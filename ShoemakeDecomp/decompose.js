@@ -2425,28 +2425,28 @@ Module['onRuntimeInitialized'] = function() {
 
   decomp_affine = function(matrix) {
     var result = decomp_affine_js(
-    matrix[0], matrix[4], matrix[8], matrix[12],
-    matrix[1], matrix[5], matrix[9], matrix[13],
-    matrix[2], matrix[6], matrix[10], matrix[14],
-    matrix[3], matrix[7], matrix[11], matrix[15]);
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
     return JSON.parse(result); 
   }
 
   spect_decomp = function(matrix) {
     var result = spect_decomp(
-    matrix[0], matrix[4], matrix[8], matrix[12],
-    matrix[1], matrix[5], matrix[9], matrix[13],
-    matrix[2], matrix[6], matrix[10], matrix[14],
-    matrix[3], matrix[7], matrix[11], matrix[15]);
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
     return JSON.parse(result); 
   }
 
   polar_decomp = function(matrix) {
     var result = polar_decomp_js(
-    matrix[0], matrix[4], matrix[8], matrix[12],
-    matrix[1], matrix[5], matrix[9], matrix[13],
-    matrix[2], matrix[6], matrix[10], matrix[14],
-    matrix[3], matrix[7], matrix[11], matrix[15]);
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
     return JSON.parse(result); 
   }
 }
