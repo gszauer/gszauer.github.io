@@ -2433,7 +2433,7 @@ Module['onRuntimeInitialized'] = function() {
   }
 
   spect_decomp = function(matrix) {
-    var result = spect_decomp(
+    var result = spect_decomp_js(
     matrix[0], matrix[1], matrix[2], matrix[3],
     matrix[4], matrix[5], matrix[6], matrix[7],
     matrix[8], matrix[9], matrix[10], matrix[11],
