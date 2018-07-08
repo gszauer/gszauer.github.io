@@ -2413,6 +2413,7 @@ if (Module['preInit']) {
 
 
 Module["noExitRuntime"] = true;
+
 decomp_affine = null;
 spect_decomp = null;
 polar_decomp = null;
@@ -2449,6 +2450,7 @@ Module['onRuntimeInitialized'] = function() {
     return JSON.parse(result); 
   }
 }
+
 run();
 
 // {{POST_RUN_ADDITIONS}}
