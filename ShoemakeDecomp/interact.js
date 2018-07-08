@@ -134,7 +134,7 @@ function ConvertResultsToString(polar, spect, affine) {
 
 	if (spect != null) {
 		out += et + "\"HVect spect_decomp(HMatrix S, HMatrix U)\": {\n";
-		out += et + "\t\"S\": [\n";
+		out += et + "\t\"U\": [\n";
 		out += et + "\t\t" + PadFixedNumber(spect.U[0])  + ", " + PadFixedNumber(spect.U[1])  + "," + PadFixedNumber(spect.U[2])  + "," + PadFixedNumber(spect.U[3])  + ",\n"
 		out += et + "\t\t" + PadFixedNumber(spect.U[4])  + ", " + PadFixedNumber(spect.U[5])  + "," + PadFixedNumber(spect.U[6])  + "," + PadFixedNumber(spect.U[7])  + ",\n"
 		out += et + "\t\t" + PadFixedNumber(spect.U[8])  + ", " + PadFixedNumber(spect.U[9])  + "," + PadFixedNumber(spect.U[10]) + "," + PadFixedNumber(spect.U[11]) + ",\n"
