@@ -1,5 +1,32 @@
 const numFixed = 5
 
+function CopyMatrix() {
+  // Create a dummy input to copy the string array inside it
+  var dummy = document.createElement("textarea");
+  // Add it to the document
+  document.body.appendChild(dummy);
+  // Set its ID
+  dummy.setAttribute("id", "dummy_id");
+  // Output the array into it
+  document.getElementById("dummy_id").value=MatrixToString(GetInputMatrix());
+  // Select it
+  dummy.select();
+  // Copy its contents
+  document.execCommand("copy");
+  // Remove it as its not needed anymore
+  document.body.removeChild(dummy);
+}
+
+function MatrixToString(M) {
+	var out = "[\n";
+	out += "\t" + PadFixedNumber(M[0])  + ", " + PadFixedNumber(M[1])  + "," + PadFixedNumber(M[2])  + "," + PadFixedNumber(M[3])  + ",\n"
+	out += "\t" + PadFixedNumber(M[4])  + ", " + PadFixedNumber(M[5])  + "," + PadFixedNumber(M[6])  + "," + PadFixedNumber(M[7])  + ",\n"
+	out += "\t" + PadFixedNumber(M[8])  + ", " + PadFixedNumber(M[9])  + "," + PadFixedNumber(M[10]) + "," + PadFixedNumber(M[11]) + ",\n"
+	out += "\t" + PadFixedNumber(M[12]) + ", " + PadFixedNumber(M[13]) + "," + PadFixedNumber(M[14]) + "," + PadFixedNumber(M[15]) + "\n"
+	out += "]";
+	return out;
+}
+
 function GetInputMatrix() {
 	var M = [
 		1, 0, 0, 0,
