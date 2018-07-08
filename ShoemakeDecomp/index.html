@@ -1,0 +1,106 @@
+<!--
+decomp_affine = null;
+spect_decomp = null;
+polar_decomp = null;
+
+Module['onRuntimeInitialized'] = function() {
+  var decomp_affine_js = Module.cwrap('decomp_affine_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+  var spect_decomp_js = Module.cwrap('spect_decomp_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+  var polar_decomp_js = Module.cwrap('polar_decomp_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+
+  decomp_affine = function(matrix) {
+    var result = decomp_affine_js(
+    matrix[0], matrix[4], matrix[8], matrix[12],
+    matrix[1], matrix[5], matrix[9], matrix[13],
+    matrix[2], matrix[6], matrix[10], matrix[14],
+    matrix[3], matrix[7], matrix[11], matrix[15]);
+    return JSON.parse(result); 
+  }
+
+  spect_decomp = function(matrix) {
+    var result = spect_decomp(
+    matrix[0], matrix[4], matrix[8], matrix[12],
+    matrix[1], matrix[5], matrix[9], matrix[13],
+    matrix[2], matrix[6], matrix[10], matrix[14],
+    matrix[3], matrix[7], matrix[11], matrix[15]);
+    return JSON.parse(result); 
+  }
+
+  polar_decomp = function(matrix) {
+    var result = polar_decomp_js(
+    matrix[0], matrix[4], matrix[8], matrix[12],
+    matrix[1], matrix[5], matrix[9], matrix[13],
+    matrix[2], matrix[6], matrix[10], matrix[14],
+    matrix[3], matrix[7], matrix[11], matrix[15]);
+    return JSON.parse(result); 
+  }
+}
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Matrix Decomposition Calculator</title>
+    <script src="decompose.js"></script>
+    <script src="interact.js"></script>
+  </head>
+
+  <body onload="FillDebugMatrix();">
+    <table>
+      <tr>
+        <th align="left">X Basis</th>
+        <th align="left">Y Basis</th>
+        <th align="left">Z Basis</th>
+        <th align="left">Translation</th>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_1_col_1"></td>
+        <td><input type="text" id="row_1_col_2"></td>
+        <td><input type="text" id="row_1_col_3"></td>
+        <td><input type="text" id="row_1_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_2_col_1"></td>
+        <td><input type="text" id="row_2_col_2"></td>
+        <td><input type="text" id="row_2_col_3"></td>
+        <td><input type="text" id="row_2_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_3_col_1"></td>
+        <td><input type="text" id="row_3_col_2"></td>
+        <td><input type="text" id="row_3_col_3"></td>
+        <td><input type="text" id="row_3_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_4_col_1"></td>
+        <td><input type="text" id="row_4_col_2"></td>
+        <td><input type="text" id="row_4_col_3"></td>
+        <td><input type="text" id="row_4_col_4"></td>
+      </tr>
+    </table>
+
+    <div>
+      <a href="#" onclick="FillDebugMatrix();return false;">Reset sample data</a> |
+      <a href="#" onclick="ClearInput();return false;">Clear Input</a> |
+      <a href="#" onclick="document.getElementById('output').value='';return false;">Clear Output</a> 
+    </div>
+
+    <div>
+      <a href="#" onclick="DoPolarDecomposition();return false;">Polar Decomposition</a> |
+      <a href="#" onclick="DoSpectDecomposition();return false;">Spectoral Decomposition</a> |
+      <a href="#" onclick="DoAffineDecomposition();return false;">Affine Decomposition</a> |
+      <a href="#" onclick="DoAllDecompositions();return false;">Do All Decomposition</a>
+    </div>
+    
+    <table>
+      <tr>
+        <th align="left">Matrices in output are column matrices written in linear meory layout (not row matrices)</th>
+      </tr>
+      <tr>
+        <td><textarea id="output" cols="90" rows="40">&nbsp;</textarea></td>
+      </tr>
+    </table>
+  </body>
+
+</html>
