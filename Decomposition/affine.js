@@ -119,7 +119,6 @@ function PolarDecomposition(X) {
   var det = Det3(Q)
   if (det < 0.0) {
     f = -1
-    // TODO: Is this right? What if we multiplied by - identity?
     Q = Mul3f(Q, -1); 
   }
 

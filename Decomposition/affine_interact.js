@@ -1,5 +1,3 @@
-
-
 function CopyMatrix() {
   var dummy = document.createElement("textarea");
   document.body.appendChild(dummy);
