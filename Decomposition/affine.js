@@ -48,6 +48,11 @@ function AffineDecompose(M) {
       u : M4ToQ(SpecDecompResult.U), //  Stretch rotation (quaternion: <w, x, y, z>)
       k : [SpecDecompResult.K[0], SpecDecompResult.K[5], SpecDecompResult.K[10]], // Stretch factors (vector: <x, y, z>)
       f : PolarDecompResult.F[0] // Sign of determinant (float)
+    },
+
+    Iterations : {
+      polar: PolarDecompResult.iterations,
+      spect: SpecDecompResult.iterations
     }
   }
 }
@@ -75,28 +80,37 @@ function FactorTranslation(M) {
   }
 }
 
+// https://csmbrannon.net/2013/02/14/illustration-of-polar-decomposition/
 // Decompose X so that X = QS where Q a rotation matrix
 // and S is a symetric matrix describing a deformation
 // That is, S contains scale and skew data
 // Q is factored into FR where R is a rotation and F is
 // either positive or negative identiy. This makes sure that
 // R contains no flip information.
-
 function PolarDecomposition(X) {
-	// TODO: Determinant must be postiive?
-
   var Q = [ // X as a 3x3 matrix
     X[0], X[1], X[2],
     X[4], X[5], X[6],
     X[8], X[9], X[10]
   ]
+  if (Det3(Q) < 0) {
+    alert("Trying to do polar decompositon, but determinant is negative");
+  }
   var Qit = Inverse3(Transpose3(Q));
 
+  var numIterations = 20;
+
   for (var i = 0; i < 20; ++i) {
+    const QPrev = [
+      Q[0], Q[1], Q[2],
+      Q[3], Q[4], Q[5],
+      Q[6], Q[7], Q[8]
+    ]
     Q = Mul3f(Add3(Q, Qit), 0.5)
     Qit = Inverse3(Transpose3(Q))
     
-    if (PolarDecompositionEarlyOut(Q, Qit)) {
+    if (PolarDecompositionEarlyOut(Q, QPrev)) {
+      numIterations = i;
       break;
     }
   }
@@ -134,13 +148,20 @@ function PolarDecomposition(X) {
       s[6], s[7], s[8], 0,
       0, 0, 0, 1
     ],
-    determinant : det
+    determinant : det,
+    iterations: numIterations
   }
 }
 
-function PolarDecompositionEarlyOut(Q, Qit) {
-  // TODO: Coverd here: http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
-  return false;
+// http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
+function PolarDecompositionEarlyOut(Q, Qprev) {
+  const res = Sub3(Q, Qprev);
+  for (var i = 0; i < 9; ++i) {
+    if (Math.abs(res[i] > 0.00001)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // TODO: Describe
@@ -157,6 +178,7 @@ function QRDecomposition(A) {
   y = Normalize(y)
   z = Normalize(z)
 
+  // Could do cross products instead of gram schmidt
   /*z = Cross(x, y)
   z = Normalize(z)
   y = Cross(z, x)
@@ -211,6 +233,8 @@ function SpectoralDecomposition(S) {
     0, 0, 1
   ]
 
+  var numIterations = 20
+
   for (var i = 0; i < 20; ++i) {
     QRFactorization = QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
       Ai[0], Ai[1], Ai[2], 0,
@@ -235,6 +259,7 @@ function SpectoralDecomposition(S) {
     Ai = Mul3(R, Q);
 
     if (EigenDecompositionEarlyOut(Ai)) {
+      numIterations = i
       break;
     }
   }
@@ -265,12 +290,15 @@ function SpectoralDecomposition(S) {
       Qa[1], Qa[4], Qa[7], 0,
       Qa[2], Qa[5], Qa[8], 0,
       0, 0, 0, 1
-    ]
+    ],
+    iterations: numIterations
   }
 }
 
 function EigenDecompositionEarlyOut(A) {
-  // TODO
+  if (Math.abs(A[3]) < 0.00001 && Math.abs(A[6]) < 0.00001 && Math.abs(A[7]) < 0.00001) {
+    return true;
+  }
   return false;
 }
 
@@ -346,6 +374,17 @@ function Add3(m1, m2) {
     m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2],
     m1[3] + m2[3], m1[4] + m2[4], m1[5] + m2[5],
     m1[6] + m2[6], m1[7] + m2[7], m1[8] + m2[8] 
+  ]
+}
+
+function Sub3(m1, m2) {
+  if (m1.length != 9 || m2.length != 9) {
+    alert("Trying to add non 3x3 matrices");
+  }
+  return [
+    m1[0] - m2[0], m1[1] - m2[1], m1[2] - m2[2],
+    m1[3] - m2[3], m1[4] - m2[4], m1[5] - m2[5],
+    m1[6] - m2[6], m1[7] - m2[7], m1[8] - m2[8] 
   ]
 }
 

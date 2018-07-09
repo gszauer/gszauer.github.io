@@ -545,10 +545,10 @@ function AffineDecompositionResultToString(o) {
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.U[12]) + ", " + PadFixedNumber(o.TFRUKUt.U[13]) + "," + PadFixedNumber(o.TFRUKUt.U[14]) + "," + PadFixedNumber(o.TFRUKUt.U[15]) + "\n"
 	out += "\t\t],\n";
 	out += "\t\t\"K\": [\n";
-	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.T[0])  + ", " + PadFixedNumber(o.TFRUKUt.T[1])  + "," + PadFixedNumber(o.TFRUKUt.T[2])  + "," + PadFixedNumber(o.TFRUKUt.T[3])  + ",\n"
-	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.T[4])  + ", " + PadFixedNumber(o.TFRUKUt.T[5])  + "," + PadFixedNumber(o.TFRUKUt.T[6])  + "," + PadFixedNumber(o.TFRUKUt.T[7])  + ",\n"
-	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.T[8])  + ", " + PadFixedNumber(o.TFRUKUt.T[9])  + "," + PadFixedNumber(o.TFRUKUt.T[10]) + "," + PadFixedNumber(o.TFRUKUt.T[11]) + ",\n"
-	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.T[12]) + ", " + PadFixedNumber(o.TFRUKUt.T[13]) + "," + PadFixedNumber(o.TFRUKUt.T[14]) + "," + PadFixedNumber(o.TFRUKUt.T[15]) + "\n"
+	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.K[0])  + ", " + PadFixedNumber(o.TFRUKUt.K[1])  + "," + PadFixedNumber(o.TFRUKUt.K[2])  + "," + PadFixedNumber(o.TFRUKUt.K[3])  + ",\n"
+	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.K[4])  + ", " + PadFixedNumber(o.TFRUKUt.K[5])  + "," + PadFixedNumber(o.TFRUKUt.K[6])  + "," + PadFixedNumber(o.TFRUKUt.K[7])  + ",\n"
+	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.K[8])  + ", " + PadFixedNumber(o.TFRUKUt.K[9])  + "," + PadFixedNumber(o.TFRUKUt.K[10]) + "," + PadFixedNumber(o.TFRUKUt.K[11]) + ",\n"
+	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.K[12]) + ", " + PadFixedNumber(o.TFRUKUt.K[13]) + "," + PadFixedNumber(o.TFRUKUt.K[14]) + "," + PadFixedNumber(o.TFRUKUt.K[15]) + "\n"
 	out += "\t\t],\n";
 	out += "\t\t\"Ut\": [\n";
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.Ut[0])  + ", " + PadFixedNumber(o.TFRUKUt.Ut[1])  + "," + PadFixedNumber(o.TFRUKUt.Ut[2])  + "," + PadFixedNumber(o.TFRUKUt.Ut[3])  + ",\n"
@@ -556,6 +556,11 @@ function AffineDecompositionResultToString(o) {
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.Ut[8])  + ", " + PadFixedNumber(o.TFRUKUt.Ut[9])  + "," + PadFixedNumber(o.TFRUKUt.Ut[10]) + "," + PadFixedNumber(o.TFRUKUt.Ut[11]) + ",\n"
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.Ut[12]) + ", " + PadFixedNumber(o.TFRUKUt.Ut[13]) + "," + PadFixedNumber(o.TFRUKUt.Ut[14]) + "," + PadFixedNumber(o.TFRUKUt.Ut[15]) + "\n"
 	out += "\t\t]\n";
+	out += "\t}\n";
+
+	out += "\t\"Iterations\": {\n";
+	out += "\t\t\"polar\": " + o.Iterations.polar + ",\n";
+	out += "\t\t\"spect\": " + o.Iterations.spect + "\n";
 	out += "\t}\n";
 
 	out += "}"
