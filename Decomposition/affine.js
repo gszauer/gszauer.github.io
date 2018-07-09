@@ -164,13 +164,18 @@ function PolarDecompositionEarlyOut(Q, Qprev) {
   return true;
 }
 
-// TODO: Describe
+// https://www.youtube.com/watch?v=c_QCR20nTDY
+// QR Decomposition / QR Factorization
+// Decompose matrix A into a product A = QR where
+// Q is an orthogonal matrix and R is an upper
+// triangular matrix. This method is a support method
+// for the QR Alrorithm / Spectoral Decomposition
 function QRDecomposition(A) {
   var x = [A[0], A[1], A[2]]
   var y = [A[4], A[5], A[6]]
   var z = [A[8], A[9], A[10]]
 
-  // gram schmidt
+  // gram schmidt - Orthogonalize A
   y = SubV3(y, Projection(x, y)) // Y equals Y minus the projection of Y onto X
   z = SubV3(SubV3(z, Projection(x, z)), Projection(y, z)) // Z = Projection of z onto x - projection of z onto y
 
@@ -214,8 +219,11 @@ function QRDecomposition(A) {
   }
 }
 
-// QR Algorithm, Spectoral Decomposition, EigenDecompositon
-// TODO: Describe
+// QR Algorithm, Spectoral Decomposition, Eigen Decompositon
+// Factorize matrix into canonical form, so that
+// it is represented in terms of eigenvectors and eigenvalues
+// S = UKUt where K is the eigenvalues on the main diagonal
+// and U is the eigenvectors packed into a matrix
 function SpectoralDecomposition(S) { 
   var QRFactorization = null
   var Q = null
@@ -227,6 +235,8 @@ function SpectoralDecomposition(S) {
   ]
 
   // From wikipedia: https://en.wikipedia.org/wiki/QR_algorithm
+  // The eigenvectors are an accumulation of all the orthogonal
+  // transforms needed to get to the matrix conversion
   var Qa = [
     1, 0, 0,
     0, 1, 0,
@@ -295,6 +305,7 @@ function SpectoralDecomposition(S) {
   }
 }
 
+// The lower triangular matrix has zeroed out
 function EigenDecompositionEarlyOut(A) {
   if (Math.abs(A[3]) < 0.00001 && Math.abs(A[6]) < 0.00001 && Math.abs(A[7]) < 0.00001) {
     return true;
