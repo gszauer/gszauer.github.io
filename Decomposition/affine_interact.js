@@ -555,7 +555,7 @@ function AffineDecompositionResultToString(o) {
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.Ut[8])  + ", " + PadFixedNumber(o.TFRUKUt.Ut[9])  + "," + PadFixedNumber(o.TFRUKUt.Ut[10]) + "," + PadFixedNumber(o.TFRUKUt.Ut[11]) + ",\n"
 	out += "\t\t\t" + PadFixedNumber(o.TFRUKUt.Ut[12]) + ", " + PadFixedNumber(o.TFRUKUt.Ut[13]) + "," + PadFixedNumber(o.TFRUKUt.Ut[14]) + "," + PadFixedNumber(o.TFRUKUt.Ut[15]) + "\n"
 	out += "\t\t]\n";
-	out += "\t}\n";
+	out += "\t},\n";
 
 	out += "\t\"Iterations\": {\n";
 	out += "\t\t\"polar\": " + o.Iterations.polar + ",\n";
