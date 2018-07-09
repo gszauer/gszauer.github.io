@@ -1,20 +1,12 @@
 
-const numFixed = 4
 
 function CopyMatrix() {
-  // Create a dummy input to copy the string array inside it
   var dummy = document.createElement("textarea");
-  // Add it to the document
   document.body.appendChild(dummy);
-  // Set its ID
   dummy.setAttribute("id", "dummy_id");
-  // Output the array into it
   document.getElementById("dummy_id").value=MatrixToString(GetInputMatrix());
-  // Select it
   dummy.select();
-  // Copy its contents
   document.execCommand("copy");
-  // Remove it as its not needed anymore
   document.body.removeChild(dummy);
 }
 
@@ -88,6 +80,8 @@ function GetWolframMatrix3(M) {
 }
 
 function FillInputMatrix(M) {
+	const numFixed = 5
+
 	document.getElementById("row_1_col_1").value = M[0].toFixed(numFixed)
 	document.getElementById("row_2_col_1").value = M[1].toFixed(numFixed)
 	document.getElementById("row_3_col_1").value = M[2].toFixed(numFixed)
@@ -121,6 +115,8 @@ function FillDebugMatrix() {
 }
 
 function PadFixedNumber(num) {
+	const numFixed = 5
+
 	var out = ""
 	if (num >= 0) {
 		out += " "
@@ -193,7 +189,8 @@ function PolarDecompositionResultToString(o) {
 	out += "\t\t" + PadFixedNumber(o.S[12]) + ", " + PadFixedNumber(o.S[13]) + "," + PadFixedNumber(o.S[14]) + "," + PadFixedNumber(o.S[15]) + "\n"
 	out += "\t],\n";
 
-	out += "\t\"determinent\": " + PadFixedNumber(o.determinant) + "\n";
+	out += "\t\"determinent\": " + PadFixedNumber(o.determinant) + ",\n";
+	out += "\t\"iterations\": " + o.iterations + "\n";
 
 
 	out += "}"
@@ -341,7 +338,9 @@ function SpectoralDecompositionResultToString(o) {
 	out += "\t\t" + PadFixedNumber(o.Ut[4])  + ", " + PadFixedNumber(o.Ut[5])  + "," + PadFixedNumber(o.Ut[6])  + "," + PadFixedNumber(o.Ut[7])  + ",\n"
 	out += "\t\t" + PadFixedNumber(o.Ut[8])  + ", " + PadFixedNumber(o.Ut[9])  + "," + PadFixedNumber(o.Ut[10]) + "," + PadFixedNumber(o.Ut[11]) + ",\n"
 	out += "\t\t" + PadFixedNumber(o.Ut[12]) + ", " + PadFixedNumber(o.Ut[13]) + "," + PadFixedNumber(o.Ut[14]) + "," + PadFixedNumber(o.Ut[15]) + "\n"
-	out += "\t]\n";
+	out += "\t],\n";
+
+	out += "\t\"iterations\": " + o.iterations + "\n";
 
 	out += "}"
 

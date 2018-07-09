@@ -1,7 +1,6 @@
-// http://www.wolframalpha.com/widgets/view.jsp?id=8897f1ab0998a5ac87df2ff26ec54c7f
-
+// Quaternions take <w, x, y, z> form, represented as arrays
 // Matrices are column matrices laid out linearly in memory
-// Quaternions take <w, x, y, z> form
+// All vectors are 3d column vectors
 
 function AffineDecompose(M) {
   const FTResult = FactorTranslation(M); 
@@ -50,6 +49,7 @@ function AffineDecompose(M) {
       f : PolarDecompResult.F[0] // Sign of determinant (float)
     },
 
+    // Debug info on number of iterations takes
     Iterations : {
       polar: PolarDecompResult.iterations,
       spect: SpecDecompResult.iterations
