@@ -156,7 +156,7 @@ function PolarDecomposition(X) {
 function PolarDecompositionEarlyOut(Q, Qprev) {
   const res = Sub3(Q, Qprev);
   for (var i = 0; i < 9; ++i) {
-    if (Math.abs(res[i] > 0.00001)) {
+    if (Math.abs(res[i]) > 0.00001) {
       return false;
     }
   }
