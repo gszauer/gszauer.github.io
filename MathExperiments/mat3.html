@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Rando math tests</title>
+    <script src="mat3.js"></script>
+    <script src="interact_mat3.js"></script>
+  </head>
+
+  <body onload="InitMatrices()">
+    <table>
+      <tr>
+        <th align="left">A: X Basis</th>
+        <th align="left">A: Y Basis</th>
+        <th align="left">A: Z Basis</th>
+      </tr>
+      <tr>
+        <td><input type="text" id="m0_row_0_col_0"></td> <!-- x[0] -->
+        <td><input type="text" id="m0_row_0_col_1"></td> <!-- y[0] -->
+        <td><input type="text" id="m0_row_0_col_2"></td> <!-- z[0] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m0_row_1_col_0"></td> <!-- x[1] -->
+        <td><input type="text" id="m0_row_1_col_1"></td> <!-- y[1] -->
+        <td><input type="text" id="m0_row_1_col_2"></td> <!-- z[1] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m0_row_2_col_0"></td> <!-- x[2] -->
+        <td><input type="text" id="m0_row_2_col_1"></td> <!-- y[2] -->
+        <td><input type="text" id="m0_row_2_col_2"></td> <!-- z[2] -->
+      </tr>
+    </table>
+
+<hr />
+
+    <table>
+      <tr>
+        <th align="left">B: X Basis</th>
+        <th align="left">B: Y Basis</th>
+        <th align="left">B: Z Basis</th>
+      </tr>
+      <tr>
+        <td><input type="text" id="m1_row_0_col_0"></td> <!-- x[0] -->
+        <td><input type="text" id="m1_row_0_col_1"></td> <!-- y[0] -->
+        <td><input type="text" id="m1_row_0_col_2"></td> <!-- z[0] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m1_row_1_col_0"></td> <!-- x[1] -->
+        <td><input type="text" id="m1_row_1_col_1"></td> <!-- y[1] -->
+        <td><input type="text" id="m1_row_1_col_2"></td> <!-- z[1] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m1_row_2_col_0"></td> <!-- x[2] -->
+        <td><input type="text" id="m1_row_2_col_1"></td> <!-- y[2] -->
+        <td><input type="text" id="m1_row_2_col_2"></td> <!-- z[2] -->
+      </tr>
+    </table>
+
+<hr />
+
+
+    <table>
+      <tr>
+        <th align="left">Result: X Basis</th>
+        <th align="left">Result: Y Basis</th>
+        <th align="left">Result: Z Basis</th>
+      </tr>
+      <tr>
+        <td><input type="text" id="m2_row_0_col_0"></td> <!-- x[0] -->
+        <td><input type="text" id="m2_row_0_col_1"></td> <!-- y[0] -->
+        <td><input type="text" id="m2_row_0_col_2"></td> <!-- z[0] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m2_row_1_col_0"></td> <!-- x[1] -->
+        <td><input type="text" id="m2_row_1_col_1"></td> <!-- y[1] -->
+        <td><input type="text" id="m2_row_1_col_2"></td> <!-- z[1] -->
+      </tr>
+      <tr>
+        <td><input type="text" id="m2_row_2_col_0"></td> <!-- x[2] -->
+        <td><input type="text" id="m2_row_2_col_1"></td> <!-- y[2] -->
+        <td><input type="text" id="m2_row_2_col_2"></td> <!-- z[2] -->
+      </tr>
+    </table>
+<hr />
+     <div>
+      <a href="#" onclick="MultiplyMatrices();return false;">Multiply</a>, 
+      <a href="#" onclick="TransposeMatrices();return false;">Transpose</a>, 
+      <a href="#" onclick="MatrixMinor();return false;">Minor</a>, 
+      <a href="#" onclick="MatrixCofactor();return false;">Cofactor</a>, 
+      <a href="#" onclick="MatrixAdjugate();return false;">Adjugate</a>, 
+      <a href="#" onclick="MatrixDeterminant();return false;">Detreminant</a>, 
+      <a href="#" onclick="MatrixInverse();return false;">Inverse</a>
+    </div>
+<hr />
+     <div>
+      <a href="#" onclick="IdentityA();return false;">Reset A</a>, 
+      <a href="#" onclick="IdentityB();return false;">Reset B</a>, 
+      <a href="#" onclick="IdentityR();return false;">Reset Result</a>, 
+      <a href="#" onclick="SwapAB();return false;">Swap A|B</a>, 
+      <a href="#" onclick="RToA();return false;">Result to A</a>, 
+      <a href="#" onclick="RToB();return false;">Result to B</a> 
+    </div>
+<hr />
+     <div>
+      <a href="#" onclick="StepA();return false;">Step A (<span id="a_step">0</span>)</a> ,
+      <a href="#" onclick="StepB();return false;">Step B (<span id="b_step">0</span>)</a>
+    </div>
+
+  </body>
+
+</html>

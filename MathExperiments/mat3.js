@@ -110,3 +110,167 @@ function M3_Mul_M3(a, b) {
 		a[2] * b[6] + a[5] * b[7] + a[8] * b[8]
 	];
 }
+
+function M3_Mul_F(m, f) {
+	return [
+		m[0] * f, m[1] * f, m[2] * f,
+		m[3] * f, m[4] * f, m[5] * f,
+		m[6] * f, m[7] * f, m[8] * f
+	]
+}
+
+function M3_Transpose(mat) {
+	return [
+		mat[0], mat[3], mat[6], 
+		mat[1], mat[4], mat[7],
+		mat[2], mat[5], mat[8]
+	]
+}
+
+// To find the matrix of minor of a 3x3 matrix, take each element,
+// cut the row & column of that element. Take the determinant of
+// the resulting 2x2 matrix. To find the determinant of a 2x2 matrix
+// subtract the product of its diagonals. IE:
+// det |A B| = (A * D) - (B * C) 
+//     |C D|
+// Remember, we're dealing with column matrices! A column matrix is laid
+// out in memory like so: A, C, B, D. Which visually looks like:
+// det |[0]: A [1]: C| = (A * D) - (B * C)
+//     |[2]: B [3]: D|
+// So, working with indices: ([0] * [3]) - ([2] * [1])
+function M3_Minor(m) {
+	return [
+		/* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
+		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
+		/* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
+		m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
+		/* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
+		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+
+		/* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
+		m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
+		/* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
+		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],
+		/* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
+		m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+
+		/* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
+		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+		/* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [0, 2] */
+		m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+		/* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
+		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+	]
+}
+
+// To find the cofactor, take the minor of the matrix, and raise
+// every element (i, j) to the (-1)^(i + j) th power. 
+// For example, the first column (basis vector, so logical layout)
+// would be: (Indices are 1 based here, sorry for the confusion)
+// [0, 0] = -1 ^ (0 + 0) = -1 ^ 0 =  1
+// [1, 0] = -1 ^ (1 + 0) = -1 ^ 1 = -1
+// [2, 0] = -1 ^ (2 + 0) = -1 ^ 2 =  1
+// We can overlay the following pattern onto the matrix:
+// + - +
+// - + -
+// + - +
+function M3_Cofactor(m) {
+	return [
+		/* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
+		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
+		/* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
+		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
+		/* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
+		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+
+		/* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
+		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
+		/* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
+		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],
+		/* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
+		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+
+		/* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
+		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+		/* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [0, 2] */
+		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+		/* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
+		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+	]
+}
+
+// Transpose of the cofactor matrix!
+function M3_Adjugate(m) {
+	return [
+		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
+		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
+		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+
+		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
+		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],	
+		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+
+		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+	]
+}
+
+// To find the determinant of a 3x3 matrix: sum the product of
+// every element in the first row with it's cofactor. This operates on the 
+// logical topology of the matrix, so it's the cofactor of the x element
+// of each basis vector!
+function M3_Determinant(m) {
+	const cofactor_00 = m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3];
+	const cofactor_01 = -1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3];
+	const cofactor_02 = m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3];
+
+	return cofactor_00 * m[0] + cofactor_01 * m[1] + cofactor_02 * m[2];
+}
+
+// Inverse of a matrix = adjugate / determinant
+function M3_Inverse(m) {
+	const cofactor_00 = m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3];
+	const cofactor_01 = -1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3];
+	const cofactor_02 = m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3];
+
+	const determinant = cofactor_00 * m[0] + cofactor_01 * m[1] + cofactor_02 * m[2];
+	if (determinant == 0.0) {
+		alert("Matrix does not have an inverse!");
+		return [
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1
+		];
+	}
+
+	const inv_determinant = 1.0 / determinant;
+	if (inv_determinant == 0.0) {
+		alert("Matrix does not have an inverse!");
+		return [
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1
+		];
+	}
+
+	const adjugate = [
+		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
+		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
+		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+
+		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
+		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],	
+		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+
+		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+	]
+
+	return [
+		adjugate[0] * inv_determinant, adjugate[1] * inv_determinant, adjugate[2] * inv_determinant, 
+		adjugate[3] * inv_determinant, adjugate[4] * inv_determinant, adjugate[5] * inv_determinant, 
+		adjugate[6] * inv_determinant, adjugate[7] * inv_determinant, adjugate[8] * inv_determinant, 
+	]
+} 

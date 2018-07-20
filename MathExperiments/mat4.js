@@ -133,3 +133,27 @@ function M4_Mul_M4(a, b) {
 		a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15]
 	];
 }
+
+function M4_Mul_F(m, f) {
+	return [
+		m[0] * f, m[1] * f, m[2] * f, m[3] * f,
+		m[4] * f, m[5] * f, m[6] * f, m[7] * f,
+		m[8] * f, m[9] * f, m[10]* f, m[11]* f,
+		m[12]* f, m[13]* f, m[14]* f, m[15]* f
+	]
+}
+
+function M4_Transpose(m) {
+	return [
+		m[0], m[4], m[8],  m[12],
+		m[1], m[5], m[9],  m[13],
+		m[2], m[6], m[10], m[14],
+		m[3], m[7], m[11], m[15]
+	]
+}
+
+function M4_Minor(m) {
+	return [
+
+	]
+}
