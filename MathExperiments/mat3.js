@@ -234,6 +234,10 @@ function M3_Inverse(m) {
 	const cofactor_01 = -1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3];
 	const cofactor_02 = m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3];
 
+	const debug_01 = cofactor_00 * m[0]
+	const debug_02 = cofactor_01 * m[1]
+	const debug_03 = cofactor_02 * m[2]
+	
 	const determinant = cofactor_00 * m[0] + cofactor_01 * m[1] + cofactor_02 * m[2];
 	if (determinant == 0.0) {
 		alert("Matrix does not have an inverse!");

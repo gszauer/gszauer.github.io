@@ -18,7 +18,8 @@ function MakeTransform(position, rotation, scale, parent) {
 		scale: scale,
 		parent: parent,
 
-		children: []
+		children: [],
+		debug: false
 	}
 
 	if (parent != null) {
@@ -54,13 +55,39 @@ function GetWorldMatrix(transform) {
 	if (transform.parent != null) {
 		var parentMatrix = GetWorldMatrix(transform.parent);
 		// Vertex * child * parent
-		worldMatrix = M4_Mul_M4(parentMatrix, localMatrix);
+		worldMatrix = M4_Mul_M4(parentMatrix, localMatrix); // * vertex
+		// Vertex first, child next, parent last
 	}
 
 	return worldMatrix;
 }
 
 // Debug help functions
+function M4_ToString(m, fixed) {
+	if (typeof fixed == "undefined" || fixed == null) {
+		fixed = 5
+	}
+	var out = "[ ";
+	for (var i = 0; i < 15; ++i) {
+		out += m[i].toFixed(fixed) + ", ";
+	}
+	out += m[15].toFixed(fixed) + " ]";
+	return out;
+}
+
+function M3_ToString(m, fixed) {
+	if (typeof fixed == "undefined" || fixed == null) {
+		fixed = 5
+	}
+
+	var out = "[ ";
+	for (var i = 0; i < 8; ++i) {
+		out += m[i].toFixed(fixed) + ", ";
+	}
+	out += m[8].toFixed(fixed) + " ]"
+	return out;
+}
+
 function Q_AngleAxis(angle, axis) {
 	angle = angle * 0.0174533;
 
@@ -159,26 +186,70 @@ var polar_cam_pos = [0, 2, -10]
 var polar_cam_target = [0, 2, 0]
 var light_dir = [0.85, 1, 2]
 
-var root_xform = null;
+var use_global = false;
+var hierarchy_xform = null;
+var global_xform = null;
+
+function UseHierarchy() {
+	document.getElementById("h_stat").innerHTML = "(t)"
+	document.getElementById("g_stat").innerHTML = "(f)"
+	use_global = false;
+	DrawWebGL();
+}
+
+function UseGlobal() {
+	document.getElementById("h_stat").innerHTML = "(f)"
+	document.getElementById("g_stat").innerHTML = "(t)"
+	use_global = true;
+	DrawWebGL();
+}
+
+function C_ToString(c) {
+	return "{\"r\":" + c.r.toFixed(5) + ", \"g\": " + c.g.toFixed(5) + ", \"b\": " + c.b.toFixed(5) + "}";
+}
+
+function XFormToString(x) {
+	var out = "{ \"m\":";
+	out +=  M4_ToString(GetWorldMatrix(x), 10)
+	out += ", \"color\": "
+	out += C_ToString(x.color);
+	out += ", \"debug\": false"
+	out += " }"
+	return out; 
+}
 
 function MakeXFormHierarchy() {
-	root_xform = MakeTransform(null, null, null, null);
-	root_xform.color = {r:0, g:0, b:1};
+	global_xform = []
 
-	var child = MakeTransform([3, 3, 0], Q_AngleAxis(90, [1, 0, 0]), [1, 2, 1], root_xform);
+	hierarchy_xform = MakeTransform(null, null, null, null);
+	hierarchy_xform.color = {r:0, g:0, b:1};
+	global_xform.push(JSON.parse(XFormToString(hierarchy_xform)));
+
+	var child = MakeTransform([3, 3, 0], Q_AngleAxis(90, [1, 0, 0]), [1, 2, 1], hierarchy_xform);
 	child.color = {r:0, g:1, b:0};
+	global_xform.push(JSON.parse(XFormToString(child)));
 
-	MakeTransform([0, 0, 3], null, null, child).color = {r:0, g:0, b:1};
-	MakeTransform([0, 0, 1.5], null, [1, 0.5, 1], child).color = {r:0, g:0, b:1};
+	var x = MakeTransform([0, 0, 3], null, null, child)
+	x.color = {r:0, g:0, b:1};
+	global_xform.push(JSON.parse(XFormToString(x)));
 
-	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, root_xform);
+	x = MakeTransform([0, 0, 1.5], null, [1, 0.5, 1], child)
+	x.color = {r:0, g:0, b:1};
+	global_xform.push(JSON.parse(XFormToString(x)));
+
+	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
+	child.debug = true;
+	global_xform.push(JSON.parse(XFormToString(child)));
+	global_xform[global_xform.length - 1].debug = true;
 
 	child = MakeTransform([2, 0, 0], Q_AngleAxis(45, [0, 1, 0]), null, child);
 	child.color = {r:0, g:1, b:1};
+	global_xform.push(JSON.parse(XFormToString(child)));
 
 	child = MakeTransform([0, 2, 0], Q_AngleAxis(45, [0, 0, 1]), null, child);
 	child.color = {r:1, g:0, b:1};
+	global_xform.push(JSON.parse(XFormToString(child)));
 }
 
 function IntWebGL() {
@@ -246,13 +317,24 @@ function DrawWebGL() {
 
 	polar_gl.clear(polar_gl.COLOR_BUFFER_BIT | polar_gl.DEPTH_BUFFER_BIT);
 
-	DrawTransformBuffer(root_xform);
+	if (!use_global) {
+		DrawTransformBuffer(hierarchy_xform);
+	}
+	else {
+		for (var i = 0; i < global_xform.length; ++i) {
+			DrawBuffer(polar_cube, global_xform[i].m, global_xform[i].color, global_xform[i].debug)
+		}
+	}
 }
 
 function DrawTransformBuffer(transform) {
 	var model = GetWorldMatrix(transform);
 
-	DrawBuffer(polar_cube, model, /*{r:0, g:0, b:1}*/transform.color)
+	if (transform.debug) {
+		var stop_it = "true";
+	}
+
+	DrawBuffer(polar_cube, model, transform.color, transform.debug)
 
 	if (transform.children != null) {
 		for (var i = 0; i < transform.children.length; ++i) {
@@ -604,7 +686,10 @@ function MakeCube(gl, position, halfX, halfY, halfZ) {
 	}
 }
 
-function DrawBuffer(buffer, modelMatrix, color) {
+function DrawBuffer(buffer, modelMatrix, color, debug_normal) {
+	if (typeof debug_normal == "undefined" || debug_normal == null) {
+		debug_normal = false;
+	}
   var modelViewMatrix = M4_Mul_M4(polar_view, modelMatrix);
 
   var normalMatrix = [
@@ -612,6 +697,14 @@ function DrawBuffer(buffer, modelMatrix, color) {
   	modelViewMatrix[4], modelViewMatrix[5], modelViewMatrix[6],
   	modelViewMatrix[8], modelViewMatrix[9], modelViewMatrix[10]
   ]
+
+  if (debug_normal) {
+  	console.log("debug: " + M3_ToString(normalMatrix));
+  }
+  else if (M3_Determinant(normalMatrix) == 0.0) {
+  	console.log("error: " + M3_ToString(normalMatrix));
+  }
+
   normalMatrix = M3_Transpose(M3_Inverse(normalMatrix));
 
   polar_gl.bindBuffer(polar_gl.ARRAY_BUFFER, buffer.bufferId);
