@@ -15,6 +15,82 @@ var use_global = false;
 var hierarchy_xform = null;
 var global_xform = null;
 
+function MakeXFormHierarchy() {
+	var global_transforms = []
+	var global_hierarchy = []
+
+	hierarchy_xform = MakeTransform(null, null, null, null);
+	hierarchy_xform.color = {r:0, g:0, b:1};
+	global_transforms.push(JSON.parse(XFormToString(hierarchy_xform)));
+
+	var child = MakeTransform([3, 3, 0], Q_AngleAxis(90, [1, 0, 0]), [1, 2, 1], hierarchy_xform);
+	child.color = {r:0, g:1, b:0};
+	global_transforms.push(JSON.parse(XFormToString(child)));
+
+	var x = MakeTransform([0, 0, 3], null, null, child)
+	x.color = {r:0, g:0, b:1};
+	global_transforms.push(JSON.parse(XFormToString(x)));
+
+	x = MakeTransform([0, 0, 1.5], null, [1, 0.5, 1], child)
+	x.color = {r:0, g:0, b:1};
+	global_transforms.push(JSON.parse(XFormToString(x)));
+
+	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, hierarchy_xform);
+	child.color = {r:1, g:0, b:0};
+	global_transforms.push(JSON.parse(XFormToString(child)));
+
+	child = MakeTransform([2, 0, 0], Q_AngleAxis(45, [0, 1, 0]), null, child);
+	child.color = {r:0, g:1, b:1};
+	global_transforms.push(JSON.parse(XFormToString(child)));
+
+	child = MakeTransform([0, 2, 0], Q_AngleAxis(45, [0, 0, 1]), null, child);
+	child.color = {r:1, g:0, b:1};
+	global_transforms.push(JSON.parse(XFormToString(child)));
+
+
+	/* 0: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
+	
+	/* 1: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:0};
+
+	/* 2: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[1]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
+
+	/* 3: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[1]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
+
+	/* 4: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:0};
+
+	/* 5: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:1};
+
+	/* 6: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:1};
+
+
+	global_xform = global_hierarchy[0];
+	/*for (var i = 0; i < global_hierarchy.length; ++i) {
+		SetGlobalTRS(global_hierarchy[i], global_transforms[i].position, global_transforms[i].rotation, global_transforms[i].scale);
+	}*/
+}
+
+function RandomPositon() {
+	return [Math.random() * 3, Math.random() * 3, Math.random() * 3]
+}
+
+function RandomRotation() {
+	var axis = [Math.random() * 10, Math.random() * 10, Math.random() * 10]
+	var angle = Math.random() * 359
+
+	return Q_AngleAxis(angle, axis);
+}
+
+function RandomScale() {
+	return [Math.random() * 3 + 0.25, Math.random() * 3 + 0.25, Math.random() * 3 + 0.25]
+}
+
 function UseHierarchy() {
 	document.getElementById("h_stat").innerHTML = "(t)"
 	document.getElementById("g_stat").innerHTML = "(f)"
@@ -72,38 +148,6 @@ function XFormToString(x) {
 
 	out += " }"
 	return out; 
-}
-
-function MakeXFormHierarchy() {
-	global_xform = []
-
-	hierarchy_xform = MakeTransform(null, null, null, null);
-	hierarchy_xform.color = {r:0, g:0, b:1};
-	global_xform.push(JSON.parse(XFormToString(hierarchy_xform)));
-
-	var child = MakeTransform([3, 3, 0], Q_AngleAxis(90, [1, 0, 0]), [1, 2, 1], hierarchy_xform);
-	child.color = {r:0, g:1, b:0};
-	global_xform.push(JSON.parse(XFormToString(child)));
-
-	var x = MakeTransform([0, 0, 3], null, null, child)
-	x.color = {r:0, g:0, b:1};
-	global_xform.push(JSON.parse(XFormToString(x)));
-
-	x = MakeTransform([0, 0, 1.5], null, [1, 0.5, 1], child)
-	x.color = {r:0, g:0, b:1};
-	global_xform.push(JSON.parse(XFormToString(x)));
-
-	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, hierarchy_xform);
-	child.color = {r:1, g:0, b:0};
-	global_xform.push(JSON.parse(XFormToString(child)));
-
-	child = MakeTransform([2, 0, 0], Q_AngleAxis(45, [0, 1, 0]), null, child);
-	child.color = {r:0, g:1, b:1};
-	global_xform.push(JSON.parse(XFormToString(child)));
-
-	child = MakeTransform([0, 2, 0], Q_AngleAxis(45, [0, 0, 1]), null, child);
-	child.color = {r:1, g:0, b:1};
-	global_xform.push(JSON.parse(XFormToString(child)));
 }
 
 function IntWebGL() {
@@ -175,9 +219,10 @@ function DrawWebGL() {
 		DrawTransformBuffer(hierarchy_xform);
 	}
 	else {
-		for (var i = 0; i < global_xform.length; ++i) {
+		DrawTransformBuffer(global_xform);
+		/*for (var i = 0; i < global_xform.length; ++i) {
 			DrawTransformBuffer(global_xform[i]);
-		}
+		}*/
 	}
 }
 

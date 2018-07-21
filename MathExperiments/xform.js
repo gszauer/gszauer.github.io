@@ -61,3 +61,7 @@ function GetWorldMatrix(transform) {
 
 	return worldMatrix;
 }
+
+function SetGlobalTRS(xform, translation, rotation, scale) {
+	
+}
