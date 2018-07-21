@@ -157,6 +157,7 @@ var polar_width = 800;
 var polar_3d_height = 400;
 var polar_cam_pos = [0, 2, -10]
 var polar_cam_target = [0, 2, 0]
+var light_dir = [0.85, 1, 2]
 
 var root_xform = null;
 
@@ -213,6 +214,11 @@ function IntWebGL() {
 			document.getElementById("tar_y").value = polar_cam_target[1].toFixed(5)
 			document.getElementById("tar_z").value = polar_cam_target[2].toFixed(5)
 
+
+			document.getElementById("light_x").value = light_dir[0].toFixed(5)
+			document.getElementById("light_y").value = light_dir[1].toFixed(5)
+			document.getElementById("light_z").value = light_dir[2].toFixed(5)
+
 			MakeXFormHierarchy();
 
 			DrawWebGL();
@@ -224,6 +230,10 @@ function DrawWebGL() {
 	if (!polar_gl) {
 		return;
 	}
+
+	light_dir[0] = Number(document.getElementById("light_x").value)
+	light_dir[1] = Number(document.getElementById("light_y").value)
+	light_dir[2] = Number(document.getElementById("light_z").value)
 
 	polar_cam_pos[0] = Number(document.getElementById("cam_x").value)
 	polar_cam_pos[1] = Number(document.getElementById("cam_y").value)
@@ -264,6 +274,7 @@ function MakeSolidColorShader(gl) {
     uniform mat4 projectionMatrix;
     uniform mat3 normalMatrix;
     uniform vec4 renderColor;
+    uniform vec3 lightDirection;
 
     varying vec3 color; 
 
@@ -271,10 +282,8 @@ function MakeSolidColorShader(gl) {
       vec3 norm = normalMatrix * normal;
 
       vec3 ambientLight = vec3(0.1, 0.1, 0.1);
-      //vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-      vec3 directionalVector = normalize(vec3(0, 1, 0));
 
-      float directional = max(dot(norm, directionalVector), 0.0);
+      float directional = max(dot(norm, normalize(lightDirection)), 0.0);
       color = ambientLight + (renderColor.xyz * directional);
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
@@ -335,7 +344,8 @@ function MakeSolidColorShader(gl) {
       modelView: gl.getUniformLocation(program, "modelViewMatrix"),
       normal: gl.getUniformLocation(program, "normalMatrix"),
       projection: gl.getUniformLocation(program, "projectionMatrix"),
-      color: gl.getUniformLocation(program, "renderColor")
+      color: gl.getUniformLocation(program, "renderColor"),
+      light: gl.getUniformLocation(program, "lightDirection")
     }
   };
   return info;
@@ -620,6 +630,7 @@ function DrawBuffer(buffer, modelMatrix, color) {
   polar_gl.uniformMatrix3fv(polar_shader.uniforms.normal, false, normalMatrix);
 
   polar_gl.uniform4f(polar_shader.uniforms.color, color.r, color.g, color.b, 1.0);
+  polar_gl.uniform3f(polar_shader.uniforms.light, light_dir[0], light_dir[1], light_dir[2]);
 
   const offset = 0;
   polar_gl.drawArrays(polar_gl.TRIANGLES, offset, buffer.count)
