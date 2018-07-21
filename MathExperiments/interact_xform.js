@@ -71,9 +71,9 @@ function MakeXFormHierarchy() {
 
 
 	global_xform = global_hierarchy[0];
-	/*for (var i = 0; i < global_hierarchy.length; ++i) {
+	for (var i = 0; i < global_hierarchy.length; ++i) {
 		SetGlobalTRS(global_hierarchy[i], global_transforms[i].position, global_transforms[i].rotation, global_transforms[i].scale);
-	}*/
+	}
 }
 
 function RandomPositon() {
