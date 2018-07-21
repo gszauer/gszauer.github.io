@@ -208,12 +208,31 @@ function C_ToString(c) {
 	return "{\"r\":" + c.r.toFixed(5) + ", \"g\": " + c.g.toFixed(5) + ", \"b\": " + c.b.toFixed(5) + "}";
 }
 
+function V3_ToString(v) {
+	return "[ " + v[0].toFixed(5) + ", " + v[1].toFixed(5) + ", " + v[2].toFixed(5) + " ]"
+}
+
+function Q_ToString(v) {
+	return "[ " + v[0].toFixed(5) + ", " + v[1].toFixed(5) + ", " + v[2].toFixed(5) + ", " + v[3].toFixed(5) + " ]"
+}
+
 function XFormToString(x) {
-	var out = "{ \"m\":";
-	out +=  M4_ToString(GetWorldMatrix(x), 10)
-	out += ", \"color\": "
-	out += C_ToString(x.color);
-	out += ", \"debug\": false"
+	var world = GetWorldMatrix(x);
+	var decomp = AffineDecompose(world).Shoemake;
+
+	var out = "{ ";
+	//out += "\"m\":" + M4_ToString(world, 10) + ","
+
+	out += "\"position\": " + V3_ToString(decomp.t) + ", "
+	out += "\"rotation\": " + Q_ToString(decomp.q) + ", "
+	out += "\"scale\": " + V3_ToString(decomp.k) + ", "
+
+	out += "\"parent\": null, "
+	out += "\"children\": [], "
+
+	out += "\"color\": " + C_ToString(x.color) + ", "
+	out += "\"debug\": false"
+
 	out += " }"
 	return out; 
 }
@@ -239,9 +258,7 @@ function MakeXFormHierarchy() {
 
 	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
-	child.debug = true;
 	global_xform.push(JSON.parse(XFormToString(child)));
-	global_xform[global_xform.length - 1].debug = true;
 
 	child = MakeTransform([2, 0, 0], Q_AngleAxis(45, [0, 1, 0]), null, child);
 	child.color = {r:0, g:1, b:1};
@@ -322,7 +339,7 @@ function DrawWebGL() {
 	}
 	else {
 		for (var i = 0; i < global_xform.length; ++i) {
-			DrawBuffer(polar_cube, global_xform[i].m, global_xform[i].color, global_xform[i].debug)
+			DrawTransformBuffer(global_xform[i]);
 		}
 	}
 }
