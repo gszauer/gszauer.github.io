@@ -106,16 +106,55 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	parentRotation[3] *= -1
 	rotation = Dbg_Q_Mul_Q(parentRotation, t.rotation)
 
+	var parentPosition = [parentWorld[12], parentWorld[13], parentWorld[14]]
+	positon = [
+		t.position[0] - parentPosition[0],
+		t.position[1] - parentPosition[1],
+		t.position[2] - parentPosition[2]
+	]
+
 	// Multiply world scale by the reciprocal of the parents scale
 	scale[0] = t.scale[0] / parentWorldScale[0]
 	scale[1] = t.scale[1] / parentWorldScale[1]
 	scale[2] = t.scale[2] / parentWorldScale[2]
 
-	t.position = decomp.t;//Dbg_M4_Mul_P(invParent, position)
+	if (Dbg_Vec3_Diff_Vec3(position, decomp.t)) {
+		console.log("position error");
+	}
+	if (Dbg_Vec3_Diff_Vec3(scale, decomp.k)) {
+		console.log("scale error");
+	}
+	if (Dbg_Q_Diff_Q(rotation, decomp.q)) {
+		console.log("rotation error");
+	}
+	if (Dbg_Vec3_Diff_Vec3(position, decomp.t) || Dbg_Vec3_Diff_Vec3(scale, decomp.k) || Dbg_Q_Diff_Q(rotation, decomp.q)) {
+		console.log("pos: " + V3_ToString(position) + " / " + V3_ToString(decomp.t))
+		console.log("rot: " + Q_ToString(rotation) + " / " + Q_ToString(decomp.q))
+		console.log("scl: " + V3_ToString(scale) + " / " + V3_ToString(decomp.k))
+	}
+
+	t.position = positon;//decomp.t;//Dbg_M4_Mul_P(invParent, position)
 	t.rotation = rotation;//decomp.q;//Dbg_Q_Mul_Q(invParentRot, rotation)
 	t.scale = scale;//decomp.k;//Dbg_V3_Mul_V3(invParentScl, scale);
 
 	return t;
+}
+
+function Dbg_Vec3_Diff_Vec3(v1, v2) {
+	var d1 = Math.abs(v1[0] - v2[0])
+	var d2 = Math.abs(v1[1] - v2[1])
+	var d3 = Math.abs(v1[2] - v2[2])
+	var d4 = Math.abs(v1[3] - v2[3])
+
+	return (d1 > 0.0001 || d2 > 0.0001 || d3 > 0.0001 || d4 > 0.000);
+}
+
+function Dbg_Q_Diff_Q(v1, v2) {
+	var d1 = Math.abs(v1[0] - v2[0])
+	var d2 = Math.abs(v1[1] - v2[1])
+	var d3 = Math.abs(v1[2] - v2[2])
+
+	return (d1 > 0.0001 || d2 > 0.0001 || d3 > 0.0001);
 }
 
 function Dbg_Vec3_Mag(v) {
@@ -225,7 +264,6 @@ function Dbg_M4_Mul_P(m, v) {
 		v[0], v[1], v[2], 0
 	]
 
-	// TODO: Is this the right order?
 	var res = M4_Mul_M4(p, m);
 
 	return [res[12], res[13], res[14]];
