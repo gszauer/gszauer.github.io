@@ -12,6 +12,8 @@ var polar_cam_target = [0, 2, 0]
 var light_dir = [0.85, 1, 2]
 
 var use_global = false;
+var use_matrices = true;
+
 var hierarchy_xform = null;
 var global_xform = null;
 
@@ -57,15 +59,15 @@ function MakeXFormHierarchy() {
 	global_transforms.push(JSON.parse(XFormToString(child)));
 
 	// Edge case # 2
-	child = MakeTransform([8, -2, 0], null, [3,0.5,0.5], hierarchy_xform);
+	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
 	global_transforms.push(JSON.parse(XFormToString(child)));
 
-	child = MakeTransform([-3, 0, 0], null, [5, 1, 1], child);
+	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);// MakeTransform([-3, 0, 0], null, [5, 1, 1], child);
 	child.color = {r:0, g:1, b:0};
 	global_transforms.push(JSON.parse(XFormToString(child)));
 
-	child = MakeTransform([-0.7, 0, 0], null, [1/5 * 2, 2, 2], child);
+	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);//MakeTransform([-0.7, 0, 0], null, [1/5 * 2, 2, 2], child);
 	child.color = {r:0, g:0, b:1};
 	global_transforms.push(JSON.parse(XFormToString(child)));
 
@@ -105,7 +107,6 @@ function MakeXFormHierarchy() {
 	/* 11: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[9]))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 
-
 	global_xform = global_hierarchy[0];
 	for (var i = 0; i < global_hierarchy.length; ++i) {
 		SetGlobalTRS(global_hierarchy[i], global_transforms[i].position, global_transforms[i].rotation, global_transforms[i].scale);
@@ -125,6 +126,21 @@ function RandomRotation() {
 
 function RandomScale() {
 	return [Math.random() * 3 + 0.25, Math.random() * 3 + 0.25, Math.random() * 3 + 0.25]
+}
+
+
+function UseMatrices() {
+	document.getElementById("u_mat").innerHTML = "(t)"
+	document.getElementById("u_tran").innerHTML = "(f)"
+	use_matrices = true;
+	DrawWebGL();
+}
+
+function UseTransforms() {
+	document.getElementById("u_mat").innerHTML = "(f)"
+	document.getElementById("u_tran").innerHTML = "(t)"
+	use_matrices = false;
+	DrawWebGL();
 }
 
 function UseHierarchy() {
@@ -256,14 +272,18 @@ function DrawWebGL() {
 	}
 	else {
 		DrawTransformBuffer(global_xform);
-		/*for (var i = 0; i < global_xform.length; ++i) {
-			DrawTransformBuffer(global_xform[i]);
-		}*/
 	}
 }
 
 function DrawTransformBuffer(transform) {
-	var model = GetWorldMatrix(transform);
+	var model = null;
+	if (use_matrices) {
+		model = GetWorldMatrix(transform);
+	}
+	else {
+		model = GetWorldTransform(transform);
+		model = ToMatrix(model);
+	}
 
 	if (transform.debug) {
 		var stop_it = "true";

@@ -81,6 +81,39 @@ function GetWorldMatrix(transform) {
 	return worldMatrix;
 }
 
+function GetWorldTransform(transform) {
+	var worldTransform = {}
+	worldTransform.position = [transform.position[0], transform.position[1], transform.position[2]]
+	worldTransform.rotation = [transform.rotation[0], transform.rotation[1], transform.rotation[2], transform.rotation[3]]
+	worldTransform.scale = [transform.scale[0], transform.scale[1], transform.scale[2]];
+	worldTransform.parent = transform.parent;
+
+    if (transform.parent != null) {
+        var worldParent = GetWorldTransform(transform.parent);
+
+        worldTransform.scale = [
+        	worldParent.scale[0] * worldTransform.scale[0],
+        	worldParent.scale[1] * worldTransform.scale[1],
+        	worldParent.scale[2] * worldTransform.scale[2]
+        ];
+        worldTransform.rotation = Dbg_Q_Mul_Q(worldParent.rotation, worldTransform.rotation);
+
+        worldTransform.position = [
+        	worldParent.scale[0] * worldTransform.position[0],
+        	worldParent.scale[1] * worldTransform.position[1],
+        	worldParent.scale[2] * worldTransform.position[2],
+        ]
+        worldTransform.position = Q_Mul_V3(worldParent.rotation, worldTransform.position)
+        worldTransform.position = [
+        	worldParent.position[0] + worldTransform.position[0],
+        	worldParent.position[1] + worldTransform.position[1],
+        	worldParent.position[2] + worldTransform.position[2],
+        ]
+    }
+
+    return worldTransform;
+}
+
 function SetGlobalScale(t, scale) {
 	t.scale[0] = scale[0];
 	t.scale[1] = scale[1];
