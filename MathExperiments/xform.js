@@ -77,6 +77,9 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	var local = M4_Mul_M4(invParent, ToMatrix(t));
 	var decomp = AffineDecompose(local).Shoemake;
 
+	///////////////////////////////////////////////////////////////////
+	// Scale
+	///////////////////////////////////////////////////////////////////
 	// Use this for global scale!
 	var parentWorldScale = [
 		Dbg_Vec3_Mag([parentWorld[0], parentWorld[1], parentWorld[2]]),
@@ -93,7 +96,14 @@ function SetGlobalTRS(t, position, rotation, scale) {
 
 		iter = iter.parent;
 	}*/
+	// Multiply world scale by the reciprocal of the parents scale
+	scale[0] = t.scale[0] / parentWorldScale[0]
+	scale[1] = t.scale[1] / parentWorldScale[1]
+	scale[2] = t.scale[2] / parentWorldScale[2]
 
+	///////////////////////////////////////////////////////////////////
+	// Rotation
+	///////////////////////////////////////////////////////////////////
 	var parentRotation = [1, 0, 0, 0]
 	var iter = t.parent
 	while (iter != null) {
@@ -106,17 +116,15 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	parentRotation[3] *= -1
 	rotation = Dbg_Q_Mul_Q(parentRotation, t.rotation)
 
+	///////////////////////////////////////////////////////////////////
+	// Position
+	///////////////////////////////////////////////////////////////////
 	var parentPosition = [parentWorld[12], parentWorld[13], parentWorld[14]]
 	positon = [
 		t.position[0] - parentPosition[0],
 		t.position[1] - parentPosition[1],
 		t.position[2] - parentPosition[2]
 	]
-
-	// Multiply world scale by the reciprocal of the parents scale
-	scale[0] = t.scale[0] / parentWorldScale[0]
-	scale[1] = t.scale[1] / parentWorldScale[1]
-	scale[2] = t.scale[2] / parentWorldScale[2]
 
 	if (Dbg_Vec3_Diff_Vec3(position, decomp.t)) {
 		console.log("position error");
