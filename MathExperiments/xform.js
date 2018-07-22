@@ -71,17 +71,60 @@ function SetGlobalTRS(t, position, rotation, scale) {
 		return t;
 	}
 
-	var parentworld = GetWorldMatrix(t.parent);
-	var invParent = Dbg_M4_Inverse(parentworld);
+	var parentWorld = GetWorldMatrix(t.parent);
+	var invParent = Dbg_M4_Inverse(parentWorld);
 
 	var local = M4_Mul_M4(invParent, ToMatrix(t));
 	var decomp = AffineDecompose(local).Shoemake;
 
+	// Use this for global scale!
+	var parentWorldScale = [
+		Dbg_Vec3_Mag([parentWorld[0], parentWorld[1], parentWorld[2]]),
+		Dbg_Vec3_Mag([parentWorld[4], parentWorld[5], parentWorld[6]]),
+		Dbg_Vec3_Mag([parentWorld[8], parentWorld[9], parentWorld[10]])
+	]
+	/* this works for scale 
+	var parentWorldScale = [1, 1, 1]
+	var iter = t.parent;
+	while (iter != null) {
+		parentWorldScale[0] *= iter.scale[0]
+		parentWorldScale[1] *= iter.scale[1]
+		parentWorldScale[2] *= iter.scale[2]
+
+		iter = iter.parent;
+	}*/
+
+	var parentRotation = [1, 0, 0, 0]
+	var iter = t.parent
+	while (iter != null) {
+		parentRotation = Dbg_Q_Mul_Q(parentRotation, iter.rotation)
+		iter = iter.parent
+	}
+	// Inverse parent rotation: conjugate
+	parentRotation[1] *= -1
+	parentRotation[2] *= -1
+	parentRotation[3] *= -1
+	rotation = Dbg_Q_Mul_Q(parentRotation, t.rotation)
+
+	// Multiply world scale by the reciprocal of the parents scale
+	scale[0] = t.scale[0] / parentWorldScale[0]
+	scale[1] = t.scale[1] / parentWorldScale[1]
+	scale[2] = t.scale[2] / parentWorldScale[2]
+
 	t.position = decomp.t;//Dbg_M4_Mul_P(invParent, position)
-	t.rotation = decomp.q;//Dbg_Q_Mul_Q(invParentRot, rotation)
-	t.scale = decomp.k;//Dbg_V3_Mul_V3(invParentScl, scale);
+	t.rotation = rotation;//decomp.q;//Dbg_Q_Mul_Q(invParentRot, rotation)
+	t.scale = scale;//decomp.k;//Dbg_V3_Mul_V3(invParentScl, scale);
 
 	return t;
+}
+
+function Dbg_Vec3_Mag(v) {
+	const dot = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+	if (dot == 0) {
+		alert("Zero vector")
+		return 0;
+	}
+	return Math.sqrt(dot);
 }
 
 function Dbg_V3_Mul_V3(v1, v2) {
