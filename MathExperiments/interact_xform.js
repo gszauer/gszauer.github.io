@@ -47,6 +47,14 @@ function MakeXFormHierarchy() {
 	child.color = {r:1, g:0, b:1};
 	global_transforms.push(JSON.parse(XFormToString(child)));
 
+	// Edge case matrix
+	child = MakeTransform([-8, 5, 0], null, [3, 0.5, 0.5], hierarchy_xform);
+	child.color = {r:0.2, g:0.4, b:0.6};
+	global_transforms.push(JSON.parse(XFormToString(child)));
+
+	child = MakeTransform([0.5, -2, 0], Q_AngleAxis(45, [0, 0, 1]), [1, 1, 1], child);
+	child.color = {r:0.2, g:0.4, b:0.6};
+	global_transforms.push(JSON.parse(XFormToString(child)));
 
 	/* 0: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
@@ -68,6 +76,12 @@ function MakeXFormHierarchy() {
 
 	/* 6: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:1};
+
+	/* 7: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
+
+	/* 8: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[7]))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
 
 
 	global_xform = global_hierarchy[0];
