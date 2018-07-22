@@ -63,23 +63,23 @@ function GetWorldMatrix(transform) {
 }
 
 function SetGlobalTRS(t, position, rotation, scale) {
-	if (t.parent == null) {
-		t.position = position;
-		t.rotation = rotation;
-		t.scale = scale;
+	t.position = position;
+	t.rotation = rotation;
+	t.scale = scale;
 
+	if (t.parent == null) {
 		return t;
 	}
 
 	var parentworld = GetWorldMatrix(t.parent);
 	var invParent = Dbg_M4_Inverse(parentworld);
 
-	var invParentRot = Dbg_M4_To_Q(invParent);
-	var invParentScl = [invParent[0], invParent[5], invParent[10]];
+	var local = M4_Mul_M4(invParent, ToMatrix(t));
+	var decomp = AffineDecompose(local).Shoemake;
 
-	t.position = Dbg_M4_Mul_P(invParent, position)
-	t.rotation = Dbg_Q_Mul_Q(invParentRot, rotation)
-	t.scale = Dbg_V3_Mul_V3(invParentScl, scale);
+	t.position = decomp.t;//Dbg_M4_Mul_P(invParent, position)
+	t.rotation = decomp.q;//Dbg_Q_Mul_Q(invParentRot, rotation)
+	t.scale = decomp.k;//Dbg_V3_Mul_V3(invParentScl, scale);
 
 	return t;
 }

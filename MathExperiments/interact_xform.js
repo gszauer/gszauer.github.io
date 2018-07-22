@@ -67,7 +67,7 @@ function MakeXFormHierarchy() {
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:1};
 
 	/* 6: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
-	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:1};
+	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:1};
 
 
 	global_xform = global_hierarchy[0];
