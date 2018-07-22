@@ -62,7 +62,88 @@ function GetWorldMatrix(transform) {
 	return worldMatrix;
 }
 
+function SetGlobalScale(t, scale) {
+	t.scale[0] = scale[0];
+	t.scale[1] = scale[1];
+	t.scale[2] = scale[2];
+
+	if (t.parent == null) {
+		return t;
+	}
+
+	var parentWorldScale = [1, 1, 1]
+	var iter = t.parent;
+
+	while (iter != null) {
+		parentWorldScale[0] *= iter.scale[0]
+		parentWorldScale[1] *= iter.scale[1]
+		parentWorldScale[2] *= iter.scale[2]
+
+		iter = iter.parent;
+	}
+
+	var invParentWorldScale = [
+		1.0 / parentWorldScale[0],
+		1.0 / parentWorldScale[1],
+		1.0 / parentWorldScale[2]
+	]
+
+	// Multiply world scale by the reciprocal of the parents scale
+	t.scale[0] = scale[0] * invParentWorldScale[0]
+	t.scale[1] = scale[1] * invParentWorldScale[1]
+	t.scale[2] = scale[2] * invParentWorldScale[2]
+}
+
+function SetGlobalRotation(t, rotation) {
+	t.rotation[0] = rotation[0]
+	t.rotation[1] = rotation[1]
+	t.rotation[2] = rotation[2]
+	t.rotation[3] = rotation[3]
+
+	if (t.parent == null) {
+		return t;
+	}
+
+	var parentRotation = [1, 0, 0, 0]
+	var iter = t.parent
+
+	while (iter != null) {
+		parentRotation = Dbg_Q_Mul_Q(parentRotation, iter.rotation)
+		iter = iter.parent
+	}
+
+	var invParentRotation = [
+		parentRotation[0],
+		parentRotation[1] * -1.0,
+		parentRotation[2] * -1.0,
+		parentRotation[3] * -1.0
+	]
+	
+	t.rotation = Dbg_Q_Mul_Q(invParentRotation, rotation)
+}
+
+function SetGlobalPosition(t, position) {
+	t.position[0] = position[0]
+	t.position[1] = position[1]
+	t.position[2] = position[2]
+
+	if (t.parent == null) {
+		return t;
+	}
+
+	var parentWorld = GetWorldMatrix(t.parent);
+	var invParent = Dbg_M4_Inverse(parentWorld);
+
+	t.position = Dbg_M4_Mul_P(invParent, position) 
+}
+
 function SetGlobalTRS(t, position, rotation, scale) {
+	SetGlobalPosition(t, position);
+	SetGlobalRotation(t, rotation);
+	SetGlobalScale(t, scale);
+}
+
+function _SetGlobalTRS(t, position, rotation, scale) {
 	t.position = position;
 	t.rotation = rotation;
 	t.scale = scale;
@@ -81,12 +162,12 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	// Scale
 	///////////////////////////////////////////////////////////////////
 	// Use this for global scale!
-	var parentWorldScale = [
+	/* var parentWorldScale = [
 		Dbg_Vec3_Mag([parentWorld[0], parentWorld[1], parentWorld[2]]),
 		Dbg_Vec3_Mag([parentWorld[4], parentWorld[5], parentWorld[6]]),
 		Dbg_Vec3_Mag([parentWorld[8], parentWorld[9], parentWorld[10]])
-	]
-	/* this works for scale 
+	]*/
+	// this works for scale 
 	var parentWorldScale = [1, 1, 1]
 	var iter = t.parent;
 	while (iter != null) {
@@ -95,7 +176,7 @@ function SetGlobalTRS(t, position, rotation, scale) {
 		parentWorldScale[2] *= iter.scale[2]
 
 		iter = iter.parent;
-	}*/
+	}
 	// Multiply world scale by the reciprocal of the parents scale
 	scale[0] = t.scale[0] / parentWorldScale[0]
 	scale[1] = t.scale[1] / parentWorldScale[1]
@@ -105,7 +186,7 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	// Rotation
 	///////////////////////////////////////////////////////////////////
 	var parentRotation = [1, 0, 0, 0]
-	var iter = t.parent
+	iter = t.parent
 	while (iter != null) {
 		parentRotation = Dbg_Q_Mul_Q(parentRotation, iter.rotation)
 		iter = iter.parent
@@ -119,13 +200,12 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	///////////////////////////////////////////////////////////////////
 	// Position
 	///////////////////////////////////////////////////////////////////
-	var parentPosition = [parentWorld[12], parentWorld[13], parentWorld[14]]
-	positon = [
-		t.position[0] - parentPosition[0],
-		t.position[1] - parentPosition[1],
-		t.position[2] - parentPosition[2]
-	]
+	// This works
+	position = Dbg_M4_Mul_P(invParent, t.position) 
 
+	///////////////////////////////////////////////////////////////////
+	// Debug
+	///////////////////////////////////////////////////////////////////
 	if (Dbg_Vec3_Diff_Vec3(position, decomp.t)) {
 		console.log("position error");
 	}
@@ -141,7 +221,7 @@ function SetGlobalTRS(t, position, rotation, scale) {
 		console.log("scl: " + V3_ToString(scale) + " / " + V3_ToString(decomp.k))
 	}
 
-	t.position = positon;//decomp.t;//Dbg_M4_Mul_P(invParent, position)
+	t.position = position;//decomp.t;//Dbg_M4_Mul_P(invParent, position)
 	t.rotation = rotation;//decomp.q;//Dbg_Q_Mul_Q(invParentRot, rotation)
 	t.scale = scale;//decomp.k;//Dbg_V3_Mul_V3(invParentScl, scale);
 
@@ -269,10 +349,10 @@ function Dbg_M4_Mul_P(m, v) {
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		v[0], v[1], v[2], 0
+		v[0], v[1], v[2], 1
 	]
 
-	var res = M4_Mul_M4(p, m);
+	var res = M4_Mul_M4(m, p);
 
 	return [res[12], res[13], res[14]];
 }
