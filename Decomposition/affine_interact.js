@@ -9,9 +9,9 @@ function CopyMatrix() {
 }
 
 function ToggleEarlyOuts() {
-	global_disable_early_out = !global_disable_early_out;
+	global_enable_early_out = !global_enable_early_out;
 
-	if (global_disable_early_out) {
+	if (global_enable_early_out) {
 		document.getElementById("stat_out").innerHTML = "(t)"
 	}
 	else {
@@ -165,7 +165,7 @@ function FillDebugMatrix() {
 	]
 	FillInputMatrix(B)
 
-	if (global_disable_early_out) {
+	if (global_enable_early_out) {
 		document.getElementById("stat_out").innerHTML = "(t)"
 	}
 	else {

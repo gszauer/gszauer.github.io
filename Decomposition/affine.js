@@ -2,7 +2,7 @@
 // Matrices are column matrices laid out linearly in memory
 // All vectors are 3d column vectors
 
-var global_disable_early_out = true;
+var global_enable_early_out = false;
 
 function AffineDecompose(M) {
   const FTResult = FactorTranslation(M); 
@@ -112,7 +112,7 @@ function PolarDecomposition(X) {
     Qit = Inverse3(Transpose3(Q))
     numIterations += 1;
 
-    if (global_disable_early_out && PolarDecompositionEarlyOut(Q, QPrev)) {
+    if (global_enable_early_out && PolarDecompositionEarlyOut(Q, QPrev)) {
       break;
     }
   }
@@ -270,7 +270,7 @@ function SpectoralDecomposition(S) {
     Ai = Mul3(R, Q);
     numIterations += 1
 
-    if (global_disable_early_out && EigenDecompositionEarlyOut(Ai)) {
+    if (global_enable_early_out && EigenDecompositionEarlyOut(Ai)) {
       break;
     }
   }
