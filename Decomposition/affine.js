@@ -184,14 +184,6 @@ function QRDecomposition(A) {
   y = Normalize(y)
   z = Normalize(z)
 
-  // Could do cross products instead of gram schmidt
-  /*z = Cross(x, y)
-  z = Normalize(z)
-  y = Cross(z, x)
-  y = Normalize(y)
-  x = Cross(y, z)
-  x = Normalize(x)*/
-
   const Qt = [ // Transpose of Q
     x[0], y[0], z[0],
     x[1], y[1], z[1],
@@ -340,43 +332,51 @@ function Transpose4(m) {
   ]
 }
 
-function Inverse3(me) {
-  if (me.length != 9) {
-    alert("Trying to invert non 3x3 matrix");
-  }
-  var te = []
+function Inverse3(m) {
+  const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
+  const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
+  const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
 
-  var n11 = me[ 0 ]; var n21 = me[ 1 ]; var n31 = me[ 2 ];
-  var n12 = me[ 3 ]; var n22 = me[ 4 ]; var n32 = me[ 5 ];
-  var n13 = me[ 6 ]; var n23 = me[ 7 ]; var n33 = me[ 8 ];
-
-  var t11 = n33 * n22 - n32 * n23;
-  var t12 = n32 * n13 - n33 * n12;
-  var t13 = n23 * n12 - n22 * n13;
-
-  var det = n11 * t11 + n21 * t12 + n31 * t13;
-
-  if ( det === 0 ) {
-    alert("Can't invert matrix, determinant is 0")
-    return me;
+  const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+  if (determinant == 0.0) {
+    alert("Matrix does not have an inverse!");
+    return [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1
+    ];
   }
 
-  var detInv = 1 / det;
+  const inv_determinant = 1.0 / determinant;
+  if (inv_determinant == 0.0) {
+    alert("Matrix does not have an inverse!");
+    return [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1
+    ];
+  }
 
-  te[ 0 ] = t11 * detInv;
-  te[ 1 ] = ( n31 * n23 - n33 * n21 ) * detInv;
-  te[ 2 ] = ( n32 * n21 - n31 * n22 ) * detInv;
+  const adjugate = [
+    m[4] * m[8] - m[7] * m[5],
+    -1.0 * (m[1] * m[8] - m[7] * m[2]),
+    m[1] * m[5] - m[4] * m[2],
 
-  te[ 3 ] = t12 * detInv;
-  te[ 4 ] = ( n33 * n11 - n31 * n13 ) * detInv;
-  te[ 5 ] = ( n31 * n12 - n32 * n11 ) * detInv;
+    -1.0 * (m[3] * m[8] - m[6] * m[5]),
+    m[0] * m[8] - m[6] * m[2], 
+    -1.0 * (m[0] * m[5] - m[3] * m[2]),
 
-  te[ 6 ] = t13 * detInv;
-  te[ 7 ] = ( n21 * n13 - n23 * n11 ) * detInv;
-  te[ 8 ] = ( n22 * n11 - n21 * n12 ) * detInv;
+    m[3] * m[7] - m[6] * m[4],
+    -1.0 * (m[0] * m[7] - m[6] * m[1]),
+    m[0] * m[4] - m[3] * m[1]
+  ]
 
-  return te;
-}
+  return [
+    adjugate[0] * inv_determinant, adjugate[1] * inv_determinant, adjugate[2] * inv_determinant, 
+    adjugate[3] * inv_determinant, adjugate[4] * inv_determinant, adjugate[5] * inv_determinant, 
+    adjugate[6] * inv_determinant, adjugate[7] * inv_determinant, adjugate[8] * inv_determinant, 
+  ]
+} 
 
 function Add3(m1, m2) {
   if (m1.length != 9 || m2.length != 9) {
@@ -411,29 +411,32 @@ function Mul3f(m, f) {
   ]
 }
 
-function Mul3(m1, m2) {
-  if (m2.length != 9 || m1.length != 9) {
+function Mul3(a, b) {
+   if (a.length != 9 || b.length != 9) {
     alert("Trying to multiply two non 3x3 matrices");
   }
-  var result = [
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1,
+  return [
+    /* result[0, 0] = a.row[0] DOT b.col[0] */
+    a[0] * b[0] + a[3] * b[1] + a[6] * b[2],
+    /* result[1, 0] = a.row[1] DOT b.col[0] */
+    a[1] * b[0] + a[4] * b[1] + a[7] * b[2],
+    /* result[2, 0] = a.row[2] DOT b.col[0] */
+    a[2] * b[0] + a[5] * b[1] + a[8] * b[2],
+
+    /* result[0, 1] = a.row[0] DOT b.col[1] */
+    a[0] * b[3] + a[3] * b[4] + a[6] * b[5],
+    /* result[1, 1] = a.row[1] DOT b.col[1]*/
+    a[1] * b[3] + a[4] * b[4] + a[7] * b[5],
+    /* result[2, 1] = a.row[2] DOT b.col[1]*/
+    a[2] * b[3] + a[5] * b[4] + a[8] * b[5],
+
+    /* result[0, 2] = a.row[0] DOT b.col[2]*/
+    a[0] * b[6] + a[3] * b[7] + a[6] * b[8],
+    /* result[1, 2] = a.row[1] DOT b.col[2]*/
+    a[1] * b[6] + a[4] * b[7] + a[7] * b[8],
+    /* result[2, 2] = a.row[2] DOT b.col[2]*/
+    a[2] * b[6] + a[5] * b[7] + a[8] * b[8]
   ]
-
-  result[0] = m2[0] * m1[0] + m2[1] * m1[3] + m2[2] * m1[6]
-  result[1] = m2[0] * m1[1] + m2[1] * m1[4] + m2[2] * m1[7]
-  result[2] = m2[0] * m1[2] + m2[1] * m1[5] + m2[2] * m1[8]
-  
-  result[3] = m2[3] * m1[0] + m2[4] * m1[3] + m2[5] * m1[6]
-  result[4] = m2[3] * m1[1] + m2[4] * m1[4] + m2[5] * m1[7]
-  result[5] = m2[3] * m1[2] + m2[4] * m1[5] + m2[5] * m1[8]
-
-  result[6] = m2[6] * m1[0] + m2[7] * m1[3] + m2[8] * m1[6]
-  result[7] = m2[6] * m1[1] + m2[7] * m1[4] + m2[8] * m1[7]
-  result[8] = m2[6] * m1[2] + m2[7] * m1[5] + m2[8] * m1[8]
-
-  return result;
 }
 
 function Mul4(m1, m2) {
