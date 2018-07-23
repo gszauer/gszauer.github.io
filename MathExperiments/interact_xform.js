@@ -25,54 +25,54 @@ function MakeXFormHierarchy() {
 
 	hierarchy_xform = MakeTransform(null, null, null, null);
 	hierarchy_xform.color = {r:0, g:0, b:1};
-	global_transforms.push(JSON.parse(XFormToString(hierarchy_xform)));
+	global_transforms.push(hierarchy_xform);
 
 	var child = MakeTransform([3, 3, 0], Q_AngleAxis(90, [1, 0, 0]), [1, 2, 1], hierarchy_xform);
 	child.color = {r:0, g:1, b:0};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	var x = MakeTransform([0, 0, 3], null, null, child)
 	x.color = {r:0, g:0, b:1};
-	global_transforms.push(JSON.parse(XFormToString(x)));
+	global_transforms.push(x);
 
 	x = MakeTransform([0, 0, 1.5], null, [1, 0.5, 1], child)
 	x.color = {r:0, g:0, b:1};
-	global_transforms.push(JSON.parse(XFormToString(x)));
+	global_transforms.push(x);
 
 	child = MakeTransform([-2, 0, 0], Q_AngleAxis(45, [0, 0, 1]), null, hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	child = MakeTransform([2, 0, 0], Q_AngleAxis(45, [0, 1, 0]), null, child);
 	child.color = {r:0, g:1, b:1};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	child = MakeTransform([0, 2, 0], Q_AngleAxis(45, [0, 0, 1]), null, child);
 	child.color = {r:1, g:0, b:1};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	// Edge case matrix
 	child = MakeTransform([-8, 5, 0], null, [3, 0.5, 0.5], hierarchy_xform);
 	child.color = {r:0.2, g:0.4, b:0.6};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	child = MakeTransform([0.5, -2, 0], Q_AngleAxis(45, [0, 0, 1]), [1, 1, 1], child);
 	child.color = {r:0.2, g:0.4, b:0.6};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	// Edge case # 2
 	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
-	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);// MakeTransform([-3, 0, 0], null, [5, 1, 1], child);
+	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);
 	child.color = {r:0, g:1, b:0};
-	global_transforms.push(JSON.parse(XFormToString(child)));
-	child.debug = true;
+	global_transforms.push(child);
+	// Debug this!
 
-	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);//MakeTransform([-0.7, 0, 0], null, [1/5 * 2, 2, 2], child);
+	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);
 	child.color = {r:0, g:0, b:1};
-	global_transforms.push(JSON.parse(XFormToString(child)));
+	global_transforms.push(child);
 
 	/* 0: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
@@ -112,7 +112,11 @@ function MakeXFormHierarchy() {
 
 	global_xform = global_hierarchy[0];
 	for (var i = 0; i < global_hierarchy.length; ++i) {
-		SetGlobalTRS(global_hierarchy[i], global_transforms[i].position, global_transforms[i].rotation, global_transforms[i].scale);
+		var world = GetWorldMatrix(global_transforms[i]);
+		var decomp = AffineDecompose(world).Shoemake;
+
+		SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		global_hierarchy[i].debug = global_transforms[i].debug;
 	}
 }
 
@@ -184,7 +188,7 @@ function Q_ToString(v, fixed) {
 	return "[ " + v[0].toFixed(fixed) + ", " + v[1].toFixed(fixed) + ", " + v[2].toFixed(fixed) + ", " + v[3].toFixed(fixed) + " ]"
 }
 
-function XFormToString(x) {
+/*function XFormToString(x) {
 	var world = GetWorldMatrix(x);
 	var decomp = AffineDecompose(world).Shoemake;
 
@@ -203,7 +207,7 @@ function XFormToString(x) {
 
 	out += " }"
 	return out; 
-}
+}*/
 
 function IntWebGL() {
 	polar_3d_canvas = document.getElementById('polar_3d_canvas');
