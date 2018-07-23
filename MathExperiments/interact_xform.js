@@ -17,6 +17,8 @@ var use_matrices = true;
 var hierarchy_xform = null;
 var global_xform = null;
 
+var default_fixed_count = 15
+
 function MakeXFormHierarchy() {
 	var global_transforms = []
 	var global_hierarchy = []
@@ -66,6 +68,7 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);// MakeTransform([-3, 0, 0], null, [5, 1, 1], child);
 	child.color = {r:0, g:1, b:0};
 	global_transforms.push(JSON.parse(XFormToString(child)));
+	child.debug = true;
 
 	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);//MakeTransform([-0.7, 0, 0], null, [1/5 * 2, 2, 2], child);
 	child.color = {r:0, g:0, b:1};
@@ -159,7 +162,7 @@ function UseGlobal() {
 
 function C_ToString(c, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = 5
+		fixed = default_fixed_count
 	}
 
 	return "{\"r\":" + c.r.toFixed(fixed) + ", \"g\": " + c.g.toFixed(fixed) + ", \"b\": " + c.b.toFixed(fixed) + "}";
@@ -167,7 +170,7 @@ function C_ToString(c, fixed) {
 
 function V3_ToString(v, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = 5
+		fixed = default_fixed_count
 	}
 
 	return "[ " + v[0].toFixed(fixed) + ", " + v[1].toFixed(fixed) + ", " + v[2].toFixed(fixed) + " ]"
@@ -175,7 +178,7 @@ function V3_ToString(v, fixed) {
 
 function Q_ToString(v, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = 5
+		fixed = default_fixed_count
 	}
 
 	return "[ " + v[0].toFixed(fixed) + ", " + v[1].toFixed(fixed) + ", " + v[2].toFixed(fixed) + ", " + v[3].toFixed(fixed) + " ]"
@@ -186,11 +189,11 @@ function XFormToString(x) {
 	var decomp = AffineDecompose(world).Shoemake;
 
 	var out = "{ ";
-	//out += "\"m\":" + M4_ToString(world, 10) + ","
+	//out += "\"m\":" + M4_ToString(world) + ","
 
-	out += "\"position\": " + V3_ToString(decomp.t, 10) + ", "
-	out += "\"rotation\": " + Q_ToString(decomp.q, 10) + ", "
-	out += "\"scale\": " + V3_ToString(decomp.k, 10) + ", "
+	out += "\"position\": " + V3_ToString(decomp.t) + ", "
+	out += "\"rotation\": " + Q_ToString(decomp.q) + ", "
+	out += "\"scale\": " + V3_ToString(decomp.k) + ", "
 
 	out += "\"parent\": null, "
 	out += "\"children\": [], "
@@ -276,6 +279,10 @@ function DrawWebGL() {
 }
 
 function DrawTransformBuffer(transform) {
+	if (transform.debug) {
+		var stop_it = "true";
+	}
+
 	var model = null;
 	if (use_matrices) {
 		model = GetWorldMatrix(transform);
@@ -285,9 +292,29 @@ function DrawTransformBuffer(transform) {
 		model = ToMatrix(model);
 	}
 
-	if (transform.debug) {
-		var stop_it = "true";
+	// TODO: Note to self, WTF is going on here?!?!?!
+	if (true || transform.debug) {
+		//CopyString(M4_ToString(model));
+
+		/*model = [
+			0, 1, 0, 0,
+			-15, 0, 0, 0,
+			0, 0, 1, 0,
+			-1, -2, 0, 1
+		]*/
+
+		/*model = JSON.parse(M4_ToString(model))
+
+		var dcmp = AffineDecompose(model);
+
+		var xfrm = {}
+		xfrm.position = dcmp.Shoemake.t;// [-1, -2, 0];
+		xfrm.rotation = dcmp.Shoemake.q;// [0.70711, 0, 0, 0.70711];
+		xfrm.scale = dcmp.Shoemake.k;// [1,15,1]
+
+		model = ToMatrix(xfrm);*/
 	}
+	
 
 	DrawBuffer(polar_cube, model, transform.color, transform.debug)
 
@@ -300,7 +327,7 @@ function DrawTransformBuffer(transform) {
 
 function M4_ToString(m, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = 5
+		fixed = default_fixed_count
 	}
 	var out = "[ ";
 	for (var i = 0; i < 15; ++i) {
@@ -312,7 +339,7 @@ function M4_ToString(m, fixed) {
 
 function M3_ToString(m, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = 5
+		fixed = default_fixed_count
 	}
 
 	var out = "[ ";

@@ -127,6 +127,7 @@ function M3_Transpose(mat) {
 	]
 }
 
+// https://www.mathsisfun.com/algebra/matrix-inverse-minors-cofactors-adjugate.html
 // To find the matrix of minor of a 3x3 matrix, take each element,
 // cut the row & column of that element. Take the determinant of
 // the resulting 2x2 matrix. To find the determinant of a 2x2 matrix
@@ -140,26 +141,17 @@ function M3_Transpose(mat) {
 // So, working with indices: ([0] * [3]) - ([2] * [1])
 function M3_Minor(m) {
 	return [
-		/* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
-		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
-		/* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
-		m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
-		/* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
-		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+		m[4] * m[8] - m[7] * m[5], /* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
+		m[3] * m[8] - m[6] * m[5], /* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
+		m[3] * m[7] - m[6] * m[4], /* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
 
-		/* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
-		m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
-		/* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
-		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],
-		/* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
-		m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+		m[1] * m[8] - m[7] * m[2], /* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
+		m[0] * m[8] - m[6] * m[2], /* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
+		m[0] * m[7] - m[6] * m[1], /* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
 
-		/* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
-		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
-		/* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [0, 2] */
-		m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
-		/* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
-		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+		m[1] * m[5] - m[4] * m[2], /* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
+		m[0] * m[5] - m[3] * m[2], /* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [2, 0] */
+		m[0] * m[4] - m[3] * m[1]  /* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
 	]
 }
 
@@ -176,69 +168,57 @@ function M3_Minor(m) {
 // + - +
 function M3_Cofactor(m) {
 	return [
-		/* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
-		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
-		/* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
-		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
-		/* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
-		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
+		        m[4] * m[8] - m[7] * m[5], /* result[0, 0] = [1, 1] * [2, 2] - [1, 2] * [2, 1] */
+		-1.0 * (m[3] * m[8] - m[6] * m[5]), /* result[1, 0] = [0, 1] * [2, 2] - [0, 2] * [2, 1] */
+		        m[3] * m[7] - m[6] * m[4], /* result[2, 0] = [0, 1] * [1, 2] - [0, 2] * [1, 1] */
 
-		/* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
-		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
-		/* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
-		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],
-		/* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
-		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
+		-1.0 * (m[1] * m[8] - m[7] * m[2]), /* result[0, 1] = [1, 0] * [2, 2] - [1, 2] * [2, 0] */
+		        m[0] * m[8] - m[6] * m[2], /* result[1, 1] = [0, 0] * [2, 2] - [0, 2] * [2, 0] */
+		-1.0 * (m[0] * m[7] - m[6] * m[1]), /* result[2, 1] = [0, 0] * [1, 2] - [0, 2] * [1, 0] */
 
-		/* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
-		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
-		/* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [0, 2] */
-		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
-		/* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
-		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+		        m[1] * m[5] - m[4] * m[2], /* result[0, 2] = [1, 0] * [2, 1] - [1, 1] * [2, 0] */
+		-1.0 * (m[0] * m[5] - m[3] * m[2]), /* result[1, 2] = [0, 0] * [2, 1] - [0, 1] * [2, 0] */
+		        m[0] * m[4] - m[3] * m[1]  /* result[2, 2] = [0, 0] * [1, 1] - [0, 1] * [1, 0] */
 	]
 }
 
 // Transpose of the cofactor matrix!
 function M3_Adjugate(m) {
 	return [
-		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
-		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
-		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+		m[4] * m[8] - m[7] * m[5],
+		-1.0 * (m[1] * m[8] - m[7] * m[2]),
+		m[1] * m[5] - m[4] * m[2],
 
-		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
-		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],	
-		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+		-1.0 * (m[3] * m[8] - m[6] * m[5]),
+		m[0] * m[8] - m[6] * m[2], 
+		-1.0 * (m[0] * m[5] - m[3] * m[2]),
 
-		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
-		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
-		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+		m[3] * m[7] - m[6] * m[4],
+		-1.0 * (m[0] * m[7] - m[6] * m[1]),
+		m[0] * m[4] - m[3] * m[1]
 	]
 }
 
+// https://www.chilimath.com/lessons/advanced-algebra/determinant-3x3-matrix/
 // To find the determinant of a 3x3 matrix: sum the product of
 // every element in the first row with it's cofactor. This operates on the 
 // logical topology of the matrix, so it's the cofactor of the x element
 // of each basis vector!
 function M3_Determinant(m) {
-	const cofactor_00 = m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3];
-	const cofactor_01 = -1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3];
-	const cofactor_02 = m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3];
+	const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
+	const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
+	const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
 
-	return cofactor_00 * m[0] + cofactor_01 * m[1] + cofactor_02 * m[2];
+	return cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
 }
 
 // Inverse of a matrix = adjugate / determinant
 function M3_Inverse(m) {
-	const cofactor_00 = m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3];
-	const cofactor_01 = -1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3];
-	const cofactor_02 = m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3];
+	const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
+	const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
+	const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
 
-	const debug_01 = cofactor_00 * m[0]
-	const debug_02 = cofactor_01 * m[1]
-	const debug_03 = cofactor_02 * m[2]
-	
-	const determinant = cofactor_00 * m[0] + cofactor_01 * m[1] + cofactor_02 * m[2];
+	const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
 	if (determinant == 0.0) {
 		alert("Matrix does not have an inverse!");
 		return [
@@ -259,17 +239,17 @@ function M3_Inverse(m) {
 	}
 
 	const adjugate = [
-		m[1 + 1 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 1 * 3],
-		-1.0 * m[1 + 0 * 3] * m[2 + 2 * 3] - m[1 + 2 * 3] * m[2 + 0 * 3],
-		m[1 + 0 * 3] * m[2 + 1 * 3] - m[1 + 1 * 3] * m[2 + 0 * 3],
+		m[4] * m[8] - m[7] * m[5],
+		-1.0 * (m[1] * m[8] - m[7] * m[2]),
+		m[1] * m[5] - m[4] * m[2],
 
-		-1.0 * m[0 + 1 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 1 * 3],
-		m[0 + 0 * 3] * m[2 + 2 * 3] - m[0 + 2 * 3] * m[2 + 0 * 3],	
-		-1.0 * m[0 + 0 * 3] * m[2 + 1 * 3] - m[0 + 1 * 3] * m[0 + 2 * 3],
+		-1.0 * (m[3] * m[8] - m[6] * m[5]),
+		m[0] * m[8] - m[6] * m[2], 
+		-1.0 * (m[0] * m[5] - m[3] * m[2]),
 
-		m[0 + 1 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 1 * 3],
-		-1.0 * m[0 + 0 * 3] * m[1 + 2 * 3] - m[0 + 2 * 3] * m[1 + 0 * 3],
-		m[0 + 0 * 3] * m[1 + 1 * 3] - m[0 + 1 * 3] * m[1 + 0 * 3]
+		m[3] * m[7] - m[6] * m[4],
+		-1.0 * (m[0] * m[7] - m[6] * m[1]),
+		m[0] * m[4] - m[3] * m[1]
 	]
 
 	return [

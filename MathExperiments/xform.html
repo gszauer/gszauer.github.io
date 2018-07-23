@@ -5,9 +5,9 @@
     <title>Rando math tests</title>
     <script src="mat3.js"></script>
     <script src="mat4.js"></script>
-    <script src="affine.js"></script>
     <script src="xform.js"></script>
     <script src="interact_xform.js"></script>
+    <script src="affine.js"></script>
   </head>
 
   <body onload="IntWebGL()">
@@ -60,6 +60,10 @@
      </p>
       <p><a href="#" onclick="UseMatrices();return false;">Combine matrices <span id="u_mat">(t)</span></a>,
        <a href="#" onclick="UseTransforms();return false;">Combine transforms <span id="u_tran">(f)</span></a>
+     </p>
+     <hr />
+     <p>
+      <textarea id="outputs">Output</textarea>
      </p>
   </body>
 

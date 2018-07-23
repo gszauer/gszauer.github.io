@@ -2,7 +2,9 @@
 // Matrices are column matrices laid out linearly in memory
 // All vectors are 3d column vectors
 
-var affine = { }
+var affine = { 
+  maxIterations: 20
+}
 
 function AffineDecompose(M) {
   return affine.AffineDecompose(M);
@@ -104,9 +106,9 @@ affine.PolarDecomposition = function(X) {
   }
   var Qit = affine.Inverse3(affine.Transpose3(Q));
 
-  var numIterations = 20;
+  var numIterations = 0;
 
-  for (var i = 0; i < 20; ++i) {
+  for (var i = 0; i < affine.maxIterations; ++i) {
     const QPrev = [
       Q[0], Q[1], Q[2],
       Q[3], Q[4], Q[5],
@@ -114,11 +116,7 @@ affine.PolarDecomposition = function(X) {
     ]
     Q = affine.Mul3f(affine.Add3(Q, Qit), 0.5)
     Qit = affine.Inverse3(affine.Transpose3(Q))
-    
-    if (affine.PolarDecompositionEarlyOut(Q, QPrev)) {
-      numIterations = i;
-      break;
-    }
+    numIterations += 1
   }
 
   var f = 1
@@ -156,17 +154,6 @@ affine.PolarDecomposition = function(X) {
     determinant : det,
     iterations: numIterations
   }
-}
-
-// http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
-affine.PolarDecompositionEarlyOut = function(Q, Qprev) {
-  const res = affine.Sub3(Q, Qprev);
-  for (var i = 0; i < 9; ++i) {
-    if (Math.abs(res[i]) > 0.00001) {
-      return false;
-    }
-  }
-  return true;
 }
 
 // https://www.youtube.com/watch?v=c_QCR20nTDY
@@ -240,9 +227,9 @@ affine.SpectoralDecomposition = function(S) {
     0, 0, 1
   ]
 
-  var numIterations = 20
+  var numIterations = 0
 
-  for (var i = 0; i < 20; ++i) {
+  for (var i = 0; i < affine.maxIterations; ++i) {
     QRFactorization = affine.QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
       Ai[0], Ai[1], Ai[2], 0,
       Ai[3], Ai[4], Ai[5], 0,
@@ -265,10 +252,7 @@ affine.SpectoralDecomposition = function(S) {
     Qa = affine.Mul3(Qa, Q);
     Ai = affine.Mul3(R, Q);
 
-    if (affine.EigenDecompositionEarlyOut(Ai)) {
-      numIterations = i
-      break;
-    }
+    numIterations += 1
   }
 
   return {
@@ -300,14 +284,6 @@ affine.SpectoralDecomposition = function(S) {
     ],
     iterations: numIterations
   }
-}
-
-// The lower triangular matrix has zeroed out
-affine.EigenDecompositionEarlyOut = function(A) {
-  if (Math.abs(A[3]) < 0.00001 && Math.abs(A[6]) < 0.00001 && Math.abs(A[7]) < 0.00001) {
-    return true;
-  }
-  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
