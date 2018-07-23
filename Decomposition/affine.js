@@ -3,6 +3,7 @@
 // All vectors are 3d column vectors
 
 var global_enable_early_out = false;
+var global_num_iterations = 100
 
 function AffineDecompose(M) {
   const FTResult = FactorTranslation(M); 
@@ -102,7 +103,7 @@ function PolarDecomposition(X) {
 
   var numIterations = 0;
 
-  for (var i = 0; i < 20; ++i) {
+  for (var i = 0; i < global_num_iterations; ++i) {
     const QPrev = [
       Q[0], Q[1], Q[2],
       Q[3], Q[4], Q[5],
@@ -238,7 +239,7 @@ function SpectoralDecomposition(S) {
 
   var numIterations = 0
 
-  for (var i = 0; i < 20; ++i) {
+  for (var i = 0; i < global_num_iterations; ++i) {
     QRFactorization = QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
       Ai[0], Ai[1], Ai[2], 0,
       Ai[3], Ai[4], Ai[5], 0,
