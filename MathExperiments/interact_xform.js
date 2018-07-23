@@ -164,14 +164,6 @@ function UseGlobal() {
 	DrawWebGL();
 }
 
-function C_ToString(c, fixed) {
-	if (typeof fixed == "undefined" || fixed == null) {
-		fixed = default_fixed_count
-	}
-
-	return "{\"r\":" + c.r.toFixed(fixed) + ", \"g\": " + c.g.toFixed(fixed) + ", \"b\": " + c.b.toFixed(fixed) + "}";
-}
-
 function V3_ToString(v, fixed) {
 	if (typeof fixed == "undefined" || fixed == null) {
 		fixed = default_fixed_count
@@ -187,27 +179,6 @@ function Q_ToString(v, fixed) {
 
 	return "[ " + v[0].toFixed(fixed) + ", " + v[1].toFixed(fixed) + ", " + v[2].toFixed(fixed) + ", " + v[3].toFixed(fixed) + " ]"
 }
-
-/*function XFormToString(x) {
-	var world = GetWorldMatrix(x);
-	var decomp = AffineDecompose(world).Shoemake;
-
-	var out = "{ ";
-	//out += "\"m\":" + M4_ToString(world) + ","
-
-	out += "\"position\": " + V3_ToString(decomp.t) + ", "
-	out += "\"rotation\": " + Q_ToString(decomp.q) + ", "
-	out += "\"scale\": " + V3_ToString(decomp.k) + ", "
-
-	out += "\"parent\": null, "
-	out += "\"children\": [], "
-
-	out += "\"color\": " + C_ToString(x.color) + ", "
-	out += "\"debug\": false"
-
-	out += " }"
-	return out; 
-}*/
 
 function IntWebGL() {
 	polar_3d_canvas = document.getElementById('polar_3d_canvas');
