@@ -68,7 +68,7 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);
 	child.color = {r:0, g:1, b:0};
 	global_transforms.push(child);
-	// Debug this!
+	child.debug = true
 
 	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);
 	child.color = {r:0, g:0, b:1};
@@ -117,6 +117,10 @@ function MakeXFormHierarchy() {
 
 		SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
 		global_hierarchy[i].debug = global_transforms[i].debug;
+
+		if (global_hierarchy[i].debug) {
+			var debug = "true"
+		}
 	}
 }
 

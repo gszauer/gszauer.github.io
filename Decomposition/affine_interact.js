@@ -8,6 +8,17 @@ function CopyMatrix() {
   document.body.removeChild(dummy);
 }
 
+function ToggleEarlyOuts() {
+	global_disable_early_out = !global_disable_early_out;
+
+	if (global_disable_early_out) {
+		document.getElementById("stat_out").innerHTML = "(t)"
+	}
+	else {
+		document.getElementById("stat_out").innerHTML = "(f)"
+	}
+}
+
 function PasteMatrix() {
 	var data = window.clipboardData.getData('Text');
 	var array = JSON.parse(data); 
@@ -110,6 +121,13 @@ function FillDebugMatrix() {
 		5, -1.75, 1, 1
 	]
 	FillInputMatrix(B)
+
+	if (global_disable_early_out) {
+		document.getElementById("stat_out").innerHTML = "(t)"
+	}
+	else {
+		document.getElementById("stat_out").innerHTML = "(f)"
+	}
 }
 
 function PadFixedNumber(num) {

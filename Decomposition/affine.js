@@ -2,6 +2,8 @@
 // Matrices are column matrices laid out linearly in memory
 // All vectors are 3d column vectors
 
+var global_disable_early_out = false;
+
 function AffineDecompose(M) {
   const FTResult = FactorTranslation(M); 
   const PolarDecompResult = PolarDecomposition(FTResult.X);
@@ -98,7 +100,7 @@ function PolarDecomposition(X) {
   }
   var Qit = Inverse3(Transpose3(Q));
 
-  var numIterations = 20;
+  var numIterations = 0;
 
   for (var i = 0; i < 20; ++i) {
     const QPrev = [
@@ -108,9 +110,9 @@ function PolarDecomposition(X) {
     ]
     Q = Mul3f(Add3(Q, Qit), 0.5)
     Qit = Inverse3(Transpose3(Q))
-    
-    if (PolarDecompositionEarlyOut(Q, QPrev)) {
-      numIterations = i;
+    numIterations += 1;
+
+    if (global_disable_early_out && PolarDecompositionEarlyOut(Q, QPrev)) {
       break;
     }
   }
@@ -242,7 +244,7 @@ function SpectoralDecomposition(S) {
     0, 0, 1
   ]
 
-  var numIterations = 20
+  var numIterations = 0
 
   for (var i = 0; i < 20; ++i) {
     QRFactorization = QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
@@ -266,9 +268,9 @@ function SpectoralDecomposition(S) {
 
     Qa = Mul3(Qa, Q);
     Ai = Mul3(R, Q);
+    numIterations += 1
 
-    if (EigenDecompositionEarlyOut(Ai)) {
-      numIterations = i
+    if (global_disable_early_out && EigenDecompositionEarlyOut(Ai)) {
       break;
     }
   }
