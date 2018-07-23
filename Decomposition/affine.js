@@ -2,7 +2,7 @@
 // Matrices are column matrices laid out linearly in memory
 // All vectors are 3d column vectors
 
-var global_disable_early_out = false;
+var global_disable_early_out = true;
 
 function AffineDecompose(M) {
   const FTResult = FactorTranslation(M); 
