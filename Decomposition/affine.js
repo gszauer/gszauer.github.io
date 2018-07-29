@@ -275,9 +275,9 @@ function SpectoralDecomposition(S) {
     [Qa[6], Qa[7], Qa[8]]
   ]
 
-  var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
+  /*var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
   eigenvalues = adjusted.eigenvalues
-  eigenvectors = adjusted.eigenvectors
+  eigenvectors = adjusted.eigenvectors*/
 
   // shorthand to save some typing
   var val = eigenvalues;
@@ -326,170 +326,188 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   const b = eigenvalues[1]
   const c = eigenvalues[2]
 
-  var m_permutations = [
-    // Permutation: z, y, z
-    [ x[0],  x[1],  x[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-      z[0],  z[1],  z[2], 0,
-         0,     0,     0, 1 ],
-    /*[ x[0],  x[1],  x[2], 0, 
-     -y[0], -y[1], -y[2], 0, 
-     -z[0], -z[1], -z[2], 0,
-         0,     0,     0, 1 ],
-    [-x[0], -x[1], -x[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-      z[0],  z[1],  z[2], 0,
-         0,     0,     0, 1 ],
-    [-x[0], -x[1], -x[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-     -z[0], -z[1], -z[2], 0,
-         0,     0,     0, 1 ],*/
-    // Permutation: x, z, y
-    [ x[0],  x[1],  x[2], 0, 
-      z[0],  z[1],  z[2], 0,  
-      y[0],  y[1],  y[2], 0,
-         0,     0,     0, 1 ],
-    /*[ x[0],  x[1],  x[2], 0,  
-     -z[0], -z[1], -z[2], 0,  
-     -y[0], -y[1], -y[2], 0,
-         0,     0,     0, 1 ],
-    [-x[0], -x[1], -x[2], 0,  
-      z[0],  z[1],  z[2], 0,  
-      y[0],  y[1],  y[2], 0,
-         0,     0,     0, 1 ],
-    [-x[0], -x[1], -x[2], 0,  
-      z[0],  z[1],  z[2], 0,  
-     -y[0], -y[1], -y[2], 0,
-         0,     0,     0, 1 ],*/
-    // Permutation: y, x, z
-    [ y[0],  y[1],  y[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-      z[0],  z[1],  z[2], 0,
-         0,     0,     0, 1 ],
-    /*[ y[0],  y[1],  y[2], 0, 
-     -x[0], -x[1], -x[2], 0, 
-     -z[0], -z[1], -z[2], 0,
-         0,     0,     0, 1 ],
-    [-y[0], -y[1], -y[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-      z[0],  z[1],  z[2], 0,
-         0,     0,     0, 1 ],
-    [-y[0], -y[1], -y[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-     -z[0], -z[1], -z[2], 0,
-         0,     0,     0, 1 ],*/
-    // Permutation: y, z, x
-    [ y[0],  y[1],  y[2], 0, 
-      z[0],  z[1],  z[2], 0, 
-      x[0],  x[1],  x[2], 0,
-         0,     0,     0, 1 ],
-    /*[ y[0],  y[1],  y[2], 0, 
-     -z[0], -z[1], -z[2], 0, 
-     -x[0], -x[1], -x[2], 0,
-         0,     0,     0, 1 ],
-    [-y[0], -y[1], -y[2], 0, 
-      z[0],  z[1],  z[2], 0, 
-      x[0],  x[1],  x[2], 0,
-         0,     0,     0, 1 ],
-    [-y[0], -y[1], -y[2], 0, 
-      z[0],  z[1],  z[2], 0, 
-     -x[0], -x[1], -x[2], 0,
-         0,     0,     0, 1 ],*/
-    // Permutation: z, x, y
-    [ z[0],  z[1],  z[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-      y[0],  y[1],  y[2], 0,
-         0,     0,     0, 1 ],
-    /*[ z[0],  z[1],  z[2], 0, 
-     -x[0], -x[1], -x[2], 0, 
-     -y[0], -y[1], -y[2], 0,
-         0,     0,     0, 1 ],
-    [-z[0], -z[1], -z[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-      y[0],  y[1],  y[2], 0,
-         0,     0,     0, 1 ],
-    [-z[0], -z[1], -z[2], 0, 
-      x[0],  x[1],  x[2], 0, 
-     -y[0], -y[1], -y[2], 0,
-         0,     0,     0, 1 ],*/
-    // Permutation: z, y, x
-    [ z[0],  z[1],  z[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-      x[0],  x[1],  x[2], 0,
-         0,     0,     0, 1 ],
-    /*[ z[0],  z[1],  z[2], 0, 
-     -y[0], -y[1], -y[2], 0, 
-     -x[0], -x[1], -x[2], 0,
-         0,     0,     0, 1 ],
-    [-z[0], -z[1], -z[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-      x[0],  x[1],  x[2], 0,
-         0,     0,     0, 1 ],
-    [-z[0], -z[1], -z[2], 0, 
-      y[0],  y[1],  y[2], 0, 
-     -x[0], -x[1], -x[2], 0,
-         0,     0,     0, 1 ]*/
+  var U1 = [ 
+    x[0],  x[1],  x[2], 
+    y[0],  y[1],  y[2], 
+    z[0],  z[1],  z[2]
   ]
 
-  var q_permutations = []
-  for (var i = 0; i < m_permutations.length; ++i) {
-    q_permutations[i] = M4ToQ(m_permutations[i])
-  }
+  var U1t = [
+    U1[0], U1[3], U1[6], 
+    U1[1], U1[4], U1[7], 
+    U1[2], U1[5], U1[8]
+  ]
+
+  // ONE OF THESE is U2, gotta pick the right one
+  var m_permutations = [
+    // Permutation: z, y, z
+    [ x[0],  x[1],  x[2], 
+      y[0],  y[1],  y[2], 
+      z[0],  z[1],  z[2] ],
+    [ x[0],  x[1],  x[2], 
+     -y[0], -y[1], -y[2], 
+     -z[0], -z[1], -z[2] ],
+    [-x[0], -x[1], -x[2], 
+      y[0],  y[1],  y[2], 
+      z[0],  z[1],  z[2] ],
+    [-x[0], -x[1], -x[2], 
+      y[0],  y[1],  y[2], 
+     -z[0], -z[1], -z[2] ],
+    // Permutation: x, z, y
+    [ x[0],  x[1],  x[2], 
+      z[0],  z[1],  z[2],  
+      y[0],  y[1],  y[2] ],
+    [ x[0],  x[1],  x[2],  
+     -z[0], -z[1], -z[2],  
+     -y[0], -y[1], -y[2] ],
+    [-x[0], -x[1], -x[2],  
+      z[0],  z[1],  z[2],  
+      y[0],  y[1],  y[2] ],
+    [-x[0], -x[1], -x[2],  
+      z[0],  z[1],  z[2],  
+     -y[0], -y[1], -y[2] ],
+    // Permutation: y, x, z
+    [ y[0],  y[1],  y[2], 
+      x[0],  x[1],  x[2], 
+      z[0],  z[1],  z[2] ],
+    [ y[0],  y[1],  y[2], 
+     -x[0], -x[1], -x[2], 
+     -z[0], -z[1], -z[2] ],
+    [-y[0], -y[1], -y[2], 
+      x[0],  x[1],  x[2], 
+      z[0],  z[1],  z[2] ],
+    [-y[0], -y[1], -y[2], 
+      x[0],  x[1],  x[2], 
+     -z[0], -z[1], -z[2] ],
+    // Permutation: y, z, x
+    [ y[0],  y[1],  y[2], 
+      z[0],  z[1],  z[2], 
+      x[0],  x[1],  x[2] ],
+    [ y[0],  y[1],  y[2], 
+     -z[0], -z[1], -z[2], 
+     -x[0], -x[1], -x[2] ],
+    [-y[0], -y[1], -y[2], 
+      z[0],  z[1],  z[2], 
+      x[0],  x[1],  x[2] ],
+    [-y[0], -y[1], -y[2], 
+      z[0],  z[1],  z[2], 
+     -x[0], -x[1], -x[2] ],
+    // Permutation: z, x, y
+    [ z[0],  z[1],  z[2], 
+      x[0],  x[1],  x[2], 
+      y[0],  y[1],  y[2] ],
+    [ z[0],  z[1],  z[2], 
+     -x[0], -x[1], -x[2], 
+     -y[0], -y[1], -y[2] ],
+    [-z[0], -z[1], -z[2], 
+      x[0],  x[1],  x[2], 
+      y[0],  y[1],  y[2] ],
+    [-z[0], -z[1], -z[2], 
+      x[0],  x[1],  x[2], 
+     -y[0], -y[1], -y[2] ],
+    // Permutation: z, y, x
+    [ z[0],  z[1],  z[2], 
+      y[0],  y[1],  y[2], 
+      x[0],  x[1],  x[2] ],
+    [ z[0],  z[1],  z[2], 
+     -y[0], -y[1], -y[2], 
+     -x[0], -x[1], -x[2] ],
+    [-z[0], -z[1], -z[2], 
+      y[0],  y[1],  y[2], 
+      x[0],  x[1],  x[2] ],
+    [-z[0], -z[1], -z[2], 
+      y[0],  y[1],  y[2], 
+     -x[0], -x[1], -x[2] ],
+  ]
 
   var e_permutations = [
     [ a,  b,  c],
-    //[ a, -b, -c],
-    //[-a,  b,  c],
-    //[-a,  b, -c],
+    [ a, -b, -c],
+    [-a,  b,  c],
+    [-a,  b, -c],
 
     [ a,  c,  b],
-    //[ a, -c, -b],
-    //[-a,  c,  b],
-    //[-a,  c, -b],
+    [ a, -c, -b],
+    [-a,  c,  b],
+    [-a,  c, -b],
     
     [ b,  a,  c],
-    //[ b, -a, -c],
-    //[-b,  a,  c],
-    //[-b,  a, -c],
+    [ b, -a, -c],
+    [-b,  a,  c],
+    [-b,  a, -c],
     
     [ b,  c,  a],
-    //[ b, -c, -a],
-    //[-b,  c,  a],
-    //[-b,  c, -a],
+    [ b, -c, -a],
+    [-b,  c,  a],
+    [-b,  c, -a],
     
     [ c,  a,  b],
-    //[ c, -a, -b],
-    //[-c,  a,  b],
-    //[-c,  a, -b],
+    [ c, -a, -b],
+    [-c,  a,  b],
+    [-c,  a, -b],
     
     [ c,  b,  a],
-    //[ c, -b, -a],
-    //[-c,  b,  a],
-    //[-c,  b, -a]
+    [ c, -b, -a],
+    [-c,  b,  a],
+    [-c,  b, -a]
   ]
 
-  var largest = 0
-  for (var i = 0; i < q_permutations.length; ++i) {
+  var largest_index = null
+  var largest_value = null
+
+  for (var i = 0; i < m_permutations.length; ++i) {
+    var U2 = m_permutations[i]
+
+    var QU1 = M4ToQ([
+      U1t[0], U1t[1], U1t[2], 0,
+      U1t[3], U1t[4], U1t[5], 0,
+      U1t[6], U1t[7], U1t[8], 0,
+      0, 0, 0, 1
+    ]);
+
+    var QU2 = M4ToQ([
+      U2[0], U2[1], U2[2], 0,
+      U2[3], U2[4], U2[5], 0,
+      U2[6], U2[7], U2[8], 0,
+      0, 0, 0, 1
+    ]);
+    
+    var angle = Q_Angle(QU1, QU2)
+
     // Optimize for largest w, which is smallest angle of rotation
-    if (q_permutations[i][0] > q_permutations[largest][0]) {
-      largest = i
+    if (largest_index == null || angle < largest_value) {
+      largest_value = angle
+      largest_index = i
     }
   }
 
   // We now know what the largest w component (smallest angle of rotation) is.
   // There might be multiples of these! (Especially if two)
 
-  var m = m_permutations[largest]
+  var m = m_permutations[largest_index]
+  var debug_u = M4ToQ([
+    m[0], m[1], m[2], 0,
+    m[3], m[4], m[5], 0,
+    m[6], m[7], m[8], 0,
+    0, 0, 0, 1
+  ])
+  var debug_u1 = M4ToQ([
+    x[0], x[1], x[2], 0,
+    y[0], y[1], y[2], 0,
+    z[0], z[1], z[2], 0,
+    0, 0, 0, 1
+  ])
+
   return {
     eigenvectors: [
       [m[0], m[1], m[2]],
-      [m[4], m[5], m[6]],
-      [m[8], m[9], m[10]]
+      [m[3], m[4], m[5]],
+      [m[6], m[7], m[8]]
     ],
     eigenvalues: [
-      e_permutations[largest][0],
-      e_permutations[largest][1],
-      e_permutations[largest][2]
+      e_permutations[largest_index][0],
+      e_permutations[largest_index][1],
+      e_permutations[largest_index][2]
     ]
   }
 }
@@ -505,6 +523,41 @@ function EigenDecompositionEarlyOut(A) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Math functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+function Q_Angle(a, b) {
+  var inv = [a[0], -a[1], -a[2], -a[3]]
+  var res = Mul_QQ(b, inv);
+  
+  var angle = Math.acos(res[0]) * 2.0 * 57.2957795; // To degrees!;
+  if (angle > 180) {
+    angle = 360 - angle
+  }
+
+  return angle
+}
+
+
+function Mul_QQ(a, b) {
+  var out = [];
+
+  const ax = a[1];
+  const ay = a[2];
+  const az = a[3];
+  const aw = a[0];
+  const bx = b[1];
+  const by = b[2];
+  const bz = b[3];
+  const bw = b[0];
+
+  out[0] = aw * bw - ax * bx - ay * by - az * bz;
+  out[1] = ax * bw + aw * bx + ay * bz - az * by;
+  out[2] = ay * bw + aw * by + az * bx - ax * bz;
+  out[3] = az * bw + aw * bz + ax * by - ay * bx;
+
+  return out;
+}
+
+
 function Transpose3(m) {
   if (m.length != 9) {
     alert("Trying to transpose non 3x3 matrix");
