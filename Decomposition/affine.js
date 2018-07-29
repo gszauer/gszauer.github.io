@@ -268,34 +268,226 @@ function SpectoralDecomposition(S) {
     }
   }
 
+  eigenvalues = [Ai[0], Ai[4], Ai[8]]
+  eigenvectors = [
+    [Qa[0], Qa[1], Qa[2]],
+    [Qa[3], Qa[4], Qa[5]],
+    [Qa[6], Qa[7], Qa[8]]
+  ]
+
+  var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
+  eigenvalues = adjusted.eigenvalues
+  eigenvectors = adjusted.eigenvectors
+
+  // shorthand to save some typing
+  var val = eigenvalues;
+  var vec = eigenvectors;
+
   return {
-    eigenvalues : [
-      Ai[0], Ai[4], Ai[8]
-    ],
-    eigenvectors : [
-      [Qa[0], Qa[1], Qa[2]],
-      [Qa[3], Qa[4], Qa[5]],
-      [Qa[6], Qa[7], Qa[8]]
-    ],
+    eigenvalues : eigenvalues,
+    eigenvectors : eigenvectors,
     U : [
-      Qa[0], Qa[1], Qa[2], 0,
-      Qa[3], Qa[4], Qa[5], 0,
-      Qa[6], Qa[7], Qa[8], 0,
+      vec[0][0], vec[0][1], vec[0][2], 0,
+      vec[1][0], vec[1][1], vec[1][2], 0,
+      vec[2][0], vec[2][1], vec[2][2], 0,
       0, 0, 0, 1
     ],
     K : [
-      Ai[0], 0, 0, 0,
-      0, Ai[4], 0, 0,
-      0, 0, Ai[8], 0,
+      val[0], 0, 0, 0,
+      0, val[1], 0, 0,
+      0, 0, val[2], 0,
       0, 0, 0, 1
     ],
     Ut: [
-      Qa[0], Qa[3], Qa[6], 0,
-      Qa[1], Qa[4], Qa[7], 0,
-      Qa[2], Qa[5], Qa[8], 0,
+      vec[0][0], vec[1][0], vec[2][0], 0,
+      vec[0][1], vec[1][1], vec[2][1], 0,
+      vec[0][2], vec[1][2], vec[2][2], 0,
       0, 0, 0, 1
     ],
     iterations: numIterations
+  }
+}
+
+// The order of spectoral decomp is busted. Looking at shoemakes code,
+// he calls the fix function "snuggle". That's bsiacally what this does
+// Only needed when the matrix has a non uniform scale. This function builds
+// all permutations of the input eigen vectors into matrices (+6, 6 total)
+// Then takes all of the possible positive / negative axis combinations (*8, 48 total)
+// but only uses the combinations that are valid to rotate to (/2, 24 total)
+// Seeing which ones are rotatable is obvious is you draw out the basis vectors
+// Convert all of these matrices into quaternions.
+// Choose the one with the largest W component, as it has the smallest rotation
+function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
+  var x = eigenvectors[0];
+  var y = eigenvectors[1];
+  var z = eigenvectors[2];
+
+  var m_permutations = [
+    // Permutation: z, y, z
+    [ x[0],  x[1],  x[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+      z[0],  z[1],  z[2], 0,
+         0,     0,     0, 1 ],
+    [ x[0],  x[1],  x[2], 0, 
+     -y[0], -y[1], -y[2], 0, 
+     -z[0], -z[1], -z[2], 0,
+         0,     0,     0, 1 ],
+    [-x[0], -x[1], -x[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+      z[0],  z[1],  z[2], 0,
+         0,     0,     0, 1 ],
+    [-x[0], -x[1], -x[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+     -z[0], -z[1], -z[2], 0,
+         0,     0,     0, 1 ],
+    // Permutation: x, z, y
+    [ x[0],  x[1],  x[2], 0, 
+      z[0],  z[1],  z[2], 0,  
+      y[0],  y[1],  y[2], 0,
+         0,     0,     0, 1 ],
+    [ x[0],  x[1],  x[2], 0,  
+     -z[0], -z[1], -z[2], 0,  
+     -y[0], -y[1], -y[2], 0,
+         0,     0,     0, 1 ],
+    [-x[0], -x[1], -x[2], 0,  
+      z[0],  z[1],  z[2], 0,  
+      y[0],  y[1],  y[2], 0,
+         0,     0,     0, 1 ],
+    [-x[0], -x[1], -x[2], 0,  
+      z[0],  z[1],  z[2], 0,  
+     -y[0], -y[1], -y[2], 0,
+         0,     0,     0, 1 ],
+    // Permutation: y, x, z
+    [ y[0],  y[1],  y[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+      z[0],  z[1],  z[2], 0,
+         0,     0,     0, 1 ],
+    [ y[0],  y[1],  y[2], 0, 
+     -x[0], -x[1], -x[2], 0, 
+     -z[0], -z[1], -z[2], 0,
+         0,     0,     0, 1 ],
+    [-y[0], -y[1], -y[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+      z[0],  z[1],  z[2], 0,
+         0,     0,     0, 1 ],
+    [-y[0], -y[1], -y[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+     -z[0], -z[1], -z[2], 0,
+         0,     0,     0, 1 ],
+    // Permutation: y, z, x
+    [ y[0],  y[1],  y[2], 0, 
+      z[0],  z[1],  z[2], 0, 
+      x[0],  x[1],  x[2], 0,
+         0,     0,     0, 1 ],
+    [ y[0],  y[1],  y[2], 0, 
+     -z[0], -z[1], -z[2], 0, 
+     -x[0], -x[1], -x[2], 0,
+         0,     0,     0, 1 ],
+    [-y[0], -y[1], -y[2], 0, 
+      z[0],  z[1],  z[2], 0, 
+      x[0],  x[1],  x[2], 0,
+         0,     0,     0, 1 ],
+    [-y[0], -y[1], -y[2], 0, 
+      z[0],  z[1],  z[2], 0, 
+     -x[0], -x[1], -x[2], 0,
+         0,     0,     0, 1 ],
+    // Permutation: z, x, y
+    [ z[0],  z[1],  z[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+      y[0],  y[1],  y[2], 0,
+         0,     0,     0, 1 ],
+    [ z[0],  z[1],  z[2], 0, 
+     -x[0], -x[1], -x[2], 0, 
+     -y[0], -y[1], -y[2], 0,
+         0,     0,     0, 1 ],
+    [-z[0], -z[1], -z[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+      y[0],  y[1],  y[2], 0,
+         0,     0,     0, 1 ],
+    [-z[0], -z[1], -z[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+     -y[0], -y[1], -y[2], 0,
+         0,     0,     0, 1 ],
+    // Permutation: z, y, x
+    [ z[0],  z[1],  z[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+      x[0],  x[1],  x[2], 0,
+         0,     0,     0, 1 ],
+    [ z[0],  z[1],  z[2], 0, 
+     -y[0], -y[1], -y[2], 0, 
+     -x[0], -x[1], -x[2], 0,
+         0,     0,     0, 1 ],
+    [-z[0], -z[1], -z[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+      x[0],  x[1],  x[2], 0,
+         0,     0,     0, 1 ],
+    [-z[0], -z[1], -z[2], 0, 
+      y[0],  y[1],  y[2], 0, 
+     -x[0], -x[1], -x[2], 0,
+         0,     0,     0, 1 ]
+  ]
+
+  var q_permutations = []
+  for (var i = 0; i < m_permutations.length; ++i) {
+    q_permutations[i] = M4ToQ(m_permutations[i])
+  }
+
+  x = eigenvalues[0]
+  y = eigenvalues[1]
+  z = eigenvalues[2]
+
+  var e_permutations = [
+    [x, y, z],
+    [x, -y, -z],
+    [-x, y, z],
+    [-x, y, -z],
+
+    [x, z, y],
+    [x, -z, -y],
+    [-x, z, y],
+    [-x, z, -y],
+    
+    [y, x, z],
+    [y, -x, -z],
+    [-y, x, z],
+    [-y, x, -z],
+    
+    [y, z, x],
+    [y, -z, -x],
+    [-y, z, x],
+    [-y, z, -x],
+    
+    [z, x, y],
+    [z, -x, -y],
+    [-z, x, y],
+    [-z, x, -y],
+    
+    [z, y, x],
+    [z, -y, -x],
+    [-z, y, x],
+    [-z, y, -x]
+  ]
+
+  var largest = 0
+  for (var i = 0; i < q_permutations.length; ++i) {
+    // Optimize for largest w, which is smallest angle of rotation
+    if (q_permutations[i][0] > q_permutations[largest][i]) {
+      largest = i
+    }
+  }
+
+  var m = m_permutations[largest]
+  return {
+    eigenvectors: [
+      [m[0], m[1], m[2]],
+      [m[4], m[5], m[6]],
+      [m[8], m[9], m[10]]
+    ],
+    eigenvalues: [
+      e_permutations[largest][0],
+      e_permutations[largest][1],
+      e_permutations[largest][2]
+    ]
   }
 }
 
