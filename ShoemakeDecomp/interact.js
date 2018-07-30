@@ -259,6 +259,11 @@ function DoSnuggle() {
 
 	const result = snuggle(k, q);
 
+	var up = Mul_QQ(
+		q,
+		[result.q.w, result.q.x, result.q.y, result.q.z]
+	)
+
 	var out = "{\"";
 	out += "\t\"k\":{\n";
 	out += "\t\t\"x\" : " + PadFixedNumber(result.k.x) + ",\n";
@@ -271,9 +276,35 @@ function DoSnuggle() {
 	out += "\t\t\"y\" : " + PadFixedNumber(result.q.y) + ",\n";
 	out += "\t\t\"z\" : " + PadFixedNumber(result.q.z) + "\n";
 	out += "\t},\n";
+	out += "\t\"up\":{\n";
+	out += "\t\t\"w\" : " + PadFixedNumber(up[0]) + ",\n";
+	out += "\t\t\"x\" : " + PadFixedNumber(up[1]) + ",\n";
+	out += "\t\t\"y\" : " + PadFixedNumber(up[2]) + ",\n";
+	out += "\t\t\"z\" : " + PadFixedNumber(up[3]) + "\n";
+	out += "\t},\n";
 	out += "}"
 
 	document.getElementById("output").value = out
+}
+
+function Mul_QQ(a, b) {
+	var out = [];
+
+	const ax = a[1];
+	const ay = a[2];
+	const az = a[3];
+	const aw = a[0];
+	const bx = b[1];
+	const by = b[2];
+	const bz = b[3];
+	const bw = b[0];
+
+	out[0] = aw * bw - ax * bx - ay * by - az * bz;
+	out[1] = ax * bw + aw * bx + ay * bz - az * by;
+	out[2] = ay * bw + aw * by + az * bx - ax * bz;
+	out[3] = az * bw + aw * bz + ax * by - ay * bx;
+
+	return out;
 }
 
 function DoAllDecompositions() {
