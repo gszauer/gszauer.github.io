@@ -247,6 +247,35 @@ function ConvertResultsToString(polar, spect, affine) {
 	return out
 }
 
+function DoSnuggle() {
+	const M = GetInputMatrix();
+
+	var k = [
+		M[0], M[1], M[2]
+	]
+	var q = [
+		M[4], M[5], M[6], M[7]
+	]
+
+	const result = snuggle(k, q);
+
+	var out = "{\"";
+	out += et + "\t\"k\":{\n";
+	out += et + "\t\t\"x\" : " + PadFixedNumber(k[0]) + ",\n";
+	out += et + "\t\t\"y\" : " + PadFixedNumber(k[1]) + ",\n";
+	out += et + "\t\t\"z\" : " + PadFixedNumber(k[2]) + "\n";
+	out += et + "\t},\n";
+	out += et + "\t\"q\":{\n";
+	out += et + "\t\t\"x\" : " + PadFixedNumber(q[0]) + ",\n";
+	out += et + "\t\t\"y\" : " + PadFixedNumber(q[1]) + ",\n";
+	out += et + "\t\t\"z\" : " + PadFixedNumber(q[2]) + ",\n";
+	out += et + "\t\t\"w\" : " + PadFixedNumber(q[3]) + "\n";
+	out += et + "\t},\n";
+	out += et + "}"
+
+	document.getElementById("output").value = out
+}
+
 function DoAllDecompositions() {
 	const M = GetInputMatrix();
 
