@@ -341,18 +341,18 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   // ONE OF THESE is U2, gotta pick the right one
   var m_permutations = [
     // Permutation: z, y, z
-    [ x[0],  x[1],  x[2], 
-      y[0],  y[1],  y[2], 
-      z[0],  z[1],  z[2] ],
-    [ x[0],  x[1],  x[2], 
-     -y[0], -y[1], -y[2], 
-     -z[0], -z[1], -z[2] ],
-    [-x[0], -x[1], -x[2], 
-      y[0],  y[1],  y[2], 
-      z[0],  z[1],  z[2] ],
-    [-x[0], -x[1], -x[2], 
-      y[0],  y[1],  y[2], 
-     -z[0], -z[1], -z[2] ],
+    [ x[0],  x[1],  x[2],   // + x
+      y[0],  y[1],  y[2],   // + y
+      z[0],  z[1],  z[2] ], // + z
+    [ x[0],  x[1],  x[2],   // + x
+     -y[0], -y[1], -y[2],   // - y
+     -z[0], -z[1], -z[2] ], // - z
+    [-x[0], -x[1], -x[2],   // -x
+     -y[0], -y[1], -y[2],   // - y
+      z[0],  z[1],  z[2] ], // + z
+    [-x[0], -x[1], -x[2],   // - x   
+      y[0],  y[1],  y[2],   // + y
+     -z[0], -z[1], -z[2] ], // - z
     // Permutation: x, z, y
     [ x[0],  x[1],  x[2], 
       z[0],  z[1],  z[2],  
@@ -361,7 +361,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -z[0], -z[1], -z[2],  
      -y[0], -y[1], -y[2] ],
     [-x[0], -x[1], -x[2],  
-      z[0],  z[1],  z[2],  
+     -z[0], -z[1], -z[2],  
       y[0],  y[1],  y[2] ],
     [-x[0], -x[1], -x[2],  
       z[0],  z[1],  z[2],  
@@ -374,7 +374,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -x[0], -x[1], -x[2], 
      -z[0], -z[1], -z[2] ],
     [-y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2], 
+     -x[0], -x[1], -x[2], 
       z[0],  z[1],  z[2] ],
     [-y[0], -y[1], -y[2], 
       x[0],  x[1],  x[2], 
@@ -387,7 +387,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -z[0], -z[1], -z[2], 
      -x[0], -x[1], -x[2] ],
     [-y[0], -y[1], -y[2], 
-      z[0],  z[1],  z[2], 
+     -z[0], -z[1], -z[2], 
       x[0],  x[1],  x[2] ],
     [-y[0], -y[1], -y[2], 
       z[0],  z[1],  z[2], 
@@ -400,7 +400,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -x[0], -x[1], -x[2], 
      -y[0], -y[1], -y[2] ],
     [-z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2], 
+     -x[0], -x[1], -x[2], 
       y[0],  y[1],  y[2] ],
     [-z[0], -z[1], -z[2], 
       x[0],  x[1],  x[2], 
@@ -413,7 +413,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -y[0], -y[1], -y[2], 
      -x[0], -x[1], -x[2] ],
     [-z[0], -z[1], -z[2], 
-      y[0],  y[1],  y[2], 
+     -y[0], -y[1], -y[2], 
       x[0],  x[1],  x[2] ],
     [-z[0], -z[1], -z[2], 
       y[0],  y[1],  y[2], 
@@ -423,32 +423,32 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var e_permutations = [
     [ a,  b,  c],
     [ a, -b, -c],
-    [-a,  b,  c],
+    [-a, -b,  c],
     [-a,  b, -c],
 
     [ a,  c,  b],
     [ a, -c, -b],
-    [-a,  c,  b],
+    [-a, -c,  b],
     [-a,  c, -b],
     
     [ b,  a,  c],
     [ b, -a, -c],
-    [-b,  a,  c],
+    [-b, -a,  c],
     [-b,  a, -c],
     
     [ b,  c,  a],
     [ b, -c, -a],
-    [-b,  c,  a],
+    [-b, -c,  a],
     [-b,  c, -a],
     
     [ c,  a,  b],
     [ c, -a, -b],
-    [-c,  a,  b],
+    [-c, -a,  b],
     [-c,  a, -b],
     
     [ c,  b,  a],
     [ c, -b, -a],
-    [-c,  b,  a],
+    [-c, -b,  a],
     [-c,  b, -a]
   ]
 
@@ -475,12 +475,27 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     ]);
 
     var inv = [QU1[0], -QU1[1], -QU1[2], -QU1[3]]
-    var rotation = Mul_QQ(QU2, inv);
-    debug_q.push(rotation)
+    var q = Mul_QQ(QU2, inv);
+
+    const dot = q[1]*q[1] + q[2]*q[2] + q[3]*q[3] + q[0]*q[0];
+    if (dot == 0) {
+      alert("Trying to normalize zero quaternion");
+    }
+    else {
+      const n = Math.sqrt(dot);
+      q = [
+        q[0] / n,
+        q[1] / n,
+        q[2] / n,
+        q[3] / n
+      ]
+    }
+
+    debug_q.push(q)
 
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || rotation[0] > saved_value) {
-      saved_value = rotation[0]
+    if (saved_index == null || q[0] > saved_value) {
+      saved_value = q[0]
       saved_index = i
     }
   }
