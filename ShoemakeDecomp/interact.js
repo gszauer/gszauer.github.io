@@ -260,18 +260,18 @@ function DoSnuggle() {
 	const result = snuggle(k, q);
 
 	var out = "{\"";
-	out += et + "\t\"k\":{\n";
-	out += et + "\t\t\"x\" : " + PadFixedNumber(k[0]) + ",\n";
-	out += et + "\t\t\"y\" : " + PadFixedNumber(k[1]) + ",\n";
-	out += et + "\t\t\"z\" : " + PadFixedNumber(k[2]) + "\n";
-	out += et + "\t},\n";
-	out += et + "\t\"q\":{\n";
-	out += et + "\t\t\"x\" : " + PadFixedNumber(q[0]) + ",\n";
-	out += et + "\t\t\"y\" : " + PadFixedNumber(q[1]) + ",\n";
-	out += et + "\t\t\"z\" : " + PadFixedNumber(q[2]) + ",\n";
-	out += et + "\t\t\"w\" : " + PadFixedNumber(q[3]) + "\n";
-	out += et + "\t},\n";
-	out += et + "}"
+	out += "\t\"k\":{\n";
+	out += "\t\t\"x\" : " + PadFixedNumber(k[0]) + ",\n";
+	out += "\t\t\"y\" : " + PadFixedNumber(k[1]) + ",\n";
+	out += "\t\t\"z\" : " + PadFixedNumber(k[2]) + "\n";
+	out += "\t},\n";
+	out += "\t\"q\":{\n";
+	out += "\t\t\"x\" : " + PadFixedNumber(q[0]) + ",\n";
+	out += "\t\t\"y\" : " + PadFixedNumber(q[1]) + ",\n";
+	out += "\t\t\"z\" : " + PadFixedNumber(q[2]) + ",\n";
+	out += "\t\t\"w\" : " + PadFixedNumber(q[3]) + "\n";
+	out += "\t},\n";
+	out += "}"
 
 	document.getElementById("output").value = out
 }

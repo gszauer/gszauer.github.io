@@ -2427,6 +2427,7 @@ Module["noExitRuntime"] = true;
 decomp_affine = null;
 spect_decomp = null;
 polar_decomp = null;
+snuggle = null;
 
 Module['onRuntimeInitialized'] = function() {
   var decomp_affine_js = Module.cwrap('decomp_affine_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
@@ -2472,8 +2473,6 @@ Module['onRuntimeInitialized'] = function() {
 run();
 
 // {{POST_RUN_ADDITIONS}}
-
-
 
 
 

@@ -611,7 +611,7 @@ char* snuggle_js(float Kx, float Ky, float Kz, float qW, float qX, float qY, flo
 	sprintf(outputString,
 	"{\"k\": {\"x\": %.5f, \"y\":%.5f,\"z\": %.5f},\"q\":{\"w\": %.5f, \"x\": %.5f, \"y\":%.5f,\"z\":%.5f}}",
 	k.x, k.y, k.z, 
-	q.w, q.x, q.y, q.z);
+	result.w, result.x, result.y, result.z);
 
 	return outputString;
 }
