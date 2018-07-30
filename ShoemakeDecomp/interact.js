@@ -261,15 +261,15 @@ function DoSnuggle() {
 
 	var out = "{\"";
 	out += "\t\"k\":{\n";
-	out += "\t\t\"x\" : " + PadFixedNumber(k.x) + ",\n";
-	out += "\t\t\"y\" : " + PadFixedNumber(k.y) + ",\n";
-	out += "\t\t\"z\" : " + PadFixedNumber(k.z) + "\n";
+	out += "\t\t\"x\" : " + PadFixedNumber(result.k.x) + ",\n";
+	out += "\t\t\"y\" : " + PadFixedNumber(result.k.y) + ",\n";
+	out += "\t\t\"z\" : " + PadFixedNumber(result.k.z) + "\n";
 	out += "\t},\n";
 	out += "\t\"q\":{\n";
-	out += "\t\t\"w\" : " + PadFixedNumber(q.w) + ",\n";
-	out += "\t\t\"x\" : " + PadFixedNumber(q.x) + ",\n";
-	out += "\t\t\"y\" : " + PadFixedNumber(q.y) + ",\n";
-	out += "\t\t\"z\" : " + PadFixedNumber(q.z) + "\n";
+	out += "\t\t\"w\" : " + PadFixedNumber(result.q.w) + ",\n";
+	out += "\t\t\"x\" : " + PadFixedNumber(result.q.x) + ",\n";
+	out += "\t\t\"y\" : " + PadFixedNumber(result.q.y) + ",\n";
+	out += "\t\t\"z\" : " + PadFixedNumber(result.q.z) + "\n";
 	out += "\t},\n";
 	out += "}"
 
