@@ -275,9 +275,9 @@ function SpectoralDecomposition(S) {
     [Qa[6], Qa[7], Qa[8]]
   ]
 
-  /*var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
-  eigenvalues = adjusted.eigenvalues
-  eigenvectors = adjusted.eigenvectors*/
+  //var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
+  //eigenvalues = adjusted.eigenvalues
+  //eigenvectors = adjusted.eigenvectors
 
   // shorthand to save some typing
   var val = eigenvalues;
@@ -452,9 +452,11 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     [-c,  b, -a]
   ]
 
-  var largest_index = null
-  var largest_value = null
+  var saved_index = null
+  var saved_value = null
 
+  // The rotation taking U1 into U2 is U1t * U2
+    var debug_q = []
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
 
@@ -471,32 +473,38 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       U2[6], U2[7], U2[8], 0,
       0, 0, 0, 1
     ]);
-    
-    var angle = Q_Angle(QU1, QU2)
+
+    var inv = [QU1[0], -QU1[1], -QU1[2], -QU1[3]]
+    var rotation = Mul_QQ(QU2, inv);
+    debug_q.push(rotation)
 
     // Optimize for largest w, which is smallest angle of rotation
-    if (largest_index == null || angle < largest_value) {
-      largest_value = angle
-      largest_index = i
+    if (saved_index == null || rotation[0] > saved_value) {
+      saved_value = rotation[0]
+      saved_index = i
     }
   }
 
   // We now know what the largest w component (smallest angle of rotation) is.
   // There might be multiples of these! (Especially if two)
 
-  var m = m_permutations[largest_index]
-  var debug_u = M4ToQ([
+  var m = m_permutations[saved_index]
+  var q = M4ToQ([
     m[0], m[1], m[2], 0,
     m[3], m[4], m[5], 0,
     m[6], m[7], m[8], 0,
     0, 0, 0, 1
   ])
-  var debug_u1 = M4ToQ([
-    x[0], x[1], x[2], 0,
-    y[0], y[1], y[2], 0,
-    z[0], z[1], z[2], 0,
-    0, 0, 0, 1
-  ])
+  var debug_perm = []
+  for (var i = 0; i < m_permutations.length; ++i) {
+    var l = m_permutations[i]
+    debug_perm[i] = M4ToQ([
+      l[0], l[1], l[2], 0,
+      l[3], l[4], l[5], 0,
+      l[6], l[7], l[8], 0,
+      0, 0, 0, 1
+    ])
+  }
 
   return {
     eigenvectors: [
@@ -505,9 +513,9 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       [m[6], m[7], m[8]]
     ],
     eigenvalues: [
-      e_permutations[largest_index][0],
-      e_permutations[largest_index][1],
-      e_permutations[largest_index][2]
+      e_permutations[saved_index][0],
+      e_permutations[saved_index][1],
+      e_permutations[saved_index][2]
     ]
   }
 }
@@ -528,12 +536,7 @@ function Q_Angle(a, b) {
   var inv = [a[0], -a[1], -a[2], -a[3]]
   var res = Mul_QQ(b, inv);
   
-  var angle = Math.acos(res[0]) * 2.0 * 57.2957795; // To degrees!;
-  if (angle > 180) {
-    angle = 360 - angle
-  }
-
-  return angle
+  return Math.acos(res[0]) * 2.0
 }
 
 
