@@ -2424,9 +2424,55 @@ if (Module['preInit']) {
 
 Module["noExitRuntime"] = true;
 
+decomp_affine = null;
+spect_decomp = null;
+polar_decomp = null;
+
+Module['onRuntimeInitialized'] = function() {
+  var decomp_affine_js = Module.cwrap('decomp_affine_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+  var spect_decomp_js = Module.cwrap('spect_decomp_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+  var polar_decomp_js = Module.cwrap('polar_decomp_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+  var snuggle_js = Module.cwrap('snuggle_js', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number'])
+
+  snuggle = function(vecK, quatQ) {
+    var result = snuggle_js(
+        vecK[0], vecK[1], vecK[2],
+        quatQ[0], quatQ[1], quatQ[2], quatQ[3]);
+    return JSON.parse(result);
+  } 
+
+  decomp_affine = function(matrix) {
+    var result = decomp_affine_js(
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
+    return JSON.parse(result); 
+  }
+
+  spect_decomp = function(matrix) {
+    var result = spect_decomp_js(
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
+    return JSON.parse(result); 
+  }
+
+  polar_decomp = function(matrix) {
+    var result = polar_decomp_js(
+    matrix[0], matrix[1], matrix[2], matrix[3],
+    matrix[4], matrix[5], matrix[6], matrix[7],
+    matrix[8], matrix[9], matrix[10], matrix[11],
+    matrix[12], matrix[13], matrix[14], matrix[15]);
+    return JSON.parse(result); 
+  }
+}
+
 run();
 
 // {{POST_RUN_ADDITIONS}}
+
 
 
 
