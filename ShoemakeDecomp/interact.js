@@ -125,6 +125,27 @@ function FillSample2() {
 	document.getElementById("row_4_col_4").value = "1"
 }
 
+function FillSample3() {
+	document.getElementById("row_1_col_1").value = "14.9999999999971"
+	document.getElementById("row_2_col_1").value = "1.000000000000194"
+	document.getElementById("row_3_col_1").value = "1.0000000000000002"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "0.7071068236890367"
+	document.getElementById("row_2_col_2").value = "0"
+	document.getElementById("row_3_col_2").value = "0"
+	document.getElementById("row_4_col_2").value = "0.7071067386840559"
+
+	document.getElementById("row_1_col_3").value = "0"
+	document.getElementById("row_2_col_3").value = "0"
+	document.getElementById("row_3_col_3").value = "0"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "0"
+	document.getElementById("row_2_col_4").value = "0"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "0"
+}
 
 function FillDebugMatrix() {
 	const B = [
