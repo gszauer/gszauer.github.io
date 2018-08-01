@@ -178,6 +178,28 @@ function FillSample3() {
 	document.getElementById("row_4_col_4").value = "0"
 }
 
+function FillSample4() {
+	document.getElementById("row_1_col_1").value = "1.9999991574533886"
+	document.getElementById("row_2_col_1").value = "0.24999863616775173"
+	document.getElementById("row_3_col_1").value = "0.25"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "0.948323571695159"
+	document.getElementById("row_2_col_2").value = "0"
+	document.getElementById("row_3_col_2").value = "0"
+	document.getElementById("row_4_col_2").value = "-0.3173049059931736"
+
+	document.getElementById("row_1_col_3").value = "0"
+	document.getElementById("row_2_col_3").value = "0"
+	document.getElementById("row_3_col_3").value = "0"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "0"
+	document.getElementById("row_2_col_4").value = "0"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "0"
+}
+
 function FillDebugMatrix() {
 	const B = [
 		 1.597270686975348, 0.15045381104601616, 0, 0,

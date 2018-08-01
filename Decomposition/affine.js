@@ -332,6 +332,14 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     z[0],  z[1],  z[2]
   ]
 
+  // For debugging!
+  var QU1 = M4ToQ([
+      U1[0], U1[1], U1[2], 0,
+      U1[3], U1[4], U1[5], 0,
+      U1[6], U1[7], U1[8], 0,
+      0, 0, 0, 1
+  ]);
+
   var U1t = [
     U1[0], U1[3], U1[6], 
     U1[1], U1[4], U1[7], 
@@ -341,18 +349,18 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   // ONE OF THESE is U2, gotta pick the right one
   var m_permutations = [
     // Permutation: z, y, z
-    [ x[0],  x[1],  x[2],   // + x
-      y[0],  y[1],  y[2],   // + y
-      z[0],  z[1],  z[2] ], // + z
-    [ x[0],  x[1],  x[2],   // + x
-     -y[0], -y[1], -y[2],   // - y
-     -z[0], -z[1], -z[2] ], // - z
-    [-x[0], -x[1], -x[2],   // -x
-     -y[0], -y[1], -y[2],   // - y
-      z[0],  z[1],  z[2] ], // + z
-    [-x[0], -x[1], -x[2],   // - x   
-      y[0],  y[1],  y[2],   // + y
-     -z[0], -z[1], -z[2] ], // - z
+    [ x[0],  x[1],  x[2],  
+      y[0],  y[1],  y[2],  
+      z[0],  z[1],  z[2] ],
+    [ x[0],  x[1],  x[2],  
+     -y[0], -y[1], -y[2],  
+     -z[0], -z[1], -z[2] ],
+    [-x[0], -x[1], -x[2],  
+     -y[0], -y[1], -y[2],  
+      z[0],  z[1],  z[2] ],
+    [-x[0], -x[1], -x[2],     
+      y[0],  y[1],  y[2],  
+     -z[0], -z[1], -z[2] ],
     // Permutation: x, z, y
     [ x[0],  x[1],  x[2], 
       z[0],  z[1],  z[2],  
@@ -460,42 +468,21 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
 
-    var QU1 = M4ToQ([
-      U1t[0], U1t[1], U1t[2], 0,
-      U1t[3], U1t[4], U1t[5], 0,
-      U1t[6], U1t[7], U1t[8], 0,
+    // U12 is the matrix that takes U1t to U2
+    var U12 = Mul3(Inverse3(U1t), U2)
+
+    var QU12 = M4ToQ([
+      U12[0], U12[1], U12[2], 0,
+      U12[3], U12[4], U12[5], 0,
+      U12[6], U12[7], U12[8], 0,
       0, 0, 0, 1
     ]);
 
-    var QU2 = M4ToQ([
-      U2[0], U2[1], U2[2], 0,
-      U2[3], U2[4], U2[5], 0,
-      U2[6], U2[7], U2[8], 0,
-      0, 0, 0, 1
-    ]);
-
-    var inv = [QU1[0], -QU1[1], -QU1[2], -QU1[3]]
-    var q = Mul_QQ(QU2, inv);
-
-    const dot = q[1]*q[1] + q[2]*q[2] + q[3]*q[3] + q[0]*q[0];
-    if (dot == 0) {
-      alert("Trying to normalize zero quaternion");
-    }
-    else {
-      const n = Math.sqrt(dot);
-      q = [
-        q[0] / n,
-        q[1] / n,
-        q[2] / n,
-        q[3] / n
-      ]
-    }
-
-    debug_q.push(q)
+    debug_q.push(QU12)
 
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || q[0] > saved_value) {
-      saved_value = q[0]
+    if (saved_index == null || QU12[0] > saved_value) {
+      saved_value = QU12[0]
       saved_index = i
     }
   }
@@ -504,22 +491,14 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   // There might be multiples of these! (Especially if two)
 
   var m = m_permutations[saved_index]
+  m = Mul3(m, U1)
+
   var q = M4ToQ([
     m[0], m[1], m[2], 0,
     m[3], m[4], m[5], 0,
     m[6], m[7], m[8], 0,
     0, 0, 0, 1
   ])
-  var debug_perm = []
-  for (var i = 0; i < m_permutations.length; ++i) {
-    var l = m_permutations[i]
-    debug_perm[i] = M4ToQ([
-      l[0], l[1], l[2], 0,
-      l[3], l[4], l[5], 0,
-      l[6], l[7], l[8], 0,
-      0, 0, 0, 1
-    ])
-  }
 
   return {
     eigenvectors: [
