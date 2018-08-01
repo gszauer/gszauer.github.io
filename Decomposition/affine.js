@@ -275,9 +275,9 @@ function SpectoralDecomposition(S) {
     [Qa[6], Qa[7], Qa[8]]
   ]
 
-  //var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
-  //eigenvalues = adjusted.eigenvalues
-  //eigenvectors = adjusted.eigenvectors
+  var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
+  eigenvalues = adjusted.eigenvalues
+  eigenvectors = adjusted.eigenvectors
 
   // shorthand to save some typing
   var val = eigenvalues;
@@ -464,34 +464,90 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
-    var debug_q = []
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
 
-    // U12 is the matrix that takes U1t to U2
-    var U12 = Mul3(Inverse3(U1t), U2)
+    var U12 = Mul3(U1t, U2)
 
-    var QU12 = M4ToQ([
-      U12[0], U12[1], U12[2], 0,
-      U12[3], U12[4], U12[5], 0,
-      U12[6], U12[7], U12[8], 0,
-      0, 0, 0, 1
-    ]);
+    var QU12 = [
+      U12[0], U12[3], U12[6], 
+      U12[1], U12[4], U12[7], 
+      U12[2], U12[5], U12[8]
+    ]
 
-    debug_q.push(QU12)
+    QU12[0] = Math.abs(QU12[0])
+    QU12[1] = Math.abs(QU12[1])
+    QU12[2] = Math.abs(QU12[2])
+    QU12[3] = Math.abs(QU12[3])
+
+    var max = QU12[0]
+    var s_max = QU12[1]
+    var half_sum = (QU12[0] + QU12[1] + QU12[2] + QU12[3]) * 0.5
+
+    if (QU12[0] >= QU12[1] && QU12[0] >= QU12[2] && QU12[0] >= QU12[3]) {
+      max = QU12[0]
+
+      if (QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
+        s_max = QU12[1]
+      }
+      else if (QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
+        s_max = QU12[2]
+      }
+      else {
+        s_max = QU12[3]
+      }
+    }
+    else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
+      max = QU12[1]
+
+      if (QU12[0] >= 2 && QU12[0] >= QU12[3]) {
+        s_max = QU12[0]
+      }
+      else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[3]) {
+        s_max = QU12[2]
+      }
+      else {
+        s_max = QU12[3]
+      }
+    }
+    else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
+      max = QU12[2]
+
+      if (QU12[0] >= 1 && QU12[0] >= QU12[3]) {
+        s_max = QU12[0]
+      }
+      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[3]) {
+        s_max = QU12[1]
+      }
+      else {
+        s_max = QU12[3]
+      }
+    }
+    else {
+      max = QU12[3]
+
+      if (QU12[0] >= 1 && QU12[0] >= QU12[2]) {
+        s_max = QU12[0]
+      }
+      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2]) {
+        s_max = QU12[1]
+      }
+      else {
+        s_max = QU12[2]
+      }
+    }
+
+    var third = (1.0 / Math.sqrt(2)) * s_max
+    var w = Math.max(Math.max(max, half_sum), third)
 
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || QU12[0] > saved_value) {
-      saved_value = QU12[0]
+    if (saved_index == null || w > saved_value) {
+      saved_value = w
       saved_index = i
     }
   }
 
-  // We now know what the largest w component (smallest angle of rotation) is.
-  // There might be multiples of these! (Especially if two)
-
   var m = m_permutations[saved_index]
-  m = Mul3(m, U1)
 
   var q = M4ToQ([
     m[0], m[1], m[2], 0,
@@ -525,36 +581,6 @@ function EigenDecompositionEarlyOut(A) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Math functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
-function Q_Angle(a, b) {
-  var inv = [a[0], -a[1], -a[2], -a[3]]
-  var res = Mul_QQ(b, inv);
-  
-  return Math.acos(res[0]) * 2.0
-}
-
-
-function Mul_QQ(a, b) {
-  var out = [];
-
-  const ax = a[1];
-  const ay = a[2];
-  const az = a[3];
-  const aw = a[0];
-  const bx = b[1];
-  const by = b[2];
-  const bz = b[3];
-  const bw = b[0];
-
-  out[0] = aw * bw - ax * bx - ay * by - az * bz;
-  out[1] = ax * bw + aw * bx + ay * bz - az * by;
-  out[2] = ay * bw + aw * by + az * bx - ax * bz;
-  out[3] = az * bw + aw * bz + ax * by - ay * bx;
-
-  return out;
-}
-
-
 function Transpose3(m) {
   if (m.length != 9) {
     alert("Trying to transpose non 3x3 matrix");
@@ -563,18 +589,6 @@ function Transpose3(m) {
     m[0], m[3], m[6],
     m[1], m[4], m[7],
     m[2], m[5], m[8]
-  ]
-}
-
-function Transpose4(m) {
-  if (m.length != 16) {
-    alert("Trying to transpose non 4x4 matrix");
-  }
-  return [
-    m[0], m[4], m[8], m[12],
-    m[1], m[5], m[9], m[13],
-    m[2], m[6], m[10],m[14],
-    m[3], m[7], m[11],m[15]
   ]
 }
 
