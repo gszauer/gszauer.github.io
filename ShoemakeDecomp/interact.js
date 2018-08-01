@@ -303,8 +303,9 @@ function DoSnuggle() {
 	const result = snuggle(k, q);
 
 	var up = Mul_QQ(
-		q,
-		[result.q.w, result.q.x, result.q.y, result.q.z]
+		
+		[result.q.w, result.q.x, result.q.y, result.q.z],
+		q
 	)
 
 	var out = "{\"";
