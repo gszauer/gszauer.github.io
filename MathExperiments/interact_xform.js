@@ -59,6 +59,7 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([0.5, -2, 0], Q_AngleAxis(45, [0, 0, 1]), [1, 1, 1], child);
 	child.color = {r:0.2, g:0.4, b:0.6};
 	global_transforms.push(child);
+	child.debug = true
 
 	// Edge case # 2
 	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
@@ -68,7 +69,6 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([-3, 0, 0], Q_AngleAxis(90, [0, 0, 1]), [1,5,1], child);
 	child.color = {r:0, g:1, b:0};
 	global_transforms.push(child);
-	child.debug = true
 
 	child = MakeTransform([0,0.75,0], null, [2,1/2,2], child);
 	child.color = {r:0, g:0, b:1};
