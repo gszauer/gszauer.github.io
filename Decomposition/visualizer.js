@@ -366,16 +366,16 @@ function MakeSolidColorShader(gl) {
   const vSource = `
     precision highp float;
     attribute vec3 position;
+    attribute vec3 color;
 
     uniform mat4 modelMatrix;
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
-    uniform vec4 renderColor;
 
-    varying vec4 color; 
+    varying vec4 vert_color; 
 
     void main() {
-      color = renderColor;
+      vert_color = vec4(color, 1.0);
 
       gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
     }
@@ -394,10 +394,10 @@ function MakeSolidColorShader(gl) {
   // Setup fragment shader
   const fSource = `
     precision highp float;
-    varying vec4 color; 
+    varying vec4 vert_color; 
 
     void main() {
-      gl_FragColor = color;
+      gl_FragColor = vert_color;
     }
   `;
 
@@ -428,13 +428,13 @@ function MakeSolidColorShader(gl) {
   const info = {
     id : program,
     attribs : {
-      position: gl.getAttribLocation(program, "position")   
+      position: gl.getAttribLocation(program, "position"),
+      color: gl.getAttribLocation(program, "color")   
     },
     uniforms : {
       model: gl.getUniformLocation(program, "modelMatrix"),
       view: gl.getUniformLocation(program, "viewMatrix"),
       projection: gl.getUniformLocation(program, "projectionMatrix"),
-      color: gl.getUniformLocation(program, "renderColor")
     }
   };
   return info;
@@ -512,15 +512,18 @@ function LookAt(eye, at, up) {
 
 function DrawBuffer(buffer, modelMatrix, color) {
   polar_gl.bindBuffer(polar_gl.ARRAY_BUFFER, buffer.bufferId);
+
   polar_gl.vertexAttribPointer(polar_shader.attribs.position, buffer.numComponents, buffer.type, false, buffer.stride, buffer.offset);
   polar_gl.enableVertexAttribArray(polar_shader.attribs.position);
+
+  polar_gl.vertexAttribPointer(polar_shader.attribs.color, buffer.numComponents, buffer.type, false, buffer.stride, buffer.count * 3 * 4);
+  polar_gl.enableVertexAttribArray(polar_shader.attribs.color);
 
   polar_gl.useProgram(polar_shader.id);
 
   polar_gl.uniformMatrix4fv(polar_shader.uniforms.projection, false, polar_projection);
   polar_gl.uniformMatrix4fv(polar_shader.uniforms.view, false, polar_view);
   polar_gl.uniformMatrix4fv(polar_shader.uniforms.model, false, modelMatrix);
-  polar_gl.uniform4f(polar_shader.uniforms.color, color.r, color.g, color.b, 1.0);
 
   const offset = 0;
   polar_gl.drawArrays(polar_gl.TRIANGLES, offset, buffer.count)
@@ -713,21 +716,43 @@ function MakeBasis(gl, position, lenX, lenY, lenZ, radius) {
 
   var verts = []
 
-  for (var i = 0; i < x.length; ++i) {
-    verts.push(x[i]);
+  for (var i = 0; i < x.length; i += 3) {
+    verts.push(x[i + 0]); // X
+    verts.push(x[i + 1]); // Y
+    verts.push(x[i + 2]); // Z
   }
-  for (var i = 0; i < y.length; ++i) {
-    verts.push(y[i]);
+  for (var i = 0; i < y.length; i += 3) {
+    verts.push(y[i + 0]); // X
+    verts.push(y[i + 1]); // Y
+    verts.push(y[i + 2]); // Z
   }
-  for (var i = 0; i < z.length; ++i) {
-    verts.push(z[i]);
+  for (var i = 0; i < z.length; i += 3) {
+    verts.push(z[i + 0]); // X
+    verts.push(z[i + 1]); // Y 
+    verts.push(z[i + 2]); // Z
+  }
+
+  for (var i = 0; i < x.length; i += 3) {
+    verts.push(1) // R
+    verts.push(0) // G
+    verts.push(0) // B
+  }
+  for (var i = 0; i < y.length; i += 3) {
+    verts.push(0) // R
+    verts.push(1) // G
+    verts.push(0) // B
+  }
+  for (var i = 0; i < z.length; i += 3) {
+    verts.push(0) // R
+    verts.push(0) // G
+    verts.push(1) // B
   }
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
 
   return {
     bufferId: arrayBuffer,
-    count: verts.length / 3,
+    count: ((verts.length) / 2) / 3,
     numComponents: 3,
     type: gl.FLOAT,
     stride: 0,
