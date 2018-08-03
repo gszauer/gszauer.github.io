@@ -13,7 +13,8 @@ var polar_3d_height = 400;
 var polar_mouse = [0, 0]
 var polar_scale = [1, 1]
 
-var polar_cam_pos = [3 * 1.5, 4 * 1.5, 6 * 1.5]
+//var polar_cam_pos = [3 * 1.5, 4 * 1.5, 6 * 1.5]
+var polar_cam_pos = [0, 4 * 1.5, 6 * 1.5]
 var polar_cam_target = [0, 0, 0]
 
 var polar_mouseOnItem = 0
@@ -221,14 +222,27 @@ function RenderPolar3D() {
   model = Mul_MM(Mul_MM(scale, rotate), translate)
   var debug = Mul_MM(model, polar_basis) */
 
+  
+  DrawBuffer(basis_geometry,[1, 0, 0, 0,0, 1, 0, 0,0, 0, 1, 0,8, 0, 0, 1])
+
   var debug_mat = [
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1
   ]
+  var move = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
 
-  DrawBuffer(basis_geometry, debug_mat, {r:1, g:0, b:0})
+  DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+
+  move[12] = -8
+  DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+
 }
 
 function RenderPolar2D() {
@@ -510,7 +524,7 @@ function LookAt(eye, at, up) {
   return result;
 }
 
-function DrawBuffer(buffer, modelMatrix, color) {
+function DrawBuffer(buffer, modelMatrix) {
   polar_gl.bindBuffer(polar_gl.ARRAY_BUFFER, buffer.bufferId);
 
   polar_gl.vertexAttribPointer(polar_shader.attribs.position, buffer.numComponents, buffer.type, false, buffer.stride, buffer.offset);
