@@ -24,12 +24,23 @@ var polar_show_reference = false
 
 var polar_t = 0;
 
-var polar_cylinder = null;
-var polar_basis = [
-  1.597270686975348, 0.15045381104601616, 0, 0,
-  -1.2036304883681292, 0.1996588358719185, 0, 0,
-  0, 0, 0.25000000000000006, 0,
+var basis_geometry = null;
+
+var debug_matrix = [
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
   0, 0, 0, 1
+]
+
+var matrix_steps = [
+  null, null, null, null, null, null, null, null, null, null, null, null, 
+  null, null, null, null, null, null, null, null, null, null, null, null
+]
+
+var result_variations = [
+  null, null, null, null, null, null, null, null, null, null, null, null, 
+  null, null, null, null, null, null, null, null, null, null, null, null
 ]
 
 function Init() {
@@ -64,7 +75,7 @@ function Init() {
       polar_projection = PerspectiveMatrix(60, 0.1, 500, polar_width / polar_3d_height);
       polar_view = LookAt(polar_cam_pos, polar_cam_target, [0, 1, 0]);
 
-      polar_cylinder = MakeCylinder(polar_gl, {x:0,y:0,z:0}, 0.5, 1);
+      basis_geometry = MakeBasis(polar_gl, {x:0,y:0,z:0}, 2, 2, 2, 0.25);
     }
   }
 
@@ -189,33 +200,7 @@ function RenderPolar3D() {
 
   var model = null;
 
-  if (polar_show_reference) {
-    model = [
-      0.19965883587191846, 0.15045381104601613, 0, 0,
-      -0.15045381104601613, 0.19965883587191846, 0, 0,
-      0, 0, 3, 0, 
-      0, 0, 1.5, 1
-    ]
-    DrawBuffer(polar_cylinder, model, {r:0.75, g:0.75, b:1})
-    
-    model = [
-      0, 0, 0.24999999999994335, 0,
-      -0.15045381104601613, 0.19965883587191846, 0, 0,
-      -2.3959060304624784, -1.8054457325517843, -0.000002019615310804749, 0,
-      1.1979530152315108, 0.9027228662760968, 0, 1
-    ]
-    DrawBuffer(polar_cylinder, model, {r:1, g:0.75, b:0.75})
-
-    model = [
-      0.19965883587191846, 0.15045381104601613, 0, 0,
-      0, 0, -0.24999999999994335, 0,
-      -1.8054457325517843, 2.3959060304624784, -0.000002019615310804749, 0,
-      -0.9027228662760968, 1.1979530152315108, 0, 1
-    ]
-    DrawBuffer(polar_cylinder, model, {r:0.75, g:1, b:0.75})
-  }
-
-  var scale = [
+  /*var scale = [
     0.25, 0, 0, 0,
     0, 0.25, 0, 0,
     0, 0, 3, 0,
@@ -233,35 +218,17 @@ function RenderPolar3D() {
     0, 0, 1, 0,
     0, 0, 1.5, 1
   ]
-  // TRS: Translate first, rotate second, scale last!
-  const angle = 90 * 0.0174533
   model = Mul_MM(Mul_MM(scale, rotate), translate)
-  var debug = Mul_MM(model, polar_basis)
-  DrawBuffer(polar_cylinder, Mul_MM(model, polar_basis), {r:0, g:0, b:1})
-  
-  rotate = [
-    Math.cos(angle), 0, Math.sin(angle), 0,
-    0, 1, 0, 0,
-    -Math.sin(angle), 0, Math.cos(angle), 0,
-    0, 0, 0, 1
-  ]
-  translate[12] = 1.5
-  translate[14] = 0
-  model = Mul_MM(Mul_MM(scale, rotate), translate)
-  debug = Mul_MM(model, polar_basis)
-  DrawBuffer(polar_cylinder, Mul_MM(model, polar_basis), {r:1, g:0, b:0})
+  var debug = Mul_MM(model, polar_basis) */
 
-  rotate = [
+  var debug_mat = [
     1, 0, 0, 0,
-    0, Math.cos(angle), -Math.sin(angle), 0,
-    0, Math.sin(angle), Math.cos(angle), 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
     0, 0, 0, 1
   ]
-  translate[13] = 1.5
-  translate[12] = 0
-  model = Mul_MM(Mul_MM(scale, rotate), translate)
-  debug = Mul_MM(model, polar_basis)
-  DrawBuffer(polar_cylinder, Mul_MM(model, polar_basis), {r:0, g:1, b:0})
+
+  DrawBuffer(basis_geometry, debug_mat, {r:1, g:0, b:0})
 }
 
 function RenderPolar2D() {
@@ -391,94 +358,7 @@ function GetIterationPolar() {
 }
 
 function UpdatePolarBasis() {
-  polar_basis = [
-    1.597270686975348, 0.15045381104601616, 0, 0,
-    -1.2036304883681292, 0.1996588358719185, 0, 0,
-    0, 0, 0.25000000000000006, 0,
-    0, 0, 0, 1
-  ]
-  var numIter = GetIterationPolar()
-
-  var Q = Copy_M4_to_M3(polar_basis);
-  var Qit = Transpose3(Inverse3(Q))
-
-  for (var i = 0; i < numIter; ++i) {
-    Q = Mul_M3(Add_M3(Q, Qit), 0.5)
-    Qit = Transpose3(Inverse3(Q))
-  }
-
-  polar_basis = [
-    Q[0], Q[1], Q[2], 0,
-    Q[3], Q[4], Q[5], 0,
-    Q[6], Q[7], Q[8], 0,
-    0, 0, 0, 1
-  ]
-}
-
-function Copy_M4_to_M3(m) {
-  return [
-    m[0], m[1], m[2],
-    m[4], m[5], m[6],
-    m[8], m[9], m[10]
-  ]
-}
-
-function Transpose3(m) {
-  return [
-    m[0], m[3], m[6],
-    m[1], m[4], m[7],
-    m[2], m[5], m[8]
-  ]
-}
-
-function Mul_M3(m, f) {
-  return [
-    m[0] * f, m[1] * f, m[2] * f,
-    m[3] * f, m[4] * f, m[5] * f,
-    m[6] * f, m[7] * f, m[8] * f
-  ]
-}
-
-function Add_M3(m1, m2) {
-  return [
-    m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2],
-    m1[3] + m2[3], m1[4] + m2[4], m1[5] + m2[5],
-    m1[6] + m2[6], m1[7] + m2[7], m1[8] + m2[8] 
-  ]
-}
-
-function Inverse3(me) {
-  var te = []
-
-  var n11 = me[ 0 ]; var n21 = me[ 1 ]; var n31 = me[ 2 ];
-  var n12 = me[ 3 ]; var n22 = me[ 4 ]; var n32 = me[ 5 ];
-  var n13 = me[ 6 ]; var n23 = me[ 7 ]; var n33 = me[ 8 ];
-
-  var t11 = n33 * n22 - n32 * n23;
-  var t12 = n32 * n13 - n33 * n12;
-  var t13 = n23 * n12 - n22 * n13;
-
-  var det = n11 * t11 + n21 * t12 + n31 * t13;
-
-  if ( det === 0 ) {
-    return me;
-  }
-
-  var detInv = 1 / det;
-
-  te[ 0 ] = t11 * detInv;
-  te[ 1 ] = ( n31 * n23 - n33 * n21 ) * detInv;
-  te[ 2 ] = ( n32 * n21 - n31 * n22 ) * detInv;
-
-  te[ 3 ] = t12 * detInv;
-  te[ 4 ] = ( n33 * n11 - n31 * n13 ) * detInv;
-  te[ 5 ] = ( n31 * n12 - n32 * n11 ) * detInv;
-
-  te[ 6 ] = t13 * detInv;
-  te[ 7 ] = ( n21 * n13 - n23 * n11 ) * detInv;
-  te[ 8 ] = ( n22 * n11 - n21 * n12 ) * detInv;
-
-  return te;
+  // TODO
 }
 
 function MakeSolidColorShader(gl) {
@@ -578,135 +458,56 @@ function PerspectiveMatrix(fov, zNear, zFar, aspect) {
 }
 
 function LookAt(eye, at, up) {
-  const zAxis = Normalize([
+  const zAxis = [
     eye[0] - at[0],
     eye[1] - at[1],
     eye[2] - at[2]
-  ]);
-  const xAxis = Normalize(Cross(zAxis, up));
-  const yAxis = Cross(xAxis, zAxis);
+  ];
+  var lenSq = (zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    zAxis[0] /= len;
+    zAxis[1] /= len;
+    zAxis[2] /= len;
+  }
+
+  const xAxis = [ // Cross
+    zAxis[1] * up[2] - zAxis[2] * up[1],
+    zAxis[2] * up[0] - zAxis[0] * up[2],
+    zAxis[0] * up[1] - zAxis[1] * up[0]
+  ]
+  lenSq = (xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    xAxis[0] /= len;
+    xAxis[1] /= len;
+    xAxis[2] /= len;
+  }
+
+  const yAxis = [ // Cross
+    xAxis[1] * zAxis[2] - xAxis[2] * zAxis[1],
+    xAxis[2] * zAxis[0] - xAxis[0] * zAxis[2],
+    xAxis[0] * zAxis[1] - xAxis[1] * zAxis[0]
+  ]
+  lenSq = (yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    yAxis[0] /= len;
+    yAxis[1] /= len;
+    yAxis[2] /= len;
+  }
 
   const result = [
     xAxis[0], yAxis[0], zAxis[0], 0,
     xAxis[1], yAxis[1], zAxis[1], 0,
     xAxis[2], yAxis[2], zAxis[2], 0,
-    -Dot(xAxis, eye), 
-    -Dot(yAxis, eye),
-    -Dot(zAxis, eye),
+    -(xAxis[0] * eye[0] + xAxis[1] * eye[1] + xAxis[2] * eye[2]), 
+    -(yAxis[0] * eye[0] + yAxis[1] * eye[1] + yAxis[2] * eye[2]), 
+    -(zAxis[0] * eye[0] + zAxis[1] * eye[1] + zAxis[2] * eye[2]), 
     1
   ];
 
   return result;
-}
-
-function Normalize(v) {
-  const dot = Dot(v, v);
-  if (dot !== 0.0) {
-    const length = Math.sqrt(dot);
-    const result = [
-      v[0] / length,
-      v[1] / length,
-      v[2] / length
-    ];
-    return result;
-  }
-  alert("Cant normalize zero vector");
-  return v;
-}
-
-function Cross(v1, v2) {
-  const result = [
-    v1[1] * v2[2] - v1[2] * v2[1],
-    v1[2] * v2[0] - v1[0] * v2[2],
-    v1[0] * v2[1] - v1[1] * v2[0]
-  ];
-  return result;
-}
-
-function Dot(v1, v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-
-function MakeCylinder(gl, position, radius, length) {
-  var numSegments = 16
-
-  var arrayBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
-
-  var halfLen = length / 2;
-  var verts = []
-  var i, j, theta1, theta2;
-  for (i = 0; i < numSegments; ++i) {
-    theta1 = 2.0 * 3.1415926 * i / numSegments;
-    j = i + 1
-    if (j >= numSegments) {
-      j = 0;
-    }
-    theta2 = 2.0 * 3.1415926 * j / numSegments;
-
-    // Front face
-    verts.push(position.x);
-    verts.push(position.y);
-    verts.push(position.z + halfLen);
-
-    verts.push(radius * Math.cos(theta2) + position.x);
-    verts.push(radius * Math.sin(theta2) + position.y);
-    verts.push(position.z + halfLen);
-
-    verts.push(radius * Math.cos(theta1) + position.x);
-    verts.push(radius * Math.sin(theta1) + position.y);
-    verts.push(position.z + halfLen);
-
-    // Back face
-    verts.push(position.x);
-    verts.push(position.y);
-    verts.push(position.z - halfLen);
-
-    verts.push(radius * Math.cos(theta1) + position.x);
-    verts.push(radius * Math.sin(theta1) + position.y);
-    verts.push(position.z - halfLen);
-
-    verts.push(radius * Math.cos(theta2) + position.x);
-    verts.push(radius * Math.sin(theta2) + position.y);
-    verts.push(position.z - halfLen);
-
-    // connector1
-    verts.push(radius * Math.cos(theta2) + position.x);
-    verts.push(radius * Math.sin(theta2) + position.y);
-    verts.push(position.z + halfLen);
-
-    verts.push(radius * Math.cos(theta2) + position.x);
-    verts.push(radius * Math.sin(theta2) + position.y);
-    verts.push(position.z - halfLen);
-
-    verts.push(radius * Math.cos(theta1) + position.x);
-    verts.push(radius * Math.sin(theta1) + position.y);
-    verts.push(position.z - halfLen);
-    
-    // connector2
-    verts.push(radius * Math.cos(theta1) + position.x);
-    verts.push(radius * Math.sin(theta1) + position.y);
-    verts.push(position.z + halfLen);
-
-    verts.push(radius * Math.cos(theta2) + position.x);
-    verts.push(radius * Math.sin(theta2) + position.y);
-    verts.push(position.z + halfLen);
-
-    verts.push(radius * Math.cos(theta1) + position.x);
-    verts.push(radius * Math.sin(theta1) + position.y);
-    verts.push(position.z - halfLen);
-  }
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
-
-  return {
-    bufferId: arrayBuffer,
-    count: verts.length / 3,
-    numComponents: 3,
-    type: gl.FLOAT,
-    stride: 0,
-    offset: 0
-  }
 }
 
 function DrawBuffer(buffer, modelMatrix, color) {
@@ -725,33 +526,211 @@ function DrawBuffer(buffer, modelMatrix, color) {
   polar_gl.drawArrays(polar_gl.TRIANGLES, offset, buffer.count)
 }
 
-function Mul_MM(m1, m2) {
-  var result = [
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  ]
+function GetCubeVertx(position, halfX, halfY, halfZ) {
+  var verts = []
 
-  result[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8] + m1[3] *m2[12]
-  result[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9] + m1[3] *m2[13]
-  result[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] *m2[10] + m1[3] *m2[14]
-  result[3] = m1[0] * m2[3] + m1[1] * m2[7] + m1[2] *m2[11] + m1[3] *m2[15]
+  // Top face
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
 
-  result[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8] + m1[7] *m2[12]
-  result[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9] + m1[7] *m2[13]
-  result[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] *m2[10] + m1[7] *m2[14]
-  result[7] = m1[4] * m2[3] + m1[5] * m2[7] + m1[6] *m2[11] + m1[7] *m2[15]
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
 
-  result[8] = m1[8] * m2[0] + m1[9] * m2[4] +m1[10] * m2[8] +m1[11] *m2[12]
-  result[9] = m1[8] * m2[1] + m1[9] * m2[5] +m1[10] * m2[9] +m1[11] *m2[13]
-  result[10]= m1[8] * m2[2] + m1[9] * m2[6] +m1[10] *m2[10] +m1[11] *m2[14]
-  result[11]= m1[8] * m2[3] + m1[9] * m2[7] +m1[10] *m2[11] +m1[11] *m2[15]
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
 
-  result[12]=m1[12] * m2[0] +m1[13] * m2[4] +m1[14] * m2[8] +m1[15] *m2[12]
-  result[13]=m1[12] * m2[1] +m1[13] * m2[5] +m1[14] * m2[9] +m1[15] *m2[13]
-  result[14]=m1[12] * m2[2] +m1[13] * m2[6] +m1[14] *m2[10] +m1[15] *m2[14]
-  result[15]=m1[12] * m2[3] +m1[13] * m2[7] +m1[14] *m2[11] +m1[15] *m2[15]
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
 
-  return result;
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  // Bottom face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+
+  // Right face
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  // Left face
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  // Front face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)  
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  // Back face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+  
+  return verts
+}
+
+function MakeBasis(gl, position, lenX, lenY, lenZ, radius) {
+  radius = radius * 0.5
+
+  var arrayBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+  var verts = []
+
+  var p = {
+    x: position.x + lenX * 0.5,
+    y: position.y,
+    z: position.z
+  }
+  var x = GetCubeVertx(p, lenX * 0.5, radius, radius)
+
+  p = {
+    x: position.x,
+    y: position.y + lenY * 0.5,
+    z: position.z
+  }
+  var y = GetCubeVertx(p, radius, lenY * 0.5, radius)
+
+  p = {
+    x: position.x,
+    y: position.y,
+    z: position.z + lenZ * 0.5
+  }
+  var z = GetCubeVertx(p, radius, radius, lenZ * 0.5)
+
+  var verts = []
+
+  for (var i = 0; i < x.length; ++i) {
+    verts.push(x[i]);
+  }
+  for (var i = 0; i < y.length; ++i) {
+    verts.push(y[i]);
+  }
+  for (var i = 0; i < z.length; ++i) {
+    verts.push(z[i]);
+  }
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+  return {
+    bufferId: arrayBuffer,
+    count: verts.length / 3,
+    numComponents: 3,
+    type: gl.FLOAT,
+    stride: 0,
+    offset: 0
+  }
 }
