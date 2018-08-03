@@ -469,11 +469,12 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
 
     var U12 = Mul3(U1t, U2)
 
-    var QU12 = [
-      U12[0], U12[3], U12[6], 
-      U12[1], U12[4], U12[7], 
-      U12[2], U12[5], U12[8]
-    ]
+    var QU12 = M4ToQ([
+      U12[0], U12[3], U12[6], 0,
+      U12[1], U12[4], U12[7], 0,
+      U12[2], U12[5], U12[8], 0,
+           0,      0,      0, 1
+    ])
 
     QU12[0] = Math.abs(QU12[0])
     QU12[1] = Math.abs(QU12[1])
