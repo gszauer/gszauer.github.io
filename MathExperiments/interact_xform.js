@@ -950,5 +950,5 @@ function Dbg_Q_Mul_Q(a, b) {
 }
 
 function Dbg_M4_To_Q(m) {
-	return affine.M4ToQ(m);
+	return decompose.M4ToQ(m);
 }
