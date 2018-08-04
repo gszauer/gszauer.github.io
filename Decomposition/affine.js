@@ -318,18 +318,14 @@ function SpectoralDecomposition(S) {
 // Convert all of these matrices into quaternions.
 // Choose the one with the largest W component, as it has the smallest rotation
 function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
-  const x = eigenvectors[0]
-  const y = eigenvectors[1]
-  const z = eigenvectors[2]
-
-  const a = eigenvalues[0]
-  const b = eigenvalues[1]
-  const c = eigenvalues[2]
+  const x = eigenvalues[0]
+  const y = eigenvalues[1]
+  const z = eigenvalues[2]
 
   var U1 = [ 
-    x[0],  x[1],  x[2], 
-    y[0],  y[1],  y[2], 
-    z[0],  z[1],  z[2]
+    eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+    eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+    eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]
   ]
 
   var U1t = [
@@ -339,116 +335,117 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   ]
 
   var m_permutations = [
-    // Permutation: x, y, z
-    [-x[0], -x[1], -x[2],  
-     -y[0], -y[1], -y[2],  
-      z[0],  z[1],  z[2] ],
-    [ x[0],  x[1],  x[2],  
-     -y[0], -y[1], -y[2],  
-     -z[0], -z[1], -z[2] ],
-    [-x[0], -x[1], -x[2],  
-      y[0],  y[1],  y[2],  
-     -z[0], -z[1], -z[2] ],
-    [ x[0],  x[1],  x[2],     
-      y[0],  y[1],  y[2],  
-      z[0],  z[1],  z[2] ],
-    // Permutation: x, z, y
-    [-x[0], -x[1], -x[2], 
-      z[0],  z[1],  z[2],  
-      y[0],  y[1],  y[2] ],
-    [-x[0], -x[1], -x[2],  
-     -z[0], -z[1], -z[2],  
-     -y[0], -y[1], -y[2] ],
-    [ x[0],  x[1],  x[2],  
-      z[0],  z[1],  z[2],  
-     -y[0], -y[1], -y[2] ],
-    [ x[0],  x[1],  x[2],  
-     -z[0], -z[1], -z[2],  
-      y[0],  y[1],  y[2] ],
-    // Permutation: y, x, z
-    [-y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2], 
-      z[0],  z[1],  z[2] ],
-    [-y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2], 
-     -z[0], -z[1], -z[2] ],
-    [ y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2], 
-     -z[0], -z[1], -z[2] ],
-    [ y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2], 
-      z[0],  z[1],  z[2] ],
-    // Permutation: y, z, x
-    [-y[0], -y[1], -y[2], 
-     -z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2] ],
-    [ y[0],  y[1],  y[2], 
-     -z[0], -z[1], -z[2], 
-     -x[0], -x[1], -x[2] ],
-    [-y[0], -y[1], -y[2], 
-      z[0],  z[1],  z[2], 
-     -x[0], -x[1], -x[2] ],
-    [ y[0],  y[1],  y[2], 
-      z[0],  z[1],  z[2], 
-      x[0],  x[1],  x[2] ],
-     // Permutation: z, y, x
-    [-z[0], -z[1], -z[2], 
-      y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2] ],
-    [-z[0], -z[1], -z[2], 
-     -y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2] ],
-    [ z[0],  z[1],  z[2], 
-      y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2] ],
-    [ z[0],  z[1],  z[2], 
-     -y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2] ],
-    // Permutation: z, x, y
-    [-z[0], -z[1], -z[2], 
-     -x[0], -x[1], -x[2], 
-      y[0],  y[1],  y[2] ],
-    [ z[0],  z[1],  z[2], 
-     -x[0], -x[1], -x[2], 
-     -y[0], -y[1], -y[2] ],
-    [-z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2], 
-     -y[0], -y[1], -y[2] ],
-    [ z[0],  z[1],  z[2], 
-      x[0],  x[1],  x[2], 
-      y[0],  y[1],  y[2] ],
+    // Permutation 0: x, y, z
+    [ 1, 0, 0,  
+      0, 1, 0,
+      0, 0, 1 ],
+    [-1,-0,-0,  
+     -0,-1,-0,
+      0, 0, 1 ],
+    [ 1, 0, 0,  
+     -0,-1,-0,
+     -0,-0,-1 ],
+    [-1,-0,-0,  
+      0, 1, 0,
+     -0,-0,-1 ],
+    // Permutation 1: x, z, y
+    [-1,-0,-0,
+      0, 0, 1,
+      0, 1, 0 ],
+    [-1,-0,-0,
+     -0,-0,-1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+      0, 0, 1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+     -0,-0,-1,
+      0, 1, 0 ],
+    // Permutation 2: y, x, z
+    [ -0,-1,-0,
+       1, 0, 0,
+       0, 0, 1 ],
+    [ -0,-1,-0,
+      -1,-0,-0,
+      -0,-0,-1 ],
+    [  0, 1, 0,
+       1, 0, 0,
+      -0,-0,-1 ],
+    [  0, 1, 0,
+      -1,-0,-0,
+       0, 0, 1 ],
+    // Permutation 3: y, z, x
+    [ 0, 1, 0,
+      0, 0, 1,
+      1, 0, 0 ],
+    [-0,-1,-0,
+     -0,-0,-1,
+      1, 0, 0 ],
+    [ 0, 1, 0,
+     -0,-0,-1,
+     -1,-0,-0 ],
+    [-0,-1,-0,
+      0, 0, 1,
+     -1,-0,-0 ],
+     // Permutation 4: z, x, y
+    [ 0, 0, 1,
+      1, 0, 0,
+      0, 1, 0 ],
+    [-0,-0,-1,
+     -1,-0,-0,
+      0, 1, 0 ],
+    [ 0, 0, 1,
+     -1,-0,-0,
+     -0,-1,-0 ],
+    [-0,-0,-1,
+      1, 0, 0,
+     -0,-1,-0 ],
+    // Permutation 5: z, y, x
+    [-0,-0,-1,
+      0, 1, 0,
+      1, 0, 0 ],
+    [-0,-0,-1,
+     -0,-1,-0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+      0, 1, 0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+     -0,-1,-0,
+      1, 0, 0],
   ]
 
   var e_permutations = [
-    [-a, -b,  c],
-    [ a, -b, -c],
-    [-a,  b, -c],
-    [ a,  b,  c],
-
-    [-a,  c,  b],
-    [-a, -c, -b],
-    [ a,  c, -b],
-    [ a, -c,  b],
-    
-    [-b,  a,  c],
-    [-b, -a, -c],
-    [ b,  a, -c],
-    [ b, -a,  c],
-    
-    [-b, -c,  a],
-    [ b, -c, -a],
-    [-b,  c, -a],
-    [ b,  c,  a],
-    
-    [-c,  b,  a],
-    [-c, -b, -a],
-    [ c,  b, -a],
-    [ c, -b,  a],
-
-    [-c, -a,  b],
-    [ c, -a, -b],
-    [-c,  a, -b],
-    [ c,  a,  b]
+    // Permutation 0
+    [ x,  y,  z],
+    [-x, -y,  z],
+    [ x, -y, -z],
+    [-x,  y, -z],
+    // Permutation 1
+    [-x,  z,  y],
+    [-x, -z, -y],
+    [ x,  z, -y],
+    [ x, -z,  y],
+    // Permutation 2
+    [-y,  x,  z],
+    [-y, -x, -z],
+    [ y,  x, -z],
+    [ y, -x,  z],
+    // Permutation 3
+    [ y,  z,  x],
+    [-y, -z,  x],
+    [ y, -z, -x],
+    [-y,  z, -x],
+    // Permutation 4
+    [ z,  x,  y],
+    [-z, -x,  y],
+    [ z, -x, -y],
+    [-z,  x, -y],
+    // Permutation 5
+    [-z,  y,  x],
+    [-z, -y, -x],
+    [ z,  y, -x],
+    [ z, -y,  x],
   ]
 
   var saved_index = null
@@ -458,7 +455,6 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var debug_quats = []
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
-
     var U12 = Mul3(U1t, U2)
 
     var QU12 = M4ToQ([
@@ -470,15 +466,14 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     debug_quats.push([QU12[0], QU12[1], QU12[2], QU12[3]])
     
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || Math.abs(QU12[0]) > saved_value) {
-      saved_value = Math.abs(QU12[0])
+    if (saved_index == null || QU12[0] > saved_value) {
+      saved_value = QU12[0]
       saved_index = i
     }
   }
 
   var m = m_permutations[saved_index]
-
-  var q = M4ToQ([
+  var q = M4ToQ([ // For debugging only
     m[0], m[1], m[2], 0,
     m[3], m[4], m[5], 0,
     m[6], m[7], m[8], 0,

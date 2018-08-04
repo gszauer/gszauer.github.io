@@ -43,8 +43,8 @@ var p_out = [
   "X, Z, Y",
   "Y, X, Z",
   "Y, Z, X",
+  "Z, X, Y",
   "Z, Y, X",
-  "Z, X, Y"
 ]
 
 var v_out = [
@@ -113,34 +113,34 @@ function FillOutMatrices(m) {
 
   permutations = [
     [ // X Y Z
-      base_mat[0], base_mat[1], base_mat[2],
-      base_mat[3], base_mat[4], base_mat[5],
-      base_mat[6], base_mat[7], base_mat[8],
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1
     ],
     [ // X Z Y
-      base_mat[0], base_mat[1], base_mat[2],
-      base_mat[6], base_mat[7], base_mat[8],
-      base_mat[3], base_mat[4], base_mat[5],
+      1, 0, 0,
+      0, 0, 1,
+      0, 1, 0
     ],
     [ // Y X Z
-      base_mat[3], base_mat[4], base_mat[5],
-      base_mat[0], base_mat[1], base_mat[2],
-      base_mat[6], base_mat[7], base_mat[8],
+      0, 1, 0,
+      1, 0, 0,
+      0, 0, 1
     ],
     [ // Y Z X
-      base_mat[3], base_mat[4], base_mat[5],
-      base_mat[6], base_mat[7], base_mat[8],
-      base_mat[0], base_mat[1], base_mat[2],
-    ],
-    [ // Z Y X
-      base_mat[6], base_mat[7], base_mat[8],
-      base_mat[3], base_mat[4], base_mat[5],
-      base_mat[0], base_mat[1], base_mat[2],
+      0, 1, 0,
+      0, 0, 1,
+      1, 0, 0
     ],
     [ // Z X Y
-      base_mat[6], base_mat[7], base_mat[8],
-      base_mat[0], base_mat[1], base_mat[2],
-      base_mat[3], base_mat[4], base_mat[5],
+      0, 0, 1,
+      1, 0, 0,
+      0, 1, 0
+    ],
+    [ // Z Y X
+      0, 0, 1,
+      0, 1, 0,
+      1, 0, 0
     ]
   ]
 
