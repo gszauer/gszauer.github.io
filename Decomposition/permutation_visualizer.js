@@ -43,7 +43,7 @@ var p_out = [
   "X, Z, Y",
   "Y, X, Z",
   "Y, Z, X",
-  "Z, Y, Z",
+  "Z, Y, X",
   "Z, X, Y"
 ]
 
