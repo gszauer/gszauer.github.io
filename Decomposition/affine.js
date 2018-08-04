@@ -332,218 +332,146 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     z[0],  z[1],  z[2]
   ]
 
-  // For debugging!
-  var QU1 = M4ToQ([
-      U1[0], U1[1], U1[2], 0,
-      U1[3], U1[4], U1[5], 0,
-      U1[6], U1[7], U1[8], 0,
-      0, 0, 0, 1
-  ]);
-
   var U1t = [
     U1[0], U1[3], U1[6], 
     U1[1], U1[4], U1[7], 
     U1[2], U1[5], U1[8]
   ]
 
-  // ONE OF THESE is U2, gotta pick the right one
   var m_permutations = [
-    // Permutation: z, y, z
-    [ x[0],  x[1],  x[2],  
-      y[0],  y[1],  y[2],  
+    // Permutation: x, y, z
+    [-x[0], -x[1], -x[2],  
+     -y[0], -y[1], -y[2],  
       z[0],  z[1],  z[2] ],
     [ x[0],  x[1],  x[2],  
      -y[0], -y[1], -y[2],  
      -z[0], -z[1], -z[2] ],
     [-x[0], -x[1], -x[2],  
-     -y[0], -y[1], -y[2],  
-      z[0],  z[1],  z[2] ],
-    [-x[0], -x[1], -x[2],     
       y[0],  y[1],  y[2],  
      -z[0], -z[1], -z[2] ],
+    [ x[0],  x[1],  x[2],     
+      y[0],  y[1],  y[2],  
+      z[0],  z[1],  z[2] ],
     // Permutation: x, z, y
-    [ x[0],  x[1],  x[2], 
+    [-x[0], -x[1], -x[2], 
       z[0],  z[1],  z[2],  
       y[0],  y[1],  y[2] ],
+    [-x[0], -x[1], -x[2],  
+     -z[0], -z[1], -z[2],  
+     -y[0], -y[1], -y[2] ],
+    [ x[0],  x[1],  x[2],  
+      z[0],  z[1],  z[2],  
+     -y[0], -y[1], -y[2] ],
     [ x[0],  x[1],  x[2],  
      -z[0], -z[1], -z[2],  
-     -y[0], -y[1], -y[2] ],
-    [-x[0], -x[1], -x[2],  
-     -z[0], -z[1], -z[2],  
       y[0],  y[1],  y[2] ],
-    [-x[0], -x[1], -x[2],  
-      z[0],  z[1],  z[2],  
-     -y[0], -y[1], -y[2] ],
     // Permutation: y, x, z
-    [ y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2], 
-      z[0],  z[1],  z[2] ],
-    [ y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2], 
-     -z[0], -z[1], -z[2] ],
-    [-y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2], 
-      z[0],  z[1],  z[2] ],
     [-y[0], -y[1], -y[2], 
       x[0],  x[1],  x[2], 
+      z[0],  z[1],  z[2] ],
+    [-y[0], -y[1], -y[2], 
+     -x[0], -x[1], -x[2], 
      -z[0], -z[1], -z[2] ],
+    [ y[0],  y[1],  y[2], 
+      x[0],  x[1],  x[2], 
+     -z[0], -z[1], -z[2] ],
+    [ y[0],  y[1],  y[2], 
+     -x[0], -x[1], -x[2], 
+      z[0],  z[1],  z[2] ],
     // Permutation: y, z, x
-    [ y[0],  y[1],  y[2], 
-      z[0],  z[1],  z[2], 
+    [-y[0], -y[1], -y[2], 
+     -z[0], -z[1], -z[2], 
       x[0],  x[1],  x[2] ],
     [ y[0],  y[1],  y[2], 
      -z[0], -z[1], -z[2], 
      -x[0], -x[1], -x[2] ],
     [-y[0], -y[1], -y[2], 
-     -z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2] ],
-    [-y[0], -y[1], -y[2], 
       z[0],  z[1],  z[2], 
      -x[0], -x[1], -x[2] ],
+    [ y[0],  y[1],  y[2], 
+      z[0],  z[1],  z[2], 
+      x[0],  x[1],  x[2] ],
+     // Permutation: z, y, x
+    [-z[0], -z[1], -z[2], 
+      y[0],  y[1],  y[2], 
+      x[0],  x[1],  x[2] ],
+    [-z[0], -z[1], -z[2], 
+     -y[0], -y[1], -y[2], 
+     -x[0], -x[1], -x[2] ],
+    [ z[0],  z[1],  z[2], 
+      y[0],  y[1],  y[2], 
+     -x[0], -x[1], -x[2] ],
+    [ z[0],  z[1],  z[2], 
+     -y[0], -y[1], -y[2], 
+      x[0],  x[1],  x[2] ],
     // Permutation: z, x, y
-    [ z[0],  z[1],  z[2], 
-      x[0],  x[1],  x[2], 
+    [-z[0], -z[1], -z[2], 
+     -x[0], -x[1], -x[2], 
       y[0],  y[1],  y[2] ],
     [ z[0],  z[1],  z[2], 
      -x[0], -x[1], -x[2], 
      -y[0], -y[1], -y[2] ],
     [-z[0], -z[1], -z[2], 
-     -x[0], -x[1], -x[2], 
-      y[0],  y[1],  y[2] ],
-    [-z[0], -z[1], -z[2], 
       x[0],  x[1],  x[2], 
      -y[0], -y[1], -y[2] ],
-    // Permutation: z, y, x
     [ z[0],  z[1],  z[2], 
-      y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2] ],
-    [ z[0],  z[1],  z[2], 
-     -y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2] ],
-    [-z[0], -z[1], -z[2], 
-     -y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2] ],
-    [-z[0], -z[1], -z[2], 
-      y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2] ],
+      x[0],  x[1],  x[2], 
+      y[0],  y[1],  y[2] ],
   ]
 
   var e_permutations = [
-    [ a,  b,  c],
-    [ a, -b, -c],
     [-a, -b,  c],
+    [ a, -b, -c],
     [-a,  b, -c],
+    [ a,  b,  c],
 
-    [ a,  c,  b],
-    [ a, -c, -b],
-    [-a, -c,  b],
-    [-a,  c, -b],
+    [-a,  c,  b],
+    [-a, -c, -b],
+    [ a,  c, -b],
+    [ a, -c,  b],
     
-    [ b,  a,  c],
-    [ b, -a, -c],
-    [-b, -a,  c],
-    [-b,  a, -c],
+    [-b,  a,  c],
+    [-b, -a, -c],
+    [ b,  a, -c],
+    [ b, -a,  c],
     
-    [ b,  c,  a],
-    [ b, -c, -a],
     [-b, -c,  a],
+    [ b, -c, -a],
     [-b,  c, -a],
+    [ b,  c,  a],
     
-    [ c,  a,  b],
-    [ c, -a, -b],
+    [-c,  b,  a],
+    [-c, -b, -a],
+    [ c,  b, -a],
+    [ c, -b,  a],
+
     [-c, -a,  b],
+    [ c, -a, -b],
     [-c,  a, -b],
-    
-    [ c,  b,  a],
-    [ c, -b, -a],
-    [-c, -b,  a],
-    [-c,  b, -a]
+    [ c,  a,  b]
   ]
 
   var saved_index = null
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
+  var debug_quats = []
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
 
     var U12 = Mul3(U1t, U2)
 
     var QU12 = M4ToQ([
-      U12[0], U12[3], U12[6], 0,
-      U12[1], U12[4], U12[7], 0,
-      U12[2], U12[5], U12[8], 0,
+      U12[0], U12[1], U12[2], 0,
+      U12[3], U12[4], U12[5], 0,
+      U12[6], U12[7], U12[8], 0,
            0,      0,      0, 1
     ])
-
-    QU12[0] = Math.abs(QU12[0])
-    QU12[1] = Math.abs(QU12[1])
-    QU12[2] = Math.abs(QU12[2])
-    QU12[3] = Math.abs(QU12[3])
-
-    var max = QU12[0]
-    var s_max = QU12[1]
-    var half_sum = (QU12[0] + QU12[1] + QU12[2] + QU12[3]) * 0.5
-
-    if (QU12[0] >= QU12[1] && QU12[0] >= QU12[2] && QU12[0] >= QU12[3]) {
-      max = QU12[0]
-
-      if (QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
-        s_max = QU12[1]
-      }
-      else if (QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
-        s_max = QU12[2]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
-      max = QU12[1]
-
-      if (QU12[0] >= 2 && QU12[0] >= QU12[3]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[3]) {
-        s_max = QU12[2]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
-      max = QU12[2]
-
-      if (QU12[0] >= 1 && QU12[0] >= QU12[3]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[3]) {
-        s_max = QU12[1]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else {
-      max = QU12[3]
-
-      if (QU12[0] >= 1 && QU12[0] >= QU12[2]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2]) {
-        s_max = QU12[1]
-      }
-      else {
-        s_max = QU12[2]
-      }
-    }
-
-    var third = (1.0 / Math.sqrt(2)) * s_max
-    var w = Math.max(Math.max(max, half_sum), third)
-
+    debug_quats.push([QU12[0], QU12[1], QU12[2], QU12[3]])
+    
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || w > saved_value) {
-      saved_value = w
+    if (saved_index == null || Math.abs(QU12[0]) > saved_value) {
+      saved_value = Math.abs(QU12[0])
       saved_index = i
     }
   }
