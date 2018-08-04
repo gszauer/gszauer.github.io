@@ -34,12 +34,12 @@ var u1 = [
   0, 0, 0, 1
 ]
 
-var matrix_steps = [
+var u2 = [
   null, null, null, null, null, null, null, null, null, null, null, null, 
   null, null, null, null, null, null, null, null, null, null, null, null
 ]
 
-var result_variations = [
+var u12 = [
   null, null, null, null, null, null, null, null, null, null, null, null, 
   null, null, null, null, null, null, null, null, null, null, null, null
 ]
@@ -230,27 +230,29 @@ function RenderPolar3D() {
   model = Mul_MM(Mul_MM(scale, rotate), translate)
   var debug = Mul_MM(model, polar_basis) */
 
-  
-  DrawBuffer(basis_geometry, u1)
-
-  var debug_mat = [
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  ]
   var move = [
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    0, 0, 0, 1
+    8, 0, 0, 1
   ]
 
-  //DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+  DrawBuffer(basis_geometry, Mul4(move, u1))
 
-  move[12] = -8
-  //DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+  if (GetIterationPolar() < u12.length && u12[GetIterationPolar()] != null) {
+    DrawBuffer(basis_geometry, u12[GetIterationPolar()])
+  }
 
+  move = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    -8, 0, 0, 1
+  ]
+
+  if (GetIterationPolar() < u2.length && u2[GetIterationPolar()] != null) {
+    DrawBuffer(basis_geometry, Mul4(move, u2[GetIterationPolar()]))
+  }
 }
 
 function RenderPolar2D() {
@@ -300,7 +302,7 @@ function RenderPolar2D() {
     polar_2d_context.closePath()
 
     polar_2d_context.font = '18px serif';
-    debugString = 'Iteration: ' + GetIterationPolar()
+    debugString = 'U2: ' + GetIterationPolar()
     polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
     polar_2d_context.fillText(debugString, 320, 25);
 
@@ -835,15 +837,6 @@ function GetInputMatrix() {
   return M
 }
 
-function LoadAndDecompose() {
-  var M = GetInputMatrix();
-  var decomp_result = AffineDecompose(M);
-  // SpectoralDecomposition is done on S!
-  u1 = SpectDecomp(decomp_result.TFRS.S).u;
-
-  RenderPolar();
-}
-
 function SpectDecomp(S) {
   var QRFactorization = null
   var Q = null
@@ -909,4 +902,146 @@ function SpectDecomp(S) {
       0, 0, 0, 1
     ]
   }
+}
+
+function LoadAndDecompose() {
+  var M = GetInputMatrix();
+  var decomp_result = AffineDecompose(M);
+  // SpectoralDecomposition is done on S!
+  u1 = SpectDecomp(decomp_result.TFRS.S).u;
+
+
+  var x = [u1[0], u1[1], u1[2]]
+  var y = [u1[4], u1[5], u1[6]]
+  var z = [u1[8], u1[9], u1[10]]
+
+  //
+  u2 = [
+    // Permutation: z, y, z
+    [ x[0],  x[1],  x[2], 0,  
+      y[0],  y[1],  y[2], 0,  
+      z[0],  z[1],  z[2], 0,
+      0, 0, 0, 1 ],
+    [ x[0],  x[1],  x[2],  0, 
+     -y[0], -y[1], -y[2],  0, 
+     -z[0], -z[1], -z[2],0, 
+      0, 0, 0, 1 ],
+    [-x[0], -x[1], -x[2],  0, 
+     -y[0], -y[1], -y[2],  0, 
+      z[0],  z[1],  z[2],0, 
+      0, 0, 0, 1 ],
+    [-x[0], -x[1], -x[2],     0, 
+      y[0],  y[1],  y[2],  0, 
+     -z[0], -z[1], -z[2],0, 
+      0, 0, 0, 1 ],
+    // Permutation: x, z, y
+    [ x[0],  x[1],  x[2], 0, 
+      z[0],  z[1],  z[2],  0, 
+      y[0],  y[1],  y[2],0, 
+      0, 0, 0, 1 ],
+    [ x[0],  x[1],  x[2],  0, 
+     -z[0], -z[1], -z[2],  0, 
+     -y[0], -y[1], -y[2],0, 
+      0, 0, 0, 1 ],
+    [-x[0], -x[1], -x[2],  0, 
+     -z[0], -z[1], -z[2],  0, 
+      y[0],  y[1],  y[2],0, 
+      0, 0, 0, 1 ],
+    [-x[0], -x[1], -x[2],  0, 
+      z[0],  z[1],  z[2],  0, 
+     -y[0], -y[1], -y[2],0, 
+      0, 0, 0, 1 ],
+    // Permutation: y, x, z
+    [ y[0],  y[1],  y[2], 0, 
+      x[0],  x[1],  x[2], 0, 
+      z[0],  z[1],  z[2],0, 
+      0, 0, 0, 1 ],
+    [ y[0],  y[1],  y[2], 0,
+     -x[0], -x[1], -x[2], 0,
+     -z[0], -z[1], -z[2],0,
+      0, 0, 0, 1 ],
+    [-y[0], -y[1], -y[2], 0,
+     -x[0], -x[1], -x[2], 0,
+      z[0],  z[1],  z[2],0,
+      0, 0, 0, 1 ],
+    [-y[0], -y[1], -y[2], 0,
+      x[0],  x[1],  x[2], 0,
+     -z[0], -z[1], -z[2],0,
+      0, 0, 0, 1 ],
+    // Permutation: y, z, x
+    [ y[0],  y[1],  y[2], 0,
+      z[0],  z[1],  z[2], 0,
+      x[0],  x[1],  x[2],0,
+      0, 0, 0, 1 ],
+    [ y[0],  y[1],  y[2], 0,
+     -z[0], -z[1], -z[2], 0,
+     -x[0], -x[1], -x[2],0,
+      0, 0, 0, 1 ],
+    [-y[0], -y[1], -y[2], 0,
+     -z[0], -z[1], -z[2], 0,
+      x[0],  x[1],  x[2],0,
+      0, 0, 0, 1 ],
+    [-y[0], -y[1], -y[2], 0,
+      z[0],  z[1],  z[2], 0,
+     -x[0], -x[1], -x[2],0,
+      0, 0, 0, 1 ],
+    // Permutation: z, x, y
+    [ z[0],  z[1],  z[2], 0,
+      x[0],  x[1],  x[2], 0,
+      y[0],  y[1],  y[2],0,
+      0, 0, 0, 1 ],
+    [ z[0],  z[1],  z[2], 0,
+     -x[0], -x[1], -x[2], 0,
+     -y[0], -y[1], -y[2],0,
+      0, 0, 0, 1 ],
+    [-z[0], -z[1], -z[2], 0,
+     -x[0], -x[1], -x[2], 0,
+      y[0],  y[1],  y[2],0,
+      0, 0, 0, 1 ],
+    [-z[0], -z[1], -z[2], 0,
+      x[0],  x[1],  x[2], 0,
+     -y[0], -y[1], -y[2],0,
+      0, 0, 0, 1 ],
+    // Permutation: z, y, x
+    [ z[0],  z[1],  z[2], 0,
+      y[0],  y[1],  y[2], 0,
+      x[0],  x[1],  x[2],0,
+      0, 0, 0, 1 ],
+    [ z[0],  z[1],  z[2], 0,
+     -y[0], -y[1], -y[2], 0,
+     -x[0], -x[1], -x[2],0,
+      0, 0, 0, 1 ],
+    [-z[0], -z[1], -z[2], 0,
+     -y[0], -y[1], -y[2], 0,
+      x[0],  x[1],  x[2],0,
+      0, 0, 0, 1 ],
+    [-z[0], -z[1], -z[2], 0,
+      y[0],  y[1],  y[2], 0,
+     -x[0], -x[1], -x[2],0,
+      0, 0, 0, 1 ],
+  ]
+  
+  for (var i = 0; i < u2.length; ++i) {
+    var _12 = Mul3(
+      [
+        u1[0], u1[4], u1[8],
+        u1[1], u1[5], u1[9],
+        u1[2], u1[6], u1[10]
+      ],
+      [
+        u2[i][0], u2[i][1], u2[i][2],
+        u2[i][4], u2[i][5], u2[i][6],
+        u2[i][8], u2[i][9], u2[i][10]
+      ]
+    )
+
+    u12[i] = [
+      _12[0], _12[1], _12[2], 0,
+      _12[3], _12[4], _12[5], 0,
+      _12[6], _12[7], _12[8], 0,
+           0,      0,      0, 1
+    ]
+  }
+
+  RenderPolar();
 }
