@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Spectral Correction Visualization</title>
+
+    <script src="affine.js" type="text/javascript"></script>
+    <script src="affine_interact.js" type="text/javascript"></script>
+    <script src="permutation_visualizer.js" type="text/javascript"></script>
+  </head>
+
+  <body onload="Init();">
+  	<div>
+    <table>
+      <tr>
+        <th align="left">X Basis</th>
+        <th align="left">Y Basis</th>
+        <th align="left">Z Basis</th>
+        <th align="left">Translation</th>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_1_col_1"></td>
+        <td><input type="text" id="row_1_col_2"></td>
+        <td><input type="text" id="row_1_col_3"></td>
+        <td><input type="text" id="row_1_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_2_col_1"></td>
+        <td><input type="text" id="row_2_col_2"></td>
+        <td><input type="text" id="row_2_col_3"></td>
+        <td><input type="text" id="row_2_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_3_col_1"></td>
+        <td><input type="text" id="row_3_col_2"></td>
+        <td><input type="text" id="row_3_col_3"></td>
+        <td><input type="text" id="row_3_col_4"></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="row_4_col_1"></td>
+        <td><input type="text" id="row_4_col_2"></td>
+        <td><input type="text" id="row_4_col_3"></td>
+        <td><input type="text" id="row_4_col_4"></td>
+      </tr>
+    </table>
+  	</div>
+  	<div><a href="#" onclick="LoadMatrix();return false;">Load matrix</a></div>
+  	<hr />
+	  <div>
+	    <canvas id="polar_2d_canvas" width="800" height="80" class="img-fluid">
+	      Canvas support required
+	    </canvas>
+	  </div>
+	  <div>
+	    <canvas id="polar_3d_canvas" width="800" height="400" class="img-fluid">
+	      WebGL support required
+	    </canvas>
+	  </div>
+  </body>
+</html>
