@@ -27,7 +27,7 @@ var polar_t = 0;
 
 var basis_geometry = null;
 
-var debug_matrix = [
+var u1 = [
   1, 0, 0, 0,
   0, 1, 0, 0,
   0, 0, 1, 0,
@@ -45,6 +45,13 @@ var result_variations = [
 ]
 
 function Init() {
+  FillDebugMatrix([
+     2.1213196295176813, 0.35355350960022724,   0, 0, 
+    -2.1213210576013637, 0.35355327158628025,   0, 0, 
+                      0,                   0, 0.5, 0, 
+                   -6.5,                   4,   0, 1
+  ])
+
   polar_2d_canvas = document.getElementById('polar_2d_canvas');
   if (polar_2d_canvas && polar_2d_canvas.getContext) {
     polar_2d_context = polar_2d_canvas.getContext('2d');
@@ -81,6 +88,7 @@ function Init() {
   }
 
   RenderPolar();
+  LoadAndDecompose();
 }
 
 function OnMouseDownPolar(evt) {
@@ -223,7 +231,7 @@ function RenderPolar3D() {
   var debug = Mul_MM(model, polar_basis) */
 
   
-  DrawBuffer(basis_geometry,[1, 0, 0, 0,0, 1, 0, 0,0, 0, 1, 0,8, 0, 0, 1])
+  DrawBuffer(basis_geometry, u1)
 
   var debug_mat = [
     1, 0, 0, 0,
@@ -238,10 +246,10 @@ function RenderPolar3D() {
     0, 0, 0, 1
   ]
 
-  DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+  //DrawBuffer(basis_geometry, Mul4(move, debug_mat))
 
   move[12] = -8
-  DrawBuffer(basis_geometry, Mul4(move, debug_mat))
+  //DrawBuffer(basis_geometry, Mul4(move, debug_mat))
 
 }
 
@@ -771,5 +779,134 @@ function MakeBasis(gl, position, lenX, lenY, lenZ, radius) {
     type: gl.FLOAT,
     stride: 0,
     offset: 0
+  }
+}
+
+function FillDebugMatrix(M) {
+  document.getElementById("row_1_col_1").value = M[0]
+  document.getElementById("row_2_col_1").value = M[1]
+  document.getElementById("row_3_col_1").value = M[2]
+  document.getElementById("row_4_col_1").value = M[3]
+
+  document.getElementById("row_1_col_2").value = M[4]
+  document.getElementById("row_2_col_2").value = M[5]
+  document.getElementById("row_3_col_2").value = M[6]
+  document.getElementById("row_4_col_2").value = M[7]
+
+  document.getElementById("row_1_col_3").value = M[8]
+  document.getElementById("row_2_col_3").value = M[9]
+  document.getElementById("row_3_col_3").value = M[10]
+  document.getElementById("row_4_col_3").value = M[11]
+
+  document.getElementById("row_1_col_4").value = M[12]
+  document.getElementById("row_2_col_4").value = M[13]
+  document.getElementById("row_3_col_4").value = M[14]
+  document.getElementById("row_4_col_4").value = M[15]
+}
+
+function GetInputMatrix() {
+  var M = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+
+  M[0] = Number(document.getElementById("row_1_col_1").value)
+  M[1] = Number(document.getElementById("row_2_col_1").value)
+  M[2] = Number(document.getElementById("row_3_col_1").value)
+  M[3] = Number(document.getElementById("row_4_col_1").value)
+
+  M[4] = Number(document.getElementById("row_1_col_2").value)
+  M[5] = Number(document.getElementById("row_2_col_2").value)
+  M[6] = Number(document.getElementById("row_3_col_2").value)
+  M[7] = Number(document.getElementById("row_4_col_2").value)
+
+  M[8] = Number(document.getElementById("row_1_col_3").value)
+  M[9] = Number(document.getElementById("row_2_col_3").value)
+  M[10]= Number(document.getElementById("row_3_col_3").value)
+  M[11]= Number(document.getElementById("row_4_col_3").value)
+
+  M[12]= Number(document.getElementById("row_1_col_4").value)
+  M[13]= Number(document.getElementById("row_2_col_4").value)
+  M[14]= Number(document.getElementById("row_3_col_4").value)
+  M[15]= Number(document.getElementById("row_4_col_4").value)
+
+  return M
+}
+
+function LoadAndDecompose() {
+  var M = GetInputMatrix();
+  var decomp_result = AffineDecompose(M);
+  // SpectoralDecomposition is done on S!
+  u1 = SpectDecomp(decomp_result.TFRS.S).u;
+
+  RenderPolar();
+}
+
+function SpectDecomp(S) {
+  var QRFactorization = null
+  var Q = null
+  var R = null
+  var Ai = [ // Only care about S as a 3x3 matrix
+    S[0], S[1], S[2],
+    S[4], S[5], S[6],
+    S[8], S[9], S[10]
+  ]
+
+  // From wikipedia: https://en.wikipedia.org/wiki/QR_algorithm
+  // The eigenvectors are an accumulation of all the orthogonal
+  // transforms needed to get to the matrix conversion
+  var Qa = [
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  ]
+
+  var numIterations = 0
+
+  for (var i = 0; i < global_num_iterations; ++i) {
+    QRFactorization = QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
+      Ai[0], Ai[1], Ai[2], 0,
+      Ai[3], Ai[4], Ai[5], 0,
+      Ai[6], Ai[7], Ai[8], 0,
+      0, 0, 0, 1
+    ])
+
+    Q = [ // QRFactorization.Q as a 3x3 matrix
+      QRFactorization.Q[0], QRFactorization.Q[1], QRFactorization.Q[2],
+      QRFactorization.Q[4], QRFactorization.Q[5], QRFactorization.Q[6],
+      QRFactorization.Q[8], QRFactorization.Q[9], QRFactorization.Q[10]
+    ];
+
+    R = [ // QRFactorization.R as a 3x3 matrix
+      QRFactorization.R[0], QRFactorization.R[1], QRFactorization.R[2],
+      QRFactorization.R[4], QRFactorization.R[5], QRFactorization.R[6],
+      QRFactorization.R[8], QRFactorization.R[9], QRFactorization.R[10]
+    ]
+
+    Qa = Mul3(Qa, Q);
+    Ai = Mul3(R, Q);
+    numIterations += 1
+
+    if (global_enable_early_out && EigenDecompositionEarlyOut(Ai)) {
+      break;
+    }
+  }
+
+  eigenvalues = [Ai[0], Ai[4], Ai[8]]
+  eigenvectors = [
+    [Qa[0], Qa[1], Qa[2]],
+    [Qa[3], Qa[4], Qa[5]],
+    [Qa[6], Qa[7], Qa[8]]
+  ]
+
+  return {
+    u : [
+      Qa[0], Qa[1], Qa[2], 0 ,
+      Qa[3], Qa[4], Qa[5],0 ,
+      Qa[6], Qa[7], Qa[8], 0 ,
+      0, 0, 0, 1
+    ]
   }
 }
