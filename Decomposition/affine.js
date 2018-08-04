@@ -362,18 +362,18 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
      -0,-0,-1,
       0, 1, 0 ],
     // Permutation 2: y, x, z
-    [ -0,-1,-0,
-       1, 0, 0,
-       0, 0, 1 ],
-    [ -0,-1,-0,
-      -1,-0,-0,
-      -0,-0,-1 ],
-    [  0, 1, 0,
-       1, 0, 0,
-      -0,-0,-1 ],
-    [  0, 1, 0,
-      -1,-0,-0,
-       0, 0, 1 ],
+    [-0,-1,-0,
+      1, 0, 0,
+      0, 0, 1 ],
+    [-0,-1,-0,
+     -1,-0,-0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+      1, 0, 0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+     -1,-0,-0,
+      0, 0, 1 ],
     // Permutation 3: y, z, x
     [ 0, 1, 0,
       0, 0, 1,
@@ -418,34 +418,16 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var e_permutations = [
     // Permutation 0
     [ x,  y,  z],
-    [-x, -y,  z],
-    [ x, -y, -z],
-    [-x,  y, -z],
     // Permutation 1
-    [-x,  z,  y],
-    [-x, -z, -y],
-    [ x,  z, -y],
-    [ x, -z,  y],
+    [ x,  z,  y],
     // Permutation 2
-    [-y,  x,  z],
-    [-y, -x, -z],
-    [ y,  x, -z],
-    [ y, -x,  z],
+    [ y,  x,  z],
     // Permutation 3
     [ y,  z,  x],
-    [-y, -z,  x],
-    [ y, -z, -x],
-    [-y,  z, -x],
     // Permutation 4
     [ z,  x,  y],
-    [-z, -x,  y],
-    [ z, -x, -y],
-    [-z,  x, -y],
     // Permutation 5
-    [-z,  y,  x],
-    [-z, -y, -x],
-    [ z,  y, -x],
-    [ z, -y,  x],
+    [ z,  y,  x],
   ]
 
   var saved_index = null
@@ -473,12 +455,6 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   }
 
   var m = m_permutations[saved_index]
-  var q = M4ToQ([ // For debugging only
-    m[0], m[1], m[2], 0,
-    m[3], m[4], m[5], 0,
-    m[6], m[7], m[8], 0,
-    0, 0, 0, 1
-  ])
 
   return {
     eigenvectors: [
@@ -487,9 +463,9 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       [m[6], m[7], m[8]]
     ],
     eigenvalues: [
-      e_permutations[saved_index][0],
-      e_permutations[saved_index][1],
-      e_permutations[saved_index][2]
+      e_permutations[Math.floor(saved_index/4)][0],
+      e_permutations[Math.floor(saved_index/4)][1],
+      e_permutations[Math.floor(saved_index/4)][2]
     ]
   }
 }
