@@ -38,6 +38,26 @@ var permutations = null;
 var variants = null;
 var base_mat = null;
 
+var p_out = [
+  "X, Y, Z",
+  "X, Z, Y",
+  "Y, X, Z",
+  "Y, Z, X",
+  "Z, Y, Z",
+  "Z, X, Y"
+]
+
+var v_out = [
+  "+, +, +",
+  "-, -, +",
+  "+, -, -",
+  "-, +, -",
+  "-, +, +",
+  "-, -, -",
+  "+, +, -",
+  "+, -, +"
+]
+
 function FillOutMatrices(m) {
   if (m.length == 9) {
     base_mat = [
@@ -183,82 +203,82 @@ function FillOutMatrices(m) {
     [
       [  p3[0],  p3[1],  p3[2],
          p3[3],  p3[4],  p3[5],
-         p3[6],  p3[7],  p3[8], ],
-      [ -p3[0], -p3[1], -p3[2],
-         p3[3],  p3[4],  p3[5],
-         p3[6],  p3[7],  p3[8], ],
+         p3[6],  p3[7],  p3[8], ], // OK - Goes from permutation to variant
       [ -p3[0], -p3[1], -p3[2],
         -p3[3], -p3[4], -p3[5],
-         p3[6],  p3[7],  p3[8], ],
-      [ -p3[0], -p3[1], -p3[2],
-        -p3[3], -p3[4], -p3[5],
-        -p3[6], -p3[7], -p3[8], ],
+         p3[6],  p3[7],  p3[8], ], // OK - Goes from permutation to variant
       [  p3[0],  p3[1],  p3[2],
         -p3[3], -p3[4], -p3[5],
-        -p3[6], -p3[7], -p3[8], ],
-      [  p3[0],  p3[1],  p3[2],
-         p3[3],  p3[4],  p3[5],
-        -p3[6], -p3[7], -p3[8], ],
-      [  p3[0],  p3[1],  p3[2],
-        -p3[3], -p3[4], -p3[5],
-         p3[6],  p3[7],  p3[8], ],
+        -p3[6], -p3[7], -p3[8], ], // OK - Goes from permutation to variant
       [ -p3[0], -p3[1], -p3[2],
          p3[3],  p3[4],  p3[5],
-        -p3[6], -p3[7], -p3[8], ],
+        -p3[6], -p3[7], -p3[8], ], // OK - Goes from permutation to variant
+      [ -p3[0], -p3[1], -p3[2],
+         p3[3],  p3[4],  p3[5],
+         p3[6],  p3[7],  p3[8], ], // NO - Goes from original to variant
+      [ -p3[0], -p3[1], -p3[2],
+        -p3[3], -p3[4], -p3[5],
+        -p3[6], -p3[7], -p3[8], ], // NO - Goes from original to variant
+      [  p3[0],  p3[1],  p3[2],
+         p3[3],  p3[4],  p3[5],
+        -p3[6], -p3[7], -p3[8], ], // NO - Goes from original to variant
+      [  p3[0],  p3[1],  p3[2],
+        -p3[3], -p3[4], -p3[5],
+         p3[6],  p3[7],  p3[8], ], // NO - Goes from original to variant
     ],
     // permutation 4
     [
       [  p4[0],  p4[1],  p4[2],
          p4[3],  p4[4],  p4[5],
-         p4[6],  p4[7],  p4[8], ],
-      [ -p4[0], -p4[1], -p4[2],
-         p4[3],  p4[4],  p4[5],
-         p4[6],  p4[7],  p4[8], ],
+         p4[6],  p4[7],  p4[8], ], // OK - Goes from permutation to variant
       [ -p4[0], -p4[1], -p4[2],
         -p4[3], -p4[4], -p4[5],
-         p4[6],  p4[7],  p4[8], ],
-      [ -p4[0], -p4[1], -p4[2],
-        -p4[3], -p4[4], -p4[5],
-        -p4[6], -p4[7], -p4[8], ],
+         p4[6],  p4[7],  p4[8], ], // OK - Goes from permutation to variant
       [  p4[0],  p4[1],  p4[2],
         -p4[3], -p4[4], -p4[5],
-        -p4[6], -p4[7], -p4[8], ],
-      [  p4[0],  p4[1],  p4[2],
-         p4[3],  p4[4],  p4[5],
-        -p4[6], -p4[7], -p4[8], ],
-      [  p4[0],  p4[1],  p4[2],
-        -p4[3], -p4[4], -p4[5],
-         p4[6],  p4[7],  p4[8], ],
+        -p4[6], -p4[7], -p4[8], ], // OK - Goes from permutation to variant
       [ -p4[0], -p4[1], -p4[2],
          p4[3],  p4[4],  p4[5],
-        -p4[6], -p4[7], -p4[8], ],
+        -p4[6], -p4[7], -p4[8], ], // OK - Goes from permutation to variant
+      [ -p4[0], -p4[1], -p4[2],
+         p4[3],  p4[4],  p4[5],
+         p4[6],  p4[7],  p4[8], ], // NO - Goes from original to variant
+      [ -p4[0], -p4[1], -p4[2],
+        -p4[3], -p4[4], -p4[5],
+        -p4[6], -p4[7], -p4[8], ], // NO - Goes from original to variant
+      [  p4[0],  p4[1],  p4[2],
+         p4[3],  p4[4],  p4[5],
+        -p4[6], -p4[7], -p4[8], ], // NO - Goes from original to variant
+      [  p4[0],  p4[1],  p4[2],
+        -p4[3], -p4[4], -p4[5],
+         p4[6],  p4[7],  p4[8], ], // NO - Goes from original to variant
     ],
     // permutation 5
     [
       [  p5[0],  p5[1],  p5[2],
          p5[3],  p5[4],  p5[5],
-         p5[6],  p5[7],  p5[8], ],
-      [ -p5[0], -p5[1], -p5[2],
-         p5[3],  p5[4],  p5[5],
-         p5[6],  p5[7],  p5[8], ],
+         p5[6],  p5[7],  p5[8], ], // OK - Goes from permutation to variant
       [ -p5[0], -p5[1], -p5[2],
         -p5[3], -p5[4], -p5[5],
-         p5[6],  p5[7],  p5[8], ],
-      [ -p5[0], -p5[1], -p5[2],
-        -p5[3], -p5[4], -p5[5],
-        -p5[6], -p5[7], -p5[8], ],
+         p5[6],  p5[7],  p5[8], ], // OK - Goes from permutation to variant
       [  p5[0],  p5[1],  p5[2],
         -p5[3], -p5[4], -p5[5],
-        -p5[6], -p5[7], -p5[8], ],
-      [  p5[0],  p5[1],  p5[2],
-         p5[3],  p5[4],  p5[5],
-        -p5[6], -p5[7], -p5[8], ],
-      [  p5[0],  p5[1],  p5[2],
-        -p5[3], -p5[4], -p5[5],
-         p5[6],  p5[7],  p5[8], ],
+        -p5[6], -p5[7], -p5[8], ], // OK - Goes from permutation to variant
       [ -p5[0], -p5[1], -p5[2],
          p5[3],  p5[4],  p5[5],
-        -p5[6], -p5[7], -p5[8], ],
+        -p5[6], -p5[7], -p5[8], ], // OK - Goes from permutation to variant
+      [ -p5[0], -p5[1], -p5[2],
+         p5[3],  p5[4],  p5[5],
+         p5[6],  p5[7],  p5[8], ], // NO - Goes from original to variant
+      [ -p5[0], -p5[1], -p5[2],
+        -p5[3], -p5[4], -p5[5],
+        -p5[6], -p5[7], -p5[8], ], // NO - Goes from original to variant
+      [  p5[0],  p5[1],  p5[2],
+         p5[3],  p5[4],  p5[5],
+        -p5[6], -p5[7], -p5[8], ], // NO - Goes from original to variant
+      [  p5[0],  p5[1],  p5[2],
+        -p5[3], -p5[4], -p5[5],
+         p5[6],  p5[7],  p5[8], ], // NO - Goes from original to variant
     ]
   ]
 }
@@ -266,6 +286,41 @@ function FillOutMatrices(m) {
 function LoadMatrix() {
   var M = GetInputMatrix()
   FillOutMatrices(M)
+  RenderPolar();
+}
+
+function S1() {
+  var m = [
+    0.7986351932653266, -0.601815443535686, 0, 0,
+    0.601815443535686, 0.7986351932653264, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+  FillDebugMatrix(m)
+  FillOutMatrices(m)
+  RenderPolar();
+}
+
+function S2() {
+  var m = [
+    1.2021519598762158e-7, 0.9999999999999926, 0, 0,
+    -0.9999999999999926, 1.2021519693052948e-7, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+  FillDebugMatrix(m)
+  FillOutMatrices(m)
+  RenderPolar();
+}
+function S3() {
+  var m = [
+    0.7071065431725604, -0.707107019200454, 0, 0,
+    0.7071070192004547, 0.7071065431725607, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+  FillDebugMatrix(m)
+  FillOutMatrices(m)
   RenderPolar();
 }
 
@@ -535,6 +590,10 @@ function RenderPolar2D() {
     polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
     polar_2d_context.fillText(debugString, 320, 25);
 
+    polar_2d_context.font = '18px serif';
+    debugString = p_out[GetIterationPolar()]
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 475, 25);
 
     // SLIDER 2
 
@@ -582,6 +641,11 @@ function RenderPolar2D() {
     debugString = 'Variant: ' + GetIterationPolar2()
     polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
     polar_2d_context.fillText(debugString, 320, 65);
+
+    polar_2d_context.font = '18px serif';
+    debugString = v_out[GetIterationPolar2()]
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 475, 65);
   }
 }
 
