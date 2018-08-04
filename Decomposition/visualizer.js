@@ -106,7 +106,7 @@ function OnMouseDownPolar(evt) {
   polar_mouse[0] /= polar_scale[0];
   polar_mouse[1] /= polar_scale[1];
 
-  var cirX = 20 + GetIterationPolar() * 11.25
+  var cirX = 20 + GetIterationPolar() * 11.739
   var cirY = 20
   var cirR = 10
 
@@ -147,7 +147,7 @@ function OnMouseMovePolar(evt) {
   polar_mouse[1] /= polar_scale[1];
 
   var lastpolar_mouseOnItem = polar_mouseOnItem
-  var cirX = 20 + GetIterationPolar() * 11.25
+  var cirX = 20 + GetIterationPolar() * 11.739
 
   if (evt.buttons & 1 == 1) {
    cirX = GetHandleXPolar(polar_t);
@@ -277,8 +277,8 @@ function RenderPolar2D() {
 
     // Draw notches
     polar_2d_context.beginPath()
-    for (var i = 0; i < 25; ++i) {
-      var x = Math.floor(20 + i * 11.25);
+    for (var i = 0; i < 24; ++i) {
+      var x = Math.floor(20 + i * 11.739);
       polar_2d_context.moveTo(x, 10)
       polar_2d_context.lineTo(x, 30) 
       polar_2d_context.stroke()
@@ -293,7 +293,7 @@ function RenderPolar2D() {
     if (polar_mouseOnItem == 2 || polar_selectedItem == 2) {
         polar_2d_context.fillStyle = 'rgb(200, 200, 200)';
     }
-    var handleX = 20 + GetIterationPolar() * 11.25
+    var handleX = 20 + GetIterationPolar() * 11.739
     var handleY = 20
     polar_2d_context.beginPath()
     polar_2d_context.arc(handleX, handleY, 10, 0, Math.PI * 2, true); // Outer circle
@@ -378,7 +378,7 @@ function GetHandleXPolar(_t) {
 }
 
 function GetIterationPolar() {
-  return Math.floor(polar_t * 270 / 11.25)
+  return Math.floor(polar_t * 270 / 11.739)
 }
 
 function UpdatePolarBasis() {
