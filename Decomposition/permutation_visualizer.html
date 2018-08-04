@@ -49,6 +49,26 @@
       <a href="#" onclick="S2();return false;">Sample 2</a>,
       <a href="#" onclick="S3();return false;">Sample 3</a>
     </div>
+    <hr />
+    <div>
+    <table>
+      <tr>
+        <td>Camera Position</td>
+        <td><input type="text" id="cam_x"></td>
+        <td><input type="text" id="cam_y"></td>
+        <td><input type="text" id="cam_z"></td>
+      </tr>
+      <tr>
+        <td>Camera Target</td>
+        <td><input type="text" id="tar_x"></td>
+        <td><input type="text" id="tar_y"></td>
+        <td><input type="text" id="tar_z"></td>
+      </tr>
+    </table>
+    </div>
+    <div>
+      <a href="#" onclick="DoLookAt();return false;">Look At</a>
+    </div>
   	<hr />
 	  <div>
 	    <canvas id="polar_2d_canvas" width="800" height="80" class="img-fluid">

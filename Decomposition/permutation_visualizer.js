@@ -58,6 +58,40 @@ var v_out = [
   "+, -, +"
 ]
 
+function DoLookAt() {
+  polar_cam_pos[0] = Number(document.getElementById("cam_x").value)
+  polar_cam_pos[1] = Number(document.getElementById("cam_y").value)
+  polar_cam_pos[2] = Number(document.getElementById("cam_z").value)
+
+  polar_cam_target[0] = Number(document.getElementById("tar_x").value)
+  polar_cam_target[1] = Number(document.getElementById("tar_y").value)
+  polar_cam_target[2] = Number(document.getElementById("tar_z").value)
+
+  polar_view = LookAt(polar_cam_pos, polar_cam_target, [0, 1, 0]);
+  RenderPolar();
+}
+
+function SetLookAt(pos, tar) {
+  polar_cam_pos[0] = pos[0]
+  polar_cam_pos[1] = pos[1]
+  polar_cam_pos[2] = pos[2]
+
+  polar_cam_target[0] = tar[0]
+  polar_cam_target[1] = tar[1]
+  polar_cam_target[2] = tar[2]
+
+  document.getElementById("cam_x").value = polar_cam_pos[0]
+  document.getElementById("cam_y").value = polar_cam_pos[1]
+  document.getElementById("cam_z").value = polar_cam_pos[2]
+
+  document.getElementById("tar_x").value = polar_cam_target[0]
+  document.getElementById("tar_y").value = polar_cam_target[1]
+  document.getElementById("tar_z").value = polar_cam_target[2]
+
+  polar_view = LookAt(polar_cam_pos, polar_cam_target, [0, 1, 0]);
+  RenderPolar();
+}
+
 function FillOutMatrices(m) {
   if (m.length == 9) {
     base_mat = [
@@ -333,6 +367,8 @@ function Init() {
   ])
   var M = GetInputMatrix()
   FillOutMatrices(M)
+
+  SetLookAt(polar_cam_pos, polar_cam_target)
 
   polar_2d_canvas = document.getElementById('polar_2d_canvas');
   if (polar_2d_canvas && polar_2d_canvas.getContext) {
