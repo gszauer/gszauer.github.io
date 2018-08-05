@@ -38,6 +38,28 @@ function MatrixToString(M) {
 	return out;
 }
 
+function DoJSONFill() {
+	var mat = document.getElementById("json_matrix").value
+	var array =JSON.parse(mat)
+
+	document.getElementById("row_1_col_1").value = array[0]
+	document.getElementById("row_2_col_1").value = array[1]
+	document.getElementById("row_3_col_1").value = array[2]
+	document.getElementById("row_4_col_1").value = array[3]
+	document.getElementById("row_1_col_2").value = array[4]
+	document.getElementById("row_2_col_2").value = array[5]
+	document.getElementById("row_3_col_2").value = array[6]
+	document.getElementById("row_4_col_2").value = array[7]
+	document.getElementById("row_1_col_3").value = array[8]
+	document.getElementById("row_2_col_3").value = array[9]
+	document.getElementById("row_3_col_3").value = array[10]
+	document.getElementById("row_4_col_3").value = array[11]
+	document.getElementById("row_1_col_4").value = array[12]
+	document.getElementById("row_2_col_4").value = array[13]
+	document.getElementById("row_3_col_4").value = array[14]
+	document.getElementById("row_4_col_4").value = array[15]
+}
+
 function GetInputMatrix() {
 	var M = [
 		1, 0, 0, 0,
