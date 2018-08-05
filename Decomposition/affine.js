@@ -96,23 +96,21 @@ function PolarDecomposition(X) {
     X[4], X[5], X[6],
     X[8], X[9], X[10]
   ]
+
   if (Det3(Q) < 0) {
     alert("Trying to do polar decompositon, but determinant is negative");
   }
-  var Qit = Inverse3(Transpose3(Q));
-
+  
   var numIterations = 0;
 
   for (var i = 0; i < global_num_iterations; ++i) {
-    const QPrev = [
-      Q[0], Q[1], Q[2],
-      Q[3], Q[4], Q[5],
-      Q[6], Q[7], Q[8]
-    ]
-    Q = Mul3f(Add3(Q, Qit), 0.5)
-    Qit = Inverse3(Transpose3(Q))
-    numIterations += 1;
+    const QPrev = [ Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7], Q[8] ]
 
+    var Qit = Transpose3(Inverse3(Q))
+    Q = Mul3f(Add3(Q, Qit), 0.5)
+
+    numIterations += 1;
+  
     if (global_enable_early_out && PolarDecompositionEarlyOut(Q, QPrev)) {
       break;
     }
@@ -528,12 +526,32 @@ function Transpose3(m) {
   ]
 }
 
-function Inverse3(m) {
-  const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
-  const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
-  const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
+function Det3(m) {
+  if (m.length != 9) {
+    alert("Trying to get the determinant of a non 3x3 matrix");
+  }
+  const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+  const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+  const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
 
   const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+
+  return determinant
+}
+
+function Inverse3(m) {
+  if (m.length != 9) {
+    alert("Trying to get the determinant of a non 3x3 matrix");
+  }
+
+  const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+  const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+  const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
+
+  const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+  if (isNaN(determinant)) {
+    alert("Determinant is nan");
+  }
   if (determinant == 0.0) {
     alert("Matrix does not have an inverse!");
     return [
@@ -544,6 +562,9 @@ function Inverse3(m) {
   }
 
   const inv_determinant = 1.0 / determinant;
+  if (isNaN(inv_determinant)) {
+    alert("Inv-determinant is nan");
+  }
   if (inv_determinant == 0.0) {
     alert("Matrix does not have an inverse!");
     return [
@@ -712,21 +733,6 @@ function Cross(v1, v2) {
     v1[0] * v2[1] - v1[1] * v2[0]
   ];
   return result;
-}
-
-function Det3(me) {
-  if (me.length != 9) {
-    alert("Trying to get the determinant of a non 3x3 matrix");
-  }
-  var n11 = me[ 0 ]; var n21 = me[ 1 ]; var n31 = me[ 2 ];
-  var n12 = me[ 3 ]; var n22 = me[ 4 ]; var n32 = me[ 5 ];
-  var n13 = me[ 6 ]; var n23 = me[ 7 ]; var n33 = me[ 8 ];
-
-  var t11 = n33 * n22 - n32 * n23;
-  var t12 = n32 * n13 - n33 * n12;
-  var t13 = n23 * n12 - n22 * n13;
-
-  return n11 * t11 + n21 * t12 + n31 * t13;
 }
 
 function Normalize(v) {
