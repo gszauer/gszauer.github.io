@@ -430,11 +430,39 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     [ z,  y,  x],
   ]
 
+  var p_permutations = [
+    // Permutation 0
+    [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]  ],
+    // Permutation 1
+    [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2]  ],
+    // Permutation 2
+    [ eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]  ],
+    // Permutation 3
+    [ eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2]  ],
+    // Permutation 4
+    [ eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2]  ], 
+    // Permutation 5
+    [ eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2]  ] 
+  ]
+
   var saved_index = null
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
   var debug_quats = []
+  var p_out = null;
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
     var U12 = Mul3(U1t, U2)
@@ -451,21 +479,29 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     if (saved_index == null || QU12[0] > saved_value) {
       saved_value = QU12[0]
       saved_index = i
+      p_out = Mul3(Inverse3(U12), U2)
     }
   }
 
-  var m = m_permutations[saved_index]
+  var i = Math.floor(saved_index/4);
+
+  //var m = m_permutations[saved_index]
+  var pm = [
+    p_permutations[i][0], p_permutations[i][1], p_permutations[i][2],
+    p_permutations[i][3], p_permutations[i][4], p_permutations[i][5], 
+    p_permutations[i][6], p_permutations[i][7], p_permutations[i][8], 
+  ]
 
   return {
     eigenvectors: [
-      [m[0], m[1], m[2]],
-      [m[3], m[4], m[5]],
-      [m[6], m[7], m[8]]
+      [pm[0], pm[1], pm[2]],
+      [pm[3], pm[4], pm[5]],
+      [pm[6], pm[7], pm[8]]
     ],
     eigenvalues: [
-      e_permutations[Math.floor(saved_index/4)][0],
-      e_permutations[Math.floor(saved_index/4)][1],
-      e_permutations[Math.floor(saved_index/4)][2]
+      e_permutations[i][0],
+      e_permutations[i][1],
+      e_permutations[i][2]
     ]
   }
 }
