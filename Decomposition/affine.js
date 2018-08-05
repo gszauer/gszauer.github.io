@@ -459,8 +459,6 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
-  var debug_quats = []
-  var p_out = null;
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
     var U12 = Mul3(U1t, U2)
@@ -471,13 +469,11 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       U12[6], U12[7], U12[8], 0,
            0,      0,      0, 1
     ])
-    debug_quats.push([QU12[0], QU12[1], QU12[2], QU12[3]])
     
     // Optimize for largest w, which is smallest angle of rotation
     if (saved_index == null || QU12[0] > saved_value) {
       saved_value = QU12[0]
       saved_index = i
-      p_out = Mul3(Inverse3(U12), U2)
     }
   }
 
