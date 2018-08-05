@@ -266,6 +266,28 @@ function FillSample6() {
 	document.getElementById("row_4_col_4").value = "1"
 }
 
+function FillSample7() {
+	document.getElementById("row_1_col_1").value = "-0.14644730303013853"
+	document.getElementById("row_2_col_1").value = "0.853553271586087"
+	document.getElementById("row_3_col_1").value = "-0.49999999999988676"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "-0.853553271586087"
+	document.getElementById("row_2_col_2").value = "0.14644615379730097"
+	document.getElementById("row_3_col_2").value = "0.5000003366025519"
+	document.getElementById("row_4_col_2").value = "0"
+
+	document.getElementById("row_1_col_3").value = "0.49999999999988676"
+	document.getElementById("row_2_col_3").value = "0.5000003366025519"
+	document.getElementById("row_3_col_3").value = "0.7071065431725605"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "-2.000000952055788"
+	document.getElementById("row_2_col_4").value = "2.82842712474603"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "1"
+}
+
 function FillDebugMatrix() {
 	const B = [
 		 1.597270686975348, 0.15045381104601616, 0, 0,
