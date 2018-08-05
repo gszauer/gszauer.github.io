@@ -3,12 +3,11 @@
 // All vectors are 3d column vectors
 
 var decompose = {
-	global_enable_early_out: false,
-	global_num_iterations: 100
+  global_num_iterations: 100
 }
 
 function AffineDecompose(M) {
-	return decompose.AffineDecompose(M);
+  return decompose.AffineDecompose(M);
 }
 
 decompose.AffineDecompose = function(M) {
@@ -118,10 +117,6 @@ decompose.PolarDecomposition = function(X) {
     Q = decompose.Mul3f(decompose.Add3(Q, Qit), 0.5)
     Qit = decompose.Inverse3(decompose.Transpose3(Q))
     numIterations += 1;
-
-    if (decompose.global_enable_early_out && decompose.PolarDecompositionEarlyOut(Q, QPrev)) {
-      break;
-    }
   }
 
   var f = 1
@@ -159,17 +154,6 @@ decompose.PolarDecomposition = function(X) {
     determinant : det,
     iterations: numIterations
   }
-}
-
-// http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
-decompose.PolarDecompositionEarlyOut = function(Q, Qprev) {
-  const res = decompose.Sub3(Q, Qprev);
-  for (var i = 0; i < 9; ++i) {
-    if (Math.abs(res[i]) > 0.00001) {
-      return false;
-    }
-  }
-  return true;
 }
 
 // https://www.youtube.com/watch?v=c_QCR20nTDY
@@ -268,10 +252,6 @@ decompose.SpectoralDecomposition = function(S) {
     Qa = decompose.Mul3(Qa, Q);
     Ai = decompose.Mul3(R, Q);
     numIterations += 1
-
-    if (decompose.global_enable_early_out && decompose.EigenDecompositionEarlyOut(Ai)) {
-      break;
-    }
   }
 
   eigenvalues = [Ai[0], Ai[4], Ai[8]]
@@ -324,27 +304,15 @@ decompose.SpectoralDecomposition = function(S) {
 // Convert all of these matrices into quaternions.
 // Choose the one with the largest W component, as it has the smallest rotation
 decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
-  const x = eigenvectors[0]
-  const y = eigenvectors[1]
-  const z = eigenvectors[2]
-
-  const a = eigenvalues[0]
-  const b = eigenvalues[1]
-  const c = eigenvalues[2]
+  const x = eigenvalues[0]
+  const y = eigenvalues[1]
+  const z = eigenvalues[2]
 
   var U1 = [ 
-    x[0],  x[1],  x[2], 
-    y[0],  y[1],  y[2], 
-    z[0],  z[1],  z[2]
+    eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+    eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+    eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]
   ]
-
-  // For debugging!
-  var QU1 = decompose.M4ToQ([
-      U1[0], U1[1], U1[2], 0,
-      U1[3], U1[4], U1[5], 0,
-      U1[6], U1[7], U1[8], 0,
-      0, 0, 0, 1
-  ]);
 
   var U1t = [
     U1[0], U1[3], U1[6], 
@@ -352,242 +320,182 @@ decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
     U1[2], U1[5], U1[8]
   ]
 
-  // ONE OF THESE is U2, gotta pick the right one
   var m_permutations = [
-    // Permutation: z, y, z
-    [ x[0],  x[1],  x[2],  
-      y[0],  y[1],  y[2],  
-      z[0],  z[1],  z[2] ],
-    [ x[0],  x[1],  x[2],  
-     -y[0], -y[1], -y[2],  
-     -z[0], -z[1], -z[2] ],
-    [-x[0], -x[1], -x[2],  
-     -y[0], -y[1], -y[2],  
-      z[0],  z[1],  z[2] ],
-    [-x[0], -x[1], -x[2],     
-      y[0],  y[1],  y[2],  
-     -z[0], -z[1], -z[2] ],
-    // Permutation: x, z, y
-    [ x[0],  x[1],  x[2], 
-      z[0],  z[1],  z[2],  
-      y[0],  y[1],  y[2] ],
-    [ x[0],  x[1],  x[2],  
-     -z[0], -z[1], -z[2],  
-     -y[0], -y[1], -y[2] ],
-    [-x[0], -x[1], -x[2],  
-     -z[0], -z[1], -z[2],  
-      y[0],  y[1],  y[2] ],
-    [-x[0], -x[1], -x[2],  
-      z[0],  z[1],  z[2],  
-     -y[0], -y[1], -y[2] ],
-    // Permutation: y, x, z
-    [ y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2], 
-      z[0],  z[1],  z[2] ],
-    [ y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2], 
-     -z[0], -z[1], -z[2] ],
-    [-y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2], 
-      z[0],  z[1],  z[2] ],
-    [-y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2], 
-     -z[0], -z[1], -z[2] ],
-    // Permutation: y, z, x
-    [ y[0],  y[1],  y[2], 
-      z[0],  z[1],  z[2], 
-      x[0],  x[1],  x[2] ],
-    [ y[0],  y[1],  y[2], 
-     -z[0], -z[1], -z[2], 
-     -x[0], -x[1], -x[2] ],
-    [-y[0], -y[1], -y[2], 
-     -z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2] ],
-    [-y[0], -y[1], -y[2], 
-      z[0],  z[1],  z[2], 
-     -x[0], -x[1], -x[2] ],
-    // Permutation: z, x, y
-    [ z[0],  z[1],  z[2], 
-      x[0],  x[1],  x[2], 
-      y[0],  y[1],  y[2] ],
-    [ z[0],  z[1],  z[2], 
-     -x[0], -x[1], -x[2], 
-     -y[0], -y[1], -y[2] ],
-    [-z[0], -z[1], -z[2], 
-     -x[0], -x[1], -x[2], 
-      y[0],  y[1],  y[2] ],
-    [-z[0], -z[1], -z[2], 
-      x[0],  x[1],  x[2], 
-     -y[0], -y[1], -y[2] ],
-    // Permutation: z, y, x
-    [ z[0],  z[1],  z[2], 
-      y[0],  y[1],  y[2], 
-      x[0],  x[1],  x[2] ],
-    [ z[0],  z[1],  z[2], 
-     -y[0], -y[1], -y[2], 
-     -x[0], -x[1], -x[2] ],
-    [-z[0], -z[1], -z[2], 
-     -y[0], -y[1], -y[2], 
-      x[0],  x[1],  x[2] ],
-    [-z[0], -z[1], -z[2], 
-      y[0],  y[1],  y[2], 
-     -x[0], -x[1], -x[2] ],
+    // Permutation 0: x, y, z
+    [ 1, 0, 0,  
+      0, 1, 0,
+      0, 0, 1 ],
+    [-1,-0,-0,  
+     -0,-1,-0,
+      0, 0, 1 ],
+    [ 1, 0, 0,  
+     -0,-1,-0,
+     -0,-0,-1 ],
+    [-1,-0,-0,  
+      0, 1, 0,
+     -0,-0,-1 ],
+    // Permutation 1: x, z, y
+    [-1,-0,-0,
+      0, 0, 1,
+      0, 1, 0 ],
+    [-1,-0,-0,
+     -0,-0,-1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+      0, 0, 1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+     -0,-0,-1,
+      0, 1, 0 ],
+    // Permutation 2: y, x, z
+    [-0,-1,-0,
+      1, 0, 0,
+      0, 0, 1 ],
+    [-0,-1,-0,
+     -1,-0,-0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+      1, 0, 0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+     -1,-0,-0,
+      0, 0, 1 ],
+    // Permutation 3: y, z, x
+    [ 0, 1, 0,
+      0, 0, 1,
+      1, 0, 0 ],
+    [-0,-1,-0,
+     -0,-0,-1,
+      1, 0, 0 ],
+    [ 0, 1, 0,
+     -0,-0,-1,
+     -1,-0,-0 ],
+    [-0,-1,-0,
+      0, 0, 1,
+     -1,-0,-0 ],
+     // Permutation 4: z, x, y
+    [ 0, 0, 1,
+      1, 0, 0,
+      0, 1, 0 ],
+    [-0,-0,-1,
+     -1,-0,-0,
+      0, 1, 0 ],
+    [ 0, 0, 1,
+     -1,-0,-0,
+     -0,-1,-0 ],
+    [-0,-0,-1,
+      1, 0, 0,
+     -0,-1,-0 ],
+    // Permutation 5: z, y, x
+    [-0,-0,-1,
+      0, 1, 0,
+      1, 0, 0 ],
+    [-0,-0,-1,
+     -0,-1,-0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+      0, 1, 0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+     -0,-1,-0,
+      1, 0, 0],
   ]
 
   var e_permutations = [
-    [ a,  b,  c],
-    [ a, -b, -c],
-    [-a, -b,  c],
-    [-a,  b, -c],
+    // Permutation 0
+    [ x,  y,  z],
+    // Permutation 1
+    [ x,  z,  y],
+    // Permutation 2
+    [ y,  x,  z],
+    // Permutation 3
+    [ y,  z,  x],
+    // Permutation 4
+    [ z,  x,  y],
+    // Permutation 5
+    [ z,  y,  x],
+  ]
 
-    [ a,  c,  b],
-    [ a, -c, -b],
-    [-a, -c,  b],
-    [-a,  c, -b],
-    
-    [ b,  a,  c],
-    [ b, -a, -c],
-    [-b, -a,  c],
-    [-b,  a, -c],
-    
-    [ b,  c,  a],
-    [ b, -c, -a],
-    [-b, -c,  a],
-    [-b,  c, -a],
-    
-    [ c,  a,  b],
-    [ c, -a, -b],
-    [-c, -a,  b],
-    [-c,  a, -b],
-    
-    [ c,  b,  a],
-    [ c, -b, -a],
-    [-c, -b,  a],
-    [-c,  b, -a]
+  var p_permutations = [
+    // Permutation 0
+    [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]  ],
+    // Permutation 1
+    [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2]  ],
+    // Permutation 2
+    [ eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2]  ],
+    // Permutation 3
+    [ eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2]  ],
+    // Permutation 4
+    [ eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2]  ], 
+    // Permutation 5
+    [ eigenvectors[2][0],  eigenvectors[2][1],  eigenvectors[2][2],
+      eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
+      eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2]  ] 
   ]
 
   var saved_index = null
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
+  var debug_quats = []
+  var p_out = null;
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
-
     var U12 = decompose.Mul3(U1t, U2)
 
-    var QU12 = [
-      U12[0], U12[3], U12[6], 
-      U12[1], U12[4], U12[7], 
-      U12[2], U12[5], U12[8]
-    ]
-
-    QU12[0] = Math.abs(QU12[0])
-    QU12[1] = Math.abs(QU12[1])
-    QU12[2] = Math.abs(QU12[2])
-    QU12[3] = Math.abs(QU12[3])
-
-    var max = QU12[0]
-    var s_max = QU12[1]
-    var half_sum = (QU12[0] + QU12[1] + QU12[2] + QU12[3]) * 0.5
-
-    if (QU12[0] >= QU12[1] && QU12[0] >= QU12[2] && QU12[0] >= QU12[3]) {
-      max = QU12[0]
-
-      if (QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
-        s_max = QU12[1]
-      }
-      else if (QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
-        s_max = QU12[2]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2] && QU12[1] >= QU12[3]) {
-      max = QU12[1]
-
-      if (QU12[0] >= 2 && QU12[0] >= QU12[3]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[3]) {
-        s_max = QU12[2]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else if (QU12[2] >= QU12[0] && QU12[2] >= QU12[1] && QU12[2] >= QU12[3]) {
-      max = QU12[2]
-
-      if (QU12[0] >= 1 && QU12[0] >= QU12[3]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[3]) {
-        s_max = QU12[1]
-      }
-      else {
-        s_max = QU12[3]
-      }
-    }
-    else {
-      max = QU12[3]
-
-      if (QU12[0] >= 1 && QU12[0] >= QU12[2]) {
-        s_max = QU12[0]
-      }
-      else if (QU12[1] >= QU12[0] && QU12[1] >= QU12[2]) {
-        s_max = QU12[1]
-      }
-      else {
-        s_max = QU12[2]
-      }
-    }
-
-    var third = (1.0 / Math.sqrt(2)) * s_max
-    var w = Math.max(Math.max(max, half_sum), third)
-
+    var QU12 = decompose.M4ToQ([
+      U12[0], U12[1], U12[2], 0,
+      U12[3], U12[4], U12[5], 0,
+      U12[6], U12[7], U12[8], 0,
+           0,      0,      0, 1
+    ])
+    debug_quats.push([QU12[0], QU12[1], QU12[2], QU12[3]])
+    
     // Optimize for largest w, which is smallest angle of rotation
-    if (saved_index == null || w > saved_value) {
-      saved_value = w
+    if (saved_index == null || QU12[0] > saved_value) {
+      saved_value = QU12[0]
       saved_index = i
+      p_out = decompose.Mul3(decompose.Inverse3(U12), U2)
     }
   }
 
-  var m = m_permutations[saved_index]
+  var i = Math.floor(saved_index/4);
 
-  var q = decompose.M4ToQ([
-    m[0], m[1], m[2], 0,
-    m[3], m[4], m[5], 0,
-    m[6], m[7], m[8], 0,
-    0, 0, 0, 1
-  ])
+  //var m = m_permutations[saved_index]
+  var pm = [
+    p_permutations[i][0], p_permutations[i][1], p_permutations[i][2],
+    p_permutations[i][3], p_permutations[i][4], p_permutations[i][5], 
+    p_permutations[i][6], p_permutations[i][7], p_permutations[i][8], 
+  ]
 
   return {
     eigenvectors: [
-      [m[0], m[1], m[2]],
-      [m[3], m[4], m[5]],
-      [m[6], m[7], m[8]]
+      [pm[0], pm[1], pm[2]],
+      [pm[3], pm[4], pm[5]],
+      [pm[6], pm[7], pm[8]]
     ],
     eigenvalues: [
-      e_permutations[saved_index][0],
-      e_permutations[saved_index][1],
-      e_permutations[saved_index][2]
+      e_permutations[i][0],
+      e_permutations[i][1],
+      e_permutations[i][2]
     ]
   }
-}
-
-// The lower triangular matrix has zeroed out
-decompose.EigenDecompositionEarlyOut = function(A) {
-  if (Math.abs(A[3]) < 0.00001 && Math.abs(A[6]) < 0.00001 && Math.abs(A[7]) < 0.00001) {
-    return true;
-  }
-  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Math functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
-decompose.Transpose3 = function(m) {
+decompose.Transpose3 = function (m) {
   if (m.length != 9) {
     alert("Trying to transpose non 3x3 matrix");
   }
@@ -598,7 +506,7 @@ decompose.Transpose3 = function(m) {
   ]
 }
 
-decompose.Inverse3 = function(m) {
+decompose.Inverse3 = function (m) {
   const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
   const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
   const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
@@ -644,7 +552,7 @@ decompose.Inverse3 = function(m) {
   ]
 } 
 
-decompose.Add3 = function(m1, m2) {
+decompose.Add3 = function (m1, m2) {
   if (m1.length != 9 || m2.length != 9) {
     alert("Trying to add non 3x3 matrices");
   }
@@ -655,7 +563,7 @@ decompose.Add3 = function(m1, m2) {
   ]
 }
 
-decompose.Sub3 = function(m1, m2) {
+decompose.Sub3 = function (m1, m2) {
   if (m1.length != 9 || m2.length != 9) {
     alert("Trying to add non 3x3 matrices");
   }
@@ -677,7 +585,7 @@ decompose.Mul3f = function(m, f) {
   ]
 }
 
-decompose.Mul3 = function(a, b) {
+decompose.Mul3 = function (a, b) {
    if (a.length != 9 || b.length != 9) {
     alert("Trying to multiply two non 3x3 matrices");
   }
@@ -705,7 +613,7 @@ decompose.Mul3 = function(a, b) {
   ]
 }
 
-decompose.Mul4 = function(m1, m2) {
+decompose.Mul4 = function (m1, m2) {
   if (m2.length!= 16 || m1.length != 16) {
     alert("Trying to multiply two non 4x4 matrices");
   }
@@ -739,14 +647,14 @@ decompose.Mul4 = function(m1, m2) {
   return result;
 }
 
-decompose.Dot = function(v1, v2) {
+decompose.Dot = function (v1, v2) {
   if (v1.length != 3 || v2.length != 3) {
     alert("trying to dot product non vector3's")
   }
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-decompose.SubV3 = function(v1, v2) {
+decompose.SubV3 = function (v1, v2) {
   if (v1.length != 3 || v2.length != 3) {
     alert("trying to subtract non vector3's")
   }
@@ -758,7 +666,7 @@ decompose.SubV3 = function(v1, v2) {
 }
 
 // Project v onto u
-decompose.Projection = function(u, v) {
+decompose.Projection = function (u, v) {
   if (u.length != 3 || v.length != 3) {
     alert("trying to project non vector3's")
   }
@@ -772,7 +680,7 @@ decompose.Projection = function(u, v) {
   return [u[0] * d, u[1] * d, u[2] * d]
 }
 
-decompose.Det3 = function(me) {
+decompose.Det3 = function (me) {
   if (me.length != 9) {
     alert("Trying to get the determinant of a non 3x3 matrix");
   }
@@ -787,7 +695,7 @@ decompose.Det3 = function(me) {
   return n11 * t11 + n21 * t12 + n31 * t13;
 }
 
-decompose.Normalize = function(v) {
+decompose.Normalize = function (v) {
   if (v.length != 3) {
     alert("trying to normalize non vector3")
   }
@@ -803,6 +711,38 @@ decompose.Normalize = function(v) {
   }
   alert("Cant normalize zero vector");
   return v;
+}
+
+decompose.QToM4 = function(q) {
+  var Q = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+
+  var sqx      = q[0]*q[0];
+  var sqy      = q[1]*q[1];
+  var sqz      = q[2]*q[2];
+  var sqw      = q[3]*q[3];
+
+  Q[0]  = ( sqx - sqy - sqz + sqw);
+  Q[5]  = (-sqx + sqy - sqz + sqw);
+  Q[10]  = (-sqx - sqy + sqz + sqw);
+  var tmp1     = q[0]*q[1];
+  var tmp2     = q[2]*q[3];
+  Q[4]  = 2.0 * (tmp1 + tmp2);
+  Q[1]  = 2.0 * (tmp1 - tmp2);
+  tmp1     = q[0]*q[2];
+  tmp2     = q[1]*q[3];
+  Q[8]  = 2.0 * (tmp1 - tmp2);
+  Q[2]  = 2.0 * (tmp1 + tmp2);
+  tmp1     = q[1]*q[2];
+  tmp2     = q[0]*q[3];
+  Q[9]  = 2.0 * (tmp1 + tmp2);
+  Q[6]  = 2.0 * (tmp1 - tmp2);
+
+  return Q
 }
 
 decompose.M4ToQ = function(m) {
