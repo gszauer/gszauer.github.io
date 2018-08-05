@@ -213,7 +213,7 @@ function FillSample5() {
 	document.getElementById("row_4_col_4").value = "1"
 }
 
-function FillSample6() {
+function FillSample7() {
 	document.getElementById("row_1_col_1").value = "0.49999966339744817"
 	document.getElementById("row_2_col_1").value = "0.49999999999988676"
 	document.getElementById("row_3_col_1").value = "-0.7071070192004545"
