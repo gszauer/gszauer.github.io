@@ -185,17 +185,17 @@ function M3_Cofactor(m) {
 // Transpose of the cofactor matrix!
 function M3_Adjugate(m) {
 	return [
-		m[4] * m[8] - m[7] * m[5],
+		m[4] *  m[8] - m[7] * m[5],
 		-1.0 * (m[1] * m[8] - m[7] * m[2]),
-		m[1] * m[5] - m[4] * m[2],
+		m[1] *  m[5] - m[4] * m[2],
 
 		-1.0 * (m[3] * m[8] - m[6] * m[5]),
-		m[0] * m[8] - m[6] * m[2], 
+		m[0] *  m[8] - m[6] * m[2], 
 		-1.0 * (m[0] * m[5] - m[3] * m[2]),
 
-		m[3] * m[7] - m[6] * m[4],
+		m[3] *  m[7] - m[6] * m[4],
 		-1.0 * (m[0] * m[7] - m[6] * m[1]),
-		m[0] * m[4] - m[3] * m[1]
+		m[0] *  m[4] - m[3] * m[1]
 	]
 }
 
@@ -205,20 +205,23 @@ function M3_Adjugate(m) {
 // logical topology of the matrix, so it's the cofactor of the x element
 // of each basis vector!
 function M3_Determinant(m) {
-	const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
-	const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
-	const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
+	const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+	const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+	const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
 
 	return cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
 }
 
 // Inverse of a matrix = adjugate / determinant
 function M3_Inverse(m) {
-	const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
-	const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
-	const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
+	const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+	const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+	const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
 
 	const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+	if (isNaN(determinant)) {
+		alert("Determinant is nan");
+	}
 	if (determinant == 0.0) {
 		alert("Matrix does not have an inverse!");
 		return [
@@ -229,6 +232,9 @@ function M3_Inverse(m) {
 	}
 
 	const inv_determinant = 1.0 / determinant;
+	if (isNaN(inv_determinant)) {
+		alert("Inv-determinant is nan");
+	}
 	if (inv_determinant == 0.0) {
 		alert("Matrix does not have an inverse!");
 		return [
