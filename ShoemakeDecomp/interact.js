@@ -171,14 +171,81 @@ function FillSample3() {
 
 function FillSample4() {
 	document.getElementById("row_1_col_1").value = "1.9999991574533886"
-	document.getElementById("row_2_col_1").value = "0.24999863616775173"
+	document.getElementById("row_2_col_1").value = "0.2499986361677519"
 	document.getElementById("row_3_col_1").value = "0.25"
 	document.getElementById("row_4_col_1").value = "0"
 
-	document.getElementById("row_1_col_2").value = "0.948323571695159"
+	document.getElementById("row_1_col_2").value = "0.9483235716951589"
 	document.getElementById("row_2_col_2").value = "0"
 	document.getElementById("row_3_col_2").value = "0"
-	document.getElementById("row_4_col_2").value = "-0.3173049059931736"
+	document.getElementById("row_4_col_2").value = "-0.3173049059931737"
+
+	document.getElementById("row_1_col_3").value = "0"
+	document.getElementById("row_2_col_3").value = "0"
+	document.getElementById("row_3_col_3").value = "0"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "0"
+	document.getElementById("row_2_col_4").value = "0"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "0"
+}
+
+
+function FillSample6() {
+	document.getElementById("row_1_col_1").value = "2.999999999999997"
+	document.getElementById("row_2_col_1").value = "0.5000000000000007"
+	document.getElementById("row_3_col_1").value = "0.5"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "0.9238794681051637"
+	document.getElementById("row_2_col_2").value = "0"
+	document.getElementById("row_3_col_2").value = "0"
+	document.getElementById("row_4_col_2").value = "-0.3826835878551884"
+
+	document.getElementById("row_1_col_3").value = "0"
+	document.getElementById("row_2_col_3").value = "0"
+	document.getElementById("row_3_col_3").value = "0"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "0"
+	document.getElementById("row_2_col_4").value = "0"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "0"
+}
+
+function FillSample9() {
+	document.getElementById("row_1_col_1").value = "1"
+	document.getElementById("row_2_col_1").value = "1"
+	document.getElementById("row_3_col_1").value = "1"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "1"
+	document.getElementById("row_2_col_2").value = "0"
+	document.getElementById("row_3_col_2").value = "0"
+	document.getElementById("row_4_col_2").value = "0"
+
+	document.getElementById("row_1_col_3").value = "0"
+	document.getElementById("row_2_col_3").value = "0"
+	document.getElementById("row_3_col_3").value = "0"
+	document.getElementById("row_4_col_3").value = "0"
+
+	document.getElementById("row_1_col_4").value = "0"
+	document.getElementById("row_2_col_4").value = "0"
+	document.getElementById("row_3_col_4").value = "0"
+	document.getElementById("row_4_col_4").value = "0"
+}
+
+function FillSample10() {
+	document.getElementById("row_1_col_1").value = "1"
+	document.getElementById("row_2_col_1").value = "1"
+	document.getElementById("row_3_col_1").value = "1"
+	document.getElementById("row_4_col_1").value = "0"
+
+	document.getElementById("row_1_col_2").value = "1"
+	document.getElementById("row_2_col_2").value = "0"
+	document.getElementById("row_3_col_2").value = "0"
+	document.getElementById("row_4_col_2").value = "0"
 
 	document.getElementById("row_1_col_3").value = "0"
 	document.getElementById("row_2_col_3").value = "0"
@@ -255,28 +322,6 @@ function FillSample8() {
 	document.getElementById("row_2_col_4").value = "2.82842712474603"
 	document.getElementById("row_3_col_4").value = "0"
 	document.getElementById("row_4_col_4").value = "1"
-}
-
-function FillSample6() {
-	document.getElementById("row_1_col_1").value = "2.999999999999997"
-	document.getElementById("row_2_col_1").value = "0.5000000000000007"
-	document.getElementById("row_3_col_1").value = "0.5"
-	document.getElementById("row_4_col_1").value = "0"
-
-	document.getElementById("row_1_col_2").value = "0.9238794681051637"
-	document.getElementById("row_2_col_2").value = "0"
-	document.getElementById("row_3_col_2").value = "0"
-	document.getElementById("row_4_col_2").value = "-0.3826835878551884"
-
-	document.getElementById("row_1_col_3").value = "0"
-	document.getElementById("row_2_col_3").value = "0"
-	document.getElementById("row_3_col_3").value = "0"
-	document.getElementById("row_4_col_3").value = "0"
-
-	document.getElementById("row_1_col_4").value = "0"
-	document.getElementById("row_2_col_4").value = "0"
-	document.getElementById("row_3_col_4").value = "0"
-	document.getElementById("row_4_col_4").value = "0"
 }
 
 
