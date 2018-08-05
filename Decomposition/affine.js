@@ -316,6 +316,7 @@ function SpectoralDecomposition(S) {
 // Convert all of these matrices into quaternions.
 // Choose the one with the largest W component, as it has the smallest rotation
 function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
+  //DebugSpectralAxisAdjustment();	
   const x = eigenvalues[0]
   const y = eigenvalues[1]
   const z = eigenvalues[2]
@@ -334,44 +335,44 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
 
   var m_permutations = [
     // Permutation 0: x, y, z
-    [ 1, 0, 0,  
-      0, 1, 0,
-      0, 0, 1 ],
-    [-1,-0,-0,  
-     -0,-1,-0,
-      0, 0, 1 ],
-    [ 1, 0, 0,  
-     -0,-1,-0,
-     -0,-0,-1 ],
-    [-1,-0,-0,  
-      0, 1, 0,
-     -0,-0,-1 ],
+    [ 1, 0, 0,  // 0
+      0, 1, 0,  // 0
+      0, 0, 1 ],// 0
+    [-1,-0,-0,  // 1
+     -0,-1,-0,  // 1
+      0, 0, 1 ],// 1
+    [ 1, 0, 0,  // 2
+     -0,-1,-0,  // 2
+     -0,-0,-1 ],// 2
+    [-1,-0,-0,  // 3
+      0, 1, 0,  // 3
+     -0,-0,-1 ],// 3
     // Permutation 1: x, z, y
-    [-1,-0,-0,
-      0, 0, 1,
-      0, 1, 0 ],
-    [-1,-0,-0,
-     -0,-0,-1,
-     -0,-1,-0 ],
-    [ 1, 0, 0,
-      0, 0, 1,
-     -0,-1,-0 ],
-    [ 1, 0, 0,
-     -0,-0,-1,
-      0, 1, 0 ],
+    [-1,-0,-0,  // 4
+      0, 0, 1,  // 4
+      0, 1, 0 ],// 4
+    [-1,-0,-0,  // 5
+     -0,-0,-1,  // 5
+     -0,-1,-0 ],// 5
+    [ 1, 0, 0,  // 6
+      0, 0, 1,  // 6
+     -0,-1,-0 ],// 6
+    [ 1, 0, 0,  // 7
+     -0,-0,-1,  // 7
+      0, 1, 0 ],// 7
     // Permutation 2: y, x, z
-    [-0,-1,-0,
-      1, 0, 0,
-      0, 0, 1 ],
-    [-0,-1,-0,
-     -1,-0,-0,
-     -0,-0,-1 ],
-    [ 0, 1, 0,
-      1, 0, 0,
-     -0,-0,-1 ],
-    [ 0, 1, 0,
-     -1,-0,-0,
-      0, 0, 1 ],
+    [-0,-1,-0,  // 8
+      1, 0, 0,  // 8
+      0, 0, 1 ],// 8
+    [-0,-1,-0,  // 9
+     -1,-0,-0,  // 9
+     -0,-0,-1 ],// 9
+    [ 0, 1, 0,  // 10
+      1, 0, 0,  // 10
+     -0,-0,-1 ],// 10
+    [ 0, 1, 0,  // 11
+     -1,-0,-0,  // 11
+      0, 0, 1 ],// 11
     // Permutation 3: y, z, x
     [ 0, 1, 0,
       0, 0, 1,
@@ -413,7 +414,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       1, 0, 0],
   ]
 
-  var e_permutations = [
+  var eigen_value_permutations = [
     // Permutation 0
     [ x,  y,  z],
     // Permutation 1
@@ -428,7 +429,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     [ z,  y,  x],
   ]
 
-  var p_permutations = [
+  var eigen_vector_permutations = [
     // Permutation 0
     [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
       eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
@@ -479,24 +480,32 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
 
   var i = Math.floor(saved_index/4);
 
-  //var m = m_permutations[saved_index]
-  var pm = [
-    p_permutations[i][0], p_permutations[i][1], p_permutations[i][2],
-    p_permutations[i][3], p_permutations[i][4], p_permutations[i][5], 
-    p_permutations[i][6], p_permutations[i][7], p_permutations[i][8], 
+  var m = Inverse3(m_permutations[saved_index])
+  var q = M4ToQ([
+  	m[0], m[1], m[2], 0,
+  	m[3], m[4], m[5], 0,
+  	m[6], m[7], m[8], 0,
+  	   0,    0,    0, 1
+  ])
+
+  var ev = [
+    eigen_vector_permutations[i][0], eigen_vector_permutations[i][1], eigen_vector_permutations[i][2],
+    eigen_vector_permutations[i][3], eigen_vector_permutations[i][4], eigen_vector_permutations[i][5], 
+    eigen_vector_permutations[i][6], eigen_vector_permutations[i][7], eigen_vector_permutations[i][8], 
   ]
 
   return {
     eigenvectors: [
-      [pm[0], pm[1], pm[2]],
-      [pm[3], pm[4], pm[5]],
-      [pm[6], pm[7], pm[8]]
+      [ev[0], ev[1], ev[2]],
+      [ev[3], ev[4], ev[5]],
+      [ev[6], ev[7], ev[8]]
     ],
     eigenvalues: [
-      e_permutations[i][0],
-      e_permutations[i][1],
-      e_permutations[i][2]
-    ]
+      eigen_value_permutations[i][0],
+      eigen_value_permutations[i][1],
+      eigen_value_permutations[i][2]
+    ],
+    q: q
   }
 }
 
@@ -840,3 +849,227 @@ function M4ToQ(m) {
   ]
   return result;
 }
+
+/*
+function DebugSpectralAxisAdjustment() {
+	var m_permutations = [
+    // Permutation 0: x, y, z
+    [ 1, 0, 0,  
+      0, 1, 0,
+      0, 0, 1 ],
+    [-1,-0,-0,  
+     -0,-1,-0,
+      0, 0, 1 ],
+    [ 1, 0, 0,  
+     -0,-1,-0,
+     -0,-0,-1 ],
+    [-1,-0,-0,  
+      0, 1, 0,
+     -0,-0,-1 ],
+    [-1,-0,-0,  
+      0, 1, 0,
+      0, 0, 1 ],
+    [-1,-0,-0,  
+     -0,-1,-0,
+     -0,-0,-1 ],
+    [ 1, 0, 0,  
+      0, 1, 0,
+     -0,-0,-1 ],
+    [ 1, 0, 0,  
+     -0,-1,-0,
+      0, 0, 1 ],
+    // Permutation 1: x, z, y
+    [ 1, 0, 0,
+      0, 0, 1,
+      0, 1, 0 ],
+    [-1,-0,-0,
+     -0,-0,-1,
+      0, 1, 0 ],
+    [ 1, 0, 0,
+     -0,-0,-1,
+     -0,-1,-0 ],
+    [-1,-0,-0,
+      0, 0, 1,
+     -0,-1,-0 ],
+    [-1,-0,-0,
+      0, 0, 1,
+      0, 1, 0 ],
+    [-1,-0,-0,
+     -0,-0,-1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+      0, 0, 1,
+     -0,-1,-0 ],
+    [ 1, 0, 0,
+     -0,-0,-1,
+      0, 1, 0 ],
+    // Permutation 2: y, x, z
+    [ 0, 1, 0,
+      1, 0, 0,
+      0, 0, 1 ],
+    [-0,-1,-0,
+     -1,-0,-0,
+      0, 0, 1 ],
+    [ 0, 1, 0,
+     -1,-0,-0,
+     -0,-0,-1 ],
+    [-0,-1,-0,
+      1, 0, 0,
+     -0,-0,-1 ],
+    [-0,-1,-0,
+      1, 0, 0,
+      0, 0, 1 ],
+    [-0,-1,-0,
+     -1,-0,-0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+      1, 0, 0,
+     -0,-0,-1 ],
+    [ 0, 1, 0,
+     -1,-0,-0,
+      0, 0, 1 ],
+    // Permutation 3: y, z, x
+    [ 0, 1, 0,
+      0, 0, 1,
+      1, 0, 0 ],
+    [-0,-1,-0,
+     -0,-0,-1,
+      1, 0, 0 ],
+    [ 0, 1, 0,
+     -0,-0,-1,
+     -1,-0,-0 ],
+    [-0,-1,-0,
+      0, 0, 1,
+     -1,-0,-0 ],
+    [-0,-1,-0,
+      0, 0, 1,
+      1, 0, 0 ],
+    [-0,-1,-0,
+     -0,-0,-1,
+     -1,-0,-0 ],
+    [ 0, 1, 0,
+      0, 0, 1,
+     -1,-0,-0 ],
+    [ 0, 1, 0,
+     -0,-0,-1,
+      1, 0, 0 ],
+     // Permutation 4: z, x, y
+    [ 0, 0, 1,
+      1, 0, 0,
+      0, 1, 0 ],
+    [-0,-0,-1,
+     -1,-0,-0,
+      0, 1, 0 ],
+    [ 0, 0, 1,
+     -1,-0,-0,
+     -0,-1,-0 ],
+    [-0,-0,-1,
+      1, 0, 0,
+     -0,-1,-0 ],
+    [-0,-0,-1,
+      1, 0, 0,
+      0, 1, 0 ],
+    [-0,-0,-1,
+     -1,-0,-0,
+     -0,-1,-0 ],
+    [ 0, 0, 1,
+      1, 0, 0,
+     -0,-1,-0 ],
+    [ 0, 0, 1,
+     -1,-0,-0,
+      0, 1, 0 ],
+    // Permutation 5: z, y, x
+    [ 0, 0, 1,
+      0, 1, 0,
+      1, 0, 0 ],
+    [-0,-0,-1,
+     -0,-1,-0,
+      1, 0, 0 ],
+    [ 0, 0, 1,
+     -0,-1,-0,
+     -1,-0,-0 ],
+    [-0,-0,-1,
+      0, 1, 0,
+     -1,-0,-0],
+    [-0,-0,-1,
+      0, 1, 0,
+      1, 0, 0 ],
+    [-0,-0,-1,
+     -0,-1,-0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+      0, 1, 0,
+     -1,-0,-0 ],
+    [ 0, 0, 1,
+     -0,-1,-0,
+      1, 0, 0],
+  ]
+
+  var q_permutations = []
+
+  var needles = [
+  	[1.00000, 0.00000, 0.00000, 0.00000], // Spectral 1
+  	[0.70711, 0.00000,  0.00000, -0.70711], // Spectral 2
+  	[0.70711, 0.00000, 0.00000,  0.70711], // Spectral 3
+  	[1.00000, 0.00000, 0.00000, 0.00000], // Spectral 4
+  	[1.00000, 0.00000, 0.00000, 0.00000], // Spectral 5
+  ]
+  var indices = [
+  	[],
+  	[],
+  	[],
+  	[],
+  	[]
+  ]
+
+  for (var i = 0; i < m_permutations.length; ++i) {
+  	var m = m_permutations[i]
+  	var q = M4ToQ([
+  		m[0], m[1], m[2], 0,
+  		m[3], m[4], m[5], 0,
+  		m[6], m[7], m[8], 0,
+  		   0,    0,    0, 1
+  	])
+  	q_permutations.push(q)
+
+  	var c = [
+  		Number(q[0].toFixed(5)),
+  		Number(q[1].toFixed(5)),
+  		Number(q[2].toFixed(5)),
+  		Number(q[3].toFixed(5))
+  	]
+
+  	for (var j = 0; j < needles.length; ++j) {
+  		if (needles[j][0] == c[0] &&
+  			needles[j][1] == c[1] &&
+  			needles[j][2] == c[2] &&
+  			needles[j][3] == c[3]) {
+
+  			indices[j].push(i);
+  			//console.log("Spectoral " + (j + 1) + " at index: " + i);
+  		}
+  	}
+  }
+
+  for (var i = 0; i < indices.length; ++i) {
+  	var idx = indices[i];
+  	if (idx.length > 0) {
+  		var out = "Spectoral " + (i + 1) + " at: ";
+  		for (var j = 0; j < idx.length; ++j) {
+  			out += idx[j] + ", ";
+  		}
+  		if (idx.length == 1) {
+  			var m = m_permutations[idx[0]]
+  			out += "["
+  			out += m[0] + ", " + m[1] + ", " + m[2] + ", "
+  			out += m[3] + ", " + m[4] + ", " + m[5] + ", "
+  			out += m[6] + ", " + m[7] + ", " + m[8] 
+  			out += "]"
+  		}
+  		console.log(out);
+  	}
+  }
+
+  var debug = "Break"
+}
+*/
