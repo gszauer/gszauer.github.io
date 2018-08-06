@@ -279,15 +279,16 @@ function SpectoralDecomposition(S) {
 
   // shorthand to save some typing
   var val = eigenvalues;
-  var vec = eigenvectors;
+
+  var u = Mul3(Qa, adjusted.q_mat)
 
   return {
     eigenvalues : eigenvalues,
     eigenvectors : eigenvectors,
     U : [
-      vec[0][0], vec[0][1], vec[0][2], 0,
-      vec[1][0], vec[1][1], vec[1][2], 0,
-      vec[2][0], vec[2][1], vec[2][2], 0,
+      u[0], u[1], u[2], 0,
+      u[3], u[4], u[5], 0,
+      u[6], u[7], u[8], 0,
       0, 0, 0, 1
     ],
     K : [
@@ -297,9 +298,9 @@ function SpectoralDecomposition(S) {
       0, 0, 0, 1
     ],
     Ut: [
-      vec[0][0], vec[1][0], vec[2][0], 0,
-      vec[0][1], vec[1][1], vec[2][1], 0,
-      vec[0][2], vec[1][2], vec[2][2], 0,
+      u[0], u[3], u[6], 0,
+      u[1], u[4], u[7], 0,
+      u[2], u[5], u[8], 0,
       0, 0, 0, 1
     ],
     iterations: numIterations
@@ -481,6 +482,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   var i = Math.floor(saved_index/4);
 
   var m = Inverse3(m_permutations[saved_index])
+  
   var q = M4ToQ([
   	m[0], m[1], m[2], 0,
   	m[3], m[4], m[5], 0,
@@ -505,7 +507,8 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
       eigen_value_permutations[i][1],
       eigen_value_permutations[i][2]
     ],
-    q: q
+    q: q,
+    q_mat: m
   }
 }
 
