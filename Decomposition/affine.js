@@ -10,6 +10,8 @@ function AffineDecompose(M) {
   const PolarDecompResult = PolarDecomposition(FTResult.X);
   const Q = Mul4(PolarDecompResult.F, PolarDecompResult.R);
   const SpecDecompResult = SpectoralDecomposition(PolarDecompResult.S);
+  var AdjustedSpect = SpectralAxisAdjustment(SpecDecompResult.eigenvectors, SpecDecompResult.eigenvalues)
+ 
 
   return {
     // M = TX
@@ -38,17 +40,17 @@ function AffineDecompose(M) {
       T : FTResult.T, // 4x4 column matrix, linear memory layout
       F : PolarDecompResult.F, // 4x4 column matrix, linear memory layout
       R : PolarDecompResult.R, // 4x4 column matrix, linear memory layout
-      U : SpecDecompResult.U, // 4x4 column matrix, linear memory layout
-      K : SpecDecompResult.K, // 4x4 column matrix, linear memory layout
-      Ut : SpecDecompResult.Ut // 4x4 column matrix, linear memory layout
+      U : AdjustedSpect.U, // 4x4 column matrix, linear memory layout
+      K : AdjustedSpect.K, // 4x4 column matrix, linear memory layout
+      Ut : AdjustedSpect.Ut // 4x4 column matrix, linear memory layout
     },
 
     // Shoemake reference output (sample code from graphics gems 4)
     Shoemake : { 
       t : [FTResult.T[12], FTResult.T[13], FTResult.T[14]], // Translation components (vector: <x, y, z>)
       q : M4ToQ(PolarDecompResult.R), //  Essential rotation (quaternion: <w, x, y, z>)
-      u : M4ToQ(SpecDecompResult.U), //  Stretch rotation (quaternion: <w, x, y, z>)
-      k : [SpecDecompResult.K[0], SpecDecompResult.K[5], SpecDecompResult.K[10]], // Stretch factors (vector: <x, y, z>)
+      u : M4ToQ(AdjustedSpect.U), //  Stretch rotation (quaternion: <w, x, y, z>)
+      k : [AdjustedSpect.K[0], AdjustedSpect.K[5], AdjustedSpect.K[10]], // Stretch factors (vector: <x, y, z>)
       f : PolarDecompResult.F[0] // Sign of determinant (float)
     },
 
@@ -273,13 +275,8 @@ function SpectoralDecomposition(S) {
     [Qa[6], Qa[7], Qa[8]]
   ]
 
-  var adjusted = SpectralAxisAdjustment(eigenvectors, eigenvalues)
-  eigenvalues = adjusted.eigenvalues
-  eigenvectors = adjusted.eigenvectors
-
   // shorthand to save some typing
   var val = eigenvalues;
-  //var u = Mul3(Qa, adjusted.q_mat)
   var vec = [
     eigenvectors[0][0], eigenvectors[0][1], eigenvectors[0][2],
     eigenvectors[1][0], eigenvectors[1][1], eigenvectors[1][2],
@@ -492,7 +489,7 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
   // Idk why that works, it just does!
   var ev = Mul3(U1, m)
   // ^ new eigen vectors
-  
+
   var q = M4ToQ([
   	m[0], m[1], m[2], 0,
   	m[3], m[4], m[5], 0,
@@ -519,7 +516,26 @@ function SpectralAxisAdjustment(eigenvectors, eigenvalues) {
     ],
     // These should not be needed, Here just for debugging.
     q: q, // To compare to shoemakes
-    q_mat: m
+    q_mat: m,
+    // These make life easier:
+    U: [
+      ev[0], ev[1], ev[2], 0,
+      ev[3], ev[4], ev[5], 0,
+      ev[6], ev[7], ev[8], 0,
+          0,     0,     0, 1
+    ],
+    K: [
+      eigen_value_permutations[i][0], 0, 0, 0,
+      0, eigen_value_permutations[i][1], 0, 0,
+      0, 0, eigen_value_permutations[i][2], 0,
+      0, 0,                              0, 1
+    ],
+    Ut: [
+      ev[0], ev[3], ev[6], 0,
+      ev[1], ev[4], ev[7], 0,
+      ev[2], ev[5], ev[8], 0,
+          0,     0,     0, 1
+    ]
   }
 }
 
