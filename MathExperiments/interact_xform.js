@@ -273,17 +273,7 @@ function DrawTransformBuffer(transform) {
 
 	// TODO: Note to self, WTF is going on here?!?!?!
 	if (true || transform.debug) {
-		//CopyString(M4_ToString(model));
-
-		/*model = [
-			0, 1, 0, 0,
-			-15, 0, 0, 0,
-			0, 0, 1, 0,
-			-1, -2, 0, 1
-		]*/
-
-		/*model = JSON.parse(M4_ToString(model))
-
+		/*
 		var dcmp = AffineDecompose(model);
 
 		var xfrm = {}
@@ -291,7 +281,8 @@ function DrawTransformBuffer(transform) {
 		xfrm.rotation = dcmp.Shoemake.q;// [0.70711, 0, 0, 0.70711];
 		xfrm.scale = dcmp.Shoemake.k;// [1,15,1]
 
-		model = ToMatrix(xfrm);*/
+		model = ToMatrix(xfrm);
+		*/
 	}
 	
 

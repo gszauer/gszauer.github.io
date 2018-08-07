@@ -2,19 +2,18 @@
 // Matrices are column matrices laid out linearly in memory
 // All vectors are 3d column vectors
 
-var decompose = {
-  global_num_iterations: 100
+var decomp = {
+  global_enable_early_out: false,
+  global_num_iterations: 100,
 }
 
 function AffineDecompose(M) {
-  return decompose.AffineDecompose(M);
-}
-
-decompose.AffineDecompose = function(M) {
-  const FTResult = decompose.FactorTranslation(M); 
-  const PolarDecompResult = decompose.PolarDecomposition(FTResult.X);
-  const Q = decompose.Mul4(PolarDecompResult.F, PolarDecompResult.R);
-  const SpecDecompResult = decompose.SpectoralDecomposition(PolarDecompResult.S);
+  const FTResult = decomp.FactorTranslation(M); 
+  const PolarDecompResult = decomp.PolarDecomposition(FTResult.X);
+  const Q = decomp.Mul4(PolarDecompResult.F, PolarDecompResult.R);
+  const SpecDecompResult = decomp.SpectoralDecomposition(PolarDecompResult.S);
+  var AdjustedSpect = decomp.SpectralAxisAdjustment(SpecDecompResult.eigenvectors, SpecDecompResult.eigenvalues)
+ 
 
   return {
     // M = TX
@@ -43,17 +42,17 @@ decompose.AffineDecompose = function(M) {
       T : FTResult.T, // 4x4 column matrix, linear memory layout
       F : PolarDecompResult.F, // 4x4 column matrix, linear memory layout
       R : PolarDecompResult.R, // 4x4 column matrix, linear memory layout
-      U : SpecDecompResult.U, // 4x4 column matrix, linear memory layout
-      K : SpecDecompResult.K, // 4x4 column matrix, linear memory layout
-      Ut : SpecDecompResult.Ut // 4x4 column matrix, linear memory layout
+      U : AdjustedSpect.U, // 4x4 column matrix, linear memory layout
+      K : AdjustedSpect.K, // 4x4 column matrix, linear memory layout
+      Ut : AdjustedSpect.Ut // 4x4 column matrix, linear memory layout
     },
 
     // Shoemake reference output (sample code from graphics gems 4)
     Shoemake : { 
       t : [FTResult.T[12], FTResult.T[13], FTResult.T[14]], // Translation components (vector: <x, y, z>)
-      q : decompose.M4ToQ(PolarDecompResult.R), //  Essential rotation (quaternion: <w, x, y, z>)
-      u : decompose.M4ToQ(SpecDecompResult.U), //  Stretch rotation (quaternion: <w, x, y, z>)
-      k : [SpecDecompResult.K[0], SpecDecompResult.K[5], SpecDecompResult.K[10]], // Stretch factors (vector: <x, y, z>)
+      q : decomp.M4ToQ(PolarDecompResult.R), //  Essential rotation (quaternion: <w, x, y, z>)
+      u : decomp.M4ToQ(AdjustedSpect.U), //  Stretch rotation (quaternion: <w, x, y, z>)
+      k : [AdjustedSpect.K[0], AdjustedSpect.K[5], AdjustedSpect.K[10]], // Stretch factors (vector: <x, y, z>)
       f : PolarDecompResult.F[0] // Sign of determinant (float)
     },
 
@@ -71,7 +70,7 @@ decompose.AffineDecompose = function(M) {
 
 // Factor M = TX where T contains translation information a
 // and X contains some affinite transform (rotation & scale)
-decompose.FactorTranslation = function(M) {
+decomp.FactorTranslation = function(M) {
   return {
     T : [ // Original matrix with translation only
       1, 0, 0, 0,
@@ -95,38 +94,40 @@ decompose.FactorTranslation = function(M) {
 // Q is factored into FR where R is a rotation and F is
 // either positive or negative identiy. This makes sure that
 // R contains no flip information.
-decompose.PolarDecomposition = function(X) {
+decomp.PolarDecomposition = function(X) {
   var Q = [ // X as a 3x3 matrix
     X[0], X[1], X[2],
     X[4], X[5], X[6],
     X[8], X[9], X[10]
   ]
-  if (decompose.Det3(Q) < 0) {
+
+  if (decomp.Det3(Q) < 0) {
     alert("Trying to do polar decompositon, but determinant is negative");
   }
-  var Qit = decompose.Inverse3(decompose.Transpose3(Q));
-
+  
   var numIterations = 0;
 
-  for (var i = 0; i < decompose.global_num_iterations; ++i) {
-    const QPrev = [
-      Q[0], Q[1], Q[2],
-      Q[3], Q[4], Q[5],
-      Q[6], Q[7], Q[8]
-    ]
-    Q = decompose.Mul3f(decompose.Add3(Q, Qit), 0.5)
-    Qit = decompose.Inverse3(decompose.Transpose3(Q))
+  for (var i = 0; i < decomp.global_num_iterations; ++i) {
+    const QPrev = [ Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7], Q[8] ]
+
+    var Qit = decomp.Transpose3(decomp.Inverse3(Q))
+    Q = decomp.Mul3f(decomp.Add3(Q, Qit), 0.5)
+
     numIterations += 1;
+  
+    if (decomp.global_enable_early_out && decomp.PolarDecompositionEarlyOut(Q, QPrev)) {
+      break;
+    }
   }
 
   var f = 1
-  var det = decompose.Det3(Q)
+  var det = decomp.Det3(Q)
   if (det < 0.0) {
     f = -1
-    Q = decompose.Mul3f(Q, -1); 
+    Q = decomp.Mul3f(Q, -1); 
   }
 
-  const s = decompose.Mul3(decompose.Inverse3(Q), [
+  const s = decomp.Mul3(decomp.Inverse3(Q), [
     X[0], X[1], X[2],
     X[4], X[5], X[6],
     X[8], X[9], X[10]
@@ -156,24 +157,35 @@ decompose.PolarDecomposition = function(X) {
   }
 }
 
+// http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
+decomp.PolarDecompositionEarlyOut = function(Q, Qprev) {
+  const res = decomp.Sub3(Q, Qprev);
+  for (var i = 0; i < 9; ++i) {
+    if (Math.abs(res[i]) > 0.00001) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // https://www.youtube.com/watch?v=c_QCR20nTDY
 // QR Decomposition / QR Factorization
 // Decompose matrix A into a product A = QR where
 // Q is an orthogonal matrix and R is an upper
 // triangular matrix. This method is a support method
 // for the QR Alrorithm / Spectoral Decomposition
-decompose.QRDecomposition = function(A) {
+decomp.QRDecomposition = function(A) {
   var x = [A[0], A[1], A[2]]
   var y = [A[4], A[5], A[6]]
   var z = [A[8], A[9], A[10]]
 
   // gram schmidt - Orthogonalize A
-  y = decompose.SubV3(y, decompose.Projection(x, y)) // Y equals Y minus the projection of Y onto X
-  z = decompose.SubV3(decompose.SubV3(z, decompose.Projection(x, z)), decompose.Projection(y, z)) // Z = Projection of z onto x - projection of z onto y
+  y = decomp.SubV3(y, decomp.Projection(x, y)) // Y equals Y minus the projection of Y onto X
+  z = decomp.SubV3(decomp.SubV3(z, decomp.Projection(x, z)), decomp.Projection(y, z)) // Z = Projection of z onto x - projection of z onto y
 
-  x = decompose.Normalize(x)
-  y = decompose.Normalize(y)
-  z = decompose.Normalize(z)
+  x = decomp.Normalize(x)
+  y = decomp.Normalize(y)
+  z = decomp.Normalize(z)
 
   const Qt = [ // Transpose of Q
     x[0], y[0], z[0],
@@ -181,7 +193,7 @@ decompose.QRDecomposition = function(A) {
     x[2], y[2], z[2]
   ]
 
-  const r = decompose.Mul3(Qt, [
+  const r = decomp.Mul3(Qt, [
     A[0], A[1], A[2],
     A[4], A[5], A[6],
     A[8], A[9], A[10]
@@ -208,7 +220,7 @@ decompose.QRDecomposition = function(A) {
 // it is represented in terms of eigenvectors and eigenvalues
 // S = UKUt where K is the eigenvalues on the main diagonal
 // and U is the eigenvectors packed into a matrix
-decompose.SpectoralDecomposition = function(S) { 
+decomp.SpectoralDecomposition = function(S) { 
   var QRFactorization = null
   var Q = null
   var R = null
@@ -229,8 +241,8 @@ decompose.SpectoralDecomposition = function(S) {
 
   var numIterations = 0
 
-  for (var i = 0; i < decompose.global_num_iterations; ++i) {
-    QRFactorization = decompose.QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
+  for (var i = 0; i < decomp.global_num_iterations; ++i) {
+    QRFactorization = decomp.QRDecomposition([ // Need to pad Ai to be a 4x4 matrix
       Ai[0], Ai[1], Ai[2], 0,
       Ai[3], Ai[4], Ai[5], 0,
       Ai[6], Ai[7], Ai[8], 0,
@@ -249,9 +261,13 @@ decompose.SpectoralDecomposition = function(S) {
       QRFactorization.R[8], QRFactorization.R[9], QRFactorization.R[10]
     ]
 
-    Qa = decompose.Mul3(Qa, Q);
-    Ai = decompose.Mul3(R, Q);
+    Qa = decomp.Mul3(Qa, Q);
+    Ai = decomp.Mul3(R, Q);
     numIterations += 1
+
+    if (decomp.global_enable_early_out && decomp.EigenDecompositionEarlyOut(Ai)) {
+      break;
+    }
   }
 
   eigenvalues = [Ai[0], Ai[4], Ai[8]]
@@ -261,21 +277,21 @@ decompose.SpectoralDecomposition = function(S) {
     [Qa[6], Qa[7], Qa[8]]
   ]
 
-  var adjusted = decompose.SpectralAxisAdjustment(eigenvectors, eigenvalues)
-  eigenvalues = adjusted.eigenvalues
-  eigenvectors = adjusted.eigenvectors
-
   // shorthand to save some typing
   var val = eigenvalues;
-  var vec = eigenvectors;
+  var vec = [
+    eigenvectors[0][0], eigenvectors[0][1], eigenvectors[0][2],
+    eigenvectors[1][0], eigenvectors[1][1], eigenvectors[1][2],
+    eigenvectors[2][0], eigenvectors[2][1], eigenvectors[2][2]
+  ]
 
   return {
     eigenvalues : eigenvalues,
     eigenvectors : eigenvectors,
     U : [
-      vec[0][0], vec[0][1], vec[0][2], 0,
-      vec[1][0], vec[1][1], vec[1][2], 0,
-      vec[2][0], vec[2][1], vec[2][2], 0,
+      vec[0], vec[1], vec[2], 0,
+      vec[3], vec[4], vec[5], 0,
+      vec[6], vec[7], vec[8], 0,
       0, 0, 0, 1
     ],
     K : [
@@ -285,9 +301,9 @@ decompose.SpectoralDecomposition = function(S) {
       0, 0, 0, 1
     ],
     Ut: [
-      vec[0][0], vec[1][0], vec[2][0], 0,
-      vec[0][1], vec[1][1], vec[2][1], 0,
-      vec[0][2], vec[1][2], vec[2][2], 0,
+      vec[0], vec[3], vec[6], 0,
+      vec[1], vec[4], vec[7], 0,
+      vec[2], vec[5], vec[8], 0,
       0, 0, 0, 1
     ],
     iterations: numIterations
@@ -303,7 +319,8 @@ decompose.SpectoralDecomposition = function(S) {
 // Seeing which ones are rotatable is obvious is you draw out the basis vectors
 // Convert all of these matrices into quaternions.
 // Choose the one with the largest W component, as it has the smallest rotation
-decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
+decomp.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
+  //DebugSpectralAxisAdjustment();	
   const x = eigenvalues[0]
   const y = eigenvalues[1]
   const z = eigenvalues[2]
@@ -322,44 +339,44 @@ decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
 
   var m_permutations = [
     // Permutation 0: x, y, z
-    [ 1, 0, 0,  
-      0, 1, 0,
-      0, 0, 1 ],
-    [-1,-0,-0,  
-     -0,-1,-0,
-      0, 0, 1 ],
-    [ 1, 0, 0,  
-     -0,-1,-0,
-     -0,-0,-1 ],
-    [-1,-0,-0,  
-      0, 1, 0,
-     -0,-0,-1 ],
+    [ 1, 0, 0,  // 0
+      0, 1, 0,  // 0
+      0, 0, 1 ],// 0
+    [-1,-0,-0,  // 1
+     -0,-1,-0,  // 1
+      0, 0, 1 ],// 1
+    [ 1, 0, 0,  // 2
+     -0,-1,-0,  // 2
+     -0,-0,-1 ],// 2
+    [-1,-0,-0,  // 3
+      0, 1, 0,  // 3
+     -0,-0,-1 ],// 3
     // Permutation 1: x, z, y
-    [-1,-0,-0,
-      0, 0, 1,
-      0, 1, 0 ],
-    [-1,-0,-0,
-     -0,-0,-1,
-     -0,-1,-0 ],
-    [ 1, 0, 0,
-      0, 0, 1,
-     -0,-1,-0 ],
-    [ 1, 0, 0,
-     -0,-0,-1,
-      0, 1, 0 ],
+    [-1,-0,-0,  // 4
+      0, 0, 1,  // 4
+      0, 1, 0 ],// 4
+    [-1,-0,-0,  // 5
+     -0,-0,-1,  // 5
+     -0,-1,-0 ],// 5
+    [ 1, 0, 0,  // 6
+      0, 0, 1,  // 6
+     -0,-1,-0 ],// 6
+    [ 1, 0, 0,  // 7
+     -0,-0,-1,  // 7
+      0, 1, 0 ],// 7
     // Permutation 2: y, x, z
-    [-0,-1,-0,
-      1, 0, 0,
-      0, 0, 1 ],
-    [-0,-1,-0,
-     -1,-0,-0,
-     -0,-0,-1 ],
-    [ 0, 1, 0,
-      1, 0, 0,
-     -0,-0,-1 ],
-    [ 0, 1, 0,
-     -1,-0,-0,
-      0, 0, 1 ],
+    [-0,-1,-0,  // 8
+      1, 0, 0,  // 8
+      0, 0, 1 ],// 8
+    [-0,-1,-0,  // 9
+     -1,-0,-0,  // 9
+     -0,-0,-1 ],// 9
+    [ 0, 1, 0,  // 10
+      1, 0, 0,  // 10
+     -0,-0,-1 ],// 10
+    [ 0, 1, 0,  // 11
+     -1,-0,-0,  // 11
+      0, 0, 1 ],// 11
     // Permutation 3: y, z, x
     [ 0, 1, 0,
       0, 0, 1,
@@ -401,7 +418,7 @@ decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
       1, 0, 0],
   ]
 
-  var e_permutations = [
+  var eigen_value_permutations = [
     // Permutation 0
     [ x,  y,  z],
     // Permutation 1
@@ -416,7 +433,7 @@ decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
     [ z,  y,  x],
   ]
 
-  var p_permutations = [
+  var eigen_vector_permutations = [
     // Permutation 0
     [ eigenvectors[0][0],  eigenvectors[0][1],  eigenvectors[0][2], 
       eigenvectors[1][0],  eigenvectors[1][1],  eigenvectors[1][2], 
@@ -447,55 +464,95 @@ decompose.SpectralAxisAdjustment = function(eigenvectors, eigenvalues) {
   var saved_value = null
 
   // The rotation taking U1 into U2 is U1t * U2
-  var debug_quats = []
-  var p_out = null;
   for (var i = 0; i < m_permutations.length; ++i) {
     var U2 = m_permutations[i]
-    var U12 = decompose.Mul3(U1t, U2)
+    var U12 = decomp.Mul3(U1t, U2)
 
-    var QU12 = decompose.M4ToQ([
+    var QU12 = decomp.M4ToQ([
       U12[0], U12[1], U12[2], 0,
       U12[3], U12[4], U12[5], 0,
       U12[6], U12[7], U12[8], 0,
            0,      0,      0, 1
     ])
-    debug_quats.push([QU12[0], QU12[1], QU12[2], QU12[3]])
     
     // Optimize for largest w, which is smallest angle of rotation
     if (saved_index == null || QU12[0] > saved_value) {
       saved_value = QU12[0]
       saved_index = i
-      p_out = decompose.Mul3(decompose.Inverse3(U12), U2)
     }
   }
 
   var i = Math.floor(saved_index/4);
 
-  //var m = m_permutations[saved_index]
-  var pm = [
-    p_permutations[i][0], p_permutations[i][1], p_permutations[i][2],
-    p_permutations[i][3], p_permutations[i][4], p_permutations[i][5], 
-    p_permutations[i][6], p_permutations[i][7], p_permutations[i][8], 
-  ]
+  // m = u2t
+  var m = decomp.Transpose3(m_permutations[saved_index])
+  // eigenvectors * u2t
+  // that is: u1 * u2t
+  // Idk why that works, it just does!
+  var ev = decomp.Mul3(U1, m)
+  // ^ new eigen vectors
+
+  var q = decomp.M4ToQ([
+  	m[0], m[1], m[2], 0,
+  	m[3], m[4], m[5], 0,
+  	m[6], m[7], m[8], 0,
+  	   0,    0,    0, 1
+  ])
+
+  /*var ev = [ // This isn't really correct, it doesn't show the path taken from Q1 to Q2, just re-orders
+    eigen_vector_permutations[i][0], eigen_vector_permutations[i][1], eigen_vector_permutations[i][2],
+    eigen_vector_permutations[i][3], eigen_vector_permutations[i][4], eigen_vector_permutations[i][5], 
+    eigen_vector_permutations[i][6], eigen_vector_permutations[i][7], eigen_vector_permutations[i][8], 
+  ]*/
 
   return {
     eigenvectors: [
-      [pm[0], pm[1], pm[2]],
-      [pm[3], pm[4], pm[5]],
-      [pm[6], pm[7], pm[8]]
+      [ev[0], ev[1], ev[2]],
+      [ev[3], ev[4], ev[5]],
+      [ev[6], ev[7], ev[8]]
     ],
     eigenvalues: [
-      e_permutations[i][0],
-      e_permutations[i][1],
-      e_permutations[i][2]
+      eigen_value_permutations[i][0],
+      eigen_value_permutations[i][1],
+      eigen_value_permutations[i][2]
+    ],
+    // These should not be needed, Here just for debugging.
+    q: q, // To compare to shoemakes
+    q_mat: m,
+    // These make life easier:
+    U: [
+      ev[0], ev[1], ev[2], 0,
+      ev[3], ev[4], ev[5], 0,
+      ev[6], ev[7], ev[8], 0,
+          0,     0,     0, 1
+    ],
+    K: [
+      eigen_value_permutations[i][0], 0, 0, 0,
+      0, eigen_value_permutations[i][1], 0, 0,
+      0, 0, eigen_value_permutations[i][2], 0,
+      0, 0,                              0, 1
+    ],
+    Ut: [
+      ev[0], ev[3], ev[6], 0,
+      ev[1], ev[4], ev[7], 0,
+      ev[2], ev[5], ev[8], 0,
+          0,     0,     0, 1
     ]
   }
+}
+
+// The lower triangular matrix has zeroed out
+decomp.EigenDecompositionEarlyOut = function(A) {
+  if (Math.abs(A[3]) < 0.00001 && Math.abs(A[6]) < 0.00001 && Math.abs(A[7]) < 0.00001) {
+    return true;
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Math functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
-decompose.Transpose3 = function (m) {
+decomp.Transpose3 = function(m) {
   if (m.length != 9) {
     alert("Trying to transpose non 3x3 matrix");
   }
@@ -506,12 +563,32 @@ decompose.Transpose3 = function (m) {
   ]
 }
 
-decompose.Inverse3 = function (m) {
-  const cofactor_00 =        m[4] * m[8] - m[7] * m[5];
-  const cofactor_01 = -1.0 * m[1] * m[8] - m[7] * m[2];
-  const cofactor_02 =        m[1] * m[5] - m[4] * m[2];
+decomp.Det3 = function(m) {
+  if (m.length != 9) {
+    alert("Trying to get the determinant of a non 3x3 matrix");
+  }
+  const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+  const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+  const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
 
   const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+
+  return determinant
+}
+
+decomp.Inverse3 = function(m) {
+  if (m.length != 9) {
+    alert("Trying to get the determinant of a non 3x3 matrix");
+  }
+
+  const cofactor_00 =         m[4] * m[8] - m[7] * m[5];
+  const cofactor_01 = -1.0 * (m[1] * m[8] - m[7] * m[2]);
+  const cofactor_02 =         m[1] * m[5] - m[4] * m[2];
+
+  const determinant = cofactor_00 * m[0] + cofactor_01 * m[3] + cofactor_02 * m[6];
+  if (isNaN(determinant)) {
+    alert("Determinant is nan");
+  }
   if (determinant == 0.0) {
     alert("Matrix does not have an inverse!");
     return [
@@ -522,6 +599,9 @@ decompose.Inverse3 = function (m) {
   }
 
   const inv_determinant = 1.0 / determinant;
+  if (isNaN(inv_determinant)) {
+    alert("Inv-determinant is nan");
+  }
   if (inv_determinant == 0.0) {
     alert("Matrix does not have an inverse!");
     return [
@@ -552,7 +632,7 @@ decompose.Inverse3 = function (m) {
   ]
 } 
 
-decompose.Add3 = function (m1, m2) {
+decomp.Add3 = function(m1, m2) {
   if (m1.length != 9 || m2.length != 9) {
     alert("Trying to add non 3x3 matrices");
   }
@@ -563,7 +643,7 @@ decompose.Add3 = function (m1, m2) {
   ]
 }
 
-decompose.Sub3 = function (m1, m2) {
+decomp.Sub3 = function(m1, m2) {
   if (m1.length != 9 || m2.length != 9) {
     alert("Trying to add non 3x3 matrices");
   }
@@ -574,7 +654,7 @@ decompose.Sub3 = function (m1, m2) {
   ]
 }
 
-decompose.Mul3f = function(m, f) {
+decomp.Mul3f = function(m, f) {
   if (m.length != 9) {
     alert("Trying to scale non 3x3 matrix");
   }
@@ -585,7 +665,7 @@ decompose.Mul3f = function(m, f) {
   ]
 }
 
-decompose.Mul3 = function (a, b) {
+decomp.Mul3 = function(a, b) {
    if (a.length != 9 || b.length != 9) {
     alert("Trying to multiply two non 3x3 matrices");
   }
@@ -613,7 +693,7 @@ decompose.Mul3 = function (a, b) {
   ]
 }
 
-decompose.Mul4 = function (m1, m2) {
+decomp.Mul4 = function(m1, m2) {
   if (m2.length!= 16 || m1.length != 16) {
     alert("Trying to multiply two non 4x4 matrices");
   }
@@ -647,14 +727,7 @@ decompose.Mul4 = function (m1, m2) {
   return result;
 }
 
-decompose.Dot = function (v1, v2) {
-  if (v1.length != 3 || v2.length != 3) {
-    alert("trying to dot product non vector3's")
-  }
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-
-decompose.SubV3 = function (v1, v2) {
+decomp.SubV3 = function(v1, v2) {
   if (v1.length != 3 || v2.length != 3) {
     alert("trying to subtract non vector3's")
   }
@@ -666,13 +739,13 @@ decompose.SubV3 = function (v1, v2) {
 }
 
 // Project v onto u
-decompose.Projection = function (u, v) {
+decomp.Projection = function(u, v) {
   if (u.length != 3 || v.length != 3) {
     alert("trying to project non vector3's")
   }
 
-  const d1 = decompose.Dot(u, v)
-  const d2 = decompose.Dot(u, u)
+  const d1 = u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+  const d2 = u[0] * u[0] + u[1] * u[1] + u[2] * u[2]
   if (d2 == 0) {
     alert("Can't project onto zero vector");
   }
@@ -680,26 +753,11 @@ decompose.Projection = function (u, v) {
   return [u[0] * d, u[1] * d, u[2] * d]
 }
 
-decompose.Det3 = function (me) {
-  if (me.length != 9) {
-    alert("Trying to get the determinant of a non 3x3 matrix");
-  }
-  var n11 = me[ 0 ]; var n21 = me[ 1 ]; var n31 = me[ 2 ];
-  var n12 = me[ 3 ]; var n22 = me[ 4 ]; var n32 = me[ 5 ];
-  var n13 = me[ 6 ]; var n23 = me[ 7 ]; var n33 = me[ 8 ];
-
-  var t11 = n33 * n22 - n32 * n23;
-  var t12 = n32 * n13 - n33 * n12;
-  var t13 = n23 * n12 - n22 * n13;
-
-  return n11 * t11 + n21 * t12 + n31 * t13;
-}
-
-decompose.Normalize = function (v) {
+decomp.Normalize = function(v) {
   if (v.length != 3) {
     alert("trying to normalize non vector3")
   }
-  const dot = decompose.Dot(v, v);
+  const dot = v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
   if (dot !== 0.0) {
     const length = Math.sqrt(dot);
     const result = [
@@ -713,7 +771,7 @@ decompose.Normalize = function (v) {
   return v;
 }
 
-decompose.QToM4 = function(q) {
+decomp.QToM4 = function(q) {
   var Q = [
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -745,7 +803,7 @@ decompose.QToM4 = function(q) {
   return Q
 }
 
-decompose.M4ToQ = function(m) {
+decomp.M4ToQ = function(m) {
   var m00 = m[0]
   var m01 = m[4]
   var m02 = m[8]
