@@ -29,6 +29,28 @@ function MakeTransform(position, rotation, scale, parent) {
 	return xform;
 }
 
+function DetachXFormCopy(t) {
+	var n_t = {
+		position: [t.position[0], t.position[1], t.position[2]],
+		rotation: [t.rotation[0], t.rotation[1], t.rotation[2], t.rotation[3]],
+		scale: [t.scale[0], t.scale[1], t.scale[2]],
+		parent: null,
+
+		children: [],
+		debug: t.debug
+	}
+
+	var position = GetGlobalPosition(t);
+	var rotation = GetGlobalRotation(t);
+	var matrixRotationAndScale = GetGlobalRotationAndScale(t);
+
+	SetGlobalRotation (n_t, rotation);
+	SetGlobalPosition (n_t, position);
+	SetGlobalRotationAndScale (n_t, matrixRotationAndScale);
+
+	return n_t;
+}
+
 function ToMatrix(transform) {
 	var x = Q_Mul_V3(transform.rotation, [1, 0, 0]);
 	var y = Q_Mul_V3(transform.rotation, [0, 1, 0]);
@@ -114,154 +136,168 @@ function GetWorldTransform(transform) {
     return worldTransform;
 }
 
-function SetGlobalScale(t, scale) {
-	t.scale[0] = scale[0];
-	t.scale[1] = scale[1];
-	t.scale[2] = scale[2];
+// GETTERS & SETTERS!
+function GetGlobalPosition(t) {
+	var worldPos = [t.position[0], t.position[1], t.position[2]];
 
-	if (t.parent == null) {
-		return t;
+	var iter = t.parent
+	while (iter != null) {
+		worldPos[0] *= iter.scale[0]
+		worldPos[1] *= iter.scale[1]
+		worldPos[2] *= iter.scale[2]
+
+		worldPos = Q_Mul_V3(iter.rotation, worldPos);
+
+		worldPos[0] += iter.position[0]
+		worldPos[1] += iter.position[1]
+		worldPos[2] += iter.position[2]
+		
+		iter = iter.parent
 	}
 
-	var parentWorldScale = [1, 1, 1]
+	return worldPos;
+}
+
+function GetGlobalRotation(t) {
+	var rotation = [t.rotation[0], t.rotation[1], t.rotation[2], t.rotation[3]]
+
+	var iterator = t.parent
+	while (iterator != null) {
+		rotation = Dbg_Q_Mul_Q(iterator.rotation, rotation);
+		iterator = iterator.parent
+	}
+
+	return rotation;
+}
+
+function GetGlobalRotationAndScale(t) {
+	var scale = [ // Scale matrix
+		t.scale[0], 0, 0,
+		0, t.scale[1], 0,
+		0, 0, t.scale[2]
+	]
+
+	var x = Q_Mul_V3(t.rotation, [1, 0, 0]);
+	var y = Q_Mul_V3(t.rotation, [0, 1, 0]);
+	var z = Q_Mul_V3(t.rotation, [0, 0, 1]);
+
+	var rotation = [ // Rotation matrix
+		x[0], x[1], x[2],
+		y[0], y[1], y[2],
+		z[0], z[1], z[2]
+	]
+
+	var localMat =  M3_Mul_M3(rotation, scale);
+	if (t.parent == null) {
+		return localMat
+	}
+
+	var parentRotAndScale = GetGlobalRotationAndScale(t.parent)
+	return M3_Mul_M3(parentRotAndScale, localMat)
+}
+
+function SetGlobalRotationAndScale(t, scaleMat) {
+	t.scale = [1, 1, 1]
+
+	var inverseRS = GetGlobalRotationAndScale(t);
+	inverseRS = M3_Inverse(inverseRS);
+	inverseRS = M3_Mul_M3(inverseRS, scaleMat);
+	
+	t.scale[0] = inverseRS[0];
+	t.scale[1] = inverseRS[4];
+	t.scale[2] = inverseRS[8];
+}
+
+function InverseTransformPoint(t, point) {
+	var localPosition = [point[0], point[1], point[2]]
+	if (t.parent != null) {
+		localPosition = InverseTransformPoint(t.parent, localPosition)
+	}
+
+	localPosition[0] -= t.position[0]
+	localPosition[1] -= t.position[1]
+	localPosition[2] -= t.position[2]
+
+	var invRot = [
+		t.rotation[0],
+		-t.rotation[1],
+		-t.rotation[2],
+		-t.rotation[3]
+	]
+
+	localPosition = Q_Mul_V3(invRot, localPosition);
+
+	var invScale = [
+		1.0 / t.scale[0],
+		1.0 / t.scale[1],
+		1.0 / t.scale[2],
+	]
+
+	localPosition[0] *= invScale[0]
+	localPosition[1] *= invScale[1]
+	localPosition[2] *= invScale[2]
+
+	return localPosition
+}
+
+function SetGlobalPosition(t, vec) {
+	var pos = [vec[0], vec[1], vec[2]];
+
 	var iter = t.parent;
-
 	while (iter != null) {
-		parentWorldScale[0] *= iter.scale[0]
-		parentWorldScale[1] *= iter.scale[1]
-		parentWorldScale[2] *= iter.scale[2]
-
+		pos = InverseTransformPoint(iter, pos);
 		iter = iter.parent;
 	}
 
-	var invParentWorldScale = [
-		1.0 / parentWorldScale[0],
-		1.0 / parentWorldScale[1],
-		1.0 / parentWorldScale[2]
-	]
-
-	// Multiply world scale by the reciprocal of the parents scale
-	t.scale[0] = scale[0] * invParentWorldScale[0]
-	t.scale[1] = scale[1] * invParentWorldScale[1]
-	t.scale[2] = scale[2] * invParentWorldScale[2]
+	t.position = [pos[0], pos[1], pos[2]]
 }
 
-function SetGlobalRotation(t, rotation) {
-	t.rotation[0] = rotation[0]
-	t.rotation[1] = rotation[1]
-	t.rotation[2] = rotation[2]
-	t.rotation[3] = rotation[3]
-
+function SetGlobalRotation(t, quat)  {
 	if (t.parent == null) {
-		return t;
+		t.rotation[0] = quat[0]
+		t.rotation[1] = quat[1]
+		t.rotation[2] = quat[2]
+		t.rotation[3] = quat[3]
+		return
 	}
 
-	var parentRotation = [1, 0, 0, 0]
-	var iter = t.parent
-
-	while (iter != null) {
-		parentRotation = Dbg_Q_Mul_Q(parentRotation, iter.rotation)
-		iter = iter.parent
-	}
-
-	var invParentRotation = [
-		parentRotation[0],
-		parentRotation[1] * -1.0,
-		parentRotation[2] * -1.0,
-		parentRotation[3] * -1.0
+	var parentGlobal = GetGlobalRotation(t.parent)
+	var parentGlobalInv = [
+		parentGlobal[0],
+		-parentGlobal[1],
+		-parentGlobal[2],
+		-parentGlobal[3]
 	]
-	
-	t.rotation = Dbg_Q_Mul_Q(invParentRotation, rotation)
+
+	t.rotation = Dbg_Q_Mul_Q(parentGlobalInv, quat);
 }
 
-function SetGlobalPosition(t, position) {
-	t.position[0] = position[0]
-	t.position[1] = position[1]
-	t.position[2] = position[2]
+function SetGlobalScale(t, vec) {
+	var rotation = GetGlobalRotation(t)
 
-	if (t.parent == null) {
-		return t;
-	}
-
-	// This works
-	//var parentWorld = GetWorldMatrix(t.parent);
-	//var invParent = Dbg_M4_Inverse(parentWorld);
-	//t.position = Dbg_M4_Mul_P(invParent, position) 
-
-	var parentRotation = [1, 0, 0, 0]
-	var parentScale = [1, 1, 1]
-	var parentPositon = [0, 0, 0]
-	
-	var iter = t.parent
-	while (iter != null) {
-		parentRotation = Dbg_Q_Mul_Q(parentRotation, iter.rotation)
-
-		parentScale[0] *= iter.scale[0]
-		parentScale[1] *= iter.scale[1]
-		parentScale[2] *= iter.scale[2]
-
-		parentPositon[0] *= iter.scale[0]
-		parentPositon[1] *= iter.scale[1]
-		parentPositon[2] *= iter.scale[2]
-		parentPositon = Q_Mul_V3(iter.rotation, parentPositon)
-    	parentPositon[0] = iter.position[0] + parentPositon[0]
-    	parentPositon[1] = iter.position[1] + parentPositon[1]
-    	parentPositon[2] = iter.position[2] + parentPositon[2]
-
-		iter = iter.parent
-	}
-
-	// This (alos) works
-	//var parentWorld = PartsToMatrix(parentPositon, parentRotation, parentScale)
-	//var invParent = Dbg_M4_Inverse(parentWorld);
-	//t.position = Dbg_M4_Mul_P(invParent, position) 
-
-	var invRot = [
-		parentRotation[0],
-		parentRotation[1] * -1.0,
-		parentRotation[2] * -1.0,
-		parentRotation[3] * -1.0
+	var x = V3_Mul_F(Q_Mul_V3(rotation, [1, 0, 0]), vec[0]);
+	var y = V3_Mul_F(Q_Mul_V3(rotation, [0, 1, 0]), vec[1]);
+	var z = V3_Mul_F(Q_Mul_V3(rotation, [0, 0, 1]), vec[2]);
+	var matrixRotationAndScale = [
+		x[0], x[1], x[2],
+		y[0], y[1], y[2],
+		z[0], z[1], z[2]
 	]
+	SetGlobalRotationAndScale (t, matrixRotationAndScale);
 
-	var invScale = [
-		1.0 / parentScale[0],
-		1.0 / parentScale[1],
-		1.0 / parentScale[2]
-	]
-
-	var v0 = [
-		position[0] - parentPositon[0],
-		position[1] - parentPositon[1],
-		position[2] - parentPositon[2]
-	]
-	var v1 = Q_Mul_V3(invRot, v0); // Unrotate(parentRotation, v0)
-	t.position[0] = v1[0] * invScale[0];
-	t.position[1] = v1[1] * invScale[1];
-	t.position[2] = v1[2] * invScale[2];
-}
-
-function Unrotate(Quat, V) {
-	var Q = [-1.0 * Quat[1], -1.0 * Quat[2], -1.0 * Quat[3]]; // Inverse
-	var T = V3_Cross_V3(Q, V);
-	T[0] *= 2.0
-	T[1] *= 2.0
-	T[2] *= 2.0
-
-	var cQT = V3_Cross_V3(Q, T)
-	var WT = [
-		Quat[0] * T[0],
-		Quat[0] * T[1],
-		Quat[0] * T[2]
-	]
-	return [
-		V[0] + WT[0] + cQT[0],
-		V[1] + WT[1] + cQT[1],
-		V[2] + WT[2] + cQT[2],
-	]
 }
 
 function SetGlobalTRS(t, position, rotation, scale) {
-	SetGlobalPosition(t, position);
-	SetGlobalRotation(t, rotation);
+	if (t.parent == null) {
+		t.position = position;
+		t.rotation = rotation;
+		t.scale = scale;
+		return;
+	}
+
+	SetGlobalRotation (t, rotation);
+	SetGlobalPosition (t, position);
 	SetGlobalScale(t, scale);
+
+	var debug = "break";
 }

@@ -74,40 +74,42 @@ function MakeXFormHierarchy() {
 	child.color = {r:0, g:0, b:1};
 	global_transforms.push(child);
 
-	/* 0: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
+	var copyXForm = false;
+
+	/* 0: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 	
-	/* 1: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	/* 1: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:0};
 
-	/* 2: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[1]))
+	/* 2: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 
-	/* 3: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[1]))
+	/* 3: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 
-	/* 4: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	/* 4: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:0};
 
-	/* 5: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
+	/* 5: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:1};
 
-	/* 6: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[4]))
+	/* 6: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:1};
 
-	/* 7: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	/* 7: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
 
-	/* 8: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[7]))
+	/* 8: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
 
-	/* 9: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[0]))
+	/* 9: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:0};
 
-	/* 10: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[9]))
+	/* 10: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:1, b:0};
 
-	/* 11: */global_hierarchy.push(MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), global_hierarchy[9]))
+	/* 11: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 
 	global_xform = global_hierarchy[0];
@@ -115,12 +117,16 @@ function MakeXFormHierarchy() {
 		var world = GetWorldMatrix(global_transforms[i]);
 		var decomp = AffineDecompose(world).Shoemake;
 
-		SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
 		global_hierarchy[i].debug = global_transforms[i].debug;
-
+		if (i != 0) {
+			global_hierarchy[i].parent = global_xform;
+			global_xform.children.push(global_hierarchy[i]);
+		}
 		if (global_hierarchy[i].debug) {
 			var debug = "true"
 		}
+
+		SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
 	}
 }
 
