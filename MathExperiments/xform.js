@@ -295,6 +295,7 @@ function SetGlobalTRS(t, position, rotation, scale) {
 		return;
 	}
 
+
 	SetGlobalRotation (t, rotation);
 	SetGlobalPosition (t, position);
 	SetGlobalScale(t, scale);
