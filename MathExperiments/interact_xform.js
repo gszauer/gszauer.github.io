@@ -117,12 +117,6 @@ function MakeXFormHierarchy() {
 		var world = GetWorldMatrix(global_transforms[i]);
 		var decomp = AffineDecompose(world).Shoemake;
 
-		// TODO: At some point in the pipeline, either my
-		// rotation OR my scale becomes bad. Need to fix this!
-		decomp.q[1] *= -1
-		decomp.q[2] *= -1
-		decomp.q[3] *= -1
-
 		global_hierarchy[i].debug = global_transforms[i].debug;
 		if (i != 0) {
 			global_hierarchy[i].parent = global_xform;
