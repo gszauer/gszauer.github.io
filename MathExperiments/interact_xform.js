@@ -61,6 +61,10 @@ function MakeXFormHierarchy() {
 	global_transforms.push(child);
 	child.debug = true
 
+	child = MakeTransform([8, 5, 0], Q_AngleAxis(45, [0, 0, 1]), [3, 0.5, 0.5], hierarchy_xform);
+	child.color = {r:0.2, g:0.4, b:0.6};
+	global_transforms.push(child);
+
 	// Edge case # 2
 	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
 	child.color = {r:1, g:0, b:0};
@@ -98,6 +102,9 @@ function MakeXFormHierarchy() {
 	global_hierarchy[global_hierarchy.length - 1].color = {r:1, g:0, b:1};
 
 	/* 7: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
+	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
+
+	/* 8: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0.2, g:0.4, b:0.6};
 
 	/* 8: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
