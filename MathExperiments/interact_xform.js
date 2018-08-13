@@ -64,6 +64,7 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([8, 5, 0], Q_AngleAxis(45, [0, 0, 1]), [3, 0.5, 0.5], hierarchy_xform);
 	child.color = {r:0.2, g:0.4, b:0.6};
 	global_transforms.push(child);
+	child.debug = true
 
 	// Edge case # 2
 	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
@@ -121,6 +122,10 @@ function MakeXFormHierarchy() {
 
 	global_xform = global_hierarchy[0];
 	for (var i = 0; i < global_hierarchy.length; ++i) {
+		if (global_transforms[i].debug) {
+			var debug = "true"
+		}
+		
 		var world = GetWorldMatrix(global_transforms[i]);
 		var decomp = AffineDecompose(world).Shoemake;
 
