@@ -1,11 +1,11 @@
 function MakeTransform(position, rotation, scale, parent) {
-	if (position == null || !Array.isArray(position) || position.length != 3) {
+	if (typeof position == 'undefined' || position == null || !Array.isArray(position) || position.length != 3) {
 		position = [0, 0, 0]
 	}
-	if (rotation == null || !Array.isArray(rotation) || rotation.length != 4) {
+	if (typeof rotation == 'undefined' || rotation == null || !Array.isArray(rotation) || rotation.length != 4) {
 		rotation = [1, 0, 0, 0]
 	}
-	if (scale == null || !Array.isArray(scale) || scale.length != 3) {
+	if (typeof scale == 'undefined' || scale == null || !Array.isArray(scale) || scale.length != 3) {
 		scale = [1,1,1]
 	}
 	if (typeof parent == 'undefined') {
@@ -56,6 +56,16 @@ function ToMatrix(transform) {
 }
 
 function PartsToMatrix(position, rotation, scale) {
+	if (typeof position == 'undefined' || position == null || !Array.isArray(position) || position.length != 3) {
+		position = [0, 0, 0]
+	}
+	if (typeof rotation == 'undefined' || rotation == null || !Array.isArray(rotation) || rotation.length != 4) {
+		rotation = [1, 0, 0, 0]
+	}
+	if (typeof scale == 'undefined' || scale == null || !Array.isArray(scale) || scale.length != 3) {
+		scale = [1,1,1]
+	}
+	
 	var x = Q_Mul_V3(rotation, [1, 0, 0]);
 	var y = Q_Mul_V3(rotation, [0, 1, 0]);
 	var z = Q_Mul_V3(rotation, [0, 0, 1]);
