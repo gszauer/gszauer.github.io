@@ -59,12 +59,12 @@ function MakeXFormHierarchy() {
 	child = MakeTransform([0.5, -2, 0], Q_AngleAxis(45, [0, 0, 1]), [1, 1, 1], child);
 	child.color = {r:0.2, g:0.4, b:0.6};
 	global_transforms.push(child);
-	child.debug = true
+	//child.debug = true
 
 	child = MakeTransform([8, 5, 0], Q_AngleAxis(45, [0, 0, 1]), [3, 0.5, 0.5], hierarchy_xform);
 	child.color = {r:0.2, g:0.4, b:0.6};
 	global_transforms.push(child);
-	child.debug = true
+	//child.debug = true
 
 	// Edge case # 2
 	child = MakeTransform([8, -2, 0], null, [3, 1, 1], hierarchy_xform);
@@ -120,6 +120,8 @@ function MakeXFormHierarchy() {
 	/* 11: */global_hierarchy.push( copyXForm? DetachXFormCopy(global_transforms[global_hierarchy.length]) : MakeTransform(RandomPositon(), RandomRotation(), RandomScale(), null))
 	global_hierarchy[global_hierarchy.length - 1].color = {r:0, g:0, b:1};
 
+	const testingXForms = false;
+
 	global_xform = global_hierarchy[0];
 	for (var i = 0; i < global_hierarchy.length; ++i) {
 		if (global_transforms[i].debug) {
@@ -128,6 +130,13 @@ function MakeXFormHierarchy() {
 		
 		var world = GetWorldMatrix(global_transforms[i]);
 		var decomp = AffineDecompose(world).Shoemake;
+
+		if (testingXForms) {
+			var worldXForm = GetWorldTransform(global_transforms[i]);
+			decomp.t = worldXForm.position;
+			decomp.q = worldXForm.rotation;
+			decomp.k = worldXForm.scale;
+		}
 
 		global_hierarchy[i].debug = global_transforms[i].debug;
 		if (i != 0) {
@@ -138,8 +147,12 @@ function MakeXFormHierarchy() {
 			var debug = "true"
 		}
 
-		//Matrix_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
-		Transform_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		if (testingXForms) {
+			Transform_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		} 
+		else {
+			Matrix_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		}
 	}
 }
 
