@@ -29,7 +29,7 @@ function MakeTransform(position, rotation, scale, parent) {
 	return xform;
 }
 
-function DetachXFormCopy(t) {
+/*function DetachXFormCopy(t) {
 	var n_t = {
 		position: [t.position[0], t.position[1], t.position[2]],
 		rotation: [t.rotation[0], t.rotation[1], t.rotation[2], t.rotation[3]],
@@ -49,7 +49,7 @@ function DetachXFormCopy(t) {
 	SetGlobalRotationAndScale (n_t, matrixRotationAndScale);
 
 	return n_t;
-}
+}*/
 
 function ToMatrix(transform) {
 	return PartsToMatrix(transform.position, transform.rotation, transform.scale)
@@ -131,8 +131,11 @@ function GetWorldTransform(transform) {
     return worldTransform;
 }
 
-// GETTERS & SETTERS!
-function GetGlobalPosition(t) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Matrix variant getters / setters
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function Matrix_GetGlobalPosition(t) {
 	var worldPos = [t.position[0], t.position[1], t.position[2]];
 
 	var iter = t.parent
@@ -153,7 +156,7 @@ function GetGlobalPosition(t) {
 	return worldPos;
 }
 
-function GetGlobalRotation(t) {
+function Matrix_GetGlobalRotation(t) {
 	var rotation = [t.rotation[0], t.rotation[1], t.rotation[2], t.rotation[3]]
 
 	var iterator = t.parent
@@ -165,7 +168,7 @@ function GetGlobalRotation(t) {
 	return rotation;
 }
 
-function GetGlobalRotationAndScale(t) {
+function Matrix_GetGlobalRotationAndScale(t) {
 	var scale = [ // Scale matrix
 		t.scale[0], 0, 0,
 		0, t.scale[1], 0,
@@ -187,14 +190,14 @@ function GetGlobalRotationAndScale(t) {
 		return localMat
 	}
 
-	var parentRotAndScale = GetGlobalRotationAndScale(t.parent)
+	var parentRotAndScale = Matrix_GetGlobalRotationAndScale(t.parent)
 	return M3_Mul_M3(parentRotAndScale, localMat)
 }
 
-function SetGlobalRotationAndScale(t, scaleMat) {
+function Matrix_SetGlobalRotationAndScale(t, scaleMat) {
 	t.scale = [1, 1, 1]
 
-	var inverseRS = GetGlobalRotationAndScale(t);
+	var inverseRS = Matrix_GetGlobalRotationAndScale(t);
 	inverseRS = M3_Inverse(inverseRS);
 	inverseRS = M3_Mul_M3(inverseRS, scaleMat);
 	
@@ -203,10 +206,10 @@ function SetGlobalRotationAndScale(t, scaleMat) {
 	t.scale[2] = inverseRS[8];
 }
 
-function InverseTransformPoint(t, point) {
+function Matrix_InverseTransformPoint(t, point) {
 	var localPosition = [point[0], point[1], point[2]]
 	if (t.parent != null) {
-		localPosition = InverseTransformPoint(t.parent, localPosition)
+		localPosition = IMatrix_nverseTransformPoint(t.parent, localPosition)
 	}
 
 	localPosition[0] -= t.position[0]
@@ -235,19 +238,19 @@ function InverseTransformPoint(t, point) {
 	return localPosition
 }
 
-function SetGlobalPosition(t, vec) {
+function Matrix_SetGlobalPosition(t, vec) {
 	var pos = [vec[0], vec[1], vec[2]];
 
 	var iter = t.parent;
 	while (iter != null) {
-		pos = InverseTransformPoint(iter, pos);
+		pos = Matrix_InverseTransformPoint(iter, pos);
 		iter = iter.parent;
 	}
 
 	t.position = [pos[0], pos[1], pos[2]]
 }
 
-function SetGlobalRotation(t, quat)  {
+function Matrix_SetGlobalRotation(t, quat)  {
 	if (t.parent == null) {
 		t.rotation[0] = quat[0]
 		t.rotation[1] = quat[1]
@@ -256,7 +259,7 @@ function SetGlobalRotation(t, quat)  {
 		return
 	}
 
-	var parentGlobal = GetGlobalRotation(t.parent)
+	var parentGlobal = Matrix_GetGlobalRotation(t.parent)
 	var parentGlobalInv = [
 		parentGlobal[0],
 		-parentGlobal[1],
@@ -267,8 +270,8 @@ function SetGlobalRotation(t, quat)  {
 	t.rotation = Dbg_Q_Mul_Q(parentGlobalInv, quat);
 }
 
-function SetGlobalScale(t, vec) {
-	var rotation = GetGlobalRotation(t)
+function Matrix_SetGlobalScale(t, vec) {
+	var rotation = Matrix_GetGlobalRotation(t)
 
 	var x = V3_Mul_F(Q_Mul_V3(rotation, [1, 0, 0]), vec[0]);
 	var y = V3_Mul_F(Q_Mul_V3(rotation, [0, 1, 0]), vec[1]);
@@ -278,11 +281,10 @@ function SetGlobalScale(t, vec) {
 		y[0], y[1], y[2],
 		z[0], z[1], z[2]
 	]
-	SetGlobalRotationAndScale (t, matrixRotationAndScale);
-
+	Matrix_SetGlobalRotationAndScale (t, matrixRotationAndScale);
 }
 
-function SetGlobalTRS(t, position, rotation, scale) {
+function Matrix_SetGlobalTRS(t, position, rotation, scale) {
 	if (t.parent == null) {
 		t.position = position;
 		t.rotation = rotation;
@@ -291,9 +293,37 @@ function SetGlobalTRS(t, position, rotation, scale) {
 	}
 
 
-	SetGlobalRotation (t, rotation);
-	SetGlobalPosition (t, position);
-	SetGlobalScale(t, scale);
+	Matrix_SetGlobalRotation (t, rotation);
+	Matrix_SetGlobalPosition (t, position);
+	Matrix_SetGlobalScale(t, scale);
 
 	var debug = "break";
 }
+
+
+// Transform, not matrix methods
+/*
+Transform Inverse(Transform t) {
+    Quaternion invRotation = Inverse(t.rotation);
+
+    Vector3 invScale = Vector3(0, 0, 0);
+    if (t.scale.x != 0) { // Do epsilon comparison here
+        invScale.x = 1.0 / t.scale.x
+    }
+    if (t.scale.y != 0) { // Do epsilon comparison here
+        invScale.y = 1.0 / t.scale.y
+    }
+    if (t.scale.z != 0) { // Do epsilon comparison here
+        invScale.z = 1.0 / t.scale.z
+    }
+
+    Vector3 invTranslation = invRotation * (invScale * (-1 * t.translation));
+
+    Transform result;
+    result.position = invTranslation;
+    result.rotation = invRotation;
+    result.scale = invScale;
+
+    return result;
+}
+*/
