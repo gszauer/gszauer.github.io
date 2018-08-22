@@ -138,7 +138,8 @@ function MakeXFormHierarchy() {
 			var debug = "true"
 		}
 
-		Matrix_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		//Matrix_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
+		Transform_SetGlobalTRS(global_hierarchy[i], decomp.t, decomp.q, decomp.k);
 	}
 }
 

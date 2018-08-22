@@ -103,7 +103,7 @@ function GetWorldTransform(transform) {
 	worldTransform.position = [transform.position[0], transform.position[1], transform.position[2]]
 	worldTransform.rotation = [transform.rotation[0], transform.rotation[1], transform.rotation[2], transform.rotation[3]]
 	worldTransform.scale = [transform.scale[0], transform.scale[1], transform.scale[2]];
-	worldTransform.parent = transform.parent;
+	worldTransform.parent = null;
 
     if (transform.parent != null) {
         var worldParent = GetWorldTransform(transform.parent);
@@ -132,7 +132,7 @@ function GetWorldTransform(transform) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Matrix variant getters / setters
+// Matrix variant global getters / setters
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function Matrix_GetGlobalPosition(t) {
@@ -301,29 +301,115 @@ function Matrix_SetGlobalTRS(t, position, rotation, scale) {
 }
 
 
-// Transform, not matrix methods
-/*
-Transform Inverse(Transform t) {
-    Quaternion invRotation = Inverse(t.rotation);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Transform variant global getters / setters
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Vector3 invScale = Vector3(0, 0, 0);
-    if (t.scale.x != 0) { // Do epsilon comparison here
-        invScale.x = 1.0 / t.scale.x
-    }
-    if (t.scale.y != 0) { // Do epsilon comparison here
-        invScale.y = 1.0 / t.scale.y
-    }
-    if (t.scale.z != 0) { // Do epsilon comparison here
-        invScale.z = 1.0 / t.scale.z
-    }
-
-    Vector3 invTranslation = invRotation * (invScale * (-1 * t.translation));
-
-    Transform result;
-    result.position = invTranslation;
-    result.rotation = invRotation;
-    result.scale = invScale;
-
-    return result;
+function Transform_GetGlobalRotation (t) {
+	const worldT = GetWorldTransform(t);
+	return worldT.rotation;
 }
-*/
+
+function Transform_GetGlobalPosition (t) {
+	const worldT = GetWorldTransform(t);
+	return worldT.position;
+
+}
+
+function Transform_GetGlobalScale(t) {
+	const worldT = GetWorldTransform(t);
+	return worldT.scale;
+}
+
+function Transform_Local_Inverse(t) { // Returns a new copy of the transform with no parent
+    var invRotation = [
+    	 t.rotation[0],
+    	-t.rotation[1],
+    	-t.rotation[2],
+    	-t.rotation[3]
+    ]
+
+    var invScale = [0, 0, 0]
+    if (t.scale[0] != 0) { // Do epsilon comparison here
+        invScale[0] = 1.0 / t.scale[0]
+    }
+    if (t.scale[1] != 0) { // Do epsilon comparison here
+        invScale[1] = 1.0 / t.scale[1]
+    }
+    if (t.scale[2] != 0) { // Do epsilon comparison here
+        invScale[2] = 1.0 / t.scale[2]
+    }
+
+    // First: Invert position
+    var invTranslation = [-t.position[0], -t.position[1], -t.position[2]]
+    // Second: Apply scale
+    invTranslation[0] = invTranslation[0] * invScale[0]
+    invTranslation[1] = invTranslation[1] * invScale[1]
+    invTranslation[2] = invTranslation[2] * invScale[2]
+    // Last: Apply inv rotation
+    invTranslation = Q_Mul_V3(invRotation, invTranslation);
+
+    return MakeTransform(invTranslation, invRotation, invScale, null);
+}
+
+function Transform_Combine(a, b) {
+    var scale = [
+    	a.scale[0] * b.scale[0],
+    	a.scale[1] * b.scale[1],
+    	a.scale[2] * b.scale[2]
+    ]    
+
+    var rotation = Dbg_Q_Mul_Q(a.rotation, b.rotation);
+
+    var position = [
+		a.scale[0] * b.position[0],
+    	a.scale[1] * b.position[1],
+    	a.scale[2] * b.position[2]
+    ]
+    position = Q_Mul_V3(a.rotation, position);
+    position =  [
+    	a.position[0] + position[0],
+    	a.position[1] + position[1],
+    	a.position[2] + position[2]
+    ]
+
+    return MakeTransform(position, rotation, scale, null);
+}
+
+function Transform_SetGlobalRotation (t, rotation) {
+	var worldXForm = GetWorldTransform(t);
+	Transform_SetGlobalTRS(t, worldXForm.position, rotation, worldXForm.scale);
+}
+
+function Transform_SetGlobalPosition (t, position) {
+	var worldXForm = GetWorldTransform(t);
+	Transform_SetGlobalTRS(t, position, worldXForm.rotation, worldXForm.scale);
+}
+
+function Transform_SetGlobalScale(t, scale) {
+	var worldXForm = GetWorldTransform(t);
+	Transform_SetGlobalTRS(t, worldXForm.position, worldXForm.rotation, scale);
+}
+
+function Transform_SetGlobalTRS(t, position, rotation, scale) {
+	if (t.parent == null) {
+		t.rotation = [ rotation[0], rotation[1], rotation[2], rotation[3] ]
+		t.position = [ position[0], position[1], position[2] ]
+		t.scale = [ scale[0], scale[1], scale[2] ]
+		return;
+	}
+
+	var invParent = Transform_Local_Inverse(GetWorldTransform(t.parent));
+	var worldXForm = {
+		position: position,
+		rotation: rotation,
+		scale: scale,
+		parent: null
+	}
+
+	worldXForm = Transform_Combine(invParent, worldXForm);
+
+	t.position = worldXForm.position;
+	t.rotation = worldXForm.rotation;
+	t.scale = worldXForm.scale;
+}
