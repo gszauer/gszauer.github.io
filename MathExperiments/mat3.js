@@ -53,7 +53,7 @@ above mapping should be correct.*/
 /* X.x, Y.x, Z.x
    X.y, Y.y, Z.y
    X.z, Y.z, Z.z */
-function M3_ArrayIndex(m, row, col) {
+function M3_ArrayIndex(row, col) {
 	return col * 3 + row;
 }
 

@@ -1,6 +1,7 @@
 // Quaternion is stored as a 4D array, in <x ,y, z, w> order
 
-
+// Unreal:
+//    https://github.com/EpicGames/UnrealEngine/blob/08ee319f80ef47dbf0988e14b546b65214838ec4/Engine/Source/Runtime/Core/Public/Math/Quat.h
 
 // Create quaternions
 function Q_Identity() {
@@ -106,5 +107,5 @@ function Q_To_Str(quat) {
 }
 
 function Q_Angle_Q(quat1, quat2) {
-	
+
 }

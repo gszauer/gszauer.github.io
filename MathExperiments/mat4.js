@@ -58,7 +58,7 @@ above mapping should be correct.*/
    X.y, Y.y, Z.y, T.y
    X.z, Y.z, Z.z, T.z
      0,   0,   0,   1 */
-function M4_ArrayIndex(m, row, col) {
+function M4_ArrayIndex(row, col) {
 	return col * 4 + row; 
 }
 
