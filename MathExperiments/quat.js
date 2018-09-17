@@ -1,13 +1,21 @@
 // Quaternion is stored as a 4D array, in <x ,y, z, w> order
+// http://danceswithcode.net/engineeringnotes/quaternions/quaternions.html
+// https://math.stackexchange.com/questions/302465/half-sine-and-half-cosine-quaternions
 
 // Unreal:
 //    https://github.com/EpicGames/UnrealEngine/blob/08ee319f80ef47dbf0988e14b546b65214838ec4/Engine/Source/Runtime/Core/Public/Math/Quat.h
 
 // Create quaternions
 function Q_Identity() {
-
+	return [0, 0, 0, 1];
 }
 
+// https://math.stackexchange.com/questions/1637243/quaternions-why-is-the-angle-frac-theta2
+// https://math.stackexchange.com/questions/1385028/concise-description-of-why-rotation-quaternions-use-half-the-angle
+// http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/notations/scalarAndVector/index.htm
+// http://wiki.roblox.com/index.php?title=User:EgoMoose/Articles/Quaternions_and_slerping
+// https://www.essentialmath.com/GDC2013/GDC13_quaternions_final.pdfhttps://www.essentialmath.com/GDC2013/GDC13_quaternions_final.pdf
+// https://www.kisspng.com/png-line-point-angle-quaternion-5389831/
 function Q_AngleAxis(angleInDegrees, vec3NormalAxis) {
 
 }
