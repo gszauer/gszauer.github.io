@@ -296,7 +296,7 @@ function UpdateSimulation(interpVal) {
 	const r2 = Q_Normalize(r1); // NLERP 1
 
 	// TODO: This linear blend makes sense!
-	const r3 = Q_Add(Q_Scale(a, t), Q_Scale(b, 1.0 - t));
+	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, t));
 	const r4 = Q_Normalize(r3); // NLERP 2
 
 	const r5 = Slerp(a, b, t);
@@ -320,8 +320,7 @@ function UpdateSimulation(interpVal) {
 }
 
 var global_state = {
-	//camPos: [3, 4, 6],
-	camPos: [-3, 3, 3],
+	camPos: [-3, 4, 3],
 	camTarget: [0, 0, 0],
 
 	q1: [0,0,0,1],
@@ -350,7 +349,7 @@ var global_state = {
 }
 
 function main() {
-	global_state.q1 = Q_AngleAxis(90, [1, 0, 0])
+	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
 	global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
 
 	var gl = SetupWebGL();
@@ -414,14 +413,13 @@ function DrawScene() {
 	DrawLine(global_state.red, {r:1, g:0, b:0});
 	DrawLine(global_state.disk_red, {r:1, g:0, b:0}, true)
 
-
 	DrawLine(global_state.green, {r:0, g:1, b:0});
 	DrawLine(global_state.disk_green, {r:0, g:1, b:0}, true)
 
 	DrawLine(global_state.blue, {r:0, g:0, b:1});
 	DrawLine(global_state.disk_blue, {r:0, g:0, b:1}, true)
 
-	DrawLine(global_state.c1, {r:1, g:0, b:1});
+	DrawLine(global_state.c1, {r:1, g:0, b:1}); // TODO: Get rid of these crazy names, make "cyan, magenta, etc..."
 	DrawLine(global_state.c2, {r:0, g:1, b:1});
 	DrawLine(global_state.c3, {r:1, g:1, b:0});
 
