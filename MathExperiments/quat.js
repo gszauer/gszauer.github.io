@@ -16,6 +16,8 @@ function Q_Identity() {
 // http://wiki.roblox.com/index.php?title=User:EgoMoose/Articles/Quaternions_and_slerping
 // https://www.essentialmath.com/GDC2013/GDC13_quaternions_final.pdfhttps://www.essentialmath.com/GDC2013/GDC13_quaternions_final.pdf
 // https://www.kisspng.com/png-line-point-angle-quaternion-5389831/
+// https://youtu.be/4mXL751ko0w?t=884
+// https://www.youtube.com/watch?v=jlskQDR8-bY&list=PLpzmRsG7u_gr0FO12cBWj-15_e0yqQQ1U
 function Q_AngleAxis(angleInDegrees, vec3NormalAxis) {
 
 }

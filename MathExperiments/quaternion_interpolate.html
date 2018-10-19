@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>NLERP Test</title>
+
+<script type="text/javascript">
+function V3_Normalize(quat) {
+	const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
+	
+	const length = Math.sqrt(lengthSq);
+	const invLength = 1.0 / length;
+
+	return [
+		quat[0] * invLength,
+		quat[1] * invLength,
+		quat[2] * invLength,
+	]
+}
+
+function Q_AngleAxis(degreesNum, axisVec3) {
+	const radians = degreesNum * 0.0174533; // TODO: Probably get a more accurate number?
+	const axis = V3_Normalize(axisVec3);
+
+	const halfCos = Math.cos(radians * 0.5);
+	const halfSin = Math.sin(radians * 0.5);
+
+	return [
+		axis[0] * halfSin,
+		axis[1] * halfSin,
+		axis[2] * halfSin,
+		halfCos
+	];
+}
+
+function Q_Add(leftQuat, rightQuat) {
+	return [
+		leftQuat[0] + rightQuat[0],
+		leftQuat[1] + rightQuat[1],
+		leftQuat[2] + rightQuat[2],
+		leftQuat[3] + rightQuat[3]
+	]
+}
+
+function Q_Sub(leftQuat, rightQuat) {
+	return [
+		leftQuat[0] - rightQuat[0],
+		leftQuat[1] - rightQuat[1],
+		leftQuat[2] - rightQuat[2],
+		leftQuat[3] - rightQuat[3]
+	]
+}
+
+function Q_Scale(quat, numFloat) {
+	return [
+		quat[0] * numFloat,
+		quat[1] * numFloat,
+		quat[2] * numFloat,
+		quat[3] * numFloat
+	]
+}
+
+function Q_Normalize(quat) {
+	const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3];
+	
+	const length = Math.sqrt(lengthSq);
+	const invLength = 1.0 / length;
+
+	return [
+		quat[0] * invLength,
+		quat[1] * invLength,
+		quat[2] * invLength,
+		quat[3] * invLength
+	]
+}
+
+function Q_Dot(a, b) {
+	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; 
+}
+
+function Q_Inv(q) {
+	return [
+		-q[0],
+		-q[1],
+		-q[2],
+		q[3]
+	]
+}
+
+function f(a) {
+	return Number(a).toFixed(5)
+}
+
+function Q_Equals(leftQuat, rightQuat) {
+	const epsilonFloatOptional = 0.0001;
+
+
+	const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
+	const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
+	const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
+	const l4 = Math.abs(leftQuat[3] - rightQuat[3]) <= epsilonFloatOptional
+
+	const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
+	const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
+	const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
+	const r4 = Math.abs(leftQuat[3] + rightQuat[3]) <= epsilonFloatOptional
+
+	const left = l1 && l2 && l3 && l4
+	const right = r1 && r2 && r3 && r4
+
+	const result = left || right
+
+	return result
+}
+
+function V3_Equals(leftQuat, rightQuat) {
+	const epsilonFloatOptional = 0.0001;
+
+	const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
+	const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
+	const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
+
+	const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
+	const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
+	const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
+
+	const left = l1 && l2 && l3 
+	const right = r1 && r2 && r3 
+
+	const result = left || right
+
+	return result
+}
+
+function V3_Add(v1, v2) {
+	return [
+		v1[0] + v2[0],
+		v1[1] + v2[1],
+		v1[2] + v2[2]
+	]
+}
+
+function V3_Dot(v1, v2) {
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+function V3_Scale(v, s) {
+	return [
+		v[0] * s,
+		v[1] * s,
+		v[2] * s
+	]
+}
+
+function V3_Cross(v1, v2) {
+	const result = [
+		v1[1] * v2[2] - v1[2] * v2[1],
+		v1[2] * v2[0] - v1[0] * v2[2],
+		v1[0] * v2[1] - v1[1] * v2[0]
+	];
+	return result;
+}
+
+function Q_Mul_V3(quaternion, vector3) {
+	const qVector = [quaternion[0], quaternion[1], quaternion[2]];
+	const qScalar = quaternion[3];
+
+	return V3_Add(
+		V3_Add(
+			V3_Scale(qVector, 2.0 * V3_Dot(qVector, vector3)),
+			V3_Scale(vector3, qScalar * qScalar - V3_Dot(qVector, qVector))
+		),
+		V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
+	);
+}
+
+function Nlerp_Test(a, b, t) {
+	console.log("(" + f(a[3]) + ", (" + f(a[0]) + ", " + f(a[1]) + ", " + f(a[2]) + ")) -> " +
+	            "(" + f(b[3]) + ", (" + f(b[0]) + ", " + f(b[1]) + ", " + f(b[2]) + ")): " + f(t));
+	const dot = Q_Dot(a, b);
+
+	if (dot < 0.0) {
+		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
+		b = Q_Inv(b); // TODO: Test when this triggers!
+	}
+
+	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t)); // (or a + (b-a)*t)
+	//console.log("a + (b - a) * t: (" + result[3] + ", (" + result[0] + ", " + result[1] + ", " + result[2] + "))");
+	
+	const r2 = Q_Normalize(r1)
+	console.log("|a + (b - a) * t|:     (" + f(r2[3]) + ", (" + f(r2[0]) + ", " + f(r2[1]) + ", " + f(r2[2]) + "))");
+
+	const r3 = Q_Add(Q_Scale(a, t), Q_Scale(b, 1.0 - t));
+	//console.log("a * t + b * (1 - t): (" + result[3] + ", (" + result[0] + ", " + result[1] + ", " + result[2] + "))");
+	
+	const r4 = Q_Normalize(r3);	
+	console.log("|a * t + b * (1 - t)|: (" + f(r4[3]) + ", (" + f(r4[0]) + ", " + f(r4[1]) + ", " + f(r4[2]) + "))");
+
+	if (Q_Equals(r2, r4)) {
+		console.log("true, Normalized results are the same");
+	}
+	else {
+		console.log("false Normalized results are NOT the same");
+	}
+	console.log("---------------------------------------------------------------------------");
+	console.log();
+}
+
+const x = Q_AngleAxis(90, [1, 0, 0])
+const y = Q_AngleAxis(90, [0, 1, 0])
+const z = Q_AngleAxis(90, [0, 1, 0])
+
+Nlerp_Test(x, y, 0);
+Nlerp_Test(x, y, 0.25);
+Nlerp_Test(x, y, 0.5);
+Nlerp_Test(x, y, 0.75);
+Nlerp_Test(x, y, 1);
+</script>
+
+  </head>
+
+<body onload="main();">
+	<div>
+		<canvas id="glCanvas" width="640" height="480"></canvas>
+	</div>
+	<div>
+		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="myRange" oninput="UpdateSimulation(this.value)" onchange="UpdateSimulation(this.value)">
+	</div>
+	<div>
+		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="myRange2" oninput="UpdateCamera(this.value)" onchange="UpdateCamera(this.value)">
+	</div>
+</body>
+
+<script type="text/javascript">
+
+function UpdateCamera(interpVal) {
+	var t = interpVal / 200.0
+	t = t * 360
+	t = t * 0.0174533;
+
+	var v = global_state.camPos;
+	var k = [0,1,0]
+
+	var cos = Math.cos(t)
+	var sin = Math.sin(t)
+
+	var vprime = V3_Add(
+	V3_Add(V3_Scale(v, cos),
+		   V3_Scale(V3_Cross(k, v), sin)),
+	       V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
+    );
+
+	global_state.view = LookAt(vprime, global_state.camTarget, [0, 1, 0]);
+	DrawScene();
+}
+
+function Slerp(q1, q2, t) {
+	var dotproduct = Q_Dot(q1, q2);
+	var lambda = t;// / 2.0;
+
+	var theta = Math.acos(dotproduct);
+	if (theta < 0.0) theta = -theta;
+	
+	var st = Math.sin(theta);
+	var sut = Math.sin(lambda*theta);
+	var sout = Math.sin((1.0-lambda)*theta);
+	var coeff1 = sout/st;
+	var coeff2 = sut/st;
+
+	var result = Q_Normalize([
+		coeff1*q1[0] + coeff2*q2[0],
+		coeff1*q1[1] + coeff2*q2[1],
+		coeff1*q1[2] + coeff2*q2[2],
+		coeff1*q1[3] + coeff2*q2[3]
+	]);
+
+	return result;
+}
+
+function UpdateSimulation(interpVal) {
+	var a = global_state.q1;
+	var b = global_state.q2;
+	var t = interpVal / 200.0
+
+	const dot = Q_Dot(a, b);
+
+	if (dot < 0.0) {
+		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
+		b = Q_Inv(b); // TODO: Test when this triggers!
+	}
+
+	if (t < 0) t = 0;
+	if (t > 1) t = 1;
+
+	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
+	const r2 = Q_Normalize(r1); // NLERP 1
+
+	// TODO: This linear blend makes sense!
+	const r3 = Q_Add(Q_Scale(a, t), Q_Scale(b, 1.0 - t));
+	const r4 = Q_Normalize(r3); // NLERP 2
+
+	const r5 = Slerp(a, b, t);
+
+	// Visualize vectors
+	//const v1 = Q_Mul_V3(r2, [0, 0, 1]);
+	//const v2 = Q_Mul_V3(r3, [0, 0, 1]);
+	//const v3 = Q_Mul_V3(r5, [0, 0, 1]);
+
+	// Normals. red = NLERP1, blue = NLERP2, green = SLERP
+	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], V3_Normalize([r2[0], r2[1], r2[2]]));
+	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], V3_Normalize([r4[0], r4[1], r4[2]]));
+	UpdateLine_Vec(global_state.gl, global_state.green,  [0, 0, 0], V3_Normalize([r5[0], r5[1], r5[2]]));
+
+	// Disc. red = NLERP1, blue = NLERP2, green = SLERP
+	UpdateDisc_Vec(global_state.gl, global_state.disk_red, [0, 0, 0], V3_Normalize([r2[0], r2[1], r2[2]]), 0.5)
+	UpdateDisc_Vec(global_state.gl, global_state.disk_blue, [0, 0, 0], V3_Normalize([r4[0], r4[1], r4[2]]), 0.5)
+	UpdateDisc_Vec(global_state.gl, global_state.disk_green, [0, 0, 0], V3_Normalize([r5[0], r5[1], r5[2]]), 0.5)
+
+	DrawScene();
+}
+
+var global_state = {
+	//camPos: [3, 4, 6],
+	camPos: [-3, 3, 3],
+	camTarget: [0, 0, 0],
+
+	q1: [0,0,0,1],
+	q2: [0,0,0,1],
+
+	view: null,
+	projection: null,
+	gl: null,
+	shader: null,
+
+	red: null,
+	green: null,
+	blue: null,
+
+	b1:null,
+	b2:null,
+	b3:null,
+
+	c1:null,
+	c2:null,
+	c3:null,
+
+	disk_red: null,
+	disk_green: null,
+	disk_blue: null
+}
+
+function main() {
+	global_state.q1 = Q_AngleAxis(90, [1, 0, 0])
+	global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+
+	var gl = SetupWebGL();
+    global_state.gl = gl;
+
+	if (!gl) {
+		return;
+	}
+
+	var shader = MakeSolidColorShader(global_state.gl);
+	global_state.shader = shader;
+	if (!shader) {
+		return;
+	}
+
+	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
+	global_state.view = LookAt(global_state.camPos, global_state.camTarget, [0, 1, 0]);
+
+	const s_vec = [5000, 5000, 5000]
+	const e_vec = [5001, 5001, 5001]
+	global_state.red = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.green = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.blue = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.c1 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.c2 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.c3 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.b1 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.b2 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.b3 = MakeLine_Vec(gl, s_vec, e_vec);
+
+	// TODO: Change all updates to match direct input!
+
+	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], [0, 0, 1]);
+	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], [0, 0, 1]);
+
+	UpdateLine_Vec(global_state.gl, global_state.b1,  [0, 0, 0], [1, 0, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.b2,  [0, 0, 0], [0, 1, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.b3,  [0, 0, 0], [0, 0, 1]);
+
+	const v1 = Q_Mul_V3(global_state.q1, [0, 0, 1]);
+	const v2 = Q_Mul_V3(global_state.q2, [0, 0, 1]);
+
+	UpdateLine_Vec(global_state.gl, global_state.c1,  [0, 0, 0], v1);
+	UpdateLine_Vec(global_state.gl, global_state.c2,  [0, 0, 0], v2);
+	UpdateLine_Vec(global_state.gl, global_state.c3,  v1, v2);
+
+	global_state.disk_red = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
+	global_state.disk_green = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
+	global_state.disk_blue = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
+
+	DrawScene();
+}
+
+function DrawScene() {
+	global_state.gl.clear(global_state.gl.COLOR_BUFFER_BIT | global_state.gl.DEPTH_BUFFER_BIT);
+
+	//UpdateLine_Vec(global_state.gl, global_state.red,   [0, 0, 0], [1, 0, 0]);
+	//UpdateLine_Vec(global_state.gl, global_state.green, [0, 0, 0], [0, 1, 0]);
+	//UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], [0, 0, 1]);
+
+	DrawLine(global_state.red, {r:1, g:0, b:0});
+	DrawLine(global_state.disk_red, {r:1, g:0, b:0}, true)
+
+
+	DrawLine(global_state.green, {r:0, g:1, b:0});
+	DrawLine(global_state.disk_green, {r:0, g:1, b:0}, true)
+
+	DrawLine(global_state.blue, {r:0, g:0, b:1});
+	DrawLine(global_state.disk_blue, {r:0, g:0, b:1}, true)
+
+	DrawLine(global_state.c1, {r:1, g:0, b:1});
+	DrawLine(global_state.c2, {r:0, g:1, b:1});
+	DrawLine(global_state.c3, {r:1, g:1, b:0});
+
+	DrawLine(global_state.b1, {r:0, g:0, b:0});
+	DrawLine(global_state.b2, {r:0, g:0, b:0});
+	DrawLine(global_state.b3, {r:0, g:0, b:0});
+
+}
+
+function SetupWebGL() {
+	const canvas = document.querySelector("#glCanvas");
+	const gl = canvas.getContext("webgl");
+
+	if (!gl) {
+		alert("Can't initialize Web GL! Consider this page broken!")
+		return null
+	}
+
+	gl.clearColor(0.4, 0.5, 0.6, 1.0);
+
+	gl.clearDepth(1.0);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+
+	gl.enable(gl.CULL_FACE);
+	gl.cullFace(gl.BACK);
+
+	return gl;
+}
+
+function MakeSolidColorShader(gl) {
+	// Setup vertex Shader
+	const vSource = `
+		precision highp float;
+		attribute vec3 position;
+
+		uniform mat4 modelMatrix;
+		uniform mat4 viewMatrix;
+		uniform mat4 projectionMatrix;
+		uniform vec4 renderColor;
+
+		varying vec4 color; 
+
+		void main() {
+			color = renderColor;
+
+			gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
+		}
+	`;	
+
+	const vertex = gl.createShader(gl.VERTEX_SHADER);
+	gl.shaderSource(vertex, vSource);
+	gl.compileShader(vertex);
+
+	if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS)) {
+		alert("Can't compile vertex shader: " + gl.getShaderInfoLog(vertex));
+		gl.deleteShader(vertex);
+		return null;
+	}
+
+	// Setup fragment shader
+	const fSource = `
+		precision highp float;
+		varying vec4 color; 
+
+		void main() {
+			gl_FragColor = color;
+		}
+	`;
+
+	const fragment = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(fragment, fSource);
+	gl.compileShader(fragment);
+
+	if (!gl.getShaderParameter(fragment, gl.COMPILE_STATUS)) {
+		alert("Can't compile fragment shader: " + gl.getShaderInfoLog(fragment));
+		gl.deleteShader(fragment);
+		return null;
+	}
+
+	// Setup actual program
+	const program = gl.createProgram();
+	gl.attachShader(program, vertex);
+	gl.attachShader(program, fragment);
+	gl.linkProgram(program);
+
+	gl.deleteShader(vertex);
+	gl.deleteShader(fragment);
+
+	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+		alert("Can't link the shader: " + gl.getProgramInfoLog(program));
+		return null;
+	}
+
+	const info = {
+		id : program,
+		attribs : {
+			position: gl.getAttribLocation(program, "position")		
+		},
+		uniforms : {
+			model: gl.getUniformLocation(program, "modelMatrix"),
+			view: gl.getUniformLocation(program, "viewMatrix"),
+			projection: gl.getUniformLocation(program, "projectionMatrix"),
+			color: gl.getUniformLocation(program, "renderColor")
+		}
+	};
+	return info;
+}
+
+function PerspectiveMatrix(fov, zNear, zFar, aspect) {
+	const tanHalfFov = Math.tan((fov * 0.5) * 0.0174533);
+	const fovY = 1.0 / tanHalfFov; 
+	const fovX = fovY / aspect; 
+	const _33 = -(zFar / (zFar - zNear))
+	const _43 = -((zFar * zNear) / (zFar - zNear));
+
+	const result = [
+		fovX, 0,    0,   0,
+		0,    fovY, 0,   0,
+		0,    0,    _33, -1,
+		0,    0,    _43,   0
+	];
+
+	return result;
+}
+
+function LookAt(eye, at, up) {
+	const zAxis = Normalize([
+		eye[0] - at[0],
+		eye[1] - at[1],
+		eye[2] - at[2]
+	]);
+	const xAxis = Normalize(Cross(zAxis, up));
+	const yAxis = Cross(xAxis, zAxis);
+
+	const result = [
+		xAxis[0], yAxis[0], zAxis[0], 0,
+		xAxis[1], yAxis[1], zAxis[1], 0,
+		xAxis[2], yAxis[2], zAxis[2], 0,
+		-Dot(xAxis, eye), 
+		-Dot(yAxis, eye),
+		-Dot(zAxis, eye),
+		1
+	];
+
+	return result;
+}
+
+function Dot(v1, v2) {
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+function Normalize(v) {
+	const dot = Dot(v, v);
+	if (dot !== 0.0) {
+		const length = Math.sqrt(dot);
+		const result = [
+			v[0] / length,
+			v[1] / length,
+			v[2] / length
+		];
+		return result;
+	}
+	alert("Cant normalize zero vector");
+	return v;
+}
+
+function Cross(v1, v2) {
+	const result = [
+		v1[1] * v2[2] - v1[2] * v2[1],
+		v1[2] * v2[0] - v1[0] * v2[2],
+		v1[0] * v2[1] - v1[1] * v2[0]
+	];
+	return result;
+}
+
+function MakeLine_Vec(gl, v1, v2) { 
+	var arrayBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+
+		const verts = [
+		v1[0], v1[1], v1[2],
+		v2[0], v2[1], v2[2]
+	];
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+
+	return {
+		bufferId: arrayBuffer,
+		count: verts.length / 3,
+		numComponents: 3,
+		type: gl.FLOAT,
+		stride: 0,
+		offset: 0
+	}
+}
+
+function MakeDisc_Vec(gl, point, normal, radius) { 
+	var arrayBuffer = gl.createBuffer();
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+
+	const verts = [];
+
+	normal = V3_Normalize(normal);
+
+	const zero = [0, 0, 0]
+	var perp = V3_Cross(normal, [0, 1, 0])
+	if (V3_Equals(perp, zero)) {
+		perp = V3_Cross(normal, [0, 0, 1])
+		if (V3_Equals(perp, zero)) {
+			perp = V3_Cross(normal, [1, 0, 0])
+		}
+	}
+
+	var forward = V3_Cross(V3_Normalize(perp), normal)
+	var right = V3_Cross(normal, forward);
+
+	var v = right;
+	var k = V3_Normalize(normal)
+
+	for (var i = 0; i < 360; ++i) {
+		var cos = Math.cos(i * 0.0174533)
+		var sin = Math.sin(i * 0.0174533)
+
+		// v' = (1 - cos)(v dot n)n + cos v + sin(n cross v)
+
+		const p1 = V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
+		const p2 = V3_Scale(v, cos)
+		const p3 = V3_Scale(V3_Cross(k, v), sin)
+
+		var vprime = 
+		V3_Add(
+			V3_Add(
+				p1,
+				p2
+			),
+		    p3
+	    );
+
+	    //vprime = V3_Scale(V3_Normalize(vprime), radius)
+
+	    verts.push(point[0] + vprime[0])
+		verts.push(point[1] + vprime[1])
+		verts.push(point[2] + vprime[2]);
+	}
+
+	return {
+		bufferId: arrayBuffer,
+		count: verts.length / 3,
+		numComponents: 3,
+		type: gl.FLOAT,
+		stride: 0,
+		offset: 0
+	}
+}
+
+function DrawLine(buffer, color, loop) {
+	if (typeof loop == "undefined" || loop == null) {
+		loop = false
+	}
+	const modelMatrix = [
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	]
+	global_state.gl.bindBuffer(global_state.gl.ARRAY_BUFFER, buffer.bufferId);
+	global_state.gl.vertexAttribPointer(global_state.shader.attribs.position, buffer.numComponents, buffer.type, false, buffer.stride, buffer.offset);
+	global_state.gl.enableVertexAttribArray(global_state.shader.attribs.position);
+
+	global_state.gl.useProgram(global_state.shader.id);
+
+	global_state.gl.uniformMatrix4fv(global_state.shader.uniforms.projection, false, global_state.projection);
+	global_state.gl.uniformMatrix4fv(global_state.shader.uniforms.view, false, global_state.view);
+	global_state.gl.uniformMatrix4fv(global_state.shader.uniforms.model, false, modelMatrix);
+	global_state.gl.uniform4f(global_state.shader.uniforms.color, color.r, color.g, color.b, 1.0);
+
+	const offset = 0;
+	global_state.gl.drawArrays(loop? global_state.gl.LINE_LOOP : global_state.gl.LINES, offset, buffer.count)
+}
+
+function UpdateLine_Vec(gl, buffer, v1, v2) { 
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer.bufferId);
+
+	const verts = [
+		v1[0], v1[1], v1[2],
+		v2[0], v2[1], v2[2]
+	];
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+}
+
+function UpdateDisc_Vec(gl, buffer, point, normal, radius) { 
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer.bufferId);
+
+	const verts = [];
+
+	normal = V3_Normalize(normal);
+
+	const zero = [0, 0, 0]
+	var perp = V3_Cross(normal, [0, 1, 0])
+	if (V3_Equals(perp, zero)) {
+		perp = V3_Cross(normal, [0, 0, 1])
+		if (V3_Equals(perp, zero)) {
+			perp = V3_Cross(normal, [1, 0, 0])
+		}
+	}
+
+	var forward = V3_Cross(V3_Normalize(perp), normal)
+	var right = V3_Cross(normal, forward);
+
+	var v = right;
+	var k = V3_Normalize(normal)
+
+	for (var i = 0; i < 360; ++i) {
+		var cos = Math.cos(i * 0.0174533)
+		var sin = Math.sin(i * 0.0174533)
+
+		// v' = (1 - cos)(v dot n)n + cos v + sin(n cross v)
+
+		const p1 = V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
+		const p2 = V3_Scale(v, cos)
+		const p3 = V3_Scale(V3_Cross(k, v), sin)
+
+		var vprime = 
+		V3_Add(
+			V3_Add(
+				p1,
+				p2
+			),
+		    p3
+	    );
+
+	    vprime = V3_Scale(V3_Normalize(vprime), radius)
+
+	    verts.push(point[0] + vprime[0])
+		verts.push(point[1] + vprime[1])
+		verts.push(point[2] + vprime[2]);
+	}
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+}
+
+</script>
+
+</html>
