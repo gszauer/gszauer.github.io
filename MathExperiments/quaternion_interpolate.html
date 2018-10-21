@@ -277,11 +277,7 @@ function Slerp(q1, q2, t) {
 	return result;
 }
 
-function UpdateSimulation(interpVal) {
-	var a = global_state.q1;
-	var b = global_state.q2;
-	var t = interpVal / 200.0
-
+function Nlerp1(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	if (dot < 0.0) {
@@ -289,32 +285,60 @@ function UpdateSimulation(interpVal) {
 		b = Q_Inv(b); // TODO: Test when this triggers!
 	}
 
-	if (t < 0) t = 0;
-	if (t > 1) t = 1;
-
 	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
 	const r2 = Q_Normalize(r1); // NLERP 1
 
-	// TODO: This linear blend makes sense!
+	return r2;
+}
+
+function Nlerp2(a, b, t) {
+	const dot = Q_Dot(a, b);
+
+	if (dot < 0.0) {
+		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
+		b = Q_Inv(b); // TODO: Test when this triggers!
+	}
+
 	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, t));
 	const r4 = Q_Normalize(r3); // NLERP 2
 
-	const r5 = Slerp(a, b, t);
+	return r4;
+}
 
-	// Visualize vectors
-	//const v1 = Q_Mul_V3(r2, [0, 0, 1]);
-	//const v2 = Q_Mul_V3(r3, [0, 0, 1]);
-	//const v3 = Q_Mul_V3(r5, [0, 0, 1]);
+function UpdateSimulation(interpVal) {
+	var a = global_state.q1;
+	var b = global_state.q2;
+	var t = interpVal / 200.0
+
+	if (t < 0) t = 0;
+	if (t > 1) t = 1;
+
+	const result_n1 = Nlerp1(a, b, t);
+	const result_n2 = Nlerp2(a, b, t)
+	const result_s = Slerp(a, b, t);
+
+	const axis_n1 = V3_Normalize([result_n1[0], result_n1[1], result_n1[2]])
+	const axis_n2 = V3_Normalize([result_n2[0], result_n2[1], result_n2[2]])
+	const axis_s = V3_Normalize([result_s[0], result_s[1], result_s[2]])
+
+	// Vectors, no idea how the colors work
+	const vec_n1 = Q_Mul_V3(result_n1, [0, 0, 1]);
+	const vec_n2 = Q_Mul_V3(result_n2, [0, 0, 1]);
+	const vec_n3 = Q_Mul_V3(result_s, [0, 0, 1]);
+
+	UpdateLine_Vec(global_state.gl, global_state.vector_red,  [0, 0, 0], vec_n1);
+	UpdateLine_Vec(global_state.gl, global_state.vector_green,  [0, 0, 0], vec_n2);
+	UpdateLine_Vec(global_state.gl, global_state.vector_blue,  [0, 0, 0], vec_n3);
 
 	// Normals. red = NLERP1, blue = NLERP2, green = SLERP
-	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], V3_Normalize([r2[0], r2[1], r2[2]]));
-	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], V3_Normalize([r4[0], r4[1], r4[2]]));
-	UpdateLine_Vec(global_state.gl, global_state.green,  [0, 0, 0], V3_Normalize([r5[0], r5[1], r5[2]]));
+	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], axis_n1);
+	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], axis_n2);
+	UpdateLine_Vec(global_state.gl, global_state.green,  [0, 0, 0], axis_s);
 
 	// Disc. red = NLERP1, blue = NLERP2, green = SLERP
-	UpdateDisc_Vec(global_state.gl, global_state.disk_red, [0, 0, 0], V3_Normalize([r2[0], r2[1], r2[2]]), 0.5)
-	UpdateDisc_Vec(global_state.gl, global_state.disk_blue, [0, 0, 0], V3_Normalize([r4[0], r4[1], r4[2]]), 0.5)
-	UpdateDisc_Vec(global_state.gl, global_state.disk_green, [0, 0, 0], V3_Normalize([r5[0], r5[1], r5[2]]), 0.5)
+	UpdateDisc_Vec(global_state.gl, global_state.disk_red, [0, 0, 0], axis_n1, 0.5)
+	UpdateDisc_Vec(global_state.gl, global_state.disk_blue, [0, 0, 0], axis_n2, 0.5)
+	UpdateDisc_Vec(global_state.gl, global_state.disk_green, [0, 0, 0], axis_s, 0.5)
 
 	DrawScene();
 }
@@ -339,9 +363,9 @@ var global_state = {
 	b2:null,
 	b3:null,
 
-	c1:null,
-	c2:null,
-	c3:null,
+	vector_red:null,
+	vector_green:null,
+	vector_blue:null,
 
 	disk_red: null,
 	disk_green: null,
@@ -349,8 +373,11 @@ var global_state = {
 }
 
 function main() {
+	//global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+	//global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+
 	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+	global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
 	var gl = SetupWebGL();
     global_state.gl = gl;
@@ -373,32 +400,30 @@ function main() {
 	global_state.red = MakeLine_Vec(gl, s_vec, e_vec);
 	global_state.green = MakeLine_Vec(gl, s_vec, e_vec);
 	global_state.blue = MakeLine_Vec(gl, s_vec, e_vec);
-	global_state.c1 = MakeLine_Vec(gl, s_vec, e_vec);
-	global_state.c2 = MakeLine_Vec(gl, s_vec, e_vec);
-	global_state.c3 = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.vector_red = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.vector_green = MakeLine_Vec(gl, s_vec, e_vec);
+	global_state.vector_blue = MakeLine_Vec(gl, s_vec, e_vec);
 	global_state.b1 = MakeLine_Vec(gl, s_vec, e_vec);
 	global_state.b2 = MakeLine_Vec(gl, s_vec, e_vec);
 	global_state.b3 = MakeLine_Vec(gl, s_vec, e_vec);
 
 	// TODO: Change all updates to match direct input!
 
-	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], [0, 0, 1]);
-	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], [0, 0, 1]);
-
 	UpdateLine_Vec(global_state.gl, global_state.b1,  [0, 0, 0], [1, 0, 0]);
 	UpdateLine_Vec(global_state.gl, global_state.b2,  [0, 0, 0], [0, 1, 0]);
 	UpdateLine_Vec(global_state.gl, global_state.b3,  [0, 0, 0], [0, 0, 1]);
 
-	const v1 = Q_Mul_V3(global_state.q1, [0, 0, 1]);
-	const v2 = Q_Mul_V3(global_state.q2, [0, 0, 1]);
+	UpdateLine_Vec(global_state.gl, global_state.red,  [0, 0, 0], [0, 0, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], [0, 0, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.green,  [0, 0, 0], [0, 0, 0]);
 
-	UpdateLine_Vec(global_state.gl, global_state.c1,  [0, 0, 0], v1);
-	UpdateLine_Vec(global_state.gl, global_state.c2,  [0, 0, 0], v2);
-	UpdateLine_Vec(global_state.gl, global_state.c3,  v1, v2);
+	UpdateLine_Vec(global_state.gl, global_state.vector_red,  [0, 0, 0], [0, 0, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.vector_green,  [0, 0, 0], [0, 0, 0]);
+	UpdateLine_Vec(global_state.gl, global_state.vector_blue,  [0, 0, 0], [0, 0, 0]);
 
-	global_state.disk_red = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
-	global_state.disk_green = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
-	global_state.disk_blue = MakeDisc_Vec(global_state.gl, [0, 0, 0], V3_Normalize([global_state.q1[0], global_state.q1[1], global_state.q1[2]]), 0.5)
+	global_state.disk_red = MakeDisc_Vec(global_state.gl, [0, 0, 0], [1, 0, 0], 0.5)
+	global_state.disk_green = MakeDisc_Vec(global_state.gl, [0, 0, 0], [0, 1, 0], 0.5)
+	global_state.disk_blue = MakeDisc_Vec(global_state.gl, [0, 0, 0], [0, 0, 1], 0.5)
 
 	DrawScene();
 }
@@ -406,22 +431,18 @@ function main() {
 function DrawScene() {
 	global_state.gl.clear(global_state.gl.COLOR_BUFFER_BIT | global_state.gl.DEPTH_BUFFER_BIT);
 
-	//UpdateLine_Vec(global_state.gl, global_state.red,   [0, 0, 0], [1, 0, 0]);
-	//UpdateLine_Vec(global_state.gl, global_state.green, [0, 0, 0], [0, 1, 0]);
-	//UpdateLine_Vec(global_state.gl, global_state.blue,  [0, 0, 0], [0, 0, 1]);
-
+	// TODO: Maybe refactor these into a "QuaternionVisual" structure or something?
 	DrawLine(global_state.red, {r:1, g:0, b:0});
 	DrawLine(global_state.disk_red, {r:1, g:0, b:0}, true)
+	DrawLine(global_state.vector_red, {r:1, g:0, b:1});
 
 	DrawLine(global_state.green, {r:0, g:1, b:0});
 	DrawLine(global_state.disk_green, {r:0, g:1, b:0}, true)
+	DrawLine(global_state.vector_green, {r:0, g:1, b:1});
 
 	DrawLine(global_state.blue, {r:0, g:0, b:1});
 	DrawLine(global_state.disk_blue, {r:0, g:0, b:1}, true)
-
-	DrawLine(global_state.c1, {r:1, g:0, b:1}); // TODO: Get rid of these crazy names, make "cyan, magenta, etc..."
-	DrawLine(global_state.c2, {r:0, g:1, b:1});
-	DrawLine(global_state.c3, {r:1, g:1, b:0});
+	DrawLine(global_state.vector_blue, {r:1, g:1, b:0});
 
 	DrawLine(global_state.b1, {r:0, g:0, b:0});
 	DrawLine(global_state.b2, {r:0, g:0, b:0});
@@ -667,6 +688,8 @@ function MakeDisc_Vec(gl, point, normal, radius) {
 		verts.push(point[2] + vprime[2]);
 	}
 
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+
 	return {
 		bufferId: arrayBuffer,
 		count: verts.length / 3,
@@ -763,6 +786,15 @@ function UpdateDisc_Vec(gl, buffer, point, normal, radius) {
 
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
 }
+
+/*
+----------------
+IntLineRenderer
+MakeLine
+UpdateLine
+DrawLine
+----------------
+*/
 
 </script>
 
