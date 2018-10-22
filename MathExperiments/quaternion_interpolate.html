@@ -168,7 +168,7 @@ function Q_Mul_V3(quaternion, vector3) {
 	return V3_Add(
 		V3_Add(
 			V3_Scale(qVector, 2.0 * V3_Dot(qVector, vector3)),
-			V3_Scale(vector3, qScalar * qScalar - V3_Dot(qVector, qVector))
+			V3_Scale(vector3, (qScalar * qScalar) - V3_Dot(qVector, qVector))
 		),
 		V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
 	);
@@ -449,30 +449,6 @@ function UpdateSimulation() {
 	var camX = cameraZDistance * -Math.sin(cameraXAngle*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
 	var camY = cameraZDistance * -Math.sin((cameraYAngle)*(Math.PI/180.0));
 	var camZ = -cameraZDistance * Math.cos((cameraXAngle)*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
-
-	/*var v = [global_state.camPos[0], 0, cameraZ];
-	var k = [0,1,0]
-
-	var cos = Math.cos(cameraX)
-	var sin = Math.sin(cameraX)
-
-	const camera_x_vec = V3_Add(
-	V3_Add(V3_Scale(v, cos),
-		   V3_Scale(V3_Cross(k, v), sin)),
-	       V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
-    );
-
-    var v = [0, global_state.camPos[1], 0];
-	var k = [1,0,0]
-
-	var cos = Math.cos(cameraY)
-	var sin = Math.sin(cameraY)
-
-	const camera_y_vec = V3_Add(
-	V3_Add(V3_Scale(v, cos),
-		   V3_Scale(V3_Cross(k, v), sin)),
-	       V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
-    );*/
 
 	global_state.view = LookAt([camX, camY, camZ], global_state.camTarget, [0, 1, 0]);
 	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
