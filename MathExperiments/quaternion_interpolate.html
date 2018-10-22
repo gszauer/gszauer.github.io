@@ -186,6 +186,20 @@ function Q_Mul_V3(quaternion, vector3) {
 		<input type="checkbox" id="draw_nlerp2" checked onchange="UpdateSimulation()"><b><font color="yellow" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Yellow (Nlerp2)</font></b>
 		<input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Cyan (Slerp)</font></b>
 	</div>
+
+	<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
+		<input type="checkbox" id="draw_origin" onchange="UpdateSimulation()">
+		<b>
+			<font color="red" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Or</font>
+			<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">ig</font>
+			<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">in</font>
+			<font color="red" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">(R</font>
+			<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">G</font>
+			<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">B)</font>
+		</b>
+		<input type="checkbox" id="draw_q1" onchange="UpdateSimulation()"><b><font color="black" style="text-shadow:-1px -1px 0 #FFFFFF,1px -1px 0 #FFFFFF,-1px 1px 0 #FFFFFF,1px 1px 0 #FFFFFF;">Q1 (Black)</font></b>
+		<input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
+	</div>
 	
 	<div>
 		<b>Q1:</b>
@@ -328,6 +342,10 @@ function UpdateSimulation() {
 	UpdateQuaternionVisual(global_state.visual_nlerp2, result_n2, forward)
 	UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
+
+	UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
+	UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, null)
+
 	DrawScene();
 }
 
@@ -346,20 +364,36 @@ var global_state = {
 
 	visual_nlerp1: null,
 	visual_nlerp2: null,
-	visual_slerp: null
+	visual_slerp: null,
+
+	line_origin_r: null,
+	line_origin_g: null,
+	line_origin_b: null,
+
+	origin_q1: null,
+	origin_q2: null
 }
 
-function MakeQuaternionVisual(lr, color) {
+function MakeQuaternionVisual(lr, color, exclude_vector) {
+	if (typeof exclude_vector == "undefined" || exclude_vector == null) {
+		exclude_vector = false
+	}
+
 	const null_line = [
 		0, 0, 0,
 		0, 0, 0
 	]
 
+	var dv = null;
+	if (!exclude_vector) {
+		dv = LR_MakeLine(lr, null_line, false);
+	}
+
 	return {
 		quaternion: [0, 0, 0, 1],
 		draw_normal: LR_MakeLine(lr, null_line, false),
 		draw_plane:  LR_MakeLine(lr, null_line, true),
-		draw_vector: LR_MakeLine(lr, null_line, false),
+		draw_vector: dv,
 		normal_color: {
 			r: color[0] * 0.5,
 			g: color[1] * 0.5,
@@ -386,14 +420,18 @@ function UpdateQuaternionVisual(visualObject, quat, vector) {
 
 	LR_UpdateLine(visualObject.draw_plane, MakeDiskArray(n, 0.5))
 
-	const v = Q_Mul_V3(quat, vector);
-	LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
+	if (vector != null && visualObject.draw_vector != null) {
+		const v = Q_Mul_V3(quat, vector);
+		LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
+	}
 }
 
 function DrawQuaternionVisual(visualObject, view, proj) {
 	LR_DrawLine(visualObject.draw_normal, view, proj, visualObject.normal_color);
 	LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
-	LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
+	if (visualObject.draw_vector != null) {
+		LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
+	}
 }
 
 function main() {
@@ -422,6 +460,13 @@ function main() {
 	global_state.visual_nlerp2 = MakeQuaternionVisual(lr, [1, 1, 0]);
 	global_state.visual_slerp  = MakeQuaternionVisual(lr, [0, 1, 1]);
 
+	global_state.origin_q1 = MakeQuaternionVisual(lr, [0, 0, 0], true);
+	global_state.origin_q2 = MakeQuaternionVisual(lr, [2, 2, 2], true);
+
+	global_state.line_origin_r = LR_MakeLine(lr, [0, 0, 0, 1.5, 0, 0], false);
+	global_state.line_origin_g = LR_MakeLine(lr, [0, 0, 0, 0, 1.5, 0], false);
+	global_state.line_origin_b = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1.5], false);
+
 	UpdateSimulation()
 }
 
@@ -433,6 +478,22 @@ function DrawScene() {
 	const draw_nlerp1 = document.getElementById("draw_nlerp1").checked;
 	const draw_nlerp2 = document.getElementById("draw_nlerp2").checked;
 	const draw_slerp = document.getElementById("draw_slerp").checked;
+	const draw_origin = document.getElementById("draw_origin").checked;
+	const draw_q1 = document.getElementById("draw_q1").checked;
+	const draw_q2 = document.getElementById("draw_q2").checked;
+
+	if (draw_origin) {
+		LR_DrawLine(global_state.line_origin_r, view, proj, [1, 0, 0]);
+		LR_DrawLine(global_state.line_origin_g, view, proj, [0, 1, 0]);
+		LR_DrawLine(global_state.line_origin_b, view, proj, [0, 0, 1]);
+	}
+
+	if (draw_q1) {
+		DrawQuaternionVisual(global_state.origin_q1, view, proj);
+	}
+	if (draw_q2) {
+		DrawQuaternionVisual(global_state.origin_q2, view, proj);
+	}
 
 	if (draw_nlerp1) {
 		DrawQuaternionVisual(global_state.visual_nlerp1, view, proj);
@@ -443,6 +504,8 @@ function DrawScene() {
 	if (draw_slerp) {
 		DrawQuaternionVisual(global_state.visual_slerp, view, proj);
 	}
+
+	
 }
 
 function SetupWebGL() {
