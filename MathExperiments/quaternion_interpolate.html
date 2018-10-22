@@ -223,12 +223,19 @@ Nlerp_Test(x, y, 1);
 	<div>
 		<canvas id="glCanvas" width="640" height="480"></canvas>
 	</div>
-	<div>
-		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="myRange" oninput="UpdateSimulation(this.value)" onchange="UpdateSimulation(this.value)">
+	<div style="background-color: rgb(0,0,0); width:640px">
+		<input type="checkbox" id="draw_nlerp1" checked onchange="UpdateSimulation()"><b><font color="magenta">Magenta (Nlerp1)</font></b>
+		<input type="checkbox" id="draw_nlerp2" checked onchange="UpdateSimulation()"><b><font color="yellow">Yellow (Nlerp2)</font></b>
+		<input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan">Cyan (Slerp)</font></b>
 	</div>
 	<div>
-		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="myRange2" oninput="UpdateCamera(this.value)" onchange="UpdateCamera(this.value)">
+		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
 	</div>
+	<div>
+		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+	</div>
+
+
 </body>
 
 <script type="text/javascript">
@@ -284,10 +291,17 @@ function Nlerp2(a, b, t) {
 	return r4;
 }
 
-function UpdateCamera(interpVal) {
-	var t = interpVal / 200.0
-	t = t * 360
-	t = t * 0.0174533;
+function UpdateSimulation() {
+	var interp_value = document.getElementById("interp_value").value
+	var interp_range = document.getElementById("interp_value").max - document.getElementById("interp_value").min
+	var camera_x_value = document.getElementById("camera_x_value").value
+	var camera_x_range = document.getElementById("camera_x_value").max - document.getElementById("camera_x_value").min
+
+	// UPDATE CAMERA POSITION
+	var t = (camera_x_value / camera_x_range) 
+	if (t < 0) t = 0;
+	if (t > 1) t = 1;
+	t = t * 360.0 * 0.0174533;
 
 	var v = global_state.camPos;
 	var k = [0,1,0]
@@ -302,20 +316,16 @@ function UpdateCamera(interpVal) {
     );
 
 	global_state.view = LookAt(vprime, global_state.camTarget, [0, 1, 0]);
-	DrawScene();
-}
+	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
 
-function UpdateSimulation(interpVal) {
-	var a = global_state.q1;
-	var b = global_state.q2;
-	var t = interpVal / 200.0
-
+	// UPDATE INTERPOLATION VALUES
+	t = interp_value / interp_range
 	if (t < 0) t = 0;
 	if (t > 1) t = 1;
 
-	const result_n1 = Nlerp1(a, b, t);
-	const result_n2 = Nlerp2(a, b, t)
-	const result_s = Slerp(a, b, t);
+	const result_n1 = Nlerp1(global_state.q1, global_state.q2, t);
+	const result_n2 = Nlerp2(global_state.q1, global_state.q2, t)
+	const result_s = Slerp(global_state.q1, global_state.q2, t);
 
 	const forward = [0, 0, 1];
 
@@ -392,11 +402,11 @@ function DrawQuaternionVisual(visualObject, view, proj) {
 }
 
 function main() {
-	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
-
 	//global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	//global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+	//global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+
+	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+	global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
 	var gl = SetupWebGL();
     global_state.gl = gl;
@@ -413,16 +423,11 @@ function main() {
 		0, 0, 0
 	]
 
-	global_state.visual_nlerp1 = MakeQuaternionVisual(lr, [1, 0, 0]);
-	global_state.visual_nlerp2 = MakeQuaternionVisual(lr, [0, 1, 0]);
-	global_state.visual_slerp = MakeQuaternionVisual(lr, [0, 0, 1]);
+	global_state.visual_nlerp1 = MakeQuaternionVisual(lr, [1, 0, 1]);
+	global_state.visual_nlerp2 = MakeQuaternionVisual(lr, [1, 1, 0]);
+	global_state.visual_slerp  = MakeQuaternionVisual(lr, [0, 1, 1]);
 
-	// TODO: Call update camera
-	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
-	global_state.view = LookAt(global_state.camPos, global_state.camTarget, [0, 1, 0]);
-	// TODO: Call update simulation
-
-	DrawScene();
+	UpdateSimulation()
 }
 
 function DrawScene() {
@@ -430,9 +435,19 @@ function DrawScene() {
 	const view = global_state.view 
 	const proj = global_state.projection
 
-	DrawQuaternionVisual(global_state.visual_nlerp1, view, proj);
-	DrawQuaternionVisual(global_state.visual_nlerp2, view, proj);
-	DrawQuaternionVisual(global_state.visual_slerp, view, proj);
+	const draw_nlerp1 = document.getElementById("draw_nlerp1").checked;
+	const draw_nlerp2 = document.getElementById("draw_nlerp2").checked;
+	const draw_slerp = document.getElementById("draw_slerp").checked;
+
+	if (draw_nlerp1) {
+		DrawQuaternionVisual(global_state.visual_nlerp1, view, proj);
+	}
+	if (draw_nlerp2) {
+		DrawQuaternionVisual(global_state.visual_nlerp2, view, proj);
+	}
+	if (draw_slerp) {
+		DrawQuaternionVisual(global_state.visual_slerp, view, proj);
+	}
 }
 
 function SetupWebGL() {
