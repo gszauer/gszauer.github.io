@@ -303,6 +303,7 @@ function Slerp(q1, q2, t) {
         return Q_Normalize(Q_Add(Q_Scale(q1, sin1), Q_Scale(q2, sin2)));
     }
     // if the angle is small, use linear interpolation
+    console.log("slerp falling back to nlerp")
     return Nlerp1(q1,q3,t);
 }
 
