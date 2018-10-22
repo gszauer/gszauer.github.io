@@ -287,38 +287,34 @@ function Q_Mul_V3(quaternion, vector3) {
 
 <script type="text/javascript">
 function Slerp(q1, q2, t) {
-	var dotproduct = Q_Dot(q1, q2);
-	var lambda = t;// / 2.0;
+    var dot = Q_Dot(q1, q2);
+    
+    if (dot < 0) {
+        dot = -dot;
+        q2 = Q_Scale(q2, -1)
+    }
+    
+    if (dot < 0.99) {
+        var angle = Math.acos(dot);
 
-	var theta = Math.acos(dotproduct);
-	if (theta < 0.0) {
-		console.log("Slerp: theta < 0");
-		theta = -theta;
-	}
+        var sin1 = Math.sin(angle*(1-t))
+        var sin2 = Math.sin(angle*t)
 
-	var st = Math.sin(theta);
-	var sut = Math.sin(lambda*theta);
-	var sout = Math.sin((1.0-lambda)*theta);
-	var coeff1 = sout/st;
-	var coeff2 = sut/st;
-
-	var result = Q_Normalize([
-		coeff1*q1[0] + coeff2*q2[0],
-		coeff1*q1[1] + coeff2*q2[1],
-		coeff1*q1[2] + coeff2*q2[2],
-		coeff1*q1[3] + coeff2*q2[3]
-	]);
-
-	return result;
+        return Q_Normalize(Q_Add(Q_Scale(q1, sin1), Q_Scale(q2, sin2)));
+    }
+    // if the angle is small, use linear interpolation
+    return Nlerp1(q1,q3,t);
 }
+
+// TODO:
+// Does this explain why: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=398
 
 // a + (b - a) * t
 function Nlerp1(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	if (dot < 0.0) {
-		console.log("Nlerp1: dot < 0");
-		//b = Q_Inv(b); // TODO: Test when this triggers!
+		//console.log("Nlerp1: dot < 0");
 		b = [
 			-b[0],
 			-b[1],
@@ -333,22 +329,14 @@ function Nlerp1(a, b, t) {
 	return r2;
 }
 
+// TODO: Negative t is from:
+// https://zeuxcg.org/2015/07/23/approximating-slerp/
+
 // a * (1 - t) + b * t
 function Nlerp2(a, b, t) {
 	const dot = Q_Dot(a, b);
 
-	if (dot < 0.0) {
-		console.log("Nlerp2: dot < 0");
-		//b = Q_Inv(b); // TODO: Test when this triggers!
-		b = [
-			-b[0],
-			-b[1],
-			-b[2],
-			-b[3]
-		]
-	}
-
-	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, t));
+	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, dot < 0.0? -t : t));
 	const r4 = Q_Normalize(r3); // NLERP 2
 
 	return r4;
