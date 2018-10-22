@@ -355,9 +355,17 @@ function FormatNum(x) {
 }
 
 function LoadSample(which) {
+	var camera_x = 100
+	var camera_y = 100
+	var camera_z = 100
+
 	if (which == 1) {
 		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
 		global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+
+		camera_x = 129
+		camera_y = 111
+		camera_z = 200
 	}
 	else if (which == 2) {
 		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
@@ -366,6 +374,10 @@ function LoadSample(which) {
 	else {
 		alert("TODO: Set still");
 	}
+
+	document.getElementById("camera_x_value").value = camera_x
+	document.getElementById("camera_y_value").value = camera_y
+	document.getElementById("camera_z_value").value = camera_z
 
 	SetQuat(1, true, false);
 	SetQuat(2, true, false);
@@ -476,7 +488,6 @@ function UpdateSimulation() {
 	UpdateQuaternionVisual(global_state.visual_nlerp2, result_n2, forward)
 	UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
-
 	UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
 	UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, null)
 
@@ -549,7 +560,12 @@ function MakeQuaternionVisual(lr, color, exclude_vector) {
 function UpdateQuaternionVisual(visualObject, quat, vector) {
 	visualObject.quaternion = [quat[0], quat[1], quat[2], quat[3]]
 
-	const n = V3_Normalize([quat[0], quat[1], quat[2]]);
+
+	var n = [quat[0], quat[1], quat[2]];
+	if (V3_Equals(n, [0, 0, 0])) {
+		n = [1, 0, 0]
+	}
+	n = V3_Normalize(n)
 	LR_UpdateLine(visualObject.draw_normal, [-n[0], -n[1], -n[2], n[0], n[1], n[2]]);
 
 	LR_UpdateLine(visualObject.draw_plane, MakeDiskArray(n, 0.5))
