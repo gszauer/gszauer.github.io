@@ -248,22 +248,38 @@ function Q_Mul_V3(quaternion, vector3) {
 	</div>
 
 
-	<div style="width: 640px;">
-		<dov id="t_value" style="width:75px;display:inline;float:left;"><b>t:</b> 0</div>
-		<input type="range" min="0" max="200" value="100" style="width: 564px;display:inline;float:left;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+	<div>
+		<table style="width: 640px">
+	      <tr>
+	        <td><span id="t_value"><b>t:</b> 0</span></td> <!-- x[0] -->
+	        <td>
+				<input type="range" min="0" max="200" value="100" style="width: 570px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+	        </td> <!-- z[1] -->
+	      </tr>
+	  </table>
 	</div>
 
-	<div style="width:640px;display: block;">
+	<div>
 		<b>Nlerp1:</b> <span id="output_nlerp1">1, (0, 0, 0)</span> <br />
 		<b>Nlerp2:</b> <span id="output_nlerp2">1, (0, 0, 0)</span> <br />
 		<b>Slerp: &nbsp;</b>  <span id="output_slerp">1, (0, 0, 0)</span> <br />
 	</div>
 
 	<div>
-		
-	</div>
-	<div>
-		<input type="range" min="0" max="200" value="100" style="width: 640px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+		<table style="width: 640px">
+	      <tr>
+	        <td>Camera X</td> <!-- x[0] -->
+	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+	      </tr>
+	      <tr>
+	        <td>Camera Y</td> <!-- x[0] -->
+	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_y_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+	      </tr>
+	      <tr>
+	        <td>Camera Z</td> <!-- x[0] -->
+	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_z_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+	      </tr>
+	    </table>	
 	</div>
 
 
@@ -420,30 +436,49 @@ function UpdateSimulation() {
 	var interp_range = document.getElementById("interp_value").max - document.getElementById("interp_value").min
 	var camera_x_value = document.getElementById("camera_x_value").value
 	var camera_x_range = document.getElementById("camera_x_value").max - document.getElementById("camera_x_value").min
+	var camera_y_value = document.getElementById("camera_y_value").value
+	var camera_y_range = document.getElementById("camera_y_value").max - document.getElementById("camera_y_value").min
+	var camera_z_value = document.getElementById("camera_z_value").value
+	var camera_z_range = document.getElementById("camera_z_value").max - document.getElementById("camera_z_value").min
 
 	// UPDATE CAMERA POSITION
-	var t = (camera_x_value / camera_x_range) 
-	if (t < 0) t = 0;
-	if (t > 1) t = 1;
-	t = t * 360.0 * 0.0174533;
+	const cameraXAngle = (camera_x_value / camera_x_range) * 360.0;
+	const cameraYAngle = 0 - (camera_y_value / camera_y_range)  * 90.0;
+	const cameraZDistance = (6 - (camera_z_value / camera_z_range) * 6.0) + 3;
 
-	var v = global_state.camPos;
+	var camX = cameraZDistance * -Math.sin(cameraXAngle*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
+	var camY = cameraZDistance * -Math.sin((cameraYAngle)*(Math.PI/180.0));
+	var camZ = -cameraZDistance * Math.cos((cameraXAngle)*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
+
+	/*var v = [global_state.camPos[0], 0, cameraZ];
 	var k = [0,1,0]
 
-	var cos = Math.cos(t)
-	var sin = Math.sin(t)
+	var cos = Math.cos(cameraX)
+	var sin = Math.sin(cameraX)
 
-	var vprime = V3_Add(
+	const camera_x_vec = V3_Add(
 	V3_Add(V3_Scale(v, cos),
 		   V3_Scale(V3_Cross(k, v), sin)),
 	       V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
     );
 
-	global_state.view = LookAt(vprime, global_state.camTarget, [0, 1, 0]);
+    var v = [0, global_state.camPos[1], 0];
+	var k = [1,0,0]
+
+	var cos = Math.cos(cameraY)
+	var sin = Math.sin(cameraY)
+
+	const camera_y_vec = V3_Add(
+	V3_Add(V3_Scale(v, cos),
+		   V3_Scale(V3_Cross(k, v), sin)),
+	       V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
+    );*/
+
+	global_state.view = LookAt([camX, camY, camZ], global_state.camTarget, [0, 1, 0]);
 	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
 
 	// UPDATE INTERPOLATION VALUES
-	t = interp_value / interp_range
+	var t = interp_value / interp_range
 	document.getElementById("t_value").innerHTML = "<b>t: </b>" + t.toFixed(3);
 	if (t < 0) t = 0;
 	if (t > 1) t = 1;
@@ -473,7 +508,7 @@ function UpdateSimulation() {
 }
 
 var global_state = {
-	camPos: [-3, 4, 3],
+	camPos: [-3, 4, 6],
 	camTarget: [0, 0, 0],
 
 	q1: [0,0,0,1],
