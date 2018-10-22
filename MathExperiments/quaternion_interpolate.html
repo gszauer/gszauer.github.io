@@ -315,12 +315,7 @@ function Nlerp1(a, b, t) {
 
 	if (dot < 0.0) {
 		//console.log("Nlerp1: dot < 0");
-		b = [
-			-b[0],
-			-b[1],
-			-b[2],
-			-b[3]
-		]
+		b = Q_Scale(b, -1);
 	}
 
 	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
