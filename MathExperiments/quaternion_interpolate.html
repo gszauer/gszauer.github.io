@@ -201,12 +201,53 @@ function Q_Mul_V3(quaternion, vector3) {
 		<input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
 	</div>
 	
-	<div>
-		<b>Q1:</b>
+
+	<div style="margin-top: 5px;margin-bottom: 5px;">
+		<input type="button"value="Load Sample 1" onclick="LoadSample(1)" style="width: 125px;" />
+		<input type="button"value="Load Sample 2" onclick="LoadSample(2)" style="width: 125px;" />
+		<input type="button"value="Load Sample 3" onclick="LoadSample(3)" style="width: 125px;" />
+		<input type="button"value="Load Sample 4" onclick="LoadSample(4)" style="width: 125px;" />
+		<input type="button"value="Load Sample 5" onclick="LoadSample(5)" style="width: 125px;" />
 	</div>
+
 	<div>
-		<b>Q2:</b>
+		<table style="width: 640px">
+	      <tr>
+	        <td><b>Q1</b> (x, y, z), w</td> <!-- x[0] -->
+	        <td><input type="text" id="q1_x" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_y" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_z" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_w" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, false)" /></td> <!-- z[1] -->
+	      </tr>
+	      <tr>
+	        <td><b>Q1</b> angle, axis</td> <!-- x[0] -->
+	        <td><input type="text" id="q1_angle" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q1_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, true)" /></td> <!-- z[1] -->
+	      </tr>
+	      <tr>
+	        <td><b>Q2</b> (x, y, z), w</td> <!-- x[0] -->
+	        <td><input type="text" id="q2_x" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_y" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_z" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_w" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, false)" /></td> <!-- z[1] -->
+	      </tr>
+	      <tr>
+	        <td><b>Q2</b> angle, axis</td> <!-- x[0] -->
+	        <td><input type="text" id="q2_angle" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="text" id="q2_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, true)" /></td> <!-- z[1] -->
+	      </tr>
+	    </table>
 	</div>
+
+
 	<div style="width: 640px;">
 		<dov id="t_value" style="width:75px;display:inline;float:left;"><b>t:</b> 0</div>
 		<input type="range" min="0" max="200" value="100" style="width: 564px;display:inline;float:left;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
@@ -290,6 +331,80 @@ function FormatNum(x) {
 	}
 	result += x.toFixed(4);
 	return result;
+}
+
+function LoadSample(which) {
+	if (which == 1) {
+		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+		global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+	}
+	else if (which == 2) {
+		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+		global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+	}
+
+	SetQuat(1, true, false);
+	SetQuat(2, true, false);
+}
+
+function SetQuat(which, ignoreInput, setAngleAxis) {
+	if (typeof ignoreInput == "undefined" || ignoreInput == null) {
+		ignoreInput = false
+	}
+	if (typeof setAngleAxis == "undefined" || setAngleAxis == null) {
+		setAngleAxis = false;
+	}
+
+	var q = global_state.q2;
+	if (which == 1) {
+		q = global_state.q1;
+	}
+
+	if (!ignoreInput) {
+		if (setAngleAxis) {
+			const in_angle = Number(document.getElementById("q" + which + "_angle").value)
+			const in_axis_x = Number(document.getElementById("q" + which + "_axis_x").value)
+			const in_axis_y = Number(document.getElementById("q" + which + "_axis_y").value)
+			const in_axis_z = Number(document.getElementById("q" + which + "_axis_z").value)
+			const in_axis = V3_Normalize([in_axis_x, in_axis_y, in_axis_z]);
+
+			q = Q_AngleAxis(in_angle, in_axis)
+		}
+		else {
+			const w = Number(document.getElementById("q" + which + "_w").value)
+			const x = Number(document.getElementById("q" + which + "_x").value)
+			const y = Number(document.getElementById("q" + which + "_y").value)
+			const z = Number(document.getElementById("q" + which + "_z").value)
+
+			q[0] = x;
+			q[1] = y;
+			q[2] = z;
+			q[3] = w;
+		}
+
+		q = Q_Normalize(q);
+		if (which == 1) {
+			global_state.q1 = q;
+		}
+		else {
+			global_state.q2 = q;
+		}
+	}
+
+	document.getElementById("q" + which + "_w").value = q[3].toFixed(5);
+	document.getElementById("q" + which + "_x").value = q[0].toFixed(5);
+	document.getElementById("q" + which + "_y").value = q[1].toFixed(5);
+	document.getElementById("q" + which + "_z").value = q[2].toFixed(5);
+
+	const angle = (Math.acos(q[3]) * 2) * 57.2958
+	document.getElementById("q" + which + "_angle").value = angle.toFixed(5);
+
+	const axis = V3_Normalize([q[0], q[1], q[2]]);
+	document.getElementById("q" + which + "_axis_x").value = axis[0].toFixed(5);
+	document.getElementById("q" + which + "_axis_y").value = axis[1].toFixed(5);
+	document.getElementById("q" + which + "_axis_z").value = axis[2].toFixed(5);
+
+	UpdateSimulation();
 }
 
 function UpdateSimulation() {
@@ -466,6 +581,9 @@ function main() {
 	global_state.line_origin_r = LR_MakeLine(lr, [0, 0, 0, 1.5, 0, 0], false);
 	global_state.line_origin_g = LR_MakeLine(lr, [0, 0, 0, 0, 1.5, 0], false);
 	global_state.line_origin_b = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1.5], false);
+
+	SetQuat(1, true, false);
+	SetQuat(2, true, false);
 
 	UpdateSimulation()
 }
