@@ -347,6 +347,9 @@ function LoadSample(which) {
 		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
 		global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
 	}
+	else {
+		alert("TODO: Set still");
+	}
 
 	SetQuat(1, true, false);
 	SetQuat(2, true, false);
