@@ -270,14 +270,16 @@ function Q_Mul_V3(quaternion, vector3) {
 </body>
 
 <script type="text/javascript">
-
 function Slerp(q1, q2, t) {
 	var dotproduct = Q_Dot(q1, q2);
 	var lambda = t;// / 2.0;
 
 	var theta = Math.acos(dotproduct);
-	if (theta < 0.0) theta = -theta;
-	
+	if (theta < 0.0) {
+		console.log("Slerp: theta < 0");
+		theta = -theta;
+	}
+
 	var st = Math.sin(theta);
 	var sut = Math.sin(lambda*theta);
 	var sout = Math.sin((1.0-lambda)*theta);
@@ -299,7 +301,7 @@ function Nlerp1(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	if (dot < 0.0) {
-		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
+		console.log("Nlerp1: dot < 0");
 		b = Q_Inv(b); // TODO: Test when this triggers!
 	}
 
@@ -314,7 +316,7 @@ function Nlerp2(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	if (dot < 0.0) {
-		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
+		console.log("Nlerp2: dot < 0");
 		b = Q_Inv(b); // TODO: Test when this triggers!
 	}
 
@@ -323,6 +325,9 @@ function Nlerp2(a, b, t) {
 
 	return r4;
 }
+</script>
+
+<script type="text/javascript">
 
 function FormatNum(x) {
 	var result = "";
