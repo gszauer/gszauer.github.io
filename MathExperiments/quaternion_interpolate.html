@@ -173,48 +173,6 @@ function Q_Mul_V3(quaternion, vector3) {
 		V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
 	);
 }
-
-function Nlerp_Test(a, b, t) {
-	console.log("(" + f(a[3]) + ", (" + f(a[0]) + ", " + f(a[1]) + ", " + f(a[2]) + ")) -> " +
-	            "(" + f(b[3]) + ", (" + f(b[0]) + ", " + f(b[1]) + ", " + f(b[2]) + ")): " + f(t));
-	const dot = Q_Dot(a, b);
-
-	if (dot < 0.0) {
-		console.log("!!!!!!!!!!!!!!!!!!!!!!! Dot < 0, TODO: Test")
-		b = Q_Inv(b); // TODO: Test when this triggers!
-	}
-
-	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t)); // (or a + (b-a)*t)
-	//console.log("a + (b - a) * t: (" + result[3] + ", (" + result[0] + ", " + result[1] + ", " + result[2] + "))");
-	
-	const r2 = Q_Normalize(r1)
-	console.log("|a + (b - a) * t|:     (" + f(r2[3]) + ", (" + f(r2[0]) + ", " + f(r2[1]) + ", " + f(r2[2]) + "))");
-
-	const r3 = Q_Add(Q_Scale(a, t), Q_Scale(b, 1.0 - t));
-	//console.log("a * t + b * (1 - t): (" + result[3] + ", (" + result[0] + ", " + result[1] + ", " + result[2] + "))");
-	
-	const r4 = Q_Normalize(r3);	
-	console.log("|a * t + b * (1 - t)|: (" + f(r4[3]) + ", (" + f(r4[0]) + ", " + f(r4[1]) + ", " + f(r4[2]) + "))");
-
-	if (Q_Equals(r2, r4)) {
-		console.log("true, Normalized results are the same");
-	}
-	else {
-		console.log("false Normalized results are NOT the same");
-	}
-	console.log("---------------------------------------------------------------------------");
-	console.log();
-}
-
-const x = Q_AngleAxis(90, [1, 0, 0])
-const y = Q_AngleAxis(90, [0, 1, 0])
-const z = Q_AngleAxis(90, [0, 1, 0])
-
-Nlerp_Test(x, y, 0);
-Nlerp_Test(x, y, 0.25);
-Nlerp_Test(x, y, 0.5);
-Nlerp_Test(x, y, 0.75);
-Nlerp_Test(x, y, 1);
 </script>
 
   </head>
@@ -281,6 +239,7 @@ function Slerp(q1, q2, t) {
 	return result;
 }
 
+// a + (b - a) * t
 function Nlerp1(a, b, t) {
 	const dot = Q_Dot(a, b);
 
@@ -295,6 +254,7 @@ function Nlerp1(a, b, t) {
 	return r2;
 }
 
+// a * (1 - t) + b * t
 function Nlerp2(a, b, t) {
 	const dot = Q_Dot(a, b);
 
