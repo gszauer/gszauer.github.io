@@ -317,29 +317,11 @@ function UpdateSimulation(interpVal) {
 	const result_n2 = Nlerp2(a, b, t)
 	const result_s = Slerp(a, b, t);
 
-	const axis_n1 = V3_Normalize([result_n1[0], result_n1[1], result_n1[2]])
-	const axis_n2 = V3_Normalize([result_n2[0], result_n2[1], result_n2[2]])
-	const axis_s = V3_Normalize([result_s[0], result_s[1], result_s[2]])
+	const forward = [0, 0, 1];
 
-	const vec_n1 = Q_Mul_V3(result_n1, [0, 0, 1]);
-	const vec_n2 = Q_Mul_V3(result_n2, [0, 0, 1]);
-	const vec_n3 = Q_Mul_V3(result_s,  [0, 0, 1]);
-
-
-	// Vectors, no idea how the colors work
-	LR_UpdateLine(global_state.vector_red,   [0, 0, 0, vec_n1[0], vec_n1[1], vec_n1[2]]);
-	LR_UpdateLine(global_state.vector_blue,  [0, 0, 0, vec_n2[0], vec_n2[1], vec_n2[2]]);
-	LR_UpdateLine(global_state.vector_green, [0, 0, 0, vec_n3[0], vec_n3[1], vec_n3[2]]);
-
-	// Normals. red = NLERP1, blue = NLERP2, green = SLERP
-	LR_UpdateLine(global_state.red,    [0, 0, 0, axis_n1[0], axis_n1[1], axis_n1[2]]);
-	LR_UpdateLine(global_state.blue,   [0, 0, 0, axis_n2[0], axis_n2[1], axis_n2[2]]);
-	LR_UpdateLine(global_state.green,  [0, 0, 0,  axis_s[0],  axis_s[1],  axis_s[2]]);
-
-	// Disc. red = NLERP1, blue = NLERP2, green = SLERP
-	LR_UpdateLine(global_state.disk_red,   MakeDiskArray(axis_n1, 0.5))
-	LR_UpdateLine(global_state.disk_blue,  MakeDiskArray(axis_n2, 0.5))
-	LR_UpdateLine(global_state.disk_green, MakeDiskArray(axis_s, 0.5))
+	UpdateQuaternionVisual(global_state.visual_nlerp1, result_n1, forward)
+	UpdateQuaternionVisual(global_state.visual_nlerp2, result_n2, forward)
+	UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
 	DrawScene();
 }
@@ -357,29 +339,64 @@ var global_state = {
 	view: null,
 	projection: null,
 
-	red: null,
-	green: null,
-	blue: null,
+	visual_nlerp1: null,
+	visual_nlerp2: null,
+	visual_slerp: null
+}
 
-	b1:null,
-	b2:null,
-	b3:null,
+function MakeQuaternionVisual(lr, color) {
+	const null_line = [
+		0, 0, 0,
+		0, 0, 0
+	]
 
-	vector_red:null,
-	vector_green:null,
-	vector_blue:null,
+	return {
+		quaternion: [0, 0, 0, 1],
+		draw_normal: LR_MakeLine(lr, null_line, false),
+		draw_plane:  LR_MakeLine(lr, null_line, true),
+		draw_vector: LR_MakeLine(lr, null_line, false),
+		normal_color: {
+			r: color[0] * 0.5,
+			g: color[1] * 0.5,
+			b: color[2] * 0.5
+		},
+		plane_color: {
+			r: color[0] * 0.5,
+			g: color[1] * 0.5,
+			b: color[2] * 0.5
+		},
+		vector_color: {
+			r: color[0],
+			g: color[1],
+			b: color[2]
+		}
+	};
+}
 
-	disk_red: null,
-	disk_green: null,
-	disk_blue: null
+function UpdateQuaternionVisual(visualObject, quat, vector) {
+	visualObject.quaternion = [quat[0], quat[1], quat[2], quat[3]]
+
+	const n = V3_Normalize([quat[0], quat[1], quat[2]]);
+	LR_UpdateLine(visualObject.draw_normal, [-n[0], -n[1], -n[2], n[0], n[1], n[2]]);
+
+	LR_UpdateLine(visualObject.draw_plane, MakeDiskArray(n, 0.5))
+
+	const v = Q_Mul_V3(quat, vector);
+	LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
+}
+
+function DrawQuaternionVisual(visualObject, view, proj) {
+	LR_DrawLine(visualObject.draw_normal, view, proj, visualObject.normal_color);
+	LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
+	LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
 }
 
 function main() {
-	//global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	//global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
-
 	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+	global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+
+	//global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+	//global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
 	var gl = SetupWebGL();
     global_state.gl = gl;
@@ -396,20 +413,9 @@ function main() {
 		0, 0, 0
 	]
 
-	global_state.red = LR_MakeLine(lr, null_line, false);
-	global_state.green = LR_MakeLine(lr, null_line, false);
-	global_state.blue = LR_MakeLine(lr, null_line, false);
-	global_state.vector_red = LR_MakeLine(lr, null_line, false);
-	global_state.vector_green = LR_MakeLine(lr, null_line, false);
-	global_state.vector_blue = LR_MakeLine(lr, null_line, false);
-
-	global_state.disk_red = LR_MakeLine(lr, null_line, true);
-	global_state.disk_green = LR_MakeLine(lr, null_line, true);
-	global_state.disk_blue = LR_MakeLine(lr, null_line, true);
-
-	global_state.b1 = LR_MakeLine(lr, [0, 0, 0, 1, 0, 0], false);
-	global_state.b2 = LR_MakeLine(lr, [0, 0, 0, 0, 1, 0], false);
-	global_state.b3 = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1], false);
+	global_state.visual_nlerp1 = MakeQuaternionVisual(lr, [1, 0, 0]);
+	global_state.visual_nlerp2 = MakeQuaternionVisual(lr, [0, 1, 0]);
+	global_state.visual_slerp = MakeQuaternionVisual(lr, [0, 0, 1]);
 
 	// TODO: Call update camera
 	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
@@ -424,22 +430,9 @@ function DrawScene() {
 	const view = global_state.view 
 	const proj = global_state.projection
 
-	// TODO: Maybe refactor these into a "QuaternionVisual" structure or something?
-	LR_DrawLine(global_state.red, view, proj, {r:1, g:0, b:0});
-	LR_DrawLine(global_state.disk_red, view, proj, {r:1, g:0, b:0}, true)
-	LR_DrawLine(global_state.vector_red, view, proj, {r:1, g:0, b:1});
-
-	LR_DrawLine(global_state.green, view, proj, {r:0, g:1, b:0});
-	LR_DrawLine(global_state.disk_green, view, proj, {r:0, g:1, b:0}, true)
-	LR_DrawLine(global_state.vector_green, view, proj, {r:0, g:1, b:1});
-
-	LR_DrawLine(global_state.blue, view, proj, {r:0, g:0, b:1});
-	LR_DrawLine(global_state.disk_blue, view, proj, {r:0, g:0, b:1}, true)
-	LR_DrawLine(global_state.vector_blue, view, proj, {r:1, g:1, b:0});
-
-	/*LR_DrawLine(global_state.b1, view, proj, {r:0, g:0, b:0});
-	LR_DrawLine(global_state.b2, view, proj, {r:0, g:0, b:0});
-	LR_DrawLine(global_state.b3, view, proj, {r:0, g:0, b:0});*/
+	DrawQuaternionVisual(global_state.visual_nlerp1, view, proj);
+	DrawQuaternionVisual(global_state.visual_nlerp2, view, proj);
+	DrawQuaternionVisual(global_state.visual_slerp, view, proj);
 }
 
 function SetupWebGL() {
