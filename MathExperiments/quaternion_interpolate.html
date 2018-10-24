@@ -203,11 +203,11 @@ function Q_Mul_V3(quaternion, vector3) {
 	
 
 	<div style="margin-top: 5px;margin-bottom: 5px;">
-		<input type="button"value="Load Sample 1" onclick="LoadSample(1)" style="width: 125px;" />
-		<input type="button"value="Load Sample 2" onclick="LoadSample(2)" style="width: 125px;" />
-		<input type="button"value="Load Sample 3" onclick="LoadSample(3)" style="width: 125px;" />
-		<input type="button"value="Load Sample 4" onclick="LoadSample(4)" style="width: 125px;" />
-		<input type="button"value="Load Sample 5" onclick="LoadSample(5)" style="width: 125px;" />
+		<input type="button" value="Load Sample 1" onclick="LoadSample(1)" style="width: 125px;" />
+		<input type="button" value="Load Sample 2" onclick="LoadSample(2)" style="width: 125px;" />
+		<input type="button" value="Load Sample 3" onclick="LoadSample(3)" style="width: 125px;" />
+		<input type="button" value="Load Sample 4" onclick="LoadSample(4)" style="width: 125px;" />
+		<input type="button" value="Load Sample 5" onclick="LoadSample(5)" style="width: 125px;" />
 	</div>
 
 	<div>
@@ -282,10 +282,8 @@ function Q_Mul_V3(quaternion, vector3) {
 	    </table>	
 	</div>
 
-
-</body>
-
-<script type="text/javascript">
+	<div>
+<textarea rows="15" cols="100" id="code_text">
 function Slerp(q1, q2, t) {
     var dot = Q_Dot(q1, q2);
     
@@ -337,9 +335,75 @@ function Nlerp2(a, b, t) {
 
 	return r4;
 }
-</script>
+</textarea>
+</div>
+<div>
+		<input type="button" value="Reload Code" onclick="ReloadCode()" style="width: 125px;" />
+</div>
+
+
+</body>
+
+<!--script type="text/javascript">
+function Slerp(q1, q2, t) {
+    var dot = Q_Dot(q1, q2);
+    
+    if (dot < 0) {
+        dot = -dot;
+        q2 = Q_Scale(q2, -1)
+    }
+    
+    if (dot < 0.99) {
+        var angle = Math.acos(dot);
+
+        var sin1 = Math.sin(angle*(1-t))
+        var sin2 = Math.sin(angle*t)
+
+        return Q_Normalize(Q_Add(Q_Scale(q1, sin1), Q_Scale(q2, sin2)));
+    }
+    // if the angle is small, use linear interpolation
+    console.log("slerp falling back to nlerp")
+    return Nlerp1(q1,q3,t);
+}
+
+// TODO:
+// Does this explain why: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=398
+
+// a + (b - a) * t
+function Nlerp1(a, b, t) {
+	const dot = Q_Dot(a, b);
+
+	if (dot < 0.0) {
+		//console.log("Nlerp1: dot < 0");
+		b = Q_Scale(b, -1);
+	}
+
+	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
+	const r2 = Q_Normalize(r1); // NLERP 1
+
+	return r2;
+}
+
+// TODO: Negative t is from:
+// https://zeuxcg.org/2015/07/23/approximating-slerp/
+
+// a * (1 - t) + b * t
+function Nlerp2(a, b, t) {
+	const dot = Q_Dot(a, b);
+
+	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, dot < 0.0? -t : t));
+	const r4 = Q_Normalize(r3); // NLERP 2
+
+	return r4;
+}
+</script-->
 
 <script type="text/javascript">
+
+function ReloadCode() {
+	const v = document.getElementById('code_text').value
+	window.eval(v)
+}
 
 function FormatNum(x) {
 	var result = "";
@@ -629,8 +693,8 @@ function main() {
 	global_state.line_origin_g = LR_MakeLine(lr, [0, 0, 0, 0, 1.5, 0], false);
 	global_state.line_origin_b = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1.5], false);
 
-	SetQuat(1, true, false);
-	SetQuat(2, true, false);
+	ReloadCode();
+	LoadSample(1);
 
 	UpdateSimulation()
 }
