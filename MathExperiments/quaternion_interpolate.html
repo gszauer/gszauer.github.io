@@ -381,21 +381,25 @@ function LoadSample(which) {
 		global_state.q1 = Q_AngleAxis(45, [1, 0, 0])
 		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
-		camera_x = 129
-		camera_y = 111
-		camera_z = 200
+		camera_x = 108
+		camera_y = 45
+		camera_z = 166
 	}
 	else if (which == 3) {
 		global_state.q1 = Q_AngleAxis(-180, [1, 0, 0])
 		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
-		camera_x = 129
-		camera_y = 111
-		camera_z = 200
+		camera_x = 34
+		camera_y = 140
+		camera_z = 171
 	}
 	else if (which == 4) {
 		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
 		global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+
+		camera_x = 200
+		camera_y = 0
+		camera_z = 45
 	}
 	else {
 		alert("TODO: Set still");
