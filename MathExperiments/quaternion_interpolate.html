@@ -5,6 +5,10 @@
     <title>Quaternion Interpolation Test</title>
 
 <script type="text/javascript">
+function V3_MagnitudeSq(quat) {
+	return quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
+}
+
 function V3_Normalize(quat) {
 	const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
 	
@@ -19,7 +23,7 @@ function V3_Normalize(quat) {
 }
 
 function Q_AngleAxis(degreesNum, axisVec3) {
-	const radians = degreesNum * 0.0174533; // TODO: Probably get a more accurate number?
+	const radians = degreesNum * 0.0174533; 
 	const axis = V3_Normalize(axisVec3);
 
 	const halfCos = Math.cos(radians * 0.5);
@@ -366,7 +370,7 @@ function LoadSample(which) {
 	var camera_z = 100
 
 	if (which == 1) {
-		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
 		global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
 		camera_x = 129
@@ -374,7 +378,7 @@ function LoadSample(which) {
 		camera_z = 200
 	}
 	else if (which == 2) {
-		global_state.q1 = Q_AngleAxis(45, [1, 0, 0]) // TODO: Read these from input
+		global_state.q1 = Q_AngleAxis(45, [1, 0, 0])
 		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
 		camera_x = 129
@@ -382,7 +386,7 @@ function LoadSample(which) {
 		camera_z = 200
 	}
 	else if (which == 3) {
-		global_state.q1 = Q_AngleAxis(-180, [1, 0, 0]) // TODO: Read these from input
+		global_state.q1 = Q_AngleAxis(-180, [1, 0, 0])
 		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
 		camera_x = 129
@@ -390,7 +394,7 @@ function LoadSample(which) {
 		camera_z = 200
 	}
 	else if (which == 4) {
-		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
 		global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
 	}
 	else {
@@ -559,6 +563,7 @@ function MakeQuaternionVisual(lr, color, exclude_vector) {
 	return {
 		quaternion: [0, 0, 0, 1],
 		draw_normal: LR_MakeLine(lr, null_line, false),
+		draw_nib: LR_MakeLine(lr, null_line, false),
 		draw_plane:  LR_MakeLine(lr, null_line, true),
 		draw_vector: dv,
 		normal_color: {
@@ -582,7 +587,6 @@ function MakeQuaternionVisual(lr, color, exclude_vector) {
 function UpdateQuaternionVisual(visualObject, quat, vector) {
 	visualObject.quaternion = [quat[0], quat[1], quat[2], quat[3]]
 
-
 	var n = [quat[0], quat[1], quat[2]];
 	if (V3_Equals(n, [0, 0, 0])) {
 		n = [1, 0, 0]
@@ -595,22 +599,28 @@ function UpdateQuaternionVisual(visualObject, quat, vector) {
 	if (vector != null && visualObject.draw_vector != null) {
 		const v = Q_Mul_V3(quat, vector);
 		LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
+
+		var nib = [
+			v[0] * 0.75 + n[0] * 0.15, 
+			v[1] * 0.75 + n[1] * 0.15, 
+			v[2] * 0.75 + n[2] * 0.15
+		]
+		LR_UpdateLine(visualObject.draw_nib, [nib[0], nib[1], nib[2], v[0], v[1], v[2]]);
 	}
 }
 
 function DrawQuaternionVisual(visualObject, view, proj) {
 	LR_DrawLine(visualObject.draw_normal, view, proj, visualObject.normal_color);
+
 	LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
 	if (visualObject.draw_vector != null) {
+		LR_DrawLine(visualObject.draw_nib, view, proj, visualObject.vector_color);
 		LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
 	}
 }
 
 function main() {
-	//global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
-	//global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
-
-	global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) // TODO: Read these from input
+	global_state.q1 = Q_AngleAxis(90, [1, 0, 0])
 	global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
 	var gl = SetupWebGL();
