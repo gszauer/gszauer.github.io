@@ -6,808 +6,884 @@
 
 <script type="text/javascript">
 function V3_MagnitudeSq(quat) {
-	return quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
+    return quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
 }
 
 function V3_Normalize(quat) {
-	const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
-	
-	const length = Math.sqrt(lengthSq);
-	const invLength = 1.0 / length;
+    const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2];
+    
+    const length = Math.sqrt(lengthSq);
+    const invLength = 1.0 / length;
 
-	return [
-		quat[0] * invLength,
-		quat[1] * invLength,
-		quat[2] * invLength,
-	]
+    return [
+        quat[0] * invLength,
+        quat[1] * invLength,
+        quat[2] * invLength,
+    ]
 }
 
 function Q_AngleAxis(degreesNum, axisVec3) {
-	const radians = degreesNum * 0.0174533; 
-	const axis = V3_Normalize(axisVec3);
+    const radians = degreesNum * 0.0174533; 
+    const axis = V3_Normalize(axisVec3);
 
-	const halfCos = Math.cos(radians * 0.5);
-	const halfSin = Math.sin(radians * 0.5);
+    const halfCos = Math.cos(radians * 0.5);
+    const halfSin = Math.sin(radians * 0.5);
 
-	return [
-		axis[0] * halfSin,
-		axis[1] * halfSin,
-		axis[2] * halfSin,
-		halfCos
-	];
+    return [
+        axis[0] * halfSin,
+        axis[1] * halfSin,
+        axis[2] * halfSin,
+        halfCos
+    ];
 }
 
 function Q_Add(leftQuat, rightQuat) {
-	return [
-		leftQuat[0] + rightQuat[0],
-		leftQuat[1] + rightQuat[1],
-		leftQuat[2] + rightQuat[2],
-		leftQuat[3] + rightQuat[3]
-	]
+    return [
+        leftQuat[0] + rightQuat[0],
+        leftQuat[1] + rightQuat[1],
+        leftQuat[2] + rightQuat[2],
+        leftQuat[3] + rightQuat[3]
+    ]
 }
 
 function Q_Sub(leftQuat, rightQuat) {
-	return [
-		leftQuat[0] - rightQuat[0],
-		leftQuat[1] - rightQuat[1],
-		leftQuat[2] - rightQuat[2],
-		leftQuat[3] - rightQuat[3]
-	]
+    return [
+        leftQuat[0] - rightQuat[0],
+        leftQuat[1] - rightQuat[1],
+        leftQuat[2] - rightQuat[2],
+        leftQuat[3] - rightQuat[3]
+    ]
 }
 
 function Q_Scale(quat, numFloat) {
-	return [
-		quat[0] * numFloat,
-		quat[1] * numFloat,
-		quat[2] * numFloat,
-		quat[3] * numFloat
-	]
+    return [
+        quat[0] * numFloat,
+        quat[1] * numFloat,
+        quat[2] * numFloat,
+        quat[3] * numFloat
+    ]
 }
 
 function Q_Normalize(quat) {
-	const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3];
-	
-	const length = Math.sqrt(lengthSq);
-	const invLength = 1.0 / length;
+    const lengthSq = quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3];
+    
+    const length = Math.sqrt(lengthSq);
+    const invLength = 1.0 / length;
 
-	return [
-		quat[0] * invLength,
-		quat[1] * invLength,
-		quat[2] * invLength,
-		quat[3] * invLength
-	]
+    return [
+        quat[0] * invLength,
+        quat[1] * invLength,
+        quat[2] * invLength,
+        quat[3] * invLength
+    ]
 }
 
 function Q_Dot(a, b) {
-	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; 
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; 
+}
+
+function Q_Mul_Q(a, b) {
+    const aw = a[3]
+    const ax = a[0]
+    const ay = a[1]
+    const az = a[2]
+
+    const bw = b[3]
+    const bx = b[0]
+    const by = b[1]
+    const bz = b[2]
+
+    return [
+        aw * bx + ax * bw + ay * bz - az * by,
+        aw * by + ay * bw + az * bx - ax * bz,
+        aw * bz + az * bw + ax * by - ay * bx,
+        aw * bw - ax * bx - ay * by - az * bz
+    ];
+}
+
+function UE4_FloatSelect(Comparand, ValueGEZero, ValueLTZero ) {
+    return Comparand >= 0 ? ValueGEZero : ValueLTZero;
+}
+
+
+function UE4_Slerp(Quat1, Quat2, Slerp) {
+    // Get cosine of angle between quats.
+    const RawCosom = 
+            Quat1[0] * Quat2[0] +
+            Quat1[1] * Quat2[1] +
+            Quat1[2] * Quat2[2] +
+            Quat1[3] * Quat2[3];
+
+    // Unaligned quats - compensate, results in taking shorter route.
+    const Cosom = UE4_FloatSelect( RawCosom, RawCosom, -RawCosom );
+    
+    var Scale0 = null;
+    var Scale1 = null;
+
+    if( Cosom < 0.9999 ) {  
+        const Omega = Math.acos(Cosom);
+        const InvSin = 1.0/Math.sin(Omega);
+
+        Scale0 = Math.sin( (1.0 - Slerp) * Omega ) * InvSin;
+        Scale1 = Math.sin( Slerp * Omega ) * InvSin;
+    }
+    else { // Use linear interpolation.
+        Scale0 = 1.0 - Slerp;
+        Scale1 = Slerp; 
+        console.log("UE4 fallback to lerp: " + Cosom.toFixed(8));
+    }
+
+    // In keeping with our flipped Cosom:
+    Scale1 = UE4_FloatSelect( RawCosom, Scale1, -Scale1 );
+
+    return Q_Normalize([
+        Scale0 * Quat1[0] + Scale1 * Quat2[0],
+        Scale0 * Quat1[1] + Scale1 * Quat2[1],
+        Scale0 * Quat1[2] + Scale1 * Quat2[2],
+        Scale0 * Quat1[3] + Scale1 * Quat2[3],
+    ])
+}
+
+function Q_Pow(inputQuaternion, powerNum) {
+    var axis = V3_Normalize([
+        inputQuaternion[0],
+        inputQuaternion[1],
+        inputQuaternion[2]
+    ]);
+    const radians = 2.0 * Math.acos(inputQuaternion[3]);
+
+    const halfCos = Math.cos((powerNum * radians) * 0.5);
+    const halfSin = Math.sin((powerNum * radians) * 0.5);
+
+    return [
+        axis[0] * halfSin,
+        axis[1] * halfSin,
+        axis[2] * halfSin,
+        halfCos
+    ];
 }
 
 function Q_Inv(q) {
-	return [
-		-q[0],
-		-q[1],
-		-q[2],
-		q[3]
-	]
+    return [
+        -q[0],
+        -q[1],
+        -q[2],
+         q[3]
+    ]
 }
 
+
 function f(a) {
-	return Number(a).toFixed(5)
+    return Number(a).toFixed(5)
 }
 
 function Q_Equals(leftQuat, rightQuat) {
-	const epsilonFloatOptional = 0.0001;
+    const epsilonFloatOptional = 0.0001;
 
 
-	const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
-	const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
-	const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
-	const l4 = Math.abs(leftQuat[3] - rightQuat[3]) <= epsilonFloatOptional
+    const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
+    const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
+    const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
+    const l4 = Math.abs(leftQuat[3] - rightQuat[3]) <= epsilonFloatOptional
 
-	const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
-	const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
-	const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
-	const r4 = Math.abs(leftQuat[3] + rightQuat[3]) <= epsilonFloatOptional
+    const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
+    const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
+    const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
+    const r4 = Math.abs(leftQuat[3] + rightQuat[3]) <= epsilonFloatOptional
 
-	const left = l1 && l2 && l3 && l4
-	const right = r1 && r2 && r3 && r4
+    const left = l1 && l2 && l3 && l4
+    const right = r1 && r2 && r3 && r4
 
-	const result = left || right
+    const result = left || right
 
-	return result
+    return result
 }
 
 function V3_Equals(leftQuat, rightQuat) {
-	const epsilonFloatOptional = 0.0001;
+    const epsilonFloatOptional = 0.0001;
 
-	const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
-	const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
-	const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
+    const l1 = Math.abs(leftQuat[0] - rightQuat[0]) <= epsilonFloatOptional
+    const l2 = Math.abs(leftQuat[1] - rightQuat[1]) <= epsilonFloatOptional
+    const l3 = Math.abs(leftQuat[2] - rightQuat[2]) <= epsilonFloatOptional
 
-	const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
-	const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
-	const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
+    const r1 = Math.abs(leftQuat[0] + rightQuat[0]) <= epsilonFloatOptional
+    const r2 = Math.abs(leftQuat[1] + rightQuat[1]) <= epsilonFloatOptional
+    const r3 = Math.abs(leftQuat[2] + rightQuat[2]) <= epsilonFloatOptional
 
-	const left = l1 && l2 && l3 
-	const right = r1 && r2 && r3 
+    const left = l1 && l2 && l3 
+    const right = r1 && r2 && r3 
 
-	const result = left || right
+    const result = left || right
 
-	return result
+    return result
 }
 
 function V3_Add(v1, v2) {
-	return [
-		v1[0] + v2[0],
-		v1[1] + v2[1],
-		v1[2] + v2[2]
-	]
+    return [
+        v1[0] + v2[0],
+        v1[1] + v2[1],
+        v1[2] + v2[2]
+    ]
 }
 
 function V3_Dot(v1, v2) {
-	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
 function V3_Scale(v, s) {
-	return [
-		v[0] * s,
-		v[1] * s,
-		v[2] * s
-	]
+    return [
+        v[0] * s,
+        v[1] * s,
+        v[2] * s
+    ]
 }
 
 function V3_Cross(v1, v2) {
-	const result = [
-		v1[1] * v2[2] - v1[2] * v2[1],
-		v1[2] * v2[0] - v1[0] * v2[2],
-		v1[0] * v2[1] - v1[1] * v2[0]
-	];
-	return result;
+    const result = [
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0]
+    ];
+    return result;
 }
 
 function Q_Mul_V3(quaternion, vector3) {
-	const qVector = [quaternion[0], quaternion[1], quaternion[2]];
-	const qScalar = quaternion[3];
+    const qVector = [quaternion[0], quaternion[1], quaternion[2]];
+    const qScalar = quaternion[3];
 
-	return V3_Add(
-		V3_Add(
-			V3_Scale(qVector, 2.0 * V3_Dot(qVector, vector3)),
-			V3_Scale(vector3, (qScalar * qScalar) - V3_Dot(qVector, qVector))
-		),
-		V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
-	);
+    return V3_Add(
+        V3_Add(
+            V3_Scale(qVector, 2.0 * V3_Dot(qVector, vector3)),
+            V3_Scale(vector3, (qScalar * qScalar) - V3_Dot(qVector, qVector))
+        ),
+        V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
+    );
 }
 </script>
 
   </head>
 
 <body onload="main();">
-	<div style="width: 1280px; display: flex;">
-		<div style="width: 640px;">
-			<div>
-				<canvas id="glCanvas" width="640" height="480"></canvas>
-			</div>
-			<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
-				<input type="checkbox" id="draw_nlerp" checked onchange="UpdateSimulation()"><b><font color="magenta" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Magenta (Nlerp)</font></b>
-				<input type="checkbox" id="draw_nlerp_mix" checked onchange="UpdateSimulation()"><b><font color="yellow" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Yellow (Nlerp Mix)</font></b>
-				<input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Cyan (Slerp)</font></b>
-			</div>
+    <div style="width: 1280px; display: flex;">
+        <div style="width: 640px;">
+            <div>
+                <canvas id="glCanvas" width="640" height="480"></canvas>
+            </div>
+            <div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
+                <input type="checkbox" id="draw_nlerp" checked onchange="UpdateSimulation()"><b><font color="magenta" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Magenta (Nlerp)</font></b>
+                <input type="checkbox" id="draw_nlerp_mix" checked onchange="UpdateSimulation()"><b><font color="yellow" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Yellow (Nlerp Mix)</font></b>
+                <input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Cyan (Slerp)</font></b>
+            </div>
 
-			<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
-				<input type="checkbox" id="draw_origin" onchange="UpdateSimulation()">
-				<b>
-					<font color="red" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Or</font>
-					<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">ig</font>
-					<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">in</font>
-					<font color="red" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">(R</font>
-					<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">G</font>
-					<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">B)</font>
-				</b>
-				<input type="checkbox" id="draw_q1" onchange="UpdateSimulation()"><b><font color="black" style="text-shadow:-1px -1px 0 #FFFFFF,1px -1px 0 #FFFFFF,-1px 1px 0 #FFFFFF,1px 1px 0 #FFFFFF;">Q1 (Black)</font></b>
-				<input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
-			</div>
-			
+            <div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
+                <input type="checkbox" id="draw_origin" onchange="UpdateSimulation()">
+                <b>
+                    <font color="red" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Or</font>
+                    <font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">ig</font>
+                    <font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">in</font>
+                    <font color="red" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">(R</font>
+                    <font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">G</font>
+                    <font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">B)</font>
+                </b>
+                <input type="checkbox" id="draw_q1" onchange="UpdateSimulation()"><b><font color="black" style="text-shadow:-1px -1px 0 #FFFFFF,1px -1px 0 #FFFFFF,-1px 1px 0 #FFFFFF,1px 1px 0 #FFFFFF;">Q1 (Black)</font></b>
+                <input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
+            </div>
+            
 
-			<div style="margin-top: 5px;margin-bottom: 5px;">
-				<input type="button" value="Load Sample 1" onclick="LoadSample(1)" style="width: 124px;" />
-				<input type="button" value="Load Sample 2" onclick="LoadSample(2)" style="width: 124px;" />
-				<input type="button" value="Load Sample 3" onclick="LoadSample(3)" style="width: 124px;" />
-				<input type="button" value="Load Sample 4" onclick="LoadSample(4)" style="width: 124px;" />
-				<input type="button" value="Load Sample 5" onclick="LoadSample(5)" style="width: 124px;" />
-			</div>
+            <div style="margin-top: 5px;margin-bottom: 5px;">
+                <input type="button" value="Load Sample 1" onclick="LoadSample(1)" style="width: 124px;" />
+                <input type="button" value="Load Sample 2" onclick="LoadSample(2)" style="width: 124px;" />
+                <input type="button" value="Load Sample 3" onclick="LoadSample(3)" style="width: 124px;" />
+                <input type="button" value="Load Sample 4" onclick="LoadSample(4)" style="width: 124px;" />
+                <input type="button" value="Load Sample 5" onclick="LoadSample(5)" style="width: 124px;" />
+            </div>
 
-			<div>
-				<table style="width: 640px">
-			      <tr>
-			        <td><b>Q1</b> (x, y, z), w</td> <!-- x[0] -->
-			        <td><input type="text" id="q1_x" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_y" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_z" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_w" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, false)" /></td> <!-- z[1] -->
-			      </tr>
-			      <tr>
-			        <td><b>Q1</b> angle, axis</td> <!-- x[0] -->
-			        <td><input type="text" id="q1_angle" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_axis_x" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_axis_y" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q1_axis_z" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, true)" /></td> <!-- z[1] -->
-			      </tr>
-			      <tr>
-			        <td><b>Q2</b> (x, y, z), w</td> <!-- x[0] -->
-			        <td><input type="text" id="q2_x" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_y" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_z" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_w" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, false)" /></td> <!-- z[1] -->
-			      </tr>
-			      <tr>
-			        <td><b>Q2</b> angle, axis</td> <!-- x[0] -->
-			        <td><input type="text" id="q2_angle" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_axis_x" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_axis_y" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="text" id="q2_axis_z" style="width: 105px;"></td> <!-- z[1] -->
-			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, true)" /></td> <!-- z[1] -->
-			      </tr>
-			    </table>
-			</div>
+            <div>
+                <table style="width: 640px">
+                  <tr>
+                    <td><b>Q1</b> (x, y, z), w</td> <!-- x[0] -->
+                    <td><input type="text" id="q1_x" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_y" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_z" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_w" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, false)" /></td> <!-- z[1] -->
+                  </tr>
+                  <tr>
+                    <td><b>Q1</b> angle, axis</td> <!-- x[0] -->
+                    <td><input type="text" id="q1_angle" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q1_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, true)" /></td> <!-- z[1] -->
+                  </tr>
+                  <tr>
+                    <td><b>Q2</b> (x, y, z), w</td> <!-- x[0] -->
+                    <td><input type="text" id="q2_x" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_y" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_z" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_w" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, false)" /></td> <!-- z[1] -->
+                  </tr>
+                  <tr>
+                    <td><b>Q2</b> angle, axis</td> <!-- x[0] -->
+                    <td><input type="text" id="q2_angle" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="text" id="q2_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+                    <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, true)" /></td> <!-- z[1] -->
+                  </tr>
+                </table>
+            </div>
 
 
-			<div>
-				<table style="width: 640px">
-			      <tr>
-			        <td><span id="t_value"><b>t:</b> 0</span></td> <!-- x[0] -->
-			        <td>
-						<input type="range" min="0" max="200" value="100" style="width: 570px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
-			        </td> <!-- z[1] -->
-			      </tr>
-			  </table>
-			</div>
+            <div>
+                <table style="width: 640px">
+                  <tr>
+                    <td><span id="t_value"><b>t:</b> 0</span></td> <!-- x[0] -->
+                    <td>
+                        <input type="range" min="0" max="200" value="100" style="width: 570px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+                    </td> <!-- z[1] -->
+                  </tr>
+              </table>
+            </div>
 
-			<div>
-				<span style="display:inline-block;width: 100px;"><b>Nlerp:</b></span><span id="output_nlerp">1, (0, 0, 0)</span> <br />
-				<span style="display:inline-block;width: 100px;"><b>Nlerp Mix:</b></span><span id="output_nlerp_mix">1, (0, 0, 0)</span> <br />
-				<span style="display:inline-block;width: 100px;"><b>Slerp:</b></span><span id="output_slerp">1, (0, 0, 0)</span> <br />
-			</div>
+            <div>
+                <span style="display:inline-block;width: 100px;"><b>Nlerp:</b></span><span id="output_nlerp">1, (0, 0, 0)</span> <br />
+                <span style="display:inline-block;width: 100px;"><b>Nlerp Mix:</b></span><span id="output_nlerp_mix">1, (0, 0, 0)</span> <br />
+                <span style="display:inline-block;width: 100px;"><b>Slerp:</b></span><span id="output_slerp">1, (0, 0, 0)</span> <br />
+            </div>
 
-			<div>
-				<table style="width: 640px">
-			      <tr>
-			        <td>Camera X</td> <!-- x[0] -->
-			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-			      </tr>
-			      <tr>
-			        <td>Camera Y</td> <!-- x[0] -->
-			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_y_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-			      </tr>
-			      <tr>
-			        <td>Camera Z</td> <!-- x[0] -->
-			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_z_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-			      </tr>
-			    </table>	
-			</div>
+            <div>
+                <table style="width: 640px">
+                  <tr>
+                    <td>Camera X</td> <!-- x[0] -->
+                    <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+                  </tr>
+                  <tr>
+                    <td>Camera Y</td> <!-- x[0] -->
+                    <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_y_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+                  </tr>
+                  <tr>
+                    <td>Camera Z</td> <!-- x[0] -->
+                    <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_z_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+                  </tr>
+                </table>    
+            </div>
 
-		</div>
+        </div>
 
-		<div style="width: 640px;">
-			<div>
-				<textarea style="width: 630px;height:840px;" id="code_text">
+        <div style="width: 640px;">
+            <div>
+                <textarea style="width: 630px;height:840px;" id="code_text">
 function Slerp(q1, q2, t) {
+    const reference = UE4_Slerp(q1, q2, t);
+
     var dot = Q_Dot(q1, q2);
-    
     if (dot < 0) {
-        dot = -dot;
         q2 = Q_Scale(q2, -1)
     }
-    
-    if (dot < 0.99) {
-        var angle = Math.acos(dot);
+    const slerp = Q_Mul_Q(Q_Pow(Q_Mul_Q(q2, Q_Inv(q1)), t), q1)
 
-        var sin1 = Math.sin(angle*(1-t))
-        var sin2 = Math.sin(angle*t)
-
-        return Q_Normalize(Q_Add(Q_Scale(q1, sin1), Q_Scale(q2, sin2)));
+    if (!Q_Equals(reference, slerp)) {
+        console.log("slerp deviated from reference implementation");
     }
-    // if the angle is small, use linear interpolation
-    console.log("slerp falling back to nlerp")
-    return Nlerp(q1,q3,t);
+    return slerp;
 }
 
 // a + (b - a) * t
 function Nlerp(a, b, t) {
-	const dot = Q_Dot(a, b);
+    const dot = Q_Dot(a, b);
 
-	if (dot < 0.0) {
-		//console.log("Nlerp: dot < 0");
-		b = Q_Scale(b, -1);
-	}
+    if (dot < 0.0) {
+        //console.log("Nlerp: dot < 0");
+        b = Q_Scale(b, -1);
+    }
 
-	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
-	const r2 = Q_Normalize(r1); 
+    const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
+    const r2 = Q_Normalize(r1); 
 
-	return r2;
+    return r2;
 }
 
 // a * (1 - t) + b * t
 function Nlerp_mix(a, b, t) {
-	const dot = Q_Dot(a, b);
+    const dot = Q_Dot(a, b);
 
-	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, dot < 0.0? -t : t));
-	const r4 = Q_Normalize(r3);
+    const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, dot < 0.0? -t : t));
+    const r4 = Q_Normalize(r3);
 
-	return r4;
+    return r4;
 }
-				</textarea>
-			</div>
-			<div>
-				<input type="button" value="Reload Code" onclick="ReloadCode()" style="width: 125px;" />
-			</div>
-		</div> <!-- End Code Div -->
+                </textarea>
+            </div>
+            <div>
+                <input type="button" value="Reload Code" onclick="ReloadCode()" style="width: 125px;" />
+            </div>
+        </div> <!-- End Code Div -->
 
-	</div><!-- End Wrapper -->
+    </div><!-- End Wrapper -->
 </body>
 
 <script type="text/javascript">
 
 function ReloadCode() {
-	const v = document.getElementById('code_text').value
-	window.eval(v)
+    const v = document.getElementById('code_text').value
+    window.eval(v)
 }
 
 function FormatNum(x) {
-	var result = "";
-	if (x >= 0) {
-		result += "&nbsp;";
-	}
-	result += x.toFixed(4);
-	return result;
+    var result = "";
+    if (x >= 0) {
+        result += "&nbsp;";
+    }
+    result += x.toFixed(4);
+    return result;
 }
 
 function LoadSample(which) {
-	var camera_x = 100
-	var camera_y = 100
-	var camera_z = 100
+    var camera_x = 100
+    var camera_y = 100
+    var camera_z = 100
 
-	if (which == 1) {
-		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
-		global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+    if (which == 1) {
+        global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
+        global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
-		camera_x = 129
-		camera_y = 111
-		camera_z = 200
-	}
-	else if (which == 2) {
-		global_state.q1 = Q_AngleAxis(45, [1, 0, 0])
-		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
+        camera_x = 129
+        camera_y = 111
+        camera_z = 200
+    }
+    else if (which == 2) {
+        global_state.q1 = Q_AngleAxis(45, [1, 0, 0])
+        global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
-		camera_x = 108
-		camera_y = 45
-		camera_z = 166
-	}
-	else if (which == 3) {
-		global_state.q1 = Q_AngleAxis(-180, [1, 0, 0])
-		global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
+        camera_x = 108
+        camera_y = 45
+        camera_z = 166
+    }
+    else if (which == 3) {
+        global_state.q1 = Q_AngleAxis(-180, [1, 0, 0])
+        global_state.q2 = Q_AngleAxis(90, [1, 0, 0])
 
-		camera_x = 34
-		camera_y = 140
-		camera_z = 171
-	}
-	else if (which == 4) {
-		global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
-		global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
+        camera_x = 34
+        camera_y = 140
+        camera_z = 171
+    }
+    else if (which == 4) {
+        global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
+        global_state.q2 = Q_AngleAxis(-90, [0, 1, 0])
 
-		camera_x = 200
-		camera_y = 0
-		camera_z = 45
-	}
-	else {
-		alert("TODO: Set still");
-	}
+        camera_x = 200
+        camera_y = 0
+        camera_z = 45
+    }
+    else {
+        alert("TODO: Set still");
+    }
 
-	document.getElementById("camera_x_value").value = camera_x
-	document.getElementById("camera_y_value").value = camera_y
-	document.getElementById("camera_z_value").value = camera_z
+    document.getElementById("camera_x_value").value = camera_x
+    document.getElementById("camera_y_value").value = camera_y
+    document.getElementById("camera_z_value").value = camera_z
 
-	SetQuat(1, true, false);
-	SetQuat(2, true, false);
+    SetQuat(1, true, false);
+    SetQuat(2, true, false);
 }
 
 function SetQuat(which, ignoreInput, setAngleAxis) {
-	if (typeof ignoreInput == "undefined" || ignoreInput == null) {
-		ignoreInput = false
-	}
-	if (typeof setAngleAxis == "undefined" || setAngleAxis == null) {
-		setAngleAxis = false;
-	}
+    if (typeof ignoreInput == "undefined" || ignoreInput == null) {
+        ignoreInput = false
+    }
+    if (typeof setAngleAxis == "undefined" || setAngleAxis == null) {
+        setAngleAxis = false;
+    }
 
-	var q = global_state.q2;
-	if (which == 1) {
-		q = global_state.q1;
-	}
+    var q = global_state.q2;
+    if (which == 1) {
+        q = global_state.q1;
+    }
 
-	if (!ignoreInput) {
-		if (setAngleAxis) {
-			const in_angle = Number(document.getElementById("q" + which + "_angle").value)
-			const in_axis_x = Number(document.getElementById("q" + which + "_axis_x").value)
-			const in_axis_y = Number(document.getElementById("q" + which + "_axis_y").value)
-			const in_axis_z = Number(document.getElementById("q" + which + "_axis_z").value)
-			const in_axis = V3_Normalize([in_axis_x, in_axis_y, in_axis_z]);
+    if (!ignoreInput) {
+        if (setAngleAxis) {
+            const in_angle = Number(document.getElementById("q" + which + "_angle").value)
+            const in_axis_x = Number(document.getElementById("q" + which + "_axis_x").value)
+            const in_axis_y = Number(document.getElementById("q" + which + "_axis_y").value)
+            const in_axis_z = Number(document.getElementById("q" + which + "_axis_z").value)
+            const in_axis = V3_Normalize([in_axis_x, in_axis_y, in_axis_z]);
 
-			q = Q_AngleAxis(in_angle, in_axis)
-		}
-		else {
-			const w = Number(document.getElementById("q" + which + "_w").value)
-			const x = Number(document.getElementById("q" + which + "_x").value)
-			const y = Number(document.getElementById("q" + which + "_y").value)
-			const z = Number(document.getElementById("q" + which + "_z").value)
+            q = Q_AngleAxis(in_angle, in_axis)
+        }
+        else {
+            const w = Number(document.getElementById("q" + which + "_w").value)
+            const x = Number(document.getElementById("q" + which + "_x").value)
+            const y = Number(document.getElementById("q" + which + "_y").value)
+            const z = Number(document.getElementById("q" + which + "_z").value)
 
-			q[0] = x;
-			q[1] = y;
-			q[2] = z;
-			q[3] = w;
-		}
+            q[0] = x;
+            q[1] = y;
+            q[2] = z;
+            q[3] = w;
+        }
 
-		q = Q_Normalize(q);
-		if (which == 1) {
-			global_state.q1 = q;
-		}
-		else {
-			global_state.q2 = q;
-		}
-	}
+        q = Q_Normalize(q);
+        if (which == 1) {
+            global_state.q1 = q;
+        }
+        else {
+            global_state.q2 = q;
+        }
+    }
 
-	document.getElementById("q" + which + "_w").value = q[3].toFixed(5);
-	document.getElementById("q" + which + "_x").value = q[0].toFixed(5);
-	document.getElementById("q" + which + "_y").value = q[1].toFixed(5);
-	document.getElementById("q" + which + "_z").value = q[2].toFixed(5);
+    document.getElementById("q" + which + "_w").value = q[3].toFixed(5);
+    document.getElementById("q" + which + "_x").value = q[0].toFixed(5);
+    document.getElementById("q" + which + "_y").value = q[1].toFixed(5);
+    document.getElementById("q" + which + "_z").value = q[2].toFixed(5);
 
-	const angle = (Math.acos(q[3]) * 2) * 57.2958
-	document.getElementById("q" + which + "_angle").value = angle.toFixed(5);
+    const angle = (Math.acos(q[3]) * 2) * 57.2958
+    document.getElementById("q" + which + "_angle").value = angle.toFixed(5);
 
-	const axis = V3_Normalize([q[0], q[1], q[2]]);
-	document.getElementById("q" + which + "_axis_x").value = axis[0].toFixed(5);
-	document.getElementById("q" + which + "_axis_y").value = axis[1].toFixed(5);
-	document.getElementById("q" + which + "_axis_z").value = axis[2].toFixed(5);
+    const axis = V3_Normalize([q[0], q[1], q[2]]);
+    document.getElementById("q" + which + "_axis_x").value = axis[0].toFixed(5);
+    document.getElementById("q" + which + "_axis_y").value = axis[1].toFixed(5);
+    document.getElementById("q" + which + "_axis_z").value = axis[2].toFixed(5);
 
-	UpdateSimulation();
+    UpdateSimulation();
 }
 
 function UpdateSimulation() {
-	var interp_value = document.getElementById("interp_value").value
-	var interp_range = document.getElementById("interp_value").max - document.getElementById("interp_value").min
-	var camera_x_value = document.getElementById("camera_x_value").value
-	var camera_x_range = document.getElementById("camera_x_value").max - document.getElementById("camera_x_value").min
-	var camera_y_value = document.getElementById("camera_y_value").value
-	var camera_y_range = document.getElementById("camera_y_value").max - document.getElementById("camera_y_value").min
-	var camera_z_value = document.getElementById("camera_z_value").value
-	var camera_z_range = document.getElementById("camera_z_value").max - document.getElementById("camera_z_value").min
+    var interp_value = document.getElementById("interp_value").value
+    var interp_range = document.getElementById("interp_value").max - document.getElementById("interp_value").min
+    var camera_x_value = document.getElementById("camera_x_value").value
+    var camera_x_range = document.getElementById("camera_x_value").max - document.getElementById("camera_x_value").min
+    var camera_y_value = document.getElementById("camera_y_value").value
+    var camera_y_range = document.getElementById("camera_y_value").max - document.getElementById("camera_y_value").min
+    var camera_z_value = document.getElementById("camera_z_value").value
+    var camera_z_range = document.getElementById("camera_z_value").max - document.getElementById("camera_z_value").min
 
-	// UPDATE CAMERA POSITION
-	const cameraXAngle = (camera_x_value / camera_x_range) * 360.0;
-	const cameraYAngle = 0 - (camera_y_value / camera_y_range)  * 90.0;
-	const cameraZDistance = (6 - (camera_z_value / camera_z_range) * 6.0) + 3;
+    // UPDATE CAMERA POSITION
+    const cameraXAngle = (camera_x_value / camera_x_range) * 360.0;
+    const cameraYAngle = 0 - (camera_y_value / camera_y_range)  * 90.0;
+    const cameraZDistance = (6 - (camera_z_value / camera_z_range) * 6.0) + 3;
 
-	var camX = cameraZDistance * -Math.sin(cameraXAngle*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
-	var camY = cameraZDistance * -Math.sin((cameraYAngle)*(Math.PI/180.0));
-	var camZ = -cameraZDistance * Math.cos((cameraXAngle)*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
+    var camX = cameraZDistance * -Math.sin(cameraXAngle*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
+    var camY = cameraZDistance * -Math.sin((cameraYAngle)*(Math.PI/180.0));
+    var camZ = -cameraZDistance * Math.cos((cameraXAngle)*(Math.PI/180.0)) * Math.cos((cameraYAngle)*(Math.PI/180.0));
 
-	global_state.view = LookAt([camX, camY, camZ], global_state.camTarget, [0, 1, 0]);
-	global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
+    global_state.view = LookAt([camX, camY, camZ], global_state.camTarget, [0, 1, 0]);
+    global_state.projection = PerspectiveMatrix(60, 0.1, 500, global_state.gl.canvas.clientWidth / global_state.gl.canvas.clientHeight);
 
-	// UPDATE INTERPOLATION VALUES
-	var t = interp_value / interp_range
-	document.getElementById("t_value").innerHTML = "<b>t: </b>" + t.toFixed(3);
-	if (t < 0) t = 0;
-	if (t > 1) t = 1;
+    // UPDATE INTERPOLATION VALUES
+    var t = interp_value / interp_range
+    document.getElementById("t_value").innerHTML = "<b>t: </b>" + t.toFixed(3);
+    if (t < 0) t = 0;
+    if (t > 1) t = 1;
 
-	const result_n1 = Nlerp(global_state.q1, global_state.q2, t);
-	const result_n2 = Nlerp_mix(global_state.q1, global_state.q2, t)
-	const result_s = Slerp(global_state.q1, global_state.q2, t);
+    const result_n1 = Nlerp(global_state.q1, global_state.q2, t);
+    const result_n2 = Nlerp_mix(global_state.q1, global_state.q2, t)
+    const result_s = Slerp(global_state.q1, global_state.q2, t);
 
-	document.getElementById("output_nlerp").innerHTML = FormatNum(result_n1[3]) + ", (" +
-		FormatNum(result_n1[0]) + ", " + FormatNum(result_n1[1]) + ", " + FormatNum(result_n1[2]) + ")"
-	document.getElementById("output_nlerp_mix").innerHTML = FormatNum(result_n2[3]) + ", (" +
-		FormatNum(result_n2[0]) + ", " + FormatNum(result_n2[1]) + ", " + FormatNum(result_n2[2]) + ")"
-	document.getElementById("output_slerp").innerHTML = FormatNum(result_s[3]) + ", (" +
-		FormatNum(result_s[0]) + ", " + FormatNum(result_s[1]) + ", " + FormatNum(result_s[2]) + ")" 
+    document.getElementById("output_nlerp").innerHTML = FormatNum(result_n1[3]) + ", (" +
+        FormatNum(result_n1[0]) + ", " + FormatNum(result_n1[1]) + ", " + FormatNum(result_n1[2]) + ")"
+    document.getElementById("output_nlerp_mix").innerHTML = FormatNum(result_n2[3]) + ", (" +
+        FormatNum(result_n2[0]) + ", " + FormatNum(result_n2[1]) + ", " + FormatNum(result_n2[2]) + ")"
+    document.getElementById("output_slerp").innerHTML = FormatNum(result_s[3]) + ", (" +
+        FormatNum(result_s[0]) + ", " + FormatNum(result_s[1]) + ", " + FormatNum(result_s[2]) + ")" 
 
-	const forward = [0, 0, 1];
+    const forward = [0, 0, 1];
 
-	UpdateQuaternionVisual(global_state.visual_nlerp, result_n1, forward)
-	UpdateQuaternionVisual(global_state.visual_nlerp_mix, result_n2, forward)
-	UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
+    UpdateQuaternionVisual(global_state.visual_nlerp, result_n1, forward)
+    UpdateQuaternionVisual(global_state.visual_nlerp_mix, result_n2, forward)
+    UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
-	UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
-	UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, null)
+    UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
+    UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, null)
 
-	DrawScene();
+    DrawScene();
 }
 
 var global_state = {
-	camPos: [-3, 4, 6],
-	camTarget: [0, 0, 0],
+    camPos: [-3, 4, 6],
+    camTarget: [0, 0, 0],
 
-	q1: [0,0,0,1],
-	q2: [0,0,0,1],
+    q1: [0,0,0,1],
+    q2: [0,0,0,1],
 
-	lineRenderer: null,
-	gl: null,
+    lineRenderer: null,
+    gl: null,
 
-	view: null,
-	projection: null,
+    view: null,
+    projection: null,
 
-	visual_nlerp: null,
-	visual_nlerp_mix: null,
-	visual_slerp: null,
+    visual_nlerp: null,
+    visual_nlerp_mix: null,
+    visual_slerp: null,
 
-	line_origin_r: null,
-	line_origin_g: null,
-	line_origin_b: null,
+    line_origin_r: null,
+    line_origin_g: null,
+    line_origin_b: null,
 
-	origin_q1: null,
-	origin_q2: null
+    origin_q1: null,
+    origin_q2: null
 }
 
 function MakeQuaternionVisual(lr, color, exclude_vector) {
-	if (typeof exclude_vector == "undefined" || exclude_vector == null) {
-		exclude_vector = false
-	}
+    if (typeof exclude_vector == "undefined" || exclude_vector == null) {
+        exclude_vector = false
+    }
 
-	const null_line = [
-		0, 0, 0,
-		0, 0, 0
-	]
+    const null_line = [
+        0, 0, 0,
+        0, 0, 0
+    ]
 
-	var dv = null;
-	if (!exclude_vector) {
-		dv = LR_MakeLine(lr, null_line, false);
-	}
+    var dv = null;
+    if (!exclude_vector) {
+        dv = LR_MakeLine(lr, null_line, false);
+    }
 
-	return {
-		quaternion: [0, 0, 0, 1],
-		draw_normal: LR_MakeLine(lr, null_line, false),
-		draw_nib: LR_MakeLine(lr, null_line, false),
-		draw_plane:  LR_MakeLine(lr, null_line, true),
-		draw_vector: dv,
-		normal_color: {
-			r: color[0] * 0.5,
-			g: color[1] * 0.5,
-			b: color[2] * 0.5
-		},
-		plane_color: {
-			r: color[0] * 0.5,
-			g: color[1] * 0.5,
-			b: color[2] * 0.5
-		},
-		vector_color: {
-			r: color[0],
-			g: color[1],
-			b: color[2]
-		}
-	};
+    return {
+        quaternion: [0, 0, 0, 1],
+        draw_normal: LR_MakeLine(lr, null_line, false),
+        draw_nib: LR_MakeLine(lr, null_line, false),
+        draw_plane:  LR_MakeLine(lr, null_line, true),
+        draw_vector: dv,
+        normal_color: {
+            r: color[0] * 0.5,
+            g: color[1] * 0.5,
+            b: color[2] * 0.5
+        },
+        plane_color: {
+            r: color[0] * 0.5,
+            g: color[1] * 0.5,
+            b: color[2] * 0.5
+        },
+        vector_color: {
+            r: color[0],
+            g: color[1],
+            b: color[2]
+        }
+    };
 }
 
 function UpdateQuaternionVisual(visualObject, quat, vector) {
-	visualObject.quaternion = [quat[0], quat[1], quat[2], quat[3]]
+    visualObject.quaternion = [quat[0], quat[1], quat[2], quat[3]]
 
-	var n = [quat[0], quat[1], quat[2]];
-	if (V3_Equals(n, [0, 0, 0])) {
-		n = [1, 0, 0]
-	}
-	n = V3_Normalize(n)
-	LR_UpdateLine(visualObject.draw_normal, [-n[0], -n[1], -n[2], n[0], n[1], n[2]]);
+    var n = [quat[0], quat[1], quat[2]];
+    if (V3_Equals(n, [0, 0, 0])) {
+        n = [1, 0, 0]
+    }
+    n = V3_Normalize(n)
+    LR_UpdateLine(visualObject.draw_normal, [-n[0], -n[1], -n[2], n[0], n[1], n[2]]);
 
-	LR_UpdateLine(visualObject.draw_plane, MakeDiskArray(n, 0.5))
+    LR_UpdateLine(visualObject.draw_plane, MakeDiskArray(n, 0.5))
 
-	if (vector != null && visualObject.draw_vector != null) {
-		const v = Q_Mul_V3(quat, vector);
-		LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
+    if (vector != null && visualObject.draw_vector != null) {
+        const v = Q_Mul_V3(quat, vector);
+        LR_UpdateLine(visualObject.draw_vector, [0, 0, 0, v[0], v[1], v[2]]);
 
-		var nib = [
-			v[0] * 0.75 + n[0] * 0.15, 
-			v[1] * 0.75 + n[1] * 0.15, 
-			v[2] * 0.75 + n[2] * 0.15
-		]
-		LR_UpdateLine(visualObject.draw_nib, [nib[0], nib[1], nib[2], v[0], v[1], v[2]]);
-	}
+        var nib = [
+            v[0] * 0.75 + n[0] * 0.15, 
+            v[1] * 0.75 + n[1] * 0.15, 
+            v[2] * 0.75 + n[2] * 0.15
+        ]
+        LR_UpdateLine(visualObject.draw_nib, [nib[0], nib[1], nib[2], v[0], v[1], v[2]]);
+    }
 }
 
 function DrawQuaternionVisual(visualObject, view, proj) {
-	LR_DrawLine(visualObject.draw_normal, view, proj, visualObject.normal_color);
+    LR_DrawLine(visualObject.draw_normal, view, proj, visualObject.normal_color);
 
-	LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
-	if (visualObject.draw_vector != null) {
-		LR_DrawLine(visualObject.draw_nib, view, proj, visualObject.vector_color);
-		LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
-	}
+    LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
+    if (visualObject.draw_vector != null) {
+        LR_DrawLine(visualObject.draw_nib, view, proj, visualObject.vector_color);
+        LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
+    }
 }
 
 function main() {
-	global_state.q1 = Q_AngleAxis(90, [1, 0, 0])
-	global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
+    global_state.q1 = Q_AngleAxis(90, [1, 0, 0])
+    global_state.q2 = Q_AngleAxis(-90, [1, 0, 0])
 
-	var gl = SetupWebGL();
+    var gl = SetupWebGL();
     global_state.gl = gl;
 
-	if (!gl) {
-		return;
-	}
+    if (!gl) {
+        return;
+    }
 
-	global_state.lineRenderer = LR_Init(gl);
-	const lr = global_state.lineRenderer;
+    global_state.lineRenderer = LR_Init(gl);
+    const lr = global_state.lineRenderer;
 
-	const null_line = [
-		0, 0, 0,
-		0, 0, 0
-	]
+    const null_line = [
+        0, 0, 0,
+        0, 0, 0
+    ]
 
-	global_state.visual_nlerp = MakeQuaternionVisual(lr, [1, 0, 1]);
-	global_state.visual_nlerp_mix = MakeQuaternionVisual(lr, [1, 1, 0]);
-	global_state.visual_slerp  = MakeQuaternionVisual(lr, [0, 1, 1]);
+    global_state.visual_nlerp = MakeQuaternionVisual(lr, [1, 0, 1]);
+    global_state.visual_nlerp_mix = MakeQuaternionVisual(lr, [1, 1, 0]);
+    global_state.visual_slerp  = MakeQuaternionVisual(lr, [0, 1, 1]);
 
-	global_state.origin_q1 = MakeQuaternionVisual(lr, [0, 0, 0], true);
-	global_state.origin_q2 = MakeQuaternionVisual(lr, [2, 2, 2], true);
+    global_state.origin_q1 = MakeQuaternionVisual(lr, [0, 0, 0], true);
+    global_state.origin_q2 = MakeQuaternionVisual(lr, [2, 2, 2], true);
 
-	global_state.line_origin_r = LR_MakeLine(lr, [0, 0, 0, 1.5, 0, 0], false);
-	global_state.line_origin_g = LR_MakeLine(lr, [0, 0, 0, 0, 1.5, 0], false);
-	global_state.line_origin_b = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1.5], false);
+    global_state.line_origin_r = LR_MakeLine(lr, [0, 0, 0, 1.5, 0, 0], false);
+    global_state.line_origin_g = LR_MakeLine(lr, [0, 0, 0, 0, 1.5, 0], false);
+    global_state.line_origin_b = LR_MakeLine(lr, [0, 0, 0, 0, 0, 1.5], false);
 
-	ReloadCode();
-	LoadSample(1);
+    ReloadCode();
+    LoadSample(1);
 
-	UpdateSimulation()
+    UpdateSimulation()
 }
 
 function DrawScene() {
-	global_state.gl.clear(global_state.gl.COLOR_BUFFER_BIT | global_state.gl.DEPTH_BUFFER_BIT);
-	const view = global_state.view 
-	const proj = global_state.projection
+    global_state.gl.clear(global_state.gl.COLOR_BUFFER_BIT | global_state.gl.DEPTH_BUFFER_BIT);
+    const view = global_state.view 
+    const proj = global_state.projection
 
-	const draw_nlerp = document.getElementById("draw_nlerp").checked;
-	const draw_nlerp_mix = document.getElementById("draw_nlerp_mix").checked;
-	const draw_slerp = document.getElementById("draw_slerp").checked;
-	const draw_origin = document.getElementById("draw_origin").checked;
-	const draw_q1 = document.getElementById("draw_q1").checked;
-	const draw_q2 = document.getElementById("draw_q2").checked;
+    const draw_nlerp = document.getElementById("draw_nlerp").checked;
+    const draw_nlerp_mix = document.getElementById("draw_nlerp_mix").checked;
+    const draw_slerp = document.getElementById("draw_slerp").checked;
+    const draw_origin = document.getElementById("draw_origin").checked;
+    const draw_q1 = document.getElementById("draw_q1").checked;
+    const draw_q2 = document.getElementById("draw_q2").checked;
 
-	if (draw_origin) {
-		LR_DrawLine(global_state.line_origin_r, view, proj, [1, 0, 0]);
-		LR_DrawLine(global_state.line_origin_g, view, proj, [0, 1, 0]);
-		LR_DrawLine(global_state.line_origin_b, view, proj, [0, 0, 1]);
-	}
+    if (draw_origin) {
+        LR_DrawLine(global_state.line_origin_r, view, proj, [1, 0, 0]);
+        LR_DrawLine(global_state.line_origin_g, view, proj, [0, 1, 0]);
+        LR_DrawLine(global_state.line_origin_b, view, proj, [0, 0, 1]);
+    }
 
-	if (draw_q1) {
-		DrawQuaternionVisual(global_state.origin_q1, view, proj);
-	}
-	if (draw_q2) {
-		DrawQuaternionVisual(global_state.origin_q2, view, proj);
-	}
+    if (draw_q1) {
+        DrawQuaternionVisual(global_state.origin_q1, view, proj);
+    }
+    if (draw_q2) {
+        DrawQuaternionVisual(global_state.origin_q2, view, proj);
+    }
 
-	if (draw_nlerp) {
-		DrawQuaternionVisual(global_state.visual_nlerp, view, proj);
-	}
-	if (draw_nlerp_mix) {
-		DrawQuaternionVisual(global_state.visual_nlerp_mix, view, proj);
-	}
-	if (draw_slerp) {
-		DrawQuaternionVisual(global_state.visual_slerp, view, proj);
-	}
+    if (draw_nlerp) {
+        DrawQuaternionVisual(global_state.visual_nlerp, view, proj);
+    }
+    if (draw_nlerp_mix) {
+        DrawQuaternionVisual(global_state.visual_nlerp_mix, view, proj);
+    }
+    if (draw_slerp) {
+        DrawQuaternionVisual(global_state.visual_slerp, view, proj);
+    }
 
-	
+    
 }
 
 function SetupWebGL() {
-	const canvas = document.querySelector("#glCanvas");
-	const gl = canvas.getContext("webgl");
+    const canvas = document.querySelector("#glCanvas");
+    const gl = canvas.getContext("webgl");
 
-	if (!gl) {
-		alert("Can't initialize Web GL! Consider this page broken!")
-		return null
-	}
+    if (!gl) {
+        alert("Can't initialize Web GL! Consider this page broken!")
+        return null
+    }
 
-	gl.clearColor(0.4, 0.5, 0.6, 1.0);
+    gl.clearColor(0.4, 0.5, 0.6, 1.0);
 
-	gl.clearDepth(1.0);
-	gl.enable(gl.DEPTH_TEST);
-	gl.depthFunc(gl.LEQUAL);
+    gl.clearDepth(1.0);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
 
-	gl.enable(gl.CULL_FACE);
-	gl.cullFace(gl.BACK);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
 
-	return gl;
+    return gl;
 }
 
 function PerspectiveMatrix(fov, zNear, zFar, aspect) {
-	const tanHalfFov = Math.tan((fov * 0.5) * 0.0174533);
-	const fovY = 1.0 / tanHalfFov; 
-	const fovX = fovY / aspect; 
-	const _33 = -(zFar / (zFar - zNear))
-	const _43 = -((zFar * zNear) / (zFar - zNear));
+    const tanHalfFov = Math.tan((fov * 0.5) * 0.0174533);
+    const fovY = 1.0 / tanHalfFov; 
+    const fovX = fovY / aspect; 
+    const _33 = -(zFar / (zFar - zNear))
+    const _43 = -((zFar * zNear) / (zFar - zNear));
 
-	const result = [
-		fovX, 0,    0,   0,
-		0,    fovY, 0,   0,
-		0,    0,    _33, -1,
-		0,    0,    _43,   0
-	];
+    const result = [
+        fovX, 0,    0,   0,
+        0,    fovY, 0,   0,
+        0,    0,    _33, -1,
+        0,    0,    _43,   0
+    ];
 
-	return result;
+    return result;
 }
 
 function LookAt(eye, at, up) {
-	const zAxis = V3_Normalize([
-		eye[0] - at[0],
-		eye[1] - at[1],
-		eye[2] - at[2]
-	]);
-	const xAxis = V3_Normalize(V3_Cross(zAxis, up));
-	const yAxis = V3_Cross(xAxis, zAxis);
+    const zAxis = V3_Normalize([
+        eye[0] - at[0],
+        eye[1] - at[1],
+        eye[2] - at[2]
+    ]);
+    const xAxis = V3_Normalize(V3_Cross(zAxis, up));
+    const yAxis = V3_Cross(xAxis, zAxis);
 
-	const result = [
-		xAxis[0], yAxis[0], zAxis[0], 0,
-		xAxis[1], yAxis[1], zAxis[1], 0,
-		xAxis[2], yAxis[2], zAxis[2], 0,
-		-(xAxis[0] * eye[0] + xAxis[1] * eye[1] + xAxis[2] * eye[2]), 
-		-(yAxis[0] * eye[0] + yAxis[1] * eye[1] + yAxis[2] * eye[2]),
-		-(zAxis[0] * eye[0] + zAxis[1] * eye[1] + zAxis[2] * eye[2]),
-		1
-	];
+    const result = [
+        xAxis[0], yAxis[0], zAxis[0], 0,
+        xAxis[1], yAxis[1], zAxis[1], 0,
+        xAxis[2], yAxis[2], zAxis[2], 0,
+        -(xAxis[0] * eye[0] + xAxis[1] * eye[1] + xAxis[2] * eye[2]), 
+        -(yAxis[0] * eye[0] + yAxis[1] * eye[1] + yAxis[2] * eye[2]),
+        -(zAxis[0] * eye[0] + zAxis[1] * eye[1] + zAxis[2] * eye[2]),
+        1
+    ];
 
-	return result;
+    return result;
 }
 
 function MakeDiskArray(normal, radius, centerPoint) {
-	var point = centerPoint
-	if (typeof centerPoint == "undefined" || centerPoint == null) {
-		point = [0, 0, 0]
-	} 
+    var point = centerPoint
+    if (typeof centerPoint == "undefined" || centerPoint == null) {
+        point = [0, 0, 0]
+    } 
 
-	const verts = [];
-	normal = V3_Normalize(normal);
+    const verts = [];
+    normal = V3_Normalize(normal);
 
-	const zero = [0, 0, 0]
-	var perp = V3_Cross(normal, [0, 1, 0])
-	if (V3_Equals(perp, zero)) {
-		perp = V3_Cross(normal, [0, 0, 1])
-		if (V3_Equals(perp, zero)) {
-			perp = V3_Cross(normal, [1, 0, 0])
-		}
-	}
+    const zero = [0, 0, 0]
+    var perp = V3_Cross(normal, [0, 1, 0])
+    if (V3_Equals(perp, zero)) {
+        perp = V3_Cross(normal, [0, 0, 1])
+        if (V3_Equals(perp, zero)) {
+            perp = V3_Cross(normal, [1, 0, 0])
+        }
+    }
 
-	var forward = V3_Cross(V3_Normalize(perp), normal)
-	var right = V3_Cross(normal, forward);
+    var forward = V3_Cross(V3_Normalize(perp), normal)
+    var right = V3_Cross(normal, forward);
 
-	var v = right;
-	var k = V3_Normalize(normal)
+    var v = right;
+    var k = V3_Normalize(normal)
 
-	for (var i = 0; i < 360; ++i) {
-		var cos = Math.cos(i * 0.0174533)
-		var sin = Math.sin(i * 0.0174533)
+    for (var i = 0; i < 360; ++i) {
+        var cos = Math.cos(i * 0.0174533)
+        var sin = Math.sin(i * 0.0174533)
 
-		// v' = (1 - cos)(v dot n)n + cos v + sin(n cross v)
+        // v' = (1 - cos)(v dot n)n + cos v + sin(n cross v)
 
-		const p1 = V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
-		const p2 = V3_Scale(v, cos)
-		const p3 = V3_Scale(V3_Cross(k, v), sin)
+        const p1 = V3_Scale(k, V3_Dot(k, v) * (1.0 - cos))
+        const p2 = V3_Scale(v, cos)
+        const p3 = V3_Scale(V3_Cross(k, v), sin)
 
-		var vprime = 
-		V3_Add(
-			V3_Add(
-				p1,
-				p2
-			),
-		    p3
-	    );
+        var vprime = 
+        V3_Add(
+            V3_Add(
+                p1,
+                p2
+            ),
+            p3
+        );
 
-	    vprime = V3_Scale(V3_Normalize(vprime), radius)
+        vprime = V3_Scale(V3_Normalize(vprime), radius)
 
-	    verts.push(point[0] + vprime[0])
-		verts.push(point[1] + vprime[1])
-		verts.push(point[2] + vprime[2]);
-	}
+        verts.push(point[0] + vprime[0])
+        verts.push(point[1] + vprime[1])
+        verts.push(point[2] + vprime[2]);
+    }
 
-	return verts;
+    return verts;
 }
 
 /* Line Renderer API
@@ -820,167 +896,167 @@ void LR_DrawLine(LineObject object, Mat4 projection, Mat4 view, float[] color)
 */
 
 function LR_Init(gl) {
-	var lineRendererObject = {
-		shader: null,
-		gl: null
-	}
+    var lineRendererObject = {
+        shader: null,
+        gl: null
+    }
 
-	lineRendererObject.gl = gl;
+    lineRendererObject.gl = gl;
 
-	// Setup vertex Shader
-	const vSource = `
-		precision highp float;
-		attribute vec3 position;
+    // Setup vertex Shader
+    const vSource = `
+        precision highp float;
+        attribute vec3 position;
 
-		uniform mat4 modelMatrix;
-		uniform mat4 viewMatrix;
-		uniform mat4 projectionMatrix;
-		uniform vec4 renderColor;
+        uniform mat4 modelMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform vec4 renderColor;
 
-		varying vec4 color; 
+        varying vec4 color; 
 
-		void main() {
-			color = renderColor;
+        void main() {
+            color = renderColor;
 
-			gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
-		}
-	`;	
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
+        }
+    `;  
 
-	const vertex = gl.createShader(gl.VERTEX_SHADER);
-	gl.shaderSource(vertex, vSource);
-	gl.compileShader(vertex);
+    const vertex = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertex, vSource);
+    gl.compileShader(vertex);
 
-	if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS)) {
-		alert("Can't compile vertex shader: " + gl.getShaderInfoLog(vertex));
-		gl.deleteShader(vertex);
-		return null;
-	}
+    if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS)) {
+        alert("Can't compile vertex shader: " + gl.getShaderInfoLog(vertex));
+        gl.deleteShader(vertex);
+        return null;
+    }
 
-	// Setup fragment shader
-	const fSource = `
-		precision highp float;
-		varying vec4 color; 
+    // Setup fragment shader
+    const fSource = `
+        precision highp float;
+        varying vec4 color; 
 
-		void main() {
-			gl_FragColor = color;
-		}
-	`;
+        void main() {
+            gl_FragColor = color;
+        }
+    `;
 
-	const fragment = gl.createShader(gl.FRAGMENT_SHADER);
-	gl.shaderSource(fragment, fSource);
-	gl.compileShader(fragment);
+    const fragment = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragment, fSource);
+    gl.compileShader(fragment);
 
-	if (!gl.getShaderParameter(fragment, gl.COMPILE_STATUS)) {
-		alert("Can't compile fragment shader: " + gl.getShaderInfoLog(fragment));
-		gl.deleteShader(fragment);
-		return null;
-	}
+    if (!gl.getShaderParameter(fragment, gl.COMPILE_STATUS)) {
+        alert("Can't compile fragment shader: " + gl.getShaderInfoLog(fragment));
+        gl.deleteShader(fragment);
+        return null;
+    }
 
-	// Setup actual program
-	const program = gl.createProgram();
-	gl.attachShader(program, vertex);
-	gl.attachShader(program, fragment);
-	gl.linkProgram(program);
+    // Setup actual program
+    const program = gl.createProgram();
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
 
-	gl.deleteShader(vertex);
-	gl.deleteShader(fragment);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
 
-	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-		alert("Can't link the shader: " + gl.getProgramInfoLog(program));
-		return null;
-	}
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        alert("Can't link the shader: " + gl.getProgramInfoLog(program));
+        return null;
+    }
 
-	lineRendererObject.shader = {
-		id : program,
-		attribs : {
-			position: gl.getAttribLocation(program, "position")		
-		},
-		uniforms : {
-			model: gl.getUniformLocation(program, "modelMatrix"),
-			view: gl.getUniformLocation(program, "viewMatrix"),
-			projection: gl.getUniformLocation(program, "projectionMatrix"),
-			color: gl.getUniformLocation(program, "renderColor")
-		}
-	};
+    lineRendererObject.shader = {
+        id : program,
+        attribs : {
+            position: gl.getAttribLocation(program, "position")     
+        },
+        uniforms : {
+            model: gl.getUniformLocation(program, "modelMatrix"),
+            view: gl.getUniformLocation(program, "viewMatrix"),
+            projection: gl.getUniformLocation(program, "projectionMatrix"),
+            color: gl.getUniformLocation(program, "renderColor")
+        }
+    };
 
-	return lineRendererObject;
+    return lineRendererObject;
 }
 
 function LR_MakeLine(lineRenderer, lineArray, loop) {
-	if (typeof loop == "undefined" || loop == null) {
-		loop = false
-	}
-	const gl = lineRenderer.gl;
+    if (typeof loop == "undefined" || loop == null) {
+        loop = false
+    }
+    const gl = lineRenderer.gl;
 
-	var arrayBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+    var arrayBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
 
-	var lineObject = {
-		bufferId: arrayBuffer,
-		count: lineArray.length / 3,
-		numComponents: 3,
-		type: gl.FLOAT,
-		stride: 0,
-		offset: 0,
-		looping: loop,
-		renderer: lineRenderer
-	}
-	
-	LR_UpdateLine(lineObject, lineArray);
+    var lineObject = {
+        bufferId: arrayBuffer,
+        count: lineArray.length / 3,
+        numComponents: 3,
+        type: gl.FLOAT,
+        stride: 0,
+        offset: 0,
+        looping: loop,
+        renderer: lineRenderer
+    }
+    
+    LR_UpdateLine(lineObject, lineArray);
 
-	return lineObject;
+    return lineObject;
 }
 
 function LR_UpdateLine(lineObject, lineArray, loop) {
-	if (typeof lineObject == "undefined" || lineObject == null) {
-		console.log("Could not find line object");
-	}
-	else if (typeof lineObject.renderer == "undefined" || lineObject.renderer == null) {
-		console.log("Could not find line renderer");
-	}
+    if (typeof lineObject == "undefined" || lineObject == null) {
+        console.log("Could not find line object");
+    }
+    else if (typeof lineObject.renderer == "undefined" || lineObject.renderer == null) {
+        console.log("Could not find line renderer");
+    }
 
-	const gl = lineObject.renderer.gl;
+    const gl = lineObject.renderer.gl;
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, lineObject.bufferId);
-	lineObject.count =  lineArray.length / 3;
+    gl.bindBuffer(gl.ARRAY_BUFFER, lineObject.bufferId);
+    lineObject.count =  lineArray.length / 3;
 
-	if (typeof loop != "undefined" && loop != null) {
-		lineObject.looping = loop;
-	}
+    if (typeof loop != "undefined" && loop != null) {
+        lineObject.looping = loop;
+    }
 
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineArray), gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lineArray), gl.DYNAMIC_DRAW);
 }
 
 function LR_DrawLine(lineObject, projectionMatrix, viewMatrix, color) {
-	if (typeof color == "undefined" || color == null) {
-		color = {r:0,g:0,b:0}
-	}
-	else if (Array.isArray(color)) {
-		color = {r:color[0],g:color[1],b:color[2]}
-	}
+    if (typeof color == "undefined" || color == null) {
+        color = {r:0,g:0,b:0}
+    }
+    else if (Array.isArray(color)) {
+        color = {r:color[0],g:color[1],b:color[2]}
+    }
 
-	const gl = lineObject.renderer.gl;
-	const shader = lineObject.renderer.shader;
+    const gl = lineObject.renderer.gl;
+    const shader = lineObject.renderer.shader;
 
-	const modelMatrix = [
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1
-	]
-	gl.bindBuffer(global_state.gl.ARRAY_BUFFER, lineObject.bufferId);
-	gl.vertexAttribPointer(shader.attribs.position, lineObject.numComponents, lineObject.type, false, lineObject.stride, lineObject.offset);
-	gl.enableVertexAttribArray(shader.attribs.position);
+    const modelMatrix = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]
+    gl.bindBuffer(global_state.gl.ARRAY_BUFFER, lineObject.bufferId);
+    gl.vertexAttribPointer(shader.attribs.position, lineObject.numComponents, lineObject.type, false, lineObject.stride, lineObject.offset);
+    gl.enableVertexAttribArray(shader.attribs.position);
 
-	gl.useProgram(shader.id);
+    gl.useProgram(shader.id);
 
-	gl.uniformMatrix4fv(shader.uniforms.projection, false, global_state.projection);
-	gl.uniformMatrix4fv(shader.uniforms.view, false, global_state.view);
-	gl.uniformMatrix4fv(shader.uniforms.model, false, modelMatrix);
-	gl.uniform4f(shader.uniforms.color, color.r, color.g, color.b, 1.0);
+    gl.uniformMatrix4fv(shader.uniforms.projection, false, global_state.projection);
+    gl.uniformMatrix4fv(shader.uniforms.view, false, global_state.view);
+    gl.uniformMatrix4fv(shader.uniforms.model, false, modelMatrix);
+    gl.uniform4f(shader.uniforms.color, color.r, color.g, color.b, 1.0);
 
-	const offset = 0;
-	gl.drawArrays(lineObject.looping? global_state.gl.LINE_LOOP : global_state.gl.LINES, offset, lineObject.count)
+    const offset = 0;
+    gl.drawArrays(lineObject.looping? global_state.gl.LINE_LOOP : global_state.gl.LINES, offset, lineObject.count)
 }
 
 </script>
