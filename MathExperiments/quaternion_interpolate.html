@@ -178,112 +178,117 @@ function Q_Mul_V3(quaternion, vector3) {
   </head>
 
 <body onload="main();">
-	<div>
-		<canvas id="glCanvas" width="640" height="480"></canvas>
-	</div>
-	<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
-		<input type="checkbox" id="draw_nlerp1" checked onchange="UpdateSimulation()"><b><font color="magenta" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Magenta (Nlerp1)</font></b>
-		<input type="checkbox" id="draw_nlerp2" checked onchange="UpdateSimulation()"><b><font color="yellow" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Yellow (Nlerp2)</font></b>
-		<input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Cyan (Slerp)</font></b>
-	</div>
+	<div style="width: 1280px; display: flex;">
+		<div style="width: 640px;">
+			<div>
+				<canvas id="glCanvas" width="640" height="480"></canvas>
+			</div>
+			<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
+				<input type="checkbox" id="draw_nlerp" checked onchange="UpdateSimulation()"><b><font color="magenta" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Magenta (Nlerp)</font></b>
+				<input type="checkbox" id="draw_nlerp_mix" checked onchange="UpdateSimulation()"><b><font color="yellow" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Yellow (Nlerp Mix)</font></b>
+				<input type="checkbox" id="draw_slerp" checked onchange="UpdateSimulation()"><b><font color="cyan" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Cyan (Slerp)</font></b>
+			</div>
 
-	<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
-		<input type="checkbox" id="draw_origin" onchange="UpdateSimulation()">
-		<b>
-			<font color="red" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Or</font>
-			<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">ig</font>
-			<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">in</font>
-			<font color="red" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">(R</font>
-			<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">G</font>
-			<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">B)</font>
-		</b>
-		<input type="checkbox" id="draw_q1" onchange="UpdateSimulation()"><b><font color="black" style="text-shadow:-1px -1px 0 #FFFFFF,1px -1px 0 #FFFFFF,-1px 1px 0 #FFFFFF,1px 1px 0 #FFFFFF;">Q1 (Black)</font></b>
-		<input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
-	</div>
-	
+			<div style="background-color: rgb(102, 127, 153); width:630px; padding: 5px">
+				<input type="checkbox" id="draw_origin" onchange="UpdateSimulation()">
+				<b>
+					<font color="red" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Or</font>
+					<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">ig</font>
+					<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">in</font>
+					<font color="red" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">(R</font>
+					<font color="green" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">G</font>
+					<font color="blue" style="margin-left:-2px;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">B)</font>
+				</b>
+				<input type="checkbox" id="draw_q1" onchange="UpdateSimulation()"><b><font color="black" style="text-shadow:-1px -1px 0 #FFFFFF,1px -1px 0 #FFFFFF,-1px 1px 0 #FFFFFF,1px 1px 0 #FFFFFF;">Q1 (Black)</font></b>
+				<input type="checkbox" id="draw_q2" onchange="UpdateSimulation()"><b><font color="white" style="text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;">Q2 (White)</font></b>
+			</div>
+			
 
-	<div style="margin-top: 5px;margin-bottom: 5px;">
-		<input type="button" value="Load Sample 1" onclick="LoadSample(1)" style="width: 125px;" />
-		<input type="button" value="Load Sample 2" onclick="LoadSample(2)" style="width: 125px;" />
-		<input type="button" value="Load Sample 3" onclick="LoadSample(3)" style="width: 125px;" />
-		<input type="button" value="Load Sample 4" onclick="LoadSample(4)" style="width: 125px;" />
-		<input type="button" value="Load Sample 5" onclick="LoadSample(5)" style="width: 125px;" />
-	</div>
+			<div style="margin-top: 5px;margin-bottom: 5px;">
+				<input type="button" value="Load Sample 1" onclick="LoadSample(1)" style="width: 124px;" />
+				<input type="button" value="Load Sample 2" onclick="LoadSample(2)" style="width: 124px;" />
+				<input type="button" value="Load Sample 3" onclick="LoadSample(3)" style="width: 124px;" />
+				<input type="button" value="Load Sample 4" onclick="LoadSample(4)" style="width: 124px;" />
+				<input type="button" value="Load Sample 5" onclick="LoadSample(5)" style="width: 124px;" />
+			</div>
 
-	<div>
-		<table style="width: 640px">
-	      <tr>
-	        <td><b>Q1</b> (x, y, z), w</td> <!-- x[0] -->
-	        <td><input type="text" id="q1_x" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_y" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_z" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_w" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, false)" /></td> <!-- z[1] -->
-	      </tr>
-	      <tr>
-	        <td><b>Q1</b> angle, axis</td> <!-- x[0] -->
-	        <td><input type="text" id="q1_angle" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_axis_x" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_axis_y" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q1_axis_z" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, true)" /></td> <!-- z[1] -->
-	      </tr>
-	      <tr>
-	        <td><b>Q2</b> (x, y, z), w</td> <!-- x[0] -->
-	        <td><input type="text" id="q2_x" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_y" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_z" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_w" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, false)" /></td> <!-- z[1] -->
-	      </tr>
-	      <tr>
-	        <td><b>Q2</b> angle, axis</td> <!-- x[0] -->
-	        <td><input type="text" id="q2_angle" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_axis_x" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_axis_y" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="text" id="q2_axis_z" style="width: 105px;"></td> <!-- z[1] -->
-	        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, true)" /></td> <!-- z[1] -->
-	      </tr>
-	    </table>
-	</div>
+			<div>
+				<table style="width: 640px">
+			      <tr>
+			        <td><b>Q1</b> (x, y, z), w</td> <!-- x[0] -->
+			        <td><input type="text" id="q1_x" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_y" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_z" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_w" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, false)" /></td> <!-- z[1] -->
+			      </tr>
+			      <tr>
+			        <td><b>Q1</b> angle, axis</td> <!-- x[0] -->
+			        <td><input type="text" id="q1_angle" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q1_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(1, false, true)" /></td> <!-- z[1] -->
+			      </tr>
+			      <tr>
+			        <td><b>Q2</b> (x, y, z), w</td> <!-- x[0] -->
+			        <td><input type="text" id="q2_x" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_y" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_z" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_w" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, false)" /></td> <!-- z[1] -->
+			      </tr>
+			      <tr>
+			        <td><b>Q2</b> angle, axis</td> <!-- x[0] -->
+			        <td><input type="text" id="q2_angle" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_axis_x" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_axis_y" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="text" id="q2_axis_z" style="width: 105px;"></td> <!-- z[1] -->
+			        <td><input type="button"value="Set" style="width: 50px;" onclick="SetQuat(2, false, true)" /></td> <!-- z[1] -->
+			      </tr>
+			    </table>
+			</div>
 
 
-	<div>
-		<table style="width: 640px">
-	      <tr>
-	        <td><span id="t_value"><b>t:</b> 0</span></td> <!-- x[0] -->
-	        <td>
-				<input type="range" min="0" max="200" value="100" style="width: 570px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
-	        </td> <!-- z[1] -->
-	      </tr>
-	  </table>
-	</div>
+			<div>
+				<table style="width: 640px">
+			      <tr>
+			        <td><span id="t_value"><b>t:</b> 0</span></td> <!-- x[0] -->
+			        <td>
+						<input type="range" min="0" max="200" value="100" style="width: 570px;" id="interp_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()">
+			        </td> <!-- z[1] -->
+			      </tr>
+			  </table>
+			</div>
 
-	<div>
-		<b>Nlerp1:</b> <span id="output_nlerp1">1, (0, 0, 0)</span> <br />
-		<b>Nlerp2:</b> <span id="output_nlerp2">1, (0, 0, 0)</span> <br />
-		<b>Slerp: &nbsp;</b>  <span id="output_slerp">1, (0, 0, 0)</span> <br />
-	</div>
+			<div>
+				<span style="display:inline-block;width: 100px;"><b>Nlerp:</b></span><span id="output_nlerp">1, (0, 0, 0)</span> <br />
+				<span style="display:inline-block;width: 100px;"><b>Nlerp Mix:</b></span><span id="output_nlerp_mix">1, (0, 0, 0)</span> <br />
+				<span style="display:inline-block;width: 100px;"><b>Slerp:</b></span><span id="output_slerp">1, (0, 0, 0)</span> <br />
+			</div>
 
-	<div>
-		<table style="width: 640px">
-	      <tr>
-	        <td>Camera X</td> <!-- x[0] -->
-	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-	      </tr>
-	      <tr>
-	        <td>Camera Y</td> <!-- x[0] -->
-	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_y_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-	      </tr>
-	      <tr>
-	        <td>Camera Z</td> <!-- x[0] -->
-	        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_z_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
-	      </tr>
-	    </table>	
-	</div>
+			<div>
+				<table style="width: 640px">
+			      <tr>
+			        <td>Camera X</td> <!-- x[0] -->
+			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_x_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+			      </tr>
+			      <tr>
+			        <td>Camera Y</td> <!-- x[0] -->
+			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_y_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+			      </tr>
+			      <tr>
+			        <td>Camera Z</td> <!-- x[0] -->
+			        <td><input type="range" min="0" max="200" value="100" style="width: 550px;" id="camera_z_value" oninput="UpdateSimulation()" onchange="UpdateSimulation()"></td> <!-- z[1] -->
+			      </tr>
+			    </table>	
+			</div>
 
-	<div>
-<textarea rows="15" cols="100" id="code_text">
+		</div>
+
+		<div style="width: 640px;">
+			<div>
+				<textarea style="width: 630px;height:840px;" id="code_text">
 function Slerp(q1, q2, t) {
     var dot = Q_Dot(q1, q2);
     
@@ -302,47 +307,41 @@ function Slerp(q1, q2, t) {
     }
     // if the angle is small, use linear interpolation
     console.log("slerp falling back to nlerp")
-    return Nlerp1(q1,q3,t);
+    return Nlerp(q1,q3,t);
 }
 
-// TODO:
-// Does this explain why: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=398
-
 // a + (b - a) * t
-function Nlerp1(a, b, t) {
+function Nlerp(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	if (dot < 0.0) {
-		//console.log("Nlerp1: dot < 0");
+		//console.log("Nlerp: dot < 0");
 		b = Q_Scale(b, -1);
 	}
 
 	const r1 = Q_Add(a, Q_Scale(Q_Sub(b, a), t));
-	const r2 = Q_Normalize(r1); // NLERP 1
+	const r2 = Q_Normalize(r1); 
 
 	return r2;
 }
 
-// TODO: Negative t is from:
-// https://zeuxcg.org/2015/07/23/approximating-slerp/
-// https://youtu.be/vmAY5kP-tpU?t=553
-
 // a * (1 - t) + b * t
-function Nlerp2(a, b, t) {
+function Nlerp_mix(a, b, t) {
 	const dot = Q_Dot(a, b);
 
 	const r3 = Q_Add(Q_Scale(a, 1.0 - t), Q_Scale(b, dot < 0.0? -t : t));
-	const r4 = Q_Normalize(r3); // NLERP 2
+	const r4 = Q_Normalize(r3);
 
 	return r4;
 }
-</textarea>
-</div>
-<div>
-		<input type="button" value="Reload Code" onclick="ReloadCode()" style="width: 125px;" />
-</div>
+				</textarea>
+			</div>
+			<div>
+				<input type="button" value="Reload Code" onclick="ReloadCode()" style="width: 125px;" />
+			</div>
+		</div> <!-- End Code Div -->
 
-
+	</div><!-- End Wrapper -->
 </body>
 
 <script type="text/javascript">
@@ -494,21 +493,21 @@ function UpdateSimulation() {
 	if (t < 0) t = 0;
 	if (t > 1) t = 1;
 
-	const result_n1 = Nlerp1(global_state.q1, global_state.q2, t);
-	const result_n2 = Nlerp2(global_state.q1, global_state.q2, t)
+	const result_n1 = Nlerp(global_state.q1, global_state.q2, t);
+	const result_n2 = Nlerp_mix(global_state.q1, global_state.q2, t)
 	const result_s = Slerp(global_state.q1, global_state.q2, t);
 
-	document.getElementById("output_nlerp1").innerHTML = FormatNum(result_n1[3]) + ", (" +
+	document.getElementById("output_nlerp").innerHTML = FormatNum(result_n1[3]) + ", (" +
 		FormatNum(result_n1[0]) + ", " + FormatNum(result_n1[1]) + ", " + FormatNum(result_n1[2]) + ")"
-	document.getElementById("output_nlerp2").innerHTML = FormatNum(result_n2[3]) + ", (" +
+	document.getElementById("output_nlerp_mix").innerHTML = FormatNum(result_n2[3]) + ", (" +
 		FormatNum(result_n2[0]) + ", " + FormatNum(result_n2[1]) + ", " + FormatNum(result_n2[2]) + ")"
 	document.getElementById("output_slerp").innerHTML = FormatNum(result_s[3]) + ", (" +
 		FormatNum(result_s[0]) + ", " + FormatNum(result_s[1]) + ", " + FormatNum(result_s[2]) + ")" 
 
 	const forward = [0, 0, 1];
 
-	UpdateQuaternionVisual(global_state.visual_nlerp1, result_n1, forward)
-	UpdateQuaternionVisual(global_state.visual_nlerp2, result_n2, forward)
+	UpdateQuaternionVisual(global_state.visual_nlerp, result_n1, forward)
+	UpdateQuaternionVisual(global_state.visual_nlerp_mix, result_n2, forward)
 	UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
 	UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
@@ -530,8 +529,8 @@ var global_state = {
 	view: null,
 	projection: null,
 
-	visual_nlerp1: null,
-	visual_nlerp2: null,
+	visual_nlerp: null,
+	visual_nlerp_mix: null,
 	visual_slerp: null,
 
 	line_origin_r: null,
@@ -629,8 +628,8 @@ function main() {
 		0, 0, 0
 	]
 
-	global_state.visual_nlerp1 = MakeQuaternionVisual(lr, [1, 0, 1]);
-	global_state.visual_nlerp2 = MakeQuaternionVisual(lr, [1, 1, 0]);
+	global_state.visual_nlerp = MakeQuaternionVisual(lr, [1, 0, 1]);
+	global_state.visual_nlerp_mix = MakeQuaternionVisual(lr, [1, 1, 0]);
 	global_state.visual_slerp  = MakeQuaternionVisual(lr, [0, 1, 1]);
 
 	global_state.origin_q1 = MakeQuaternionVisual(lr, [0, 0, 0], true);
@@ -651,8 +650,8 @@ function DrawScene() {
 	const view = global_state.view 
 	const proj = global_state.projection
 
-	const draw_nlerp1 = document.getElementById("draw_nlerp1").checked;
-	const draw_nlerp2 = document.getElementById("draw_nlerp2").checked;
+	const draw_nlerp = document.getElementById("draw_nlerp").checked;
+	const draw_nlerp_mix = document.getElementById("draw_nlerp_mix").checked;
 	const draw_slerp = document.getElementById("draw_slerp").checked;
 	const draw_origin = document.getElementById("draw_origin").checked;
 	const draw_q1 = document.getElementById("draw_q1").checked;
@@ -671,11 +670,11 @@ function DrawScene() {
 		DrawQuaternionVisual(global_state.origin_q2, view, proj);
 	}
 
-	if (draw_nlerp1) {
-		DrawQuaternionVisual(global_state.visual_nlerp1, view, proj);
+	if (draw_nlerp) {
+		DrawQuaternionVisual(global_state.visual_nlerp, view, proj);
 	}
-	if (draw_nlerp2) {
-		DrawQuaternionVisual(global_state.visual_nlerp2, view, proj);
+	if (draw_nlerp_mix) {
+		DrawQuaternionVisual(global_state.visual_nlerp_mix, view, proj);
 	}
 	if (draw_slerp) {
 		DrawQuaternionVisual(global_state.visual_slerp, view, proj);
