@@ -259,6 +259,18 @@ function Q_Mul_V3(quaternion, vector3) {
         V3_Scale(V3_Cross(qVector, vector3), 2.0 * qScalar)
     );
 }
+
+function Q_ToStr(quat, precision) {
+    if (typeof precision == undefined || precision == null) {
+        precision = 5
+    }
+
+    return "(" +
+        quat[3].toFixed(precision) + ", (" + 
+        quat[0].toFixed(precision) + ", " +
+        quat[1].toFixed(precision) + ", " +
+        quat[2].toFixed(precision) + ")";
+}
 </script>
 
   </head>
@@ -737,6 +749,18 @@ function main() {
     LoadSample(1);
 
     UpdateSimulation()
+
+    /*
+    const debug_Q1 = Q_AngleAxis(90, [0, 1, 0]);
+    const debug_Q2 = Q_AngleAxis(90.1, [0, 1, 0]);
+    const debug_t = 0.5;
+    const debug_ue4 = UE4_Slerp(debug_Q1, debug_Q2, debug_t)
+    const debug_slerp = Slerp(debug_Q1, debug_Q2, debug_t)
+    //if (!Q_Equals(debug_ue4, debug_slerp)) {
+        console.log("ue4:  " + Q_ToStr(debug_ue4, 10));
+        console.log("slrp: " + Q_ToStr(debug_slerp, 10));
+    //}
+    */
 }
 
 function DrawScene() {
