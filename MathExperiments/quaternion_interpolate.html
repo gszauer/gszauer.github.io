@@ -594,8 +594,8 @@ function UpdateSimulation() {
     UpdateQuaternionVisual(global_state.visual_nlerp_mix, result_n2, forward)
     UpdateQuaternionVisual(global_state.visual_slerp, result_s, forward)
 
-    UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, null)
-    UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, null)
+    UpdateQuaternionVisual(global_state.origin_q1, global_state.q1, forward)
+    UpdateQuaternionVisual(global_state.origin_q2, global_state.q2, forward)
 
     DrawScene();
 }
@@ -625,9 +625,9 @@ var global_state = {
     origin_q2: null
 }
 
-function MakeQuaternionVisual(lr, color, exclude_vector) {
-    if (typeof exclude_vector == "undefined" || exclude_vector == null) {
-        exclude_vector = false
+function MakeQuaternionVisual(lr, color, exclude_nib) {
+    if (typeof exclude_nib == "undefined" || exclude_nib == null) {
+        exclude_nib = false
     }
 
     const null_line = [
@@ -635,17 +635,17 @@ function MakeQuaternionVisual(lr, color, exclude_vector) {
         0, 0, 0
     ]
 
-    var dv = null;
-    if (!exclude_vector) {
-        dv = LR_MakeLine(lr, null_line, false);
+    var dn = null
+    if (!exclude_nib) {
+        dn = LR_MakeLine(lr, null_line, false);
     }
 
     return {
         quaternion: [0, 0, 0, 1],
         draw_normal: LR_MakeLine(lr, null_line, false),
-        draw_nib: LR_MakeLine(lr, null_line, false),
+        draw_nib: dn,
         draw_plane:  LR_MakeLine(lr, null_line, true),
-        draw_vector: dv,
+        draw_vector: LR_MakeLine(lr, null_line, false),
         normal_color: {
             r: color[0] * 0.5,
             g: color[1] * 0.5,
@@ -660,7 +660,7 @@ function MakeQuaternionVisual(lr, color, exclude_vector) {
             r: color[0],
             g: color[1],
             b: color[2]
-        }
+        },
     };
 }
 
@@ -685,7 +685,9 @@ function UpdateQuaternionVisual(visualObject, quat, vector) {
             v[1] * 0.75 + n[1] * 0.15, 
             v[2] * 0.75 + n[2] * 0.15
         ]
-        LR_UpdateLine(visualObject.draw_nib, [nib[0], nib[1], nib[2], v[0], v[1], v[2]]);
+        if (visualObject.draw_nib != null) {
+            LR_UpdateLine(visualObject.draw_nib, [nib[0], nib[1], nib[2], v[0], v[1], v[2]]);
+        }
     }
 }
 
@@ -694,7 +696,9 @@ function DrawQuaternionVisual(visualObject, view, proj) {
 
     LR_DrawLine(visualObject.draw_plane, view, proj, visualObject.plane_color);
     if (visualObject.draw_vector != null) {
-        LR_DrawLine(visualObject.draw_nib, view, proj, visualObject.vector_color);
+        if (visualObject.draw_nib != null) {
+            LR_DrawLine(visualObject.draw_nib, view, proj, visualObject.vector_color);
+        }
         LR_DrawLine(visualObject.draw_vector, view, proj, visualObject.vector_color);
     }
 }
