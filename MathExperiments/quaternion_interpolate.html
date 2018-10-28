@@ -387,6 +387,7 @@ function Q_ToStr(quat, precision) {
         <div style="width: 640px;">
             <div>
                 <textarea style="width: 630px;height:840px;" id="code_text">
+// ((b * a^-1)^t * a
 function Slerp(q1, q2, t) {
     const reference = UE4_Slerp(q1, q2, t);
 
@@ -490,7 +491,12 @@ function LoadSample(which) {
         camera_z = 45
     }
     else {
-        alert("TODO: Set still");
+         global_state.q1 = Q_AngleAxis(90, [1, 0, 0]) 
+        global_state.q2 = Q_AngleAxis(90.1, [0, 1, 0])
+
+        camera_x = 126
+        camera_y = 0
+        camera_z = 45
     }
 
     document.getElementById("camera_x_value").value = camera_x
@@ -749,18 +755,6 @@ function main() {
     LoadSample(1);
 
     UpdateSimulation()
-
-    /*
-    const debug_Q1 = Q_AngleAxis(90, [0, 1, 0]);
-    const debug_Q2 = Q_AngleAxis(90.1, [0, 1, 0]);
-    const debug_t = 0.5;
-    const debug_ue4 = UE4_Slerp(debug_Q1, debug_Q2, debug_t)
-    const debug_slerp = Slerp(debug_Q1, debug_Q2, debug_t)
-    //if (!Q_Equals(debug_ue4, debug_slerp)) {
-        console.log("ue4:  " + Q_ToStr(debug_ue4, 10));
-        console.log("slrp: " + Q_ToStr(debug_slerp, 10));
-    //}
-    */
 }
 
 function DrawScene() {
