@@ -1078,7 +1078,7 @@ function LR_DrawLine(lineObject, projectionMatrix, viewMatrix, color) {
     gl.uniform4f(shader.uniforms.color, color.r, color.g, color.b, 1.0);
 
     const offset = 0;
-    gl.drawArrays(lineObject.looping? global_state.gl.LINE_LOOP : global_state.gl.LINES, offset, lineObject.count)
+    gl.drawArrays(lineObject.looping? global_state.gl.LINE_LOOP : global_state.gl.LINE_STRIP/*LINES*/, offset, lineObject.count)
 }
 
 </script>
