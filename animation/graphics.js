@@ -1,0 +1,389 @@
+/*jshint esversion: 6 */
+
+// Shader
+function _CompileShader(gl, source, type) {
+	let shader = gl.createShader(type);
+	gl.shaderSource(shader, source);
+	gl.compileShader(shader);
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+		gl.deleteShader(shader);
+		return null;
+	}
+
+	return shader;
+}
+
+function _LinkShader(gl, vertexShader, fragmentShader) { 
+	let shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram, vertexShader);
+	gl.attachShader(shaderProgram, fragmentShader);
+	gl.linkProgram(shaderProgram);
+
+	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+		gl.deleteProgram(shaderProgram);
+
+		console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+		return null;
+	}
+
+	return shaderProgram;
+}
+
+function LoadShaderFromFile(gl, vertFile, fragFile) { 
+	let shaderObject = { };
+	shaderObject.mIsLoaded = false;
+	shaderObject.v_handle = null;
+	shaderObject.f_handle = null;
+	shaderObject.handle = null;
+
+	let vertXhttp = new XMLHttpRequest();
+	vertXhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			shaderObject.v_handle = _CompileShader(gl, this.responseText, gl.VERTEX_SHADER);
+			if (shaderObject.f_handle != null && shaderObject.handle == null) {
+				shaderObject.handle = _LinkShader(gl, shaderObject.v_handle, shaderObject.f_handle);
+				gl.deleteShader(shaderObject.v_handle); shaderObject.v_handle = null;
+				gl.deleteShader(shaderObject.f_handle); shaderObject.f_handle = null;
+				shaderObject.mIsLoaded = true;
+			}
+		}
+	};
+	vertXhttp.open("GET", vertFile, true);
+	vertXhttp.send();
+
+	let fragXhttp = new XMLHttpRequest();
+	fragXhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			shaderObject.f_handle = _CompileShader(gl, this.responseText, gl.FRAGMENT_SHADER);
+			if (shaderObject.v_handle != null && shaderObject.handle == null) {
+				shaderObject.handle = _LinkShader(gl, shaderObject.v_handle, shaderObject.f_handle);
+				gl.deleteShader(shaderObject.v_handle); shaderObject.v_handle = null;
+				gl.deleteShader(shaderObject.f_handle); shaderObject.f_handle = null;
+				shaderObject.mIsLoaded = true;
+			}
+		}
+	};
+	fragXhttp.open("GET", fragFile, true);
+	fragXhttp.send();
+
+	return shaderObject;
+}
+
+function LoadShaderFromString(gl, vertSource, fragSource) { 
+	let shaderObject = { };
+	shaderObject.mIsLoaded = true;
+	shaderObject.v_handle = _CompileShader(gl, vertSource, gl.VERTEX_SHADER);
+	shaderObject.f_handle = _CompileShader(gl, fragSource, gl.FRAGMENT_SHADER);
+	shaderObject.handle = _LinkShader(gl, shaderObject.v_handle, shaderObject.f_handle);
+	
+	gl.deleteShader(shaderObject.v_handle); shaderObject.v_handle = null;
+	gl.deleteShader(shaderObject.f_handle); shaderObject.f_handle = null;
+	
+	if (shaderObject.handle == null) {
+		shaderObject.mIsLoaded = false;
+	}
+
+	return shaderObject;
+}
+
+function ShaderIsDoneLoading(gl, shaderHandle) { 
+	return shaderHandle.mIsLoaded;
+}
+
+function ShaderBind(gl, shaderHandle) { 
+	gl.useProgram(shaderHandle.handle);
+}
+
+function ShaderGetAttribute(gl, shaderHandle, attribName) { 
+	return gl.getAttribLocation(shaderHandle.handle, attribName);
+}
+
+function ShaderGetUniform(gl, shaderHandle, uniformName) { 
+	return gl.getUniformLocation(shaderHandle.handle, uniformName);
+}
+
+function ShaderUnbind(gl) { 
+	gl.useProgram(null);
+}
+
+function DestroyShader(gl, shaderHandle) { 
+	gl.deleteProgram(shaderHandle.handle);
+	shaderHandle.handle = null;
+}
+
+const ATTRIB_TYPE = {
+	UNKNOWN: 0,
+	INT: 1,
+	FLOAT: 2,
+	VEC2: 3,
+	VEC3: 4,
+	VEC4: 5,
+	IVEC4: 6
+};
+
+// Attributes
+function MakeAttribute(gl) { 
+	let result = {};
+	result.handle = gl.createBuffer();
+	result.type = ATTRIB_TYPE.UNKNOWN;
+	return result;
+}
+
+function _SetAttribPointer(gl, attribHandle, attribSlot) {
+	if (attribHandle.type == ATTRIB_TYPE.UNKNOWN) {
+		console.error("Binding an empty attribute");
+	}
+	else if (attribHandle.type == ATTRIB_TYPE.FLOAT) {
+		gl.vertexAttribPointer(attribSlot, 1, gl.FLOAT, false, 0, 0);
+	}
+	else if (attribHandle.type == ATTRIB_TYPE.VEC2) {
+		gl.vertexAttribPointer(attribSlot, 2, gl.FLOAT, false, 0, 0);
+	}
+	else if (attribHandle.type == ATTRIB_TYPE.VEC3) {
+		gl.vertexAttribPointer(attribSlot, 3, gl.FLOAT, false, 0, 0);
+	}
+	else if (attribHandle.type == ATTRIB_TYPE.VEC4) {
+		gl.vertexAttribPointer(attribSlot, 4, gl.FLOAT, false, 0, 0);
+	}
+	// WebGL1 does not support integer attributes. Instead, these must be floating point
+	// To be honest, this kind of sucks. Even if we where to pass gl.SHORT to the 
+	// vertexAttribPointer function, the shader data would still be floating point!
+	else if (attribHandle.type == ATTRIB_TYPE.INT) {
+		gl.vertexAttribPointer(attribSlot, 1, gl.FLOAT, false, 0, 0);
+	}
+	else if (attribHandle.type == ATTRIB_TYPE.IVEC4) {
+		gl.vertexAttribPointer(attribSlot, 4, gl.FLOAT, false, 0, 0);
+	}
+}
+
+function AttributeBind(gl, attribHandle, attribSlot) { 
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.enableVertexAttribArray(attribSlot);
+	_SetAttribPointer(gl, attribHandle, attribSlot);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeInt(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.INT;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeFloat(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.FLOAT;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeVec2(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.VEC2;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeVec3(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.VEC3;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeVec4(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.VEC4;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function AttributeIVec4(gl, attribHandle, arr) { 
+	attribHandle.type = ATTRIB_TYPE.IVEC4;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+function AttributeUnbind(gl, attribHandle, attribSlot) { 
+	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
+	gl.disableVertexAttribArray(attribSlot);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+function DestroyAttribute(gl, attribHandle) { 
+	gl.deleteBuffer(attribHandle.handle);
+	attribHandle.handle = null;
+}
+
+// Index buffers
+function MakeIndexBuffer(gl) {
+	let result = {};
+	result.handle = gl.createBuffer();
+	result.numIndices = 0;
+	let ext = gl.getExtension('OES_element_index_uint');
+	result.dataType = (ext === null) ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
+	return result;
+}
+
+// Expecting an ArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+// Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+function IndexBufferData(gl, bufferHandle, arr) {
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferHandle.handle);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+	bufferHandle.numIndices = arr.length;
+}
+
+function DestroyIndexBuffer(gl, bufferHandle) {
+	gl.deleteBuffer(bufferHandle.handle);
+	bufferHandle.handle = null;
+}
+
+// Uniforms
+function UniformInt(gl, uniformSlot, arg) { 
+	gl.uniform1f(uniformSlot, arg);
+}
+
+// Expects an Int32Array:  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array
+function UniformIntArray(gl, uniformSlot, arg) { 
+	gl.uniform1fv(uniformSlot, arg);
+}
+
+// Expects a float array of 3 elements [0, 1, 2]
+function UniformVec3(gl, uniformSlot, arg) { 
+	gl.uniform3f(uniformSlot, arg[0], arg[1], arg[2]);
+}
+
+// Expects a Float32Array: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array
+function UniformVec3Array(gl, uniformSlot, arg) { 
+	gl.uniform3fv(uniformSlot, arg);
+}
+
+// Expects a Float32Array: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array
+// Or an array of floating point values, 16 elements long
+function UniformMat4(gl, uniformSlot, arg) { 
+	gl.uniformMatrix4fv(uniformSlot, false, arg); 
+}
+
+// Textures
+function LoadTextureFromFile(gl, texFile) {
+	let result = {};
+	let texture = gl.createTexture();
+	result.handle = texture;
+	result.mIsLoaded = false;
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+
+	// Because images have to be download over the internet they might take a moment until they are ready.
+	// Until then put a single pixel in the texture so we can use it immediately. 
+	// When the image has finished downloading we'll update the texture with the contents of the image.
+	const level = 0;
+	const internalFormat = gl.RGBA;
+	const width = 1;
+	const height = 1;
+	const border = 0;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	const pixel = new Uint8Array([0, 0, 255, 255]);
+	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+
+	let image = new Image();
+	image.onload = function() {
+		result.mIsLoaded = true;
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+
+		// WebGL1 has different requirements for power of 2 images
+		// vs non power of 2 images so check if the image is a
+		// power of 2 in both dimensions.
+		//if (_IsPowerOf2(image.width) && _IsPowerOf2(image.height)) { // Yes, it's a power of 2. Generate mips.
+			// ASSUME EVERYTHING IS A POWER OF 2
+		gl.generateMipmap(gl.TEXTURE_2D);
+		//} else { // No, it's not a power of 2. Turn off mips and set wrapping to clamp to edge
+		//	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		//	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		//	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		//}
+	};
+	image.src = texFile;
+
+	return result;
+}
+
+function TextureIsDoneLoading(gl, texHandle) { 
+	return texHandle.mIsLoaded;
+}
+
+function TextureBind(gl, texHandle, uniformIndex, textureIndex) { 
+	gl.activeTexture(gl.TEXTURE0 + textureIndex);
+	gl.bindTexture(gl.TEXTURE_2D, texHandle.handle);
+	gl.uniform1i(uniformIndex, textureIndex);
+}
+
+function TextureUnbind(gl, textureIndex) { 
+	gl.activeTexture(gl.TEXTURE0 + textureIndex);
+	gl.bindTexture(gl.TEXTURE_2D, null);
+	gl.activeTexture(gl.TEXTURE0);
+}
+
+function DestroyTexture(gl, texHandle) { 
+	gl.deleteTexture(texHandle.handle);
+}
+
+// Drawing functions
+const DRAW_MODE = {
+	TRIANGLES: 0,
+	LINES: 1,
+	LINE_STRIP: 2,
+	POINTS: 3
+};
+
+function _DrawModeToGL(gl, drawMode) {
+	if (drawMode == DRAW_MODE.TRIANGLES) {
+		return gl.TRIANGLES;
+	}
+	else if (drawMode == DRAW_MODE.LINES) {
+		return gl.LINES;
+	}
+	else if (drawMode == DRAW_MODE.LINE_STRIP) {
+		return gl.LINE_STRIP;
+	}
+	else if (drawMode == DRAW_MODE.POINTS) {
+		return gl.POINTS;
+	}
+	console.error("Converting unknown draw mode");
+	return gl.TRIANGLES;
+}
+
+function Draw(gl, drawMode, indexBufferOrVertexCount) {
+	if (typeof indexBufferOrVertexCount==='number') {
+		gl.drawArrays(_DrawModeToGL(gl, drawMode), 0, indexBufferOrVertexCount);
+	}
+	else {
+		let numIndices = indexBufferOrVertexCount.numIndices;
+		let dataType = indexBufferOrVertexCount.dataType;
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferOrVertexCount.handle);
+		gl.drawElements(_DrawModeToGL(gl, drawMode), numIndices, dataType, 0);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+	}
+}

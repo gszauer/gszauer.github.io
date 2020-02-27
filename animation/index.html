@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>WEBGL Demo</title>
+  <meta name="description" content="WebGL Demo">
+  <meta name="author" content="Gabor Szauer">
+
+  <!--link rel="stylesheet" href="css/styles.css?v=1.0"-->
+  <!--script src="http://benvanik.github.com/WebGL-Inspector/core/embed.js"></script-->
+
+  <script src="vector.js"></script>
+  <script src="matrix.js"></script>
+  <script src="quaternion.js"></script>
+  <script src="transform.js"></script>
+  <script src="graphics.js"></script>
+  <script src="sample01.js"></script>
+
+  <script type="text/javascript">
+  	var gTimerMs = 0.0;
+
+	function loop(gl) {
+		let lastTime = gTimerMs;
+		let thisTime = gTimerMs = performance.now();
+		let deltaTime = (thisTime - lastTime) * 0.001;
+
+		gSample01.Loop(gl, gSample01, deltaTime);
+	}
+
+	function main() {
+		let canvas = document.querySelector("#glCanvas");
+		let gl = canvas.getContext("webgl");
+
+		if (gl === null) {
+			alert("Unable to initialize WebGL. Your browser or machine may not support it.");
+			return;
+		}
+
+		gSample01.Initialize(gl, gSample01);
+		gTimerMs = performance.now();
+		window.setInterval(loop, 16, gl);
+	}
+
+	window.onload = main;
+</script>
+</head>
+
+<body>
+  <canvas id="glCanvas" width="640" height="480"></canvas>
+</body>
+</html>
