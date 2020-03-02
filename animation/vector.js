@@ -46,7 +46,8 @@ function v3_sub(l, r) {
 }
 
 function v3_scale(v, f) {
-	return [v[0] * f, v[1] * f, v[2] * f];
+	let result = [v[0] * f, v[1] * f, v[2] * f];
+	return result;
 }
 
 function v3_mul(l, r) {
@@ -134,6 +135,14 @@ function v3_reflect(a, b) {
 	let scale = v3_dot(a, b) / magBSq;
 	let proj2 = v3_scale(b, scale * 2.0);
 	return v3_sub(a, proj2);
+}
+
+function v3_negate(v) {
+	return [
+		-v[0],
+		-v[1],
+		-v[2]
+	];
 }
 
 function v3_cross(l, r) {

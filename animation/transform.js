@@ -9,6 +9,14 @@ function t_identity() {
 	return result;
 }
 
+function t_copy(t) {
+	let result = {};
+	result.position = [t.position[0], t.position[1], t.position[2]];
+	result.rotation = [t.rotation[0], t.rotation[1], t.rotation[2], t.rotation[3]];
+	result.scale = [t.scale[0], t.scale[1], t.scale[2]];
+	return result;
+}
+
 function t_new(pos, rot, scl) {
 	let result = {};
 	result.position = [pos[0], pos[1], pos[2]];
@@ -23,7 +31,7 @@ function t_combine(a, b) {
 	result.scale = v3_mul(a.scale, b.scale);
 	result.rotation = q_mul(b.rotation, a.rotation);
 
-	result.position = q_transformVector(a.rotation, v3_scale(a.scale, b.position));
+	result.position = q_transformVector(a.rotation, v3_mul(a.scale, b.position));
 	result.position = v3_add(a.position, result.position);
 
 	return result;
@@ -61,9 +69,9 @@ function t_toMat4(t) {
 	let y = q_transformVector(t.rotation, [0, 1, 0]);
 	let z = q_transformVector(t.rotation, [0, 0, 1]);
 
-	x = v3_scale(x * t.scale.x);
-	y = v3_scale(y * t.scale.y);
-	z = v3_scale(z * t.scale.z);
+	x = v3_scale(x, t.scale[0]);
+	y = v3_scale(y, t.scale[1]);
+	z = v3_scale(z, t.scale[2]);
 
 	let p = t.position;
 

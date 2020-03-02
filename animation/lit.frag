@@ -9,11 +9,12 @@ uniform vec3 light;
 uniform sampler2D tex0;
 
 void main() {
-	vec4 diffuseColor = texture2D(tex0, uv);
+	vec3 diffuseColor = vec3(texture2D(tex0, uv));
 
 	vec3 n = normalize(norm);
 	vec3 l = normalize(light);
 	float diffuseIntensity = dot(n, l);
+	
 	if (diffuseIntensity < 0.0) {
 		diffuseIntensity = 0.0;
 	}
@@ -21,5 +22,5 @@ void main() {
 		diffuseIntensity = 1.0;
 	}
 
-	gl_FragColor = diffuseColor * diffuseIntensity;
+	gl_FragColor = vec4(diffuseColor * diffuseIntensity, 1);
 }

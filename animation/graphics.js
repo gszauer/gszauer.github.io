@@ -1,5 +1,10 @@
 /*jshint esversion: 6 */
 
+const INDEXBUFFER_TYPE = {
+	INT16: 0,
+	INT32: 1,
+};
+
 // Shader
 function _CompileShader(gl, source, type) {
 	let shader = gl.createShader(type);
@@ -179,6 +184,10 @@ function AttributeInt(gl, attribHandle, arr) {
 function AttributeFloat(gl, attribHandle, arr) { 
 	attribHandle.type = ATTRIB_TYPE.FLOAT;
 
+	if (arr.constructor !== Float32Array) {
+		console.error("Bad data type");
+	}
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
 	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -188,6 +197,10 @@ function AttributeFloat(gl, attribHandle, arr) {
 // Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 function AttributeVec2(gl, attribHandle, arr) { 
 	attribHandle.type = ATTRIB_TYPE.VEC2;
+
+	if (arr.constructor !== Float32Array) {
+		console.error("Bad data type");
+	}
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
 	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
@@ -199,6 +212,10 @@ function AttributeVec2(gl, attribHandle, arr) {
 function AttributeVec3(gl, attribHandle, arr) { 
 	attribHandle.type = ATTRIB_TYPE.VEC3;
 
+	if (arr.constructor !== Float32Array) {
+		console.error("Bad data type");
+	}
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
 	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -209,6 +226,10 @@ function AttributeVec3(gl, attribHandle, arr) {
 function AttributeVec4(gl, attribHandle, arr) { 
 	attribHandle.type = ATTRIB_TYPE.VEC4;
 
+	if (arr.constructor !== Float32Array) {
+		console.error("Bad data type");
+	}
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
 	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -218,6 +239,10 @@ function AttributeVec4(gl, attribHandle, arr) {
 // Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 function AttributeIVec4(gl, attribHandle, arr) { 
 	attribHandle.type = ATTRIB_TYPE.IVEC4;
+
+	if (arr.constructor !== Float32Array) {
+		console.error("Bad data type");
+	}
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, attribHandle.handle);
 	gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
@@ -242,6 +267,7 @@ function MakeIndexBuffer(gl) {
 	result.numIndices = 0;
 	let ext = gl.getExtension('OES_element_index_uint');
 	result.dataType = (ext === null) ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
+	result.componentType = (ext === null) ? INDEXBUFFER_TYPE.INT16 : INDEXBUFFER_TYPE.INT32;
 	return result;
 }
 
@@ -249,7 +275,12 @@ function MakeIndexBuffer(gl) {
 // Or a SharedArrayBuffer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 function IndexBufferData(gl, bufferHandle, arr) {
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferHandle.handle);
+	
+	if (arr.constructor != Uint16Array && arr.constructor != Uint32Array) {
+		console.error("Bad Data Type");
+	}
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+	
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	bufferHandle.numIndices = arr.length;
 }
