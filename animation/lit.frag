@@ -5,10 +5,10 @@ varying vec3 norm;
 varying vec3 fragPos;
 varying vec2 uv;
 
-uniform vec3 light;  
 uniform sampler2D tex0;
 
 void main() {
+	vec3 light = vec3(0, 1, 2);
 	vec3 diffuseColor = vec3(texture2D(tex0, uv));
 
 	vec3 n = normalize(norm);

@@ -8,6 +8,19 @@ function Sample(gl, canvas) {
 	this.mDebugName = "Sample";
 	this.mLastUpdateTime = performance.now();
 
+	var ext = gl.getExtension('OES_texture_float');
+	this.mCanGPUSkinUsingTextures = ext !== null;
+
+	let numUniformsNeededToSkin = (43 * 4 * 2) + 5 + 4 + 4;
+	let uniformsAvailable = gl.getParameter( gl.MAX_VERTEX_UNIFORM_VECTORS );
+	this.mCanGPUSkinUsingUniforms = uniformsAvailable >= numUniformsNeededToSkin;
+
+	this.mCanGPUSkin = this.mCanGPUSkinUsingUniforms || this.mCanGPUSkinUsingTextures;
+	
+	console.log("Can uniform skin: " + this.mCanGPUSkinUsingUniforms);
+	console.log("Can texture skin: " + this.mCanGPUSkinUsingTextures);
+	console.log("Can GPU Skin: " + this.mCanGPUSkin);
+
 	//this.mLastDesiredWidth = 0;
 	//this.mLastDesiredHeight = 0 ;
 	//this.mLastCanvasStyleWidth = 0;
@@ -65,6 +78,8 @@ Sample.prototype.Loop = function() {
 	let vVis = bounds.bottom >= 0  && bounds.top <= (window.innerHeight || document.documentElement.clientHeight);
 	let hVis = bounds.right >= 0 && bounds.left <= (window.innerWidth || document.documentElement.clientWidth);
 	let vis = hVis && vVis;
+	this.InvokeInitialize();
+	
 	if (!vis) {
 		return;
 	}
@@ -145,7 +160,6 @@ Sample.prototype.Loop = function() {
 		deltaTime = 0.0333;
 	}
 
-	this.InvokeInitialize();
 	this.InvokeLoad();
 	this.InvokeUpdate(deltaTime);
 	this.InvokeRender(aspectRatio);

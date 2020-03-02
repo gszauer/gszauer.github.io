@@ -24,9 +24,8 @@ function Sample03(gl, canvas) {
 	this.mAttribWeights = null;
 	this.mAttribIndices = null;
 	this.mUniformModel = null;
-	this.mUniformView = null;
-	this.mUniformProj =null;
-	this.mUniformLight = null;
+	this.mUniformMVP = null;
+	//this.mUniformLight = null;
 	this.mUniformTex = null;
 
 	this.mPoseUniforms = null;
@@ -67,15 +66,19 @@ Sample03.prototype.Load = function(gl) {
 		this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
 		this.mInvBindPalette = this.mWomanSkeleton.GetInvBindPose();
 
+		//let info = GetProgramInfo(gl, this.mShader.handle);
+		//console.log("shader: skinned.vert, lit.frag");
+		//console.log("num attribs: " + info.attributeCount);
+		//console.log("num uniforms: " + info.uniformCount);
+
 		this.mAttribPos = ShaderGetAttribute(gl, this.mShader, "position");
 		this.mAttribNorm= ShaderGetAttribute(gl, this.mShader, "normal");
 		this.mAttribUV= ShaderGetAttribute(gl, this.mShader, "texCoord");
 		this.mAttribWeights = ShaderGetAttribute(gl, this.mShader, "weights");
 		this.mAttribIndices = ShaderGetAttribute(gl, this.mShader, "joints");
 		this.mUniformModel = ShaderGetUniform(gl, this.mShader, "model");
-		this.mUniformView = ShaderGetUniform(gl, this.mShader, "view");
-		this.mUniformProj = ShaderGetUniform(gl, this.mShader, "projection");
-		this.mUniformLight = ShaderGetUniform(gl, this.mShader, "light");
+		this.mUniformMVP = ShaderGetUniform(gl, this.mShader, "mvp");
+		//this.mUniformLight = ShaderGetUniform(gl, this.mShader, "light");
 		this.mUniformTex = ShaderGetUniform(gl, this.mShader, "tex0");
 
 		if (this.mPosePalette.length != this.mInvBindPalette.length) {
@@ -109,12 +112,12 @@ Sample03.prototype.Render = function(gl, aspectRatio) {
 	let projection = m4_perspective(60.0, aspectRatio, 0.01, 1000.0);
 	let view = m4_lookAt([0, 5, 7], [0, 3, 0], [0, 1, 0]);
 	let model = m4_identity();
+	let mvp = m4_mul(m4_mul(projection, view), model);
 
 	ShaderBind(gl, this.mShader);
 
 	UniformMat4(gl, this.mUniformModel, model);
-	UniformMat4(gl, this.mUniformView, view);
-	UniformMat4(gl, this.mUniformProj, projection);
+	UniformMat4(gl, this.mUniformMVP, mvp);
 
 	let size = this.mPosePalette.length;
 	for (let i = 0; i < size; ++i) {
@@ -122,7 +125,7 @@ Sample03.prototype.Render = function(gl, aspectRatio) {
 		UniformMat4(gl, this.mInvUniforms[i], this.mInvBindPalette[i]);
 	}
 	
-	UniformVec3(gl, this.mUniformLight, [0, 0, 1]);
+	//UniformVec3(gl, this.mUniformLight, [0, 0, 1]);
 	TextureBind(gl, this.mDisplayTexture, this.mUniformTex, 0);
 
 	this.mWomanMesh.Bind(this.mAttribPos, this.mAttribNorm, this.mAttribUV, this.mAttribWeights, this.mAttribIndices);
