@@ -15,6 +15,26 @@ function Sample(gl, canvas) {
 	let uniformsAvailable = gl.getParameter( gl.MAX_VERTEX_UNIFORM_VECTORS );
 	this.mCanGPUSkinUsingUniforms = uniformsAvailable >= numUniformsNeededToSkin;
 
+	let vars = {};
+	let sample = this;
+	let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+		vars[key] = value;
+		if (key=="skin") {
+			if (value == "uniform") {
+				sample.mCanGPUSkinUsingUniforms = true;
+				sample.mCanGPUSkinUsingTextures = false;
+			}
+			else if (value == "texture") {
+				sample.mCanGPUSkinUsingUniforms = false;
+				sample.mCanGPUSkinUsingTextures = true;
+			}
+			else if (value == "cpu") {
+				sample.mCanGPUSkinUsingUniforms = false;
+				sample.mCanGPUSkinUsingTextures = false;
+			}
+		}
+	});
+
 	this.mCanGPUSkin = this.mCanGPUSkinUsingUniforms || this.mCanGPUSkinUsingTextures;
 	
 	console.log("Can uniform skin: " + this.mCanGPUSkinUsingUniforms);

@@ -19,13 +19,13 @@
 		<script src="mesh.js"></script>
 
 		<script src="sample.js"></script>
-		<script src="sample03.js"></script>
+		<script src="full.js"></script>
 
 		<script type="text/javascript">
-			var gSample03 = null;
+			var gApplication = null;
 
 			function loop() {
-				gSample03.Loop();
+				gApplication.Loop();
 			}
 
 			function main() {
@@ -37,7 +37,7 @@
 					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 					return;
 				}
-				gSample03 = new Sample03(gl, canvas);
+				gApplication = new FullPageAnimated(gl, canvas);
 
 				window.setInterval(loop, 16);
 			}
@@ -46,8 +46,8 @@
 		</script>
 	</head>
 
-	<body style="border: 0;margin: 0;padding: 0;">
-		<div style="width: 100vw; height:100vh; display: block;">
+	<body style="border: 0px;margin: 0px;padding: 0px;">
+		<div style="width: 100%; height:100vh; position:relative;overflow:hidden;">
 			<canvas id="glCanvasThree" style="width: 100%; height:100%;"></canvas>
 		</div>
 	</body>

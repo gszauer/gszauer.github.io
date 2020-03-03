@@ -93,6 +93,9 @@ function LoadShaderFromString(gl, vertSource, fragSource) {
 }
 
 function ShaderIsDoneLoading(gl, shaderHandle) { 
+	if (shaderHandle == null) {
+		return true;
+	}
 	return shaderHandle.mIsLoaded;
 }
 
@@ -292,6 +295,10 @@ function DestroyIndexBuffer(gl, bufferHandle) {
 
 // Uniforms
 function UniformInt(gl, uniformSlot, arg) { 
+	gl.uniform1f(uniformSlot, arg);
+}
+
+function UniformFloat(gl, uniformSlot, arg) { 
 	gl.uniform1f(uniformSlot, arg);
 }
 

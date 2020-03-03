@@ -10,28 +10,47 @@ attribute vec2 texCoord;
 attribute vec4 weights;
 attribute vec4 joints;
 
-uniform mat4 pose[43];
-uniform mat4 invBindPose[43];
+uniform sampler2D boneMatrixTexture;
+uniform float numBones;
 
 varying vec3 norm;
 varying vec3 fragPos;
 varying vec2 uv;
 
-void main() {
-	ivec4 j = ivec4(
-		int(joints.x + 0.3),
-		int(joints.y + 0.3),
-		int(joints.z + 0.3),
-		int(joints.w + 0.3)
+#define ROW0_U ((0.5 + 0.0) / 4.)
+#define ROW1_U ((0.5 + 1.0) / 4.)
+#define ROW2_U ((0.5 + 2.0) / 4.)
+#define ROW3_U ((0.5 + 3.0) / 4.)
+ 
+mat4 getBoneMatrix(float boneNdx) {
+  float v = (boneNdx + 0.5) / numBones;
+	return mat4(
+		texture2D(boneMatrixTexture, vec2(ROW0_U, v)),
+		texture2D(boneMatrixTexture, vec2(ROW1_U, v)),
+		texture2D(boneMatrixTexture, vec2(ROW2_U, v)),
+		texture2D(boneMatrixTexture, vec2(ROW3_U, v))
 	);
-	mat4 skin = (pose[j.x] * invBindPose[j.x]) * weights.x;
-		 skin += (pose[j.y] * invBindPose[j.y]) * weights.y;
-		 skin += (pose[j.z] * invBindPose[j.z]) * weights.z;
-		 skin += (pose[j.w] * invBindPose[j.w]) * weights.w;
+}
 
-	gl_Position = mvp * skin * vec4(position, 1.0);
+void main() {
+	mat4 bm0 = getBoneMatrix(joints.x);
+	mat4 bm1 = getBoneMatrix(joints.y);
+	mat4 bm2 = getBoneMatrix(joints.z);
+	mat4 bm3 = getBoneMatrix(joints.w);
 
-	fragPos = vec3(model * skin * vec4(position, 1.0));
-	norm = vec3(model * skin * vec4(normal, 0.0));
+	vec4 pos =  bm0 * vec4(position, 1.0) * weights.x+
+				bm1 * vec4(position, 1.0) * weights.y+
+				bm2 * vec4(position, 1.0) * weights.z+
+				bm3 * vec4(position, 1.0) * weights.w;
+
+	gl_Position = mvp * pos;
+	fragPos = vec3(model * pos);
+
+	vec4 n =  bm0 * vec4(normal, 0.0) * weights.x+
+			  bm1 * vec4(normal, 0.0) * weights.y+
+			  bm2 * vec4(normal, 0.0) * weights.z+
+			  bm3 * vec4(normal, 0.0) * weights.w;
+
+	norm = vec3(model * n);
 	uv = texCoord;
 }
