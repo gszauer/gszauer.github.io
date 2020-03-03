@@ -9,6 +9,7 @@ function Sample(gl, canvas) {
 	this.mLastUpdateTime = performance.now();
 	this.mSkipClear = false;
 	this.mSkipResize = false;
+	this.mTimeMod = 1.0;
 
 	this.mCanGPUSkinUsingTextures = IsExtensionSupported(gl, EXTENSION_TYPE.FLOATTEX);
 
@@ -43,6 +44,9 @@ function Sample(gl, canvas) {
 			if (value == "short") {
 				// For documentation only
 			}
+		}
+		else if (key=="time") {
+			sample.mTimeMod  = parseFloat(value);
 		}
 	});
 
@@ -88,7 +92,7 @@ Sample.prototype.Update = function(gl, deltaTime) { }
 
 Sample.prototype.InvokeUpdate = function(deltaTime) {
 	if (this.mIsRunning) {
-		this.Update(this.mGl, deltaTime);
+		this.Update(this.mGl, deltaTime * this.mTimeMod);
 	}
 }
 

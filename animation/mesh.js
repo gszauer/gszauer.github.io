@@ -65,12 +65,12 @@ Mesh.prototype.CPUSkin = function(skeleton, pose) {
 			let p = [this.mCPUPositionRef[i * 3 + 0], this.mCPUPositionRef[i * 3 + 1], this.mCPUPositionRef[i * 3 + 2]];
 			p = v3_add(
 				v3_add(
-					(w[0] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[0]], p), w[0]),
-					(w[1] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[1]], p), w[1])
+					v3_scale(m4_transformPoint(this.mPosePalette[j[0]], p), w[0]),
+					v3_scale(m4_transformPoint(this.mPosePalette[j[1]], p), w[1])
 				),
 				v3_add(
-					(w[2] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[2]], p), w[2]),
-					(w[3] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[3]], p), w[3])
+					v3_scale(m4_transformPoint(this.mPosePalette[j[2]], p), w[2]),
+					v3_scale(m4_transformPoint(this.mPosePalette[j[3]], p), w[3])
 				)
 			);
 
