@@ -37,7 +37,7 @@ function FullPageAnimated(gl, canvas) {
 	this.mBoneArray = null;
 
 	this.mDebugName = "FullPageAnimated";
-	this.this.mSkipClear = true;
+	this.mSkipClear = true;
 }
 
 FullPageAnimated.prototype = Object.create(Sample.prototype);
