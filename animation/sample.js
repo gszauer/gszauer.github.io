@@ -37,7 +37,7 @@ function Sample(gl, canvas) {
 		}
 		else if (key == "resize") {
 			if (value == "no") {
-				this.mSkipResize = true;
+				sample.mSkipResize = true;
 			}
 		}
 	});
