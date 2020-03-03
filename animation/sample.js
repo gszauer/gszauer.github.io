@@ -7,6 +7,8 @@ function Sample(gl, canvas) {
 	this.mIsLoading =false;
 	this.mDebugName = "Sample";
 	this.mLastUpdateTime = performance.now();
+	this.mSkipClear = false;
+	this.mSkipResize = false;
 
 	var ext = gl.getExtension('OES_texture_float');
 	this.mCanGPUSkinUsingTextures = ext !== null;
@@ -31,6 +33,11 @@ function Sample(gl, canvas) {
 			else if (value == "cpu") {
 				sample.mCanGPUSkinUsingUniforms = false;
 				sample.mCanGPUSkinUsingTextures = false;
+			}
+		}
+		else if (key == "resize") {
+			if (value == "no") {
+				this.mSkipResize = true;
 			}
 		}
 	});
@@ -84,9 +91,10 @@ Sample.prototype.InvokeUpdate = function(deltaTime) {
 Sample.prototype.Render = function(gl, aspectRatio) { }
 
 Sample.prototype.InvokeRender = function(aspectRatio) {
-	this.mGl.clearColor(0.5, 0.6, 0.7, 1.0);
-	this.mGl.clear(this.mGl.COLOR_BUFFER_BIT | this.mGl.DEPTH_BUFFER_BIT);
-
+	if (this.mSkipClear) {
+		this.mGl.clearColor(0.5, 0.6, 0.7, 1.0);
+		this.mGl.clear(this.mGl.COLOR_BUFFER_BIT | this.mGl.DEPTH_BUFFER_BIT);
+	}
 	if (this.mIsRunning) {
 		this.Render(this.mGl, aspectRatio);
 	}
@@ -161,11 +169,13 @@ Sample.prototype.Loop = function() {
 	this.mLastDesiredHeight = displayHeight;
 
 	if (this.mNumFramesSinceLastResize == 0 && (this.mCanvas.width  !== displayWidth || this.mCanvas.height !== displayHeight)) {
-		gl.canvas.width  = displayWidth;
-		gl.canvas.height = displayHeight;
-		gl.scissor(0, 0, this.mCanvas.width, this.mCanvas.height);
-		gl.viewport(0, 0, this.mCanvas.width, this.mCanvas.height);
-		//console.log("Resized: " + this.mDebugName);
+		if (!this.mSkipResize) {
+			gl.canvas.width  = displayWidth;
+			gl.canvas.height = displayHeight;
+			gl.scissor(0, 0, this.mCanvas.width, this.mCanvas.height);
+			gl.viewport(0, 0, this.mCanvas.width, this.mCanvas.height);
+			//console.log("Resized: " + this.mDebugName);
+		}
 	}
 
 	let thisTime = performance.now();
