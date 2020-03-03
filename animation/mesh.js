@@ -74,12 +74,12 @@ Mesh.prototype.CPUSkin = function(skeleton, pose) {
 				)
 			);
 
-			if (isNaN(p[0]) || isNaN(p[1]) || isNaN(p[2])) {
+			/*if (isNaN(p[0]) || isNaN(p[1]) || isNaN(p[2])) {
 				console.logerror("skinned nan");
 			}
 			if (p[0] == p[1] && p[1] == p[2] && p[2] == 0.0) {
 				console.log("skinned 0");
-			}
+			}*/
 
 			this.mPosition[i * 3 + 0] = p[0];
 			this.mPosition[i * 3 + 1] = p[1];
