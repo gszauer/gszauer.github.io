@@ -52,34 +52,28 @@ Mesh.prototype.CPUSkin = function(skeleton, pose) {
 	
 	pose.GetMatrixPalette(this.mPosePalette);
 	let invPosePalette = skeleton.GetInvBindPose();
+	let numBones = this.mPosePalette.length;
+	for (let i = 0; i < numBones; ++i) {
+		this.mPosePalette[i] = m4_mul(this.mPosePalette[i], invPosePalette[i]);
+	}
 
 	for (let i = 0; i < numVerts; i++) {
 		let j = [this.mInfluences[i * 4 + 0], this.mInfluences[i * 4 + 1], this.mInfluences[i * 4 + 2], this.mInfluences[i * 4 + 3]];
 		let w = [this.mWeights[i * 4 + 0], this.mWeights[i * 4 + 1], this.mWeights[i * 4 + 2], this.mWeights[i * 4 + 3]];
 
-		let m0 = m4_zero();
-		let m1 = m4_zero();
-		let m2 = m4_zero();
-		let m3 = m4_zero();
-
-		if (w[0] > 0.00001) {
-			m0 = m4_scale(m4_mul(this.mPosePalette[j[0]], invPosePalette[j[0]]), w[0]);
-		}
-		if (w[1] > 0.00001) {
-			m1 = m4_scale(m4_mul(this.mPosePalette[j[1]], invPosePalette[j[1]]), w[1]);
-		}
-		if (w[2] > 0.00001) {
-			m2 = m4_scale(m4_mul(this.mPosePalette[j[2]], invPosePalette[j[2]]), w[2]);
-		}
-		if (w[3] > 0.00001) {
-			m3 = m4_scale(m4_mul(this.mPosePalette[j[3]], invPosePalette[j[3]]), w[3]);
-		}
-		
-		let skin = m4_add(m4_add(m0, m1), m4_add(m2, m3));
-
 		if (this.mCPUPositionRef.length > 0) {
 			let p = [this.mCPUPositionRef[i * 3 + 0], this.mCPUPositionRef[i * 3 + 1], this.mCPUPositionRef[i * 3 + 2]];
-			p = m4_transformPoint(skin, p);
+			p = v3_add(
+				v3_add(
+					(w[0] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[0]], p), w[0]),
+					(w[1] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[1]], p), w[1])
+				),
+				v3_add(
+					(w[2] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[2]], p), w[2]),
+					(w[3] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformPoint(this.mPosePalette[j[3]], p), w[3])
+				)
+			);
+
 			this.mPosition[i * 3 + 0] = p[0];
 			this.mPosition[i * 3 + 1] = p[1];
 			this.mPosition[i * 3 + 2] = p[2];
@@ -89,7 +83,16 @@ Mesh.prototype.CPUSkin = function(skeleton, pose) {
 		}
 		if (this.mNormal.length > 0 && this.mCPUNormRef.length > 0) {
 			let n = [this.mCPUNormRef[i * 3 + 0], this.mCPUNormRef[i * 3 + 1], this.mCPUNormRef[i * 3 + 2]];
-			n = m4_transformVector(skin, n);
+			n = v3_add(
+				v3_add(
+					(w[0] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformVector(this.mPosePalette[j[0]], n), w[0]),
+					(w[1] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformVector(this.mPosePalette[j[1]], n), w[1])
+				),
+				v3_add(
+					(w[2] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformVector(this.mPosePalette[j[2]], n), w[2]),
+					(w[3] < 0.00001)? [0, 0, 0] : v3_scale(m4_transformVector(this.mPosePalette[j[3]], n), w[3])
+				)
+			);
 			this.mNormal[i * 3 + 0] = n[0];
 			this.mNormal[i * 3 + 1] = n[1];
 			this.mNormal[i * 3 + 2] = n[2];

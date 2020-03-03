@@ -5,6 +5,39 @@ const INDEXBUFFER_TYPE = {
 	INT32: 1,
 };
 
+const EXTENSION_TYPE = {
+	UINTINDEX: 0,
+	FLOATTEX: 1
+};
+
+function IsExtensionSupported(gl, ext) {
+	let force16 = false;
+
+	let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+		if (key == "index") {
+			if (value == "short") {
+				force16 = true;
+			}
+		}
+	});
+
+	if (ext == EXTENSION_TYPE.UINTINDEX) {
+		if (!force16) {
+			let ext = gl.getExtension('OES_element_index_uint');
+			return ext !== null;
+		}
+		else {
+			return false;
+		}
+	}
+	if (ext == EXTENSION_TYPE.FLOATTEX) {
+		var ext = gl.getExtension('OES_texture_float');
+		return ext !== null;
+	}
+
+	return false;
+}
+
 // Shader
 function _CompileShader(gl, source, type) {
 	let shader = gl.createShader(type);
@@ -268,9 +301,9 @@ function MakeIndexBuffer(gl) {
 	let result = {};
 	result.handle = gl.createBuffer();
 	result.numIndices = 0;
-	let ext = gl.getExtension('OES_element_index_uint');
-	result.dataType = (ext === null) ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
-	result.componentType = (ext === null) ? INDEXBUFFER_TYPE.INT16 : INDEXBUFFER_TYPE.INT32;
+	let ext = IsExtensionSupported(gl, EXTENSION_TYPE.UINTINDEX);
+	result.dataType = ext ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+	result.componentType = ext ? INDEXBUFFER_TYPE.INT32 : INDEXBUFFER_TYPE.INT16;
 	return result;
 }
 

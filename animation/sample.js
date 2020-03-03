@@ -10,17 +10,16 @@ function Sample(gl, canvas) {
 	this.mSkipClear = false;
 	this.mSkipResize = false;
 
-	var ext = gl.getExtension('OES_texture_float');
-	this.mCanGPUSkinUsingTextures = ext !== null;
+	this.mCanGPUSkinUsingTextures = IsExtensionSupported(gl, EXTENSION_TYPE.FLOATTEX);
 
 	let numUniformsNeededToSkin = (43 * 4 * 2) + 5 + 4 + 4;
 	let uniformsAvailable = gl.getParameter( gl.MAX_VERTEX_UNIFORM_VECTORS );
 	this.mCanGPUSkinUsingUniforms = uniformsAvailable >= numUniformsNeededToSkin;
 
-	let vars = {};
+	//let vars = {};
 	let sample = this;
 	let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-		vars[key] = value;
+		//vars[key] = value;
 		if (key=="skin") {
 			if (value == "uniform") {
 				sample.mCanGPUSkinUsingUniforms = true;
@@ -38,6 +37,11 @@ function Sample(gl, canvas) {
 		else if (key == "resize") {
 			if (value == "no") {
 				sample.mSkipResize = true;
+			}
+		}
+		else if (key == "index") {
+			if (value == "short") {
+				// For documentation only
 			}
 		}
 	});
