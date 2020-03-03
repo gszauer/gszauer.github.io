@@ -185,7 +185,7 @@ FullPageAnimated.prototype.Render = function(gl, aspectRatio) {
 	}
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	let projection = m4_perspective(60.0, aspectRatio, 0.01, 100.0);
+	let projection = m4_perspective(60.0, aspectRatio, 0.3, 50.0);
 	let view = m4_lookAt([0, 5, 7], [0, 3, 0], [0, 1, 0]);
 	let model = m4_identity();
 	let mvp = m4_mul(m4_mul(projection, view), model);
