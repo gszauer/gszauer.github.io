@@ -17,6 +17,7 @@ function FullPageAnimated(gl, canvas) {
 
 	this.mPosePalette = null;
 	this.mInvBindPalette = null;
+	this.mCombinedPalette = null;
 
 	this.mShaders = null;
 	
@@ -30,8 +31,10 @@ function FullPageAnimated(gl, canvas) {
 	this.mUniformTex = null;
 	this.mUniformPoseTex = null;
 	this.mUniformNumBones = null;
-	this.mPoseUniforms = null;
-	this.mInvUniforms = null;
+	
+	//this.mPoseUniforms = null;
+	//this.mInvUniforms = null;
+	this.mPaletteUniforms = null;
 
 	this.mBoneMatrixtexture = null;
 	this.mBoneArray = null;
@@ -81,9 +84,13 @@ FullPageAnimated.prototype.Load = function(gl) {
 		
 		this.mWomanPlaybackTime = this.mWalkingClip.GetStartTime();
 		this.mPosePalette = [];
+		this.mCombinedPalette = [];
 		this.mInvBindPalette = [];
 		this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
 		this.mInvBindPalette = this.mWomanSkeleton.GetInvBindPose();
+		for (let i = 0; i < this.mPosePalette.length; ++i) {
+			this.mCombinedPalette.push(m4_identity());
+		}
 
 		this.mAttribPos = [];
 		this.mAttribNorm= [];
@@ -109,14 +116,16 @@ FullPageAnimated.prototype.Load = function(gl) {
 			this.mUniformNumBones.push(this.mShaders[i] == null? null : ShaderGetUniform(gl, this.mShaders[i], "numBones"));
 		}
 		let len = this.mPosePalette.length;
-		this.mPoseUniforms = [];
-		this.mInvUniforms = [];
+		//this.mPoseUniforms = [];
+		//this.mInvUniforms = [];
+		this.mPaletteUniforms = [];
 		for (let i = 0; i < len; ++i) {
-			this.mPoseUniforms.push(this.mShaders[0] == null? null : ShaderGetUniform(gl, this.mShaders[0], "pose[" + i + "]"));
-			this.mInvUniforms.push(this.mShaders[0] == null? null : ShaderGetUniform(gl, this.mShaders[0], "invBindPose[" + i + "]"));
+			//this.mPoseUniforms.push(this.mShaders[0] == null? null : ShaderGetUniform(gl, this.mShaders[0], "pose[" + i + "]"));
+			//this.mInvUniforms.push(this.mShaders[0] == null? null : ShaderGetUniform(gl, this.mShaders[0], "invBindPose[" + i + "]"));
+			this.mPaletteUniforms.push(this.mShaders[0] == null? null : ShaderGetUniform(gl, this.mShaders[0], "palette[" + i + "]"));
 		}
 
-		if (this.mPosePalette.length != this.mInvBindPalette.length) {
+		if (this.mPosePalette.length != this.mInvBindPalette.length || this.mPosePalette.length != this.mCombinedPalette.length) {
 			console.error("bad pose lengths");
 		}
 		this.mBoneArray = new Float32Array(this.mPosePalette.length * 16);
@@ -138,6 +147,10 @@ FullPageAnimated.prototype.Update = function(gl, deltaTime) {
 
 	if (this.mCanGPUSkinUsingUniforms) {
 		this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
+		let len = this.mPosePalette.length;
+		for (let i = 0; i < len; ++i) {
+			this.mCombinedPalette[i] = m4_mul(this.mPosePalette[i], this.mInvBindPalette[i]);
+		}
 	}
 	else if (this.mCanGPUSkinUsingTextures) {
 		this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
@@ -185,7 +198,10 @@ FullPageAnimated.prototype.Render = function(gl, aspectRatio) {
 	}
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	let projection = m4_perspective(60.0, aspectRatio, 3.0, 100.0);
+	let near = this.mNear? this.mNear : 3.0;
+	let far = this.mFar? this.mFar : 100.0;
+
+	let projection = m4_perspective(60.0, aspectRatio, near, far);
 	let view = m4_lookAt([0, 5, 7], [0, 3, 0], [0, 1, 0]);
 	let model = m4_identity();
 	let mvp = m4_mul(m4_mul(projection, view), model);
@@ -200,8 +216,9 @@ FullPageAnimated.prototype.Render = function(gl, aspectRatio) {
 
 		let size = this.mPosePalette.length;
 		for (let i = 0; i < size; ++i) {
-			UniformMat4(gl, this.mPoseUniforms[i], this.mPosePalette[i]);
-			UniformMat4(gl, this.mInvUniforms[i], this.mInvBindPalette[i]);
+			UniformMat4(gl, this.mPaletteUniforms[i], this.mCombinedPalette[i]);
+			//UniformMat4(gl, this.mPoseUniforms[i], this.mPosePalette[i]);
+			//UniformMat4(gl, this.mInvUniforms[i], this.mInvBindPalette[i]);
 		}
 		
 		TextureBind(gl, this.mDisplayTexture, this.mUniformTex[r], 0);

@@ -10,10 +10,12 @@ function Sample(gl, canvas) {
 	this.mSkipClear = false;
 	this.mSkipResize = false;
 	this.mTimeMod = 1.0;
+	this.mNear = null;
+	this.mFar = null;
 
 	this.mCanGPUSkinUsingTextures = IsExtensionSupported(gl, EXTENSION_TYPE.FLOATTEX);
 
-	let numUniformsNeededToSkin = (43 * 4 * 2) + 5 + 4 + 4;
+	let numUniformsNeededToSkin = (43 * 4) + 5 + 4 + 4;
 	let uniformsAvailable = gl.getParameter( gl.MAX_VERTEX_UNIFORM_VECTORS );
 	this.mCanGPUSkinUsingUniforms = uniformsAvailable >= numUniformsNeededToSkin;
 
@@ -47,6 +49,12 @@ function Sample(gl, canvas) {
 		}
 		else if (key=="time") {
 			sample.mTimeMod  = parseFloat(value);
+		}
+		else if (key == "near" || key == "n") {
+			sample.mNear = parseFloat(value);
+		}
+		else if (key == "far" || key == "f") {
+			sample.mFar = parseFloat(value);
 		}
 	});
 
@@ -100,7 +108,7 @@ Sample.prototype.InvokeUpdate = function(deltaTime) {
 Sample.prototype.Render = function(gl, aspectRatio) { }
 
 Sample.prototype.InvokeRender = function(aspectRatio) {
-	if (this.mSkipClear) {
+	if (!this.mSkipClear) {
 		this.mGl.clearColor(0.5, 0.6, 0.7, 1.0);
 		this.mGl.clear(this.mGl.COLOR_BUFFER_BIT | this.mGl.DEPTH_BUFFER_BIT);
 	}
