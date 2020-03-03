@@ -44,6 +44,7 @@ FullPageAnimated.prototype = Object.create(Sample.prototype);
 FullPageAnimated.prototype.constructor = FullPageAnimated;
 
 FullPageAnimated.prototype.Initialize = function (gl) {
+	this.mSkipClear = true;
 	this.mShaders = [];
 	// TODO: OR NULL!
 	this.mShaders.push(this.mCanGPUSkinUsingUniforms? LoadShaderFromFile(gl, "skinned.vert", "lit.frag") : null);

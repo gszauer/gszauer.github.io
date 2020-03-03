@@ -55,6 +55,7 @@ function Sample(gl, canvas) {
 	console.log("Can uniform skin: " + this.mCanGPUSkinUsingUniforms);
 	console.log("Can texture skin: " + this.mCanGPUSkinUsingTextures);
 	console.log("Can GPU Skin: " + this.mCanGPUSkin);
+	console.log("int index buffer: " + IsExtensionSupported(EXTENSION_TYPE.UINTINDEX));
 
 	//this.mLastDesiredWidth = 0;
 	//this.mLastDesiredHeight = 0 ;
