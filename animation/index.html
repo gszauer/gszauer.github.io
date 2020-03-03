@@ -7,6 +7,7 @@
 		<meta name="description" content="WebGL Demo">
 		<meta name="author" content="Gabor Szauer">
 
+		<!--link rel="stylesheet" href="css/styles.css?v=1.0"-->
 		<!--script src="http://benvanik.github.com/WebGL-Inspector/core/embed.js"></script-->
 
 		<script src="vector.js"></script>
@@ -18,77 +19,40 @@
 		<script src="mesh.js"></script>
 
 		<script src="sample.js"></script>
-		<script src="sample01.js"></script>
-		<script src="sample02.js"></script>
-		<script src="sample03.js"></script>
-		<script src="sample04.js"></script>
+		<script src="full.js"></script>
 
 		<script type="text/javascript">
-			var gSample01 = null;
-			var gSample02 = null;
-			var gSample03 = null;
-			var gSample04 = null;
+			var gApplication = null;
 
 			function loop() {
-				gSample01.Loop();
-				gSample02.Loop();
-				gSample03.Loop();
-				gSample04.Loop();
+				gApplication.Loop();
 			}
 
 			function main() {
-				let canvas = document.querySelector("#glCanvasOne");
+				let canvas = document.querySelector("#glCanvasThree");
 				let gl = canvas.getContext("webgl");
-				if (gl === null) {
-					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
-					return;
-				}
-				gSample01 = new Sample01(gl, canvas);
-
-				canvas = document.querySelector("#glCanvasTwo");
-				gl = canvas.getContext("webgl");
 				gl.enable(gl.DEPTH_TEST);
 				gl.enable(gl.CULL_FACE);
 				if (gl === null) {
 					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 					return;
 				}
-				gSample02 = new Sample02(gl, canvas);
-
-				canvas = document.querySelector("#glCanvasThree");
-				gl = canvas.getContext("webgl");
-				gl.enable(gl.DEPTH_TEST);
-				gl.enable(gl.CULL_FACE);
-				if (gl === null) {
-					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
-					return;
-				}
-				gSample03 = new Sample03(gl, canvas);
-
-				canvas = document.querySelector("#glCanvasFour");
-				gl = canvas.getContext("webgl");
-				gl.enable(gl.DEPTH_TEST);
-				gl.enable(gl.CULL_FACE);
-				if (gl === null) {
-					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
-					return;
-				}
-				gSample04 = new Sample04(gl, canvas);
+				gApplication = new FullPageAnimated(gl, canvas);
 
 				window.setInterval(loop, 16);
 			}
 
 			window.onload = main;
+
+			window.onresize = function() {
+				document.body.height = window.innerHeight;
+			}
 		</script>
 	</head>
 
-	<body>
-		<canvas id="glCanvasOne" style="width: 60%; height:auto;"></canvas>
-		<!--p style="height: 800px;"></p-->
-		<canvas id="glCanvasTwo" style="width: 50%; height:auto;"></canvas>
-		<!--p style="height: 100px;"></p-->
-		<canvas id="glCanvasThree" style="width: 60%; height:auto;"></canvas>
-		<!--p style="height: 100px;"></p-->
-		<canvas id="glCanvasFour" style="width: 60%; height:auto;"></canvas>
+	<body style="border: 0px;margin: 0px;padding: 0px;">
+		<div style="width: 100%; height:100vh; position:relative;overflow:hidden;">
+			<canvas id="glCanvasThree" style="width: 100%; height:100%;"></canvas>
+		</div>
 	</body>
 </html>

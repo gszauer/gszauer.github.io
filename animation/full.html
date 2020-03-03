@@ -32,7 +32,7 @@
 				let canvas = document.querySelector("#glCanvasThree");
 				let gl = canvas.getContext("webgl");
 				gl.enable(gl.DEPTH_TEST);
-				//gl.enable(gl.CULL_FACE);
+				gl.enable(gl.CULL_FACE);
 				if (gl === null) {
 					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 					return;
