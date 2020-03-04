@@ -16,6 +16,7 @@ function Sample03(gl, canvas) {
 
 	this.mPosePalette = null;
 	this.mInvBindPalette = null;
+	this.mCombinedPalette = null;
 
 	this.mShader = null;
 	this.mAttribPos = null;
@@ -27,9 +28,8 @@ function Sample03(gl, canvas) {
 	this.mUniformMVP = null;
 	//this.mUniformLight = null;
 	this.mUniformTex = null;
+	this.mUniformsPalette = null;
 
-	this.mPoseUniforms = null;
-	this.mInvUniforms = null;
 
 	this.mDebugName = "Sample03";
 }
@@ -63,8 +63,12 @@ Sample03.prototype.Load = function(gl) {
 		this.mWomanPlaybackTime = this.mWalkingClip.GetStartTime();
 		this.mPosePalette = [];
 		this.mInvBindPalette = [];
+		this.mCombinedPalette = [];
 		this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
 		this.mInvBindPalette = this.mWomanSkeleton.GetInvBindPose();
+		for (let i = 0; i < this.mPosePalette.length; ++i) {
+			this.mCombinedPalette.push(m4_identity());
+		}
 
 		//let info = GetProgramInfo(gl, this.mShader.handle);
 		//console.log("shader: skinned.vert, lit.frag");
@@ -81,16 +85,15 @@ Sample03.prototype.Load = function(gl) {
 		//this.mUniformLight = ShaderGetUniform(gl, this.mShader, "light");
 		this.mUniformTex = ShaderGetUniform(gl, this.mShader, "tex0");
 
-		if (this.mPosePalette.length != this.mInvBindPalette.length) {
+		if (this.mPosePalette.length != this.mInvBindPalette.length || this.mCombinedPalette.length != this.mPosePalette.length) {
 			console.error("bad pose lengths");
 		}
 
 		let len = this.mPosePalette.length;
-		this.mPoseUniforms = [];
+		this.mUniformsPalette = [];
 		this.mInvUniforms = [];
 		for (let i = 0; i < len; ++i) {
-			this.mPoseUniforms.push(ShaderGetUniform(gl, this.mShader, "pose[" + i + "]"));
-			this.mInvUniforms.push(ShaderGetUniform(gl, this.mShader, "invBindPose[" + i + "]"));
+			this.mUniformsPalette.push(ShaderGetUniform(gl, this.mShader, "palette[" + i + "]"));
 		}
 
 		this.mVertexPositions = MakeAttribute(gl);
@@ -106,6 +109,10 @@ Sample03.prototype.Load = function(gl) {
 Sample03.prototype.Update = function(gl, deltaTime) {
 	this.mWomanPlaybackTime = this.mWalkingClip.Sample(this.mWomanAnimatedPose, this.mWomanPlaybackTime + deltaTime);
 	this.mWomanAnimatedPose.GetMatrixPalette(this.mPosePalette);
+	let len = this.mPosePalette.length;
+	for (let i = 0; i < len; ++i) {
+		this.mCombinedPalette[i] = m4_mul(this.mPosePalette[i], this.mInvBindPalette[i]);
+	}
 };
 
 Sample03.prototype.Render = function(gl, aspectRatio) {
@@ -119,10 +126,9 @@ Sample03.prototype.Render = function(gl, aspectRatio) {
 	UniformMat4(gl, this.mUniformModel, model);
 	UniformMat4(gl, this.mUniformMVP, mvp);
 
-	let size = this.mPosePalette.length;
+	let size = this.mCombinedPalette.length;
 	for (let i = 0; i < size; ++i) {
-		UniformMat4(gl, this.mPoseUniforms[i], this.mPosePalette[i]);
-		UniformMat4(gl, this.mInvUniforms[i], this.mInvBindPalette[i]);
+		UniformMat4(gl, this.mUniformsPalette[i], this.mCombinedPalette[i]);
 	}
 	
 	//UniformVec3(gl, this.mUniformLight, [0, 0, 1]);
