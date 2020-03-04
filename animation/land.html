@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>Game Animation Programming</title>
+		<meta name="description" content="Game Animation Programming">
+		<meta name="author" content="Gabor Szauer">
+
+		<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+
+		<style>
+			body {
+				background-color: #1F2933;
+				font-family: 'Montserrat', sans-serif;
+			}
+			div {
+				border-style: none;
+				max-width: 800px;
+				margin: auto;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				padding: 20px;
+				background-color: #616E7C;
+				text-align: left;
+			}
+			p {
+				font-size: 1em;
+			}
+			h1 {
+				color: #E4E7EB;
+			}
+			div.section>h1 {
+				background-color: #3E4C59;
+				margin-top: -20px;
+				margin-left: -20px;
+				margin-right: -20px;
+				padding: 20px;
+			}
+			div.info {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			div.info>h1 {
+				font-size: 1.2em;
+				background-color: #323F4B;
+				margin: 0px;
+				padding: 10px;
+			}
+			div.info>p {
+				background-color: #52606D;
+				margin: 0px;
+				padding: 10px;
+			}
+			p {
+				color: #CBD2D9;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="section">
+			<h1 clasa="title">Animation Overview</h1>
+			<p>This site is a complete tutorial about animation programming. Reading trough the site, you can learn how to build a robust animation system. The book covers all of these topics in more detail, as well as advanced animation techniques.</p>
+
+			<p>Generally, game animation can be broken up into three distinct steps. These steps are pose generation, pose modification and skinning. The steps are usually performed in order.</p>
+
+			<div class="info">
+				<h1>Pose generation</h1>
+				<p>When talking about humanoid animations, a pose refers to the skeleton. Specifically the skeleton posed to match a frame of animation. You would generate a pose by sampling an animation clip.</p>
+			</div>
+
+			<div class="info">
+				<h1>Pose modification</h1>
+				<p>Pose modification is exactly what it sounds like, modifying the pose before it is skinned. Blending two animation clips to hide a transition would be considered pose modification, so would an IK system that adjusts a leg to keep in on top of terrain. This site will cover animation blending, the book covers blending in more detail. The book also covers more advanced topics like IK.</p>
+			</div>
+
+			<div class="info">
+				<h1>Skinning</h1>
+				<p>Given a mesh and a pose, skinning is the process of deforming the mesh so that is matches the given pose. The two most common skinning methods are matrix palette skinning and dual quaternion skinning. We will cover matrix palette skinning on this page, both are covered in the book.</p>
+			</div>
+
+			<p>All three of these topics are covered on this webpage, they are also covered more in-depth in the book. The code here and the code for the book are not the same! For example, in the book you will learn to load gltf files, on this page you will learn how to load fbx files.</p>
+
+			<p>TODO: PLUG THE BOOK</p>
+		</div>
+		<div class="section">
+			<h1>Getting started</h1>
+			<p>TODO: github</p>
+		</div>
+		<div class="section">
+			<h1>Linear algerbra</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Curves</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Pose generation</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Load pose from FBX</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Skinning</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Load mesh from FBX</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Pose modification</h1>
+			<p>TODO</p>
+		</div>
+	</body>
+</html>
