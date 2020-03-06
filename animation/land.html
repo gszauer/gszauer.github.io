@@ -7,12 +7,51 @@
 		<meta name="description" content="Game Animation Programming">
 		<meta name="author" content="Gabor Szauer">
 
-		<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+		<script src="vector.js"></script>
+		<script src="matrix.js"></script>
+		<script src="quaternion.js"></script>
+		<script src="transform.js"></script>
+		<script src="graphics.js"></script>
+		<script src="animation.js"></script>
+		<script src="mesh.js"></script>
+
+		<script src="sample.js"></script>
+		<script src="full.js"></script>
+
+		<script type="text/javascript">
+			var gApplication = null;
+
+			function loop() {
+				gApplication.Loop();
+			}
+
+			function main() {
+				let canvas = document.querySelector("#glCanvasThree");
+				let gl = canvas.getContext("webgl");
+				gl.enable(gl.DEPTH_TEST);
+				gl.enable(gl.CULL_FACE);
+				if (gl === null) {
+					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
+					return;
+				}
+				gApplication = new FullPageAnimated(gl, canvas);
+
+				window.setInterval(loop, 16);
+			}
+
+			window.onload = main;
+
+			window.onresize = function() {
+				document.body.height = window.innerHeight;
+			}
+		</script>
+
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 
 		<style>
 			body {
 				background-color: #1F2933;
-				font-family: 'Montserrat', sans-serif;
+				font-family: 'Open Sans', sans-serif;
 			}
 			div {
 				border-style: none;
@@ -53,8 +92,24 @@
 				margin: 0px;
 				padding: 10px;
 			}
+			div.gldemo {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
 			p {
 				color: #CBD2D9;
+			}
+
+			a:link, a:visited {
+				font-weight: bold;
+				color: #B3BCD8;
+				text-decoration: none;
+			}
+			a:hover, a:active {
+				font-weight: bold;
+				color: #BECCD6;
+				text-decoration: none;
 			}
 		</style>
 	</head>
@@ -83,15 +138,15 @@
 
 			<p>All three of these topics are covered on this webpage, they are also covered more in-depth in the book. The code here and the code for the book are not the same! For example, in the book you will learn to load gltf files, on this page you will learn how to load fbx files.</p>
 
-			<p>TODO: PLUG THE BOOK</p>
+			<p>The Game Aniamtion book covers everything from the basics of creating an OpenGL 3.3 enabled window to advanced animation techniques like dual quaternion skinning, crowd rendering and ik. Most of the assets used on this site and in the book are <a href="http://quaternius.com/">free game assets by Quaternius</a> and <a href="https://github.com/GDQuest/godot-3d-mannequin">Open 3D Mannequin</a></p>
 		</div>
 		<div class="section">
 			<h1>Getting started</h1>
 			<p>TODO: github</p>
 		</div>
 		<div class="section">
-			<h1>Linear algerbra</h1>
-			<p>TODO</p>
+			<h1>Math</h1>
+			<p>I'm going to assume that you are familiar with <a href="https://gabormakesgames.com/vectors.html">Vectors</a>, <a href="https://gabormakesgames.com/matrices.html">Matrices</a>, <a href="https://gabormakesgames.com/quaternions.html">Quaternions</a> and <a href="https://gabormakesgames.com/transforms.html">Linear Transformations</a>. All of these topics are covered in the book, they are also covered on my blog, <a href="https://gabormakesgames.com">Gabor Makes Games</a>. The <a href="TODO: github link">Starting Code</a> already contains code for these constructs. </p>
 		</div>
 		<div class="section">
 			<h1>Curves</h1>
@@ -108,6 +163,9 @@
 		<div class="section">
 			<h1>Skinning</h1>
 			<p>TODO</p>
+			<div class="gldemo">
+				<canvas id="glCanvasThree" style="width: 100%; height:100%;"></canvas>
+			</div>
 		</div>
 		<div class="section">
 			<h1>Load mesh from FBX</h1>
@@ -115,6 +173,10 @@
 		</div>
 		<div class="section">
 			<h1>Pose modification</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>What&lsquo;s next?</h1>
 			<p>TODO</p>
 		</div>
 	</body>
