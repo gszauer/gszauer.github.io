@@ -93,12 +93,12 @@
 			}
 			div.info>h1 {
 				font-size: 1.2em;
-				background-color: #273038;
+				background-color: #22313f;
 				margin: 0px;
 				padding: 10px;
 			}
 			div.info>p {
-				background-color: #52606D;
+				background-color: #354656;
 				margin: 0px;
 				padding: 10px;
 			}
@@ -111,11 +111,32 @@
 				color: #CBD2D9;
 			}
 			pre {
-				background-color: #52606D;
-				border: 2px solid #273038;
+				background-color: #4d545c;
+				border: 2px solid #182633;
 				padding: 10px;
 				font-family: 'Cutive Mono', monospace;
 				color: #f2c8ae;
+
+				white-space: pre-wrap;       /* css-3 */
+				white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+				white-space: -pre-wrap;      /* Opera 4-6 */
+				white-space: -o-pre-wrap;    /* Opera 7 */
+				word-wrap: break-word;       /* Internet Explorer 5.5+ */
+			}
+			pre>span.red {
+				color: #f85959;
+			}
+			pre>span.blue {
+				color: #89afd9;
+			}
+			pre>span.green {
+				color: #61ae68;
+			}
+			pre>span.orange {
+				color: #d09f41;
+			}
+			pre>span.purple {
+				color: #de5bd3;
 			}
 			p>code {
 				font-family: 'Cutive Mono', monospace;
@@ -131,12 +152,16 @@
 				color: #BECCD6;
 				text-decoration: none;
 			}
+			img {
+				width: 100%;
+				height: auto;
+			}
 		</style>
 	</head>
 
 	<body>
 		<div class="section">
-			<h1 clasa="title">Animation Overview</h1>
+			<h1 class="title">Animation Overview</h1>
 			<p>This site is a complete tutorial about animation programming. Reading trough the site, you can learn how to build a robust animation system. The book covers all of these topics in more detail, as well as advanced animation techniques.</p>
 
 			<p>Generally, game animation can be broken up into three distinct steps. These steps are pose generation, pose modification and skinning. The steps are usually performed in order.</p>
@@ -172,19 +197,27 @@
 		<div class="section">
 			<h1>Curves</h1>
 			<p>To animate game objects in code, you will need some understanding of curves. Let&apos;s start with the <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">(cubic) B&eacute;zier curve</a>.A B&eacute;zier curve segment has two points to interpolate between and two control points. These four points generate a curve. The image below has the points labeled as <code>P1</code>, <code>P2</code> and the control points as <code>C1</code> and <code>C2</code>.</p>
-			<p>TODO:IMAGE</p>
+			
+			<img src="bezier_1.png" alt="Bezier curve" />
 			
 			<p>Given the two points and the two controls, how can we generate a curve? Let&apos;s explore interpolating for a given time, <code>t</code>. Start by drawing a line from <code>P1</code> to <code>C1</code>, from <code>C1</code> to <code>C2</code> and a line from <code>C2</code> to <code>P2</code>. Then, linearly interpolate along those lines by the value of <code>t</code>.</p>
-			<p>TODO: Image</p>
+
+			<img src="bezier_2.png" alt="Bezier curve gneration step 1" />
 
 			<p>The interpolated points from <code>P1</code> to <code>C1</code> form a line, let&apos;s call it <code>A</code>. The interpolated points from <code>C2</code> to <code>P2</code> form a line as well, let&apos;s call it <code>B</code>. Finally, the interpolated points from <code>C1</code> to <code>C2</code> form a line, let&apos;s call it <code>C</code>. Repeat the process and linearly interpolate along <code>A</code> to <code>C</code> and <code>C</code> to <code>B</code>. The resulting points will be called <code>E</code> and <code>F</code> respectivley.</p>
-			<p>TODO: Iamge</p>
 
-			<p>One more time, interpolate along the line that is formed between <code>E</code> and <code>F</code> by <code>t</code>. The resulting point will be called <code>R</code>. This resulting point <code>R</code> can be plotted on the B&eacute;zier curve. If we calculate all points from <code>t=0</code> to <code>t-1</code>, the B&eacute;zier curve can be plotted.</p>
-			<p>TODO: Image</p>
+			<img src="bezier_3.png" alt="Bezier curve gneration step 2" />
+
+			<p>One more time, interpolate along the line that is formed between <code>E</code> and <code>F</code> by <code>t</code>. The resulting point will be called <code>R</code>. This resulting point <code>R</code> can be plotted on the B&eacute;zier curve. If we calculate all points from <code>t=0</code> to <code>t=1</code>, the B&eacute;zier curve can be plotted.</p>
+			
+			<img src="bezier_4.png" alt="Bezier curve gneration step 3" />
+
+			<p>In real time, interpolating along a B&eacute;zier spline should look something like this:</p>
+
+			<p>TODO: CANVAS DEMO</p>
 
 			<p>Let&apos;s try to implement a B&eacute;zier curve segment in code. This implementation won&apos;t be used in the animation system. The definition of the data structure is trivial, it holds two points and two control points.</p>
-<pre><code>template<typename T>
+<pre>template&lt;typename T&gt;
 class Bezier {
 public:
     T P1; // Point 1
@@ -192,11 +225,11 @@ public:
     T P2; // Point 2
     T C2; // Control 2
 };
-</code></pre>
+</pre>
 
 			<p>Next, imlplement the interpolate function. As shown earlier, interpolating a B&eacute;zier curve segment can be implemented using 5 lerp operations.</p>
-<pre><code>template<typename T>
-inline T Interpolate(const Bezier<T>& curve, float t) {
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
     T A = lerp(curve.P1, curve.C1, t);
     T B = lerp(curve.C2, curve.P2, t);
     T C = lerp(curve.C1, curve.C2, t);
@@ -207,10 +240,10 @@ inline T Interpolate(const Bezier<T>& curve, float t) {
     T R = lerp(D, E, t);
     return R;
 }
-</code></pre>
+</pre>
 
 			<p>That&apos;s actually all we really need. Plotting this segment is trivial. First, initalize a segment to draw.</p>
-<pre><code>Bezier<vec3> curve;
+<pre>Bezier&lt;vec3&gt; curve;
 curve.P1 = vec3(-5, 0, 0);
 curve.P2 = vec3(5, 0, 0);
 curve.C1 = vec3(-2, 1, 0);
@@ -220,10 +253,10 @@ vec3 red = vec3(1, 0, 0);
 vec3 green = vec3(0, 1, 0);
 vec3 blue = vec3(0, 0, 1);
 vec3 magenta = vec3(1, 0, 1);
-</code></pre>
+</pre>
 
 			<p>Next, draw the curves points and handles.</p>
-<pre><code>// Draw all relevant points
+<pre>// Draw all relevant points
 DrawPoint(curve.P1, red);
 DrawPoint(curve.C1, green);
 DrawPoint(curve.P2, red);
@@ -232,12 +265,12 @@ DrawPoint(curve.C2, green);
 // Draw handles
 DrawLine(curve.P1, curve.C1, blue);
 DrawLine(curve.P2, curve.C2, blue);
-</code></pre>
+</pre>
 
 			<p>Finally, we can plot the actual curve.</p>
-<pre><code>// Draw the actual curve
+<pre>// Draw the actual curve
 // Resolution is 200 steps since last point is i + 1
-for (int i = 0; i < 199; ++i) {
+for (int i = 0; i &lt; 199; ++i) {
     float t0 = (float)i / 199.0f;
     float t1 = (float)(i + 1) / 199.0f;
 
@@ -246,12 +279,116 @@ for (int i = 0; i < 199; ++i) {
 
     DrawLine(thisPoint, nextPoint, magenta);
 }
-</code></pre>
+</pre>
 
 			<p>Assuming there is a &quot;<code>DrawLine</code>&quot; and &quot;<code>DrawPoint</code>&quot; function declared, the above code should draw something that looks like this.</p>
+
 			<p>TODO: Image</p>
 
+			<p>We were able to implement the B&eacute;zier Interpolate function by using 6 linear interpolations. To better understand how curves work, we need to expand these functions to what they actualy are. Linear interpolation, <code>lerp(a, b, t)</code> is implemented as <code>(1-t) * a + t * b</code>. We can re-write the interpolation function as:</p>
 
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    T A = curve.<span class="blue">P1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="purple">C1</span> * <span class="red">t</span>;
+    T B = curve.<span class="orange">C2</span> * (1.0f - <span class="red">t</span>) + curve.<span class="green">P2</span> * <span class="red">t</span>;
+    T C = curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>;
+    T D = A * (1.0f - <span class="red">t</span>) + C * <span class="red">t</span>;
+    T E = C * (1.0f - <span class="red">t</span>) + B * <span class="red">t</span>;
+    T R = D * (1.0f - <span class="red">t</span>) + E * <span class="red">t</span>;
+    return R;
+}</pre>
+
+			<p>othing has changed, but we no longer call the <code>lerp</code> function. This will work for any data type <code>T</code>, so long as <code>T perator*(const T& t, float f)</code> is defined. Let&apos;s try to simplify this equation some more. Instead of using the variables <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> and <code>R</code>, we could write everything in-line. No local variables, we just expand the function by hand to be a one liner:</p>
+
+<pre>((<span class="blue">P1</span> * (1 - <span class="red">t</span>) + <span class="purple">C1</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * <span class="red">t</span>) * (1 - <span class="red">t</span>) + ((<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="orange">C2</span> * (1 - <span class="red">t</span>) + <span class="green">P2</span> * <span class="red">t</span>) * <span class="red">t</span>) * <span class="red">t</span></pre>
+
+			<p>The formula above might look a bit intimidating, but it&apos;s just re-writing the <code>interpolate</code> function with everything being manually inlined. In ode, this would look like the following:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
+    return ((curve.P1 * (1.0f - t) + curve.C1 * t) * (1.0f - t) + 
+           (curve.C1 * (1.0f - t) + curve.C2 * t) * t) * (1.0f - t) 
+           + ((curve.C1 * (1.0f - t) + curve.C2 * t) * (1.0f - t) + 
+           (curve.C2 * (1.0f - t) + curve.P2 * t) * t) * t;
+}</pre>
+
+			<p>The code is hard to read, and not much faster than the previous version. So, why go trough all this trouble? So we can start simplifying the equation a bit. We can start by combining like terms:</p>
+
+<pre>-P1t<sup>3</sup> + 3P1t<sup>2</sup> - 3P1t + P1 + 3C1t<sup>3</sup> - 6C1t<sup>2</sup> + 3C1t - 3C2t<sup>3</sup> + 3C2t<sup>2</sup> + P2t<sup>3</sup></pre>
+
+			<p>That&apos;s starting to look a little easier to manage. Implementing this in code isn&apos; too difficult either.</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
+    return
+        curve.P1 * (t * t * t) * -1.0f +
+        curve.P1 * 3.0f * (t * t) -
+        curve.P1 * 3.0f * t +
+        curve.P1 +
+        curve.C1 * 3.0f * (t * t * t) -
+        curve.C1 * 6.0f * (t * t) +
+        curve.C1 * 3.0f * t -
+        curve.C2 * 3.0f * (t * t * t) +
+        curve.C2 * 3.0f * (t * t) +
+        curve.P2 * (t * t * t);
+}</pre>
+
+			<p>Simplify further by isolating like terms</p>
+
+<pre>P1( -t<sup>3</sup> + 3t<sup>2</sup> - 3t + 1) +
+C1( 3t<sup>3</sup> - 6t<sup>2</sup> + 3t)+
+C2(-3t<sup>3</sup> + 3t<sup>2</sup>)+
+P2(  t<sup>3</sup>)</pre>
+
+			<p>Implementing the equation in code is starting to get simpler too:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
+    float ttt = t * t * t;
+    float tt = t * t;
+
+    return curve.P1 * (-1.0f * ttt + 3.0f * tt - 3.0f * t + 1.0f) +
+           curve.C1 * (3.0f * ttt - 6.0f * tt + 3.0f * t) +
+           curve.C2 * (-3.0f * ttt + 3.0f * tt) +
+           curve.P2 * ttt;
+}</pre>
+
+			<p>We can simlify this further</p>
+
+<pre>P1((1-t)<sup>3</sup>) +
+C1(3(1-t)<sup>2</sup>t) +
+C2(3(1-t)t<sup>2</sup>) +
+P2(t<sup>3</sup>)</pre>
+
+			<p>The code for this last simplification is eaven easier to read</p>
+
+<pre>TODO: Write last simplification code</pre>
+
+			<p>If we graph out this final simplification, the x axis would be &quot;normalized time&quot; ranging from <code>0</code> to <code>1</code> and the x axis would be the value of either <code>P1</code>, <code>P2</code>, <code>C1</code> or <code>C2</code>. The graph looks like this:</p>
+			
+			<img src="bezier_basis.png" alt="Bezier basis functions" />
+
+			<p>The graph shows the pint basis functions of a cubic B&eacute;zier curve. These functions express how the B&eacute;zier curve changes over time. For exaple, the influence of <code>P1</code> drops over time, at <code>t=0</code> the influence is <code>1</code>, but at <code>t=1</code> the influence of <code>P1</code> is <code>0</code>.</p>
+
+			<p>We went trough the exercise of simplifying a B&eacute;zier curve to see how these basis functions are derived. B&eacute;zier curves are easy to derive, other curves are not. For most curves, you will simply be given the final basis functions.</p>
+
+			<p>The most common curve used in game animation is a <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">Cubic Hermite</a> Spline. Unlike B&eacute;zier splines, a hermite spline doens&apos;t use control points. Instead, the hermite spline uses tangents (or slopes) at a given point.</p>
+
+			<p>The point basis function of a Hermite Spline is shown below. <code>P1</code> and <code>P2</code> are the start and end points of the spline, <code>S1</code> and <code>S2</code> are the slopes, or tangents at <code>P1</code> and <code>P2</code> respectivley.</p>
+
+			<img src="hermite_basis.png" alt="Hermite basis functions" />
+
+			<p>Implementing the above basis functions in code is similar to how the bezier basis function was implemented.</p>
+
+<pre>template&lt;typename T&gt;
+T Hermite(float t, const T&amp; p1, const T&amp; s1, const T&amp; p2, const T&amp; s2) {
+    return p1 * ((1.0f + 2.0f * t) * ((1.0f - t) * (1.0f - t))) +
+        s1 * (t * ((1.0f - t) * (1.0f - t))) +
+        p2 * ((t * t) * (3.0f - 2.0f * t)) +
+        s2 * ((t * t) * (t - 1.0f));
+}</pre>
+
+			<p>It’s possible to convert between B&eacute;zier and Hermite splines, but that’s beyond the scope of what you need to know for animation. Some 3D content creation packages like Maya let animators create animation using a Hermite curves, while others like Blender3D use  B&eacute;zier curves. It’s useful to understand how these functions work, regardless of which one drives our animation system. There are of course more curve types, but B&eacute;zier and Hermite are the common ones.</p>
 		</div>
 		<div class="section">
 			<h1>Pose generation</h1>
