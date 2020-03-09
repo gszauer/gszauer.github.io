@@ -3,13 +3,11 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>WEBGL Demo</title>
-		<meta name="description" content="WebGL Demo">
+		<title>Game Animation Programming</title>
+		<meta name="description" content="Game Animation Programming">
 		<meta name="author" content="Gabor Szauer">
 
-		<!--link rel="stylesheet" href="css/styles.css?v=1.0"-->
-		<!--script src="http://benvanik.github.com/WebGL-Inspector/core/embed.js"></script-->
-
+		<!-- Support functions -->
 		<script src="vector.js"></script>
 		<script src="matrix.js"></script>
 		<script src="quaternion.js"></script>
@@ -17,19 +15,38 @@
 		<script src="graphics.js"></script>
 		<script src="animation.js"></script>
 		<script src="mesh.js"></script>
+		<script src="bezier_curve.js"></script>
 
+		<!-- WebGL Demos -->
 		<script src="sample.js"></script>
 		<script src="full.js"></script>
 
+		<!-- Canvas Demos-->
+		<script src="sample_canvas.js"></script>
+		<script src="bezier_demo.js"></script>
+
 		<script type="text/javascript">
-			var gApplication = null;
+			var gFullScreenAnimation = null;
+			var gBezierDemo = null;
 
 			function loop() {
-				gApplication.Loop();
+				gFullScreenAnimation.Loop();
+				if (gBezierDemo != null) {
+					gBezierDemo.Loop();
+				}
 			}
 
 			function main() {
-				let canvas = document.querySelector("#glCanvasThree");
+				let canvas = document.getElementById("bezierCanvas");
+				if (canvas === null) {
+					console.error("Unable to initialize Bezier Canvas");
+					gBezierDemo = null;
+				}
+				else {
+					gBezierDemo = new BezierDemo(canvas);
+				}
+
+				canvas = document.querySelector("#glCanvasThree");
 				let gl = canvas.getContext("webgl");
 				gl.enable(gl.DEPTH_TEST);
 				gl.enable(gl.CULL_FACE);
@@ -37,22 +54,395 @@
 					alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 					return;
 				}
-				gApplication = new FullPageAnimated(gl, canvas);
+				gFullScreenAnimation = new FullPageAnimated(gl, canvas);
 
 				window.setInterval(loop, 16);
 			}
 
 			window.onload = main;
-
-			window.onresize = function() {
-				document.body.height = window.innerHeight;
-			}
 		</script>
+
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css?family=Cutive+Mono&display=swap" rel="stylesheet">
+
+		<style>
+			body {
+				background-color: #4F5460;
+				font-family: 'Open Sans', sans-serif;
+			}
+			div {
+				border-style: none;
+				max-width: 800px;
+				margin: auto;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				padding: 20px;
+				background-color: #383F47;
+				text-align: left;
+			}
+			p {
+				font-size: 1em;
+			}
+			h1, h2 {
+				color: #E4E7EB;
+			}
+			div.section>h1 {
+				background-color: #273038;
+				margin-top: -20px;
+				margin-left: -20px;
+				margin-right: -20px;
+				padding: 20px;
+			}
+			div.section>h2 {
+				background-color: #273038;
+				font-size: 1.2em;
+				padding: 10px;
+				margin: 0px;
+				margin-left: -20px;
+				margin-right: -20px;
+			}
+			div.info {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			div.info>h1 {
+				font-size: 1.2em;
+				background-color: #22313f;
+				margin: 0px;
+				padding: 10px;
+			}
+			div.info>p {
+				background-color: #354656;
+				margin: 0px;
+				padding: 10px;
+			}
+			div.gldemo {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			p {
+				color: #CBD2D9;
+			}
+			pre {
+				background-color: #4d545c;
+				border: 2px solid #182633;
+				padding: 10px;
+				font-family: 'Cutive Mono', monospace;
+				color: #f2c8ae;
+
+				white-space: pre-wrap;       /* css-3 */
+				white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+				white-space: -pre-wrap;      /* Opera 4-6 */
+				white-space: -o-pre-wrap;    /* Opera 7 */
+				word-wrap: break-word;       /* Internet Explorer 5.5+ */
+			}
+			pre>span.red {
+				color: #f85959;
+			}
+			pre>span.blue {
+				color: #89afd9;
+			}
+			pre>span.green {
+				color: #61ae68;
+			}
+			pre>span.orange {
+				color: #d09f41;
+			}
+			pre>span.purple {
+				color: #de5bd3;
+			}
+			p>code {
+				font-family: 'Cutive Mono', monospace;
+				font-size: 1.1em;
+			}
+			a:link, a:visited {
+				font-weight: bold;
+				color: #B3BCD8;
+				text-decoration: none;
+			}
+			a:hover, a:active {
+				font-weight: bold;
+				color: #BECCD6;
+				text-decoration: none;
+			}
+			img {
+				width: 100%;
+				height: auto;
+			}
+		</style>
 	</head>
 
-	<body style="border: 0px;margin: 0px;padding: 0px;">
-		<div style="width: 100%; height:100vh; position:relative;overflow:hidden;">
-			<canvas id="glCanvasThree" style="width: 100%; height:100%;"></canvas>
+	<body>
+		<div class="section">
+			<h1 class="title">Animation Overview</h1>
+			<p>This site is a complete tutorial about animation programming. Reading trough the site, you can learn how to build a robust animation system. The book covers all of these topics in more detail, as well as advanced animation techniques.</p>
+
+			<p>Generally, game animation can be broken up into three distinct steps. These steps are pose generation, pose modification and skinning. The steps are usually performed in order.</p>
+
+			<div class="info">
+				<h1>Pose generation</h1>
+				<p>When talking about humanoid animations, a pose refers to the skeleton. Specifically the skeleton posed to match a frame of animation. You would generate a pose by sampling an animation clip.</p>
+			</div>
+
+			<div class="info">
+				<h1>Pose modification</h1>
+				<p>Pose modification is exactly what it sounds like, modifying the pose before it is skinned. Blending two animation clips to hide a transition would be considered pose modification, so would an IK system that adjusts a leg to keep in on top of terrain. This site will cover animation blending, the book covers blending in more detail. The book also covers more advanced topics like IK.</p>
+			</div>
+
+			<div class="info">
+				<h1>Skinning</h1>
+				<p>Given a mesh and a pose, skinning is the process of deforming the mesh so that is matches the given pose. The two most common skinning methods are matrix palette skinning and dual quaternion skinning. We will cover matrix palette skinning on this page, both are covered in the book.</p>
+			</div>
+
+			<p>All three of these topics are covered on this webpage, they are also covered more in-depth in the book. The code here and the code for the book are not the same! For example, in the book you will learn to load gltf files, on this page you will learn how to load fbx files.</p>
+
+			<p>The Game Aniamtion book covers everything from the basics of creating an OpenGL 3.3 enabled window to advanced animation techniques like dual quaternion skinning, crowd rendering and ik. Most of the assets used on this site and in the book are <a href="http://quaternius.com/">free game assets by Quaternius</a> and <a href="https://github.com/GDQuest/godot-3d-mannequin">Open 3D Mannequin</a></p>
+		</div>
+		<div class="section">
+			<h1>Getting started</h1>
+			<p>I&apos;m assuming that you are familiar with C++ and Windows programing. To follow along with this page, you should be able to open a new window and set up an OpenGL context to render to. I&apos;m also assuming that you are familiar with OpenGL. These topics won&apos;t be covered on the site, but they are covered in the book.</p>
+			<p>The code that i&apos;ll be using to create the animation system is on <a href="https://github.com/gszauer/TLDRGameAnimation/Start">Github</a>. It&apos;s actually the code from Chapter 5 of the book.</p>
+		</div>
+		<div class="section">
+			<h1>Math</h1>
+			<p>I&apos;m going to assume that you are familiar with <a href="https://gabormakesgames.com/vectors.html">Vectors</a>, <a href="https://gabormakesgames.com/matrices.html">Matrices</a>, <a href="https://gabormakesgames.com/quaternions.html">Quaternions</a> and <a href="https://gabormakesgames.com/transforms.html">Linear Transformations</a>. All of these topics are covered in the book, they are also covered on my blog, <a href="https://gabormakesgames.com">Gabor Makes Games</a>. The <a href="https://github.com/gszauer/TLDRGameAnimation/Start">Starting Code</a> already contains code for these constructs. </p>
+		</div>
+		<div class="section">
+			<h1>Curves</h1>
+			<p>To animate game objects in code, you will need some understanding of curves. Let&apos;s start with the <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">(cubic) B&eacute;zier curve</a>.A B&eacute;zier curve segment has two points to interpolate between and two control points. These four points generate a curve. The image below has the points labeled as <code>P1</code>, <code>P2</code> and the control points as <code>C1</code> and <code>C2</code>.</p>
+			
+			<img src="bezier_1.png" alt="Bezier curve" />
+			
+			<p>Given the two points and the two controls, how can we generate a curve? Let&apos;s explore interpolating for a given time, <code>t</code>. Start by drawing a line from <code>P1</code> to <code>C1</code>, from <code>C1</code> to <code>C2</code> and a line from <code>C2</code> to <code>P2</code>. Then, linearly interpolate along those lines by the value of <code>t</code>.</p>
+
+			<img src="bezier_2.png" alt="Bezier curve gneration step 1" />
+
+			<p>The interpolated points from <code>P1</code> to <code>C1</code> form a line, let&apos;s call it <code>A</code>. The interpolated points from <code>C2</code> to <code>P2</code> form a line as well, let&apos;s call it <code>B</code>. Finally, the interpolated points from <code>C1</code> to <code>C2</code> form a line, let&apos;s call it <code>C</code>. Repeat the process and linearly interpolate along <code>A</code> to <code>C</code> and <code>C</code> to <code>B</code>. The resulting points will be called <code>E</code> and <code>F</code> respectivley.</p>
+
+			<img src="bezier_3.png" alt="Bezier curve gneration step 2" />
+
+			<p>One more time, interpolate along the line that is formed between <code>E</code> and <code>F</code> by <code>t</code>. The resulting point will be called <code>R</code>. This resulting point <code>R</code> can be plotted on the B&eacute;zier curve. If we calculate all points from <code>t=0</code> to <code>t=1</code>, the B&eacute;zier curve can be plotted.</p>
+			
+			<img src="bezier_4.png" alt="Bezier curve gneration step 3" />
+
+			<p>In real time, interpolating along a B&eacute;zier spline should look something like this:</p>
+
+			<canvas id="bezierCanvas" style="width: 100%; height:100%;"></canvas>
+
+			<p>Let&apos;s try to implement a B&eacute;zier curve segment in code. This implementation won&apos;t be used in the animation system. The definition of the data structure is trivial, it holds two points and two control points.</p>
+<pre>template&lt;typename T&gt;
+class Bezier {
+public:
+    T P1; // Point 1
+    T C1; // Control 1
+    T P2; // Point 2
+    T C2; // Control 2
+};
+</pre>
+
+			<p>Next, imlplement the interpolate function. As shown earlier, interpolating a B&eacute;zier curve segment can be implemented using 5 lerp operations.</p>
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
+    T A = lerp(curve.P1, curve.C1, t);
+    T B = lerp(curve.C2, curve.P2, t);
+    T C = lerp(curve.C1, curve.C2, t);
+
+    T D = lerp(A, C, t);
+    T E = lerp(C, B, t);
+
+    T R = lerp(D, E, t);
+    return R;
+}
+</pre>
+
+			<p>That&apos;s actually all we really need. Plotting this segment is trivial. First, initalize a segment to draw.</p>
+<pre>Bezier&lt;vec3&gt; curve;
+curve.P1 = vec3(1, 5, 0);
+curve.P2 = vec3(9, 5, 0);
+curve.C1 = vec3(2, 0.5, 0);
+curve.C2 = vec3(10, 0.5, 0);
+
+vec3 red = vec3(1, 0, 0);
+vec3 green = vec3(0, 1, 0);
+vec3 blue = vec3(0, 0, 1);
+vec3 magenta = vec3(1, 0, 1);
+</pre>
+
+			<p>Next, draw the curves points and handles.</p>
+<pre>// Draw all relevant points
+DrawPoint(curve.P1, red);
+DrawPoint(curve.C1, green);
+DrawPoint(curve.P2, red);
+DrawPoint(curve.C2, green);
+
+// Draw handles
+DrawLine(curve.P1, curve.C1, blue);
+DrawLine(curve.P2, curve.C2, blue);
+</pre>
+
+			<p>Finally, we can plot the actual curve.</p>
+<pre>// Draw the actual curve
+// Resolution is 200 steps since last point is i + 1
+for (int i = 0; i &lt; 199; ++i) {
+    float t0 = (float)i / 199.0f;
+    float t1 = (float)(i + 1) / 199.0f;
+
+    vec3 thisPoint = Interpolate(curve, t0);
+    vec3 nextPoint = Interpolate(curve, t1);
+
+    DrawLine(thisPoint, nextPoint, magenta);
+}
+</pre>
+
+			<p>Assuming there is a &quot;<code>DrawLine</code>&quot; and &quot;<code>DrawPoint</code>&quot; function declared, the above code should draw something that looks like this.</p>
+
+			<img src="bezier_rendered.png" alt="Rendered bezier curve" />
+
+			<p>We were able to implement the B&eacute;zier Interpolate function by using 6 linear interpolations. To better understand how curves work, we need to expand these functions to what they actualy are. Linear interpolation, <code>lerp(a, b, t)</code> is implemented as <code>(1-t) * a + t * b</code>. We can re-write the interpolation function as:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    T A = curve.<span class="blue">P1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="purple">C1</span> * <span class="red">t</span>;
+    T B = curve.<span class="orange">C2</span> * (1.0f - <span class="red">t</span>) + curve.<span class="green">P2</span> * <span class="red">t</span>;
+    T C = curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>;
+    T D = A * (1.0f - <span class="red">t</span>) + C * <span class="red">t</span>;
+    T E = C * (1.0f - <span class="red">t</span>) + B * <span class="red">t</span>;
+    T R = D * (1.0f - <span class="red">t</span>) + E * <span class="red">t</span>;
+    return R;
+}</pre>
+
+			<p>othing has changed, but we no longer call the <code>lerp</code> function. This will work for any data type <code>T</code>, so long as <code>T perator*(const T& t, float f)</code> is defined. Let&apos;s try to simplify this equation some more. Instead of using the variables <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> and <code>R</code>, we could write everything in-line. No local variables, we just expand the function by hand to be a one liner:</p>
+
+<pre>((<span class="blue">P1</span> * (1 - <span class="red">t</span>) + <span class="purple">C1</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * <span class="red">t</span>) * (1 - <span class="red">t</span>) + ((<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="orange">C2</span> * (1 - <span class="red">t</span>) + <span class="green">P2</span> * <span class="red">t</span>) * <span class="red">t</span>) * <span class="red">t</span></pre>
+
+			<p>The formula above might look a bit intimidating, but it&apos;s just re-writing the <code>interpolate</code> function with everything being manually inlined. In ode, this would look like the following:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return ((curve.<span class="blue">P1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="purple">C1</span> * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) + 
+           (curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>) * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) 
+           + ((curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) + 
+           (curve.<span class="orange">C2</span> * (1.0f - <span class="red">t</span>) + curve.<span class="green">P2</span> * <span class="red">t</span>) * <span class="red">t</span>) * t;
+}</pre>
+
+			<p>The code is hard to read, and not much faster than the previous version. So, why go trough all this trouble? So we can start simplifying the equation a bit. We can start by combining like terms:</p>
+
+<pre>-<span class="blue">P1</span><span class="red">t<sup>3</sup></span> + 3<span class="blue">P1</span><span class="red">t<sup>2</sup></span> - 3<span class="blue">P1</span><span class="red">t</span> + <span class="blue">P1</span> + 3<span class="purple">C1</span><span class="red">t<sup>3</sup></span> - 6<span class="purple">C1</span><span class="red">t<sup>2</sup></span> + 3<span class="purple">C1</span><span class="red">t</span> - 3<span class="orange">C2</span><span class="red">t<sup>3</sup></span> + 3<span class="orange">C2</span><span class="red">t<sup>2</sup></span> + <span class="green">P2</span><span class="red">t<sup>3</sup></span></pre>
+
+			<p>That&apos;s starting to look a little easier to manage. Implementing this in code isn&apos; too difficult either.</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return
+        curve.<span class="blue">P1</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) * -1.0f +
+        curve.<span class="blue">P1</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span>) -
+        curve.<span class="blue">P1</span> * 3.0f * <span class="red">t</span> +
+        curve.<span class="blue">P1</span> +
+        curve.<span class="purple">C1</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) -
+        curve.<span class="purple">C1</span> * 6.0f * (<span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="purple">C1</span> * 3.0f * <span class="red">t</span> -
+        curve.<span class="orange">C2</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="orange">C2</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="green">P2</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>);
+}</pre>
+
+			<p>Simplify further by isolating like terms</p>
+
+<pre><span class="blue">P1</span>( -<span class="red">t<sup>3</sup></span> + 3<span class="red">t<sup>2</sup></span> - 3<span class="red">t</span> + 1) +
+<span class="purple">C1</span>( 3<span class="red">t<sup>3</sup></span> - 6<span class="red">t<sup>2</sup></span> + 3<span class="red">t</span>)+
+<span class="orange">C2</span>(-3<span class="red">t<sup>3</sup></span> + 3<span class="red">t<sup>2</sup></span>)+
+<span class="green">P2</span>(  <span class="red">t<sup>3</sup></span>)</pre>
+
+			<p>Implementing the equation in code is starting to get simpler too:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    float <span class="red">ttt</span> = <span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>;
+    float <span class="red">tt</span> = <span class="red">t</span> * <span class="red">t</span>;
+
+    return curve.<span class="blue">P1</span> * (-1.0f * <span class="red">ttt</span> + 3.0f * <span class="red">tt</span> - 3.0f * <span class="red">t</span> + 1.0f) +
+           curve.<span class="purple">C1</span> * (3.0f * <span class="red">ttt</span> - 6.0f * <span class="red">tt</span> + 3.0f * <span class="red">t</span>) +
+           curve.<span class="orange">C2</span> * (-3.0f * <span class="red">ttt</span> + 3.0f * <span class="red">tt</span>) +
+           curve.<span class="green">P2</span> * <span class="red">ttt</span>;
+}</pre>
+
+			<p>We can simlify this further</p>
+
+<pre><span class="blue">P1</span>( (1-<span class="red">t</span>)<sup>3</sup>) +
+<span class="purple">C1</span>(3(1-<span class="red">t</span>)<sup>2</sup><span class="red">t</span>) +
+<span class="orange">C2</span>(3(1-<span class="red">t</span>)<span class="red">t<sup>2</sup></span>) +
+<span class="green">P2</span>(<span class="red">t<sup>3</sup></span>)</pre>
+
+			<p>The code for this last simplification is eaven easier to read</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return curve.<span class="blue">P1</span> * ((1.0f - <span class="red">t</span>) * (1.0f - <span class="red">t</span>) * (1.0f - <span class="red">t</span>)) +
+           curve.<span class="purple">C1</span> * (3.0f * ((1.0f - <span class="red">t</span>) * 1.0f - <span class="red">t</span>) * <span class="red">t</span>) +
+           curve.<span class="orange">C2</span> * (3.0f * (1.0f - <span class="red">t</span>) * (<span class="red">t</span> * <span class="red">t</span>)) +
+           curve.<span class="green">P2</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>);
+}</pre>
+
+			<p>If we graph out this final simplification, the x axis would be &quot;normalized time&quot; ranging from <code>0</code> to <code>1</code> and the x axis would be the value of either <code>P1</code>, <code>P2</code>, <code>C1</code> or <code>C2</code>. The graph looks like this:</p>
+			
+			<img src="bezier_basis.png" alt="Bezier basis functions" />
+
+			<p>The graph shows the pint basis functions of a cubic B&eacute;zier curve. These functions express how the B&eacute;zier curve changes over time. For exaple, the influence of <code>P1</code> drops over time, at <code>t=0</code> the influence is <code>1</code>, but at <code>t=1</code> the influence of <code>P1</code> is <code>0</code>.</p>
+
+			<p>We went trough the exercise of simplifying a B&eacute;zier curve to see how these basis functions are derived. B&eacute;zier curves are easy to derive, other curves are not. For most curves, you will simply be given the final basis functions.</p>
+
+			<div class="info">
+				<h1>Why is everything templated?</h1>
+				<p>The formula for evaluating curves doesn&apos;t change between scalar, and touple values. It's the same formula for a <code>float</code> as it is for a <code>vec2</code>, <code>vec3</code> or <code>quat</code>. Whatever data type <code>T</code> is will work so long as <code>T operator*(const T&amp; t, float f)</code> and <code>T operator+(const T&amp; a, const T&amp; b)</code> are defined. </p>
+			</div>
+
+			<p>The most common curve used in game animation is a <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">Cubic Hermite</a> Spline. Unlike B&eacute;zier splines, a hermite spline doens&apos;t use control points. Instead, the hermite spline uses tangents (or slopes) at a given point.</p>
+
+			<p>The point basis function of a Hermite Spline is shown below. <code>P1</code> and <code>P2</code> are the start and end points of the spline, <code>S1</code> and <code>S2</code> are the slopes, or tangents at <code>P1</code> and <code>P2</code> respectivley.</p>
+
+			<img src="hermite_basis.png" alt="Hermite basis functions" />
+
+			<p>Implementing the above basis functions in code is similar to how the bezier basis function was implemented.</p>
+
+<pre>template&lt;typename T&gt;
+T Hermite(float t, const T&amp; p1, const T&amp; s1, const T&amp; p2, const T&amp; s2) {
+    return p1 * ((1.0f + 2.0f * t) * ((1.0f - t) * (1.0f - t))) +
+        s1 * (t * ((1.0f - t) * (1.0f - t))) +
+        p2 * ((t * t) * (3.0f - 2.0f * t)) +
+        s2 * ((t * t) * (t - 1.0f));
+}</pre>
+
+			<p>It’s possible to convert between B&eacute;zier and Hermite splines, but that’s beyond the scope of what you need to know for animation. Some 3D content creation packages like Maya let animators create animation using a Hermite curves, while others like Blender3D use  B&eacute;zier curves. It’s useful to understand how these functions work, regardless of which one drives our animation system. There are of course more curve types, but B&eacute;zier and Hermite are the common ones.</p>
+		</div>
+		<div class="section">
+			<h1>Pose generation</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Load pose from FBX</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Skinning</h1>
+			<p>TODO</p>
+			<div class="gldemo">
+				<canvas id="glCanvasThree" style="width: 100%; height:100%;"></canvas>
+			</div>
+		</div>
+		<div class="section">
+			<h1>Load mesh from FBX</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Pose modification</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>What&lsquo;s next?</h1>
+			<p>TODO</p>
 		</div>
 	</body>
 </html>
