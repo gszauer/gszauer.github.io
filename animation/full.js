@@ -59,7 +59,7 @@ FullPageAnimated.prototype.Initialize = function (gl) {
 	this.mWomanSkeleton = new Skeleton();
 	this.mWomanSkeleton.LoadFromFile("Woman.skel");
 	this.mWalkingClip = new Clip();
-	this.mWalkingClip.LoadFromFile("Walk.anim");
+	this.mWalkingClip.LoadFromFile("Walking.anim");
 
 	this.mBoneMatrixtexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, this.mBoneMatrixtexture);

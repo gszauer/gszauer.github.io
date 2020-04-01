@@ -33,6 +33,20 @@ function Frame(numComponents) {
 	}
 }
 
+Clip.prototype.InterpolationFromString = function(st) {
+	if (st == "cubic") {
+		return INTERPOLATION.CUBIC;
+	}
+	else if (st == "linear") {
+		return INTERPOLATION.LINEAR;
+	}
+	else if (st == "constant") {
+		return INTERPOLATION.CONSTANT;
+	}
+	console.error("Unknown interpolation type");
+	return INTERPOLATION.CONSTANT;
+}
+
 Clip.prototype.LoadFromFile = function(filePath) {
 	let clip = this;
 	clip.mLoaded = false;
@@ -49,49 +63,49 @@ Clip.prototype.LoadFromFile = function(filePath) {
 			let iSize = content.tracks.length;
 			for (let i = 0; i < iSize; ++i) {
 				let track = new TransformTrack();
-				track.mId = content.tracks[i].mId;
+				track.mId = content.tracks[i].id;
 
 				track.mPosition = new Track(3);
-				track.mPosition.mInterpolation = content.tracks[i].mPosition.mInterpolation;
-				let refFrames = content.tracks[i].mPosition.mFrames;
+				track.mPosition.mInterpolation = clip.InterpolationFromString(content.tracks[i].position.interpolation);
+				let refFrames = content.tracks[i].position.frames;
 				let jSize = refFrames.length;
 				for (let j = 0; j < jSize; ++j) {
 					let frame = new Frame(3);
 
-					frame.mValue = new Float32Array(refFrames[j].mValue);
-					frame.mIn = new Float32Array(refFrames[j].mIn);
-					frame.mOut = new Float32Array(refFrames[j].mOut);
-					frame.mTime = refFrames[j].mTime;
+					frame.mValue = new Float32Array(refFrames[j].value);
+					frame.mIn = new Float32Array(refFrames[j].in);
+					frame.mOut = new Float32Array(refFrames[j].out);
+					frame.mTime = refFrames[j].time;
 
 					track.mPosition.mFrames.push(frame);
 				}
 
 				track.mRotation = new Track(4);
-				track.mRotation.mInterpolation = content.tracks[i].mRotation.mInterpolation;
-				refFrames = content.tracks[i].mRotation.mFrames;
+				track.mRotation.mInterpolation = clip.InterpolationFromString(content.tracks[i].rotation.interpolation);
+				refFrames = content.tracks[i].rotation.frames;
 				jSize = refFrames.length;
 				for (let j = 0; j < jSize; ++j) {
 					let frame = new Frame(4);
 
-					frame.mValue = new Float32Array(refFrames[j].mValue);
-					frame.mIn = new Float32Array(refFrames[j].mIn);
-					frame.mOut = new Float32Array(refFrames[j].mOut);
-					frame.mTime = refFrames[j].mTime;
+					frame.mValue = new Float32Array(refFrames[j].value);
+					frame.mIn = new Float32Array(refFrames[j].in);
+					frame.mOut = new Float32Array(refFrames[j].out);
+					frame.mTime = refFrames[j].time;
 
 					track.mRotation.mFrames.push(frame);
 				}
 
 				track.mScale = new Track(3);
-				track.mScale.mInterpolation = content.tracks[i].mScale.mInterpolation;
-				refFrames = content.tracks[i].mScale.mFrames;
+				track.mScale.mInterpolation = clip.InterpolationFromString(content.tracks[i].scale.interpolation);
+				refFrames = content.tracks[i].scale.frames;
 				jSize = refFrames.length;
 				for (let j = 0; j < jSize; ++j) {
 					let frame = new Frame(3);
 
-					frame.mValue = new Float32Array(refFrames[j].mValue);
-					frame.mIn = new Float32Array(refFrames[j].mIn);
-					frame.mOut = new Float32Array(refFrames[j].mOut);
-					frame.mTime = refFrames[j].mTime;
+					frame.mValue = new Float32Array(refFrames[j].value);
+					frame.mIn = new Float32Array(refFrames[j].in);
+					frame.mOut = new Float32Array(refFrames[j].out);
+					frame.mTime = refFrames[j].time;
 
 					track.mScale.mFrames.push(frame);
 				}

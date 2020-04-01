@@ -195,6 +195,17 @@
 	</head>
 
 	<body>
+		<div class="header">
+			<div class="left"></div>
+			<div class="right">
+				<div class="top"></div>
+				<div class="bottom">
+					<a href="" class="amazon">Buy on Amazon</a>
+					<a href="" class="packt">Buy from Packt</a>
+					<a href="" class="github">Code on github</a>
+				</div>
+			</div>
+		</div>
 		<div class="section">
 			<h1 class="title">Animation Overview</h1>
 			<p>This site is a complete tutorial about animation programming. Reading trough the site, you can learn how to build a robust animation system. The book covers all of these topics in more detail, as well as advanced animation techniques.</p>
@@ -977,7 +988,7 @@ void TransformTrack::SetScaleTrack(const VectorTrack&lt; scale) {
 
 			<p>When we think of a skeleton or pose it’s easy to think of a model that has one root node and many nodes that branch of it. In practice, it’s not uncommon to have two or three root nodes. This might take some getting used to as its rather unintuitive. 3DCC packages like to package up models in a way that the first node of the skeleton is a root node, but there is also a root node that all skinned meshes are children of. The hierarchies of these files tend to look like this:</p>
 
-			<h1>TODO: Image</h1>
+			<img src="many_roots.png" alt="GLTF file with multiple root nodes" />
 
 			<p>There are two essential poses for an animated character: the current pose and the rest pose. The rest pose is the default configuration of all bones. An animation describes the transformation of each bone over time. Sampling an animation in time results in the current pose, which is used to skin a character. There are actually many more poses, there is no standard terminology and some or all of these poses can be used in an animation system. The poses that you should be aware of are:</p>
 
@@ -1114,7 +1125,7 @@ void Pose::SetLocalTransform(unsigned int index, const Transform&amp; transform)
 
 			<div class="info">
 				<h1>Optimize GetGlobalTransform</h1>
-				<p>This is an easy optimization, when calculating the global transform of a joint, the global transform of all parent joints are calculated as well. Take two sibling joints for example, there is no need to calculate the world tranasform of their parent twice! This can be wasteful, especially if you call the <code>GetGlobalTransform</code> function a lot.</p>
+				<p>When calculating the global transform of a joint, the global transform of all parent joints are calculated as well. Take two sibling joints for example, there is no need to calculate the world tranasform of their parent twice! This can be wasteful, especially if you call the <code>GetGlobalTransform</code> function a lot.</p>
 
 				<p>The most straight forward way to optimize this function would be to have a lookup table with a dirty flag. However, we won't call this function often. In fact, the only time we need to call <code>GetGlobalTransform</code> for this tutorial is to set up the inverse bind pose once during initialization. Because this code isn't going to be running during game play, we won't optimize it here.</p>
 			</div>
@@ -1170,7 +1181,11 @@ void Pose::SetLocalTransform(unsigned int index, const Transform&amp; transform)
 
 			<h2>Clips</h2>
 
-			<p>TODO</p>
+			<p>An animation clip is a collection of transform tracks, each track describes the motion of one joint over time, all of the tracks combined describe the motion of the animated model over time. If we sample an animation clip, we get a Pose, which describes the configuration of each joint in an animation at the specified time.</p>
+
+			<p>For a basic clip class, all we really need is a vector of Transform Tracks. Because our transform tracks contain the id of the joint they effect, we can have a minimal number of tracks per clip. We might also want to keep track of some meta-data like the name of the clip, whether or not the clip is looping and information about the time or duration of the clip.</p>
+
+			<p>The looping attribute of the clip class could be offloaded to some construct that’s further down the pipeline (like an animation component or something), but we’re implementing a bare bones animation system, this is a good place to put the looping property for now.</p>
 
 <pre>class Clip {
 protected:
@@ -1178,30 +1193,43 @@ protected:
     std::string mName;
     float mStartTime;
     float mEndTime;
-    bool mLooping;
-protected:
+    bool mLooping;</pre>
+
+    		<p>The Clip class has variables for the start and end time of the clip. Where do these numbers come from? The start time is the lowest start time of the contained tracks, the end time is the highest if the end time of the contained tracks. We will need a helper function to re-calculate the duration any time a new transform track is added or an existing one is modified.</p>
+
+    		<p>When sampling a Clip, there is no guarantee that the sample time is going to be within the start and end times of the clip. To deal with this, we will implement a helper function that adjusts the provided sample time to be within the range of the current animation clip.
+
+<pre>protected:
     float AdjustTimeToFitRange(float inTime);
-    void RecalculateDuration();
-public:
+    void RecalculateDuration();</pre>
+
+    		<p>A default constructor is needed to assign efault values to member variables. The generated copy constructor, assignment operator and destructor are fine. The number of tracks, start and end time and duration of the clip all should have getter functions.</p>
+
+<pre>public:
     Clip();
 
     unsigned int Size();
-    void SetTransformTrack(TransformTrack&amp; t);
-
-    std::string&amp; GetName();
-    void SetName(const std::string&amp; inNewName);
-    
     float GetDuration();
     float GetStartTime();
-    float GetEndTime();
+    float GetEndTime();</pre>
+
+    		<p>The name and looping property of the track both have getter and setter functions.</p>
+
+<pre>    std::string&amp; GetName();
+    void SetName(const std::string&amp; inNewName);
     
     bool GetLooping();
-    void SetLooping(bool inLooping);
+    void SetLooping(bool inLooping);</pre>
 
+    		<p>The <code>SetTransformTrack</code> function will loop trough all tracks contained in the clip, if a track with the same id is found, it will be updated. If the track id is not found, it will be added to the vector of tracks.</p>
+
+    		<p>The <code>Sample</code> function takes a <code>Pose</code> reference and a time. It returns the time, adjusted to fit the animation clip. The idea here is that you can use that to keep the running animation time ina  valid range. The <code>Pose</code> reference will be modified for any animated joints in the clip.</p>
+
+<pre>    void SetTransformTrack(TransformTrack&amp; t);
     float Sample(Pose&amp; outPose, float inTime);
 };</pre>
 
-			<p>TODO</p>
+			<p>The constructor needs to assign default values to <code>mName</code>, <code>mStartTime</code>, <code>mEndTime</code> and <code>mLooping</code>.</p>
 
 <pre>Clip::Clip() {
     mName = "No name given";
@@ -1210,7 +1238,7 @@ public:
     mLooping = true;
 }</pre>
 
-			<p>TODO</p>
+			<p>Name and looping getter and setters are trivial.</p>
 
 <pre>std::string&amp; Clip::GetName() {
     return mName;
@@ -1218,9 +1246,17 @@ public:
 
 void Clip::SetName(const std::string&amp; inNewName) {
     mName = inNewName;
+}
+
+bool Clip::GetLooping() {
+    return mLooping;
+}
+
+void Clip::SetLooping(bool inLooping) {
+    mLooping = inLooping;
 }</pre>
 
-			<p>TODO</p>
+			<p>Start time, end time, duration and size getters are trivial as well.</p>
 
 <pre>float Clip::GetDuration() {
     return mEndTime - mStartTime;
@@ -1232,19 +1268,15 @@ float Clip::GetStartTime() {
 
 float Clip::GetEndTime() {
     return mEndTime;
-}</pre>
-
-			<p>TODO</p>
-
-<pre>bool Clip::GetLooping() {
-    return mLooping;
 }
 
-void Clip::SetLooping(bool inLooping) {
-    mLooping = inLooping;
+unsigned int Clip::Size() {
+    return (unsigned int)mTracks.size();
 }</pre>
 
-			<p>TODO</p>
+			<p>The <code>SetTransformTrack</code> function needs to loop trough all of the transform tracks contained in the clip. If one of these tracks has the same id as the track that is being set, it needs to be updated. If the clip did not contain any tracks the track needs to be added as a new track. If a track is modified, or a new track is added, the duration of the clip is no longer correct. To fix this, call <code>RecalculateDuration</code>.</p>
+
+			<p>This function isn't really fast, but it's only intended to be called during initialization, to set up the animation clip when it is loaded from a file.</p>
 
 <pre>void Clip::SetTransformTrack(TransformTrack&amp; t) {
     unsigned int size = (unsigned int)mTracks.size();
@@ -1258,14 +1290,7 @@ void Clip::SetLooping(bool inLooping) {
 
     RecalculateDuration();
 }</pre>
-
-			<p>TODO</p>
-
-<pre>unsigned int Clip::Size() {
-    return (unsigned int)mTracks.size();
-}</pre>
-
-			<p>TODO</p>
+			<p>The <code>Clip::RecalculateDuration</code> function works almost identically to how the <code>TransformTrack::RecalculateDuration</code> function works. The logic is the same, but this function must loop trough all of the tracks in the current <code>Clip</code>.</p>
 
 <pre>void Clip::RecalculateDuration() {
     mStartTime = mEndTime = 0.0f;
@@ -1287,7 +1312,7 @@ void Clip::SetLooping(bool inLooping) {
     }
 }</pre>
 
-			<p>TODO</p>
+			<p>The <code>Sample</code> function loops trough every track in the current clip. Each Transform Track is then sampled, and the resulting transform is stored in the output pose. When sampling the track, the local transform of the pose is used as the reference transform. This way, if a track only rotates a joint, only the rotation component changes.</p>
 
 <pre>float Clip::Sample(Pose&amp; outPose, float time) {
     if (GetDuration() == 0.0f) {
@@ -1305,7 +1330,7 @@ void Clip::SetLooping(bool inLooping) {
     return time;
 }</pre>
 
-			<p>TODO</p>
+			<p>The <code>AdjustTimeToFitRange</code> function works almost the same as the <code>AdjustTimeToFitTrack</code> function. The function clamps time to the start and end times if the clip isn't looping, and makes sure time is in the correct range if it is.</p>
 
 <pre>float Clip::AdjustTimeToFitRange(float inTime) {
     if (mLooping) {
@@ -1334,71 +1359,87 @@ void Clip::SetLooping(bool inLooping) {
     return inTime;
 }</pre>
 
-			<h2>Rest, bind &amp; aniamted pose</h2>
+			<h2>Poses for animating a hierarchy</h2>
 			
-			<p>TODO</p>
+			<p>There are two poses to be aware of for animating a hierarchy. These are the rest and animated poses. The rest pose is a reference pose, it's the pose everything is being animated from. The animated pose is the pose that is the result of sampling an animation clip.</p>
+
+			<p>If there are multiple animation clips, the animated pose should be set back to the rest pose when switching between clips. This needs to be done to restore all default joint transforms. One way to get around this is if the <code>Clip::Sample</code> function took both a reference pose and an output pose. Then, there would be no need to reset the pose between animations.</p>
+
+			<p>The naming convention for these poses isn't standard. And different packages and tools call these poses different things. One big point of confusion is the difference between rest and bind pose. In an ideal world, i think the rest and bind poses should always be the same. Software packages disagree.</p>
+
+			<p>The rest (sometimes called reference or default) pose is the pose that is used as the starting pose that animations are created out of. It contains the default transformations for all joints that are not animated.</p>
+
+			<p>The bind pose on the other hand is used for skinning (which will be covered later). It's a pose that roughly matches up with the mesh being skinned. This pose is used to associate vertices with joints.</p>
+
+			<p>Often the difficulty in animation is working with the different terminology that different standards like to use. To re-iterate. To animate a hierarchy (without displaying a skinned mesh), the only poses we will need are the <strong>rest pose</strong> and <strong>animated pose</strong>.</p>
 
 			<h2>Try it</h2>
 
-			<p>TODO</p>
+			<p>This is a good place to stop and make sure everything works. At this point we have all the classes written to animate a hierarchy. To see all of the code up until this point in action, we will need a <code>Sample</code> class which will contain a collection of clips, the index of the current clip, the current animation time, the animated pose and the rest pose.</p>
 
-			<div class="info">
-				<h1>Rest, bind &amp; animated pose</h1>
-				<p>TODO</p>
-			</div>
-
-			<p>TODO</p>
 <pre>class Sample : {
 protected:
     std::vector&lt;Clip&gt; mAnimClips;
     unsigned int mClipIndex;
     float mAnimTime;
     Pose mCurrentPose;
-public:
+    Pose mRestPose;</pre>
+
+    		<p>Right now we're only focusing on animating one character. To animate multiple characters, each character would need a unique clip index, animation time, and animated pose. The collection of animation clips and the rest pose could be shared between all of the aniamted models.
+
+    		<p>We need to be able to initialize, update, render and shut down the demo. </p>
+
+<pre>public:
     void Initialize();
     void Update(float inDeltaTime);
     void Render(float inAspectRatio);
     void Shutdown();
 };</pre>
 
-			<p>TODO</p>
+			<p>The initialize function should load animation clips from a file, as well as the rest pose. The animated pose should be a copy of the rest pose at this time. We will need to set the index of the animation clip to play. Setting animation time to 0 isn't accurate as not all animation clips start at 0 seconds in time. Instead use the animation clips GetStartTime function.</p>
 
 <pre>void Sample::Initialize() {
     mAnimClips = LoadAnimationClips("Woman.clips");
-    mCurrentPose = LoadRestPose("Woman.rest");
+    mRestPose = LoadRestPose("Woman.rest");
 
-    mAnimTime = 0.0f;
+    // Reset like this when switching animations
+    mCurrentPose = mRestPose; 
+
     mClipIndex = 6;
+    mAnimTime = mAnimClips[mClipIndex].GetStartTime();
 }</pre>
-			<p>TODO</p>
+			<p>The <code>Update</code> function is trivial, it samples the current animation clip. <code>mAnimationTime</code> is increased by delta time every frame and passed to the sample function. The result of the sample function is stored in <code>mAnimationTime</code>, keeping <code>mAnimationTime</code> always valid.</p>
 
 <pre>void Sample::Update(float deltaTime) {
-    mAnimTime = mAnimClips[mClipIndex].Sample(mCurrentPose, mAnimTime + inDeltaTime);
+    float time = mAnimTime + deltaTime;
+    mAnimTime = mAnimClips[mClipIndex].Sample(mCurrentPose, time);
 }</pre>
-			<p>TODO</p>
+			<p>The render function renders only a debug skeleton. Loop trough all of the joints in the current pose, skipping any joints that don't have a parent. Find the global transform of both this joint and it's parent joint and draw a line between their positions.</p>
 
 <pre>void Sample::Render(float AspectRatio) {
-    for (unsigned int i = 0; i &lt; size; ++i) {
+    for (unsigned int i = 0; i &lt; mCurrentPose.Size(); ++i) {
         int p = mCurrentPose.GetParent(i);
         if (p &lt; 0) { continue; }
 
         Transform self = mCurrentPose.GetGlobalTransform(i);
         Transform parent = mCurrentPose.GetGlobalTransform(p);
 
-        DrawLine(self, parent);
+        DrawLine(self.position, parent.position);
     }
 }</pre>
 
 			<p>TODO</p>
-			
-			<div class="gldemo">
-				<canvas id="skinnedWalkingCanvas" style="width: 100%; height:100%;"></canvas>
-			</div>
 
 			<div class="info">
 				<h1>Sample data</h1>
 				<p>TODO</p>
 			</div>
+			
+			<div class="gldemo">
+				<canvas id="skinnedWalkingCanvas" style="width: 100%; height:100%;"></canvas>
+			</div>
+
+			
 
 		</div>
 		
