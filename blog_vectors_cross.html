@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="vectors.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_vectors_add.html" class="list-group-item">2. Addition</a>
+            <a href="blog_vectors_scale.html" class="list-group-item">3. Scaling</a>
+            <a href="blog_vectors_subtract.html" class="list-group-item">4. Subtraction</a>
+            <a href="blog_vectors_dot.html" class="list-group-item">5. Dot Product</a>
+            <a href="blog_vectors_length.html" class="list-group-item">6. Magnitude</a>
+            <a href="blog_vectors_normalize.html" class="list-group-item">7. Normalize</a>
+            <a href="blog_vectors_angle.html" class="list-group-item">8. Angle</a>
+            <a href="blog_vectors_projection.html" class="list-group-item">9. Projection</a>
+            <a href="blog_vectors_reflection.html" class="list-group-item">10. Reflection</a>
+            <a href="blog_vectors_cross.html" class="list-group-item active">11. Cross Product</a>
+            <a href="blog_vectors_interpolate.html" class="list-group-item">12. Interpolation</a>
+            <a href="blog_vectors_summary.html" class="list-group-item">13. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Cross Product</h2>
+    				<p>
+						The cross product returns a new vector, <a href="https://www.mathsisfun.com/algebra/vectors-cross-product.html">perpendicular to both input vectors</a>. This only makes sense in \(\mathbb{R}^{3}\), so the cross product is only defined for 3 dimensional vectors, <code>vec3</code>. Like the image below shows, for any two vectors \(\vec{A}\) and \(\vec{B}\), there are two vectors that are perpendicular to both. Depending on the order of the cross product, one or the other vector is returned. That is, the cross product is anti-commutativ: \(\vec{A} \times \vec{B} \neq \vec{B} \times \vec{A}\)
+					</p>
+
+          <p><img class="img-fluid" src="assets/cross_02.png" alt="Cross product order" /></p>
+
+					<p class="bs-callout bs-callout-default">There is a relationship between the cross and dot products. Recall that the dot product has a relationship to the cosine of the angle between the two vectors: \(\vec{A} \cdot \vec{B} = \|\vec{A}\| \|\vec{B}\| cos(\theta)\). Simlarly, <a href="https://www.khanacademy.org/math/linear-algebra/vectors-and-spaces/dot-cross-products/v/proof-relationship-between-cross-product-and-sin-of-angle">the cross product has a relationship to the sine of the angle between the two vectors</a>: \(\|\vec{A} \times \vec{B}\| = \|\vec{A}\| \|\vec{B}\| sin(\theta) \).</p>
+
+
+            		<p>The formula for the cross product actually comes from <a href="quaternions.html">quaternion math</a>. It's a bit involved and can be hard to grasp at first. Instead of presenting the formal definition, i'm going to present an easy way to memorize it. For the formal definition, check out <a href="https://mathinsight.org/cross_product_formula">this mathinsight.org post</a>.</p>
+        
+            		<p>Given two vectors <code>a</code> and <code>b</code>, start by writing the x, y and z components of the result in a column.</p>
+<pre><code>result.x = 
+result.y = 
+result.z =</code></pre>
+					<p>
+						Fill out the right side of each column by multiplying the components of <code>a</code> and <code>b</code> in an x-y-z pattern. Starting from x the next component is always y, then z even when wrapping around: <code>xyz</code>, <code>yzx</code> and <code>zxy</code>.
+					</p>
+<pre><code>result.x = a.y * b.z
+// xyz pattern just wraps around
+result.y = a.z * b.x
+result.z = a.x * b.y</code></pre>
+					<p>
+						Finish the formula by subtracting the opposite products from the right size. So if the original product on the right side was <code>a.y * b.z</code> you would subtract <code>a.z * b.y</code>, the difference being that the components are flipped. 
+					</p>
+<pre><code>result.x = a.y * b.z - a.z * b.y
+result.y = a.z * b.x - a.x * b.z
+result.z = a.x * b.y - a.y * b.x</code></pre>
+
+			<p>
+				The code implementation for the above formula is trivial, since it was provided mostly as pseudo-code already. Unlike most vector operations, the cross product is only meaningful for <code>vec3</code> objects.
+			</p>
+
+<pre><code>vec3 Cross(vec3 a, vec3 b) {
+    vec3 result;
+    result.x = a.y * b.z - a.z * b.y
+    result.y = a.z * b.x - a.x * b.z
+    result.z = a.x * b.y - a.y * b.x
+    return result;
+}</code></pre>
+
+			<h4>Bomberman!</h4>
+
+			<p>If the method for finding the cross product above doesn't make sense, try playing a game of bomberman ;p. How does this work? Write the result vector as a row, vector a as a row and vector b as a row. This should leave all elements in a 3x3 matrix. For each component of the result, eliminate the row and column of the element. You will be left with a component of the result vector and a 2x2 sub-matrix. The value of that component in the result is the <a href="https://www.mathsisfun.com/algebra/matrix-determinant.html">determinant</a> of the 2x2 sub-matrix.</p>
+
+          <p><img class="img-fluid" src="assets/cross_01.png" alt="Bomberman" /></p>
+
+			<p>Finding the determinant of a 2x2 matrix is pretty easy. Given a matrix: \(
+ \left(\begin{matrix}
+  A & B \\
+  C & D \\
+\end{matrix}\right)\) it's determinant is: \(AD - BC\).
+</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

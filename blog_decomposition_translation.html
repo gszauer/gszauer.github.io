@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+    <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item active">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Factoring the Translation</h2>
+
+          <p>A 3D affine transform can be factored into a 3D linear transformation, folloed by a translation. Factoring the translation out of a matrix is trivial. Given a matrix \(M\), we want to factor it into \(M=TX\). \(T\) is going to be an identity matrix with the translation part of \(M\). \(X\) is going to be the same as \(M\), but with the translation part removed.</p>
+
+<pre><code>struct FactorTranslationResult {
+    Matrix T; // Translation
+    Matrix X; // Linear transformation
+};
+
+FactorTranslationResult FactorTranslation(Matrix M) {
+    FactorTranslationResult result;
+
+    result.T = Matrix4();
+    result.T[12] = M[12];
+    result.T[13] = M[13];
+    result.T[14] = M[14];
+
+    result.X = M;
+    result.X[12] = 0;
+    result.X[13] = 0;
+    result.X[14] = 0;
+
+    return result;
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

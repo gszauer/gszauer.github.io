@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+    
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+    <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
+            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
+            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
+            <a href="blog_quats_inverse.html" class="list-group-item active">5. Inverse</a>
+            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
+            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
+            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
+            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
+            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Quaternion Inverse</h2>
+
+          <p>If a quaternion is multiplied by it's inverse, the result is no rotation \(0, 0, 0, 1\). To figure out what this multiplicitive inverse is, remember that a quaternion represents some rotation around some axis. To undo that rotation, we can either negate the axis, or negate the rotation.</p>
+
+          <!--canvas id="polar_2d_canvas" width="800" height="50" class="img-fluid">
+            Canvas support required
+          </canvas>
+          <canvas id="polar_3d_canvas" width="800" height="400" class="img-fluid">
+            WebGL support required
+          </canvas-->
+          
+
+          <p>Negating the rotation means rotating about the same axis, just by a negative ammount. Negating the axis on the other hand rotates the same ammount, but the plane is flipped. It's convention to negate the axis, but there is one potential problem: finding the inverse of a quaternion by negating the axis of rotation only works for unit quaternions. Negating the axis actually results in the conjugate of the quaternion, often denoted as \(q^{*}\).</p>
+
+<pre><code>Quaternion Conjugate(Quaternion quat) {
+    return Quaternion(
+        quat.x * -1.0,
+        quat.y * -1.0,
+        quat.z * -1.0,
+        quat.w
+    );
+}</code></pre>
+
+            <p>Finding the proper inverse (\(q^{1}\)) of a quaternion is similar to finding it's conjugate. To find the inverse, divide each component of the quaternions conjugate by it's <a href="https://proofwiki.org/wiki/Definition:Norm_of_Quaternion">norm</a>. The norm of a quaternion is it's <i>squared length</i>, or dot product with its self. The norm can be expressed as \(q \cdot q\), or \(q_x^2 + q_y^2 + q_z^2 + q_w^2\).</p>
+
+<pre><code>Quaternion Inverse(Quaternion quat) {
+    float norm = quat.x * quat.x + quat.y * quat.y + quat.z * quat.z + quat.w * quat.w;
+    float recip = 1.0 / norm;
+
+    return Quaternion(
+        quat.x * -1.0 * recip,
+        quat.y * -1.0 * recip,
+        quat.z * -1.0 * recip,
+        quat.w * recip
+    );
+}</code></pre>
+
+          <p  class="bs-callout bs-callout-default">Games almost always unit length quaternions, when using unit quaternions the length and conjugate are the same \(q^{-1} = q^{*}\). When working with games, the two are usually treated interchangeably.</p>
+
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

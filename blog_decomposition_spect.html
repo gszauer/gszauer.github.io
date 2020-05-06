@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+    <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item active">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Spectral Decomposition</h2>
+
+          <p>Spectral Decomposition, sometimes called Eigen Decomposition factors a matrix into a canonical form so that it is represented in terms of eigenvectors and eigenvalues. Spectral decomposition takes the form \(S = UKU^{T}\), where \(K\) is a matrix whos main diagonal contains the eigenvalues of \(S\) and the basis vectors of \(U\) are the eigenvectors of \(S\).</p>
+
+          <p>This decomposition is not unique. The rows of both \(U\) and \(K\) can be re-arranged in any order. The re-arranged rows can even be negated (so long as it represents a valid rotation). The formula \(S = UKU^{T}\) will remain true after doing any of these modifications to the matrix.</p>
+
+          <p>A matrix can be factored into eigenvectors and eigenvalues using the QR Algorithm. Like Polar Decomposition, Spectral Decompositon is also an iterative process. Also like Polar Decomposition, spectral decompositon should not need more than 20 iterations. I found that most real world matrices take about 5 to 8 iterations.</p>
+
+          <p>To implement the QR algorithm, set a helper matrix \(A\) to be the input matrix \(S\). Iterativeley, find the <a href="blog_decomposition_qr.html">QR Factorization</a> of \(A = QR\). Take the resulting QR factorization and set \(A = RQ\). Repeat until the lower triangular components of \(A\) are \(\approx 0\). The main diagonal of the resulting matrix \(A\) contains the eigenvectors of \(Q\).</p>
+
+          <p>That takes care of the eigenvalues, but what about the eigenvectors? <a href="https://en.wikipedia.org/wiki/QR_algorithm">Turns out</a> the matrix \(U\) is an accumulation of all the orthogonal transforms taken to find \(K\). At the begenning of the algorithm set \(U\) to identity. On every iteration, multiply the \(Q\) result of the QR factorization into \(U\). The following code implements this.</p>
+
+<pre><code>struct SpectralDecompositionResult {
+    Matrix U; // Each basis vector is an eigenvector
+    Matrix K; // Contains eigenvalues on main diagonal
+    Matrix Ut; // Transpose of U
+}
+
+bool SpectralDecompositionEarlyOut(Matrix A) {
+    int indices[] = [4, 8, 9, 12, 13, 14];
+
+    for (int i = 0; i < indices.count; ++i) {
+        if (!EpsilonCompare(A[i], 0)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+SpectralDecompositionResult SpectralDecomposition(S) {
+    SpectralDecompositionResult result;
+
+    result.U = Matrix();
+    Matrix A = S;
+
+    for (int i = 0; i < 20; ++i) {
+        QRDecompResult decomp = QRDecomposition(A);
+
+        result.U = result.U * decomp.Q;
+        A = decomp.R * decomp.Q;
+
+        if (SpectralDecompositionEarlyOut(A)) {
+            break;
+        }
+    }
+
+    result.Ut = Transpose(result.U);
+
+    result.K = Matrix();
+    result.K[0] = A[0];
+    result.K[1] = A[1];
+    result.K[2] = A[2];
+
+    return result;
+}</code></pre>
+
+
+          <p>The diagonal elements matrix \(K\) are the eigen values, in descending order. While this is algebraically correct, geometrically it doesn't hold any meaning. We need to adjust the result of the spectral decomposition to be geometrically intuitive. The <a href="blog_decomposition_adjust.html">next section</a> describes how to do this.</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

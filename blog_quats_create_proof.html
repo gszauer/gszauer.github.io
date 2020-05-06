@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_quats_create.html" class="list-group-item active">2. Creating Quaternions</a>
+            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
+            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
+            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
+            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
+            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
+            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
+            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
+            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          
+
+    <h2>Why \(\frac{\theta}{2}\)?</h2>
+		<p>When i first implemented this function, i wanted to know in detail why \(\theta\) had to be divided by two. What i've realized is that this knowledge is not essential to <i>using</i> quaternions, this is a case of <i>memorizing the formula is good enough</i>. Having said that, curiosity killed the cat, so let's explore <i>why</i> \(\theta\) needs to be divided by two.</p>
+
+		<p>Start with the definition of the imaginary numbers that make up a quaternion: \(i\), \(j\) and \(k\):</p>
+
+		<p>$$ i^2 = j^2 = k^2 = ijk = -1 $$</p>
+
+		<p>This means that \(i^2 = ijk\). We can multiply both sides by the inverse of \(i\), that is \(i^{-1}\) to get:</p>
+
+		<p>$$ i = jk $$</p>
+
+		<p>Let's try to represent this with rotation matrices. Assume \(R_{x}(\theta)\) represents a rotation around the \(x\) axis by \(\theta\) degrees. Similarly, \(R_y(\theta)\) and \(R_z(\theta)\) represent rotations around the \(y\) and \(z\) axis by \(\theta\) degrees respectivley. Consider this formula:</p>
+
+		<p>$$ R_{x}(\theta) = R_{y}(\theta) R_{z}(\theta) $$</p>
+
+		<p>The above formula only be satisfied with \(\theta\) being \(0\), \(180\) or \(360\) degrees. Since \(0\) and \(360\) represent no rotation, let's work with \(180\). To prove that, \(R_x(\theta) = R_y(\theta)R_z(\theta)\) let's figure out what the \(R_x\), \(R_y\) and \(R_z\) rotation matrices for \(180^{\circ}\) look like:</p>
+
+<p>$$ R_x(180^{\circ}) = 
+\left(\begin{matrix}
+  1 & 0 & 0 \\
+  0 & cos(180^{\circ}) & -sin(180^{\circ}) \\
+  0 & sin(180^{\circ}) & cos(180^{\circ})
+\end{matrix}\right)
+=
+\left(\begin{matrix}
+  1 & 0 & 0 \\
+  0 & -1 & 0 \\
+  0 & 0 & -1
+\end{matrix}\right)
+$$ </p> 
+
+<p>$$ R_y(180^{\circ}) = 
+\left(\begin{matrix}
+  cos(180^{\circ}) & 0 & sin(180^{\circ}) \\
+  0 & 1 & 0 \\
+  -sin(180^{\circ}) & 0 & cos(180^{\circ})
+\end{matrix}\right)
+=
+\left(\begin{matrix}
+  -1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & -1
+\end{matrix}\right)
+$$ </p> 
+
+<p style="margin-bottom: 15px">$$ R_z(180^{\circ}) = 
+\left(\begin{matrix}
+  0 & cos(180^{\circ}) & -sin(180^{\circ}) \\
+  0 & sin(180^{\circ}) & cos(180^{\circ}) \\
+  0 & 0 & 1 \\
+\end{matrix}\right)
+=
+\left(\begin{matrix}
+  -1 & 0 & 0 \\
+  0 & -1 & 0 \\
+  0 & 0 & 1
+\end{matrix}\right)
+$$ </p> 
+
+<p>Knowing this, it should be easy to prove that \(R_{x}(\theta) = R_{y}(\theta) R_{z}(\theta)\) <b>if</b> \(\theta = 180^{\circ}\):</p>
+
+<p style="margin-bottom: 15px">
+$$
+  \left(\begin{matrix}
+  1 & 0 & 0 \\
+  0 & -1 & 0 \\
+  0 & 0 & -1
+\end{matrix}\right)
+=
+\left(\begin{matrix}
+  -1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & -1
+\end{matrix}\right)
+
+\left(\begin{matrix}
+  -1 & 0 & 0 \\
+  0 & -1 & 0 \\
+  0 & 0 & 1
+\end{matrix}\right)
+$$ </p> 
+
+		<p>We know that \(i = jk\), and that the same formula holds up with matrices \(R_{x}(180^{\circ}) = R_{y}(180^{\circ}) R_{z}(180^{\circ}) \). We need a function that will map a quaternion to a matrix. We will call this mapping function \(M\). This function needs to map \(i\), \(j\) and \(k\) as follows:</p>
+
+		<ul>
+			<li>Quaternion \(i\) maps to rotation matrix \(R_{x}(180^{\circ}) \)</li>
+			<li>Quaternion \(j\) maps to rotation matrix \(R_{y}(180^{\circ}) \)</li>
+			<li>Quaternion \(k\) maps to rotation matrix \(R_{z}(180^{\circ}) \)</li>
+		</ul>
+
+		<p>The implementation of this mapping function \(M\) will be coverd in the <a href="blog_quats_to_matrix.html">To Matrix</a> part of this blog, for now the implementation details are not relevant. The mapping function \(M\) works like this:</p>
+
+		<ul>
+			<li>\(M(cos(\theta) + i * sin(\theta)) = R_x(2 * \theta)\)</li>
+			<li>\(M(cos(\theta) + j * sin(\theta)) = R_y(2 * \theta)\)</li>
+			<li>\(M(cos(\theta) + k * sin(\theta)) = R_z(2 * \theta)\)</li>
+		</ul>
+
+		<p>Notice the multiply by 2 on the right side of the equation. Because of this, to map \(i\) to \(R_{x}(180^{\circ}) \), the input angle needs to be \(90\), or \(\frac{1}{2}\theta\) of the desired matrix rotation. This is why we need to divide \(\theta\) by two when creating a quaternion from an angle and an axis.</p>
+
+		<p>A more intuitive way to think about this is that one rotation around a hypersphere is \(720^{\circ}\) (this is often refered to as <a href="https://www.youtube.com/watch?v=vmAY5kP-tpU">double cover</a>). A rotation of \(360^{\circ}\) is not the same as a rotation of \(0^{\circ}\), but a rotation of \(720^{\circ}\) is. <a href="https://www.youtube.com/watch?v=4mXL751ko0w">This video</a> does a pretty good job of demonstrating this concept.</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

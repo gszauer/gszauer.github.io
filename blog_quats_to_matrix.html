@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+      <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
+            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
+            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
+            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
+            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
+            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
+            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
+            <a href="blog_quats_to_matrix.html" class="list-group-item active">9. Quaternion to Matrix</a>
+            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Quaternion to Matrix</h2>
+
+          <p>Converting a quaternion to a matrix can be trivial. Recall that a 3x3 matrix (and the upper left 3x3 sub matrix of a 4x4 matrix) is composed of three column vectors. These column vectors describe the basis of the matrix. The easiest way to convert a quaternion to a matrix is to multiply three basis vectors (x, y and z) by the quaternion and place the results in the resulting matrix.</p>
+
+<pre><code>Matrix3 ToMatrix_NonOptimal(Quaternion quat) {
+    // Basis vectors
+    Vector3 right = Vector3(1, 0, 0);
+    Vector3 up = Vector3(0, 1, 0);
+    Vector3 forward = Vector3(0, 0, 1);
+
+    // Rotate basis vectors by Quaternion
+    right = Mul(right, quat);
+    up = Mul(up, quat);
+    forward = Mul(forward, quat);
+
+    // Return basis vectors as matrix
+    return Matrix3(
+        right.x, up.x, forward.x,
+        right.y, up.y, forward.y,
+        right.z, up.z, forward.z
+    );
+
+    // Just so there is no confusion, the above constructor takes arguments
+    // in row order, but stores them in column order (transposed).
+    // That is, it creates the following array in memory:
+    // [right.x, right.y, right.z, up.x, up.y, up.z, forward.x, forward.y, forward.z]
+}</code></pre>
+          
+
+          <h4>Optimize</h4>
+
+          <p>Ken Shoemake presents a more optimal way of converting quaternions to matrices in Chapter 6 of <a href="https://www.amazon.com/Graphics-Gems-II-IBM-No/dp/0120644819">Graphics Gems II</a>, <i>Quaternions and 4x4 Matrices</i> . Shoemake's method can be dificult to grasp at first, but converting quaternions to matrices is a common enough operation that it is worth understanding and implementing. So, let's explore this method.</p>
+
+          <p>Suppose we want to multiply two quaternions \(q\) and \(p\) together. The formula for this was covered in the <a href="blog_quats_multiply_quat.html">Multiplying Quaternions</a> section. The formula looks like this:</p>
+
+          <p>
+            $$ qp = 
+            \begin{alignedat}{6}
+                & \phantom{+} &q_x p_w \textcolor{red}{i}   & {+} &q_y p_z \textcolor{red}{i}   & {-} &q_z p_y \textcolor{red}{i}   & {+} &q_w p_x \textcolor{red}{i}   & {,} \\
+                &         {-} &q_x p_z \textcolor{green}{j} & {+} &q_y p_w \textcolor{green}{j} & {+} &q_z p_x \textcolor{green}{j} & {+} &q_w p_y \textcolor{green}{j} & {,} \\
+                & \phantom{+} &q_x p_y \textcolor{blue}{k}  & {-} &q_y p_x \textcolor{blue}{k}  & {+} &q_z p_w \textcolor{blue}{k}  & {+} &q_w p_z \textcolor{blue}{k}  & {,} \\
+                &         {-} &q_x p_x                      & {-} &q_y p_y                      & {-} &q_z p_z                      & {+} &q_w p_w  
+            \end{alignedat}
+             $$
+          </p>
+
+          <p>Since we're left multiplying, this rotates \(q\) by \(p\), the above multiplication can be expressed as a <a href="https://www.youtube.com/watch?v=3Ki14CsP_9k">matrix / vector multiplication</a> by treating \(q\) as a vector and \(p\) as a matrix, like so:</p>
+
+          <p>
+            $$ qp = R(p)q = 
+            \begin{bmatrix}
+              \phantom{+}w_{p} & \phantom{+}z_{p} & -y_{p}           & \phantom{+}x_{p} \\
+              -z_{p}           & \phantom{+}w_{p} & \phantom{+}x_{p} & \phantom{+}y_{p} \\
+              \phantom{+}y_{p} & -x_{p}           & \phantom{+}w_{p} & \phantom{+}z_{p} \\
+              -x_{p}           & -y_{p}           & -z_{p}           & \phantom{+}w_{p}
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              x_{q} \\
+              y_{q} \\
+              z_{q} \\
+              w_{q}
+            \end{bmatrix} $$
+          </p>
+          
+          <p>I changed the notation up a little to put the focus on which elements of \(q\) and \(p\) are being used and where, instead of on \(q\) and \(p\). The quaternion product is either a function of \(p\) or \(q\). Above it's a function of \(q\). To find the function of \(p\), first  re-arrange the quaternion multiplication formula so that the components of \(p\) line up, like so:</p>
+
+          <p>
+            $$ qp = 
+            \begin{alignedat}{6}
+                { } &q_{w}p_{x}\textcolor{red}{i}& {-} &q_{z}p_{y}\textcolor{red}{i}& {+} &q_{y}p_{z}\textcolor{red}{i}& {+} &q_{x}p_{w}\textcolor{red}{i}& {,} \\
+                { } &q_{z}p_{x}\textcolor{green}{j}& {+} &q_{w}p_{y}\textcolor{green}{j}& {-} &q_{x}p_{z}\textcolor{green}{j}& {+} &q_{y}p_{w}\textcolor{green}{j}& {,} \\
+                {-} &q_{y}p_{x}\textcolor{blue}{k}& {+} &q_{x}p_{y}\textcolor{blue}{k}& {+} &q_{w}p_{z}\textcolor{blue}{k}& {+} &q_{z}p_{w}\textcolor{blue}{k}& {,} \\
+                {-} &q_{x}p_{x}&  {-} &q_{y}p_{y}&  {-} &q_{z}p_{z}&  {+} &q_{w}p_{w}& 
+            \end{alignedat} $$
+          </p>
+
+          <p>The formula is still the same, we just shuffled a few of the terms around. This time write \(q\) as the matrix and \(p\) as the vector, like so:</p>
+
+          <p>
+            $$ qp = L(q)p = 
+            \begin{bmatrix}
+              \phantom{+}w_{q} &           -z_{q} & \phantom{+}y_{q} & \phantom{+}x_{q} \\
+              \phantom{+}z_{q} & \phantom{+}w_{q} &           -x_{q} & \phantom{+}y_{q} \\
+                        -y_{q} & \phantom{+}x_{q} & \phantom{+}w_{q} & \phantom{+}z_{q} \\
+                        -x_{q} &           -y_{q} &           -z_{q} & \phantom{+}w_{q}
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              x_{p} \\
+              y_{p} \\
+              z_{p} \\
+              w_{p}
+            \end{bmatrix} $$
+          </p>
+
+          <p>Knowing these \(L\) and \(R\) matrices, a 4x4 matrix can be created from a quaternion. A quaternion \(q\) <a href="blog_quats_multiply_vec.html">rotates a vector</a> \(\vec{v}\) using quaternion multiplication, like so: \(q\vec{v}q^{-1}\). When dealing with unit quaternions, the inverse and conjugate of the quaternion is the same, that is \(q^{-1} = q^{*}\). Since \(q^{*}\) just negates the vector part of \(q\), the rotation matrix of \(q\) can be constructed as:</p>
+
+          <p> $$
+              Rot(q) = L(q)R(q^{*})
+            $$ 
+          </p>
+
+          <p>Substituting tha actual matrices, we get:</p>
+
+          <p>
+            $$ Rot(q) = L(q)R(q^{*}) = 
+           \begin{bmatrix}
+              \phantom{+}w &           -z & \phantom{+}y & \phantom{+}x \\
+              \phantom{+}z & \phantom{+}w &           -x & \phantom{+}y \\
+                        -y & \phantom{+}x & \phantom{+}w & \phantom{+}z \\
+                        -x &           -y &           -z & \phantom{+}w
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              \phantom{+}w &           -z & \phantom{+}y &           -x \\
+              \phantom{+}z & \phantom{+}w &           -x &           -y \\
+                        -y & \phantom{+}x & \phantom{+}w &           -z \\
+              \phantom{+}x & \phantom{+}y & \phantom{+}z & \phantom{+}w
+            \end{bmatrix}
+            $$
+          </p>
+
+          <p>Take note, the right side matrix, \(R(q^{*})\) is not the same as \(R(q)\), the signs on the vector part of the quaternion are flipped. Doing the actual matrix multiplication leaves us with the following matrix:</p>
+
+           <p>
+           $$ \tiny \begin{bmatrix}
+              (w,-z,y,x)   \cdot (w,z,-y,x) & (w,-z,y,x)   \cdot (-z,w,x,y) & (w,-z,y,x)   \cdot (y,-x,w,z) & (w,-z,y,x)   \cdot (-x,-y,-z,w) \\
+              (z,w,-x,y)   \cdot (w,z,-y,z) & (z,w,-x,y)   \cdot (-z,w,x,y) & (z,w,-x,y)   \cdot (y,-x,w,z) & (z,w,-x,y)   \cdot (-x,-y,-z,w) \\
+              (-y,x,w,z)   \cdot (w,z,-y-x) & (-y,x,w,z)   \cdot (-z,w,x,y) & (-y,x,w,z)   \cdot (y,-x,w,z) & (-y,x,w,z)   \cdot (-x,-y,-z,w) \\
+              (-x,-y,-z,w) \cdot (w,z,-y,x) & (-x,-y,-z,w) \cdot (-z,w,x,y) & (-x,-y,-z,w) \cdot (y,-x,w,z) & (-x,-y,-z,w) \cdot (-x,-y,-z,w)
+            \end{bmatrix} $$
+          </p>
+
+          <p>Doing all of the actual dot products, the above matrix simplifies to:</p>
+
+          <p>
+           $$ \begin{bmatrix}
+              w^{2}+x^{2}-y^{2}-z^{2} & 2xy - 2wz                     & 2xz + 2wy                     & 0 \\
+              2xy + 2wz               & w^{2} - x^{2} + y^{2} - z^{2} & 2yz - 2wx                     & 0 \\
+              2xz - 2wy               & 2yz + 2wx                     & w^{2} - x^{2} - y^{2} + z^{2} & 0 \\
+              0                       & 0                             & 0                             & w^{2} + x^{2} + y^{2} + z^{2}
+            \end{bmatrix} $$
+          </p>
+
+          <p  class="bs-callout bs-callout-default">Why does the last row simplify to 0? Looking at element \([3,0]\), \((-x,-y,-z,w) \cdot (w,z,-y,x)\) the dot product is \((-x)w + (-y)z + (-z)(-y) + wx\). Substituting some actual numbers \(x=2,y=3,z=4,w=5\), the dot product becomes: \((-2)5 + (-3)4 + (-4)(-3) + 5(2)\) and that simplifies to \((-10) + (-12) + 12 + 10\) which is \(0\) as expected.</p>
+
+          <p>Converting this formula to code is trivial. To convert to a 3x3 matrix instead of a 4x4 matrix just omit the last row and column.</p>
+
+<pre><code>Matrix4 ToMatrix(Quaternion q) {
+    float ww = q.w * q.w;
+    float xx = q.x * q.x;
+    float yy = q.y * q.y;
+    float zz = q.z * q.z;
+
+    float wx = q.w * q.x;
+    float wy = q.w * q.y;
+    float wz = q.w * q.z;
+
+    float xy = q.x * q.y;
+    float xz = q.x * q.z;
+
+    float yz = q.y * q.z;
+
+    return Matrix4(
+        ww + xx - yy - zz, 2 * xy - 2 * wz, 2 * xz + 2 * wy, 0,
+        2 * xy + 2 * wz, ww - xx + yy - zz, 2 * yz - 2 * wx, 0,
+        2 * xz - 2 * wy, 2 * yz + 2 * wx, ww - xx - yy + zz, 0,
+        0, 0, 0, ww + xx + yy + zz
+    );
+
+    // Just so there is no confusion, the above constructor takes arguments
+    // in row order, but stores them in column order (transposed).
+    // See the non-optimal example for memory layout.
+}</code></pre>
+
+        <h4>With Vectors</h4>
+
+        <p>It's less efficient, but easier to understand quaternion to matrix conversion if we think about basis vectors. The upper 3x3 submatrix of a 4x4 rotation matrix is the basis vectors of said matrix. We can simply take the x, y and z basis vectors, multiply them by the quaternion and store them back into a matrix.</p>
+
+<pre><code>Matrix4 ToMatrix(Quaternion q) {
+    Vector3 r = q * Vector3(1, 0, 0); // Right basis vector
+    Vector3 u = q * Vector3(0, 1, 0); // Up basis vector
+    Vector3 f = q * Vector3(0, 0, 1); // Forward basis vector
+
+    return Matrix4( // OpenGL matrix convention
+        r.x, r.y, r.z, 0,
+        u.x, u.y, u.z, 0,
+        f.x, f.y, f.z, 0,
+        0  , 0  , 0  , 1
+    );
+}</code></pre>
+
+    <h4>From Matrix</h4>
+
+    <p>Similar to how we converted a quaternion to a matrix with basis vectors, we can convert a matrix to a quaternion as well. We simply need the forward and up basis vectors of the matrix, then we can do a quaternion look at. Assuming the input matrix is generic, we should ortho-normalize it first.</p>
+
+<pre><code>Quaternion FromMatrix(Matrix4 m) {
+    Vector3 up = Normalized(Vector3(m[0], m[1], m[2]));
+    Vector3 forward = Normalized(Vector3(m[8], m[9], m[10]));
+    Vector3 right = Cross(up, forward);
+    up = Cross(forward, right);
+
+    return lookAt(forward, up);
+}</code></pre>
+
+        
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

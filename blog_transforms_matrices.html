@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="transforms.html" class="list-group-item">1. Transform Hierarchies</a>
+            <a href="blog_transforms_matrices.html" class="list-group-item active">2. Combining Matrices</a>
+            <a href="blog_transforms_matrix_getters.html" class="list-group-item"><span class="pl-4">a. World Space Getters</span></a>
+            <a href="blog_transforms_matrix_setters.html" class="list-group-item"><span class="pl-4">b. World Space Setters</span></a>
+            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
+            <a href="blog_transforms_transform_world.html" class="list-group-item"><span class="pl-4">a. World Space</span></a>
+            <a href="blog_transforms_summary.html" class="list-group-item">4. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Accumulating Matrices</h2>
+
+          <p>Conceptually, the easiest way to accumulate transforms is to concatenate their matrices. This is done by recursivley multiplying the matrix of every transform in a chain with the matrix of its parent. Engines like Unity, <a href="https://github.com/gameplay3d/GamePlay/blob/4de92c4c6f8047db5dcb7f0dee8541c7e7ea5a80/gameplay/src/Node.cpp#L436" target="_blank">Gameplay 3D</a> and <a href="https://github.com/urho3d/Urho3D/blob/5ce8f820f2842b569c251623bbba1c64495b8bec/Source/Urho3D/Scene/Node.cpp#L2080" target="_blank">Urho 3D</a> work this way.</p>
+
+          <p>It's trivial to use an iterator to avoid recursion, the code below demonstrates how to combine transforms by recursivley combinng their matrices:</p>
+
+<pre><code>Matrix GetWorldMatrix(Transform transform) {
+    Matrix localMatrix = ToMatrix(transform);
+    Matrix worldMatrix = localMatrix;
+    
+    if (transform.parent != NULL) {
+        Matrix parentMatrix = GetWorldMatrix(transform.parent);
+        worldMatrix = localMatrix * parentMatrix;
+    }
+
+    return worldMatrix;
+}
+</code></pre>
+          
+          <p>On the surface, this code works as intended. However as soon as non-uniform scaling is introduced some unintended side effects start to show. Suppose we have transforms <b>A</b>, <b>B</b> and <b>C</b>, where <b>B</b> is a child of <b>A</b>. The relationship of the transforms is shown below:</p>
+
+          <ul>
+            <li><b>Transform A</b>
+              <ul>
+                <li>position: (0, 0, 0)</li>
+                <li>rotation: (0, 0, 0)</li>
+                <li>scale: (2, 1, 1)</li>
+                <li><b>Transform B</b>
+                  <ul>
+                    <li>position: (2, 2, 0)</li>
+                    <li>rotation: (0, 0, 38)</li>
+                    <li>scale: (1, 1, 1)</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li><b>Transform C</b>
+              <ul>
+                <li>position: (0, 0, 0)</li>
+                <li>rotation: (0, 0, 0)</li>
+                <li>scale: (1, 1, 1)</li>
+              </ul>
+            </li>
+          </ul>
+
+          <p>Notice that <b>A</b> has non-uniform scaling. When we rotate <b>B</b>, instead of rotating, the object starts to skew. The following screenshot demonstrates this happening in Unity:</p>
+
+          <p>
+            <img class="img-fluid" src="assets/transform_sample1.gif" alt="Unity rotation artifact sample" />
+          </p>
+
+          <p>This is a common problem when accumulating matrices. There is no cheap or easy fix for this artifact. The skewing happens because the parents non-uniform scaling causes the basis of the child object to become non-orthogonal.</p>
+
+          <p class="bs-callout bs-callout-success">The only way to fix the skewing problem is to decompose the matrix into it's translation, rotation, skew and scale components, then recompose the matrix without skew data. I wrote a <a href="blog_decomposition_intro.html">blog post</a> on how to do just that.</p>
+
+          <p>Since each transform is represented in "local" space, relative to it's parent getting and setting local position / rotation / scale is trivial. </p>
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+    <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item active">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>QR Decomposition</h2>
+
+            <p>QR Decomposition, also called QR Factorization is the process of breaking down a matrix into the product of an orthogonal matrix and an upper triangular matrix. The formula for this is expressed as \(A=QR\) where \(A\) is the input matrix, \(Q\) is an orthogonal matrix and \(R\) is an upper triangular matrix.</p>
+
+            <p  class="bs-callout bs-callout-default">QR Decomposition is important because it is the basis of the QR Algorithm, the method we will use to <a href="blog_decomposition_spect.html">find the eigenvectors and eignvalues</a> of a matrix. The variables \(Q\), \(A\) and \(R\) presented in this page are not a part of the <a href=".html"> decomposition method described before</a>.</p>
+
+            <p>\(Q\) is simply the ortho-normal basis of \(A\). To get the ortho normal basis of \(A\) first orthogonalize the basis vectors matrix using the <a href="https://www.khanacademy.org/math/linear-algebra/alternate-bases/orthonormal-basis/v/linear-algebra-the-gram-schmidt-process">Gram Schmidt algorithm</a>. Once the basis vectors are orthogonal, normalize them. That's it, we now know what \(Q\) is.</p>
+
+            <p>Remember, we're trying to solve for \(A=QR\). To find \(R\) multiply both sides of the equation by the transpose of \(Q\) like so</p>
+            <p>
+              $$ Q^{T}A = Q^{T}QR $$
+            </p>
+            <p>Because \(Q\) is ortho normal, \(Q^{T}\) is the same as the inverse of \(Q\). The product of multiplying a matrix by its inverse is the identity matrix. The \(Q^{T}Q\) part of the right hand side of the above equation simplifies to the identity matrix \(I\). This means the equation becomes:
+            </p>
+            <p>
+              $$ Q^{T}A = R $$
+            </p>
+            <p>Now that we know that \(R\) equals \(Q^{T}A\), we can write the <code>QRDecomposition</code> function.</p>
+<pre><code>struct QRDecompResult {
+    Matrix Q; // Q is an orthogonal matrix
+    Matrix R; // R os an upper triangular matrix
+}
+
+QRDecompResult QRDecomposition(Matrix A) {
+    QRDecompResult result;
+
+    Vector x(A[0], A[1], A[2]);
+    Vector y(A[4], A[5], A[6]);
+    Vector z(A[8], A[9], A[10]);
+
+    y = y -  ProjectionV3(x, y); // y minus projection of y onto x
+    z = (z - Projection(x, z)) - Projection(y, z);
+
+    x = Normalize(x);
+    y = Normalize(y);
+    z = Normalize(z);
+
+    result.Q[0] = x[0]; resuly.Q[1] = x[1]; result.Q[2] = x[2];
+    result.Q[4] = y[0]; result.Q[5] = y[1]; result.Q[6] = y[2];
+    result.Q[8] = z[0]; result.Q[9] = z[1]; result.Q[10]= z[2];
+
+    result.R = Transpose(result.Q) * A;
+
+    return result;
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

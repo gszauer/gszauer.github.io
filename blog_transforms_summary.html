@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="transforms.html" class="list-group-item">1. Transform Hierarchies</a>
+            <a href="blog_transforms_matrices.html" class="list-group-item">2. Combining Matrices</a>
+            <a href="blog_transforms_matrix_getters.html" class="list-group-item"><span class="pl-4">a. World Space Getters</span></a>
+            <a href="blog_transforms_matrix_setters.html" class="list-group-item"><span class="pl-4">b. World Space Setters</span></a>
+            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
+            <a href="blog_transforms_transform_world.html" class="list-group-item"><span class="pl-4">a. World Space</span></a>
+            <a href="blog_transforms_summary.html" class="list-group-item active">4. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Summary</h2>
+
+          
+
+          <p>This blog post covered some of the basic considerations of a transform hierarchy, but this is by no means a comprehensive guide. We only coverd transforms represented by seperate components stored in vectors and quaternions. Godot for example, stores a transform as a <a href="https://github.com/godotengine/godot/blob/34c988cfa92f19c232b65990704816ba1c7d2622/core/math/transform.h#L42">basis matrix and an origin vector</a>. Depending on the context of what you are doing, a different storage strategy might be appropriate.</p>
+
+          <p>This blog treats all transform as non-uniform scale transforms. When combining matrices, that's a naive assumption to make. There are at least four cases to consider:</p>
+
+          <ul>
+			<li>Affine Transforms</li>
+			<li>Uniform Scale Transform</li>
+			<li>Non-Uniform Scale Transform</li>
+			<li>Transforms With Negative Scale</li>
+          </ul>
+
+          <p>These are not unique properties of a transform. For example, a transform can be non-uniform scale and negative scale at the same time.</p>
+
+          <p>When designing a transform class you should also take into consideration things like interpolation, animation and utility functions transforms should provide. Hopefully this blog provided a solid start to this, or at least helped to demonstrate some of the non obvious, potentially hidden complexity of handling object transforms in games.</p>
+
+
+          <h4>Concatination order</h4>
+
+        <p>What is the correct order to concatenate transforms? Is it parent then child, or child then parent? IE:</p>
+
+<pre><code>Transform CombineTransforms(Transform parent, Transform child) {
+// OR
+Transform CombineTransforms(Transform child, Transform parent) {</code></pre>
+          
+          <p>Almost all of the math i write concatenates right to left, so i do transform concatination in that order as well: <code>CombineTransforms(Transform child, Transform parent)</code>. I suggest following the conventions of the math library you are using.</p>
+
+          <h4>Who owns what?</h4>
+
+          <p>I don't personally like including the <code>parent</code> field in a <code>transform</code> structure. I feel like the concept of a hierarchy (and therefore what world space is) should belong to some kind of graph or node system, not necesareley the transform system. I like the way UE4 and Gameplay 3D handle this.</p>
+
+
+        </div>
+
+
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item active">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Matrix Decomposition</h2>
+
+          <p>In my <a href="blog_transforms.html">last blog</a> we discussed transformation hierarchies. A transform having a non uniformly scaled parent lead to some strage side effects. Nameley, rotating such a transform would cause it to skew instead of rotating.</p>
+
+          <p>The only way to fix this non uniform scale issue is trough matrix decompositon. The idea is that you take the final matrix with the skewing problem and decompose it into position, rotation, scale and skew components. Once you have all these components, ignore the skew and create a new matrix using only positon, rotation and scale.</p>
+
+          <p>This type of decomposition is explained in detail in Shoemake and Duff's <a href="http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf">Matrix Animation and Polar Decomposition</a> paper, as well as Shoemake's chapter on <i>Polar Matrix Decomposition</i> in <a href="https://www.amazon.com/Graphics-Gems-IV-IBM-Version/dp/0123361559">Graphics Gems IV</a>.</p>
+
+          <p>This blog post attempts to re-implementation shoemakes method, with code &amp; math that's hopefully easier to read and understand. Shoemakes code for affine decomposition is <a href="https://github.com/erich666/GraphicsGems/tree/master/gemsiv/polar_decomp">on github</a>. Looking at the code, the part of the interface that is interesting for us is this:</p>
+
+
+<pre><code>typedef struct {
+    HVect t;  /* Translation components */
+    Quat  q;  /* Essential rotation   */
+    Quat  u;  /* Stretch rotation   */
+    HVect k;  /* Stretch factors    */
+    float f;  /* Sign of determinant    */
+} AffineParts;
+
+void decomp_affine(HMatrix A, AffineParts *parts);</code></pre>
+
+          <p>We can call <code>decomp_affine</code> to find the translation (<code>t</code>), rotation (<code>q</code>) and scale (<code>k</code>) of the transform without shearing. These values can be used to build a new <code>Transform</code> that can then be converted to a <code>Matrix</code>. The code below uses the provided <code>decomp_affine</code> function to do build a correct transform:</p>
+<pre><code>Matrix GetWorldMatrix(Transform transform) {
+    Matrix localMatrix = ToMatrix(transform);
+    Matrix worldMatrix = localMatrix;
+    
+    if (transform.parent != NULL) {
+        Matrix parentMatrix = GetWorldMatrix(transform.parent);
+        worldMatrix = localMatrix * parentMatrix;
+
+        if (ContainsNonUniformScale(transform.parent)) {
+            AffineParts decomp = decomp_affine(worldMatrix, &decomp);
+
+            Transform temp;
+            temp.parent = NULL;
+            temp.position = decomp.t;
+            temp.scale = decomp.k;
+            temp.rotation = decomp.q;
+        
+            worldMatrix = ToMatrix(temp);  
+        }  
+    }
+
+    return worldMatrix;
+}
+</code></pre>
+			<p>Using the above code, we can fix the skew artifact, making orientations work as expected:</p>
+
+          <p>
+            <img class="img-fluid" src="assets/decompose_compare.gif" alt="Unity compare decomposition" />
+          </p>
+
+
+          <p>If the shearing issue is solved by an affine matrix decomposition, why isn't this technique standard in game engines? To put it simply, polar decomposition is an expensive operation, even if only performed on a few transforms. The technique is much better suited for offline tools.</p>
+
+          <p class="bs-callout bs-callout-default">Shoemake's code for matrix decompositon can be found in many places including <a href="https://github.com/aws/lumberyard/blob/394ca7ee1c2b94d8bd85516436136436bb6ae0e5/dev/Code/Tools/CryCommonTools/Decompose.h">comercial engines</a>, even if only as a part of the editor. Affine decomposition is too expensive to be a part of the runtime.</p>
+
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

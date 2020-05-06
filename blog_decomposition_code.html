@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item active">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          
+           <h2>Shoemake's Code</h2>
+
+          <p>The code presented in the <a href="blog_decomposition_intro.html">last section</a> works, but it's mostly a black box. Lets explore what the <code>decomp_affine</code> function does on a high level. We only ever use the <code>t</code>, <code>q</code> and <code>k</code> fields of the <code>AffineParts</code> structure. Let's take a look at the source of <code>decomp_affine</code> and see how these componetns are filled in.</p>
+
+<pre><code>void decomp_affine(HMatrix A, AffineParts *parts) {
+    HMatrix Q, S, U;
+    Quat p;
+    float det;
+    parts->t = Qt_(A[X][W], A[Y][W], A[Z][W], 0);
+    det = polar_decomp(A, Q, S);
+    if (det<0.f) {
+        mat_copy(Q,=,-Q,3);
+        parts->f = -1;
+    } 
+    else {
+        parts->f = 1;
+    }
+    parts->q = Qt_FromMatrix(Q);
+    parts->k = spect_decomp(S, U);
+    parts->u = Qt_FromMatrix(U);
+    p = snuggle(parts->u, &parts->k);
+    parts->u = Qt_Mul(parts->u, p);
+}</pre></code>
+        
+        <p>The <code>t</code> field is super simple, it just copies the fields of the matrix that hold the translation data.</p>
+
+        <p>The <code>q</code> field is obtained by calling the <code>polar_decomp</code> function, which performs a polar decomposition. This function takes a <code>Matrix</code> <b>M</b> as it's input argument and fills out two output arguments <b>Q</b> and <b>S</b>, the <i>rotation</i> (with potential flip data) and <i>scale</i> (with potential skew data) matrices respectivley. Finally, the function returns the <b>determinent</b> of the rotation matrix.</p>
+
+        <p>At this point, the rotation matrix <b>Q</b> might actually be a flip. If the determinant was less than <code>0</code>, <b>Q</b> contains flip information and needs to be negated. <b>Q</b> now holds the final rotation matrix, it can be converted to a quaternion and stored in <code>q</code>.</p> 
+
+        <p>The <b>S</b> matrix contains both scaling and skew data. This skew data is removed using the <code>spect_decomp</code> function, which breaks the matrix down into eigen vectors and eigen values. This function takes the <b>S</b> matrix containing scale and skew data as it's input argument and fills out a single output argument, <b>U</b> which is the "stretch" matrix. The function returns a <code>Vector</code> which holds the scale data (eigen values)for the transform on each axis.</p>
+
+        <p>The resulting <code>k</code> and <code>u</code> values are non-unique, there are 24 potential values for these. The snuggle function modifies the value of <code>k</code> and returns a quaternion that needs to multiply <code>u</code> in order to make sure these values are correct when interpolated. We don't actually care about the <code>u</code> component. After <code>k</code> is corrected, we have everything we need.</p>
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

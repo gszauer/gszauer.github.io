@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="quaternions.html" class="list-group-item active">1. Introduction</a>
+            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
+            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
+            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
+            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
+            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
+            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
+            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
+            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
+            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>An introduction to Quaternions</h2>
+
+          <p>Quaternions have a a bad rep as being difficult mathematical concepts that are borderline black magic. Thanks to popular engines like Unity and Unreal most developers know what quaternions are and how to use them, but might be wondering how the math behind quaternions actually works.</p>
+
+          <p>Quaternions are actually not very difficult to work with, think of them as an angle / axis pair. The main advantage quaternions have is that they interpolate niceley. A quaternion represents a rotation, not an orientation. What's the difference? A rotation describes how to move one basis into another. An orientation <i>is</i> a basis.</p>
+
+          <p>In the context of games, we always use unit quaternions (quaternions with a length of 1). Periodically, quaternions might need to be re-normalized due to floating point precision issues.</p>
+
+          <h4>Defining a quaternion</h4>
+
+          <p>Let's jump right in and make a quaternion! A quaternion is just a four component touple, much like a <code>Vector4</code>:</p>
+
+<pre><code>struct Quaternion {
+    float x; // vector part
+    float y; // vector part
+    float z; // vector part
+    float w; // scalar part
+}</code></pre>
+
+        <p>There is a reason <code>w</code> comes last, it's important for <a href="blog_quats_to_matrix.html">converting quaternions to matrices</a>. Writing the code for a quaternion is pretty simple. Mathematically, quaternions can be written in several notations. First, just as a four touple of numbers:</p>
+
+        <p>$$ q = (q_{0}, q_{1}, q_{2}, q_{3}) = (q_{x}, q_{y}, q_{z}, q_{w}) $$</p>
+
+          <p>A more formal definition of quaternions will call them a number system that extends complex numbers. There is a whole history about Hamilton and carving the famous formula in a bridge. I won't re-hash all this, you can <a href="https://en.wikipedia.org/wiki/Quaternion">read about it</a> on a number of sources. The important thing about this is, that quaternions are complex numbers which can be written with three imaginary components</p>
+
+          <p>$$ q = w + xi + yj + zk $$</p>
+
+          <p>The meaning of the imaginary numbers \(i\),\(j\) and \(k\) will be described in depth in the section about <a href="blog_quats_create.html">creating quaternions</a>. Finally, a quaternion can be written as a scalar and a vector where the scalar is the \(w\) component and the vector is made up of the \(x\), \(y\) and \(z\) components.</p>
+
+          <p>$$ q = (s, \vec{v}) $$</p>
+
+          <p>It's easy to mistake this notation for axis / angle, but it's not. The scalar component has <i>something</i> in relation with the angle of the quaternion, but it's not the angle. Similarly, the vector component has <i>something</i> to do with the axis, but it's not the axis.</p>
+
+          <h4>Special Quaternion</h4>
+
+          <p>Quaternions have a multiplicitive identity. This special identity quaternion represents no rotation. The scalar component of this quaternion is one, and the vector component is zero.</p>
+
+<pre><code>Quaternion Identity() {
+    //                 x, y, z, w
+    return Quaternion (0, 0, 0, 1)
+}</code></pre>
+
+        <p>Any vector can be turned into a quaternion by leaving the scalar part zero and puting the normalized vector into the vector part of the quaternion. The resulting quaternion, actually any quaternion with a zero scalar value is called a "pure" quaternion.</p>
+
+<pre><code>Quaternion Pure(Vector3 vec) {
+    return Quaternion(vec.x, vec.y, vec.z, 0);
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

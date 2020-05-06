@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="transforms.html" class="list-group-item active">1. Transform Hierarchies</a>
+            <a href="blog_transforms_matrices.html" class="list-group-item">2. Combining Matrices</a>
+            <a href="blog_transforms_matrix_getters.html" class="list-group-item"><span class="pl-4">a. World Space Getters</span></a>
+            <a href="blog_transforms_matrix_setters.html" class="list-group-item"><span class="pl-4">b. World Space Setters</span></a>
+            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
+            <a href="blog_transforms_transform_world.html" class="list-group-item"><span class="pl-4">a. World Space</span></a>
+            <a href="blog_transforms_summary.html" class="list-group-item">4. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Transform Hierarchies</h2>
+
+          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
+
+          <p>The transform hierarchy is a core concept for most games / engines. It's pretty easy to slap together something that multiplies some matrices together and works. But to have a versitile transform hierarchy there is some subtlety to the math that often goes overlooked.</p>
+
+          <p>In this blog we're going to explore two approaches to building a transform hierarchy, and the unexpected artifacts they produce. Both of these methods will represent a transform as three seperate components: <i>position</i>, <i>rotation</i> and <i>scale</i>. All transforms will be orgonized as a tree / hierarchy. </p>
+
+          <p>As expected, the final "world" position of a transform will be the effect of all it's parent's accumulated transformations added to it's own. We will represent a transform in code with a structure similar to the following:</p>
+
+<pre><code>struct Transform {
+    Transform parent; // Reference
+
+    Vector position;
+    Quaternion rotation;
+    Vector scale;
+}</code></pre>
+
+          <p>Graphics API's expect the transformation of an object to be passed as a matrix. Therefore, we need a way to convert a <code>Transform</code> structure to a <i>4x4</i> <code>Matrix</code>. To do this conversion, first extract the basis vectors from the rotation of the transform. Next, scale the basis vectors by the scale of the transform. Finally, stuff the basis vectors and the position vector into a <code>Matrix</code>. The code below demonstrates how to do this:</p>
+
+<pre><code>Matrix ToMatrix(Transform transform) {
+    // First, extract the rotation basis of the transform
+    Vector x = Vector(1, 0, 0) * transform.rotation; // Vec3 * Quat (right vector)
+    Vector y = Vector(0, 1, 0) * transform.rotation; // Vec3 * Quat (up vector)
+    Vector z = Vector(0, 0, 1) * transform.rotation; // Vec3 * Quat (forward vector)
+    
+    // Next, scale the basis vectors
+    x = x * transform.scale.x; // Vector * float
+    y = y * transform.scale.y; // Vector * float
+    z = z * transform.scale.z; // Vector * float
+
+    // Extract the position of the transform
+    Vector t = transform.position;
+
+    // Create matrix
+    return Matrix(
+        x.x, x.y, x.z, 0, // X basis (& Scale)
+        y.x, y.y, y.z, 0, // Y basis (& scale)
+        z.x, z.y, z.z, 0, // Z basis (& scale)
+        t.x, t.y, t.z, 1  // Position
+    );
+}</code></pre>
+
+          <p>This makes for the start of a good transform hierarchy. Next, we need to decide how transforms are accumulated, how global or local position / rotation / scale are assigned and how they can be retrieved. The rest of this blog will focus on these topics and the subtle artifacts they introduce.</p>
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

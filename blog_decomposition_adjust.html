@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+    <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+      var polar_2d_canvas = null;
+var polar_2d_context = null;
+
+var polar_3d_canvas = null;
+var polar_gl = null;
+var polar_shader = null;
+var polar_projection = null;
+var polar_view = null;
+
+var polar_width = 800;
+var polar_2d_height = 80;
+var polar_3d_height = 300;
+var polar_mouse = [0, 0]
+var polar_scale = [1, 1]
+
+//var polar_cam_pos = [3 * 1.5, 4 * 1.5, 6 * 1.5]
+var polar_cam_pos = [0, 4 * 1.5, 6 * 1.5]
+var polar_cam_target = [0, 0, 0]
+
+var polar_mouseOnItem = 0
+var polar_selectedItem = 0
+
+var polar_checkbox = [10,50,20,20]
+var polar_show_reference = false
+
+var polar_t = 0;
+var polar_r = 0;
+
+var basis_geometry = null;
+
+var permutations = null;
+var variants = null;
+var base_mat = null;
+
+var p_out = [
+  "X, Y, Z",
+  "X, Z, Y",
+  "Y, X, Z",
+  "Y, Z, X",
+  "Z, X, Y",
+  "Z, Y, X",
+]
+
+var v_out = [
+  "+, +, +",
+  "-, -, +",
+  "+, -, -",
+  "-, +, -",
+  "-, +, +",
+  "-, -, -",
+  "+, +, -",
+  "+, -, +"
+]
+
+function FillOutMatrices(m) {
+  if (m.length == 9) {
+    base_mat = [
+      m[0], m[1], m[2],
+      m[3], m[4], m[5],
+      m[6], m[7], m[8]
+    ]
+  }
+  else if (m.length == 16) {
+    base_mat = [
+      m[0], m[1], m[2],
+      m[4], m[5], m[6],
+      m[8], m[9], m[10]
+    ]
+  }
+  else {
+    alert("ERROR!");
+  }
+
+  permutations = [
+    [ // X Y Z
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1
+    ],
+    [ // X Z Y
+      1, 0, 0,
+      0, 0, 1,
+      0, 1, 0
+    ],
+    [ // Y X Z
+      0, 1, 0,
+      1, 0, 0,
+      0, 0, 1
+    ],
+    [ // Y Z X
+      0, 1, 0,
+      0, 0, 1,
+      1, 0, 0
+    ],
+    [ // Z X Y
+      0, 0, 1,
+      1, 0, 0,
+      0, 1, 0
+    ],
+    [ // Z Y X
+      0, 0, 1,
+      0, 1, 0,
+      1, 0, 0
+    ]
+  ]
+
+  var p0 = permutations[0]
+  var p1 = permutations[1]
+  var p2 = permutations[2]
+  var p3 = permutations[3]
+  var p4 = permutations[4]
+  var p5 = permutations[5]
+
+  variants = [
+    // permutation 0
+    [
+      [  p0[0],  p0[1],  p0[2],
+         p0[3],  p0[4],  p0[5],
+         p0[6],  p0[7],  p0[8], ], // OK - Goes from permutation to variant
+      [ -p0[0], -p0[1], -p0[2],
+        -p0[3], -p0[4], -p0[5],
+         p0[6],  p0[7],  p0[8], ], // OK - Goes from permutation to variant
+      [  p0[0],  p0[1],  p0[2],
+        -p0[3], -p0[4], -p0[5],
+        -p0[6], -p0[7], -p0[8], ], // OK - Goes from permutation to variant
+      [ -p0[0], -p0[1], -p0[2],
+         p0[3],  p0[4],  p0[5],
+        -p0[6], -p0[7], -p0[8], ], // OK - Goes from permutation to variant
+      [ -p0[0], -p0[1], -p0[2],
+         p0[3],  p0[4],  p0[5],
+         p0[6],  p0[7],  p0[8], ], // NO - Goes from original to variant
+      [ -p0[0], -p0[1], -p0[2],
+        -p0[3], -p0[4], -p0[5],
+        -p0[6], -p0[7], -p0[8], ], // NO - Goes from original to variant
+      [  p0[0],  p0[1],  p0[2],
+         p0[3],  p0[4],  p0[5],
+        -p0[6], -p0[7], -p0[8], ], // NO - Goes from original to variant
+      [  p0[0],  p0[1],  p0[2],
+        -p0[3], -p0[4], -p0[5],
+         p0[6],  p0[7],  p0[8], ], // NO - Goes from original to variant
+    ],
+    // permutation 1
+    [
+      [  p1[0],  p1[1],  p1[2],
+         p1[3],  p1[4],  p1[5],
+         p1[6],  p1[7],  p1[8], ], // OK - Goes from permutation to variant
+      [ -p1[0], -p1[1], -p1[2],
+        -p1[3], -p1[4], -p1[5],
+         p1[6],  p1[7],  p1[8], ], // OK - Goes from permutation to variant
+      [  p1[0],  p1[1],  p1[2],
+        -p1[3], -p1[4], -p1[5],
+        -p1[6], -p1[7], -p1[8], ], // OK - Goes from permutation to variant
+      [ -p1[0], -p1[1], -p1[2],
+         p1[3],  p1[4],  p1[5],
+        -p1[6], -p1[7], -p1[8], ], // OK - Goes from permutation to variant
+      [ -p1[0], -p1[1], -p1[2],
+         p1[3],  p1[4],  p1[5],
+         p1[6],  p1[7],  p1[8], ], // NO - Goes from original to variant
+      [ -p1[0], -p1[1], -p1[2],
+        -p1[3], -p1[4], -p1[5],
+        -p1[6], -p1[7], -p1[8], ], // NO - Goes from original to variant
+      [  p1[0],  p1[1],  p1[2],
+         p1[3],  p1[4],  p1[5],
+        -p1[6], -p1[7], -p1[8], ], // NO - Goes from original to variant
+      [  p1[0],  p1[1],  p1[2],
+        -p1[3], -p1[4], -p1[5],
+         p1[6],  p1[7],  p1[8], ], // NO - Goes from original to variant
+    ],
+    // permutation 2
+    [
+      [  p2[0],  p2[1],  p2[2],
+         p2[3],  p2[4],  p2[5],
+         p2[6],  p2[7],  p2[8], ], // OK - Goes from permutation to variant
+      [ -p2[0], -p2[1], -p2[2],
+        -p2[3], -p2[4], -p2[5],
+         p2[6],  p2[7],  p2[8], ], // OK - Goes from permutation to variant
+      [  p2[0],  p2[1],  p2[2],
+        -p2[3], -p2[4], -p2[5],
+        -p2[6], -p2[7], -p2[8], ], // OK - Goes from permutation to variant
+      [ -p2[0], -p2[1], -p2[2],
+         p2[3],  p2[4],  p2[5],
+        -p2[6], -p2[7], -p2[8], ], // OK - Goes from permutation to variant
+      [ -p2[0], -p2[1], -p2[2],
+         p2[3],  p2[4],  p2[5],
+         p2[6],  p2[7],  p2[8], ], // NO - Goes from original to variant
+      [ -p2[0], -p2[1], -p2[2],
+        -p2[3], -p2[4], -p2[5],
+        -p2[6], -p2[7], -p2[8], ], // NO - Goes from original to variant
+      [  p2[0],  p2[1],  p2[2],
+         p2[3],  p2[4],  p2[5],
+        -p2[6], -p2[7], -p2[8], ], // NO - Goes from original to variant
+      [  p2[0],  p2[1],  p2[2],
+        -p2[3], -p2[4], -p2[5],
+         p2[6],  p2[7],  p2[8], ], // NO - Goes from original to variant
+    ],
+    // permutation 3
+    [
+      [  p3[0],  p3[1],  p3[2],
+         p3[3],  p3[4],  p3[5],
+         p3[6],  p3[7],  p3[8], ], // OK - Goes from permutation to variant
+      [ -p3[0], -p3[1], -p3[2],
+        -p3[3], -p3[4], -p3[5],
+         p3[6],  p3[7],  p3[8], ], // OK - Goes from permutation to variant
+      [  p3[0],  p3[1],  p3[2],
+        -p3[3], -p3[4], -p3[5],
+        -p3[6], -p3[7], -p3[8], ], // OK - Goes from permutation to variant
+      [ -p3[0], -p3[1], -p3[2],
+         p3[3],  p3[4],  p3[5],
+        -p3[6], -p3[7], -p3[8], ], // OK - Goes from permutation to variant
+      [ -p3[0], -p3[1], -p3[2],
+         p3[3],  p3[4],  p3[5],
+         p3[6],  p3[7],  p3[8], ], // NO - Goes from original to variant
+      [ -p3[0], -p3[1], -p3[2],
+        -p3[3], -p3[4], -p3[5],
+        -p3[6], -p3[7], -p3[8], ], // NO - Goes from original to variant
+      [  p3[0],  p3[1],  p3[2],
+         p3[3],  p3[4],  p3[5],
+        -p3[6], -p3[7], -p3[8], ], // NO - Goes from original to variant
+      [  p3[0],  p3[1],  p3[2],
+        -p3[3], -p3[4], -p3[5],
+         p3[6],  p3[7],  p3[8], ], // NO - Goes from original to variant
+    ],
+    // permutation 4
+    [
+      [  p4[0],  p4[1],  p4[2],
+         p4[3],  p4[4],  p4[5],
+         p4[6],  p4[7],  p4[8], ], // OK - Goes from permutation to variant
+      [ -p4[0], -p4[1], -p4[2],
+        -p4[3], -p4[4], -p4[5],
+         p4[6],  p4[7],  p4[8], ], // OK - Goes from permutation to variant
+      [  p4[0],  p4[1],  p4[2],
+        -p4[3], -p4[4], -p4[5],
+        -p4[6], -p4[7], -p4[8], ], // OK - Goes from permutation to variant
+      [ -p4[0], -p4[1], -p4[2],
+         p4[3],  p4[4],  p4[5],
+        -p4[6], -p4[7], -p4[8], ], // OK - Goes from permutation to variant
+      [ -p4[0], -p4[1], -p4[2],
+         p4[3],  p4[4],  p4[5],
+         p4[6],  p4[7],  p4[8], ], // NO - Goes from original to variant
+      [ -p4[0], -p4[1], -p4[2],
+        -p4[3], -p4[4], -p4[5],
+        -p4[6], -p4[7], -p4[8], ], // NO - Goes from original to variant
+      [  p4[0],  p4[1],  p4[2],
+         p4[3],  p4[4],  p4[5],
+        -p4[6], -p4[7], -p4[8], ], // NO - Goes from original to variant
+      [  p4[0],  p4[1],  p4[2],
+        -p4[3], -p4[4], -p4[5],
+         p4[6],  p4[7],  p4[8], ], // NO - Goes from original to variant
+    ],
+    // permutation 5
+    [
+      [  p5[0],  p5[1],  p5[2],
+         p5[3],  p5[4],  p5[5],
+         p5[6],  p5[7],  p5[8], ], // OK - Goes from permutation to variant
+      [ -p5[0], -p5[1], -p5[2],
+        -p5[3], -p5[4], -p5[5],
+         p5[6],  p5[7],  p5[8], ], // OK - Goes from permutation to variant
+      [  p5[0],  p5[1],  p5[2],
+        -p5[3], -p5[4], -p5[5],
+        -p5[6], -p5[7], -p5[8], ], // OK - Goes from permutation to variant
+      [ -p5[0], -p5[1], -p5[2],
+         p5[3],  p5[4],  p5[5],
+        -p5[6], -p5[7], -p5[8], ], // OK - Goes from permutation to variant
+      [ -p5[0], -p5[1], -p5[2],
+         p5[3],  p5[4],  p5[5],
+         p5[6],  p5[7],  p5[8], ], // NO - Goes from original to variant
+      [ -p5[0], -p5[1], -p5[2],
+        -p5[3], -p5[4], -p5[5],
+        -p5[6], -p5[7], -p5[8], ], // NO - Goes from original to variant
+      [  p5[0],  p5[1],  p5[2],
+         p5[3],  p5[4],  p5[5],
+        -p5[6], -p5[7], -p5[8], ], // NO - Goes from original to variant
+      [  p5[0],  p5[1],  p5[2],
+        -p5[3], -p5[4], -p5[5],
+         p5[6],  p5[7],  p5[8], ], // NO - Goes from original to variant
+    ]
+  ]
+}
+
+function Init() {
+  FillOutMatrices([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ])
+  polar_2d_canvas = document.getElementById('polar_2d_canvas');
+  if (polar_2d_canvas && polar_2d_canvas.getContext) {
+    polar_2d_context = polar_2d_canvas.getContext('2d');
+
+    polar_2d_canvas.addEventListener('mousemove', OnMouseMovePolar, false);
+    polar_2d_canvas.addEventListener('mousedown', OnMouseDownPolar, false);
+    polar_2d_canvas.addEventListener('mouseup', OnMouseUpPolar, false);
+  }
+
+  polar_3d_canvas = document.getElementById('polar_3d_canvas');
+  if (polar_3d_canvas && polar_3d_canvas.getContext) {
+    polar_gl = polar_3d_canvas.getContext("webgl");
+
+    if (!polar_gl) {
+      alert("Can't initialize Web GL!\nWon't be able to render examples.")
+    }
+    else {
+      polar_gl.clearColor(1, 1, 1, 1);
+
+      polar_gl.clearDepth(1.0);
+      polar_gl.enable(polar_gl.DEPTH_TEST);
+      polar_gl.depthFunc(polar_gl.LEQUAL);
+
+      polar_gl.enable(polar_gl.CULL_FACE);
+      polar_gl.cullFace(polar_gl.BACK);
+
+      polar_shader = MakeSolidColorShader(polar_gl);
+
+      polar_projection = PerspectiveMatrix(35, 0.1, 500, polar_width / polar_3d_height);
+      polar_view = LookAt(polar_cam_pos, polar_cam_target, [0, 1, 0]);
+
+      basis_geometry = MakeBasis(polar_gl, {x:0,y:0,z:0}, 2, 2, 2, 0.25);
+    }
+  }
+
+  RenderPolar();
+}
+
+function OnMouseDownPolar(evt) {
+  var rect = polar_2d_canvas.getBoundingClientRect();
+  polar_mouse = [
+    evt.clientX - rect.left,
+    evt.clientY - rect.top
+  ];
+
+  polar_scale = [
+    (rect.right - rect.left) / polar_width,
+    (rect.bottom - rect.top) / polar_2d_height
+  ]
+
+  polar_mouse[0] /= polar_scale[0];
+  polar_mouse[1] /= polar_scale[1];
+
+  var cirX = 20 + GetIterationPolar() * 54
+  var cirY = 20
+  var cirX2 = 20 + GetIterationPolar2() * 38.571
+  var cirY2 = 60
+  var cirR = 10
+
+  if (PointInCircle(polar_mouse, cirX, cirY, cirR)) {
+    polar_selectedItem = 2
+  }
+  else if (PointInCircle(polar_mouse, cirX2, cirY2, cirR)) {
+    polar_selectedItem = 1
+  }
+
+  RenderPolar()
+}
+
+function OnMouseUpPolar(evt) {
+  polar_selectedItem = 0
+}
+
+function OnMouseMovePolar(evt) {
+  var rect = polar_2d_canvas.getBoundingClientRect();
+  polar_mouse = [
+    evt.clientX - rect.left,
+    evt.clientY - rect.top
+  ];
+
+  polar_scale = [
+    (rect.right - rect.left) / polar_width,
+    (rect.bottom - rect.top) / polar_2d_height
+  ]
+
+  polar_mouse[0] /= polar_scale[0];
+  polar_mouse[1] /= polar_scale[1];
+
+  var lastpolar_mouseOnItem = polar_mouseOnItem
+  var cirX = 20 + GetIterationPolar() * 54
+  var cirX2 = 20 + GetIterationPolar2() * 38.571
+
+  if (evt.buttons & 1 == 1) {
+   cirX = GetHandleXPolar(polar_t);
+   cirX2 = GetHandleXPolar(polar_r);
+
+   if (polar_selectedItem == 1) {
+      var current = polar_mouse[0]
+      if (current < 20) {
+        current = 20
+      }
+      else if (current > 20 + 270) {
+        current = 20 + 270
+      }
+
+      current = (current - 20) / (270)
+      if (current < 0) {
+        current = 0
+      }
+      else if (current > 1) {
+        current = 1
+      }
+
+      polar_r = current
+    }
+    else if (polar_selectedItem == 2) {
+      var current = polar_mouse[0]
+      if (current < 20) {
+        current = 20
+      }
+      else if (current > 20 + 270) {
+        current = 20 + 270
+      }
+
+      current = (current - 20) / (270)
+      if (current < 0) {
+        current = 0
+      }
+      else if (current > 1) {
+        current = 1
+      }
+
+      polar_t = current
+    }
+  }
+  else {
+    polar_selectedItem = 0
+  }
+
+  polar_mouseOnItem = 0
+
+  var cirY = 20
+  var cirY2 = 60
+  var cirR = 10
+
+  if (PointInCircle(polar_mouse, cirX, cirY, cirR)) {
+    polar_mouseOnItem = 2
+  }
+  else if (PointInCircle(polar_mouse, cirX2, cirY2, cirR)) {
+    polar_mouseOnItem = 1
+  }
+
+  if (lastpolar_mouseOnItem != polar_mouseOnItem || polar_selectedItem != 0) {
+    RenderPolar()
+  }
+}
+
+function RenderPolar() {
+  RenderPolar2D();
+  RenderPolar3D();
+}
+
+function RenderPolar3D() {
+  if (!polar_gl) {
+    return;
+  }
+
+  polar_gl.clear(polar_gl.COLOR_BUFFER_BIT | polar_gl.DEPTH_BUFFER_BIT);
+
+  var move = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    6, 0, 0, 1
+  ]
+
+  DrawBuffer(basis_geometry, Mul4(move, M4(base_mat)))
+
+  var perm_index = -1
+  if (GetIterationPolar() < permutations.length && permutations[GetIterationPolar()] != null) {
+    DrawBuffer(basis_geometry, M4(permutations[GetIterationPolar()]))
+    perm_index = GetIterationPolar()
+  }
+
+  move = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    -6, 0, 0, 1
+  ]
+
+  if (perm_index >= 0 && perm_index < variants.length && GetIterationPolar2() < variants[perm_index].length && variants[perm_index][GetIterationPolar2()] != null) {
+    DrawBuffer(basis_geometry, Mul4(move, M4(variants[perm_index][GetIterationPolar2()])))
+  }
+}
+
+function M4(m3) {
+  return [
+    m3[0], m3[1], m3[2], 0,
+    m3[3], m3[4], m3[5], 0,
+    m3[6], m3[7], m3[8], 0,
+        0,     0,     0, 1
+  ]
+}
+
+function RenderPolar2D() {
+  if (polar_2d_context) {
+    // Clear BG Color
+    polar_2d_context.fillStyle = 'rgb(255, 255, 255)';
+    polar_2d_context.fillRect(0, 0, polar_width, polar_2d_height);
+
+    // Draw the scale slider
+    polar_2d_context.setLineDash([]);
+    polar_2d_context.strokeStyle = 'rgb(128, 128, 128)';
+    polar_2d_context.fillStyle = 'rgb(32, 32, 32)';
+
+    polar_2d_context.lineWidth = 2
+
+    // Draw slider line
+    polar_2d_context.beginPath()
+    polar_2d_context.moveTo(20 - 10, 20)
+    polar_2d_context.lineTo(20 + 270 + 10, 20) 
+    polar_2d_context.stroke()
+    polar_2d_context.closePath()
+
+    // Draw notches
+    polar_2d_context.beginPath()
+    for (var i = 0; i < 6; ++i) {
+      var x = Math.floor(20 + i * 54);
+      polar_2d_context.moveTo(x, 10)
+      polar_2d_context.lineTo(x, 30) 
+      polar_2d_context.stroke()
+    }
+    polar_2d_context.closePath()
+
+    polar_2d_context.lineWidth = 1
+
+    // Scale 1
+    polar_2d_context.strokeStyle = 'rgb(32, 32, 32)';
+    polar_2d_context.fillStyle = 'rgb(128, 128, 128)';
+    if (polar_mouseOnItem == 2 || polar_selectedItem == 2) {
+        polar_2d_context.fillStyle = 'rgb(200, 200, 200)';
+    }
+    var handleX = 20 + GetIterationPolar() * 54
+    var handleY = 20
+    polar_2d_context.beginPath()
+    polar_2d_context.arc(handleX, handleY, 10, 0, Math.PI * 2, true); // Outer circle
+    polar_2d_context.stroke()
+    polar_2d_context.fill()
+    polar_2d_context.closePath()
+
+    polar_2d_context.font = '18px serif';
+    debugString = 'Permutation: ' + GetIterationPolar()
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 320, 25);
+
+    polar_2d_context.font = '18px serif';
+    debugString = p_out[GetIterationPolar()]
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 475, 25);
+
+    // SLIDER 2
+
+    // Draw the scale slider
+    polar_2d_context.setLineDash([]);
+    polar_2d_context.strokeStyle = 'rgb(128, 128, 128)';
+    polar_2d_context.fillStyle = 'rgb(32, 32, 32)';
+
+    polar_2d_context.lineWidth = 2
+
+    // Draw slider line
+    polar_2d_context.beginPath()
+    polar_2d_context.moveTo(20 - 10, 60)
+    polar_2d_context.lineTo(20 + 270 + 10, 60) 
+    polar_2d_context.stroke()
+    polar_2d_context.closePath()
+
+    // Draw notches
+    polar_2d_context.beginPath()
+    for (var i = 0; i < 8; ++i) {
+      var x = Math.floor(20 + i * 38.571);
+      polar_2d_context.moveTo(x, 50)
+      polar_2d_context.lineTo(x, 70) 
+      polar_2d_context.stroke()
+    }
+    polar_2d_context.closePath()
+
+    polar_2d_context.lineWidth = 1
+
+    // Scale 1
+    polar_2d_context.strokeStyle = 'rgb(32, 32, 32)';
+    polar_2d_context.fillStyle = 'rgb(128, 128, 128)';
+    if (polar_mouseOnItem == 1 || polar_selectedItem == 1) {
+        polar_2d_context.fillStyle = 'rgb(200, 200, 200)';
+    }
+    var handleX = 20 + GetIterationPolar2() * 38.571
+    var handleY = 60
+    polar_2d_context.beginPath()
+    polar_2d_context.arc(handleX, handleY, 10, 0, Math.PI * 2, true); // Outer circle
+    polar_2d_context.stroke()
+    polar_2d_context.fill()
+    polar_2d_context.closePath()
+
+    polar_2d_context.font = '18px serif';
+    debugString = 'Variant: ' + GetIterationPolar2()
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 320, 65);
+
+    polar_2d_context.font = '18px serif';
+    debugString = v_out[GetIterationPolar2()]
+    polar_2d_context.fillStyle = 'rgb(64, 64, 64)';
+    polar_2d_context.fillText(debugString, 475, 65);
+  }
+}
+
+function PointInCircle(point, cirX, cirY, rad) {
+  var x2 = (point[0] - cirX) * (point[0] - cirX)
+  var y2 = (point[1] - cirY) * (point[1] - cirY)
+  return x2 + y2 < rad * rad
+}
+
+function GetHandleXPolar(_t) {
+  // Lerp
+  return 20 + (290 - 20) * _t
+}
+
+function GetIterationPolar() {
+  return Math.floor(polar_t * 270 / 54)
+}
+
+function GetIterationPolar2() {
+  return Math.floor(polar_r * 270 / 38.571)
+}
+
+function MakeSolidColorShader(gl) {
+  // Setup vertex Shader
+  const vSource = `
+    precision highp float;
+    attribute vec3 position;
+    attribute vec3 color;
+
+    uniform mat4 modelMatrix;
+    uniform mat4 viewMatrix;
+    uniform mat4 projectionMatrix;
+
+    varying vec4 vert_color; 
+
+    void main() {
+      vert_color = vec4(color, 1.0);
+
+      gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
+    }
+  `;  
+
+  const vertex = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertex, vSource);
+  gl.compileShader(vertex);
+
+  if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS)) {
+    alert("Can't compile vertex shader: " + gl.getShaderInfoLog(vertex));
+    gl.deleteShader(vertex);
+    return null;
+  }
+
+  // Setup fragment shader
+  const fSource = `
+    precision highp float;
+    varying vec4 vert_color; 
+
+    void main() {
+      gl_FragColor = vert_color;
+    }
+  `;
+
+  const fragment = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragment, fSource);
+  gl.compileShader(fragment);
+
+  if (!gl.getShaderParameter(fragment, gl.COMPILE_STATUS)) {
+    alert("Can't compile fragment shader: " + gl.getShaderInfoLog(fragment));
+    gl.deleteShader(fragment);
+    return null;
+  }
+
+  // Setup actual program
+  const program = gl.createProgram();
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+
+  gl.deleteShader(vertex);
+  gl.deleteShader(fragment);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    alert("Can't link the shader: " + gl.getProgramInfoLog(program));
+    return null;
+  }
+
+  const info = {
+    id : program,
+    attribs : {
+      position: gl.getAttribLocation(program, "position"),
+      color: gl.getAttribLocation(program, "color")   
+    },
+    uniforms : {
+      model: gl.getUniformLocation(program, "modelMatrix"),
+      view: gl.getUniformLocation(program, "viewMatrix"),
+      projection: gl.getUniformLocation(program, "projectionMatrix"),
+    }
+  };
+  return info;
+}
+
+function PerspectiveMatrix(fov, zNear, zFar, aspect) {
+  const tanHalfFov = Math.tan((fov * 0.5) * 0.0174533);
+  const fovY = 1.0 / tanHalfFov; 
+  const fovX = fovY / aspect; 
+  const _33 = -(zFar / (zFar - zNear))
+  const _43 = -((zFar * zNear) / (zFar - zNear));
+
+  const result = [
+    fovX, 0,    0,   0,
+    0,    fovY, 0,   0,
+    0,    0,    _33, -1,
+    0,    0,    _43,   0
+  ];
+
+  return result;
+}
+
+function LookAt(eye, at, up) {
+  const zAxis = [
+    eye[0] - at[0],
+    eye[1] - at[1],
+    eye[2] - at[2]
+  ];
+  var lenSq = (zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    zAxis[0] /= len;
+    zAxis[1] /= len;
+    zAxis[2] /= len;
+  }
+
+  const xAxis = [ // Cross
+    zAxis[1] * up[2] - zAxis[2] * up[1],
+    zAxis[2] * up[0] - zAxis[0] * up[2],
+    zAxis[0] * up[1] - zAxis[1] * up[0]
+  ]
+  lenSq = (xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    xAxis[0] /= len;
+    xAxis[1] /= len;
+    xAxis[2] /= len;
+  }
+
+  const yAxis = [ // Cross
+    xAxis[1] * zAxis[2] - xAxis[2] * zAxis[1],
+    xAxis[2] * zAxis[0] - xAxis[0] * zAxis[2],
+    xAxis[0] * zAxis[1] - xAxis[1] * zAxis[0]
+  ]
+  lenSq = (yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2]);
+  if (lenSq != 0) {
+    var len = Math.sqrt(lenSq);
+    yAxis[0] /= len;
+    yAxis[1] /= len;
+    yAxis[2] /= len;
+  }
+
+  const result = [
+    xAxis[0], yAxis[0], zAxis[0], 0,
+    xAxis[1], yAxis[1], zAxis[1], 0,
+    xAxis[2], yAxis[2], zAxis[2], 0,
+    -(xAxis[0] * eye[0] + xAxis[1] * eye[1] + xAxis[2] * eye[2]), 
+    -(yAxis[0] * eye[0] + yAxis[1] * eye[1] + yAxis[2] * eye[2]), 
+    -(zAxis[0] * eye[0] + zAxis[1] * eye[1] + zAxis[2] * eye[2]), 
+    1
+  ];
+
+  return result;
+}
+
+function DrawBuffer(buffer, modelMatrix) {
+  polar_gl.bindBuffer(polar_gl.ARRAY_BUFFER, buffer.bufferId);
+
+  polar_gl.vertexAttribPointer(polar_shader.attribs.position, buffer.numComponents, buffer.type, false, buffer.stride, buffer.offset);
+  polar_gl.enableVertexAttribArray(polar_shader.attribs.position);
+
+  polar_gl.vertexAttribPointer(polar_shader.attribs.color, buffer.numComponents, buffer.type, false, buffer.stride, buffer.count * 3 * 4);
+  polar_gl.enableVertexAttribArray(polar_shader.attribs.color);
+
+  polar_gl.useProgram(polar_shader.id);
+
+  polar_gl.uniformMatrix4fv(polar_shader.uniforms.projection, false, polar_projection);
+  polar_gl.uniformMatrix4fv(polar_shader.uniforms.view, false, polar_view);
+  polar_gl.uniformMatrix4fv(polar_shader.uniforms.model, false, modelMatrix);
+
+  const offset = 0;
+  polar_gl.drawArrays(polar_gl.TRIANGLES, offset, buffer.count)
+}
+
+function GetCubeVertx(position, halfX, halfY, halfZ) {
+  var verts = []
+
+  // Top face
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  // Bottom face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+
+  // Right face
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  // Left face
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  // Front face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z + halfZ)  
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z + halfZ)
+
+  // Back face
+  verts.push(position.x - halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y - halfY)
+  verts.push(position.z - halfZ)  
+
+  verts.push(position.x + halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+
+  verts.push(position.x - halfX)
+  verts.push(position.y + halfY)
+  verts.push(position.z - halfZ)
+  
+  return verts
+}
+
+function MakeBasis(gl, position, lenX, lenY, lenZ, radius) {
+  radius = radius * 0.5
+
+  var arrayBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, arrayBuffer);
+  var verts = []
+
+  var p = {
+    x: position.x + lenX * 0.5,
+    y: position.y,
+    z: position.z
+  }
+  var x = GetCubeVertx(p, lenX * 0.5, radius, radius)
+
+  p = {
+    x: position.x,
+    y: position.y + lenY * 0.5,
+    z: position.z
+  }
+  var y = GetCubeVertx(p, radius, lenY * 0.5, radius)
+
+  p = {
+    x: position.x,
+    y: position.y,
+    z: position.z + lenZ * 0.5
+  }
+  var z = GetCubeVertx(p, radius, radius, lenZ * 0.5)
+
+  var verts = []
+
+  for (var i = 0; i < x.length; i += 3) {
+    verts.push(x[i + 0]); // X
+    verts.push(x[i + 1]); // Y
+    verts.push(x[i + 2]); // Z
+  }
+  for (var i = 0; i < y.length; i += 3) {
+    verts.push(y[i + 0]); // X
+    verts.push(y[i + 1]); // Y
+    verts.push(y[i + 2]); // Z
+  }
+  for (var i = 0; i < z.length; i += 3) {
+    verts.push(z[i + 0]); // X
+    verts.push(z[i + 1]); // Y 
+    verts.push(z[i + 2]); // Z
+  }
+
+  for (var i = 0; i < x.length; i += 3) {
+    verts.push(1) // R
+    verts.push(0) // G
+    verts.push(0) // B
+  }
+  for (var i = 0; i < y.length; i += 3) {
+    verts.push(0) // R
+    verts.push(1) // G
+    verts.push(0) // B
+  }
+  for (var i = 0; i < z.length; i += 3) {
+    verts.push(0) // R
+    verts.push(0) // G
+    verts.push(1) // B
+  }
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+  return {
+    bufferId: arrayBuffer,
+    count: ((verts.length) / 2) / 3,
+    numComponents: 3,
+    type: gl.FLOAT,
+    stride: 0,
+    offset: 0
+  }
+}
+
+function Mul4(m1, m2) {
+  if (m2.length!= 16 || m1.length != 16) {
+    alert("Trying to multiply two non 4x4 matrices");
+  }
+  var result = [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ]
+
+  result[0] = m2[0] * m1[0] + m2[1] * m1[4] + m2[2] * m1[8] + m2[3] *m1[12]
+  result[1] = m2[0] * m1[1] + m2[1] * m1[5] + m2[2] * m1[9] + m2[3] *m1[13]
+  result[2] = m2[0] * m1[2] + m2[1] * m1[6] + m2[2] *m1[10] + m2[3] *m1[14]
+  result[3] = m2[0] * m1[3] + m2[1] * m1[7] + m2[2] *m1[11] + m2[3] *m1[15]
+
+  result[4] = m2[4] * m1[0] + m2[5] * m1[4] + m2[6] * m1[8] + m2[7] *m1[12]
+  result[5] = m2[4] * m1[1] + m2[5] * m1[5] + m2[6] * m1[9] + m2[7] *m1[13]
+  result[6] = m2[4] * m1[2] + m2[5] * m1[6] + m2[6] *m1[10] + m2[7] *m1[14]
+  result[7] = m2[4] * m1[3] + m2[5] * m1[7] + m2[6] *m1[11] + m2[7] *m1[15]
+
+  result[8] = m2[8] * m1[0] + m2[9] * m1[4] +m2[10] * m1[8] +m2[11] *m1[12]
+  result[9] = m2[8] * m1[1] + m2[9] * m1[5] +m2[10] * m1[9] +m2[11] *m1[13]
+  result[10]= m2[8] * m1[2] + m2[9] * m1[6] +m2[10] *m1[10] +m2[11] *m1[14]
+  result[11]= m2[8] * m1[3] + m2[9] * m1[7] +m2[10] *m1[11] +m2[11] *m1[15]
+
+  result[12]=m2[12] * m1[0] +m2[13] * m1[4] +m2[14] * m1[8] +m2[15] *m1[12]
+  result[13]=m2[12] * m1[1] +m2[13] * m1[5] +m2[14] * m1[9] +m2[15] *m1[13]
+  result[14]=m2[12] * m1[2] +m2[13] * m1[6] +m2[14] *m1[10] +m2[15] *m1[14]
+  result[15]=m2[12] * m1[3] +m2[13] * m1[7] +m2[14] *m1[11] +m2[15] *m1[15]
+
+  return result;
+}
+
+function Dot(v1, v2) {
+  if (v1.length != 3 || v2.length != 3) {
+    alert("trying to dot product non vector3's")
+  }
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+function SubV3(v1, v2) {
+  if (v1.length != 3 || v2.length != 3) {
+    alert("trying to subtract non vector3's")
+  }
+  return [
+    v1[0] - v2[0],
+    v1[1] - v2[1],
+    v1[2] - v2[2]
+  ]
+}
+    </script>
+  </head>
+
+  <body onload="Init();renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Game Development Course</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <!--li class="nav-item">
+              <a class="nav-link" href="contact.html">Udemy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="contact.html">Hardware</a>
+            </li-->
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
+            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
+            <a href="blog_decomposition_math.html" class="list-group-item">3. The Math</a>
+            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
+            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
+            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
+            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
+            <a href="blog_decomposition_adjust.html" class="list-group-item active">8. Spectral Adjustment</a>
+            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
+            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Spectral Adjustment</h2>
+
+          <p>In my opinion, spectral adjustment is the hardest part of decomposing an affine matrix. We need to take the non-unique result of our <a href="blog_decomposition_spect.html">spectral decomposition</a> and turn it into something that's geometrically meaningful. In Shoemake's reference code, this method is called <code>snuggle</code></p>
+
+          <p>Spectral composition leaves us with the following decomposition: \(S = UKU^{T}\). Changing the labels &amp; reversing teh directions of along which \(S\) is diagonalized will change the values of \(U\) and \(K\), but not the product \(UKU^{T}\). Out of all the valid variations of \(U\), we need to pick the one that has the smallest rotation angle.</p>
+
+          <p>To do this, consider interpolating between two stretch matrices, \(S_{1}\) and \(S_{2}\). We need to choose their diagonalizing rotations, \(U_{1}\) and \(U_{2}\) so that they are as similar as possible. The transform that goes from \(U_{1}\) to \(U_{2}\) is \(U_{12} = U_{1}^{T}U_{2}\). We need to minimize the angle of rotation performed by \(U_{12}\). We know what \(U_{1}\) is, how about \(U_{2}\)? \(U_{2}\) can be one of 24 matrices. These matrices are:</p>
+
+            <ul>
+              <li>All <a href="https://en.wikipedia.org/wiki/Permutation_matrix">axis permutations</a> for a 3x3 matrix (6)</li>
+              <li>Multiplied by all axis sign combinations (8)</li>
+              <li>Which are also achiavable by a rotation (divide by 2)</li>
+            </ul>
+
+          <p>6 * 8 / 2 = 24, \(U_{2}\) can be one of 24 matrices. Knowing all possible values of \(U_{2}\), we need to compute \(U_{12}\) for each potential combination. To find the one with the smallest angle, convert \(U_{12}\) to a quaternion and pick the one with the largest <b>w</b> component. The eigen values in \(K\) should be re-arranged to match the axis permutation of the chosen \(U_{2}\). Multiply the eigen vectors by \(U_{2}^{T}\) to find the new eigen vectors, \(U = U_{1} U_{2}^{T}\)</p>
+
+          <p>The tricky part of finding all the possible values for \(U_{2}\) is figuring out which of the 48 combinations are achiavable by a rotation. The interactive sample below helps visualize this. The basis on the left is identiy (think of it as a potential value for \(U_{1}\)). The middle basis shows all axis permutations. The matrix on the right is all the sign combinations of the current permutation. Use the top slider to change permutation, the bottom slider to change sign combination. Look for matrices on the right that are rotations of the matrix on the left.</p>
+
+
+            <canvas id="polar_2d_canvas" width="800" height="80" class="img-fluid">
+              Canvas support required
+            </canvas>
+            <canvas id="polar_3d_canvas" width="800" height="300" class="img-fluid">
+              WebGL support required
+            </canvas>
+
+          <p>Below is a table with all axis permutations and the sign combinations that can be achieved by a rotation.</p>
+
+          <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Permutation</th>
+      <th scope="col">Valid Axis 1</th>
+      <th scope="col">Valid Axis 2</th>
+      <th scope="col">Valid Axis 3</th>
+      <th scope="col">Valid Axis 4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">X, Y, Z</th>
+      <td>+X, +Y, +Z</td>
+      <td>-X, -Y, -Z</td>
+      <td>+X, -Y, -Z</td>
+      <td>-X, +Y, -Z</td>
+    </tr>
+    <tr>
+      <th scope="row">X, Z, Y</th>
+      <td>-X, +Z, +Y</td>
+      <td>-X, -Z, -Y</td>
+      <td>+X, +Z, -Y</td>
+      <td>+X, -Z, +Y</td>
+    </tr>
+    <tr>
+      <th scope="row">Y, X, Z</th>
+      <td>-Y, +X, +Z</td>
+      <td>-Y, -X, -Z</td>
+      <td>+Y, +X, -Z</td>
+      <td>+Y, -X, +Z</td>
+    </tr>
+    <tr>
+      <th scope="row">Y, Z, X</th>
+      <td>+Y, +Z, +X</td>
+      <td>-Y, -Z, -X</td>
+      <td>+Y, -Z, -X</td>
+      <td>-Y, +Z, -X</td>
+    </tr>
+    <tr>
+    <th scope="row">Z, X, Y</th>
+      <td>+Z, +X, +Y</td>
+      <td>-Z, -X, -Y</td>
+      <td>+Z, -X, -Y</td>
+      <td>-Z, +X, -Y</td>
+    </tr>
+    <th scope="row">Z, Y X</th>
+      <td>-Z, +Y, +X</td>
+      <td>-Z, -Y, -X</td>
+      <td>+Z, +Y, -X</td>
+      <td>+Z, -Y, +X</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre><code>struct SpectralAdjustmentResult {
+    Matrix U; // Each basis vector is an eigenvector
+    Matrix K; // Contains eigenvalues on main diagonal
+    Matrix Ut; // Transpose of U
+}
+
+SpectralAdjustmentResult SpectralDecompositonAdjustment(SpectralDecompositionResult input) {
+  Matrix U1 = input.U;
+  Matrix U1t = input.Ut;
+
+  Matrix[24][9] m_permutations = [
+    // Permutation 0: x, y, z
+    [ 1, 0, 0,  0, 1, 0,  0, 0, 1 ],
+    [-1,-0,-0, -0,-1,-0,  0, 0, 1 ],
+    [ 1, 0, 0, -0,-1,-0, -0,-0,-1 ],
+    [-1,-0,-0,  0, 1, 0, -0,-0,-1 ],
+    // Permutation 1: x, z, y
+    [-1,-0,-0,  0, 0, 1,  0, 1, 0 ],
+    [-1,-0,-0, -0,-0,-1, -0,-1,-0 ],
+    [ 1, 0, 0,  0, 0, 1, -0,-1,-0 ],
+    [ 1, 0, 0, -0,-0,-1,  0, 1, 0 ],
+    // Permutation 2: y, x, z
+    [-0,-1,-0,  1, 0, 0,  0, 0, 1 ],
+    [-0,-1,-0, -1,-0,-0, -0,-0,-1 ],
+    [ 0, 1, 0,  1, 0, 0, -0,-0,-1 ],
+    [ 0, 1, 0, -1,-0,-0,  0, 0, 1 ],
+    // Permutation 3: y, z, x
+    [ 0, 1, 0,  0, 0, 1,  1, 0, 0 ],
+    [-0,-1,-0, -0,-0,-1,  1, 0, 0 ],
+    [ 0, 1, 0, -0,-0,-1, -1,-0,-0 ],
+    [-0,-1,-0,  0, 0, 1, -1,-0,-0 ],
+     // Permutation 4: z, x, y
+    [ 0, 0, 1,  1, 0, 0,  0, 1, 0 ],
+    [-0,-0,-1, -1,-0,-0,  0, 1, 0 ],
+    [ 0, 0, 1, -1,-0,-0, -0,-1,-0 ],
+    [-0,-0,-1,  1, 0, 0, -0,-1,-0 ],
+    // Permutation 5: z, y, x
+    [-0,-0,-1,  0, 1, 0,  1, 0, 0 ],
+    [-0,-0,-1, -0,-1,-0, -1,-0,-0 ],
+    [ 0, 0, 1,  0, 1, 0, -1,-0,-0 ],
+    [ 0, 0, 1, -0,-1,-0,  1, 0, 0],
+  ];
+
+  float x = input.K[0];
+  float y = input.K[5];
+  float z = input.K[10];
+
+  Vector[6][3] eigen_value_permutations = [
+    [ x,  y,  z], // Permutation 0
+    [ x,  z,  y], // Permutation 1
+    [ y,  x,  z], // Permutation 2
+    [ y,  z,  x], // Permutation 3
+    [ z,  x,  y], // Permutation 4
+    [ z,  y,  x], // Permutation 5
+  ];
+
+  int saved_index = -1
+  int saved_value = -1
+
+  // The rotation taking U1 into U2 is U1t * U2
+  for (int i = 0; i < 24; ++i) {
+    Matrix U2 = m_permutations[i];
+    Matrix U12 = U1t * U2;
+
+    Quaternion QU12 = ToQuaternion(U12);
+    
+    // Optimize for largest w, which is smallest angle of rotation
+    if (saved_index == -1 || QU12.w > saved_value) {
+      saved_value = QU12.w
+      saved_index = i
+    }
+  }
+
+  Matrix U2t = Transpose(m_permutations[saved_index])
+  var index = saved_index/4; // Integer division (floor this)
+
+  SpectralAdjustmentResult result;
+  result.U = Mul3(U1, U2t);
+  result.K = Matrix(
+    eigen_value_permutations[index][0], 0, 0, 0,
+    0, eigen_value_permutations[index][1], 0, 0,
+    0, 0, eigen_value_permutations[index][2], 0,
+    0, 0, 0, 1
+  );
+  result.Ut = Transpose(result.U)
+
+  return result;
+}
+</code></pre>
+
+
+      <p  class="bs-callout bs-callout-default">Be on the lookout for updates. I'm not super confident in my understanding of spectral adjustment. So far, the method presented above has worked in every scenario i've ran it in. But if it fails i'll update the post with new learnings. If you find any issues on this page, <a href="contact.html">contact me</a></p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>
