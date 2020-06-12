@@ -23,6 +23,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="css/modern-business.css" rel="stylesheet">
@@ -40,24 +41,16 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <!--li class="nav-item">
-              <a class="nav-link" href="contact.html">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.html">Game Development Course</a>
-            </li-->
             <li class="nav-item">
               <a class="nav-link active" href="blog.html">Blog</a>
             </li>
-            <!--li class="nav-item">
-              <a class="nav-link" href="contact.html">Udemy</a>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="contact.html">Books</a>
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="contact.html">Hardware</a>
-            </li-->
+
             <li class="nav-item">
               <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
             </li>
@@ -69,116 +62,67 @@
     <!-- Page Content -->
     <div class="container">
 
+
+      <div class="row mt-5">
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 text-center">
+            <h4 class="card-header">Quaternion Math</h4>
+            <img class="card-img-top" src="assets/arcball2.png" alt="Quaternion Math">
+            <div class="card-body">
+              <a href="quaternions.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 text-center">
+            <h4 class="card-header">Matrix Math, Part 1</h4>
+            <img class="card-img-top" src="assets/blog_matrices.png" alt="Matrix Mat">
+            <div class="card-body">
+              <a href="matrices.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 text-center">
+            <h4 class="card-header">Vector Math</h4>
+            <img class="card-img-top" src="assets/vector_cover.png" alt="Vector Math">
+            <div class="card-body">
+              <a href="vectors.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
+            </div>
+          </div>
+        </div>
+      
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 text-center">
+            <h4 class="card-header">Matrix Decomposition</h4>
+            <img class="card-img-top" src="assets/blog_decompose.gif" alt="Matrix Decomposition">
+            <div class="card-body">
+              <a href="blog_decomposition_intro.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card h-100 text-center">
+            <h4 class="card-header">Transform Hierarchies</h4>
+            <img class="card-img-top" src="assets/blog_hierarchy.png" alt="Transform Hierarchies">
+            <div class="card-body">
+              <a href="transforms.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          &nbsp;
+        </div>
+      </div>
+      <!-- /.row -->
+
+
+
+
       <!-- Page Heading/Breadcrumbs -->
       <!--h1 class="mt-4 mb-3">Blog Home Two</h1-->
 
-      <!-- Blog Post -->
-      <div class="card mb-4 mt-5">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="quaternions.html">
-                <img class="img-fluid rounded" src="assets/arcball2.png" alt="Matrix Decompositon" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Quaternion Math</h2>
-              <p class="card-text">Quaternions are often considered difficult and confusing. This post explores what quaternions are, how to work with them and how to implement the math behind quaternions. By taking a visual, geometric approach, working with quaternions can be easy and intuitive.</p>
-              <a href="quaternions.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Blog Post -->
-      <!--div class="card mb-4 mt-5">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="blog_decomposition_intro.html">
-                <img class="img-fluid rounded" src="assets/blog_decompose.gif" alt="Matrix Decompositon" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Matrix Math, Part 2</h2>
-              <p class="card-text">Part 2 of Matrix Math explores matrices in the context of game development. Meaning such as rotation, translation and perspective transform is assigned to matrices. The difference between game specific matrix conventions, which often causes confusion is also covered. </p>
-              <a href="blog_decomposition_intro.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div-->
-
-      <!-- Blog Post -->
-      <!--div class="card mb-4 mt-5">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="blog_decomposition_intro.html">
-                <img class="img-fluid rounded" src="assets/blog_decompose.gif" alt="Matrix Decompositon" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Matrix Math, Part 1</h2>
-              <p class="card-text">The goal of this post is to introduce matrices as a mathematical concept without the added complexity they gain in the context of game development. Common operations like multiplying and inverting matrices are coverd, with focus on 3x3 and 4x4 matrices.</p>
-              <a href="blog_decomposition_intro.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div-->
-
-      <!-- Blog Post -->
-      <div class="card mb-4 mt-5">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="vectors.html">
-                <img class="img-fluid rounded" src="assets/vector_cover.png" alt="Matrix Decompositon" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Vector Math</h2>
-              <p class="card-text">This blog post explores the basics of vector math. All common vector operations needed to make 2D & 3D games are covered. Each page has an interactive example to visually show the concepts being discussed.</p>
-              <a href="vectors.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Blog Post -->
-      <div class="card mb-4 mt-5">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="blog_decomposition_intro.html">
-                <img class="img-fluid rounded" src="assets/blog_decompose.gif" alt="Matrix Decompositon" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Matrix Decompositon</h2>
-              <p class="card-text">This post explores how to implement Shoemake's <i>Matrix animation and polar decomposition</i> paper to extract 12 degrees of freedom from an affine transform matrix. The 12 degrees of freedom contained in an affine transform matrix are: 3 translation, 3 rotation, 3 scale, 3 shear. </p>
-              <a href="blog_decomposition_intro.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Blog Post -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-6">
-              <a href="transforms.html">
-                <img class="img-fluid rounded" src="assets/blog_hierarchy.png" alt="Transform Hierarchies" />
-              </a>
-            </div>
-            <div class="col-lg-6">
-              <h2 class="card-title">Transform Hierarchies</h2>
-              <p class="card-text">Transform hierarchies are a core part of game development. This blog post covers two potential ways to implement a transform hierarchy and how to get / set both local and global properties of transforms inside the hierarchy.</p>
-              <a href="transforms.html" class="btn btn-primary">Read More &rarr;</a>
-            </div>
-          </div>
-        </div>
-      </div>
+     
 
       <!-- Pagination -->
       <!--ul class="pagination justify-content-center mb-4">

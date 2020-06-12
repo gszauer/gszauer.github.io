@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="matrices.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_matrices_topology.html" class="list-group-item active">2. Topology</a>
+            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
+            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
+            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
+            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
+            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
+            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
+            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
+            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
+            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
+            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Topology</h2>
+
+          <p>Matrix topology refers to how a matrix is laid out. The topic becomes confusing because matrices has two topologies that are not really related. Matrices have a <strong>Logical Topology</strong>, which is how you think about a matrix but they alos have a <strong>Physical Topology</strong>, which is how you store the matrix in memory. The two can be different.</p>
+
+          <h4>Logical topology</h4>
+
+          <p>When talking about logical topology we are talking about the order that elements appear in a matrix. For example, the following matrix has it's values aranged by columns, it's a <strong>Column Major</strong> matrix</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A & E & I & M\\
+              B & F & J & N\\
+              C & G & K & O\\
+              D & H & L & P
+            \end{bmatrix}
+          $$</p>
+
+          <p>The matrix below has the same values but arranged by rows, it's a <strong>Row Major</strong> matrix.</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A & B & C & D\\
+              E & F & G & H\\
+              I & J & K & L\\
+              M & N & O & P
+            \end{bmatrix}
+          $$</p>
+
+          <p>Another way to think about the major of a matrix is in terms of vectors. Assume we're talking about a 4x4 matrix. You can think of that matrix as being made up of four vectors. How the vectors are laid out determines the major of the matrix. In the sample below the left matrix is row major and the right matrix is column major. Note how both matrices are made up of the same four vectors.</p>
+
+          <p><img class="img-fluid" src="assets/matrix_majors.png" alt="Matrix Majors" /></p>
+
+          <p>Matrix elements are often refered to as their row / column indices (starting at 0). For example, element <code>(2, 1)</code> usually refers to row two, column one. This is a convention not a standard, there is no guarantee that texts or libraries will use this convention.</p>
+
+          <p>The major of the matrix does not matter when accessing a matrix using row / column convention. For example, element <code>(2, 1)</code> would be <code>J</code> in the row major matrix and <code>G</code> in the column major matrix shown above.
+
+          <p>Generally, math texts use column major matrices, this is my preference as well. For this blog, all matrices will be implemented using a logical column major layout.</p>
+
+          <h4>Physical topology</h4>
+
+          <p>Other than logical topology, we have to also consider phsyical topology. Physical topology refers to how a matrix is stored in memory. In games, matrices are stored linearly in memory as one big array. All components of each vector are usually used at the same time, making this a cache friendly approach. Consider the following matrix for example:</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A & D & G\\
+              B & E & H\\
+              C & F & I
+            \end{bmatrix}
+          $$</p>
+
+
+          <p>It could be stored linearly in memory one row at a time. This is often called <strong>Row Storage</strong>, the array would look like this:</p>
+
+<pre><code>char mat[9] = { 'A', 'D', 'G', 'B', 'E', 'H', 'C', 'F', 'I' };</code></pre>
+
+          <p>Or it could be stored in memory one column at a time. This is called <strong>Column Storage</strong>, the array would look like this:</p>
+
+<pre><code>char mat[9] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I' };</code></pre>
+
+
+          <p>Logical topology is how you think about a matrix, physical topology is how the matrix is stored in your computers memory. Physical and logical topology are not tied together. You could have a column major matrix with row storage; that is, a matrix with a column major logical topology but row major physical topology.</p>
+
+          <p>If the physical and logical topology of a matrix match, the matrices are interchangable as far as the computer can tell. Why? They are stored in the same array elements. Consider the following image, it shows logical row and a column major matrices. The row major matrix has row storage, the column major matrix has column storage. Note how the elements stored in the array map back to like elements in both matrices.</p> 
+
+          <p><img class="img-fluid" src="assets/matrix_storage.png" alt="Matrix Majors" /></p>
+
+          <h4>Common causes of confusion</h4>
+
+          <p>DirectX and OpenGL are often classified as row or column major, which has lead to a decent amount of confusion. As you've seen on this page, simply calling a matrix row or column major is misleading, because it could use row or column storage. The major of the matrix dictates multiplication order (<a href="blog_matrices_multiplication.html">Section 5, Multiplication</a>), but it's storage is important as well.</p>
+
+          <p>Another issue adding to the confusion is transforming vectors (<a href="blog_matrices_vectors.html">Section 6, Transforming Vectors</a>). This is because a vector can have it's own topology as well. For example a 4 component vector could be treated as a 1x4 matrix or a 4x1 matrix. The topology of the vector affects multiplication order between matrices and vectors.</p>
+
+          <p>The lack of standards in matrix and vector topology, both logical and physical makes working with matrices rather difficult. Let's explore the full picture for both of these API's.</p>
+
+          <p><strong>OpenGL</strong>: OpenGL has column major logical topology. OpenGL uses column storage. </p>
+
+          <p><strong>DirectX</strong>: DirectX has row major logical topology. DirectX uses row storage. </p>
+
+          <p>Both OpenGL matrices and DirectX matrices have the same physical memory layout, even tough they are logically different. Both API's use a 16 value array with the base vectors being laid out contigously in memory.</p>
+
+          <p class="bs-callout bs-callout-default">Don't get this section confused, the matrices of the two API's are not 100% interchangable. For example, NDC space is different for both API's. This topic is going to be out of the scope of this blog. NDC space and what to store in matrices will be covered in a future blog</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="matrices.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
+            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
+            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
+            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
+            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
+            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
+            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
+            <a href="blog_matrices_minors.html" class="list-group-item active"><span class="pl-4">b. Minors</span></a>
+            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
+            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
+            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Matrix Minors</h2>
+
+          <p>The minor of a matrix element \((i, j)\) is the determinant of a smaller matrix, which is obtained by removing row i and column j from the original matrix. The process of removing rows and columns is often called cutting a matrix. If you find the minor of every element in a matrix, the result is called the matrix of minors, sometimes just minor matrix. </p>
+
+          <p>For example, given the following matrix:</p>
+
+          <p>
+            $$
+            M =
+             \begin{bmatrix}
+              A & D & G \\
+              B & E & H \\
+              C & F & I
+            \end{bmatrix}
+            $$
+          </p>
+
+          <p>The minor of element \(2, 1\) (using zero based indices here) could be found like this:</p>
+
+          <p>
+            $$
+            minor(2, 1) = \begin{bmatrix}
+              A & \square & G \\
+              B & \square & H \\
+              \square & F & \square
+            \end{bmatrix}
+            =
+            | 
+			\begin{bmatrix}
+			A & G \\
+			B & H \\
+			\end{bmatrix}
+            |
+            =
+            AH - GB
+            $$
+          </p>
+
+          <p>For higher order matrices, the process is recursive. To find the minor of an element in a 4x4 matrix, you would have to remove one row and one column, then find the determinant of the resulting 3x3 matrix. Finding the determinant of a 3x3 matrix will be covered in <a href="blog_matrices_3x3determinant.html">section 7d, 3x3 Determinant</a>.The process for larger matrices is recursive. Finding the determinant of a 3x3 matrix involves finding the minor of some of it's elements, which in turn requires you to find the determinant of smaller 2x2 matrices.</p>
+
+          <h4>Implementation</h4>
+
+          <p>Before implementing the Minor function, create helper functions to cut lower order matrices from higher order matrices.</p>
+
+<pre><code>// 0 based index
+mat3 Cut(mat4, int row, int col) { 
+    mat3 result = mat3();
+    int cur = 0;
+    for (int c = 0; c < 4; ++ c) {
+        for (int r = 0; r < 4; ++r) {
+            if (r == row || c == col) {
+                continue;
+            }
+            result.v[cur++] = m.v[c * 4 + r];
+        }
+    }
+    return result;
+}
+
+// mat3 cut (produces mat2) is similar, the for loops and indexing m need to be adjusted</code></pre>
+
+    <p>The code below is for a 3x3 matrix because only the 2x2 determinant function has been covered. Finding the minor of bigger matrices, like a 4x4 matrix is covered in <a href="blog_matrices_laplace.html">section 7d, Laplace expansion</a>. To support bigger matrices adjust the loops and the index with the appropriate size.</p>
+
+<pre><code>mat3 Minor(mat3 m) {
+    mat3 result = mat3();
+    for (int c = 0; c < 3; ++c) {
+        for (int r = 0; r < 3; ++r) {
+            int index = c * 3 + r; 
+            result.v[index] = Determinant(Cut(m, r, c));
+        }
+    }
+}
+
+// Higher order matrices are very similar</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="matrices.html" class="list-group-item active">1. Introduction</a>
+            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
+            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
+            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
+            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
+            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
+            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
+            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
+            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
+            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
+            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
+            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>An introduction to Matrices</h2>
+
+          <p>A matrix is a rectangular grid of numbers. A matrix has rows and columns which dictate the dimensions of the matrix. For example, a 2x3 matrix has two rows and three columns. A matrix which has the same number of rows and columns is called a square matrix. Below are examples of 2x2, 3x3 and 4x4 matrices.</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A & C\\
+              B & D
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              A & D & G\\
+              B & E & H\\
+              C & F & I
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              A & E & I & M\\
+              B & F & J & N\\
+              C & G & K & O\\
+              D & H & L & P
+            \end{bmatrix}
+          $$</p>
+
+          <p>Generally, most games only use square 3x3 or 4x4 matrices. A 4x4 matrix can encode the transformation of an object or the projection of a camera. GLSL and some math libraries like <a href="https://glm.g-truc.net/">glm</a> support non square matrices. This blog will focus only on square matrices.</p>
+
+          <p>Matrices can be laid out in memory one of two ways. Either as a two dimensional array, or as a linear array with <code>(number of rows * number of columns)</code> elements. Games almost always store matrices as a linear array. The matrices presented previously have been augmented with subscripts that show at what index in a linear array the element would be.</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A_0 & C_2\\
+              B_1 & D_3
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              A_0 & D_3 & G_6\\
+              B_1 & E_4 & H_7\\
+              C_2 & F_5 & I_8
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              A_0 & E_4 & I_8 & M_{12}\\
+              B_1 & F_5 & J_9 & N_{13}\\
+              C_2 & G_6 & K_{10} & O_{14}\\
+              D_3 & H_7 & L_{11} & P_{15}
+            \end{bmatrix}
+          $$</p>
+
+          <p>The code snippet below shows the linear array of the 3x3 matrix above</p>
+
+<pre><code>char mat[9] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I' };</code></pre>
+
+          <p>Matrices can be indexed using a row/column notation as well. By convention it's row first, column next, but not all libraries follow that convention. The mtrices below show the row/column way to index a matrix.</p>
+
+          <p>$$
+            \begin{bmatrix}
+              A_{r:0, c:0} & C_{r:0, c:1}\\
+              B_{r:1, c:0} & D_{r:1, c:1}
+            \end{bmatrix}
+
+            \begin{bmatrix}
+              A_{r:0, c:0} & E_{r:0, c:1} & I_{r:0, c:2} & M_{r:0, c:3}\\
+              B_{r:1, c:0} & F_{r:1, c:1} & J_{r:1, c:2} & N_{r:1, c:3}\\
+              C_{r:2, c:0} & G_{r:2, c:1} & K_{r:2, c:2} & O_{r:2, c:3}\\
+              D_{r:3, c:0} & H_{r:3, c:1} & L_{r:3, c:2} & P_{r:3, c:3}
+            \end{bmatrix}
+          $$</p>
+
+          <h4>Implementation</h4>
+         
+        <p class="bs-callout bs-callout-default">The code presented in this blog (like all my other blogs) is C like, but not valid C.</p> 
+
+          <p>In C, the matrix structure could be defined using a union between a 16 element array of floating point numbers and anonymous structures. The anonymous structures provide mnemonics to access elements using a row / column notation. For this blog, implementations are provided for two, three and four dimensional square matrices.</p>
+
+<pre><code>struct mat2 {
+    union {
+        float v[4];
+        struct {
+            float r0c0; float r1c0;
+            float r0c1; float r1c1;
+        };
+        struct {
+            float c0r0; float c0r1;
+            float c1r0; float c1r1;
+        };
+        
+    };
+};
+
+struct mat3 {
+    union {
+        float v[9];
+        struct {
+            float r0c0; float r1c0; float r2c0;
+            float r0c1; float r1c1; float r2c1;
+            float r0c2; float r1c2; float r2c2;
+        };
+        struct {
+            float c0r0; float c0r1; float c0r2;
+            float c1r0; float c1r1; float c1r2;
+            float c2r0; float c2r1; float c2r2;
+        };
+        
+    };
+};
+
+struct mat4 {
+    union {
+        float v[16];
+        struct {
+            float r0c0; float r1c0; float r2c0; float r3c0;
+            float r0c1; float r1c1; float r2c1; float r3c1;
+            float r0c2; float r1c2; float r2c2; float r3c2;
+            float r0c3; float r1c3; float r2c3; float r3c3;
+        };
+        struct {
+            float c0r0; float c0r1; float c0r2; float c0r3;
+            float c1r0; float c1r1; float c1r2; float c1r3;
+            float c2r0; float c2r1; float c2r2; float c2r3;
+            float c3r0; float c3r1; float c3r2; float c3r3;
+        };
+        
+    };
+};</code></pre>
+
+
+        <p>It's trivial to address a floating point array using row / column notation, however you will need to know if the matrix is row or column major. More on this in the next section, for now let's assume these are column major matrices. To get a linear index from a row and a column, multiply the column by the size of the (square) matrix and add the row. The formula is: <code>column * size of matrix + row</code> as demonstrated below.</p>
+
+<pre><code>float Mat2ValueAt(float input[4], int row, int column) {
+  return input[column * 2 + row]; // 2 = number of columns
+}
+
+float Mat3ValueAt(float input[9], int row, int column) {
+  return input[column * 3 + row]; // 3 = number of columns
+}
+
+float Mat4ValueAt(float input[16], int row, int column) {
+  return input[column * 4 + row]; // 4 = number of columns
+}</code></pre>
+
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

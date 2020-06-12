@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="matrices.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
+            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
+            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
+            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
+            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
+            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
+            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
+            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
+            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
+            <a href="blog_matrices_laplace.html" class="list-group-item active"><span class="pl-4">d. Laplace Expansion</span></a>
+            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Laplace Expansion</h2>
+
+          <p>The determinant of any square matrix can be found trough <strong>Laplace Expansion</strong>. The formula presented in <a href="blog_matrices_2x2determinant.html">section 7a: 2x2 determinant</a> to find the determinant of a 2x2 matrix is the result of Laplace Expansion.</p>
+
+          <p>To find the determinant of a matrix trough Laplace Epxansion, multiply every element in the top row by it's cofactor and sum the result. The formula looks like this:</p>
+
+          <p>
+            $$
+            | M | =
+             \sum_{i=1}^{n} M_{1i}cofactor(M_{1i})
+            $$
+          </p>
+
+          <p>It doesn'thave to be the first row, any row will do. The choice to use the first row is arbitrary.</p>
+
+
+          <h4>Implementation</h4>
+
+          <p>The implementation provided here is naive. Calling <code>Cofactor</code> will calculate the entire cofactor matrix, which is not desired. Instead of doing exactly this, try to manually inline the work so the Determinant function does not call any other functions.</p>
+
+<pre><code>float Determinant(mat3 m) {
+    mat3 c = Cofactor(m);
+
+    float _11 = m.v[0] * c.v[0];
+    float _12 = m.v[3] * c.v[3];
+    float _13 = m.v[6] * c.v[6];
+
+    return _11 + _12 + _13;
+}
+
+float Determinant(mat4 m) {
+    mat4 c = Cofactor(m);
+
+    float _11 = m.v[0] * c.v[0];
+    float _12 = m.v[4] * c.v[4];
+    float _13 = m.v[8] * c.v[8];
+    float _14 = m.v[12] * c.v[12];
+
+    return _11 + _12 + _13 + _14;
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

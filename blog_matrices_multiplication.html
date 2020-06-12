@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+     <link href="katex/katex.min.css" rel="stylesheet">
+    <script src="katex/katex.min.js" type="text/javascript"></script>
+    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+
+  </head>
+
+  <body onload="renderMathInElement(document.body);">
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="matrices.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
+            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
+            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
+            <a href="blog_matrices_multiplication.html" class="list-group-item active">5. Multiplication</a>
+            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
+            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
+            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
+            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
+            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
+            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
+            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Matrix Multiplication</h2>
+
+          <p>Matrix multiplication has a few important properties</p>
+
+          <ul>
+            <li>Matrix multiplication <strong>IS NOT commutative</strong>
+            <ul>
+              <li>This means multiplication order matters.</li>
+              <li>Given matrices \(A\) and \(B\), then \(AB \neq BA\)</li>
+            </ul>
+            </li>
+
+            <li>Matrix multiplication <strong>is associative</strong>
+            <ul>
+              <li>Multiplication is the same regardless of grouping.</li>
+              <li>Given matrices \( A \), \( B \) and \( C \), then \(A(BC) = (AB)C \)</li>
+            </ul>
+            </li>
+
+            <li>Matrix multiplication <strong>is distributive</strong>
+            <ul>
+              <li>You can multiply a sum by multiplying each addend separately, then add the products</li>
+              <li>Given matrices \( A \), \( B \) and \( C \), then \(A(B + C) = AB + AC\)</li>
+              <li>Given matrices \( A \), \( B \) and \( C \), then \((A + B)C) = AC + BC\)</li>
+            </ul>
+            </li>
+
+            <li>Some matrices, not all have multiplicative identity. More on this in section <a href="blog_matrices_invert.html">7, Invert</a>.</li>
+          </ul>
+
+          <p>The fact that matrix multiplication is not commutative coupled with the major and storage issues adds another level of confusion. The major of a matrix actually affects multipliation order. Multiplication order in games is often associated with OpenGL vs DirectX style multiplication, which like the OpenGL/DirectX comparison with majors is over simplifying the problem.</p> 
+
+          <p>When multiplying two matrices, for example a 2x4 and a 3x1 matrix they have inner and outer dimensions. The inner dimensions are the numbers in the middle, 4 and 3. The outer dimensions are the numbers on the edges, 2 and 1.</p>
+
+          <p>Two matrices can only be multiplied together if their inner dimensions match. The result of a matrix multiplication will have the outer dimensions of the matrices being multiplied. For example, a 3x1 and a 1x2 matrix could be multiplied together and the resulting matrix would be a 3x2 matrix. These are some additional examples:</p>
+
+          <ul>
+          	<li>A 2x3 and a 3x1 matrix can be multiplied. The result is a 2x1 matrix.</li>
+          	<li>A 3x2 and a 3x1 matrix can not be multiplied. The inner dimensions are different.</li>
+          	<li>A 4x1 and a 1x4 matrix can be multiplied. The result will be a 4x4 matrix.</li>
+          	<li>A 4x4 and a 1x4 matrix can not be multiplied. The inner dimensions are different.</li>
+          	<li>A 4x4 and a 4x1 matrix can be multiplied together. The result is a 4x1 matrix.</li>
+          </ul>
+
+          <h4>Multiplication order</h4>
+
+          <p>Matrix multiplication is broken down into two categories <strong>Pre Multiplication</strong> and <strong>Post Multiplication</strong>. These names describe the order in which multiplication happens. Given matrices \(A\), \(B\) and \(C\), the result of \(M = ABC\) changes weather pre or post multipliation is used.</p>
+
+          <p>With pre-multiplication, multiplication is from left to right. Using the above example, \(A\) and \(B\) are multiplied together, the result is multiplied by \(C\) and stored in \(M\). In games, pre multiplication is often called Direct X style multiplication.</p>
+
+           <p>With post-multiplication, multiplication is from right to left. Still using the same example, \(C\) and \(B\) are multiplied together, the result is multiplied by \(A\) and stored in \(M\). In games, post multiplication is often refered to as OpenGL style.</p>
+
+           <p>Given \(X = AB\), the equation could be described as \(A\) is post multiplied by \(B\) or \(B\) is pre multiplied by \(A\). Both would give different results.</p>
+
+           <p class="bs-callout bs-callout-default">There is no right or wrong choice here. Matrix major, storage and multiplication order are all a matter of convention and consistency. You need to pick a convention that makes sense to you and stick to it. For me (and the code we write in this blog) that means column major matrices with column storage using column vectors (more about column vectors in <a href="blog_matrices_vectors.html">Section 6. Transforming Vectors</a>).</p>
+
+           <h4>Theory</h4>
+
+           <p>$$
+            (AB)_{ij} = \sum_{m}^{k=1} A_{ik}B_{kj}
+          $$</p>
+
+           <p>To multiply two matrices, \(X\) = \(AB\), pretend that \(A\) is a row matrix and \(B\) is a column matrix. Find any element, \(X_{ij}\) in the result matrix by taking the dot product of row \(i\) from matrix \(A\) and column \(j\) from matrix \(B\). The following image demonstrates this: </p>
+
+          <p><img class="img-fluid" src="assets/matrix_multiply.png" alt="Matrix Multiplication" /></p>
+
+           <h4>Implementation</h4>
+
+           <p>While it's possible to implement matrix multiplication using loops, most games implement it using inline <a href="https://en.wikipedia.org/wiki/SIMD">SIMD</a> code. Matrix multiplication is done many, many times per frame, it's vital that this function be as fast as possible. The code below is a minimally optimized reference implementation.</p>
+
+<pre><code>mat4 Mul(mat4 a, mat4 b) {
+    mat4 result;
+
+    // Column 0
+    result[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
+    result[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
+    result[2] = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3];
+    result[3] = a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3];
+
+    // Column 1
+    result[4] = a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7];
+    result[5] = a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7];
+    result[6] = a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7];
+    result[7] = a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7];
+
+    // Column 2
+    result[8] = a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11];
+    result[9] = a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11];
+    result[10] = a[2] * b[8] + a[6] * b[9] + a[10] * b[10] + a[14] * b[11];
+    result[11] = a[3] * b[8] + a[7] * b[9] + a[11] * b[10] + a[15] * b[11];
+
+    // Column 3
+    result[12] = a[0] * b[12] + a[4] * b[13] + a[8] * b[14] + a[12] * b[15];
+    result[13] = a[1] * b[12] + a[5] * b[13] + a[9] * b[14] + a[13] * b[15];
+    result[14] = a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15];
+    result[15] = a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15];
+
+    return result;
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>
