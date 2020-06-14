@@ -1,0 +1,1925 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>Game Animation Programming</title>
+		<meta name="description" content="Game Animation Programming">
+		<meta name="author" content="Gabor Szauer">
+
+		<!-- Support functions -->
+		<script src="vector.js"></script>
+		<script src="matrix.js"></script>
+		<script src="quaternion.js"></script>
+		<script src="transform.js"></script>
+		<script src="graphics.js"></script>
+		<script src="animation.js"></script>
+		<script src="mesh.js"></script>
+		<script src="bezier_curve.js"></script>
+
+		<!-- WebGL Demos -->
+		<script src="sample.js"></script>
+		<script src="full.js"></script>
+
+		<!-- Canvas Demos-->
+		<script src="sample_canvas.js"></script>
+		<script src="bezier_demo.js"></script>
+
+		<script>
+			var gSkeletonWalkingDemo = null;
+			var gBezierDemo = null;
+			var gWalkingClip = null;
+
+			// This will be removed
+			var gSkinnedWalkingDemo = null;
+			// End 
+
+			function loop() {
+				if (gBezierDemo != null) {
+					gBezierDemo.Loop();
+				}
+				if (gSkeletonWalkingDemo != null) {
+					gSkeletonWalkingDemo.Loop();
+				}
+
+				// This will be removed
+				if (gSkinnedWalkingDemo != null) {
+					gSkinnedWalkingDemo.Loop();
+				}
+				// End
+			}
+
+			function main() {
+				let canvas = document.getElementById("bezierCanvas");
+				if (canvas === null) {
+					console.error("Unable to find Bezier Canvas");
+					gBezierDemo = null;
+				}
+				else {
+					gBezierDemo = new BezierDemo(canvas);
+				}
+
+				canvas = document.getElementById("skeletonWalkingCanvas");
+				if (canvas === null) {
+					console.error("Unable to find Skeleton Walking Canvas");
+					gSkeletonWalkingDemo = null;
+				}
+				else {
+					let gl = canvas.getContext("webgl");
+					if (gl === null) {
+						console.error("Unable to get OpenGL context for Skeleton Walking Canvas");
+						gSkeletonWalkingDemo = null;
+					}
+					else {
+						gl.enable(gl.DEPTH_TEST);
+						gl.enable(gl.CULL_FACE);
+						gSkeletonWalkingDemo = null;// new AnimatedSkeleton(gl, canvas);
+					}
+				}
+
+				// This bit will be removed
+				canvas = document.getElementById("skinnedWalkingCanvas");
+				if (canvas === null) {
+					console.error("Unable to find Skinned Walking Canvas");
+					gSkinnedWalkingDemo = null;
+				}
+				else {
+					let gl = canvas.getContext("webgl");
+					if (gl === null) {
+						console.error("Unable to get OpenGL context for Skinned Walking Canvas");
+						gSkinnedWalkingDemo = null;
+					}
+					else {
+						gl.enable(gl.DEPTH_TEST);
+						gl.enable(gl.CULL_FACE);
+						gSkinnedWalkingDemo = new FullPageAnimated(gl, canvas);
+					}
+				}
+				// End
+
+				window.setInterval(loop, 16);
+			}
+
+			window.onload = main;
+		</script>
+
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css?family=Cutive+Mono&display=swap" rel="stylesheet">
+
+		<style>
+			body {
+				background-color: #4F5460;
+				font-family: 'Open Sans', sans-serif;
+			}
+			div {
+				border-style: none;
+				max-width: 800px;
+				margin: auto;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				padding: 20px;
+				background-color: #383F47;
+				text-align: left;
+			}
+			p {
+				font-size: 1em;
+			}
+			h1, h2 {
+				color: #E4E7EB;
+			}
+			div.section>h1 {
+				background-color: #273038;
+				margin-top: -20px;
+				margin-left: -20px;
+				margin-right: -20px;
+				padding: 20px;
+			}
+			div.section>h2 {
+				background-color: #273038;
+				font-size: 1.2em;
+				padding: 10px;
+				margin: 0px;
+				margin-left: -20px;
+				margin-right: -20px;
+			}
+			div.info {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+				background-color: #354656;
+				padding-bottom: 5px;
+			}
+			div.info>h1 {
+				font-size: 1.2em;
+				background-color: #22313f;
+				margin: 0px;
+				padding: 10px;
+			}
+			div.info>p {
+				margin: 0px;
+				padding: 10px;
+			}
+			div.gldemo {
+				padding: 0px;
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			p {
+				color: #CBD2D9;
+			}
+			pre {
+				background-color: #4d545c;
+				border: 2px solid #182633;
+				padding: 10px;
+				font-family: 'Cutive Mono', monospace;
+				color: #f2c8ae;
+
+				white-space: pre-wrap;       /* css-3 */
+				white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+				white-space: -pre-wrap;      /* Opera 4-6 */
+				white-space: -o-pre-wrap;    /* Opera 7 */
+				word-wrap: break-word;       /* Internet Explorer 5.5+ */
+			}
+			div.info>pre {
+				margin-top: 5px;
+				margin-left: 20px;
+				margin-right: 20px;
+				margin-bottom: 20px;
+				padding: 10px;
+			}
+
+			pre>span.red {
+				color: #f85959;
+			}
+			pre>span.blue {
+				color: #89afd9;
+			}
+			pre>span.green {
+				color: #61ae68;
+			}
+			pre>span.orange {
+				color: #d09f41;
+			}
+			pre>span.purple {
+				color: #de5bd3;
+			}
+			p>code {
+				font-family: 'Cutive Mono', monospace;
+				font-size: 1.1em;
+			}
+			a:link, a:visited {
+				font-weight: bold;
+				color: #B3BCD8;
+				text-decoration: none;
+			}
+			a:hover, a:active {
+				font-weight: bold;
+				color: #BECCD6;
+				text-decoration: none;
+			}
+			img {
+				width: 100%;
+				height: auto;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="header">
+			<div class="left"></div>
+			<div class="right">
+				<div class="top"></div>
+				<div class="bottom">
+					<a href="" class="amazon">Buy on Amazon</a>
+					<a href="" class="packt">Buy from Packt</a>
+					<a href="" class="github">Code on github</a>
+				</div>
+			</div>
+		</div>
+		<div class="section">
+			<h1 class="title">Animation Overview</h1>
+			<p>This site is a complete tutorial about animation programming. Reading trough the site, you can learn how to build a robust animation system. The book covers all of these topics in more detail, as well as advanced animation techniques.</p>
+
+			<p>Generally, game animation can be broken up into three distinct steps. These steps are pose generation, pose modification and skinning. The steps are usually performed in order.</p>
+
+			<div class="info">
+				<h1>Pose generation</h1>
+				<p>When talking about humanoid animations, a pose refers to the skeleton. Specifically the skeleton posed to match a frame of animation. You would generate a pose by sampling an animation clip.</p>
+			</div>
+
+			<div class="info">
+				<h1>Pose modification</h1>
+				<p>Pose modification is exactly what it sounds like, modifying the pose before it is skinned. Blending two animation clips to hide a transition would be considered pose modification, so would an IK system that adjusts a leg to keep in on top of terrain. This site will cover animation blending, the book covers blending in more detail. The book also covers more advanced topics like IK.</p>
+			</div>
+
+			<div class="info">
+				<h1>Skinning</h1>
+				<p>Given a mesh and a pose, skinning is the process of deforming the mesh so that is matches the given pose. The two most common skinning methods are matrix palette skinning and dual quaternion skinning. We will cover matrix palette skinning on this page, both are covered in the book.</p>
+			</div>
+
+			<p>All three of these topics are covered on this webpage, they are also covered more in-depth in the book. The code here and the code for the book are not the same! For example, in the book you will learn to load gltf files, on this page you will learn how to load fbx files.</p>
+
+			<p>The Game Aniamtion book covers everything from the basics of creating an OpenGL 3.3 enabled window to advanced animation techniques like dual quaternion skinning, crowd rendering and ik. Most of the assets used on this site and in the book are <a href="http://quaternius.com/">free game assets by Quaternius</a> and <a href="https://github.com/GDQuest/godot-3d-mannequin">Open 3D Mannequin</a></p>
+		</div>
+		<div class="section">
+			<h1>Getting started</h1>
+			<p>I&apos;m assuming that you are familiar with C++ and Windows programing. To follow along with this page, you should be able to open a Win32 window and set up an OpenGL context to render to. I&apos;m also assuming that you are familiar with OpenGL. These topics won&apos;t be covered on the site, but they are covered in the book.</p>
+			<p>The code that i&apos;ll be using to create the animation system is on <a href="https://github.com/gszauer/GameAnimationProgramming/LandingPage/Start">Github</a>. It&apos;s actually the code from Chapter 5 of the book.</p>
+		</div>
+		<div class="section">
+			<h1>Math</h1>
+			<p>I&apos;m going to assume that you are familiar with <a href="https://gabormakesgames.com/vectors.html">Vectors</a>, <a href="https://gabormakesgames.com/matrices.html">Matrices</a>, <a href="https://gabormakesgames.com/quaternions.html">Quaternions</a> and <a href="https://gabormakesgames.com/transforms.html">Transform hierarchies</a>. All of these topics are covered in the book, they are also covered on my blog, <a href="https://gabormakesgames.com">Gabor Makes Games</a>. The <a href="https://github.com/gszauer/GameAnimationProgramming/LandingPage/Start">Starting Code</a> already contains code for all of the math objects we will use. </p>
+		</div>
+		<div class="section">
+			<h1>Curves</h1>
+			<p>To animate game objects in code, you will need some understanding of curves. Let&apos;s start with the <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">(cubic) B&eacute;zier curve</a>.A B&eacute;zier curve segment has two points to interpolate between and two control points. These four points generate a curve. The image below has the points labeled as <code>P1</code>, <code>P2</code> and the control points as <code>C1</code> and <code>C2</code>.</p>
+			
+			<img src="bezier_1.png" alt="Bezier curve" />
+			
+			<p>Given the two points and the two controls, how can we generate a curve? Let&apos;s explore interpolating for a given time, <code>t</code>. Start by drawing a line from <code>P1</code> to <code>C1</code>, from <code>C1</code> to <code>C2</code> and a line from <code>C2</code> to <code>P2</code>. Then, linearly interpolate along those lines by the value of <code>t</code>.</p>
+
+			<img src="bezier_2.png" alt="Bezier curve gneration step 1" />
+
+			<p>The interpolated points from <code>P1</code> to <code>C1</code> form a line, let&apos;s call it <code>A</code>. The interpolated points from <code>C2</code> to <code>P2</code> form a line as well, let&apos;s call it <code>B</code>. Finally, the interpolated points from <code>C1</code> to <code>C2</code> form a line, let&apos;s call it <code>C</code>. Repeat the process and linearly interpolate along <code>A</code> to <code>C</code> and <code>C</code> to <code>B</code>. The resulting points will be called <code>E</code> and <code>F</code> respectivley.</p>
+
+			<img src="bezier_3.png" alt="Bezier curve gneration step 2" />
+
+			<p>One more time, interpolate along the line that is formed between <code>E</code> and <code>F</code> by <code>t</code>. The resulting point will be called <code>R</code>. This resulting point <code>R</code> can be plotted on the B&eacute;zier curve. If we calculate all points from <code>t=0</code> to <code>t=1</code>, the B&eacute;zier curve can be plotted.</p>
+			
+			<img src="bezier_4.png" alt="Bezier curve gneration step 3" />
+
+			<p>In real time, interpolating along a B&eacute;zier spline should look something like this:</p>
+
+			<canvas id="bezierCanvas" style="width: 100%; height:100%;"></canvas>
+
+			<p>Let&apos;s try to implement a B&eacute;zier curve segment in code. This implementation won&apos;t be used in the animation system. The definition of the data structure is trivial, it holds two points and two control points.</p>
+<pre>template&lt;typename T&gt;
+class Bezier {
+public:
+    T P1; // Point 1
+    T C1; // Control 1
+    T P2; // Point 2
+    T C2; // Control 2
+};
+</pre>
+
+			<p>Next, imlplement the interpolate function. As shown earlier, interpolating a B&eacute;zier curve segment can be implemented using 5 lerp operations.</p>
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
+    T A = lerp(curve.P1, curve.C1, t);
+    T B = lerp(curve.C2, curve.P2, t);
+    T C = lerp(curve.C1, curve.C2, t);
+
+    T D = lerp(A, C, t);
+    T E = lerp(C, B, t);
+
+    T R = lerp(D, E, t);
+    return R;
+}
+</pre>
+
+			<p>That&apos;s actually all we really need. Plotting this segment is trivial. First, initalize a segment to draw.</p>
+<pre>Bezier&lt;vec3&gt; curve;
+curve.P1 = vec3(1, 5, 0);
+curve.P2 = vec3(9, 5, 0);
+curve.C1 = vec3(2, 0.5, 0);
+curve.C2 = vec3(10, 0.5, 0);
+
+vec3 red = vec3(1, 0, 0);
+vec3 green = vec3(0, 1, 0);
+vec3 blue = vec3(0, 0, 1);
+vec3 magenta = vec3(1, 0, 1);
+</pre>
+
+			<p>Next, draw the curves points and handles.</p>
+<pre>// Draw all relevant points
+DrawPoint(curve.P1, red);
+DrawPoint(curve.C1, green);
+DrawPoint(curve.P2, red);
+DrawPoint(curve.C2, green);
+
+// Draw handles
+DrawLine(curve.P1, curve.C1, blue);
+DrawLine(curve.P2, curve.C2, blue);
+</pre>
+
+			<p>Finally, we can plot the actual curve.</p>
+<pre>// Draw the actual curve
+// Resolution is 200 steps since last point is i + 1
+for (int i = 0; i &lt; 199; ++i) {
+    float t0 = (float)i / 199.0f;
+    float t1 = (float)(i + 1) / 199.0f;
+
+    vec3 thisPoint = Interpolate(curve, t0);
+    vec3 nextPoint = Interpolate(curve, t1);
+
+    DrawLine(thisPoint, nextPoint, magenta);
+}
+</pre>
+
+			<p>Assuming there is a &quot;<code>DrawLine</code>&quot; and &quot;<code>DrawPoint</code>&quot; function declared, the above code should draw something that looks like this.</p>
+
+			<img src="bezier_rendered.png" alt="Rendered bezier curve" />
+
+			<p>We were able to implement the B&eacute;zier Interpolate function by using 6 linear interpolations. To better understand how curves work, we need to expand these functions to what they actualy are. Linear interpolation, <code>lerp(a, b, t)</code> is implemented as <code>(1-t) * a + t * b</code>. We can re-write the interpolation function as:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    T A = curve.<span class="blue">P1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="purple">C1</span> * <span class="red">t</span>;
+    T B = curve.<span class="orange">C2</span> * (1.0f - <span class="red">t</span>) + curve.<span class="green">P2</span> * <span class="red">t</span>;
+    T C = curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>;
+    T D = A * (1.0f - <span class="red">t</span>) + C * <span class="red">t</span>;
+    T E = C * (1.0f - <span class="red">t</span>) + B * <span class="red">t</span>;
+    T R = D * (1.0f - <span class="red">t</span>) + E * <span class="red">t</span>;
+    return R;
+}</pre>
+
+			<p>othing has changed, but we no longer call the <code>lerp</code> function. This will work for any data type <code>T</code>, so long as <code>T perator*(const T& t, float f)</code> is defined. Let&apos;s try to simplify this equation some more. Instead of using the variables <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> and <code>R</code>, we could write everything in-line. No local variables, we just expand the function by hand to be a one liner:</p>
+
+<pre>((<span class="blue">P1</span> * (1 - <span class="red">t</span>) + <span class="purple">C1</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * <span class="red">t</span>) * (1 - <span class="red">t</span>) + ((<span class="purple">C1</span> * (1 - <span class="red">t</span>) + <span class="orange">C2</span> * <span class="red">t</span>) * (1 - <span class="red">t</span>) + (<span class="orange">C2</span> * (1 - <span class="red">t</span>) + <span class="green">P2</span> * <span class="red">t</span>) * <span class="red">t</span>) * <span class="red">t</span></pre>
+
+			<p>The formula above might look a bit intimidating, but it&apos;s just re-writing the <code>interpolate</code> function with everything being manually inlined. In ode, this would look like the following:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return ((curve.<span class="blue">P1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="purple">C1</span> * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) + 
+           (curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>) * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) 
+           + ((curve.<span class="purple">C1</span> * (1.0f - <span class="red">t</span>) + curve.<span class="orange">C2</span> * <span class="red">t</span>) * (1.0f - <span class="red">t</span>) + 
+           (curve.<span class="orange">C2</span> * (1.0f - <span class="red">t</span>) + curve.<span class="green">P2</span> * <span class="red">t</span>) * <span class="red">t</span>) * t;
+}</pre>
+
+			<p>The code is hard to read, and not much faster than the previous version. So, why go trough all this trouble? So we can start simplifying the equation a bit. We can start by combining like terms:</p>
+
+<pre>-<span class="blue">P1</span><span class="red">t<sup>3</sup></span> + 3<span class="blue">P1</span><span class="red">t<sup>2</sup></span> - 3<span class="blue">P1</span><span class="red">t</span> + <span class="blue">P1</span> + 3<span class="purple">C1</span><span class="red">t<sup>3</sup></span> - 6<span class="purple">C1</span><span class="red">t<sup>2</sup></span> + 3<span class="purple">C1</span><span class="red">t</span> - 3<span class="orange">C2</span><span class="red">t<sup>3</sup></span> + 3<span class="orange">C2</span><span class="red">t<sup>2</sup></span> + <span class="green">P2</span><span class="red">t<sup>3</sup></span></pre>
+
+			<p>That&apos;s starting to look a little easier to manage. Implementing this in code isn&apos; too difficult either.</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return
+        curve.<span class="blue">P1</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) * -1.0f +
+        curve.<span class="blue">P1</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span>) -
+        curve.<span class="blue">P1</span> * 3.0f * <span class="red">t</span> +
+        curve.<span class="blue">P1</span> +
+        curve.<span class="purple">C1</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) -
+        curve.<span class="purple">C1</span> * 6.0f * (<span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="purple">C1</span> * 3.0f * <span class="red">t</span> -
+        curve.<span class="orange">C2</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="orange">C2</span> * 3.0f * (<span class="red">t</span> * <span class="red">t</span>) +
+        curve.<span class="green">P2</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>);
+}</pre>
+
+			<p>Simplify further by isolating like terms</p>
+
+<pre><span class="blue">P1</span>( -<span class="red">t<sup>3</sup></span> + 3<span class="red">t<sup>2</sup></span> - 3<span class="red">t</span> + 1) +
+<span class="purple">C1</span>( 3<span class="red">t<sup>3</sup></span> - 6<span class="red">t<sup>2</sup></span> + 3<span class="red">t</span>)+
+<span class="orange">C2</span>(-3<span class="red">t<sup>3</sup></span> + 3<span class="red">t<sup>2</sup></span>)+
+<span class="green">P2</span>(  <span class="red">t<sup>3</sup></span>)</pre>
+
+			<p>Implementing the equation in code is starting to get simpler too:</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    float <span class="red">ttt</span> = <span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>;
+    float <span class="red">tt</span> = <span class="red">t</span> * <span class="red">t</span>;
+
+    return curve.<span class="blue">P1</span> * (-1.0f * <span class="red">ttt</span> + 3.0f * <span class="red">tt</span> - 3.0f * <span class="red">t</span> + 1.0f) +
+           curve.<span class="purple">C1</span> * (3.0f * <span class="red">ttt</span> - 6.0f * <span class="red">tt</span> + 3.0f * <span class="red">t</span>) +
+           curve.<span class="orange">C2</span> * (-3.0f * <span class="red">ttt</span> + 3.0f * <span class="red">tt</span>) +
+           curve.<span class="green">P2</span> * <span class="red">ttt</span>;
+}</pre>
+
+			<p>We can simlify this further</p>
+
+<pre><span class="blue">P1</span>( (1-<span class="red">t</span>)<sup>3</sup>) +
+<span class="purple">C1</span>(3(1-<span class="red">t</span>)<sup>2</sup><span class="red">t</span>) +
+<span class="orange">C2</span>(3(1-<span class="red">t</span>)<span class="red">t<sup>2</sup></span>) +
+<span class="green">P2</span>(<span class="red">t<sup>3</sup></span>)</pre>
+
+			<p>The code for this last simplification is eaven easier to read</p>
+
+<pre>template&lt;typename T&gt;
+inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float <span class="red">t</span>) {
+    return curve.<span class="blue">P1</span> * ((1.0f - <span class="red">t</span>) * (1.0f - <span class="red">t</span>) * (1.0f - <span class="red">t</span>)) +
+           curve.<span class="purple">C1</span> * (3.0f * ((1.0f - <span class="red">t</span>) * 1.0f - <span class="red">t</span>) * <span class="red">t</span>) +
+           curve.<span class="orange">C2</span> * (3.0f * (1.0f - <span class="red">t</span>) * (<span class="red">t</span> * <span class="red">t</span>)) +
+           curve.<span class="green">P2</span> * (<span class="red">t</span> * <span class="red">t</span> * <span class="red">t</span>);
+}</pre>
+
+			<p>If we graph out this final simplification, the x axis would be &quot;normalized time&quot; ranging from <code>0</code> to <code>1</code> and the x axis would be the value of either <code>P1</code>, <code>P2</code>, <code>C1</code> or <code>C2</code>. The graph looks like this:</p>
+			
+			<img src="bezier_basis.png" alt="Bezier basis functions" />
+
+			<p>The graph shows the pint basis functions of a cubic B&eacute;zier curve. These functions express how the B&eacute;zier curve changes over time. For exaple, the influence of <code>P1</code> drops over time, at <code>t=0</code> the influence is <code>1</code>, but at <code>t=1</code> the influence of <code>P1</code> is <code>0</code>.</p>
+
+			<p>We went trough the exercise of simplifying a B&eacute;zier curve to see how these basis functions are derived. B&eacute;zier curves are easy to derive, other curves are not. For most curves, you will simply be given the final basis functions.</p>
+
+			<div class="info">
+				<h1>Why is everything templated?</h1>
+				<p>The formula for evaluating curves doesn&apos;t change between scalar, and touple values. It's the same formula for a <code>float</code> as it is for a <code>vec2</code>, <code>vec3</code> or <code>quat</code>. Whatever data type <code>T</code> is will work so long as <code>T operator*(const T&amp; t, float f)</code> and <code>T operator+(const T&amp; a, const T&amp; b)</code> are defined. </p>
+			</div>
+
+			<p>The most common curve used in game animation is a <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">Cubic Hermite</a> Spline. Unlike B&eacute;zier splines, a hermite spline doens&apos;t use control points. Instead, the hermite spline uses tangents (or slopes) at a given point.</p>
+
+			<p>The point basis function of a Hermite Spline is shown below. <code>P1</code> and <code>P2</code> are the start and end points of the spline, <code>S1</code> and <code>S2</code> are the slopes, or tangents at <code>P1</code> and <code>P2</code> respectivley.</p>
+
+			<img src="hermite_basis.png" alt="Hermite basis functions" />
+
+			<p>Implementing the above basis functions in code is similar to how the bezier basis function was implemented.</p>
+
+<pre>template&lt;typename T&gt;
+T Hermite(float t, const T&amp; p1, const T&amp; s1, const T&amp; p2, const T&amp; s2) {
+    return p1 * ((1.0f + 2.0f * t) * ((1.0f - t) * (1.0f - t))) +
+        s1 * (t * ((1.0f - t) * (1.0f - t))) +
+        p2 * ((t * t) * (3.0f - 2.0f * t)) +
+        s2 * ((t * t) * (t - 1.0f));
+}</pre>
+
+			<p>It’s possible to convert between B&eacute;zier and Hermite splines, but that’s beyond the scope of what you need to know for animation. Some 3D content creation packages like Maya let animators create animation using a Hermite curves, while others like Blender3D use  B&eacute;zier curves. It’s useful to understand how these functions work, regardless of which one drives our animation system. There are of course more curve types, but B&eacute;zier and Hermite are the common ones.</p>
+		</div>
+		<div class="section">
+			<h1>Pose generation</h1>
+			<p>Let's explore what it takes to generate a pose from an animation for a game character. A <code>Pose</code> is a hierarchy of <code>Transform</code>'s that acts like the characters skeleton. When an animation clip is sampled, it reutrns a <code>Pose</code>, which is a snapshot of the skeleton at a specific time of the animation clip.</p>
+
+			<p>An animation clip is made up of tracks. Every animated joint in a skeleton (every <code>Transform</code> in the resulting pose) can have a track. Each track is made up of several frames. A frame contains a time, a value and an incoming and outgoing tangents. The tangents are used to build curves out of Cubic Hermite Splines.</p>
+
+			<img src="pose_generation.png" alt="Pose Generation" />
+
+			<p>The most important part of pose generation is the animation tracks. Digital Content Creation (DCC) tools like Maya, 3DS Max or Blender allow animators to author animation by defining tracks. These tracks express change over time using curves. An animation track often looks similar to this:</p>
+
+			<img src="transform_timeline.png" alt="Transformation timeline" />
+
+			<p><a href="https://docs.unity3d.com/Manual/animeditor-UsingAnimationEditor.html">Unity's Animation View</a> is a great example of an animation curve editor.</p>
+
+			<p>An animator usually animated characters in a DCC tool using curves like what was shown above. In the early 2000's, most game animation pipelines would use some offline tool would then sample that animation at set intervals, and record any values that have changed over that interval.</p>
+
+			<p>At playback time, the game would linearly interpolate between the sampled points. This sampled animation method is faster, but it takes more memory. The approximated curve is generally close enough to be indiscernible at playback time. A comparison of a cubic hermite spline and it’s sampled counterpart:</p>
+
+			<img src="curve_sampling.png" alt="Comparing curves and sampled curves" /> 
+
+			<p>We’re not going to implement the approximated method, instead we will sample curves in real time, similar to 3D DCC tools, like Unity’s animation view. Sampling curves in real time is a bit more expensive in terms of processing power, but modern hardware is powerful enough to handle doing so.</p>
+
+			<h2>Interpolation types</h2>
+
+			<p>When defining an animation curve, generally, it follows one of three interpolation methods: Constant, Linear and Cubic. Cubic curves can be expressed using any cubic equation like bezier curves (what blender does) or hermite splines (what maya does). We’re going to use hermite splines to represent cubic curves.</p>
+
+			<p>A constant curve keeps its value the same until the next keyframe, sometimes this type of curve is called a step curve. Visually, a constant curve looks like this:</p>
+
+			<img src="constant_curve.png" alt="Constant Curve" />
+
+			<p>A linear curve interpolates between two frames in a linear fashion (a straight line). As we’ve seen with the sampled curve approximation example earlier, if the samples of a linear track are close enough it can start to approximate other types of curves as well. A linear curve looks like this:</p>
+
+			<img src="linear_curve.png" alt="Linear Curve" />
+
+			<p>A cubic curve lets us define a curve in terms of values and tangents. How the tangents are interpreted depends on the type of curve. The benefit of cubic curves is that we can express relatively complex curves with very little data. The downside is that there are the most expensive curves to interpolate. A cubic curve looks like this (tangents are the lines coming out of the keyframes):</p>
+
+			<img src="cubic_curve.png" alt="Cubic Curve" />
+
+			<p>We’re going to declare interpolation types as a simple enum class. Like i mentioned earlier, cubic curves for us are going to be cubic hermite splines.</p>
+
+<pre>enum class Interpolation { 
+    Constant, 
+    Linear, 
+    Cubic 
+};</pre>
+
+			<h2>Frames</h2>
+
+			<p>What is a frame of data? Well, that depends on the interpolation type. If the interpolation is constant (step) or linear, a frame is just some time and a value. When the interpolation is cubic (besizer or hermite) we need to store tangents as well.</p>
+
+			<p>A hermite curve needs values for the length of the slope of each frame. Since a curve is made up of many segments, each frame needs to know how to scale both the incoming and outgoing tangents.</p>
+
+			<p>There is one more important consideration to make, how wide is a frame? By this I mean what is the data stored in the frame? Is it a scalar, a vector or maybe a quaternion? To make that decision, we actually have to skip forward a bit and think about how we might want to construct tracks.</p>
+
+			<p>There are two strategies to track construction. We could either build a scalar track (track of floating point values) and all higher dimension tracks (like vector or quaternion tracks) would just contain a number of scalar tracks. Or we could build specified track types, we could have a salar track that contains scalar values, a vec3 track that contains vec3 values, etc.</p>
+
+			<p>The advantage of having a scalar track and compositing higher order tracks from those is that each component of a track could be interpolated differently. They can also have a different number of keyframes. The disadvantage is the additional effort of implementation.</p>
+
+			<p>The advantage of just building higher order tracks is mainly in implementation. Since the Hermite function is templated, it could handle scalar values, vec3 and even quat values. On this site we will implement explicit scalar, vector and quaternion tracks. Don’t worry, we won’t have to write the same code multiple times, we will rely on templates.</p>
+
+			<p>The Frame class will contain a time, a value and both in and out tangents. If the interpolation type doesn’t need tangents we will simply ignore them. Let’s plan that a frame can be an arbitrary size. The time it contains will always be a scalar, but the value and tangent lengths can be any size.</p>
+
+			<p>The implementation of the frame class is trivial. It needs arrays for the value, in and out tangent and a scalar for the time. Let’s use a template to specify the size of each frame.</p>
+
+<pre>template&lt;unsigned int N&gt;
+class Frame {
+public:
+    float value[N];
+    float in[N];
+    float out[N];
+    float time;
+};</pre>
+
+			<p>Let's add couple of typedefs for the frame types we might encounter</p>
+
+<pre>typedef Frame&lt;1&gt; ScalarFrame;
+typedef Frame&lt;3&gt; VectorFrame;
+typedef Frame&lt;4&gt; QuaternionFrame;</pre>
+
+			<h2>Tracks</h2>
+
+			<p>It was briefly mentioned in the "Implementing Frames" section, we will implement tracks that contain the exact data that the track represents. So, if a track is a vec3 track, it contains vec3 data and vec3 tangents (and contains a vector of Frame&lt;3&gt; objects).</p>
+
+			<p>This means that each component of our track is tied to the same time on the timeline. We can’t make a keyframe in the X position of the object without also adding a keyframe to the Y and Z components as well. The <code>vec3</code> track below shows how each component of the vector has keyframes in the same positions.</p>
+
+			<img src="transform_track.png" alt="Basic transform track" />
+
+			<p>A track is just a collection of frames and the frame class is templated, so the Track class will need to be templated as well. The Track lass will take two template parameters, the first is the type (this is intended to be float, vec3 or quat) and the other is the number of components.</p>
+
+			<p>The Track class will only need two members, a vector of frames and an interpolation type. </p>
+
+<pre>template&lt;typename T, int N&gt;
+class Track {
+protected:
+    std::vector&lt;Frame&lt;N&gt;&gt; mFrames;
+    Interpolation mInterpolation;</pre>
+
+			<p>The Track class only needs a default constructor to initialize the mInterpolation variable. The generated copy constructor, assignment operator and destructor are going to be fine. We will also add an <code>IsValid</code> function, a track is only valid if it has at least two frames.</p>
+
+<pre>public:
+    Track();
+    bool IsValid();</pre>
+
+			<p>Next, we will implement getter and setter functions for the number of frames and the interpolation type.</p>
+
+<pre>    void Resize(unsigned int size);
+    unsigned int Size();
+    Interpolation GetInterpolation();
+    void SetInterpolation(Interpolation interpolation);</pre>
+
+    		<p>We will overload the <code>[]</code> operator to retrieve a specific frame. We need to be able to sample a track at a given time for a value, </p>
+
+<pre>    T Sample(float time, bool looping);
+    Frame&lt;N&gt;& operator[](unsigned int index);</pre>
+
+    		<p>We will also implement some getter functions for the start and end time of the track as well as the duration.</p>
+
+<pre>    float GetStartTime();
+    float GetEndTime();
+    float GetDuration();</pre>
+
+    		<p>We will need to implement some helper funtions. When a track is sampled, it will call one of the <code>SampleConstant</code>, <code>SampleLinear</code> or <code>SampleCubic</code> functions depending on the type of the track.</p>
+
+<pre>protected:
+    T SampleConstant(int frame);
+    T SampleLinear(const T& start, const T& end, float t);
+    T SampleCubic(int thisFrame, int nextFrame, float t, float delta);</pre>
+
+    		<p>We have two helper functions dealing with time, the <code>FrameIndex</code> function will find the frame right before and after a given time. The <code>AdjustTimeToFitTrack</code> function will take any value and and adjust it to be valid for the animation clip.</p>
+
+<pre>    int FrameIndex(float time, bool looping);
+    float AdjustTimeToFitTrack(float time, bool looping);</pre>
+
+    		<p>Finally, the last function in the Track class will cast a <code>float</code> pointer to whatever the classes template <code>T</code> is.</p>
+
+<pre>    T Cast(float* value);
+}; // End of Track class</pre>
+			
+			<p>There are three types of tracks that we will use, tracks that represent scalar values, three dimensional vectors and quaternions. Let's make some typedef's for these.</p>
+
+<pre>typedef Track&lt;float, 1&gt; ScalarTrack;
+typedef Track&lt;vec3, 3&gt; VectorTrack;
+typedef Track&lt;quat, 4&gt; QuaternionTrack;</pre>
+
+			<p>Start implementing the track by defining the constructor. The constructor is simple, it only needs to set the default interpolation type of a track.</p>
+
+<pre>template&lt;typename T, int N&gt;
+Track&lt;T, N&gt;::Track() {
+    mInterpolation = Interpolation::Linear;
+}</pre>
+			<p>The <code>GetStartTime</code> function should return the time of the first frame, the <code>GetEndTime</code> function should return the time of the last frame and the <code>GetDuration</code> function should return the difference between the two.</p>
+
+<pre>template&lt;typename T, int N&gt;
+float Track&lt;T, N&gt;::GetStartTime() {
+    return mFrames[0].time;
+}
+
+template&lt;typename T, int N&gt;
+float Track&lt;T, N&gt;::GetEndTime() {
+    return mFrames[mFrames.size() - 1].time;
+}
+
+template&lt;typename T, int N&gt;
+float  Track&lt;T, N&gt;::GetDuration() {
+    return GetEndTime() - GetStartTime();
+}</pre>
+
+			<p>A <code>Track</code> is only valid if it has more than one frame. We do need two frames to interpolate between.</p>
+
+<pre>template&lt;typename T, int N&gt;
+bool Track&lt;T, N&gt;::IsValid() {
+    return mFrames.size() &gt; 1;
+}</pre>
+
+			<p>The <code>Resize</code> and <code>Size</code> functions work on the size of the <code>mFrames</code> vector directly. There is also a getter and setter function for interpolation type. An indevidual frame can be accessed using the overloaded <code>[]</code> operator.</p>
+
+<pre>template&lt;typename T, int N&gt;
+void Track&lt;T, N&gt;::Resize(unsigned int size) {
+    mFrames.resize(size);
+}
+
+template&lt;typename T, int N&gt;
+unsigned int Track&lt;T, N&gt;::Size() {
+    return mFrames.size();
+}
+
+template&lt;typename T, int N&gt;
+Interpolation Track&lt;T, N&gt;::GetInterpolation() {
+    return mInterpolation;
+}
+
+template&lt;typename T, int N&gt;
+void Track&lt;T, N&gt;::SetInterpolation(Interpolation interpolation) {
+    mInterpolation = interpolation;
+}
+
+template&lt;typename T, int N&gt;
+Frame&lt;N&gt;&amp; Track&lt;T, N&gt;::operator[](unsigned int index) {
+    return mFrames[index];
+}</pre>
+			<p>The <code>Cast</code> function is responsible for converting a raw float array into whatever type <code>T</code> the <code>Track</code> is. Because each type is constructed differently, we have to make an explicit version of this function for any type that the <code>Track</code> can contain.</p>
+
+<pre>template&lt;&gt; float Track&lt;float, 1&gt;::Cast(float* value) {
+    return value[0];
+}
+
+template&lt;&gt; vec3 Track&lt;vec3, 3&gt;::Cast(float* value) {
+    return vec3(value[0], value[1], value[2]);
+}
+
+template&lt;&gt; quat Track&lt;quat, 4&gt;::Cast(float* value) {
+    return quat(value[0], value[1], value[2], value[3]);
+}</pre>
+			<p>The <code>Sample</code> function starts by finding the current frame for the given time. If the frame is invalid, nothing is returned. If the interpolation type is constant, the result of the <code>SampleConstant</code> function can be returned. The only argument <code>SampleConstant</code> takes is the frame index to be sampled.</p>
+
+<pre>template&lt;typename T, int N&gt;
+T Track&lt;T, N&gt;::Sample(float time, bool looping) {
+    int thisFrame = FrameIndex(time, looping);
+    if (thisFrame &lt; 0 || thisFrame &gt;= (int)(mFrames.size() - 1)) {
+        return T();
+    }
+
+    if (mInterpolation == Interpolation::Constant) {
+        return SampleConstant(thisFrame);
+    }</pre>
+
+    		<p>Find the next frame, just add one to the current frame. Find the time relative to the track, if a track is looping or clamped, the time might need to be adjusted. If the time between the current frame and the next frame is not valid, return nothign. Otherwise, find where the current sample time is between the current and next frames and normalize that value to be in a range of <code>0</code> to <code>1</code>.</p>
+
+<pre>    int nextFrame = thisFrame + 1;
+    float trackTime = AdjustTimeToFitTrack(time, looping);
+    float frameDelta = mFrames[nextFrame].time - mFrames[thisFrame].time;
+    if (frameDelta &lt;= 0.0f) {
+        return T();
+    }
+    float t = (trackTime - mFrames[thisFrame].time) / frameDelta;</pre>
+    		
+    		<p>If the interpolation type is linear, find the start and end interpolation values by calling <code>Cast</code> on the current and next frames and call the <code>SampleLinear</code> helper function. Otherwise, the interpolation type must have been cubic. Call the <code>SampleCubic</code> helper funtion with the frame indices, <code>t</code> and delta between frame times.</p>
+
+<pre>    if (mInterpolation == Interpolation::Linear) {
+        T start = Cast(&mFrames[thisFrame].value[0]);
+        T end = Cast(&mFrames[nextFrame].value[0]);
+        return SampleLinear(start, end, t);
+    }
+    return SampleCubic(thisFrame, nextFrame, t, frameDelta);
+}</pre>
+			<p>The <code>SampleConstant</code> function does some minimal error checking and returns the value of the frame cast to whatever type <code>T</code> is.</p>
+
+<pre>template&lt;typename T, int N&gt;
+T Track&lt;T, N&gt;::SampleConstant(int frame) {
+    if (frame &lt; 0 || frame &gt;= (int)mFrames.size()) {
+        return T();
+    }
+
+    return Cast(&amp;mFrames[frame].value[0]);
+}</pre>
+
+			<p>The linear sample function has to be implemented for each type indevidually. Each of these functions is just a lerp, in the case of a quaternion it's an nlerp.</p>
+
+<pre>template&lt;&gt; 
+float Track&lt;float, 1&gt;::SampleLinear(const float&amp; start, const float&amp; end, float t) {
+    return start + (end - start) * t;
+}
+
+template&lt;&gt; 
+vec3 Track&lt;vec3, 3&gt;::SampleLinear(const vec3&amp; start, const vec3&amp; end, float t) {
+    return lerp(start, end, t);
+}
+
+template&lt;&gt; 
+quat Track&lt;quat, 4&gt;::SampleLinear(const quat&amp; start, const quat&amp; end, float t) {
+    quat result = mix(start, end, t);
+    if (dot(start, end) &lt; 0) { // Neighborhood
+        result = mix(start, -end, t);
+    }
+    return normalized(result); //NLerp, not slerp
+}</pre>
+			<p>The <code>SampleCubic</code> function used for <code>float</code> and <code>vec3</code> types implements Cubic Hermite Interpolation.</p>
+
+<pre>template&lt;typename T, int N&gt;
+T Track&lt;T, N&gt;::SampleCubic(int thisFrame, int nextFrame, float t, float frameDelta) {
+    T point1 = Cast(&amp;mFrames[thisFrame].value[0]);
+    T slope1 = Cast(&amp;mFrames[thisFrame].out[0]) * frameDelta;
+
+    T point2 = Cast(&amp;mFrames[nextFrame].value[0]);
+    T slope2 = Cast(&amp;mFrames[nextFrame].in[0]) * frameDelta;
+
+    float tt = t * t;
+    float ttt = tt * t;
+
+    float h1 = 2.0f * ttt - 3.0f * tt + 1.0f;
+    float h2 = -2.0f * ttt + 3.0f * tt;
+    float h3 = ttt - 2.0f * tt + t;
+    float h4 = ttt - tt;
+
+    T result = point1 * h1 + point2 * h2 + slope1 * h3 + slope2 * h4;
+    return result;
+}</pre>
+			<p>The <code>SampleCubic</code> function used for quaternions is a bit different. When interpolating quaternions, we have to remember to neighborhood the two quaternions together. The resulting value should be normalized as well.</p>
+
+<pre>template&lt;&gt;
+quat Track&lt;quat, 4&gt;::SampleCubic(int thisFrame, int nextFrame, float t, float frameDelta) {
+    quat point1 = Cast(&amp;mFrames[thisFrame].value[0]);
+    quat slope1 = Cast(&amp;mFrames[thisFrame].out[0]) * frameDelta;
+
+    quat point2 = Cast(&amp;mFrames[nextFrame].value[0]);
+    quat slope2 = Cast(&amp;mFrames[nextFrame].in[0]) * frameDelta;
+
+    if (dot(point1, point2) &lt; 0) {
+        point2 = -point2;
+    }
+
+    float tt = t * t;
+    float ttt = tt * t;
+
+    float h1 = 2.0f * ttt - 3.0f * tt + 1.0f;
+    float h2 = -2.0f * ttt + 3.0f * tt;
+    float h3 = ttt - 2.0f * tt + t;
+    float h4 = ttt - tt;
+
+    quat result = point1 * h1 + point2 * h2 + slope1 * h3 + slope2 * h4;
+    return normalized(result);
+}</pre>
+			<p>The <code>AdjustTimeToFitTrack</code> function adjusts the input time so that it is appropriate for the current track and returns the adjusted time. The time only needs to be adjusted if the input time is not within the range of the first and last frames times. If the sample is looping, add or subtract duration until the time is correct. If the sample is not looping, just clamp time to the first or last frame.</p>
+
+<pre>template&lt;typename T, int N&gt;
+float Track&lt;T, N&gt;::AdjustTimeToFitTrack(float time, bool looping) {
+    unsigned int size = (unsigned int)mFrames.size();
+    if (size &lt;= 1) { return 0.0f; }
+
+    float startTime = mFrames[0].time;
+    float endTime = mFrames[size - 1].time;
+    float duration = endTime - startTime;
+    if (duration &lt;= 0.0f) { return 0.0f; }
+    if (looping) {
+        while (time &lt; startTime) { time += duration; }
+        while (time &gt; endTime) { time -= duration; }
+        if (time == endTime) { time = startTime; }
+    }
+    else {
+        if (time &lt;= mFrames[0].time) { time = startTime; }
+        if (time &gt;= mFrames[size - 1].time) { time = endTime; }
+    }
+
+    return time;
+}</pre>
+			<p>The <code>FrameIndex</code> function should always return the index of the frame right before the given time. Every frame has one frame after it, except the very last frame. When dealing with the last frame, it's expected that the frame before it is returned, so it will interpolate to the next (last) frame with an interpolation value of 1. Because of this, the last frame will always return <code>size - 2</code>. Time should never stop at the end time if the clip is looping, return the start time instead.</p>
+
+<pre>template&lt;typename T, int N&gt;
+int Track&lt;T, N&gt;::FrameIndex(float time, bool looping) {
+    unsigned int size = (unsigned int)mFrames.size();
+    if (size &lt;= 1) {
+        return -1;
+    }
+    if (looping) {
+        float startTime = mFrames[0].time;
+        float endTime = mFrames[size - 1].time;
+        float duration = endTime - startTime;
+
+        while (time &lt; startTime) { time += duration; }
+        while (time &gt; endTime) { time -= duration; }
+        if (time == endTime) { time = startTime; }
+    }
+    else {
+        if (time &lt;= mFrames[0].time) {
+            return 0;
+        }
+        if (time &gt;= mFrames[size - 2].time) {
+            return (int)size - 2;
+        }
+    }
+    for (int i = (int)size - 1; i &gt;= 0; --i) {
+        if (time >= mFrames[i].time) {
+            return i;
+        }
+    }
+    // Invalid code, we should not reach here!
+    return -1;
+}</pre>
+
+			<h2>Transform track</h2>
+
+			<p>We don’t actually want to maintain lists of vector and quaternion tracks, instead we want a more convenient higher level structure, the transform track. A transform track will encapsulate three tracks, one for position, one for rotation and one for scale. The nice thing is, we can sample the Transform track at any point in time and get a full transform back, even if the component tracks are of different durations or start at different times.</p>
+
+			<p>There is a design decision we have to make here, how do we want to store these Transform tracks. The skeleton of a model contains a number of bones. We can either store a vector of transform tracks, one for each bone or we can add bone id as a member of the transform track and only store as many tracks as are needed.</p>
+
+			<p>This is important because a character can have a lot of bones (over 100  bones isn’t uncommon for a AAA model), but not all animations are going to be animating all of those bones. Implementation choices tend to end up being memory vs speed. On modern systems, the delta on either axis is usually trivial. For ease of implementation, we’re going to choose to add a bone id to our transform tracks and only store as many tracks as we need (so no tracks without a duration).</p>
+
+			<p>To implement the <code>TransformTrack</code> class, lets talk about what member variables it will need. The class will need to have an ID, and tracks for position, rotation and scale. The start and end time of the track should also be stores. The class will need a protected function to update the start and end times, these times only change when one of the tracks is updated.</p>
+
+
+<pre>class TransformTrack {
+protected:
+    unsigned int mId;
+    VectorTrack mPosition;
+    QuaternionTrack mRotation;
+    VectorTrack mScale;
+    float mStartTime;
+    float mEndTime;
+protected:
+    void RecalculateDuration();</pre>
+
+    		<p>The <code>TransformTrack</code> will need a default constructor to assign values to the id, start and end times. The generated copy constructor, assignment operator and destructor are all fine. The class has an <code>IsValid</code> helper function, a track is only valid if it has two or more frames, a transform track is only valid if at least one of it's tracks is valid.. The ID of the track has getter and setter functions, while tracks only have a setter function and start / end time only have getter functions. There is also a <code>Sample</code> function which is used to sample the track at a given point in time.</p>
+
+    		<p>The tracks only have setter functions. Any time a component track changes, the start and end times of the entire transform track changes. The setter functions are intended to be used when the track is being constructed. This is also why the time variables only have getter functions, they should only change if one of the component tracks changes.</p>
+
+<pre>public:
+    TransformTrack();
+    bool IsValid();
+
+    unsigned int GetId();
+    void SetId(unsigned int id);
+    
+    void SetPositionTrack(const VectorTrack&amp; position);
+    void SetRotationTrack(const QuaternionTrack&amp; rotation);
+    void SetScaleTrack(const VectorTrack&amp; scale);
+    
+    float GetStartTime();
+    float GetEndTime();
+    float GetDuration();
+
+    Transform Sample(const Transform&amp; t, float time, bool looping);
+};</pre>
+
+			<p>The <code>TransformTrack</code> constructor is trivial. Assign default values to id, start time and end time.</p>
+
+<pre>TransformTrack::TransformTrack() {
+    mId = 0;
+    mStartTime = 0.0f;
+    mEndTime = 0.0f;
+}</pre>
+
+			<p>A <code>TransformTrack</code> is only valid if at least one of it's component tracks, position, rotation or scale is valid.</p>
+
+<pre>bool TransformTrack::IsValid() {
+    return mPosition.IsValid() || mRotation.IsValid() || mScale.IsValid();
+}</pre>
+			<p>The getter and setter functions for the track id are trivial.</p>
+
+<pre>unsigned int TransformTrack::GetId() {
+    return mId;
+}
+
+void TransformTrack::SetId(unsigned int id) {
+    mId = id;
+}</pre>
+
+			<p>The getter functions for time are also trivial.</p>
+
+<pre>float TransformTrack::GetStartTime() {
+    return mStartTime;
+}
+
+float TransformTrack::GetEndTime() {
+    return mEndTime;
+}
+
+float TransformTrack::GetDuration() {
+    return mEndTime - mStartTime;
+}</pre>
+			<p>The track setter functions will copy a track by value, this makes the functions potentially expensive, which is why these functions are only intended to be used when a track is being loaded. The duration of a transform track is determined by the duration of each of it's component tracks, each of these functions needs to call the <code>RecalculateDuration</code> helper function after the track has been copied over.</p>
+
+<pre>void TransformTrack::SetPositionTrack(const VectorTrack&lt; position) {
+    mPosition = position;
+    RecalculateDuration();
+}
+
+void TransformTrack::SetRotationTrack(const QuaternionTrack&lt; rotation) {
+    mRotation = rotation;
+    RecalculateDuration();
+}
+
+void TransformTrack::SetScaleTrack(const VectorTrack&lt; scale) {
+    mScale = scale;
+    RecalculateDuration();
+}</pre>
+
+			<p>To re-claculate the duration of a track, set both start and end time to some default value (for me that's <code>0</code>). If a track is valid, and it's start time is less than the start time of the transform track or if the transform track has no start time set, set the start time of the transform track to the start time of the track. This logic is wrapped in a macro called <code>APPLY_START_TIME</code>. Similar logic for the ned time is wrapped in a macro called <code>APPLY_END_TIME</code>.</p>
+
+<pre>void TransformTrack::RecalculateDuration() {
+    mStartTime = mEndTime = 0.0f;
+    bool startSet = false;
+    bool endSet = false;
+
+    APPLY_START_TIME(mPosition);
+    APPLY_START_TIME(mRotation);
+    APPLY_START_TIME(mScale);
+
+    APPLY_END_TIME(mPosition);
+    APPLY_END_TIME(mRotation);
+    APPLY_END_TIME(mScale);
+}</pre>
+			<p>The <code>APPLY_START_TIME</code> macro takes a track as an argument. It assumes that there is a bool called startSet. First, check if the track is valid, if the track isn't valid it won't affect the time of the transform track. If the track was valid, get it's start time. Only update the start time of the transform track if the tracks start time is less than the start time of the transform track OR if the start time has not been set before.</p>
+
+<pre>#define APPLY_START_TIME(track) { \
+    if (track.IsValid()) { \
+        float start = track.GetStartTime(); \
+        if ((start &lt; mStartTime) || !startSet) { \
+            mStartTime = start; \
+            startSet = true; \
+        }\
+    } \
+}</pre>
+
+			<p>The <code>APPLY_END_TIME</code> macro has almost the same logic as <code>APPLY_START_TIME</code>. Instead of the start time, this macro obviously looks at the end time of the track, and only sets the transform tracks end time if the tracks end time was greater OR if the end time has not been set before.</p>
+
+<pre>#define APPLY_END_TIME(track) { \
+    if (track.IsValid()) {\
+        float end = track.GetEndTime(); \
+        if ((end &gt; mEndTime) || !endSet) { \
+            mEndTime = end; \
+            endSet = true; \
+        } \
+    } \
+}</pre>
+
+			<p>The <code>Sample</code> function takes a reference transform, a track and a boolean if the track being sampled should be looping or not. Why take a reference transform? Consider a transform object, it's at <code>(0, 2, 4)</code> with a <code>90</code> degree rotation around it's x axis. Now, assume a transform track is animating it's position only. What value should it's rotation have after the transform track is sampled? Without the reference transform, we can only set it to something like 0. With the reference transform, we can set the rotation to whatever the rotation of the reference transform was.</p>
+
+			<p>The intent here is that if a transform is animated, it is also passed in as the reference transform. This way, the result of sampling a transform track is the correct transform, with only the animated components having changed. The usage would be something like this: <code>mObject.transform = mAnimation.Sample(mObject.transform, mAnimationTime, true);</code></p>
+
+<pre>Transform TransformTrack::Sample(const Transform&amp; t, float time, bool looping) {
+    Transform result = t;
+    if (mPosition.IsValid()) { // Only assign if animated
+        result.position = mPosition.Sample(time, looping);
+    }
+    if (mRotation.IsValid()) { // Only assign if animated
+        result.rotation = mRotation.Sample(time, looping);
+    }
+    if (mScale.IsValid()) { // Only assign if animated
+        result.scale = mScale.Sample(time, looping);
+    }
+    return result;
+}</pre>
+
+			<h2>Poses</h2>
+
+			<p>Think of a pose as the skeleton of an animated character at a specific point in time. Really tough, it’s just a hierarchy (directed acyclic graph or DAG) of transforms. The state of each transform affects all of its children. We often say that a skeleton is composed of joints or bones, in practice both joints and bones are represented by Transform objects.</p> 
+
+			<p>There are many strategies for storing the parent child relationship of a Pose, the one we will be implementing is to keep two parallel vectors. One vector contains transforms, one transform per joint. The other vector contains integers that hold the parent index of the joint at the same index in the vector of transforms. Not all joints have parents, if a joint doesn’t have a parent, it’s parent value is <code>-1</code>.</p>
+
+			<p>When we think of a skeleton or pose it’s easy to think of a model that has one root node and many nodes that branch of it. In practice, it’s not uncommon to have two or three root nodes. This might take some getting used to as its rather unintuitive. 3DCC packages like to package up models in a way that the first node of the skeleton is a root node, but there is also a root node that all skinned meshes are children of. The hierarchies of these files tend to look like this:</p>
+
+			<img src="many_roots.png" alt="GLTF file with multiple root nodes" />
+
+			<p>There are two essential poses for an animated character: the current pose and the rest pose. The rest pose is the default configuration of all bones. An animation describes the transformation of each bone over time. Sampling an animation in time results in the current pose, which is used to skin a character. There are actually many more poses, there is no standard terminology and some or all of these poses can be used in an animation system. The poses that you should be aware of are:</p>
+
+			<div class="info">
+				<h1>Bind pose</h1>
+				<p>The bind pose is the pose that a character is skinned to. Much more information on this will be covered in the skinning section. The idea is, this pose matches the general shape that a model was modelled as. It's the pose used to assign vertices to bones. Again, more info in the skinning section.</p>
+			</div>
+
+			<div class="info">
+				<h1>Inverse bind pose</h1>
+				<p>The inverse bind pose is exactly what it sounds like, the inverse of the bind pose. The inverse bind pose is needed for skinning, the skinning section later will cover the inverse bind pose in depth.</p>
+			</div>
+
+			<div class="info">
+				<h1>Rest / Reference pose</h1>
+				<p>Ideally, the rest / reference pose should be the same as the bind pose. This isn't always the case tough. The Rest pose is a reference pose, it's the pose that the model started to be aniamted from. If there are any joints that are not animated, they need to contain the transform of the joint from the rest pose.</p>
+			</div>
+
+			<div class="info">
+				<h1>Animated pose</h1>
+				<p>This is the current Pose, it is what will be displayed during the current frame. To get an animated pose, set the pose to be whatever the reference pose is, then sample an animation clip. The clip will replace transforms only for joints that are animated, every other transform will remain the same as it is in the reference pose. </p>
+				<p>Once a clip is playing, it will always change the same components of the same transform tracks. The unchanged components will maintain their reference values. However, not all clips animate the same joints. This means, the animated pose needs to be assigned to have the same values as the reference pose any time a new animation starts to play.</p>
+			</div>
+
+			<div class="info">
+				<h1>Skeleton</h1>
+				<p>That's a lot of potential poses to keep track of! Some animation implementations create a <code>Skeleton</code> class to bundle together the bind pose, inverse bind pose, rest pose and joint naames. A <code>Skeleton</code> class is created in the book, but for this article we will just keep track of all the poses without any helper classes.</p>
+			</div>
+
+			<p>This is worth re-iterating: <b>not all animations affect every joint</b> or bone of a character, this means some animations might not change the value of a joint (since we’re only storing Transform tracks for joints that are animated).</p>
+
+			<p>What happens if animation A animates joint 1, but Animation B doesn’t? If we just play A or B, everything is fine. If we play B, then A, everything is (probably) fine. If we play A, then B things get a bit wonky. Joint 1 will maintain its last modified transform from animation A. Because of this, we must reset the current pose to be the same as the rest pose whenever we switch between animations!</p>
+
+			<p>Start implementing the <code>Pose</code> class by declaring the two parallel vectors it will contain. One is a vector of transforms. The index of each transform is the id of the transform. The other vector is a vector of integers, each integer is the id of the parent of the transform at that index. If a transform is a root transform (if it has no parent), the parent value will be <code>-1</code>.</p> 
+
+<pre>class Pose {
+protected:
+    std::vector&lt;Transform&gt; mJoints;
+    std::vector&lt;int&gt; mParents;</pre>
+
+    		<p>We need a default constructor and a convenience constructor that can specify how many joints a Pose will have. Whenever we switch animations, the pose of the current character will need to be reset to the rest pose of the model. Because of this, the copy constructor and assignment operator need to be fast, so we will provide implementations for those as well.</p>
+
+<pre>public:
+    Pose();
+    Pose(const Pose&amp; p);
+    Pose&amp; operator=(const Pose&amp; p);</pre>
+
+    		<p>The <code>Resize</code> and <code>Size</code> functions are getters and setters for the size of the parallel vectors. Given a joint index, the parent property of each joint has a trivial getter and setter as well. Similarly, given an index the local transform of a joint has a trivial getter and setter too. The <code>Pose</code> class stores joints in local space, so getting or setting the local trnasform of a joint is just updating the <code>Transform</code> in the joints vector.</p>
+
+<pre>    void Resize(unsigned int size);
+    unsigned int Size();
+
+    int GetParent(unsigned int index);
+    void SetParent(unsigned int index, int parent);
+    
+    Transform GetLocalTransform(unsigned int index);
+    void SetLocalTransform(unsigned int index, const Transform&amp; transform);</pre>
+    
+    		<p>Joints store their transform in local space, to get the world spcae Transform of a joint you have to multiply a joints transform by the transform of all of it's parents. The <code>GetGlobalTransform</code> function will do exactly that and return the world space transform of the specified joint. The last function, <code>GetMatrixPalette</code> fills an array of <code>mat4</code> structures with the world space transform of every joint.</p>
+
+<pre>    Transform GetGlobalTransform(unsigned int index);
+    void GetMatrixPalette(std::vector&lt;mat4&gt;&amp; out);
+};</pre>
+
+			<p>Implementing the constructor and copy constructor is trivial. The copy constructor is actually optional, the generated copy constructor would have done the same thing, but we will overload the assignment operator to be a bit fasater.</p>
+
+<pre>Pose::Pose() { }
+
+Pose::Pose(const Pose&amp; p) {
+    *this = p;
+}</pre>
+
+			<p>The copy constructor here is actually optional. The assignment operator that the compiler generates would have left us with the same data. So, why override this operator? It's going to be used to set one pose to another, like how an animated pose needs to be reset to the rest pose when switching between animations. We need to override the assignment operator to be as fast as possible, and not rely on the standard library for speed.</p>
+
+<pre>Pose&amp; Pose::operator=(const Pose&amp; p) {
+    if (&amp;p == this) {
+        return *this;
+    }
+
+    if (mParents.size() != p.mParents.size()) {
+        mParents.resize(p.mParents.size());
+    }
+    if (mJoints.size() != p.mJoints.size()) {
+        mJoints.resize(p.mJoints.size());
+    }
+
+    if (mParents.size() != 0) {
+        memcpy(&amp;mParents[0], &amp;p.mParents[0], sizeof(int) * mParents.size());
+    }
+    if (mJoints.size() != 0) {
+        memcpy(&amp;mJoints[0], &amp;p.mJoints[0], sizeof(Transform) * mJoints.size());
+    }
+
+    return *this;
+}</pre>
+
+			<p>The parent, size and local transform getters and setters are trivial to implement. The size and resize functions are getter and setter functions for the size of the parent and joints vectors.</p>
+
+<pre>int Pose::GetParent(unsigned int index) {
+    return mParents[index];
+}
+
+void Pose::SetParent(unsigned int index, int parent) {
+    mParents[index] = parent;
+}
+
+void Pose::Resize(unsigned int size) {
+    mParents.resize(size);
+    mJoints.resize(size);
+}
+
+unsigned int Pose::Size() {
+    return mJoints.size();
+}
+
+Transform Pose::GetLocalTransform(unsigned int index) {
+    return mJoints[index];
+}
+
+void Pose::SetLocalTransform(unsigned int index, const Transform&amp; transform) {
+    mJoints[index] = transform;
+}</pre>
+
+			<p>To get the global transform of a joint, you have to combine it's local transform with the local transform of all it's parents until the root joint. This can be done with a simple for loop, set the iterator to the parent index of the current joint. The loop condition is the iterator being greater than or equal to 0. Every loop iteration set the iterator to be the parent of the current iterator. Combine transforms in this loop and return the result.</p>
+
+<pre>Transform Pose::GetGlobalTransform(unsigned int index) {
+    Transform result = mJoints[index];
+    for (int parent = mParents[index]; parent &gt;= 0; parent = mParents[parent]) {
+        result = combine(mJoints[parent], result);
+    }
+
+    return result;
+}</pre>
+
+			<div class="info">
+				<h1>Optimize GetGlobalTransform</h1>
+				<p>When calculating the global transform of a joint, the global transform of all parent joints are calculated as well. Take two sibling joints for example, there is no need to calculate the world tranasform of their parent twice! This can be wasteful, especially if you call the <code>GetGlobalTransform</code> function a lot.</p>
+
+				<p>The most straight forward way to optimize this function would be to have a lookup table with a dirty flag. However, we won't call this function often. In fact, the only time we need to call <code>GetGlobalTransform</code> for this tutorial is to set up the inverse bind pose once during initialization. Because this code isn't going to be running during game play, we won't optimize it here.</p>
+			</div>
+
+			<p>The <code>GetMatrixPalette</code> function is intended to return a vector of matrices, each matrix containing the world space transform of the joint at the same index as the matrix. So, it's a parallel array of world space matrices. Finding the world space matrix of a joint is easy, get teh global transform of the joint and convert it to be a matrix. The function fills out a reference paaramater instead of returning a vector to avoid runtime memory allocation.</p>
+
+<pre>void Pose::GetMatrixPalette(std::vector&lt;mat4&gt;&amp; out) {
+    unsigned int size = Size();
+    if (out.size() != size) {
+        out.resize(size);
+    }
+
+    for (unsigned int i = 0; i &lt; size; ++i) {
+        Transform t = GetGlobalTransform(i);
+        out[i] = transformToMat4(t);
+    }
+}</pre>
+
+			<div class="info">
+				<h1>Optimize GetMatrixPalette</h1>
+				<p>The above implementation is na&Iuml;ve, it calls the expensive <code>GetGlobalTransform</code> function, in a loop! There is a way to optimize this function, if child nodes always have a greater index than their parents. However, that's not a promise we can make, since we have no controll over how content creation tools might export data. We will optimize if possible, but fall back on the na&Iuml;ve implementation if no optimization is possible.</p>
+
+				<p>The key to this optimization is that you already have an array of world spacae matrices to fill out. If every child node has a greater index than it's parent, then we know that the world space matrix of the parent is already in the array. Instead of finding the world space transform of each element, we convert the local transform to a matrix and multiply it with the already calculated matrix of the parent transform. Of course, as soon as a node is found whose parent has a greater index than the node, we need to fall back on the na&Iuml;ve implementation. Luckily, we can pick up right where the optimization broke.</p>
+
+				<p>Unlike <code>GetGlobalTransform</code>, the <code>GetMatrixPalette</code> function is called every frame, which makes this an important optimization. The optimization implementation is provided below.</p>
+
+<pre>void Pose::GetMatrixPalette(std::vector&lt;mat4&gt;&amp; out) {
+    int size = (int)Size();
+    if ((int)out.size() != size) { 
+        out.resize(size); 
+    }
+
+    int i = 0;
+    for (; i &lt; size; ++i) {
+        int parent = mParents[i];
+        if (parent &gt; i) { 
+            break; 
+        }
+
+        mat4 global = transformToMat4(mJoints[i]);
+        if (parent &gt;= 0) {
+            global = out[parent] * global;
+        }
+        out[i] = global;
+    }
+
+    for (; i &lt; size; ++i) {
+        Transform t = GetGlobalTransform(i);
+        out[i] = transformToMat4(t);
+    }
+}</pre>
+			</div>
+
+			<h2>Clips</h2>
+
+			<p>An animation clip is a collection of transform tracks, each track describes the motion of one joint over time, all of the tracks combined describe the motion of the animated model over time. If we sample an animation clip, we get a Pose, which describes the configuration of each joint in an animation at the specified time.</p>
+
+			<p>For a basic clip class, all we really need is a vector of Transform Tracks. Because our transform tracks contain the id of the joint they effect, we can have a minimal number of tracks per clip. We might also want to keep track of some meta-data like the name of the clip, whether or not the clip is looping and information about the time or duration of the clip.</p>
+
+			<p>The looping attribute of the clip class could be offloaded to some construct that’s further down the pipeline (like an animation component or something), but we’re implementing a bare bones animation system, this is a good place to put the looping property for now.</p>
+
+<pre>class Clip {
+protected:
+    std::vector&lt;TransformTrack&gt; mTracks;
+    std::string mName;
+    float mStartTime;
+    float mEndTime;
+    bool mLooping;</pre>
+
+    		<p>The Clip class has variables for the start and end time of the clip. Where do these numbers come from? The start time is the lowest start time of the contained tracks, the end time is the highest if the end time of the contained tracks. We will need a helper function to re-calculate the duration any time a new transform track is added or an existing one is modified.</p>
+
+    		<p>When sampling a Clip, there is no guarantee that the sample time is going to be within the start and end times of the clip. To deal with this, we will implement a helper function that adjusts the provided sample time to be within the range of the current animation clip.
+
+<pre>protected:
+    float AdjustTimeToFitRange(float inTime);
+    void RecalculateDuration();</pre>
+
+    		<p>A default constructor is needed to assign efault values to member variables. The generated copy constructor, assignment operator and destructor are fine. The number of tracks, start and end time and duration of the clip all should have getter functions.</p>
+
+<pre>public:
+    Clip();
+
+    unsigned int Size();
+    float GetDuration();
+    float GetStartTime();
+    float GetEndTime();</pre>
+
+    		<p>The name and looping property of the track both have getter and setter functions.</p>
+
+<pre>    std::string&amp; GetName();
+    void SetName(const std::string&amp; inNewName);
+    
+    bool GetLooping();
+    void SetLooping(bool inLooping);</pre>
+
+    		<p>The <code>SetTransformTrack</code> function will loop trough all tracks contained in the clip, if a track with the same id is found, it will be updated. If the track id is not found, it will be added to the vector of tracks.</p>
+
+    		<p>The <code>Sample</code> function takes a <code>Pose</code> reference and a time. It returns the time, adjusted to fit the animation clip. The idea here is that you can use that to keep the running animation time ina  valid range. The <code>Pose</code> reference will be modified for any animated joints in the clip.</p>
+
+<pre>    void SetTransformTrack(TransformTrack&amp; t);
+    float Sample(Pose&amp; outPose, float inTime);
+};</pre>
+
+			<p>The constructor needs to assign default values to <code>mName</code>, <code>mStartTime</code>, <code>mEndTime</code> and <code>mLooping</code>.</p>
+
+<pre>Clip::Clip() {
+    mName = "No name given";
+    mStartTime = 0.0f;
+    mEndTime = 0.0f;
+    mLooping = true;
+}</pre>
+
+			<p>Name and looping getter and setters are trivial.</p>
+
+<pre>std::string&amp; Clip::GetName() {
+    return mName;
+}
+
+void Clip::SetName(const std::string&amp; inNewName) {
+    mName = inNewName;
+}
+
+bool Clip::GetLooping() {
+    return mLooping;
+}
+
+void Clip::SetLooping(bool inLooping) {
+    mLooping = inLooping;
+}</pre>
+
+			<p>Start time, end time, duration and size getters are trivial as well.</p>
+
+<pre>float Clip::GetDuration() {
+    return mEndTime - mStartTime;
+}
+
+float Clip::GetStartTime() {
+    return mStartTime;
+}
+
+float Clip::GetEndTime() {
+    return mEndTime;
+}
+
+unsigned int Clip::Size() {
+    return (unsigned int)mTracks.size();
+}</pre>
+
+			<p>The <code>SetTransformTrack</code> function needs to loop trough all of the transform tracks contained in the clip. If one of these tracks has the same id as the track that is being set, it needs to be updated. If the clip did not contain any tracks the track needs to be added as a new track. If a track is modified, or a new track is added, the duration of the clip is no longer correct. To fix this, call <code>RecalculateDuration</code>.</p>
+
+			<p>This function isn't really fast, but it's only intended to be called during initialization, to set up the animation clip when it is loaded from a file.</p>
+
+<pre>void Clip::SetTransformTrack(TransformTrack&amp; t) {
+    unsigned int size = (unsigned int)mTracks.size();
+    for (unsigned int i = 0; i &lt; size; ++i) {
+        if (mTracks[i].GetId() == t.GetId()) {
+            mTracks[i] = t;
+            return;
+        }
+    }
+    mTracks.push_back(t);
+
+    RecalculateDuration();
+}</pre>
+			<p>The <code>Clip::RecalculateDuration</code> function works almost identically to how the <code>TransformTrack::RecalculateDuration</code> function works. The logic is the same, but this function must loop trough all of the tracks in the current <code>Clip</code>.</p>
+
+<pre>void Clip::RecalculateDuration() {
+    mStartTime = mEndTime = 0.0f;
+    bool startSet = false;
+    bool endSet = false;
+
+    unsigned int size = (unsigned int)mTracks.size();
+    for (unsigned int i = 0; i &lt; size; ++i) {
+        if (mTracks[i].IsValid()) {
+            if (mTracks[i].GetStartTime() &lt; mStartTime || !startSet) {
+                mStartTime = mTracks[i].GetStartTime();
+                startSet = true;
+            }
+            if (mTracks[i].GetEndTime() &gt; mEndTime || !endSet) {
+                mEndTime = mTracks[i].GetEndTime();
+                endSet = true;
+            }
+        }
+    }
+}</pre>
+
+			<p>The <code>Sample</code> function loops trough every track in the current clip. Each Transform Track is then sampled, and the resulting transform is stored in the output pose. When sampling the track, the local transform of the pose is used as the reference transform. This way, if a track only rotates a joint, only the rotation component changes.</p>
+
+<pre>float Clip::Sample(Pose&amp; outPose, float time) {
+    if (GetDuration() == 0.0f) {
+        return 0.0f;
+    }
+    time = AdjustTimeToFitRange(time);
+
+    unsigned int size = mTracks.size();
+    for (unsigned int i = 0; i &lt; size; ++i) {
+        unsigned int joint = mTracks[i].GetId();
+        Transform reference = outPose.GetLocalTransform(joint);
+        Transform animated = mTracks[i].Sample(reference, time, mLooping);
+        outPose.SetLocalTransform(joint, animated);
+    }
+    return time;
+}</pre>
+
+			<p>The <code>AdjustTimeToFitRange</code> function works almost the same as the <code>AdjustTimeToFitTrack</code> function. The function clamps time to the start and end times if the clip isn't looping, and makes sure time is in the correct range if it is.</p>
+
+<pre>float Clip::AdjustTimeToFitRange(float inTime) {
+    if (mLooping) {
+        float duration = mEndTime - mStartTime;
+        if (duration &lt;= 0) {
+            return 0.0f;
+        }
+        while (inTime &lt; mStartTime) {
+            inTime += duration;
+        }
+        while (inTime &gt; mEndTime) {
+            inTime -= duration;
+        }
+        if (inTime == mEndTime) {
+            inTime = mStartTime;
+        }
+    }
+    else {
+        if (inTime &lt; mStartTime) {
+            inTime = mStartTime;
+        }
+        if (inTime &gt; mEndTime) {
+            inTime = mEndTime;
+        }
+    }
+    return inTime;
+}</pre>
+
+			<h2>Poses for animating a hierarchy</h2>
+			
+			<p>There are two poses to be aware of for animating a hierarchy. These are the rest and animated poses. The rest pose is a reference pose, it's the pose everything is being animated from. The animated pose is the pose that is the result of sampling an animation clip.</p>
+
+			<p>If there are multiple animation clips, the animated pose should be set back to the rest pose when switching between clips. This needs to be done to restore all default joint transforms. One way to get around this is if the <code>Clip::Sample</code> function took both a reference pose and an output pose. Then, there would be no need to reset the pose between animations.</p>
+
+			<p>The naming convention for these poses isn't standard. And different packages and tools call these poses different things. One big point of confusion is the difference between rest and bind pose. In an ideal world, i think the rest and bind poses should always be the same. Software packages disagree.</p>
+
+			<p>The rest (sometimes called reference or default) pose is the pose that is used as the starting pose that animations are created out of. It contains the default transformations for all joints that are not animated.</p>
+
+			<p>The bind pose on the other hand is used for skinning (which will be covered later). It's a pose that roughly matches up with the mesh being skinned. This pose is used to associate vertices with joints.</p>
+
+			<p>Often the difficulty in animation is working with the different terminology that different standards like to use. To re-iterate. To animate a hierarchy (without displaying a skinned mesh), the only poses we will need are the <strong>rest pose</strong> and <strong>animated pose</strong>.</p>
+
+			<h2>Try it</h2>
+
+			<p>This is a good place to stop and make sure everything works. At this point we have all the classes written to animate a hierarchy. To see all of the code up until this point in action, we will need a <code>Sample</code> class which will contain a collection of clips, the index of the current clip, the current animation time, the animated pose and the rest pose.</p>
+
+<pre>class Sample : {
+protected:
+    std::vector&lt;Clip&gt; mAnimClips;
+    unsigned int mClipIndex;
+    float mAnimTime;
+    Pose mCurrentPose;
+    Pose mRestPose;</pre>
+
+    		<p>Right now we're only focusing on animating one character. To animate multiple characters, each character would need a unique clip index, animation time, and animated pose. The collection of animation clips and the rest pose could be shared between all of the aniamted models.
+
+    		<p>We need to be able to initialize, update, render and shut down the demo. </p>
+
+<pre>public:
+    void Initialize();
+    void Update(float inDeltaTime);
+    void Render(float inAspectRatio);
+    void Shutdown();
+};</pre>
+
+			<p>The initialize function should load animation clips from a file, as well as the rest pose. The animated pose should be a copy of the rest pose at this time. We will need to set the index of the animation clip to play. Setting animation time to 0 isn't accurate as not all animation clips start at 0 seconds in time. Instead use the animation clips GetStartTime function.</p>
+
+<pre>void Sample::Initialize() {
+    mAnimClips = LoadAnimationClips("Woman.clips");
+    mRestPose = LoadRestPose("Woman.rest");
+
+    // Reset like this when switching animations
+    mCurrentPose = mRestPose; 
+
+    mClipIndex = 6;
+    mAnimTime = mAnimClips[mClipIndex].GetStartTime();
+}</pre>
+			<p>The <code>Update</code> function is trivial, it samples the current animation clip. <code>mAnimationTime</code> is increased by delta time every frame and passed to the sample function. The result of the sample function is stored in <code>mAnimationTime</code>, keeping <code>mAnimationTime</code> always valid.</p>
+
+<pre>void Sample::Update(float deltaTime) {
+    float time = mAnimTime + deltaTime;
+    mAnimTime = mAnimClips[mClipIndex].Sample(mCurrentPose, time);
+}</pre>
+			<p>The render function renders only a debug skeleton. Loop trough all of the joints in the current pose, skipping any joints that don't have a parent. Find the global transform of both this joint and it's parent joint and draw a line between their positions.</p>
+
+<pre>void Sample::Render(float AspectRatio) {
+    for (unsigned int i = 0; i &lt; mCurrentPose.Size(); ++i) {
+        int p = mCurrentPose.GetParent(i);
+        if (p &lt; 0) { continue; }
+
+        Transform self = mCurrentPose.GetGlobalTransform(i);
+        Transform parent = mCurrentPose.GetGlobalTransform(p);
+
+        DrawLine(self.position, parent.position);
+    }
+}</pre>
+
+			<div class="info">
+				<h1>Sample data</h1>
+				<p>It helps to be able to test the animation code with some animation data. I've converted the animations and poses of the <a href="https://drive.google.com/drive/folders/1R8Xkffg1zcfNyb486lHcPYNnAGkVBzDQ">Animated woman model</a> to json. The structure of these json poses and animations mimics the c++ class definitions. You can find them under <a href="https://github.com/gszauer/GameAnimationProgramming/LandingPage/SampleData">/LandingPage/SampleData</a> in the books <a href="https://github.com/gszauer/GameAnimationProgramming/LandingPage/SampleData">Github repo</a>.</p> 
+				<p>Both the code to export and import JSON files is included in the <a href="https://github.com/gszauer/GameAnimationProgramming/LandingPage/End">final code snapshot</a> for this page. The loading code isn't actually a JSON parser, it just skips around the text file, assuming the json was created by the export tool.</p>
+			</div>
+			
+			<p>Using the application lifecycle listed above with the rest pose and walking animation from the sample data, you should be able to display an animated skeleton that looks like this.</p>
+
+			<div class="gldemo">
+				<canvas id="skeletonWalkingCanvas" style="width: 100%; height:100%;"></canvas>
+			</div>
+
+			
+
+		</div>
+		
+		<div class="section">
+			<h1>Skinning</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Load pose from FBX</h1>
+			
+			<div class="gldemo">
+				<canvas id="skinnedWalkingCanvas" style="width: 100%; height:100%;"></canvas>
+			</div>
+
+		</div>
+		<div class="section">
+			<h1>GLTF Files</h1>
+			<p>TODO</p>
+
+			<h2>Load / free</h2>
+
+			<p>TODO</p>
+
+<pre>cgltf_data* LoadGLTFFile(const char* path);
+void FreeGLTFFile(cgltf_data* handle);</pre>
+
+			<p>TODO</p>
+
+<pre>cgltf_data* LoadGLTFFile(const char* path) {
+    cgltf_options options;
+    memset(&amp;options, 0, sizeof(cgltf_options));
+    cgltf_data* data = NULL;
+    cgltf_result result = cgltf_parse_file(&amp;options, path, &amp;data);
+    if (result != cgltf_result_success) {
+        std::cout &lt;&lt; "Could not load input file: " &lt;&lt; path &lt;&lt; "\n";
+        return 0;
+    }
+    result = cgltf_load_buffers(&amp;options, data, path);
+    if (result != cgltf_result_success) {
+        cgltf_free(data);
+        std::cout &lt;&lt; "Could not load buffers for: " &lt;&lt; path &lt;&lt; "\n";
+        return 0;
+    }
+    result = cgltf_validate(data);
+    if (result != cgltf_result_success) {
+        cgltf_free(data);
+        std::cout &lt;&lt; "Invalid gltf file: " &lt;&lt; path &lt;&lt; "\n";
+        return 0;
+    }
+    return data;
+}</pre>
+
+			<p>TODO</p>
+
+<pre>void FreeGLTFFile(cgltf_data* data) {
+	if (data == 0) {
+		std::cout &lt;&lt; "WARNING: Can't free null data\n";
+	}
+	else {
+		cgltf_free(data);
+	}
+}</pre>
+
+			<h2>Load mesh</h2>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;Mesh&gt; LoadMeshes(cgltf_data* data);</pre>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;Mesh&gt; LoadMeshes(cgltf_data* data) {
+    std::vector&lt;Mesh&gt; result;
+    cgltf_node* nodes = data-&gt;nodes;
+    unsigned int nodeCount = (unsigned int)data-&gt;nodes_count;
+
+    for (unsigned int i = 0; i &lt; nodeCount; ++i) {
+        cgltf_node* node = &amp;nodes[i];
+        if (node-&gt;mesh == 0 || node-&gt;skin == 0) {
+            continue;
+        }
+        unsigned int numPrims = (unsigned int)node-&gt;mesh-&gt;primitives_count;
+        for (unsigned int j = 0; j &lt; numPrims; ++j) {
+            result.push_back(Mesh());
+            Mesh&amp; mesh = result[result.size() - 1];
+
+            cgltf_primitive* primitive = &amp;node-&gt;mesh-&gt;primitives[j];
+
+            unsigned int numAttributes = (unsigned int)primitive-&gt;attributes_count;
+            for (unsigned int k = 0; k &lt; numAttributes; ++k) {
+                cgltf_attribute* attribute = &amp;primitive-&gt;attributes[k];
+                GLTFHelpers::MeshFromAttribute(mesh, *attribute, node-&gt;skin, nodes, nodeCount);
+            }
+            if (primitive-&gt;indices != 0) {
+                unsigned int indexCount = (unsigned int)primitive-&gt;indices-&gt;count;
+                mesh.indices.resize(indexCount);
+
+                for (unsigned int k = 0; k &lt; indexCount; ++k) {
+                    mesh.indices[k] = (unsigned int)cgltf_accessor_read_index(primitive-&gt;indices, k);
+                }
+            }
+        }
+    }
+
+    return result;
+}</pre>
+
+			<p>TODO</p>
+
+<pre>namespace GLTFHelpers {
+    void MeshFromAttribute(Mesh&amp; outMesh, cgltf_attribute&amp; attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount) {
+        cgltf_attribute_type attribType = attribute.type;
+        cgltf_accessor&amp; accessor = *attribute.data;
+
+        unsigned int componentCount = 0;
+        if (accessor.type == cgltf_type_vec2) {
+            componentCount = 2;
+        }
+        else if (accessor.type == cgltf_type_vec3) {
+            componentCount = 3;
+        }
+        else if (accessor.type == cgltf_type_vec4) {
+            componentCount = 4;
+        }
+        std::vector&lt;float&gt; values;
+        GetScalarValues(values, componentCount, accessor);
+        unsigned int acessorCount = (unsigned int)accessor.count;
+
+        for (unsigned int i = 0; i &lt; acessorCount; ++i) {
+            int index = i * componentCount;
+            switch (attribType) {
+            case cgltf_attribute_type_position:
+                outMesh.positions.push_back(vec3(values[index + 0], values[index + 1], values[index + 2]));
+                break;
+            case cgltf_attribute_type_texcoord:
+                outMesh.texCoords.push_back(vec2(values[index + 0], values[index + 1]));
+                break;
+            case cgltf_attribute_type_weights:
+                outMesh.weights.push_back(vec4(values[index + 0], values[index + 1], values[index + 2], values[index + 3]));
+                break;
+            case cgltf_attribute_type_normal:
+                outMesh.normals.push_back(normalized(vec3(values[index + 0], values[index + 1], values[index + 2])));
+            break;
+            case cgltf_attribute_type_joints:
+            {
+                // These indices are skin relative. This function has no information about the
+                // skin that is being parsed. Add +0.5f to round, since we can't read ints
+                ivec4 joints(
+                    (int)(values[index + 0] + 0.5f),
+                    (int)(values[index + 1] + 0.5f),
+                    (int)(values[index + 2] + 0.5f),
+                    (int)(values[index + 3] + 0.5f)
+                );
+
+                joints.x = std::max(0, GetNodeIndex(skin-&gt;joints[joints.x], nodes, nodeCount));
+                joints.y = std::max(0, GetNodeIndex(skin-&gt;joints[joints.y], nodes, nodeCount));
+                joints.z = std::max(0, GetNodeIndex(skin-&gt;joints[joints.z], nodes, nodeCount));
+                joints.w = std::max(0, GetNodeIndex(skin-&gt;joints[joints.w], nodes, nodeCount));
+
+                outMesh.influences.push_back(joints);
+            }
+            break;
+            } // End switch statement
+        }
+    }// End of MeshFromAttribute function
+
+} // End of GLTFHelpers namespace</pre>
+
+			<p>TODO</p>
+
+<pre>namespace GLTFHelpers {
+    void GetScalarValues(std::vector&lt;float&gt;&amp; outScalars, unsigned int inComponentCount, const cgltf_accessor&amp; inAccessor) {
+        outScalars.resize(inAccessor.count * inComponentCount);
+        for (cgltf_size i = 0; i &lt; inAccessor.count; ++i) {
+            cgltf_accessor_read_float(&amp;inAccessor, i, &amp;outScalars[i * inComponentCount], inComponentCount);
+        }
+    }
+}</pre>
+			<p>TODO</p>
+
+<pre>namespace GLTFHelpers {
+    int GetNodeIndex(cgltf_node* target, cgltf_node* allNodes, unsigned int numNodes) {
+        if (target == 0) {
+            return -1;
+        }
+        for (unsigned int i = 0; i &lt; numNodes; ++i) {
+            if (target == &amp;allNodes[i]) {
+                return (int)i;
+            }
+        }
+        return -1;
+    }
+}</pre>
+			<h2>Load joint names</h2>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;std::string&gt; LoadJointNames(cgltf_data* data);</pre>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;std::string&gt; LoadJointNames(cgltf_data* data) {
+    unsigned int boneCount = (unsigned int)data-&gt;nodes_count;
+    std::vector&lt;std::string&gt; result(boneCount, "Not Set");
+
+    for (unsigned int i = 0; i &lt; boneCount; ++i) {
+        cgltf_node* node = &amp;(data-&gt;nodes[i]);
+
+        if (node-&gt;name == 0) {
+            result[i] = "EMPTY NODE";
+        }
+        else {
+            result[i] = node-&gt;name;
+        }
+    }
+
+    return result;
+}</pre>
+
+			<h2>Load bind &amp; rest pose</h2>
+
+			<p>TODO</p>
+
+<pre>Pose LoadRestPose(cgltf_data* data);
+Pose LoadBindPose(cgltf_data* data);</pre>
+
+			<p>TODO</p>
+
+<pre>Pose LoadRestPose(cgltf_data* data) {
+    unsigned int boneCount = (unsigned int)data-&gt;nodes_count;
+    Pose result;
+    result.Resize(boneCount);
+
+    for (unsigned int i = 0; i &lt; boneCount; ++i) {
+        cgltf_node* node = &amp;(data-&gt;nodes[i]);
+
+        Transform transform = GLTFHelpers::GetLocalTransform(data-&gt;nodes[i]);
+        result.SetLocalTransform(i, transform);
+
+        int parent = GLTFHelpers::GetNodeIndex(node-&gt;parent, data-&gt;nodes, boneCount);
+        result.SetParent(i, parent);
+    }
+
+    return result;
+}</pre>
+
+			<p>TODO</p>
+
+<pre>namespace GLTFHelpers {
+    Transform GetLocalTransform(cgltf_node&amp; node) {
+        Transform result;
+
+        if (node.has_matrix) {
+            mat4 mat(&amp;node.matrix[0]);
+            result = mat4ToTransform(mat);
+        }
+
+        if (node.has_translation) {
+            result.position = vec3(node.translation[0], node.translation[1], node.translation[2]);
+        }
+
+        if (node.has_rotation) {
+            result.rotation = quat(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
+        }
+
+        if (node.has_scale) {
+            result.scale = vec3(node.scale[0], node.scale[1], node.scale[2]);
+        }
+
+        return result;
+    }
+}</pre>
+
+			<p>TODO</p>
+
+<pre>Pose LoadBindPose(cgltf_data* data) {
+    Pose restPose = LoadRestPose(data);
+    unsigned int numBones = restPose.Size();
+    std::vector&lt;Transform&gt; worldBindPose(numBones);
+    for (unsigned int i = 0; i &lt; numBones; ++i) {
+        worldBindPose[i] = restPose.GetGlobalTransform(i);
+    }
+    unsigned int numSkins = (unsigned int)data-&gt;skins_count;
+    for (unsigned int i = 0; i &lt; numSkins; ++i) {
+        cgltf_skin* skin = &amp;(data-&gt;skins[i]);
+        std::vector&lt;float&gt; invBindAccessor;
+        GLTFHelpers::GetScalarValues(invBindAccessor, 16, *skin-&gt;inverse_bind_matrices);
+
+        unsigned int numJoints = (unsigned int)skin-&gt;joints_count;
+        for (unsigned int j = 0; j &lt; numJoints; ++j) {
+            // Read the ivnerse bind matrix of the joint
+            float* matrix = &amp;(invBindAccessor[j * 16]);
+            mat4 invBindMatrix = mat4(matrix);
+            // invert, convert to transform
+            mat4 bindMatrix = inverse(invBindMatrix);
+            Transform bindTransform = mat4ToTransform(bindMatrix);
+            // Set that transform in the worldBindPose.
+            cgltf_node* jointNode = skin-&gt;joints[j];
+            int jointIndex = GLTFHelpers::GetNodeIndex(jointNode, data-&gt;nodes, numBones);
+            worldBindPose[jointIndex] = bindTransform;
+        } // end for each joint
+    } // end for each skin
+    // Convert the world bind pose to a regular bind pose
+    Pose bindPose = restPose;
+    for (unsigned int i = 0; i &lt; numBones; ++i) {
+        Transform current = worldBindPose[i];
+        int p = bindPose.GetParent(i);
+        if (p &gt;= 0) { // Bring into parent space
+            Transform parent = worldBindPose[p];
+            current = combine(inverse(parent), current);
+        }
+        bindPose.SetLocalTransform(i, current);
+    }
+
+    return bindPose;
+}</pre>
+
+			<h2>Load animation clips</h2>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;Clip&gt; LoadAnimationClips(cgltf_data* data);</pre>
+
+			<p>TODO</p>
+
+<pre>std::vector&lt;Clip&gt; LoadAnimationClips(cgltf_data* data) {
+    unsigned int numClips = (unsigned int)data-&gt;animations_count;
+    unsigned int numNodes = (unsigned int)data-&gt;nodes_count;
+
+    std::vector&lt;Clip&gt; result;
+    result.resize(numClips);
+
+    for (unsigned int i = 0; i &lt; numClips; ++i) {
+        result[i].SetName(data-&gt;animations[i].name);
+
+        unsigned int numChannels = (unsigned int)data-&gt;animations[i].channels_count;
+
+        std::vector&lt;TransformTrack&gt; transformTracks;
+
+        for (unsigned int j = 0; j &lt; numChannels; ++j) {
+            cgltf_animation_channel&amp; channel = data-&gt;animations[i].channels[j];
+            cgltf_node* target = channel.target_node;
+            int nodeId = GLTFHelpers::GetNodeIndex(target, data-&gt;nodes, numNodes);
+            
+            int track = -1;
+            for (int k = 0, size = (int)transformTracks.size(); k &lt; size; ++k) {
+                if (transformTracks[k].GetId() == nodeId) {
+                    track = k;
+                    break;
+                }
+            }
+            if (track == -1) {
+                transformTracks.push_back(TransformTrack());
+                track = (int)transformTracks.size() - 1;
+                transformTracks[track].SetId(nodeId);
+            }
+
+            if (channel.target_path == cgltf_animation_path_type_translation) {
+                VectorTrack positionTrack;
+                GLTFHelpers::TrackFromChannel&lt;vec3, 3&gt;(positionTrack, channel);
+                transformTracks[track].SetPositionTrack(positionTrack);
+            }
+            else if (channel.target_path == cgltf_animation_path_type_rotation) {
+                QuaternionTrack rotationTrack;
+                GLTFHelpers::TrackFromChannel&lt;quat, 4&gt;(rotationTrack, channel);
+                transformTracks[track].SetRotationTrack(rotationTrack);
+            }
+            else if (channel.target_path == cgltf_animation_path_type_scale) {
+                VectorTrack scaleTrack;
+                GLTFHelpers::TrackFromChannel&lt;vec3, 3&gt;(scaleTrack, channel);
+                transformTracks[track].SetScaleTrack(scaleTrack);
+            }
+        }
+
+        for (int k = 0, size = (int)transformTracks.size(); k &lt; size; ++k) {
+            result[i].SetTransformTrack(transformTracks[k]);
+        }
+    }
+
+    return result;
+}</pre>
+
+			<p>TODO</p>
+
+<pre>namespace GLTFHelpers {
+    template&lt;typename T, int N&gt;
+    void TrackFromChannel(Track&lt;T, N&gt;&amp; inOutTrack, const cgltf_animation_channel&amp; inChannel) {
+        cgltf_animation_sampler&amp; sampler = *inChannel.sampler;
+
+        Interpolation interpolation = Interpolation::Constant;
+        if (inChannel.sampler-&gt;interpolation == cgltf_interpolation_type_linear) {
+            interpolation = Interpolation::Linear;
+        }
+        else if (inChannel.sampler-&gt;interpolation == cgltf_interpolation_type_cubic_spline) {
+            interpolation = Interpolation::Cubic;
+        }
+        bool isSamplerCubic = interpolation == Interpolation::Cubic;
+        inOutTrack.SetInterpolation(interpolation);
+
+        std::vector&lt;float&gt; timelineFloats;
+        GetScalarValues(timelineFloats, 1, *sampler.input);
+
+        std::vector&lt;float&gt; valueFloats;
+        GetScalarValues(valueFloats, N, *sampler.output);
+
+        unsigned int numFrames = (unsigned int)sampler.input-&gt;count;
+        unsigned int numberOfValuesPerFrame = valueFloats.size() / timelineFloats.size();
+        inOutTrack.Resize(numFrames);
+        for (unsigned int i = 0; i &lt; numFrames; ++i) {
+            int baseIndex = i * numberOfValuesPerFrame;
+            Frame&lt;N&gt;&amp; frame = inOutTrack[i];
+            int offset = 0;
+
+            frame.time = timelineFloats[i];
+
+            for (int component = 0; component &lt; N; ++component) {
+                frame.in[component] = isSamplerCubic ? valueFloats[baseIndex + offset++] : 0.0f;
+            }
+
+            for (int component = 0; component &lt; N; ++component) {
+                frame.value[component] = valueFloats[baseIndex + offset++];
+            }
+
+            for (int component = 0; component &lt; N; ++component) {
+                frame.out[component] = isSamplerCubic ? valueFloats[baseIndex + offset++] : 0.0f;
+            }
+        }
+    }
+}</pre>
+		</div>
+		<div class="section">
+			<h1>Other file formats</h1>
+			<p>TODO: fbx and where to get it</p>
+			<p>TODO: dae and where to get it</p>
+			<p>TODO: assimp and where to get it</p>
+			<p>TODO: comment on how other formats like md5 store their meshes</p>
+		</div>
+		<div class="section">
+			<h1>Pose modification</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>What&lsquo;s next?</h1>
+			<p>TODO</p>
+		</div>
+		<div class="section">
+			<h1>Questions? Comments? Rude Remarks?</h1>
+			<p>Reach out to me on twitter: <a href="https://twitter.com/gszauer">&commat;gszauer</a></p>
+		</div>
+	</body>
+</html>
