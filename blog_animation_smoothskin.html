@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="animation.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
+            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
+            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
+            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
+            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
+            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
+            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
+            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
+            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
+            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
+            <a href="blog_animation_smoothskin.html" class="list-group-item active"><span class="pl-4">b. Smooth Skinning</span></a>
+            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Smooth Skinning</h2>
+
+            <p>Smooth skinning is often a point of confusion since it involves multiple bones and weight, but it's not really that complicated. Conceptually, to smooth skin a character, you have to skin the character several different times, and average the results together.</p>
+
+            <p>To implement smooth skinning we need to add multiple bones to each vertex. Typically, four bones is the limit for how many joints a vertex can be skinned to. There are two reasons for this. First, we can encode that data into a convenient <code>ivec4</code>. Second, after about 4 bones, the influence of additonal bones becomes unnoticeable.</p>
+
+            <p>Each vertex belongs to 4 bones, the model is skinned 4 times and the result is averaged together. Almost... The four bones won't have equal influence over the vertex. Consider a vertex in the fore-arm for example. The upper arm bone might affect the vertex a bit, but nowhere near as much as the lowe arm bone.</p>
+
+            <p>To deal with this, we want to also encode how much influence each bone has over a vertex. This data typically comes from the artist that prepared the model, 3D content creation applications allow artists to paint vertex weights on a model.</p>
+
+            <p>Updating the vertex structure to support smooth skinning looks like this:</p>
+
+<pre><code>struct Vertex {
+    vec3 position;
+    vec3 normal;
+    vec2 uv;
+    ivec4 joints;
+    vec4 weights;
+}</code></pre>
+
+            <p>Let's update the <code>SkinMesh</code> function to do smooth skinning:</p>
+
+
+<pre><code>void SkinMesh(Mesh& target, const Mesh& source, const Pose& bindPose, const Pose& animPose) {
+    for (int i = 0; i &lt; source.vertices.size(); ++i) {
+        vec4 position = vec4(soure.vertices[i].position, 1.0f);
+        vec4 normal = vec4(soure.vertices[i].normal, 0.0f);
+        ivec4 joints = source.vertices[i].joints;
+        vec4 weights = source.vertices[i].weights;
+
+        if (joint >= 0) {
+            vec4 pos = vec3(0, 0, 0, 0);  // Accumulator
+            vec4 norm = vec3(0, 0, 0, 0); // Accumulator
+
+            // For each bone that can influence a vertex
+            for (int j = 0; j &lt; 4; ++j) {
+                int joint = joints.v[j];
+                float weight = weights.v[j];
+
+                mat4 invBindPose = toMat4(bindPose.GetGlobalTransform(joint));
+                invBindPose = inverse(invBindPose);
+                mat4 animatedPose = toMat4(animPose.GetGlobalTransform(joint));
+
+                pos += (animatedPose * invBindPose) * position * weight;
+                norm += (animatedPose * invBindPose) * normal * weight;
+            }
+
+            position = pos;
+            normal = norm;
+        }
+
+        target.vertices[i].position = vec3(position);
+        target.vertices[i].normal = normalized(vec3(normal));
+    }
+}</code></pre>
+
+            <p>Not all vertices have to have four bones influencing them. If a vertex only has one, two or three bones influencing it, the joints vector still contains data for all four elements. The weights vector will contain a weight of 0 for any joint that does not influence the vertex, which cancels out that joints effect.</p>
+
+            <p>The above code is easy to understand, but typically it's not how you would implement a skin function. Matrices can be combined linearly. Normally, you would combine all four of the bone matrices into one <strong>Skin</strong> matrix, then multiply the vertex position and normal by that skin matrix. The following code demonstrates this:</p>
+
+<pre><code>void SkinMesh(Mesh& target, const Mesh& source, const Pose& bindPose, const Pose& animPose) {
+    for (int i = 0; i &lt; source.vertices.size(); ++i) {
+        vec4 position = vec4(soure.vertices[i].position, 1.0f);
+        vec4 normal = vec4(soure.vertices[i].normal, 0.0f);
+        ivec4 joints = source.vertices[i].joints;
+        vec4 weights = source.vertices[i].weights;
+
+        if (joint &gt;= 0) {
+            mat4 m0 = toMat4(animPose.GetGlobalTransform(joints.v[0])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[0])));
+            mat4 m1 = toMat4(animPose.GetGlobalTransform(joints.v[1])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[1])));
+            mat4 m2 = toMat4(animPose.GetGlobalTransform(joints.v[2])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[2])));
+            mat4 m3 = toMat4(animPose.GetGlobalTransform(joints.v[3])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[3])));
+
+            mat4 skin = m0 * weights.v[0] + m1 * weights.v[1] + m2 * weights.v[2] + m3 * weights.v[3];
+
+            // Move vertex into skin space
+            position = skin * position;
+            normal = skin * normal;
+        }
+
+        target.vertices[i].position = vec3(position);
+        target.vertices[i].normal = normalized(vec3(normal));
+    }
+}</code></pre>
+        
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

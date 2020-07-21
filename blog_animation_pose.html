@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="animation.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
+            <a href="blog_animation_pose.html" class="list-group-item active">3. Pose Generation</a>
+            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
+            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
+            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
+            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
+            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
+            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
+            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
+            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
+            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
+            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Pose Generation</h2>
+
+          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
+
+          <p>Let's explore what it takes to generate a pose from an animation for a game character. A <code>Pose</code> is a hierarchy of <code>Transform</code> objects. This hierarchy acts like a skeleton for the character. When an animation clip is sampled, it reutrns a <code>Pose</code>. The returned pose is a snapshot of the skeleton at a specific time of the animation clip.</p>
+
+          <p>An animation clip is made up of animation tracks. Every animated joint in a skeleton (every <code>Transform</code> in the resulting pose) can be animated by a track. Each track is made up of several frames. A frame contains a time, a value as well as incoming and outgoing tangents. The tangents are needed to build curves out of Cubic Hermite Splines. The image below shows the relationship between each component required to generate a pose.</p>
+
+          <img class="img-fluid rounded" src="assets/pose_generation.png" alt="Pose Generation" />
+
+          <p>The most important part of pose generation is the animation tracks. Digital Content Creation (DCC) tools like Maya, 3DS Max or Blender allow animators to author animation by defining tracks. <a href="https://docs.unity3d.com/Manual/animeditor-UsingAnimationEditor.html">Unity's Animation View</a> is a great example of an animation curve editor. These tracks express change over time using curves. An animation track often looks similar to this:</p>
+
+          <img class="img-fluid rounded" src="assets/transformtimeline.png" alt="Transformation timeline" />
+
+          <p>An animator usually animated characters in a DCC tool using curves similar to what is shown in the above picture. In the early 2000's, most game animation pipelines would use an offline tool which evaluates the animation curves at set intervals and stores the values.</p>
+
+          <p>At playback time, the game would linearly interpolate between the sampled values. This sampled animation method is faster, but it takes more memory. The approximated curve is generally close enough to be indiscernible at playback time. A comparison of a cubic hermite spline and it’s sampled counterpart is shown in the image below</p>
+
+          <img class="img-fluid rounded" src="assets/sampling.png" alt="Comparing curves and sampled curves" /> 
+
+          <h4>Interpolation types</h4>
+
+          <p>When defining an animation curve, generally, it follows one of three interpolation methods: <strong>Constant</strong>, <strong>Linear</strong> or <strong>Cubic</strong>. Cubic curves can be expressed using any cubic equation like B&eacute;zier (what Blender does) or Hermite splines (what Maya does). We’re going to use Hermite splines to represent cubic curves.</p>
+
+          <p>A constant curve keeps its value the same until the next keyframe, sometimes this type of curve is called a step curve. Visually, a constant curve looks like this:</p>
+
+          <img class="img-fluid rounded" src="assets/constant.png" alt="Constant Curve" />
+
+          <p>A linear curve interpolates between two frames in a linear fashion (a straight line). If the samples of a linear track are close enough it can start to approximate other types of curves. A linear curve looks like this:</p>
+
+          <img class="img-fluid rounded" src="assets/linear.png" alt="Linear Curve" />
+
+          <p>With cubic curves, we can express complex curves using very little data. A cubic curve looks like this (tangents are the lines coming out of the keyframes):</p>
+
+          <img class="img-fluid rounded" src="assets/cubic.png" alt="Cubic Curve" />
+
+          <p class="bs-callout bs-callout-success"><strong>Interpolation type granularity</strong>The granularity of the interpolation type is up to you to decide. The animation system built in <a href="https://animationprogramming.com">Hands-On C++ Game Animation Programming</a> defines the interpolation type per track. This means a vector track will use the same interpolation for all it's components.</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

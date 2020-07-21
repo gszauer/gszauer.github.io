@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="animation.html" class="list-group-item active">1. Introduction</a>
+            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
+            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
+            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
+            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
+            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
+            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
+            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
+            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
+            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
+            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
+            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
+            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+
+        <div class="row">
+          <div class="col-lg-4">
+                <img class="img-fluid rounded" src="assets/book_anim.png" alt="Hands-On C++ Game Animation Programming">
+            </div>
+
+            <div class="col-lg-8">
+                <h2>Skinned Animation</h2>
+                <p>This blog post mirrors the contents of the landing page for my new book, <a href="https://animationprogramming.com/">Hands-On C++ Game Animation Programming</a>.</p>
+
+                <p>In this blog we will take a high level look at <i>some</i> of the content covered in chapters 8, 9 and 10 of the book. The book provides more in depth coverage of these topics, as well as advanced topics like <strong>Inverse Kinematics</strong>, <strong>Dual Quaternion Skinning</strong> and <strong>Crowd Rendering</strong>.</p>
+
+                <p>While this post does not follow the book, it's worth looking at the code for <a href="https://github.com/gszauer/GameAnimationProgramming/tree/master/Chapter10/Sample02">Chapter 10, Sample 02</a>, which contains a similar skinned character implementation.</p>
+            </div>
+        </div>
+
+          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
+
+          <p style="margin-top: 15px;">Generally, game animation can be broken up into three distinct steps. These stages are: <strong>pose generation</strong>, <strong>pose modification</strong> and <strong>skinning</strong>. The stages are usually performed in order.</p>
+
+          <h4>Pose generation</h4>
+          <p>When talking about humanoid animations, a pose refers to the skeleton. Specifically the skeleton posed to match a frame of animation. You would generate a pose by sampling an animation clip.</p>
+
+          <h4>Pose modification</h4>
+          <p>Pose modification is exactly what it sounds like, modifying the pose before it is skinned. Blending two animation clips to hide a transition would be considered pose modification, so would an IK system that adjusts a leg to keep in on top of terrain. This site will cover animation blending, the book covers blending in more detail. The book also covers more advanced topics like IK.</p>
+
+          <h4>Skinning</h4>
+          <p>Given a mesh and a pose, skinning is the process of deforming the mesh so that is matches the given pose. The two most common skinning methods are matrix palette skinning and dual quaternion skinning. We will cover matrix palette skinning on this page, both are covered in the book.</p>
+
+          <h4>Math</h4>
+          <p>All of the math required to build an animation system is covered in the book. To follow along with this blog you should have be familiar with <a href="https://gabormakesgames.com/vectors.html">Vectors</a>, <a href="https://gabormakesgames.com/matrices.html">Matrices</a>, <a href="https://gabormakesgames.com/quaternions.html">Quaternions</a> and <a href="https://gabormakesgames.com/transforms.html">Transform hierarchies</a> which are all covered in my other blog posts.</p>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

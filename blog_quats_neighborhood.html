@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
+            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
+            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
+            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
+            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
+            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
+            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
+            <a href="blog_quats_neighborhood.html" class="list-group-item active"><span class="pl-4">a. Neighborhood</span></a>
+            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
+            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Neighborhood</h2>
+
+          <p>When interpolating between two quaternions, the interpolation can take the shortest or the longest arc between the two. Think of two vectors on the surface of a sphere, there are two ways to rotate from one vector to another. Both paths lie on a plane that contains both vectors and the center of the sphere. One has a shorter arc, the other has a longer arc; shown in the image below</p>
+
+          <img class="img-fluid rounded" src="assets/short_long_path.png" alt="Quaternion short and long paths">
+
+          <p>In 3D space this affects which direction an object rotates. If you've ever seen a game where the elbow of a character is bending wrong but has the corret motion chances are it's a neighborhooding issue. The gif in the image below removed neighborhood checks from the animation code to catch a few frames of the leg bending wrong.</p>
+
+          <img class="img-fluid rounded" src="assets/neighborhood_error.gif" alt="Neighborhooding error">
+
+          <p>Neighborhooding refers to testing if the interpolation path between two quaternions is the long way or the short way. To test if two quaternions are in the same neighborhood, take their dot product. If the dot product is negative, the longer interpolation path is being taken. Ideally, we want to adjust the interpolation somehow to always take the shortest arc. Fliping which arc is taken is easy, we just have to negate the target quaternion. </p>
+
+<pre><code>Quaternion Interpolate(Quaternion a, Quaternion b, float t) {
+    if (dot(a, b) < 0.0f) {
+        b = Negate(b);
+    }
+    return NLerp(a, b, t);
+}</code></pre>
+
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

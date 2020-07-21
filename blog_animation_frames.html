@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="animation.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
+            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
+            <a href="blog_animation_frames.html" class="list-group-item active"><span class="pl-4">a. Frames</span></a>
+            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
+            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
+            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
+            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
+            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
+            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
+            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
+            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
+            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Frames</h2>
+
+          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
+
+          <p>What is a frame of data? Well, that depends on the interpolation type. If the interpolation is constant (step) or linear, a frame is just some time and a value. When the interpolation is cubic (besizer or hermite) we need to store tangents as well. A hermite curve needs values for the the slope of each frame. Since a curve is made up of many segments, each frame needs to know how to handle both the incoming and outgoing tangents.</p>
+
+          <p>There is one more important consideration to make, how wide is a frame? By this I mean what is the data stored in the frame? Is it a scalar, a vector or maybe a quaternion? To make that decision, we actually have to skip forward a bit and think about how we might want to create tracks.</p>
+
+          <p>To create an animation track, we could either build a scalar track and all higher dimension tracks would be composed of a number of scalar tracks. Or we could build specialized track types, we could have a salar track that contains scalar values, a vec3 track that contains vec3 values, etc... The book uses specialized tracks.</p>
+
+          <p>The advantage of building higher order tracks from multiple scalar tracks is that each component of a track could be interpolated differently. Each component can also have a different number of keyframes. The disadvantage is additional complexity of implementation. In this context, the component of a track refers to the components that make up the data type of the track. For example, the x, y and z components of a <code>vec3</code> track.</p>
+
+          <p>The advantage of creating specialized higher order tracks is mainly in implementation. Since the Hermite function is templated, it could handle scalar values, <code>vec3</code> and even <code>quat</code> values. Templates can be used to avoid having to write unique code for each of the higher order tracks.</p>
+
+          <p>A typical frame structure is shown below. If the interpolation type doesn’t need tangents, ignore them. The tangents and value of the frame is stored using floating point arrays, the size of a frame (the length of these arrays) is defined as a template paramater.</p>
+
+<pre><code>template&lt;unsigned int N&gt;
+class Frame {
+public:
+    float value[N];
+    float in[N];
+    float out[N];
+    float time;
+};
+
+typedef Frame&lt;1&gt; ScalarFrame;
+typedef Frame&lt;3&gt; VectorFrame;
+typedef Frame&lt;4&gt; QuaternionFrame;</code></pre>
+        
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

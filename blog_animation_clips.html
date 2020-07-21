@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-96941899-3');
+    </script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Gabor Szauer">
+
+    <title>Gabor Makes Games</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/modern-business.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="blog.html">Blog</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="book.html">Books</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+      <!-- Content Row -->
+      <div class="row mt-5">
+        <!-- Sidebar Column -->
+        <div class="col-lg-3 mb-4">
+          <div class="list-group pb-2">
+            <a href="blog.html"  class="list-group-item">&lt; Back</a>
+            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
+            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
+          </div>
+          <div class="list-group">
+            <a href="animation.html" class="list-group-item">1. Introduction</a>
+            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
+            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
+            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
+            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
+            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
+            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
+            <a href="blog_animation_clips.html" class="list-group-item active"><span class="pl-4">e. Clips</span></a>
+            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
+            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
+            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
+            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
+            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
+          </div>
+        </div>
+        <!-- Content Column -->
+        <div class="col-lg-9 mb-4">
+          <h2>Clips</h2>
+
+          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
+
+            <p>An animation clip is a collection of transform tracks. Each track describes the motion of one joint over time. All the tracks combined describe the motion of the animated model over time. When an animation clip is sampled, it yields a <code>Pose</code> object.</p>
+
+            <p>For a basic clip class, all we really need is a vector of Transform Tracks. Because each transform tracks contain the id of the joint it effects, we can have a minimal number of tracks per clip. We also want to keep track of some meta-data like the name of the clip, whether or not the clip is looping and information about the time or duration of the clip.</p>
+
+<pre><code>class Clip {
+protected:
+    std::vector&lt;TransformTrack&gt; mTracks;
+    std::string mName;
+    float mStartTime;
+    float mEndTime;
+    bool mLooping;
+// Rest of the class</code></pre>
+
+            <p>The cahced start and end times of the <code>Clip</code> class are calculated similar to the cached start and end times of the <code>TransformTrack</code> class. Any time any track contained within a clip changes, the cached times must be re-calculated. The start time is the lowest start time of the transform tracks contained in the animation clip. Similarly, the end time is the largest end time of the transform tracks.</p>
+
+            <p>When sampling a<code> Clip</code>, there is no guarantee that the requested  time will be within the start and end times of the clip. To deal with this, we  implement a helper function that adjusts the provided time to be within the range of the current animation clip. The Sample function will call <code>Clip::AdjustTimeToFitRange</code> on the input time and return the adjusted time.</p>
+
+<pre><code>float Clip::AdjustTimeToFitRange(float inTime) {
+    if (mLooping) {
+        float duration = mEndTime - mStartTime;
+        if (duration &lt;= 0) {
+            return 0.0f;
+        }
+        inTime = fmodf(inTime - mStartTime, mEndTime - mStartTime);
+        if (inTime &lt; 0.0f) {
+            inTime += mEndTime - mStartTime;
+        }
+        inTime = inTime + mStartTime;
+    }
+    else {
+        if (inTime &lt; mStartTime) {
+            inTime = mStartTime;
+        }
+        if (inTime &gt; mEndTime) {
+            inTime = mEndTime;
+        }
+    }
+    return inTime;
+}</code></pre>
+
+            <p>The <code>Sample</code> function loops trough every track in the current clip. Each Transform Track is then sampled, and the resulting transform is stored in the output pose. When sampling the track, the local transform of the pose is used as the reference transform. This way, if a track only rotates a joint, only the rotation component changes.</p>
+
+<pre><code>float Clip::Sample(Pose&amp; outPose, float time) {
+    if (GetDuration() == 0.0f) {
+        return 0.0f;
+    }
+    time = AdjustTimeToFitRange(time);
+
+    unsigned int size = mTracks.size();
+    for (unsigned int i = 0; i &lt; size; ++i) {
+        unsigned int joint = mTracks[i].GetId();
+        Transform reference = outPose.GetLocalTransform(joint);
+        Transform animated = mTracks[i].Sample(reference, time, mLooping);
+        outPose.SetLocalTransform(joint, animated);
+    }
+    return time;
+}</code></pre>
+
+            <h4>Loading clips</h4>
+            <p>Animation clips are typically loaded from some file created using a 3D content creation application like Maya. The most common file formats are: collada, fbx, and glTF. In <strong>Hands-On C++ Game Animation Programming</strong>, animation data is loaded from glTF files using <a href="https://github.com/jkuhlmann/cgltf">cgltf</a>.</p>
+
+            <h4>Poses for animating a hierarchy</h4>
+            
+            <p>There are two poses to be aware of for animating a hierarchy. These are the <strong>rest pose</strong> and the <strong>animated pose</strong>. The rest pose is a reference pose, it's the pose everything is being animated from. The animated pose is the result of sampling an animation clip.</p>
+
+            <p>The naming convention for these poses is not standard. Different animation systems and content creation tools might call these poses different names. One big point of confusion is the difference between rest and bind pose. In an ideal world, i think the rest and bind poses should always be the same. 3D content creation tools disagree.</p>
+
+            <p>Often the difficulty in animation programming is working with the different terminology that different standards and application use. To animate a hierarchy (without displaying a skinned mesh), the only poses we will need are the <strong>rest pose</strong> and <strong>animated pose</strong>.</p>
+        
+        </div>
+          
+      </div>
+      <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <!--footer class="py-5 bg-dark">
+      <div class="container">
+        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+      </div>
+    </footer-->
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
+</html>

@@ -19,307 +19,23 @@
 
         <!-- WebGL Demos -->
         <script src="sample.js"></script>
-        <script src="full.js"></script>
+        <script src="skinned.js"></script>
+        <script src="skel.js"></script>
 
         <!-- Canvas Demos-->
         <script src="sample_canvas.js"></script>
         <script src="bezier_demo.js"></script>
-
-        <script>
-            var gSkeletonWalkingDemo = null;
-            var gBezierDemo = null;
-            var gWalkingClip = null;
-
-            // This will be removed
-            var gSkinnedWalkingDemo = null;
-            // End 
-
-            function loop() {
-                if (gBezierDemo != null) {
-                    gBezierDemo.Loop();
-                }
-                if (gSkeletonWalkingDemo != null) {
-                    gSkeletonWalkingDemo.Loop();
-                }
-
-                // This will be removed
-                if (gSkinnedWalkingDemo != null) {
-                    gSkinnedWalkingDemo.Loop();
-                }
-                // End
-            }
-
-            function main() {
-                let canvas = document.getElementById("bezierCanvas");
-                if (canvas === null) {
-                    console.error("Unable to find Bezier Canvas");
-                    gBezierDemo = null;
-                }
-                else {
-                    gBezierDemo = new BezierDemo(canvas);
-                }
-
-                canvas = document.getElementById("skeletonWalkingCanvas");
-                if (canvas === null) {
-                    console.error("Unable to find Skeleton Walking Canvas");
-                    gSkeletonWalkingDemo = null;
-                }
-                else {
-                    let gl = canvas.getContext("webgl");
-                    if (gl === null) {
-                        console.error("Unable to get OpenGL context for Skeleton Walking Canvas");
-                        gSkeletonWalkingDemo = null;
-                    }
-                    else {
-                        gl.enable(gl.DEPTH_TEST);
-                        gl.enable(gl.CULL_FACE);
-                        gSkeletonWalkingDemo = null;// new AnimatedSkeleton(gl, canvas);
-                    }
-                }
-
-                /*
-                // This bit will be removed
-                canvas = document.getElementById("skinnedWalkingCanvas");
-                if (canvas === null) {
-                    console.error("Unable to find Skinned Walking Canvas");
-                    gSkinnedWalkingDemo = null;
-                }
-                else {
-                    let gl = canvas.getContext("webgl");
-                    if (gl === null) {
-                        console.error("Unable to get OpenGL context for Skinned Walking Canvas");
-                        gSkinnedWalkingDemo = null;
-                    }
-                    else {
-                        gl.enable(gl.DEPTH_TEST);
-                        gl.enable(gl.CULL_FACE);
-                        gSkinnedWalkingDemo = new FullPageAnimated(gl, canvas);
-                    }
-                }
-                // End
-				*/
-
-                window.setInterval(loop, 16);
-            }
-
-            window.onload = main;
-        </script>
+        <script src="main.js"></script>
 
         <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono&display=swap" rel="stylesheet">
-
-        <style>
-            body {
-                background-color: #4F5460;
-                font-family: 'Open Sans', sans-serif;
-            }
-            div {
-                border-style: none;
-                max-width: 800px;
-                margin: auto;
-                margin-top: 20px;
-                margin-bottom: 20px;
-                padding: 20px;
-                background-color: #383F47;
-                text-align: left;
-            }
-            p {
-                font-size: 1em;
-                color: #CBD2D9;
-            }
-            ul, li {
-                font-family: 'Open Sans', sans-serif;
-                font-size: 1em;
-                color: #CBD2D9;
-            }
-            h1, h2 {
-                color: #E4E7EB;
-            }
-            div.section>h1 {
-                background-color: #273038;
-                margin-top: -20px;
-                margin-left: -20px;
-                margin-right: -20px;
-                padding: 20px;
-            }
-            div.section>h2 {
-                background-color: #273038;
-                font-size: 1.2em;
-                padding: 10px;
-                margin: 0px;
-                margin-left: -20px;
-                margin-right: -20px;
-            }
-            div.info {
-                padding: 0px;
-                margin-left: 0px;
-                margin-right: 0px;
-                background-color: #354656;
-                padding-bottom: 5px;
-            }
-            div.info>h1 {
-                font-size: 1.2em;
-                background-color: #22313f;
-                margin: 0px;
-                padding: 10px;
-            }
-            div.info>p {
-                margin: 0px;
-                padding: 10px;
-            }
-            div.gldemo {
-                padding: 0px;
-                margin-left: 0px;
-                margin-right: 0px;
-            }
-            pre {
-                background-color: #4d545c;
-                border: 2px solid #182633;
-                padding: 10px;
-                font-family: 'Cutive Mono', monospace;
-                color: #f2c8ae;
-
-                white-space: pre-wrap;       /* css-3 */
-                white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-                white-space: -pre-wrap;      /* Opera 4-6 */
-                white-space: -o-pre-wrap;    /* Opera 7 */
-                word-wrap: break-word;       /* Internet Explorer 5.5+ */
-            }
-            div.info>pre {
-                margin-top: 5px;
-                margin-left: 20px;
-                margin-right: 20px;
-                margin-bottom: 20px;
-                padding: 10px;
-            }
-
-            pre>span.red {
-                color: #f85959;
-            }
-            pre>span.blue {
-                color: #89afd9;
-            }
-            pre>span.green {
-                color: #61ae68;
-            }
-            pre>span.orange {
-                color: #d09f41;
-            }
-            pre>span.purple {
-                color: #de5bd3;
-            }
-            p>code {
-                font-family: 'Cutive Mono', monospace;
-                font-size: 1.1em;
-            }
-            a:link, a:visited {
-                font-weight: bold;
-                color: #B3BCD8;
-                text-decoration: none;
-            }
-            a:hover, a:active {
-                font-weight: bold;
-                color: #BECCD6;
-                text-decoration: none;
-            }
-            img {
-                width: 100%;
-                height: auto;
-            }
-
-            a.extern {
-                /* TODO */
-            }
-
-            div.header {
-                display: flex;
-            }
-
-            div.left {
-                width: 50%;
-                min-width: 50%;
-                max-width: 50%;
-                margin: 0px;
-                padding: 0px;
-            }
-            div.right {
-                width: 50%;
-                min-width: 50%;
-                max-width: 50%;
-                display: flex;
-                flex-direction: column;
-                margin: 0px;
-                padding: 0px;
-            }
-            .himage {
-                width: 98%;
-                height: auto;
-                padding: 0px;
-                margin: 0px;
-                border: 2px solid #182633;
-            }
-            .extern {
-                padding: 15px;
-                margin: 25px;
-                margin-bottom: 0px;
-                margin-right: 5px;
-                background-color: #454545;
-                border: 2px solid #182633;
-            }
-
-            .right> a:link, .right> a:visited {
-                font-weight: bold;
-                color: #F37020;
-                text-decoration: none;
-            }
-            .right> a:hover, .right> a:active {
-                font-weight: bold;
-                color: #DC8C0E;
-                text-decoration: none;
-            }
-
-            .title {
-                padding: 0px;
-                margin: 30px;
-
-                margin-top: 0px;
-                margin-bottom: 0px;
-
-                font-family: 'Open Sans', sans-serif;
-                font-size: 1.5em;
-            }
-
-            .subtitle {
-                padding: 0px;
-                margin: 30px;
-
-                margin-top: 15px;
-                margin-bottom: 0px;
-
-                font-family: 'Open Sans', sans-serif;
-                font-size: 1em;
-                color: #E4E7EB;
-            }
-
-            .author {
-                padding: 0px;
-                margin: 30px;
-
-                margin-top: 15px;
-                margin-bottom: 0px;
-
-                font-family: 'Open Sans', sans-serif;
-                font-size: 0.9em;
-                color: #E4E7EB;
-            }
-
-        </style>
+        <link href="main.css" rel="stylesheet">
     </head>
 
     <body>
         <div class="header">
             <div class="left">
-                <img src="cover.jpeg" class="himage" />
+                <img src="cover.png" class="himage" alt="Hands On Game Animation Programming" />
             </div>
             <div class="right">
                 <h1 class="title">Hands-On C++ Game Animation Programming</h1>
@@ -349,7 +65,7 @@
                 <p>Given a mesh and a pose, skinning is the process of deforming the mesh so that is matches the given pose. The two most common skinning methods are matrix palette skinning and dual quaternion skinning. We will cover matrix palette skinning on this page, both are covered in the book.</p>
             </div>
 
-            <p>The book covers everything from the basics of creating an OpenGL 3.3 enabled window to advanced animation techniques like dual quaternion skinning, crowd rendering and inverse kinematics. The assets used on this site and in the book are <a href="http://quaternius.com/">free game assets by Quaternius</a> and <a href="https://github.com/GDQuest/godot-3d-mannequin">Open 3D Mannequin</a></p>
+            <p>The book covers everything from the basics of creating an OpenGL 3.3 enabled window to advanced animation techniques like dual quaternion skinning, crowd rendering and inverse kinematics.</p>
         </div>
         <div class="section">
             <h1>Math</h1>
@@ -471,7 +187,7 @@ inline T Interpolate(const Bezier&lt;T&gt;&amp; curve, float t) {
 
             <p>Hermite splines are implemented similarly to Bezier curves. The code below demonstrates how to evaluate the basis functions. The curve to plot a Hermite spline is the same as the code to plot a B&eacute;zier spline.</p>
 
-<pre>template<typename T>
+<pre>template&lt;typename T&gt;
 class Hermite {
 public:
     T P1; // Point 1
@@ -738,20 +454,20 @@ protected:
 <pre>float Clip::AdjustTimeToFitRange(float inTime) {
     if (mLooping) {
         float duration = mEndTime - mStartTime;
-        if (duration <= 0) {
+        if (duration &lt;= 0) {
             return 0.0f;
         }
         inTime = fmodf(inTime - mStartTime, mEndTime - mStartTime);
-        if (inTime < 0.0f) {
+        if (inTime &lt; 0.0f) {
             inTime += mEndTime - mStartTime;
         }
         inTime = inTime + mStartTime;
     }
     else {
-        if (inTime < mStartTime) {
+        if (inTime &lt; mStartTime) {
             inTime = mStartTime;
         }
-        if (inTime > mEndTime) {
+        if (inTime &gt; mEndTime) {
             inTime = mEndTime;
         }
     }
@@ -847,8 +563,6 @@ public:
 
             <p>Running the above sample results in an animation like this:</p>
 
-            <p>TODO: Write this sample</p>
-
             <div class="gldemo">
                 <canvas id="skeletonWalkingCanvas" style="width: 100%; height:100%;"></canvas>
             </div>
@@ -856,10 +570,9 @@ public:
         
         <div class="section">
             <h1>Skinning</h1>
-            <p>TODO: Left off here</p>
-            <p>A mesh is typically modelled in a "T" or an "A" pose. The bing pose of the mesh is constructed to match this pose. The following image shows the bind pose joint inside of a solid mesh.</p>
+            <p>A mesh is typically modelled in a "T" or an "A" pose, this pose is refered to as the bind pose of the mesh. The skeleton of a mesh is constructed to match the bind pose of the mesh. The following image shows both a mesh and its skeleton in their bind pose.</p>
 
-            <p>TODO</p>
+            <img src="skeleton_in_mesh.png" alt="Bind Pose skeleton and mesh" />
 
             <p>Skinning refers to deforming the mesh in a way that it moves with the skeleton. The demo below shows the skeleton of a character along with the mesh that is the "skin". The below demo uses smooth skinning.</p>
 
@@ -867,7 +580,9 @@ public:
                 <canvas id="skinnedWalkingCanvas" style="width: 100%; height:100%;"></canvas>
             </div>
 
-            <p>Before we explore rigid skinning, let's discuss what a non animated mesh looks like. To get something like the above demo, a mesh will need to have the following components per vertes:</p>
+            <h2>Mesh structure</h2>
+
+            <p>Before we explore rigid skinning, let's discuss how a non animated mesh is stored in memory. To get something like the above demo, a mesh will need to have the following components per vertes:</p>
 
             <ul>
                 <li>A vec3 for the vertex position</li>
@@ -875,7 +590,7 @@ public:
                 <li>A vec2 for the vertex texture coordinate</li>
             </ul>
 
-            <p>A mesh is just a collection of vertices. One way to express this in code is the following:
+            <p>A mesh is just a collection of vertices. One way to express this in code is to create a vertex structure that holds all of the components a vertex contains. When creating a <code>Mesh</code> class, it should hold a list of <code>Vertex</code> objects.</p>
 
 <pre>struct Vertex {
     vec3 position;
@@ -890,8 +605,7 @@ public:
 }</pre>
             <h2>Mesh transformation</h2>
 
-
-            <p>Before we explore skinning, let's talk about the tarnsformation pipeline of a mesh. Generally, the vertex transformation pipeline is executed like this:</p>
+            <p>Next, let's talk about the tarnsformation pipeline of a mesh. Generally, the vertex transformation pipeline is executed like this:</p>
 
             <ul>
                 <li>A mesh is created. Vertices are in <strong>model space</strong></li>
@@ -900,11 +614,11 @@ public:
                 <li>Each vertex is multiplied by the projection matrix. This puts the vertices into NDC space.</li>
             </ul>
 
-            <p>Once in NDC space the graphics API takes care of clipping and everything else. We will need to modify this pipeline to take aniamtion into consideration.</p>
+            <p>Once in NDC space the graphics API takes care of clipping and everything else. We will need to modify this pipeline to take skinning a mesh into consideration.</p>
 
             <h2>Skin space &amp; Rigid skinning</h2>
 
-            <p>Let's explore skinning trough a technique called "Rigid Skinning". When a mesh is rigid skinned, each vertex is deformed by exactly one bone. It was common for early Playstation 2 era games to use rigid skinning. When a rigid skinned model is created, the artist assigns each vertex to a bone. The easiest way to represent this in code is to add a bone index to the vertex structure.</p>
+            <p>When a mesh is skinned, each vertex is deformed by one or more bones. If each vertex is deformed by only one bone, the mesh is <strong>rigid skinned</strong>. If each vertex is deformed by one or more bones, the mesh is <strong>smooth skinned</strong>. We will explore rigid skinning here, smooth skinning will be covered later. When a rigid skinned model is created, the artist assigns each vertex to a bone. The easiest way to represent this in code is to add a bone index to the vertex structure.</p>
 
 
 <pre>struct Vertex {
@@ -914,17 +628,15 @@ public:
     int joint;
 }</pre>
 
-            <p>The joint is an index into the transform array inside the <code>Pose</code> class. In the image below, i've colored every vertex that belongs to the forearm bone darker.</p>
+            <p>The joint is an index into the transform array inside the <code>Pose</code> class. In the image below, i've colored the forearm bone blue and every vertex that belongs to the bone red.</p>
 
-            <p>TODO: IMage</p>
+            <img src="forearm.png" alt="Skinned fore-arm" />
 
-            <p>To deform these vertices along with the bone, we need to introduce a new space to the vertex transform pipeline, <strong>Skin Space</strong>. Skin space is a confusing topic, it's covered more in depth in the book than here.</p>
-
-            <p>The idea of skin space is to move all vertices in a way that if they are multiplied by the rest pose matrix of the bone they belong to, the vertices end up back in bind pose.</p>
+            <p>To deform these vertices along with the bone, we need to introduce a new space to the vertex transform pipeline, <strong>Skin Space</strong>. Skin space is a confusing topic, it's covered more in depth in the book than here. The idea of skin space is to move all vertices in a way that if they are multiplied by the rest pose matrix of the bone they belong to, the vertices end up back in bind pose.</p>
 
             <p>How is this skin space useful? Multiplying a skin space vertex by the bind pose of the bone it belongs to puts the vertex back into it's bind pose, but multiplying it by an animated pose will deform the vertex to match that animation.</p>
 
-            <p>So, how can we put a vertex into skin space? For that, let's consider the desired order of operation. If you multiply a vertex by the bind pose, the vertex should appear in it's bind pose. We know what the bind pose of the vertex is, we can multiply that by the <strong>inverse bind pose</strong> of the joint it belongs to. Doing so, will put the vertex into skin space.</p>
+            <p>So, how can we put a vertex into skin space? For that, let's consider the desired order of operation. If you multiply a vertex by the bind pose, the vertex should appear in it's bind pose. We know what the bind pose of the vertex is, we can multiply that by the <strong>inverse bind pose</strong> of the joint it belongs to.</p>
 
             <p>Here, we introduce two new matrices to the aniamtion pipeline. The <code>Inverse Bind Pose</code> matrix, and the <code>Animated Pose</code> matrix. The inverse bind pose matrix maps a vertex from model space into skin space. The animated pose matrix maps the vertex from skin space back into model space, except the vertex is now deformed around the bone it belongs to. The updated pipeline looks like this:</p>
 
@@ -940,12 +652,12 @@ public:
             <p>In code, skinning a mesh looks like this:</p>
 
 <pre>void SkinMesh(Mesh& target, const Mesh& source, const Pose& bindPose, const Pose& animPose) {
-    for (int i = 0; i < source.vertices.size(); ++i) {
+    for (int i = 0; i &lt; source.vertices.size(); ++i) {
         vec4 position = vec4(soure.vertices[i].position, 1.0f);
         vec4 normal = vec4(soure.vertices[i].normal, 0.0f);
         int joint = source.vertices[i].joint;
 
-        if (joint >= 0) {
+        if (joint &gt;= 0) {
             mat4 invBindPose = toMat4(bindPose.GetGlobalTransform(joint));
             invBindPose = inverse(invBindPose);
             mat4 animatedPose = toMat4(animPose.GetGlobalTransform(joint));
@@ -978,17 +690,19 @@ public:
 
             <p>This skinning calcualtion can be done on the CPU or the GPU. The most common method for skinning meshes is matrix palette skinning. Both CPU and GPU skinning are covered in the book.Rigid skinning is easy to implement, but it doesn't look great. There can be visual breaks in the mesh, and artists need to add relief vertices. The image below shows how relief vertices work</p>
 
-            <p>TODO: Image</p>
+            <a href="http://www.loonygames.com/content/1.6/totb/">
+            <img src="relief.png" alt="Skinned fore-arm" /></a>
 
-            <p>Modern aniamtion system don't typically use rigid skinning (unless on mobile), instead they use smooth skinning, which will be covered next.</p>
+
+            <p>Modern aniamtion system don't typically use rigid skinning, instead they use smooth skinning, which will be covered next.</p>
 
             <h2>Smooth skinning</h2>
 
-            <p>Smooth skinning is often a point of confusion since it involves multiple bones and weight, but it's not really that complicated. To smooth skin a character, you have to conceptually skin the character several different times, and average the results together.</p>
+            <p>Smooth skinning is often a point of confusion since it involves multiple bones and weight, but it's not really that complicated. Conceptually, to smooth skin a character, you have to skin the character several different times, and average the results together.</p>
 
-            <p>To implement smooth skinning we need to add multiple bones to each vertex. Typically, four bones is the limit for how many joints a vertex can be skinned to. There are two reasons for this. First, we can encode that data into a conveniant <code>ivec4</code>. Second, after about 4 bones, the influence of additonal bones becomes un-noicable.</p>
+            <p>To implement smooth skinning we need to add multiple bones to each vertex. Typically, four bones is the limit for how many joints a vertex can be skinned to. There are two reasons for this. First, we can encode that data into a convenient <code>ivec4</code>. Second, after about 4 bones, the influence of additonal bones becomes unnoticeable.</p>
 
-            <p>Each vertex belongs to 4 bones, the model is skinned 4 times and the result is averaged together... Almost. The four bones won't have equal influence over the vertex. Consider a vertex in the fore-arm for example. The upper arm bone might affect the vertex a bit, but nowhere near as much as the lowe arm bone.</p>
+            <p>Each vertex belongs to 4 bones, the model is skinned 4 times and the result is averaged together. Almost... The four bones won't have equal influence over the vertex. Consider a vertex in the fore-arm for example. The upper arm bone might affect the vertex a bit, but nowhere near as much as the lowe arm bone.</p>
 
             <p>To deal with this, we want to also encode how much influence each bone has over a vertex. This data typically comes from the artist that prepared the model, 3D content creation applications allow artists to paint vertex weights on a model.</p>
 
@@ -1006,7 +720,7 @@ public:
 
 
 <pre>void SkinMesh(Mesh& target, const Mesh& source, const Pose& bindPose, const Pose& animPose) {
-    for (int i = 0; i < source.vertices.size(); ++i) {
+    for (int i = 0; i &lt; source.vertices.size(); ++i) {
         vec4 position = vec4(soure.vertices[i].position, 1.0f);
         vec4 normal = vec4(soure.vertices[i].normal, 0.0f);
         ivec4 joints = source.vertices[i].joints;
@@ -1017,7 +731,7 @@ public:
             vec4 norm = vec3(0, 0, 0, 0); // Accumulator
 
             // For each bone that can influence a vertex
-            for (int j = 0; j < 4; ++j) {
+            for (int j = 0; j &lt; 4; ++j) {
                 int joint = joints.v[j];
                 float weight = weights.v[j];
 
@@ -1043,13 +757,13 @@ public:
             <p>The above code is easy to understand, but typically it's not how you would implement a skin function. Matrices can be combined linearly. Normally, you would combine all four of the bone matrices into one <strong>Skin</strong> matrix, then multiply the vertex position and normal by that skin matrix. The following code demonstrates this:</p>
 
 <pre>void SkinMesh(Mesh& target, const Mesh& source, const Pose& bindPose, const Pose& animPose) {
-    for (int i = 0; i < source.vertices.size(); ++i) {
+    for (int i = 0; i &lt; source.vertices.size(); ++i) {
         vec4 position = vec4(soure.vertices[i].position, 1.0f);
         vec4 normal = vec4(soure.vertices[i].normal, 0.0f);
         ivec4 joints = source.vertices[i].joints;
         vec4 weights = source.vertices[i].weights;
 
-        if (joint >= 0) {
+        if (joint &gt;= 0) {
             mat4 m0 = toMat4(animPose.GetGlobalTransform(joints.v[0])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[0])));
             mat4 m1 = toMat4(animPose.GetGlobalTransform(joints.v[1])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[1])));
             mat4 m2 = toMat4(animPose.GetGlobalTransform(joints.v[2])) * inverse(toMat4(bindPose.GetGlobalTransform(joints.v[2])));
@@ -1073,24 +787,20 @@ public:
 
             <p>These artifacts can be fixed using Dual Quaternion skinning. Dual Quaternion skinning is covered in depth in <strong>Chapter 14: Using Dual Quaternions for Skinning</strong>. The image below shows a comparison of linear blend skinning and dual quaternion skinning when a model is being twisted around.</p>
 
-            <p>TODO: Image</p>
+            <img src="d_quat.png" alt="Dual Quaternions" />
 
         </div>
         <div class="section">
             <h1>Pose modification</h1>
             <p>Pose modification is a broad topic, it means modifying the Pose that is returned by sampling a clip before using it to skin a mesh. Blending animations together and inverse kinematics are both examples of Pose Modification. Both animation blending and IK are covered in the book.</p>
 
-            <p>Animation blending is commonly used to prevents hard transitions between aniamtions. In the sample below you can compare two characters, one blending between animations, and one just switching without blending.</p>
-
-            <p>TODO: WebGL demo</p>
-
-            <p>Animation blending is an interpolation function, it will interpolate from one pose to another given some scalar value <code>t</code>. Transforms are made up of vectors and quaternions, if we interpolate those we can interpolate between two poses. The code below demonstrates this:</p>
+            <p>Animation blending is commonly used to prevents hard transitions between aniamtions, it is an interpolation function, it will interpolate from one pose to another given some scalar value <code>t</code>. Transforms are made up of vectors and quaternions, if we interpolate those we can interpolate between two poses. The code below demonstrates this:</p>
 
 <pre>void Blend(Pose& out, const Pose& a, const Pose& b, float t) {
-    for (int i = 0; i < a.size(); ++i) {
+    for (int i = 0; i &lt; a.size(); ++i) {
         out.position = lerp(a.position, b.position, t);
         quat b_rotation = b.rotation;
-        if (dot(a.rotation, b.rotation) < 0) {
+        if (dot(a.rotation, b.rotation) &lt; 0) {
             b_rotation *= -1.0f;
         }
         out.rotation = nlerp(a.rotation, b.rotation, t);

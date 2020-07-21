@@ -83,6 +83,9 @@ BezierDemo.prototype.Render = function(ctx, aspectRatio) {
 	let t_step = 1.0 / numSteps
 	let t = 0.0;
 
+	ctx.fillStyle = "rgb(56, 63, 71)";
+	ctx.fillRect(0, 0, width, height);
+
 	// Static bezier path
 	ctx.beginPath();
 	ctx.moveTo(P1[0], P1[1]);

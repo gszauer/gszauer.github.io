@@ -5,6 +5,7 @@ function Sample(gl, canvas) {
 	this.mCanvas = canvas;
 	this.mIsRunning = false;
 	this.mIsLoading =false;
+	this.mHasArgument = false;
 	this.mDebugName = "Sample";
 	this.mLastUpdateTime = performance.now();
 	this.mSkipClear = false;
@@ -24,11 +25,12 @@ function Sample(gl, canvas) {
 	let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
 		//vars[key] = value;
 		if (key=="skin") {
-			if (value == "uniform") {
+			sample.mHasArgument = true;
+			if (value == "uniform" || value == "gpu") {
 				sample.mCanGPUSkinUsingUniforms = true;
 				sample.mCanGPUSkinUsingTextures = false;
 			}
-			else if (value == "texture") {
+			else if (value == "texture" || value == "tex") {
 				sample.mCanGPUSkinUsingUniforms = false;
 				sample.mCanGPUSkinUsingTextures = true;
 			}
