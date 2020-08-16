@@ -24,11 +24,34 @@
 		<script type="text/javascript">
 			var gApplication = null;
 
+			var js_num_samples = 60;
+			var js_update_times = [];
+			var js_update_index = 0;
+			var js_update_display = "Waiting for sample";
+
 			function loop() {
+				const t0 = performance.now();
 				gApplication.Loop();
+				const t1 = performance.now();
+
+				js_update_times[js_update_index++] = t1 - t0;
+				if (js_update_index == js_num_samples) {
+					let avg = 0;
+					for (let i = 0; i < js_num_samples; ++i) {
+						avg += js_update_times[i];
+					}
+					avg /= js_num_samples;
+					js_update_display = "Js update: " + avg + "ms";
+					console.log(js_update_display);
+					js_update_index = 0;
+				}
 			}
 
 			function main() {
+				for (let i = 0; i < js_num_samples; ++i) {
+					js_update_times.push(0.0);
+				}
+
 				let canvas = document.querySelector("#glCanvasThree");
 				let gl = canvas.getContext("webgl");
 				gl.enable(gl.DEPTH_TEST);
