@@ -1,147 +1,51 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="matrices.html">Introduction</a><a class="sidebar-item" href="blog_matrices_topology.html">Topology</a><a class="sidebar-item" href="blog_matrices_transpose.html">Transpose</a><a class="sidebar-item" href="blog_matrices_component.html">Component Operations</a><a class="sidebar-item" href="blog_matrices_multiplication.html">Multiplication</a><a class="sidebar-item sidebar-active " href="blog_matrices_vectors.html">Vectors</a><a class="sidebar-item" href="blog_matrices_invert.html">Invert</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_2x2determinant.html">2x2 Determinant</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_minors.html">Minors</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_cofactor.html">Cofactor</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_laplace.html">Laplace Expansion</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_adjugate.html">Adjugate</a></div>    
+            <div id="content">
+                <h1>Transforming vectors</h1>
+                
+                <p>A <a href="vectors.html">vector</a> is often used to represent a point in space, or a direction with magnitude. A matrix is often used to encode transformations such as "move 10 units on the X axis". Matrix transformations will be the topic of the second blog in this series.</p>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>The linear transformation stored in a matrix can be applied to a vector if the matrix is multiplied by the vector. For now, let's assume we are working with 4x4 matrices and 4 component vectors.</p>
+
+                <p>A 4 component vector can be considered a row matrix or a column matrix. The difference is only theoretical and in expression, it's stored in memory the same regardless of which convention is chosen. The choice of this convention labels vectors as <strong>row vectors</strong> or <strong>column vectors</strong></p>
 
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
+                <img class="img-fluid" src="images/blog_matrix_row_col_vec.png" alt="Row and Column Vectors" />
 
-    <title>Gabor Makes Games</title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+                <p>The distinction between row and column vectors is multiplication order. We are now treating vectors as skinny matrices, to multiply two matrices their inner dimensions must match. This means a vector and a matrix can be multiplied in one of two ways:</p>
 
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
+                <ul>
+                    <li><code>1x4 * 4x4</code>. Row vectors (1 row 4 columns) can only be pre-multiplied. The result is another <code>1x4</code> row vector.</li>
+                    <li><code>4x4 * 4x1</code>. Column vectors (4 rows, 1 column) can only be post-multiplied. The result is another <code>4x1</code> column vector.</li>  
+                </ul>
 
-     <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+                <p>This again causes confusion</a> when it comes to OpenGL and DirectX. OpenGL for example has a right to left multiplication order (post multiplication). To maintain the right to left  multiplication with a vector as well OpenGL has to use column vectors. DirectX on the other hand uses left to right (pre) multiplication, to maintain this convention they have to use row vectors.</p> 
 
-  </head>
+                <p class="callout">This blog will follow <a href="https://steve.hollasch.net/cgindex/math/matrix/column-vec.html">OpenGL style</a>. This means column matrices, column vectors, post multiplication, and everything stored using column storage.</p>
 
-  <body onload="renderMathInElement(document.body);">
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="matrices.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
-            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
-            <a href="blog_matrices_component.html" class="list-group-item">4. Component Wise Operations</a>
-            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
-            <a href="blog_matrices_vectors.html" class="list-group-item active">6. Transforming Vectors</a>
-            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
-            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
-            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
-            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
-            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
-            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Transforming vectors</h2>
-
-          <p>A <a href="vectors.html">vector</a> is often used to represent a point in space, or a direction with magnitude. A matrix is often used to encode transformations such as "move 10 units on the X axis". Matrix transformations will be the topic of the second blog in this series.</p>
-
-          <p>The linear transformation stored in a matrix can be applied to a vector if the matrix is multiplied by the vector. For now, let's assume we are working with 4x4 matrices and 4 component vectors.</p>
-
-          <p>A 4 component vector can be considered a row matrix or a column matrix. The difference is only theoretical and in expression, it's stored in memory the same regardless of which convention is chosen. The choice of this convention labels vectors as <strong>row vectors</strong> or <strong>column vectors</strong></p>
-
-          <p><img class="img-fluid" src="assets/row_col_vec.png" alt="Row and Column Vectors" /></p>
-
-          <p>The distinction between row and column vectors is multiplication order. We are now treating vectors as skinny matrices, to multiply two matrices their inner dimensions must match. This means a vector and a matrix can be multiplied in one of two ways:</p>
-
-          <ul>
-            <li><code>1x4 * 4x4</code>. Row vectors (1 row 4 columns) can only be pre-multiplied. The result is another <code>1x4</code> row vector.</li>
-            <li><code>4x4 * 4x1</code>. Column vectors (4 rows, 1 column) can only be post-multiplied. The result is another <code>4x1</code> column vector.</li>  
-          </ul>
-
-          <p>This again causes confusion</a> when it comes to OpenGL and DirectX. OpenGL for example has a right to left multiplication order (post multiplication). To maintain the right to left  multiplication with a vector as well OpenGL has to use column vectors. DirectX on the other hand uses left to right (pre) multiplication, to maintain this convention they have to use row vectors.</p> 
-
-          <p class="bs-callout bs-callout-default">This blog will follow <a href="https://steve.hollasch.net/cgindex/math/matrix/column-vec.html">OpenGL style</a>. This means column matrices, column vectors, post multiplication, and everything stored using column storage.</p>
-
-          <h4>Implementation</h4>
-
-<pre><code>vec4 Mul(mat4 m, vec4 v) {
+                
+<pre class="prettyprint linenums">vec4 Mul(mat4 m, vec4 v) {
     return vec4(
         v.x * m.v[0] + v.y * m.v[4] + v.z * m.v[8] + v.w * m.v[12],
         v.x * m.v[1] + v.y * m.v[5] +  v.z * m.v[9] + v.w * m.v[13],
         v.x * m.v[2] + v.y * m.v[6] + v.z * m.v[10] + v.w * m.v[14],
         v.x * m.v[3] + v.y * m.v[8] + v.z * m.v[11] + v.w * m.v[15]
     );
-}</code></pre>
-
+}</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

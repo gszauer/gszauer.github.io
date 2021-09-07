@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+        <script src="js/blog_font_oncurve.js"></script>
+        <script src="js/blog_font_compress.js"></script>
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();Main_OnCurve('CurvePointCanvas');Main_Compress('CompressCanvas')">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+
+            <h1>Simple Glyphs</h1>
+
+            <p>A Simple glyph is made up of multiple contours. Each contour is a sequence of points that connect to form a closed shape. Contours have a direction, a clockwise contour defines a fill, a counter clockwise contour clears the shape. Simple glyphs are covered in more detail in Digitizing Letterform Designs</a>.</p>
+
+            <h2>Parsing simple glyphs</h2>
+
+            <p>The offset of the glyph from the <code>glyf</code> table is stored in the <code>loca</code> table, which is parallell to the <code>glyf</code> table (has the same indices). Once we have a pointer to the glyph, read the number of contours and make sure this is actually a simple glyph. If not, forward the arguments to the <code>ParseCompoundGlyph</code> function instead.</p>
+
+<pre class="prettyprint linenums">Glyph Font::ParseSimpleGlyph(u16 index, u8* glyf, const vector< u32 >& loca) {
+    u8* glyph = glyf + loca[index];
+    Glyph result;
+
+    i16 numberOfContours = (i16)((glyph[0] << 8) | glyph[1]);
+    if (numberOfContours < 0) {
+        return ParseCompoundGlyph(index, glyf, loca);
+    }
+    glyph += 2;</pre>
+            <p>Next, we need to parse the bounding box of the glyph. The bounding box is in <code>FUnits</code> (signed 16 bit integers), stored in <code>min.x, min.y</code>, <code>max.x, max.y</code> order.</p>
+
+<pre class="prettyprint linenums">    result.min.x = read_i16(&glyph);
+    result.min.y = read_i16(&glyph);
+    result.max.x = read_i16(&glyph);
+    result.max.y = read_i16(&glyph);</pre>
+            <p>The points that make up a glyph are stored in parallel arrays of x and y coordinates and a flags array. The <code>glyf</code> table contains <code>endPtsOfContours</code>, an array of 16 bit integers. Each element in the array is the index of the last point in the current contour. The <code>endPtsOfContours</code> array dictates where one contour in the glyph ends and the next one begins. </p>
+
+<pre class="prettyprint linenums">    vector< u16 > endPtsOfContours;
+    endPtsOfContours.resize(numberOfContours);
+    for (i16 i = 0; i < numberOfContours; ++i) {
+        endPtsOfContours[i] = read_u16(&glyph);
+    }</pre>
+            <p>Following the <code>endPtsOfContours</code> is an array of instructions for <a href="https://www.youtube.com/watch?v=jAdspOtgciQ">hinting</a>. First, the length of the instructions, then the actual instructions themselves. We're not going to handle font hinting in this blog, let's skip over the instructions.</p>
+
+<pre class="prettyprint linenums">    u16 instructionsLength = read_u16(&glyph);
+    glyph += instructionsLength; // Skip grid fitting instructions</pre>
+                <p>After the instructions is an array of flags, each flag is one byte. A glyph can store flags with delta compression, that is there might be less flags stored if they repeat. To find the actual number of flags, take the value at the last index of <code>endPtsOfContours</code> and add one to it.</p>
+
+<pre class="prettyprint linenums">    u32 lastIndex = endPtsOfContours[numberOfContours - 1];
+    u32 numFlags = lastIndex + 1;</pre>
+            <p>Now that we know how many flags tehre are, let's read and store each flag one at a time. The third bit of hte flag is the repeat bit. If the repeat bit is set, the next byte is the number of times this flag repeats.</p>
+
+<pre class="prettyprint linenums">    vector< u8 > flags;
+    flags.resize(numFlags);
+    for (u32 i = 0; i < numFlags; ++i) {
+        flags[i] = *glyph++;
+
+        if (flags[i] & (1 << 3)) { // (1 << 3): REPEAT
+            u8 repeatCount = *glyph++;
+            while (repeatCount-- > 0) {
+                i += 1;
+                flags[i] = flags[i - 1];
+            }
+        }
+    }</pre>
+                <p>After the flags, the <code>glyf</code> table contains an array of x coordinates, followed by an array of y coordinates. This array of coordinates is not an array of points, it's an array of vectors. To get a point, you need to add the vector to the last point. Because of this, we will need to store the previous point. The flag specifies how each of the vectors is stored.</p>
+
+                <p>Together, bits 1 and 4 of the flag detemrine what format each x coordinate is stored with. The following table describes how each coordinate is stored given the combination of the two flag bits (<code>(bit1 << 1) | bit4</code>). The storage format is documented here: <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html">Apples TTF reference manual</a>.</p>
+
+                <table class="blogtab">
+                    <tr><th>Bit 1</th><th>Bit 4</th><th>Storage format</th></tr>
+                    <tr><td>0</td><td>0</td><td>Signed 16-bit integer</td></tr>
+                    <tr><td>0</td><td>1</td><td>Not stored, use the same value as the previous position</td></tr>
+                    <tr><td>1</td><td>1</td><td>Positive 8 bit number</td></tr>
+                    <tr><td>1</td><td>0</td><td>Negative 8 bit number</td></tr>
+                </table>
+
+<pre class="prettyprint linenums">    std::vector< i16 > xCoordinates;
+    xCoordinates.resize(lastIndex + 1);
+    i16 prev_x = 0;
+
+    for (u32 i = 0, iSize = lastIndex + 1; i < iSize; ++i) {
+        u8 x_short = ((flags[i] & (1 << 1)) != 0) ? 1 : 0; // (1 << 1): X_SHORT
+        u8 x_short_pos = ((flags[i] & (1 << 4)) != 0) ? 1 : 0; // (1 << 4): X_SHORT_POS
+
+        i16 vector = 0;
+        u8 flag = (x_short << 1) | x_short_pos;
+
+        if (flag == 0) { // x_short off, x_short_pos off
+            vector = read_i16(&glyph);
+        }
+        else if (flag == 1) {  // x_short off, x_short_pos on
+            vector = 0; // No delta, same as last one
+        }
+        else if (flag == 2) {  // x_short on, x_short_pos of
+            vector = (*glyph++) * -1;
+        }
+        else if (flag == 3) {  // x_short on, x_short_pos on
+            vector = *glyph++;
+        }
+
+        xCoordinates[i] = prev_x + vector;
+        prev_x = xCoordinates[i];
+    }</pre>
+                    <p>Y coordinates are parsed the same way that the x coordinates where parsed. The  <code>Y_SHORT</code> flag is the second bit and the <code>Y_SHORT_POS</code> flag is the 5th bit.</p>
+
+<pre class="prettyprint linenums">    std::vector< i16 > yCoordinates;
+    yCoordinates.resize(lastIndex + 1);
+    i16 prev_y = 0;
+
+    for (u32 i = 0, iSize = lastIndex + 1; i < iSize; ++i) {
+        u8 y_short = ((flags[i] & (1 << 2)) != 0) ? 1 : 0; // (1 << 2): Y_SHORT
+        u8 y_short_pos = ((flags[i] & (1 << 5)) != 0) ? 1 : 0; // (1 << 5): Y_SHORT_POS
+        u8 flag = (y_short << 1) | (y_short_pos);
+        i16 vector = 0;
+        if (flag == 0) {
+            vector = read_i16(&glyph);
+        }
+        else if (flag == 1) {
+            vector = 0; // No delta, same as last one
+        }
+        else if (flag == 2) {
+            vector = (*glyph++) * -1;
+        }
+        else if (flag == 3) {
+            vector = *glyph++;
+        }
+
+        yCoordinates[i] = prev_y + vector;
+        prev_y = yCoordinates[i];
+    }</pre>
+
+            <p>The glyph data is now parsed into several <code>std::vector</code>s, let's combine these into a single array that's easier to work with. This will be an array of contours where every point is represented by a tuple (<code>tuple&lt;i16, i16, bool&gt;</code>). The first two values are the x and y positions of the point, in FUnits. The third value is a boolean, representing if the point is on curve or not.</p>
+
+            <p>Any point in a glyph can be <a href="http://chanae.walon.org/pub/ttf/ttf_glyphs.htm">on curve or off curve</a>. An on-curve point is a point that lies somewhere on the outline of the glyph. An off curve point is a control point. Two consequtive on curve points form a straight line. An off curve point between two on curve points draws a cubic bezier curve.</p>
+
+            <canvas id="CurvePointCanvas"></canvas>
+
+            <p>These control points are stored with some compression. Two consequtive off curve points have an implied on curve point between them. This on-curve point will always be mid way between the two off curve points, so we can avoid storing it. For example, the green points in the image below are always exactly half way between the red points. Instead of storing the green points, we can calculate them when the font data is loaded.</p>
+
+            <canvas id="CompressCanvas"></canvas>
+
+            <p>The code below creates a countours vector, and loops trough each contour. The <code>endPtsOfContours</code> array holds the index of the last point for the current contour. The start index of the current glyph is the value of <code>endPtsOfContours</code> for the last contour plus one. The end index is the value of <code>endPtsOfContours</code> for the current contour index.</p>
+
+<pre class="prettyprint linenums">    vector< vector< tuple< i16, i16, bool > > > contours;
+    contours.resize(numberOfContours);
+    
+    for (i16 c = 0; c < numberOfContours; ++c) {
+        i32 startIndex = c <= 0 ? 0 : (endPtsOfContours[c - 1] + 1);
+        i32 endIndex = endPtsOfContours[c];
+        vector< tuple< i16, i16, bool > >& contour = contours[c];</pre>
+        <p>It's easier to work with a contour that start with a point that's on curve. If the first point in the contour is on curve, record it. If it's not on curve, the following loop will make sure contour starts on a curve.</p>
+
+<pre class="prettyprint linenums">        bool first_on_curve = flags[startIndex] & 1;
+        if (first_on_curve) {
+            contour.push_back(tuple< i16, i16, bool >(xCoordinates[startIndex], yCoordinates[startIndex], true));
+        }</pre>
+        <p>Now loop trough all indices in the contour, starting with an offset of one. We include this offset because if the first point was on curve, it's already been recorded. The loop checks if the current point is on curve, and weather the last point was also on curve or not. If both are off curve, a new point is inserted between them.</p>
+
+<pre class="prettyprint linenums">        for (i32 index = startIndex + 1; index <= endIndex; ++index) {
+            bool on_curve = flags[index] & 1;
+            bool was_on_curve = flags[index  -1] & 1;
+            if (!on_curve && !was_on_curve) { // Not on curve, need to insert additional point
+                i16 gen_x = (xCoordinates[index] + xCoordinates[index - 1]) / 2;
+                i16 gen_y = (yCoordinates[index] + yCoordinates[index - 1]) / 2;
+                contour.push_back(tuple< i16, i16, bool >(gen_x, gen_y, true));
+            }
+            contour.push_back(tuple< i16, i16, bool >(xCoordinates[index], yCoordinates[index], on_curve));
+        }
+
+        contour.push_back(contour[0]);
+    }</pre>
+
+    <p>Unlike the source data, the contours array will always start with an on curve point, and an off curve point will always be surrounded by two on curve points. This makes it easy to convert the contours array into an edge list.</p>
+
+    <p>Build the edge list by inserting pairs of points for every point in the contours array, skipping off curve points. An edge pair is the current point and the one before it. If the point before was off curve, the edge is quadratic.</p>
+
+<pre class="prettyprint linenums">    // Convert contours to edge list
+    for (u32 c = 0, cSize = contours.size(); c < cSize; ++c) {
+        vector< tuple< i16, i16, bool > > & contour = contours[c];
+        for (u32 i = 1, iSize = contour.size(); i < iSize; ++i) {
+            if (!get<2>(contour[i])) { // If the point is off, do nothing
+                continue;
+            }
+
+            Edge edge;
+            edge.end = Point(get<0>(contour[i]), get<1>(contour[i]));
+            edge.quadratic = !get<2>(contour[i - 1]);
+            if (edge.quadratic) { // Curve
+                edge.control = Point(get<0>(contour[i - 1]), get<1>(contour[i - 1]));
+                edge.start = Point(get<0>(contour[i - 2]), get<1>(contour[i - 2]));
+            }
+            else { // Straight edge
+                edge.start = Point(get<0>(contour[i - 1]), get<1>(contour[i - 1]));
+            }
+            result.edges.push_back(edge);
+        }
+    }</pre>
+        <p>We are done with the <code>ParseSimpleGlyph</code> function. Return the resulting glyph.</p>
+
+<pre class="prettyprint linenums">    return result;
+}</pre>
+
+
+            </div>
+        </div>
+    </body>
+</html>

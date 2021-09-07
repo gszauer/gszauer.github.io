@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab sidebar-active " href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>Parse Compound Glyphs</h1>
+
+            <p>In addition to simple glyphs, a font can also contain compound glyphs. A compound glyph is a combination of simple glyphs or other compound glyphs. Below are some examples of compoung glyphs.</p>
+
+            <p>Compound glyphs start with the number of contours and bounding box like simple glyphs. Start by reading the number of contours in the glyph. A compoiund glyph will have a negative number of contours. After the number of contours is 4 signed 16 bit integers for the min and max points of the glyphs bounding box.</p>
+
+<pre class="prettyprint linenums">Glyph Font::ParseCompoundGlyph(u16 index, u8* glyf, const vector< u32 >& loca) {
+    u8* glyph = glyf + loca[index];
+    Glyph result;
+
+    i16 numberOfContours = (glyph[0] << 8) | glyph[1];
+    if (numberOfContours >= 0) {
+        return ParseSimpleGlyph(index, glyf, loca);
+    }
+    glyph += 2;
+    
+    result.min.x = read_i16(&glyph);
+    result.min.y = read_i16(&glyph);
+    result.max.x = read_i16(&glyph);
+    result.max.y = read_i16(&glyph);</pre>
+    <p>The number of components in a compound glyph is not stored anywhere (the negative number of components is usually -1). Instead, each component starts with a flag. The 5th bit of this flag is the <code>MORE_COMPONENTS</code> bit, if it's set, there is another component to parse immediateley after this one.  The flag has the following bits:</p>
+
+    <table class="blogtab">
+        <tr><th style="min-width: 75px;">Bit</th><th style="min-width: 75px;">Flag</th><th>Description</th></tr>
+        <tr><td>0</td><td>ARG_1_AND_2_ARE_WORDS</td><td>If set, arguments are 16-bit, otherwise, they are bytes (uint8 or int8).</td></tr>
+        <tr><td>1</td><td>ARGS_ARE_XY_VALUES</td><td>If set, arguments are signed xy values; otherwise, they are unsigned point numbers.</td></tr>
+        <tr><td>2</td><td>ROUND_XY_TO_GRID</td><td>For the xy values if the preceding is true.</td></tr>
+        <tr><td>3</td><td>WE_HAVE_A_SCALE</td><td>If set, there is a simple scale for the component. Otherwise, scale = 1.0.</td></tr>
+        <tr><td>4</td><td>RESERVED</td><td>Not used, should be 0</td></tr>
+        <tr><td>5</td><td>MORE_COMPONENTS</td><td>Indicates that there are more glyphs after this one.</td></tr>
+        <tr><td>6</td><td>WE_HAVE_AN_X_AND_Y_SCALE</td><td>The x direction will use a different scale from the y direction.</td></tr>
+        <tr><td>7</td><td>WE_HAVE_A_TWO_BY_TWO</td><td>There is a 2 by 2 transformation that will be used to scale the component.</td></tr>
+        <tr><td>8</td><td>WE_HAVE_INSTRUCTIONS</td><td>Following the last component are instructions, we will ignore these.</td></tr>
+        <tr><td>9</td><td>USE_MY_METRICS</td><td>If set, this forces the advance width and left side bearing for the composite to be equal to those from this original glyph. </td></tr>
+    </table>
+
+    <p>Following the flag is the index of the glyph, this index could point to a compound glyph or a simple one.</p>
+
+<pre class="prettyprint linenums">    u16 flags = 0;
+    do {
+        flags = read_u16(&glyph);
+        u16 glyphIndex = read_u16(&glyph);</pre>
+
+        <p>Each component of a compoung glyph can be transformed, they are usually translated or scaled. The transform data is like matrix, and all points in a component are transformed by the matrix. The equation to transform each component comes from tje <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html">true type manual</a>.</p>
+
+        <p>The <code>e</code> and <code>f</code> values are stored first. If the second bit (<code>ARGS_ARE_XY_VALUES</code>) is not set, both <code>e</code> and <code>f</code> default to zero. If the second bit is set and the first bit (<code>ARG_1_AND_2_ARE_WORDS</code>) is not, <code>e</code> and <code>f</code> are stored as signed 8 bit numbers. If both the first and second bit are set, the <code>e</code> and <code>f</code> flags are stored as signed 16 bit numbers.</p>
+
+<pre class="prettyprint linenums">        f32 a, b, c, d, e, f, m, n;
+
+        if (flags & (1 << 1)) { // ARGS_ARE_XY_VALUES
+            if (flags & 1) { // ARG_1_AND_2_ARE_WORDS
+                e = read_i16(&glyph);
+                f = read_i16(&glyph);
+            }
+            else {
+                e = (i8)(*glyph++);
+                f = (i8)(*glyph++);
+            }
+        }
+        else {
+            e = f = 0.0f;
+        }</pre>
+        <p>The variables <code>a</code>, <code>b</code>, <code>c</code> and <code>d</code> make up a 2x2 matrix. Bits 3, 6 and 7 determine how these values are stored. If none of the bits are set, default to the identity matrix. If a bit is set, nly one of the three bits will be set. The values for these variables are stored as 16 bit fixed numbers.</p>
+
+        <p>If bit 3 (<code>WE_HAVE_A_SCALE</code>) is set, <code>a</code> and <code>d</code> will contain the same scale, which is stored as a 16 bit fixed point number. In this case <code>b</code> and <code>c</code> remain 0.</p>
+
+        <p>If bit 6 (<code>WE_HAVE_AN_X_AND_Y_SCALE</code>) is set, <code>a</code> and <code>d</code> will contain unique values, both of which are stored as a 16 bit fixed numbers. In this case <code>b</code> and <code>c</code> remain 0.</p>
+
+        <p>If bit 7 (<code>WE_HAVE_A_TWO_BY_TWO</code>) is set, <code>a</code>, <code>b</code>, <code>c</code> and <code>d</code> all have unique values which are stored as 16 bit fixed point numbers.</p>
+
+        <p>To convert the fixed point numbers to a floating point number, cast to a float and divide by <code>16384.0f</code>, the <code>read_fixed</code> function already does this.</p>
+
+<pre class="prettyprint linenums">        if (flags & (1 << 3)) { // WE_HAVE_A_SCALE
+            a = d = read_fixed(&glyph);
+            b = c = 0.0f;
+        }
+        else if (flags & (1 << 6)) { // WE_HAVE_AN_X_AND_Y_SCALE
+            a = read_fixed(&glyph);
+            d = read_fixed(&glyph);
+            b = c = 0.0f;
+        }
+        else if (flags & (1 << 7)) { // WE_HAVE_A_TWO_BY_TWO
+            a = read_fixed(&glyph);
+            b = read_fixed(&glyph);
+            c = read_fixed(&glyph);
+            d = read_fixed(&glyph);
+        }
+        else {
+            a = d = 1.0f;
+            b = c = 0.0f;
+        }</pre>
+        <p>The apple <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html">true type manual</a> provides the formula for finding \(m\) and \(n\) as: </p>
+
+        <p>$$ m = max(|a|, |b|) $$ </p> <p> $$ if (|(|a| - |c|)| < (33 / 65536)) m = 2m $$</p>
+
+        <p>$$ n = max(|c|, |d|) $$ </p> <p> $$ if (|(|b| - |d|)| < (33 / 65536)) n = 2n $$</p>
+
+
+<pre class="prettyprint linenums">        m = fmaxf(fabsf(a), fabsf(b));
+        n = fmaxf(fabsf(c), fabsf(d));
+
+        if (fabsf(fabsf(a) - fabsf(c)) < (33.0f / 65536.0f)) {
+            m = 2.0f * m;
+        }
+
+        if (fabsf(fabsf(b) - fabsf(d)) < (33.0f / 65536.0f)) {
+            n = 2.0f * n;
+        }</pre>
+        <p>Now that we know how to transform the glyph, call <code>ParseSimpleGlyph</code> to get the actual gluph data. Transform the resulting glyph by the 3x2 matrix we just parsed, and add the transformed edges to the compound glyphs edge list. A compound glyph could contain other compound glyphs, <code>ParseSimpleGlyph</code> checks the number of contours of the glyphs being parsed and will call <code>ParseCompoundGlyph</code> if it's negative. We will write the <code>Transform</code> function next.</p>
+
+<pre class="prettyprint linenums">        Glyph component = ParseSimpleGlyph(glyphIndex, glyf, loca); 
+        component = component.Transform(a, b, c, d, e, f, m, n);
+
+        for (int c = 0; c < component.edges.size(); ++c) {
+            result.edges.push_back(component.edges[c]);
+        }</pre>
+        <p>To end the loop, check bit 5 (MORE_COMPONENTS) of the glyphs flag, if it's set there are more components. If it's not set, the loop ends and <code>ParseCompoundGlyph</code> can return.</p>
+
+<pre class="prettyprint linenums">    } while (flags & (1 << 5)); // MORE_COMPONENTS
+
+    return result;
+}</pre>
+            <h2>Transforming Glyphs</h2>
+
+            <p>The transformation to apply to each glyph is defined in the <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html">True Type Reference Manual</a>, it is:</p>
+
+            <p>$$ x' =  m(\frac{a}{m}x + \frac{c}{m}y + e) $$</p>
+            <p>$$ y' =  n(\frac{b}{n}x + \frac{d}{n}y + f) $$</p>
+
+            <p>The rasterizer we will build cares about the winding order of each edge. Scale is stored in the transforms main diagonal, elements <code>a</code> and <code>d</code>. If one of the scales is negative, we need to flip the start and end points of the edge. If both scales are negative, it cancels out. Flip the edge only if the signs of <code>a</code> and <code>d</code> are different.</p>
+
+<pre class="prettyprint linenums">Glyph Glyph::Transform(f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 m, f32 n) {
+    Glyph result = *this;
+    i32 numEdges = result.edges.size();
+    bool flip = a * d < 0.0f; // If the signs are different, flip
+
+    for (i32 edge = 0; edge < numEdges; ++edge) {
+        for (int p = 0; p < 3; ++p) {
+            f32 x = edges[edge].points[p].x;
+            f32 y = edges[edge].points[p].y;
+
+            result.edges[edge].points[p].x = m * ((a / m) * x + (c / m) * y + e);
+            result.edges[edge].points[p].y = n * ((b / n) * x + (d / n) * y + f);
+        }
+
+        if (flip) {
+            Point tmp = result.edges[edge].start;
+            result.edges[edge].start = result.edges[edge].end;
+            result.edges[edge].end = tmp;
+        }
+    }
+
+    f32 x = (m * ((a / m) * min.x + (c / m) * min.y + e));
+    f32 y = (n * ((b / n) * min.x + (d / n) * min.y + f));
+    result.min.x = x; 
+    result.min.y = y;
+
+    x = (m * ((a / m) * max.x + (c / m) * max.y + e));
+    y = (n * ((b / n) * max.x + (d / n) * max.y + f));
+    result.max.x = x;
+    result.max.y = y;
+
+    return result;
+}</pre>
+
+
+            </div>
+        </div>
+    </body>
+</html>

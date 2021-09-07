@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+        <script src="js/blog_font_bezier.js"></script>
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();Main_Bezier('BezierCanvas')">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first sidebar-active " href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>True Type Fonts</h1>
+
+                <p>This blog explores how to parse and render true type font files. By the end of this blog you should be able to parse, layout, and render true type fonts. The final sample code for this blog is available <a href="https://gist.github.com/gszauer/0add6695a4c1ccd617b3f4f9e1e9a3c6">here</a>. These are some additional references for working with ttf files: </p>
+
+                <ul>
+                    <li><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/">Apple TrueType Reference Manual</a></li>
+                    <li><a href="https://docs.microsoft.com/en-us/typography/opentype/spec/">MSDN Open Type Specification</a></li>
+                    <li><a href="https://scripts.sil.org/iws-chapter08">An Introduction to TrueType Fonts</a></li>
+                    <li><a href="http://designwithfontforge.com/en-US/">Design with FontForge</a></li>
+                    <li><a href="http://freetype.sourceforge.net/freetype2/docs/glyphs/">FreeType 2 Glyph Conventions</a></li>
+                    <li><a href="https://handmade.network/forums/wip/t/7330-implementing_a_font_reader_and_rasterizer_from_scratch,_part_1__ttf_font_reader.">Implementing a Font Reader and Rasterizer from Scratch, Part 1: TTF Font Reader.</a></li>
+                </ul>
+
+                <p>A font contains a number of glyphs, and maps those glyphs to characters. Glyphs are the visual representation of a character, they are stored as vector data; a collection of lines and curves that is rasterized into pixels. Before we start parsing fonts, let's explore how a font is created and some useful terminology.</p>
+
+                <p>Fonts are created on an indivisible grid, there are no fractional coordinates. This glid is called the <strong>Master Grid</strong>. The origin of this grid is <code>(0, 0)</code>, it has a range of <code>-16384</code> to <code>+16383</code>. Each unit on the master grid is called a <strong>Font Unit</strong>, or <strong>FUnit</strong>. Font units are signed 16 bit integers (<code>i16</code>).</p>
+
+                <img class="img-fluid" src="images/blog_font_mastergrid_funit.png" alt="Mater Grid" />
+
+                <p>The metal squares used to typeset print are called sorts. The EM square is the size of the metal sort that the capital M was cast on.</p>
+
+                <img class="img-fluid" src="images/blog_font_cast.png" alt="Physical EM square" />
+
+                <p>In digital fonts, the EM square has taken on a new meaning. It now serves as the digital canvas that a glyph is drawn on, the EM square is the part of the master grid that glyphs are drawn in. A glyph can extend outside of the em square.</p>
+
+                <img class="img-fluid" src="images/blog_font_mastergrid_emsquare.png" alt="EM Square" />
+
+                <p>The size of the EM square relative to the size of a font unit determines the resolution that a glyph is designed at. The larger the EM square, the more pixels are available to design glyphs on, allowing for finer detail. Most fonts are designed with a grid size of <strong>2048 funits per em</strong>.</p>
+
+                <p>Designers create vector shapes to represent glyphs. Each shape is defined by lines and curves. True Type Font files use quadratic bezier curves.</p>
+
+                <canvas id="BezierCanvas"></canvas>
+
+                <p>Two connected points form an edge. An edge can be straight or curved. A closed loop of edges makes a contour. One or more contours make a glyph. In the image below, the green dots are points on the curve and the red dots are control points. The tangents connecting curve points to control points are also visible.</p>
+
+                <img class="img-fluid" src="images/blog_font_glyph_curves.png" alt="Glyph made out of contours" />
+
+                <h2>Code</h2>
+
+                <p>Let's define common data types.</p>
+
+<pre class="prettyprint linenums">typedef unsigned char u8;
+typedef char i8;
+
+typedef unsigned short u16;
+typedef short i16;
+
+typedef unsigned int u32;
+typedef int i32;
+
+typedef float f32;</pre>
+                <p>At some point glyphs will need to be converted to <a href="https://gabormakesgames.com/vectors.html">vertices</a>, let's make a <code>Point</code> struct for the verts. For conveniance, overload the <a href="blog_vectors_add.html">addition</a>, <a href="blog_vectors_subtract.html">subtraction</a> and <a href="blog_vectors_scale.html">multiplication (with a scalar)</a> operators.</p>
+
+<pre class="prettyprint linenums">struct Point {
+    f32 x;
+    f32 y;
+
+    inline Point() : x(0.0f), y(0.0f) { }
+    inline Point(f32 _x, f32 _y) : x(_x), y(_y) { }
+};
+
+inline Point operator+(const Point& a, const Point& b) {
+    return Point(a.x + b.x, a.y + b.y);
+}
+
+inline Point operator*(const Point& a, f32 b) {
+    return Point(a.x * b, a.y * b);
+}
+
+inline Point operator-(const Point& a, const Point& b) {
+    return Point(a.x - b.x, a.y - b.y);
+}</pre>                
+                <p>TTF files are stored with Big Endian byte order. Whenever an integer needs to be read, the byte order needs to be reversed. That's what code like this is doing:</p>
+
+<pre class="prettyprint linenums">u8* p;
+u32 a = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]; // Read big endian u32
+p += 4; // move sizeof(u32);
+u16 b = (p[0] << 8) | p[1]; // Read big endian u16
+p += 2; // move sizeof(u16)</pre> 
+
+                <p>You will find manual endian conversions like the above code snipped troughout the blog. To make reading / writing common data types easier, let's create helper functions to parse <code>i16</code>, <code>u16</code>, <code>i32</code>, <code>u32</code>, and <code>f32</code>.
+
+<pre class="prettyprint linenums">static inline i16 read_i16(u8** data) {
+    i16 result = (i16)(((*data)[0] << 8) | (*data)[1]);
+    *data += 2;
+    return result;
+}
+
+static inline u16 read_u16(u8** data) {
+    u16 result = (u16)(((*data)[0] << 8) | (*data)[1]);
+    *data += 2;
+    return result;
+}
+
+static inline i32 read_i32(u8** data) {
+    i32 result = (i32)(((*data)[0] << 24) | ((*data)[1] << 16) | ((*data)[2] << 8) | (*data)[3]);
+    *data += 4;
+    return result;
+}
+
+static inline u32 read_u32(u8** data) {
+    u32 result = (u32)(((*data)[0] << 24) | ((*data)[1] << 16) | ((*data)[2] << 8) | (*data)[3]);
+    *data += 4;
+    return result;
+}
+
+static inline f32 read_fixed(u8** data) {
+    u16 result = (i16)(((*data)[0] << 8) | (*data)[1]);
+    *data += 2;
+    return f32(result) / 16384.0f;
+}</pre> 
+
+            </div>
+        </div>
+    </body>
+</html>

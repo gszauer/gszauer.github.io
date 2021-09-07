@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <!--
@@ -71,119 +72,43 @@ M(0 + i * 1) = | 1  0  0 |
                | 0 -1  0 |
                | 0  0 -1 |
 -->
-  <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="quaternions.html">Introduction</a><a class="sidebar-item sidebar-active " href="blog_quats_create.html">Creating Quaternions</a><a class="sidebar-item" href="blog_quats_component.html">Component Operations</a><a class="sidebar-item" href="blog_quats_len_norm.html">Length, Normal, Dot</a><a class="sidebar-item" href="blog_quats_inverse.html">Inverse</a><a class="sidebar-item" href="blog_quats_multiply_quat.html">Multiplying Quaternions</a><a class="sidebar-item" href="blog_quats_multiply_vec.html">Multiplying Vectors</a><a class="sidebar-item" href="blog_quats_interpolate.html">Interpolating Quaternions</a><a class="sidebar-item sidebar-tab" href="blog_quats_neighborhood.html">Neighborhood</a><a class="sidebar-item" href="blog_quats_to_matrix.html">Quaternion to Matrix</a><a class="sidebar-item" href="blog_quats_summary.html">Summary</a></div>    
+            <div id="content">
+                <h1>Creating Quaternions</h1>
+                
+                <p>Creating quaternions is not trivial or intuitive at first. To understand why quaternions are created the way they are, it's important to understand how their imaginary components work. The most common way of creating quaternions is from an angle / axis pair.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
+                <h2>Angle Axis</h2>
 
-    <title>Gabor Makes Games</title>
+                 <p  class="callout">A rotation about an axis a by amount \(\theta\) can be represented on a sphere as any directed arc of length \(\frac{1}{2}\theta\) in the plane perpendicular to the axis, with positive angles giving a counter-clockwise direction around the axis.</p>
 
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+                 <p>The <code>w</code> component of a quaternion is given by \(cos(\frac{1}{2}\theta)\), or the <i>length</i> of the arc being rotated. The <code>w</code> component is not the angle of rotation, but it is related to the angle of rotation. As the angle of rotation increases, the <code>w</code> component of the quaternion decreases. Consider the following cosines:</p>
 
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
+				<ul>
+					<li>\(cos(0^{\circ}) = 1\)</li>
+					<li>\(cos(90^{\circ}) = 0\)</li>
+					<li>\(cos(180^{\circ}) = -1\)</li>
+					<li>\(cos(270^{\circ}) = 0\)</li>
+					<li>\(cos(360^{\circ}) = 1\)</li>
+				</ul>
 
-     <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+				<p>In order for <code>w</code> to decreases as \(\theta\) increases, it needs to be mapped to the \(1\) to \(-1\) range. This means the input needs to be in the range of \(cos(0^{\circ})\) and \(cos(180^{\circ})\). Getting the input to that range is simple, since a full rotation is \(cos(360^{\circ})\), simply divide \(\theta\) by 2</p>
 
-  </head>
+				<p>The rotation happens on a <i>plane perpendicular to the axis of rotation</i>. The normal of this plane is the (normalized) axis of rotation. The rotation axis needs to be scaled by \(sin(\frac{1}{2}\theta)\). Why scale the axis? To keep the quaternion <a href="blog_quats_len_norm.html">unit length</a>, this works because \(\sqrt{sin(\theta)^2 + cos(\theta)^2} = 1\), assuming \(\theta\) is the same.</p>
 
-  <body onload="renderMathInElement(document.body);">
+				<p>Like with matrices, a positive angle of rotation is a counter clockwise rotation. This might sound like a lot of potentially complicated information, but the code implementation is fairly straight forward:</p> 
 
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_quats_create.html" class="list-group-item active">2. Creating Quaternions</a>
-            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
-            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
-            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
-            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
-            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
-            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
-            <a href="blog_quats_neighborhood.html" class="list-group-item"><span class="pl-4">a. Neighborhood</span></a>
-            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
-            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Creating Quaternions</h2>
-
-          <p>Creating quaternions is not trivial or intuitive at first. To understand why quaternions are created the way they are, it's important to understand how their imaginary components work. The most common way of creating quaternions is from an angle / axis pair.</p>
-
-          <h4>Angle Axis</h4>
-          <!-- Found here: https://www.gamedev.net/forums/topic/698840-quaternion-why-divide-angle-by-2/ -->
-          <p  class="bs-callout bs-callout-default">A rotation about an axis a by amount \(\theta\) can be represented on a sphere as any directed arc of length \(\frac{1}{2}\theta\) in the plane perpendicular to the axis, with positive angles giving a counter-clockwise direction around the axis.</p>
-
-          <p>The <code>w</code> component of a quaternion is given by \(cos(\frac{1}{2}\theta)\), or the <i>length</i> of the arc being rotated. The <code>w</code> component is not the angle of rotation, but it is related to the angle of rotation. As the angle of rotation increases, the <code>w</code> component of the quaternion decreases. Consider the following cosines:</p>
-
-          <ul>
-          	<li>\(cos(0^{\circ}) = 1\)</li>
-          	<li>\(cos(90^{\circ}) = 0\)</li>
-          	<li>\(cos(180^{\circ}) = -1\)</li>
-          	<li>\(cos(270^{\circ}) = 0\)</li>
-          	<li>\(cos(360^{\circ}) = 1\)</li>
-          </ul>
-
-          <p>In order for <code>w</code> to decreases as \(\theta\) increases, it needs to be mapped to the \(1\) to \(-1\) range. This means the input needs to be in the range of \(cos(0^{\circ})\) and \(cos(180^{\circ})\). Getting the input to that range is simple, since a full rotation is \(cos(360^{\circ})\), simply divide \(\theta\) by 2</p>
-
-          	<p>The rotation happens on a <i>plane perpendicular to the axis of rotation</i>. The normal of this plane is the (normalized) axis of rotation. The rotation axis needs to be scaled by \(sin(\frac{1}{2}\theta)\). Why scale the axis? To keep the quaternion <a href="<a href="blog_quats_len_norm.html">unit length</a>, this works because \(\sqrt{sin(\theta)^2 + cos(\theta)^2} = 1\), assuming \(\theta\) is the same.</p>
-
-      		<p>Like with matrices, a positive angle of rotation is a counter clockwise rotation. This might sound like a lot of potentially complicated information, but the code implementation is fairly straight forward:</p> 
-
-<pre><code>Quaternion AngleAxis(float degrees, Vec3 axis) {
+<pre class="prettyprint linenums">Quaternion AngleAxis(float degrees, Vec3 axis) {
     float radians = degrees * 0.0174533f;
 
     if (MagnitudeSq(axis) != 1) { // Do epsilon check here!
@@ -197,47 +122,45 @@ M(0 + i * 1) = | 1  0  0 |
     result.w = cosf(radians * 0.5f);
 
     return result;
-}</code></pre>
-    
-    <p class="bs-callout bs-callout-default">Why \(\frac{\theta}{2}\)? Quaternions track 4\(\pi\) or 720 degrees of rotation. The \(\sin\) and \(cos\) functions have a period of 2\(\pi\) or 360 degrees. Dividing by 2 maps the angle of the quaternion to the period of \(sin\) / \(cos\). A more in-depth <a href="blog_quats_create_proof.html">explanation is here</a>.</p>
+}</pre>                
+				<p class="callout">Why \(\frac{\theta}{2}\)? Quaternions track 4\(\pi\) or 720 degrees of rotation. The \(\sin\) and \(cos\) functions have a period of 2\(\pi\) or 360 degrees. Dividing by 2 maps the angle of the quaternion to the period of \(sin\) / \(cos\). A more in-depth <a href="blog_quats_create_proof.html">explanation is here</a>.</p>
 
-          <h4>Shortest Arc (from to rotation)</h4>
-          <p>Finding the rotation between two points is best described in <a href="https://www.talisman.org/~erlkonig/misc/shoemake92-arcball.pdf">[Shoemake 92]</a>. Any two vectors can be considered points on a unit sphere when normalized. The shortest arc between these two vectors lies on a plane that contains both points and the center of the sphere (0, 0, 0). This plane is perpendicular to the rotation axis. The length of the arc is \(\frac{\theta}{2}\) where \(\theta\) is the angle between the two vectors.</p>
+              	<h2>Shortest Arc (from to rotation)</h2>
 
-          <p><img class="img-fluid" src="assets/arcball.png" alt="Shortest Arc Rotation" /></p>
+              	<p>Finding the rotation between two points is best described in <a href="https://www.talisman.org/~erlkonig/misc/shoemake92-arcball.pdf">[Shoemake 92]</a>. Any two vectors can be considered points on a unit sphere when normalized. The shortest arc between these two vectors lies on a plane that contains both points and the center of the sphere (0, 0, 0). This plane is perpendicular to the rotation axis. The length of the arc is \(\frac{\theta}{2}\) where \(\theta\) is the angle between the two vectors.</p>
 
-          <p>This means we have an axis of rotation and some rotation angle, given this information a quaternion is easy to construct. Find the axis of rotation by taking the cross product of the normalized input points, this results in a unit vector perpendicular to both. Find the angle of rotation between two vectors \(\vec{p0}\) and \(\vec{p1}\) can be found like so: \(\theta = \cos^{-1}(\frac{\vec{p0} \cdot \vec{p1}}{\|p0\| \|p1\|})\).</p>
+              	<img class="img-fluid" src="images/blog_quats_shortest.png" alt="Shortest Arc Rotation">
 
-          <p>Finding the angle between two vectors is pretty expensive and should be avoided if possible. Luckily, we can use the properties of the dot and cross products here. Since we know that \(\vec{p0}\) and \(\vec{p1}\) are normalized, the angle between them is the same as the arc-cosine of their dot products: \(\theta = cos^{1}(\hat{p0}\cdot\hat{p1})\). For quaternions, we care about the following relationship between the dot and cross products and sin and cos:</p>
+              	<p>This means we have an axis of rotation and some rotation angle, given this information a quaternion is easy to construct. Find the axis of rotation by taking the cross product of the normalized input points, this results in a unit vector perpendicular to both. Find the angle of rotation between two vectors \(\vec{p0}\) and \(\vec{p1}\) can be found like so: \(\theta = \cos^{-1}(\frac{\vec{p0} \cdot \vec{p1}}{\|p0\| \|p1\|})\).</p>
 
-          <ul>
-            <li>\((\hat{p1}\times\hat{p2})_{x} = sin(\theta) * perp_{x}\)</li>
-            <li>\((\hat{p1}\times\hat{p2})_{y} = sin(\theta) * perp_{y}\)</li>
-            <li>\((\hat{p1}\times\hat{p2})_{z} = sin(\theta) * perp_{z}\)</li>
-            <li>\(\hat{p1}\cdot\hat{p2} = cos(\theta)\)</li>
-          </ul>
+              	<p>Finding the angle between two vectors is pretty expensive and should be avoided if possible. Luckily, we can use the properties of the dot and cross products here. Since we know that \(\vec{p0}\) and \(\vec{p1}\) are normalized, the angle between them is the same as the arc-cosine of their dot products: \(\theta = cos^{1}(\hat{p0}\cdot\hat{p1})\). For quaternions, we care about the following relationship between the dot and cross products and sin and cos:</p>
+                
+				<ul>
+					<li>\((\hat{p1}\times\hat{p2})_{x} = sin(\theta) * perp_{x}\)</li>
+					<li>\((\hat{p1}\times\hat{p2})_{y} = sin(\theta) * perp_{y}\)</li>
+					<li>\((\hat{p1}\times\hat{p2})_{z} = sin(\theta) * perp_{z}\)</li>
+					<li>\(\hat{p1}\cdot\hat{p2} = cos(\theta)\)</li>
+				</ul>
 
-          <p>This should look familiar, since we can create a quaternion like so:</p>
+				<p>This should look familiar, since we can create a quaternion like so:</p>
 
-          <ul>
-            <li>\(x = sin(\frac{\theta}{2}) * axis_{x}\)</li>
-            <li>\(y = sin(\frac{\theta}{2}) * axis_{y}\)</li>
-            <li>\(z = sin(\frac{\theta}{2}) * axis_{z}\)</li>
-            <li>\(w = cos(\frac{\theta}{2})\)</li>
-          </ul>
+				<ul>
+					<li>\(x = sin(\frac{\theta}{2}) * axis_{x}\)</li>
+					<li>\(y = sin(\frac{\theta}{2}) * axis_{y}\)</li>
+					<li>\(z = sin(\frac{\theta}{2}) * axis_{z}\)</li>
+					<li>\(w = cos(\frac{\theta}{2})\)</li>
+				</ul>
 
-          <p>Comparing the above equations, we can use the dot and cross products to create a quaternion that rotates two times the distance between the given input vectors. The challenge that left is to somehow half that rotation. There are two ways to go about doing this:</p>
+				<p>Comparing the above equations, we can use the dot and cross products to create a quaternion that rotates two times the distance between the given input vectors. The challenge that left is to somehow half that rotation. There are two ways to go about doing this:</p>
 
-          <ul>
-            <li>Create a new vector half way between \(\hat{p0}\) and \(\hat{p1}\), then create a quaternion which is the rotation between \(\hat{p0}\) and this half way vector.</li>
-            <li>Create a quaternion that is the rotation between \(\hat{p0}\) and \(\hat{p1}\). This quaternion is twice the desired rotation. Create a new quaternion that rotates half way from identity to the quaternion from \(\hat{p0}\) and \(\hat{p1}\), normalize this quaternion.</li>
-          </ul>
+				<ul>
+					<li>Create a new vector half way between \(\hat{p0}\) and \(\hat{p1}\), then create a quaternion which is the rotation between \(\hat{p0}\) and this half way vector.</li>
+					<li>Create a quaternion that is the rotation between \(\hat{p0}\) and \(\hat{p1}\). This quaternion is twice the desired rotation. Create a new quaternion that rotates half way from identity to the quaternion from \(\hat{p0}\) and \(\hat{p1}\), normalize this quaternion.</li>
+				</ul>
 
-          <p>I prefer the half-way vector method personally. It's a bit easier to visualize and works very well. That being said, the half-way quaternion method is a little faster. There is one edge case with the half-way vector method, where \(\hat{p0} == -\hat{p1}\), in which case a unique half-way vector doesn't exist. Should this happen, use the shortest basis of \(\hat{p0}\) to find an orthogonal vector.</p>
+				<p>I prefer the half-way vector method personally. It's a bit easier to visualize and works very well. That being said, the half-way quaternion method is a little faster. There is one edge case with the half-way vector method, where \(\hat{p0} == -\hat{p1}\), in which case a unique half-way vector doesn't exist. Should this happen, use the shortest basis of \(\hat{p0}\) to find an orthogonal vector.</p>
 
-<!-- If my explanation isn't sufficient, an equally good one is available at: https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another -->
-
-<pre><code>Quaternion FromToRotation(Vector3 from, Vector3 to) {
+<pre class="prettyprint linenums">Quaternion FromToRotation(Vector3 from, Vector3 to) {
     Vector3 p0 = Normalize(from);
     Vector3 p1 = Normalize(to);
 
@@ -266,29 +189,28 @@ M(0 + i * 1) = | 1  0  0 |
     result.w = Dot(p0, half);
 
     return result;
-}</code></pre>
+}</pre>
+				<h2>Look At</h2>
 
-          <h4>Look At</h4>
+				<p>To implement a <i>Look At</i> function using only quaternions, three pieces of information are needed:</p>
 
-          <p>To implement a <i>Look At</i> function using only quaternions, three pieces of information are needed:</p>
+				<ul>
+					<li>The current forward direction, usually (0, 0, 1)</li>
+					<li>The target direction, (this is the new desired forward)</li>
+					<li>A reference for what <i>up</i> is, usually (0, 1, 0)</li>
+				</ul>
 
-          <ul>
-            <li>The current forward direction, usually (0, 0, 1)</li>
-            <li>The target direction, (this is the new desired forward)</li>
-            <li>A reference for what <i>up</i> is, usually (0, 1, 0)</li>
-          </ul>
+				<p>Step 1) Find the quaternion that rotates between forward and the target direction. This can be done with the existing from-to rotation method. This quaternion can rotate an object to the correct position, but the objects orientation would be all kinds of messed up. That needs to be corrected.</p>
 
-          <p>Step 1) Find the quaternion that rotates between forward and the target direction. This can be done with the existing from-to rotation method. This quaternion can rotate an object to the correct position, but the objects orientation would be all kinds of messed up. That needs to be corrected.</p>
+				<p>Step 2) To correct the orientation, a new rotation frame needs to be calculated. Find the reference right vector (cross direction and desired up). Then find the new up vector (perpendicular to direction and right) by taking the cross product of reference right and direction. This new up is the desired up direction of the rotated object.</p>
 
-          <p>Step 2) To correct the orientation, a new rotation frame needs to be calculated. Find the reference right vector (cross direction and desired up). Then find the new up vector (perpendicular to direction and right) by taking the cross product of reference right and direction. This new up is the desired up direction of the rotated object.</p>
+				<p>Step 3) Find the up vector of the quaternion from Step 1. This is trivial, multiply world up (0, 1, 0) by the quaternion from step 1. <a href="blog_quats_multiply_vec.html">Multiplying Vectors and Quaternions</a> will be covered later.</p>
 
-          <p>Step 3) Find the up vector of the quaternion from Step 1. This is trivial, multiply world up (0, 1, 0) by the quaternion from step 1. <a href="blog_quats_multiply_vec.html">Multiplying Vectors and Quaternions</a> will be covered later.</p>
+				<p>Step 4) Find a quaternion that rotates from the vector of step 2 (the desired object up) to the vector of step 3 (the current, incorrect object up). Again, this is done with the existing from-to rotation method.</p>
 
-          <p>Step 4) Find a quaternion that rotates from the vector of step 2 (the desired object up) to the vector of step 3 (the current, incorrect object up). Again, this is done with the existing from-to rotation method.</p>
+				<p>Step 5) Combine the quaternions from step 1 and step 4. Quaternions can be combined using <a href="blog_quats_multiply_quat.html">multiplication</a>, which will be covered later. Quaternion multiplication is reversed (left side multiply), if you want to apply step 1 first, it would be: <code>step 2 * step 1</code>. The code below rotates to the desired direction first, then corrects the rotation to have the correct up vector.</p>
 
-          <p>Step 5) Combine the quaternions from step 1 and step 4. Quaternions can be combined using <a href="blog_quats_multiply_quat.html">multiplication</a>, which will be covered later. Quaternion multiplication is reversed (left side multiply), if you want to apply step 1 first, it would be: <code>step 2 * step 1</code>. The code below rotates to the desired direction first, then corrects the rotation to have the correct up vector.</p>
-
-<pre><code>Quaternion LookAt(Vector3 direction, Vector3 desiredUp) {
+<pre class="prettyprint linenums">Quaternion LookAt(Vector3 direction, Vector3 desiredUp) {
     // Normalize input data
     direction = Normalize(direction);
     desiredUp = Normalize(desiredUp)
@@ -313,49 +235,29 @@ M(0 + i * 1) = | 1  0  0 |
 
     // Should not be needed, but normalize output data
     return Q_Normalize(result);
-}</code></pre>
+}</pre>
+				<p>The reason correcting the up direction works, any combination of rotations around a sphere can be achieved by just a singe rotation around that sphere. When quatenrions are combined, they describe all the rotations taken around the sphere, but only produce a single rotation.</p>
 
-      <p>The reason correcting the up direction works, any combination of rotations around a sphere can be achieved by just a singe rotation around that sphere. When quatenrions are combined, they describe all the rotations taken around the sphere, but only produce a single rotation.</p>
+				<h2>Finding the Axis</h2>
 
-        <h4>Getting the axis</h4>
+				<p>Getting the axis of rotation out of a quaternion is trivial, normalize the vector component of the quaternion:</p>
 
-          <p>Getting the axis of rotation out of a quaternion is trivial, normalize the vector component of the quaternion:</p>
-
-<pre><code>Vector3 GetAxis(Quaternion quat) {
+<pre class="prettyprint linenums">Vector3 GetAxis(Quaternion quat) {
   Vector3 axis = Vector3(quat.x, quat.y, quat.z);
   return Normalize(axis);
-}</code></pre>
-
-        <h4>Getting the angle</h4>
+}</pre>
+        <h2>Finding the angle</h2>
 
         <p>The \(w\) component of a quaternion is \(cos(\frac{\theta}{2})\). The angle is double the inverse cosine of the \(w\) component, like so:</p>
 
-<pre><code>float GetAngleDegrees(Quaternion quat) {
+<pre class="prettyprint linenums">float GetAngleDegrees(Quaternion quat) {
   return 2.0 * acos(quat.w) * 57.2958;
 }
 
 float GetAngleRadians(Quaternion quat) {
   return 2.0 * acos(quat.w);
-}</code></pre>
+}</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

@@ -1,100 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="animation.html">Introduction</a><a class="sidebar-item" href="blog_animation_curves.html">Curves</a><a class="sidebar-item" href="blog_animation_pose.html">Pose Generation</a><a class="sidebar-item sidebar-tab" href="blog_animation_frames.html">Frames</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_animation_tracks.html">Tracks</a><a class="sidebar-item sidebar-tab" href="blog_animation_transformtracks.html">Transform Track</a><a class="sidebar-item sidebar-tab" href="blog_animation_poses.html">Poses</a><a class="sidebar-item sidebar-tab" href="blog_animation_clips.html">Clips</a><a class="sidebar-item sidebar-tab" href="blog_animation_sample.html">Sample</a><a class="sidebar-item" href="blog_animation_skin.html">Skinning</a><a class="sidebar-item sidebar-tab" href="blog_animation_skinspace.html">Skin Space</a><a class="sidebar-item sidebar-tab" href="blog_animation_smoothskin.html">Smooth Skinning</a><a class="sidebar-item" href="blog_animation_blend.html">Pose Modification</a></div>    
+            <div id="content">
+                <h1>Tracks</h1>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>A track is a collection of frames, along with some information about how to interpolate them. Typically, a track class would contain the following members.</p>
 
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="animation.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
-            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
-            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
-            <a href="blog_animation_tracks.html" class="list-group-item active"><span class="pl-4">b. Tracks</span></a>
-            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
-            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
-            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
-            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
-            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
-            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
-            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
-            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Tracks</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-          <p>A track is a collection of frames, along with some information about how to interpolate them. Typically, a track class would contain the following members.</p>
-
-<pre><code>template&lt;typename T, int N&gt;
+<pre class="prettyprint linenums">template&lt;typename T, int N&gt;
 class Track {
 protected:
     std::vector&lt;Frame&lt;N&gt;&gt; mFrames;
@@ -105,38 +28,19 @@ public:
 
 typedef Track&lt;float, 1&gt; ScalarTrack;
 typedef Track&lt;vec3,  3&gt; VectorTrack;
-typedef Track&lt;quat,  4&gt; QuaternionTrack;</code></pre>
+typedef Track&lt;quat,  4&gt; QuaternionTrack;</pre>
 
-            <p>Representing a track this way means that each component is tied to the same time on the timeline. You can’t make a keyframe in the X component of the track without also adding a keyframe to the Y and Z components as well. The <code>vec3</code> track below shows how the X, Y and Z components of the vector have keyframes at the same time values, even if those frames are not needed.</p>
+                <p>Representing a track this way means that each component is tied to the same time on the timeline. You can’t make a keyframe in the X component of the track without also adding a keyframe to the Y and Z components as well. The <code>vec3</code> track below shows how the X, Y and Z components of the vector have keyframes at the same time values, even if those frames are not needed.</p>
 
-            <img class="img-fluid rounded" src="assets/transform_track.png" alt="Basic transform track" />
+                <img class="img-fluid" src="images/blog_animation_transform_track.png" alt="Basic transform track" />
 
-            <p>The most important function of the track is <code>Sample</code>. The signature of this function takes a floating point number and a boolean, the function returns a floating point number.</p>
+                <p>The most important function of the track is <code>Sample</code>. The signature of this function takes a floating point number and a boolean, the function returns a floating point number.</p>
 
-<pre><code>template&lt;typename T, int N&gt;
-T Track&lt;T, N&gt;::Sample(float time, bool looping);</code></pre>
+<pre class="prettyprint linenums">template&lt;typename T, int N&gt;
+T Track&lt;T, N&gt;::Sample(float time, bool looping);</pre>
+                <p>The <code>Sample</code> function starts byadjusting the time argument to be valid. For the time to be valid, it must fit within the start and end times of the track. Next, the function finds the frame index at the atjusted time.  This way, you can increment a timer, pass it in to the <code>Sample</code> function, and assign the result of the <code>Sample</code> function to that timer variable. The <code>Sample</code> function will kep the timer in a proper range.</p>
 
-            <p>The <code>Sample</code> function starts byadjusting the time argument to be valid. For the time to be valid, it must fit within the start and end times of the track. Next, the function finds the frame index at the atjusted time.  This way, you can increment a timer, pass it in to the <code>Sample</code> function, and assign the result of the <code>Sample</code> function to that timer variable. The <code>Sample</code> function will kep the timer in a proper range.</p>
-        
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

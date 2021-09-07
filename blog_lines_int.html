@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item" href="blog_lines_dda.html">Incremental</a><a class="sidebar-item sidebar-active " href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item" href="blog_lines_thick.html">Thickness</a><a class="sidebar-item" href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item" href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Integer Math</h1>
+
+                <!--p>It seems like every article i've read on the topic calls out that doing integer math is faster than doing floating point math. This was true when Bresenhams algorithm was written, but it's not true on modern hardware. <a href="https://www.youtube.com/watch?v=q79-Qh2suMY">Handmade Hero Chat 006 - Error-based Drawing Algorithms</a> touches on this briefley, always profile your code. Below is the result of profiling the code covered in thsi blog, the floating point incremental line method is faster than the integer one.</p-->
+
+                <p>The delta between integer and floating point performance exists, but it's very minor. Depending on the algorithm, using real numbers might even be faster. <a href="https://www.youtube.com/watch?v=q79-Qh2suMY">Handmade Hero Chat 006 - Error-based Drawing Algorithms</a> touches on this briefley. Below is the result of profiling the code covered in thsi blog, the floating point incremental line method is faster than the integer one, while the opposite is true for the error based method.</p>
+
+                <img class="img-fluid" src="images/blog_lines_time.png" alt="Profiling DrawLine" />
+
+                <p>Accumulating floating point numbers can create precision errors. If you want to draw very large lines, eventually what is drawn might drift off the true line. Accumulating integer lines avoids this problem.</p>
+
+                <h2>Rational Numbers</h2>
+
+                <p>To implement an integer only line drawing function, we need to start doing math with fractions instead of float's. So instead of \(0.5 + 0.5 = 1\), we will express this as \(\frac{1}{2} + \frac{1}{2} = \frac{2}{2}\). To draw lines, we only need to know how add two fractions, which is pretty easy so long as they both have the same denominator:</p>
+
+                <p>
+                    $$
+                        \frac{20}{30} + \frac{20}{30} = \frac{40}{30} = 1\frac{10}{30}
+                    $$
+                </p>
+
+                <p>To add two fractions with like denominators, add the numerators together. A fraction is greater than 1 if the numerator is greater than the denominator. Here is a demonstration in code:</p>
+
+<pre class="prettyprint linenums">struct Fraction {
+    int numerator;
+    int denominator;
+}
+
+struct Number {
+    int whole;
+    Fraction part;
+}
+
+Number Add(Number a, Number b) {
+    assert(a.denominator == b.denominator);
+
+    Number result;
+    result.part.denominator = a.denominator;
+
+    result.whole = a.whole + b.whole;
+
+    // Add Fraction
+    result.part.numerator = a.part.numerator + b.part.numerator;
+
+    // Handle overflow
+    if (result.part.numerator >= result.part.denominator) {
+        result.part.numerator -= result.part.denominator;
+        result.whole += 1;
+    }
+
+    return result;
+}</pre>
+            <h2>Integer only Incremental line</h2>
+                
+            <p>Let's re-factor the last version of the <code>Line</code> function to use integers instead of floating point numbers. First, we have to break up the <code>x</code> and <code>y</code> floating point variables into three integers (number, numerator, and denominator) each. The denominator for both of the numbers is the <code>steps</code> variable, which is the length of the primary axis. For a simple example, let's consider how we would loop to increment only <code>y</code>.</p> 
+
+<pre class="prettyprint linenums">int steps = max(abs(x1 - x0), abs(y1 - y0));
+float yDelta = float(y1 - y0);
+float yStep = yDelta / float(steps);
+float y = float(y0);
+
+for (int i = 0; i <= steps; ++i) {
+    y += yStep;
+}</pre>
+        <p>To convert this to integer math, create integers for the whole number, numerator and denominator that will represent <code>y</code>. On each iteration, increment the numerator by <code>yDelta</code>. The reason we can add just <code>yDelta</code> instead of <code>yDelta / steps</code> is because the denominator of <code>y</code> is also <code>steps</code>. The numbers have a common denominator, which does not change with addition. If the numerator is greater than the denominator, increase the whole number part of <code>y</code>. If it's less than 0, decrease <code>y</code>.</p>
+
+<pre class="prettyprint linenums">int steps = max(abs(x1 - x0), abs(y1 - y0));
+int yDelta = y1 - y0; // Now an int as well.
+int yWhole = y0;
+int yNumerator = 0;
+int yDenominator = steps;
+
+for (int i = 0; i <= steps; ++i) {
+    yNumerator += yDelta;
+    if (yNumerator >= yDenominator) {
+        yWhole += 1;
+        yNumerator -= yDenominator;
+    }
+    else if (yNumerator < 0) {
+        yWhole -= 1;
+        yNumerator += yDenominator;
+    }
+}</pre>
+    <p>Instead of adding \(\Delta Y\) to the numerator, we could add the absolute value of \(\Delta Y\). This would eliminate the need to check if the numerator is less than 0, as it would only ever increase. Next, instead of always adding one to the whole number, we can create a direction variable that goes towards the next point. I've also removed the <code>yDenominator</code> variable, since it's a constant for <code>steps</code></p>
+
+<pre class="prettyprint linenums">int steps = max(absXDelta, absYDelta);
+int absYDelta = abs(y1 - y0);
+int yWhole = y0;
+int yNumerator = 0;
+
+int yDir = y0 < y1 ? 1 : -1;
+
+for (int i = 0; i <= steps; ++i) {
+    yNumerator += absYDelta;
+    if (yNumerator >= steps) {
+        y += yDir;
+        yNumerator -= steps;
+    }
+}</pre>
+        <p>We apply this logic to drawing a line by increasing both the <code>x</code> and <code>y</code> variables and plotting the current pixel. The value of either <code>absXDelta</code> or <code>absYDelta</code> will always be <code>1</code>.</p>
+
+<pre class="prettyprint linenums">void Line(Image& image, int x0, int y0, int x1, int y1, Color& val) {
+    int absXDelta = abs(x1 - x0);
+    int absYDelta = abs(y1 - y0);
+
+    int steps = max(absXDelta, absYDelta);
+    int xDir = x0 < x1 ? 1 : -1;
+    int yDir = y0 < y1 ? 1 : -1;
+
+    int x = x0, xNumerator = 0;
+    int y = y0, yNumerator = 0;
+
+    for (int i = 0; i <= steps; ++i) {
+        PutPixel(image, x, y, val);
+
+        xNumerator += absXDelta;
+        if (xNumerator >= steps) {
+            x += xDir;
+            xNumerator -= steps;
+        }
+
+        yNumerator += absYDelta;
+        if (yNumerator >= steps) {
+            y += yDir;
+            yNumerator -= steps;
+        }
+    }
+}</pre>
+<!--
+FROM
+int y = y0 + round( (x-x0) * (y1-y0) / (x1-x0) )
+				
+TO
+int dx = (x1-x0);
+int dy = (y1-y0);
+
+int remainder = (x-x0) * dy % dx;
+int remlimit = (dx+1)/2; //round up
+
+int y = y0 + (x-x0) * dy / dx;
+for (int x = x1; x < x2; ++x) {
+    if (rem >= remlimit) {
+        PutPixel(image, x, y);
+
+        remainder-=dx;
+        y+=1;
+    }
+}
+-->
+
+            </div>
+        </div>
+    </body>
+</html>

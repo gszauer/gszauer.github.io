@@ -1,226 +1,146 @@
+
 <!DOCTYPE html>
 <html lang="en">
-    <!-- https://www.youtube.com/watch?time_continue=1&v=jlskQDR8-bY -->
-  <head>
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="quaternions.html">Introduction</a><a class="sidebar-item" href="blog_quats_create.html">Creating Quaternions</a><a class="sidebar-item" href="blog_quats_component.html">Component Operations</a><a class="sidebar-item" href="blog_quats_len_norm.html">Length, Normal, Dot</a><a class="sidebar-item" href="blog_quats_inverse.html">Inverse</a><a class="sidebar-item sidebar-active " href="blog_quats_multiply_quat.html">Multiplying Quaternions</a><a class="sidebar-item" href="blog_quats_multiply_vec.html">Multiplying Vectors</a><a class="sidebar-item" href="blog_quats_interpolate.html">Interpolating Quaternions</a><a class="sidebar-item sidebar-tab" href="blog_quats_neighborhood.html">Neighborhood</a><a class="sidebar-item" href="blog_quats_to_matrix.html">Quaternion to Matrix</a><a class="sidebar-item" href="blog_quats_summary.html">Summary</a></div>    
+            <div id="content">
+                <h1>Multiplying Quaternions</h1>
 
+                <p>To understand <a href="https://www.youtube.com/watch?v=CRiR2eY5R_s">quaternion multiplication</a> we need to get familiar with imaginary numbers and the \(ijk\) notation of quaternions. <b>Quaternions left multiply (post multiplication)</b>. If there are two quaternions, \(q\) which rotates 90 degrees on the x axis and \(p\) which rotates 30 degrees ont he y axis, then \(qp\) will rotate on the y axis first, then the x axis.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
+                <h2>Distribute</h2>
 
-    <title>Gabor Makes Games</title>
+                <p>We're going to start off with two quaternions, \(q\) with components \((q_0, q_1, q_2), q_3\) and \(p\) with components \((p_0, p_1, p_2), p_3\). These are in vector scalar notation with elements 0, 1, and 2 being the vector part and element 3 being the scalar part. Let's rewrite the quaternions in \(ijk\) notation. I'll color code the imaginary numbers.</p>
 
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+                <p>$$ 
+                    q = q_0\textcolor{red}{i} + q_1\textcolor{green}{j} + q_2\textcolor{blue}{k} + q_3 \\
+                    p = p_0\textcolor{red}{i} + p_1\textcolor{green}{j} + p_2\textcolor{blue}{k} + p_3 
+                  $$ </p>
 
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
+                <p>To multiply quaternions \(q\) and \(p\) together, distribute all of the components of \(p\) to the components of \(q\). For example the real component of \(p\), \(p_3\) distributes to \(q\) like so: \(p_3 q_0\textcolor{red}{i} + p_3 q_1\textcolor{green}{j} + p_3 q_2\textcolor{blue}{k} + p_3 q_3\). Distributing one of the components with an imaginary number is a little more complicated.</p>
 
-     <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+                <p>When distributing a component with an imaginary number, combine the real and imaginary componetns seperateley making sure to keep the order of the imaginary numbers. For example, \(p_0\textcolor{red}{i}\) would distribute to \(q\) like so: 
+                \(
+                    p_0 q_0 \textcolor{red}{i^2} + p_0 q_1 \textcolor{red}{i}\textcolor{green}{j} + p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k} + p_0 q_3 \textcolor{red}{i}
+                \). Notice how the real numbers combine first, then the imaginary ones. Because we're distributing \(p_0\textcolor{red}{i}\), the \(\textcolor{red}{i}\) imaginary number always comes first, and every term has an \(\textcolor{red}{i}\) component.</p>
 
-  </head>
+                <p>Doing the distribution for every component, \(qp\) looks like this:</p>
+               
+                <p>$$ qp = 
+                \begin{alignedat}{6}
+                      &p_0 q_0 \textcolor{red}{i^2}                  & {+} &p_0 q_1 \textcolor{red}{i}\textcolor{green}{j}  & {+} &p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
+                      &p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &p_1 q_1 \textcolor{green}{j^2}                  & {+} &p_1 q_2 \textcolor{green}{j}\textcolor{blue}{k} & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
+                      &p_2 q_0 \textcolor{blue}{k}\textcolor{red}{i} & {+} &p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &p_2 q_2 \textcolor{blue}{k^2}                   & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
+                      &p_3 q_0 \textcolor{red}{i}                    & {+} &p_3 q_1 \textcolor{green}{j}                    & {+} &p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
+                \end{alignedat} $$</p>
 
-  <body onload="renderMathInElement(document.body);">
+                <p>Let's try to get rid of those imaginary numbers. We know that \(\textcolor{red}{i^{2}} = -1\), \(\textcolor{green}{j^{2}} = -1\) and \(\textcolor{blue}{k^{2}} = -1\). These can be substituted right away:</p>
 
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
-            <a href="blog_quats_component.html" class="list-group-item">3. Component Operations</a>
-            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
-            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
-            <a href="blog_quats_multiply_quat.html" class="list-group-item active">6. Multiplying Quaternions</a>
-            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
-            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
-            <a href="blog_quats_neighborhood.html" class="list-group-item"><span class="pl-4">a. Neighborhood</span></a>
-            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
-            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Multiplying Quaternions</h2>
-
-          <p>To understand <a href="https://www.youtube.com/watch?v=CRiR2eY5R_s">quaternion multiplication</a> we need to get familiar with imaginary numbers and the \(ijk\) notation of quaternions. <b>Quaternions left multiply</b>. If there are two quaternions, \(q\) which rotates 90 degrees on the x axis and \(p\) which rotates 30 degrees ont he y axis then \(qp\) will rotate on the y axis first, then the x axis.</p>
-
-          <h4>Distribute</h4>
-
-          <p>We're going to start off with two quaternions, \(q\) with components \((q_0, q_1, q_2), q_3\) and \(p\) with components \((p_0, p_1, p_2), p_3\). These are in vector scalar notation with elements 0, 1, and 2 being the vector part and element 3 being the scalar part. Let's rewrite the quaternions in \(ijk\) notation. I'll color code the imaginary numbers.</p>
-
-          <p>$$ 
-            q = q_0\textcolor{red}{i} + q_1\textcolor{green}{j} + q_2\textcolor{blue}{k} + q_3 \\
-            p = p_0\textcolor{red}{i} + p_1\textcolor{green}{j} + p_2\textcolor{blue}{k} + p_3 
-          $$ </p>
-
-          <p>To multiply quaternions \(q\) and \(p\) together, distribute all of the components of \(p\) to the components of \(q\). For example the real component of \(p\), \(p_3\) distributes to \(q\) like so: \(p_3 q_0\textcolor{red}{i} + p_3 q_1\textcolor{green}{j} + p_3 q_2\textcolor{blue}{k} + p_3 q_3\). Distributing one of the components with an imaginary number is a little more complicated.</p>
-
-          <p>When distributing a component with an imaginary number, combine the real and imaginary componetns seperateley making sure to keep the order of the imaginary numbers. For example, \(p_0\textcolor{red}{i}\) would distribute to \(q\) like so: 
-            \(
-                p_0 q_0 \textcolor{red}{i^2} + p_0 q_1 \textcolor{red}{i}\textcolor{green}{j} + p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k} + p_0 q_3 \textcolor{red}{i}
-            \). Notice how the real numbers combine first, then the imaginary ones. Because we're distributing \(p_0\textcolor{red}{i}\), the \(\textcolor{red}{i}\) imaginary number always comes first, and every term has an \(\textcolor{red}{i}\) component.</p>
-
-          <p>Doing the distribution for every component, \(qp\) looks like this:</p>
-
-          <p>
-            $$ qp = 
-            \begin{alignedat}{6}
-                  &p_0 q_0 \textcolor{red}{i^2}                  & {+} &p_0 q_1 \textcolor{red}{i}\textcolor{green}{j}  & {+} &p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
-                  &p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &p_1 q_1 \textcolor{green}{j^2}                  & {+} &p_1 q_2 \textcolor{green}{j}\textcolor{blue}{k} & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
-                  &p_2 q_0 \textcolor{blue}{k}\textcolor{red}{i} & {+} &p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &p_2 q_2 \textcolor{blue}{k^2}                   & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
-                  &p_3 q_0 \textcolor{red}{i}                    & {+} &p_3 q_1 \textcolor{green}{j}                    & {+} &p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
-            \end{alignedat} $$
-          </p>
-
-          <p>Let's try to get rid of those imaginary numbers. We know that \(\textcolor{red}{i^{2}} = -1\), \(\textcolor{green}{j^{2}} = -1\) and \(\textcolor{blue}{k^{2}} = -1\). These can be substituted right away:</p>
-
-          <p>
-            $$ qp = 
-            \begin{alignedat}{6}
-                  &\mathbf{(p_0 q_0 * \textcolor{red}{-1})}               & {+} &         p_0 q_1 \textcolor{red}{i}\textcolor{green}{j}  & {+} &         p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
-                  &         p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &\mathbf{(p_1 q_1 * \textcolor{green}{-1})}               & {+} &         p_1 q_2 \textcolor{green}{j}\textcolor{blue}{k} & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
-                  &         p_2 q_0 \textcolor{blue}{k}\textcolor{red}{i} & {+} &         p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &\mathbf{(p_2 q_2 \textcolor{blue}{-1})}                  & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
-                  &         p_3 q_0 \textcolor{red}{i}                    & {+} &         p_3 q_1 \textcolor{green}{j}                    & {+} &         p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
-            \end{alignedat} $$
-          </p>
-
-          <p>But, what do we do with the imaginary numbers like \(\textcolor{red}{i}\textcolor{green}{j}\) or \(\textcolor{blue}{k}\textcolor{red}{i}\)? This is where the formula \(\textcolor{red}{i^{2}} = \textcolor{green}{j^{2}} = \textcolor{blue}{k^{2}} = \textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k} = -1\) is needed.</p>
-         
-          <h4>ijk = -1</h4>
-
-          <p>We can use the formula \(\textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k} = -1\) to figure out the values for elements like \(\textcolor{green}{j}\textcolor{blue}{k}\) in the quaternion multiplication formula. Start by multiplying both sides of the equation by \(\textcolor{red}{i}\), like so: \(\textcolor{red}{i}(\textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k}) = -\textcolor{red}{i}\). Distributing \(\textcolor{red}{i}\) leaves us with \(\textcolor{red}{i^2}\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\). Since \(\textcolor{red}{i^{2}} = -1\), we can substitute \(\textcolor{red}{i^{2}}\) to get: \(-\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\). If \(-\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\), then \(\textcolor{green}{j}\textcolor{blue}{k} = \textcolor{red}{i}\). </p>
-
-          <p>The values for \(\textcolor{blue}{k}\textcolor{red}{i}\) and \(\textcolor{red}{i}\textcolor{green}{j}\) can be found in a similar fashion to the vaue of \(\textcolor{green}{j}\textcolor{blue}{k}\):</p>
-
-          <ul>
-            <li>
-                \( ijk = -1 \rightarrow i(ijk) = -i \rightarrow i^{2}jk = -i \rightarrow -jk = -i \rightarrow \mathbf{\textcolor{green}{j}\textcolor{blue}{k} = \textcolor{red}{i}} \)
-            </li>
-            <li>
-                \( j(ijk) = -j \rightarrow ji(jk) = -j \rightarrow ji = -j(jk) \rightarrow ji = -j^{2}k \rightarrow ji^{2} = -j^{2}ki \rightarrow -j = -j^{2}ki \rightarrow -j = -ki \rightarrow \mathbf{\textcolor{green}{j} = \textcolor{blue}{k}\textcolor{red}{i}} \)
-            </li>
-            <li>
-                \( ijk = -1 \rightarrow k(ijk) = -k \rightarrow (kij)k = -k \rightarrow  k = -k(kij) \rightarrow k = -k^{2}ij \rightarrow \mathbf{\textcolor{blue}{k} = \textcolor{red}{i}\textcolor{green}{j}} \)
-            </li>
-          </ul>
-
-          <p>These values can now be substituted into the multiplication formula from above:</p>
-
-          <p>
-            $$ qp = 
-            \begin{alignedat}{6}
-                  &(\textcolor{red}{-}p_0 q_0)                                      & {+} &             \mathbf{p_0 q_1 \textcolor{blue}{k}}                    & {+} &                    p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
-                  &                   p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &(\textcolor{green}{-}p_1 q_1)                                        & {+} &            \mathbf{p_1 q_2 \textcolor{red}{i}}                     & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
-                  &           \mathbf{p_2 q_0 \textcolor{green}{j}}                 & {+} &                     p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &(\textcolor{blue}{-}p_2 q_2)                                        & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
-                  &                   p_3 q_0 \textcolor{red}{i}                    & {+} &                     p_3 q_1 \textcolor{green}{j}                    & {+} &                    p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
-            \end{alignedat} $$
-          </p>
-
-          <p>The goal is to get every component of the above equation to jave a either single imaginary number or no imaginary number. This leaves three unaccounted for imaginary numbers: \(\textcolor{red}{i}\textcolor{blue}{k}\), \(\textcolor{green}{j}\textcolor{red}{i}\) and \(\textcolor{blue}{k}\textcolor{green}{j}\). You may notice that these are in reverse order to the ones we found in the last step. When you flip the order of these numbers, just negate the result, like so: </p>
-
-          <ul>
-            <li>\( \textcolor{red}{i} = \textcolor{green}{j}\textcolor{blue}{k}  \)</li>
-            <li>\( -\textcolor{red}{i} = \textcolor{blue}{k}\textcolor{green}{j} \)</li>
-            <li>\( \textcolor{green}{j} = \textcolor{blue}{k}\textcolor{red}{i}  \)</li>
-            <li>\( -\textcolor{green}{j} = \textcolor{red}{i}\textcolor{blue}{k} \)</li>
-            <li>\( \textcolor{blue}{k} = \textcolor{red}{i}\textcolor{green}{j}  \)</li>
-            <li>\( -\textcolor{blue}{k} = \textcolor{green}{j}\textcolor{red}{i} \)</li>
-          </ul>
-
-           <p class="bs-callout bs-callout-default">The math for proving the values of \(\textcolor{red}{i}\textcolor{blue}{k}\), \(\textcolor{green}{j}\textcolor{red}{i}\) and \(\textcolor{blue}{k}\textcolor{green}{j}\) is skipped because it's similar to \(\textcolor{blue}{k}\textcolor{red}{i}\) and \(\textcolor{red}{i}\textcolor{green}{j}\) and \(\textcolor{green}{j}\textcolor{blue}{k}\). If the process of finding these values is confusing, <a href="https://youtu.be/jlskQDR8-bY?t=443">this video</a> does a great job of explaining how to find them. The linked video assumes quaternions to be in a \(w, x, y, z\) format instead of the \(x, y, z, w\) format used here.</p>
+                <p>$$ qp = 
+                \begin{alignedat}{6}
+                      &\mathbf{(p_0 q_0 * \textcolor{red}{-1})}               & {+} &         p_0 q_1 \textcolor{red}{i}\textcolor{green}{j}  & {+} &         p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
+                      &         p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &\mathbf{(p_1 q_1 * \textcolor{green}{-1})}               & {+} &         p_1 q_2 \textcolor{green}{j}\textcolor{blue}{k} & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
+                      &         p_2 q_0 \textcolor{blue}{k}\textcolor{red}{i} & {+} &         p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &\mathbf{(p_2 q_2 \textcolor{blue}{-1})}                  & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
+                      &         p_3 q_0 \textcolor{red}{i}                    & {+} &         p_3 q_1 \textcolor{green}{j}                    & {+} &         p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
+                \end{alignedat} $$</p>
 
 
-          <p>We can finsh the multiplication formula by substituting these values:</p>
+                <p>But, what do we do with the imaginary numbers like \(\textcolor{red}{i}\textcolor{green}{j}\) or \(\textcolor{blue}{k}\textcolor{red}{i}\)? This is where the formula \(\textcolor{red}{i^{2}} = \textcolor{green}{j^{2}} = \textcolor{blue}{k^{2}} = \textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k} = -1\) is needed.</p>
 
-          <p>
-            $$ qp = 
-            \begin{alignedat}{6}
-                  &         (\textcolor{red}{-}p_0 q_0)                      & {+} &                           p_0 q_1 \textcolor{blue}{k}  & {+} &\mathbf{(\textcolor{green}{-}p_0 q_2 \textcolor{green}{j})}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
-                  &\mathbf{(\textcolor{blue}{-}p_1 q_0 \textcolor{blue}{k})} & {+} &      (\textcolor{green}{-}p_1 q_1)                     & {+} &                             p_1 q_2 \textcolor{red}{i}       & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
-                  &                            p_2 q_0 \textcolor{green}{j}  & {+} &\mathbf{(\textcolor{red}{-}p_2 q_1 \textcolor{red}{i})} & {+} &         (\textcolor{blue}{-}p_2 q_2)                         & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
-                  &                            p_3 q_0 \textcolor{red}{i}    & {+} &                           p_3 q_1 \textcolor{green}{j} & {+} &                             p_3 q_2 \textcolor{blue}{k}      & {+} &p_3 q_3                     & 
-            \end{alignedat} $$
-          </p>
+                <h2>ijk = -1</h2>
 
-          <p>Numbers with different imaginary components can't be added together. For example adding\(p_2 q_0 \textcolor{green}{j} \) and \(p_3 q_0 \textcolor{red}{i}\) is impossible. To fix this, grouping like terms together:</p>
+                <p>We can use the formula \(\textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k} = -1\) to figure out the values for elements like \(\textcolor{green}{j}\textcolor{blue}{k}\) in the quaternion multiplication formula. Start by multiplying both sides of the equation by \(\textcolor{red}{i}\), like so: \(\textcolor{red}{i}(\textcolor{red}{i}\textcolor{green}{j}\textcolor{blue}{k}) = -\textcolor{red}{i}\). Distributing \(\textcolor{red}{i}\) leaves us with \(\textcolor{red}{i^2}\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\). Since \(\textcolor{red}{i^{2}} = -1\), we can substitute \(\textcolor{red}{i^{2}}\) to get: \(-\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\). If \(-\textcolor{green}{j}\textcolor{blue}{k} = -\textcolor{red}{i}\), then \(\textcolor{green}{j}\textcolor{blue}{k} = \textcolor{red}{i}\). </p>
 
-          <p>
-            $$ qp = 
-            \begin{alignedat}{6}
-                & \phantom{+} &p_0 q_3 \textcolor{red}{i}   & {+} &p_1 q_2 \textcolor{red}{i}   & {-} &p_2 q_1 \textcolor{red}{i}   & {+} &p_3 q_0 \textcolor{red}{i}   & {,} \\
-                &         {-} &p_0 q_2 \textcolor{green}{j} & {+} &p_1 q_3 \textcolor{green}{j} & {+} &p_2 q_0 \textcolor{green}{j} & {+} &p_3 q_1 \textcolor{green}{j} & {,} \\
-                & \phantom{+} &p_0 q_1 \textcolor{blue}{k}  & {-} &p_1 q_0 \textcolor{blue}{k}  & {+} &p_2 q_3 \textcolor{blue}{k}  & {+} &p_3 q_2 \textcolor{blue}{k}  & {,} \\
-                &         {-} &p_0 q_0                      & {-} &p_1 q_1                      & {-} &p_2 q_2                      & {+} &p_3 q_3  
-            \end{alignedat}
-             $$
-          </p>
+                <p>The values for \(\textcolor{blue}{k}\textcolor{red}{i}\) and \(\textcolor{red}{i}\textcolor{green}{j}\) can be found in a similar fashion to the vaue of \(\textcolor{green}{j}\textcolor{blue}{k}\):</p>
 
-          <p>Changing from \(ijk\) notation back to vector scalar notation leaves us with the formula for quaternion multiplication. In the formula below elements 0, 1 and 2 are the vector part and element 3 is the scalar part of the resulting quaternion:</p>
+                <ul>
+                    <li>
+                        \( ijk = -1 \rightarrow i(ijk) = -i \rightarrow i^{2}jk = -i \rightarrow -jk = -i \rightarrow \mathbf{\textcolor{green}{j}\textcolor{blue}{k} = \textcolor{red}{i}} \)
+                    </li>
+                    <li>
+                        \( j(ijk) = -j \rightarrow ji(jk) = -j \rightarrow ji = -j(jk) \rightarrow ji = -j^{2}k \rightarrow ji^{2} = -j^{2}ki \rightarrow -j = -j^{2}ki \rightarrow -j = -ki \rightarrow \mathbf{\textcolor{green}{j} = \textcolor{blue}{k}\textcolor{red}{i}} \)
+                    </li>
+                    <li>
+                        \( ijk = -1 \rightarrow k(ijk) = -k \rightarrow (kij)k = -k \rightarrow  k = -k(kij) \rightarrow k = -k^{2}ij \rightarrow \mathbf{\textcolor{blue}{k} = \textcolor{red}{i}\textcolor{green}{j}} \)
+                    </li>
+                  </ul>
 
-          <p>
-            $$  
-            qp_0 = \phantom{+}p_0 q_3 + p_1 q_2 - p_2 q_1 + p_3 q_0 \\
-            qp_1 =           -p_0 q_2 + p_1 q_3 + p_2 q_0 + p_3 q_1 \\
-            qp_2 = \phantom{+}p_0 q_1 - p_1 q_0 + p_2 q_3 + p_3 q_2 \\
-            qp_3 =           -p_0 q_0 - p_1 q_1 - p_2 q_2 + p_3 q_3  
-             $$
-          </p>
+                  <p>These values can now be substituted into the multiplication formula from above:</p>
 
-            <p class="bs-callout bs-callout-default">When multiplying \(q\) and \(p\) together keep in mind that quaternions left multiply. This means when performing \(qp\), the rotation of \(p\) is applied first, then the rotation of \(q\)</p>
+                  <p>
+                    $$ qp = 
+                    \begin{alignedat}{6}
+                          &(\textcolor{red}{-}p_0 q_0)                                      & {+} &             \mathbf{p_0 q_1 \textcolor{blue}{k}}                    & {+} &                    p_0 q_2 \textcolor{red}{i}\textcolor{blue}{k}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
+                          &                   p_1 q_0 \textcolor{green}{j}\textcolor{red}{i}& {+} &(\textcolor{green}{-}p_1 q_1)                                        & {+} &            \mathbf{p_1 q_2 \textcolor{red}{i}}                     & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
+                          &           \mathbf{p_2 q_0 \textcolor{green}{j}}                 & {+} &                     p_2 q_1 \textcolor{blue}{k}\textcolor{green}{j} & {+} &(\textcolor{blue}{-}p_2 q_2)                                        & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
+                          &                   p_3 q_0 \textcolor{red}{i}                    & {+} &                     p_3 q_1 \textcolor{green}{j}                    & {+} &                    p_3 q_2 \textcolor{blue}{k}                     & {+} &p_3 q_3                     & 
+                    \end{alignedat} $$
+                  </p>
+
+                  <p>The goal is to get every component of the above equation to jave a either single imaginary number or no imaginary number. This leaves three unaccounted for imaginary numbers: \(\textcolor{red}{i}\textcolor{blue}{k}\), \(\textcolor{green}{j}\textcolor{red}{i}\) and \(\textcolor{blue}{k}\textcolor{green}{j}\). You may notice that these are in reverse order to the ones we found in the last step. When you flip the order of these numbers, just negate the result, like so: </p>
+
+                <ul>
+                    <li>\( \textcolor{red}{i} = \textcolor{green}{j}\textcolor{blue}{k}  \)</li>
+                    <li>\( -\textcolor{red}{i} = \textcolor{blue}{k}\textcolor{green}{j} \)</li>
+                    <li>\( \textcolor{green}{j} = \textcolor{blue}{k}\textcolor{red}{i}  \)</li>
+                    <li>\( -\textcolor{green}{j} = \textcolor{red}{i}\textcolor{blue}{k} \)</li>
+                    <li>\( \textcolor{blue}{k} = \textcolor{red}{i}\textcolor{green}{j}  \)</li>
+                    <li>\( -\textcolor{blue}{k} = \textcolor{green}{j}\textcolor{red}{i} \)</li>
+                </ul>
+
+                 <p class="callout">The math for proving the values of \(\textcolor{red}{i}\textcolor{blue}{k}\), \(\textcolor{green}{j}\textcolor{red}{i}\) and \(\textcolor{blue}{k}\textcolor{green}{j}\) is skipped because it's similar to \(\textcolor{blue}{k}\textcolor{red}{i}\) and \(\textcolor{red}{i}\textcolor{green}{j}\) and \(\textcolor{green}{j}\textcolor{blue}{k}\). If the process of finding these values is confusing, <a href="https://youtu.be/jlskQDR8-bY?t=443">this video</a> does a great job of explaining how to find them. The linked video assumes quaternions to be in a \(w, x, y, z\) format instead of the \(x, y, z, w\) format used here.</p>
+
+                 <p>We can finsh the multiplication formula by substituting these values:</p>
+
+                <p>
+                $$ qp = 
+                \begin{alignedat}{6}
+                &         (\textcolor{red}{-}p_0 q_0)                      & {+} &                           p_0 q_1 \textcolor{blue}{k}  & {+} &\mathbf{(\textcolor{green}{-}p_0 q_2 \textcolor{green}{j})}   & {+} &p_0 q_3 \textcolor{red}{i}  & {+} \\
+                &\mathbf{(\textcolor{blue}{-}p_1 q_0 \textcolor{blue}{k})} & {+} &      (\textcolor{green}{-}p_1 q_1)                     & {+} &                             p_1 q_2 \textcolor{red}{i}       & {+} &p_1 q_3 \textcolor{green}{j}& {+} \\
+                &                            p_2 q_0 \textcolor{green}{j}  & {+} &\mathbf{(\textcolor{red}{-}p_2 q_1 \textcolor{red}{i})} & {+} &         (\textcolor{blue}{-}p_2 q_2)                         & {+} &p_2 q_3 \textcolor{blue}{k} & {+} \\
+                &                            p_3 q_0 \textcolor{red}{i}    & {+} &                           p_3 q_1 \textcolor{green}{j} & {+} &                             p_3 q_2 \textcolor{blue}{k}      & {+} &p_3 q_3                     & 
+                \end{alignedat} $$
+                </p>
+
+                <p>Numbers with different imaginary components can't be added together. For example adding\(p_2 q_0 \textcolor{green}{j} \) and \(p_3 q_0 \textcolor{red}{i}\) is impossible. To fix this, grouping like terms together:</p>
+
+                <p>
+                $$ qp = 
+                \begin{alignedat}{6}
+                    & \phantom{+} &p_0 q_3 \textcolor{red}{i}   & {+} &p_1 q_2 \textcolor{red}{i}   & {-} &p_2 q_1 \textcolor{red}{i}   & {+} &p_3 q_0 \textcolor{red}{i}   & {,} \\
+                    &         {-} &p_0 q_2 \textcolor{green}{j} & {+} &p_1 q_3 \textcolor{green}{j} & {+} &p_2 q_0 \textcolor{green}{j} & {+} &p_3 q_1 \textcolor{green}{j} & {,} \\
+                    & \phantom{+} &p_0 q_1 \textcolor{blue}{k}  & {-} &p_1 q_0 \textcolor{blue}{k}  & {+} &p_2 q_3 \textcolor{blue}{k}  & {+} &p_3 q_2 \textcolor{blue}{k}  & {,} \\
+                    &         {-} &p_0 q_0                      & {-} &p_1 q_1                      & {-} &p_2 q_2                      & {+} &p_3 q_3  
+                \end{alignedat}
+                 $$
+              </p>
+
+              <p>Changing from \(ijk\) notation back to vector scalar notation leaves us with the formula for quaternion multiplication. In the formula below elements 0, 1 and 2 are the vector part and element 3 is the scalar part of the resulting quaternion:</p>
+
+            <p>
+                $$  
+                qp_0 = \phantom{+}p_0 q_3 + p_1 q_2 - p_2 q_1 + p_3 q_0 \\
+                qp_1 =           -p_0 q_2 + p_1 q_3 + p_2 q_0 + p_3 q_1 \\
+                qp_2 = \phantom{+}p_0 q_1 - p_1 q_0 + p_2 q_3 + p_3 q_2 \\
+                qp_3 =           -p_0 q_0 - p_1 q_1 - p_2 q_2 + p_3 q_3  
+                 $$
+            </p>
+
+            <p class="callout">When multiplying \(q\) and \(p\) together keep in mind that quaternions left multiply. This means when performing \(qp\), the rotation of \(p\) is applied first, then the rotation of \(q\)</p>
 
             <p>Implementing the above formula for quaternion multiplication in code is trivial.</p>
 
-<pre><code>Quaternion Mul(Quaternion q, Quaternion p) {
+
+<pre class="prettyprint linenums">Quaternion Mul(Quaternion q, Quaternion p) {
     Quaternion result;
 
     result.x =   p.x * q.w  + p.y * q.z - p.z * q.y + p.w * q.x;
@@ -229,38 +149,37 @@
     result.w = -(p.x * q.x) - p.y * q.y - p.z * q.z + p.w * q.w;  
 
     return result;
-}</code></pre>
+}</pre>
+                <h2>Dot and Cross Products</h2>
 
-            <h4>Dot and Cross Products</h4>
+                <p>I'm going to re-order the equation from above so the vector part of the quaternion has it's negative term last, and the scalar part has its positive term first. I'm also going to switch from subscripting \(0, 1, 2, 3\) to \(x, y, z, w\) respectivley.</p>
 
-            <p>I'm going to re-order the equation from above so the vector part of the quaternion has it's negative term last, and the scalar part has its positive term first. I'm also going to switch from subscripting \(0, 1, 2, 3\) to \(x, y, z, w\) respectivley.</p>
+                <p>
+                $$  
+                qp_x = \textcolor{sienna}{p_x q_w} +  \textcolor{teal}{p_w q_x} + \textcolor{purple}{p_y q_z - p_z q_y} \\
+                qp_y = \textcolor{sienna}{p_y q_w} +  \textcolor{teal}{p_w q_y} + \textcolor{purple}{p_z q_x - p_x q_z} \\
+                qp_z = \textcolor{sienna}{p_z q_w} +  \textcolor{teal}{p_w q_z} + \textcolor{purple}{p_x q_y - p_y q_x} \\
+                qp_w =                    p_w q_w \textcolor{orange}{- p_x q_x  -                    p_y q_y - p_z q_z}
+                $$
+                </p>
 
-            <p>
-            $$  
-            qp_x = \textcolor{sienna}{p_x q_w} +  \textcolor{teal}{p_w q_x} + \textcolor{purple}{p_y q_z - p_z q_y} \\
-            qp_y = \textcolor{sienna}{p_y q_w} +  \textcolor{teal}{p_w q_y} + \textcolor{purple}{p_z q_x - p_x q_z} \\
-            qp_z = \textcolor{sienna}{p_z q_w} +  \textcolor{teal}{p_w q_z} + \textcolor{purple}{p_x q_y - p_y q_x} \\
-            qp_w =                    p_w q_w \textcolor{orange}{- p_x q_x  -                    p_y q_y - p_z q_z}
-            $$
-          </p>
+                <p>All i did here was re-arrange some numbers (and change the subscript notation), the value of each component remains unchanged by this re-arrangement. But, there are some interesting properties to notice in this re-arrangement.</p>
 
-          <p>All i did here was re-arrange some numbers (and change the subscript notation), the value of each component remains unchanged by this re-arrangement. But, there are some interesting properties to notice in this re-arrangement.</p>
+                <p>First, look at the purple part of the equation, that's the vector cross product! Next, look at the brown part, it's the vector part of \(p\) scaled by \(q_w\). Similarly the teal (green-ish) part is the vector part of \(q\) scaled by \(p_w\).</p>
 
-          <p>First, look at the purple part of the equation, that's the vector cross product! Next, look at the brown part, it's the vector part of \(p\) scaled by \(q_w\). Similarly the teal (green-ish) part is the vector part of \(q\) scaled by \(p_w\).</p>
+                <p>Finally, look at the orange part of the equation. We can re-write it as: \(\textcolor{orange}{-1(p_x q_x + p_y q_y + p_z q_z)}\). What you might notice here is that's the vector dot product!</p>
 
-          <p>Finally, look at the orange part of the equation. We can re-write it as: \(\textcolor{orange}{-1(p_x q_x + p_y q_y + p_z q_z)}\). What you might notice here is that's the vector dot product!</p>
-        
-        <p>With these observations, the formula for quaternion multiplication can be re-written in terms of the <a href="https://www.youtube.com/watch?v=ln3vI4JEArc">dot and cross products</a>. </p>
+                <p>With these observations, the formula for quaternion multiplication can be re-written in terms of the <a href="https://www.youtube.com/watch?v=ln3vI4JEArc">dot and cross products</a>. </p>
 
-        <p>
-            $$
-            qp = (p_w\vec{q_v} + q_w\vec{p_v} + \vec{p_v} \times \vec{q_v}), p_w q_w - \vec{p_v} \cdot \vec{q_v}
-            $$
-        </p>
+                <p>$$
+                    qp = (p_w\vec{q_v} + q_w\vec{p_v} + \vec{p_v} \times \vec{q_v}), p_w q_w - \vec{p_v} \cdot \vec{q_v}
+                $$</p>
 
-        <p>In the above formula, \(\vec{q_v}\) and \(\vec{p_v}\) refer to the vector parts of \(q\) and \(p\) respectivley,  \(q_w\) and \(p_w\) refer to the real parts. This notation might be a bit easier to remember. There is no speed gain for this notation, implementing it in code is trivial</p>
 
-<pre><code>Quaternion Mul_AlternateImplementation(Quaternion q, Quaternion p) {
+                <p>In the above formula, \(\vec{q_v}\) and \(\vec{p_v}\) refer to the vector parts of \(q\) and \(p\) respectivley,  \(q_w\) and \(p_w\) refer to the real parts. This notation might be a bit easier to remember. There is no speed gain for this notation, implementing it in code is trivial</p>
+
+
+<pre class="prettyprint linenums">Quaternion Mul_AlternateImplementation(Quaternion q, Quaternion p) {
     Vector3 q_v = Vector3(q.x, q.y, q.z);
     Vector3 p_v = Vector3(p.x, p.y, p.z);
 
@@ -278,27 +197,8 @@
     result.y = vector.y;
     result.z = vector.z;
     return result;
-}</code></pre>
-
+}</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

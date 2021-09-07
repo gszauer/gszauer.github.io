@@ -1,127 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="vectors.html">Introduction</a><a class="sidebar-item" href="blog_vectors_add.html">Addition</a><a class="sidebar-item" href="blog_vectors_scale.html">Scaling</a><a class="sidebar-item" href="blog_vectors_subtract.html">Subtraction</a><a class="sidebar-item" href="blog_vectors_dot.html">Dot Product</a><a class="sidebar-item" href="blog_vectors_length.html">Magnitude</a><a class="sidebar-item" href="blog_vectors_normalize.html">Normalize</a><a class="sidebar-item" href="blog_vectors_angle.html">Angle</a><a class="sidebar-item" href="blog_vectors_projection.html">Projection</a><a class="sidebar-item" href="blog_vectors_reflection.html">Reflection</a><a class="sidebar-item" href="blog_vectors_cross.html">Cross Product</a><a class="sidebar-item" href="blog_vectors_interpolate.html">Interpolation</a><a class="sidebar-item sidebar-active " href="blog_vectors_summary.html">Summary</a></div>    
+            <div id="content">
+                <h1>Summary</h1>
+                
+                <p>Vector math is at the core of game development. Gameplay, physics, graphics just about all aspects of game development involve vector math. In this blog i've provided an explanation of the most commonly used vector math operations, be sure to check out <a href="https://github.com/gszauer/GaborMakesGames/blob/master/code/vector3.js">my reference implementation.</a></p>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>There are several books on game math, you should probably grab a copy of <a href="https://www.amazon.com/Mathematics-Programming-Computer-Graphics-Third/dp/1435458869">Mathematics for 3D game programming and computer graphics</a> and <a href="https://www.amazon.com/gp/product/0985811749/">Foundations of Game Engine Development, Volume 1: Mathematics</a> by Eric Lengyel. My own book, the <a href="http://gamephysicscookbook.com/">Game Physics Cookbook</a> also provides an in depth coverage of vector math.</p>
 
+                 <p>If video's are more your style, check out <a href="https://www.youtube.com/watch?v=sKCF8A3XGxQ&list=PLW3Zl3wyJwWOpdhYedlD-yCB7WQoHf-My">Math For Game Developers</a> by Jorge Rodriguez, or <a href="https://www.youtube.com/watch?v=3BAY6smfXx4&list=PLZMkqlPED79zp6E6Je9ZksqaIqJ55ZlyV">Game Math</a> by Nathan Biefeld. And of course, <a href="https://www.khanacademy.org/math/precalculus/vectors-precalc">Pre calc on Khan academy</a> is one of the best video resources on the topic. Not really a video, but another good resource is <a href="https://www.3dgep.com/3d-math-primer-for-game-programmers-vector-operations/">3D Math Primer for Game Programmers</a> on 3DGEP.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-    <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
-
-  </head>
-
-  <body onload="renderMathInElement(document.body);">
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
+            </div>
         </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="vectors.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_vectors_add.html" class="list-group-item">2. Addition</a>
-            <a href="blog_vectors_scale.html" class="list-group-item">3. Scaling</a>
-            <a href="blog_vectors_subtract.html" class="list-group-item">4. Subtraction</a>
-            <a href="blog_vectors_dot.html" class="list-group-item">5. Dot Product</a>
-            <a href="blog_vectors_length.html" class="list-group-item">6. Magnitude</a>
-            <a href="blog_vectors_normalize.html" class="list-group-item">7. Normalize</a>
-            <a href="blog_vectors_angle.html" class="list-group-item">8. Angle</a>
-            <a href="blog_vectors_projection.html" class="list-group-item">9. Projection</a>
-            <a href="blog_vectors_reflection.html" class="list-group-item">10. Reflection</a>
-            <a href="blog_vectors_cross.html" class="list-group-item">11. Cross Product</a>
-            <a href="blog_vectors_interpolate.html" class="list-group-item">12. Interpolation</a>
-            <a href="blog_vectors_summary.html" class="list-group-item active">13. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Summary</h2>
-    				<p>
-						Vector math is at the core of game development. Gameplay, physics, graphics just about all aspects of game development involve vector math. In this blog i've provided an explanation of the most commonly used vector math operations, be sure to check out <a href="https://github.com/gszauer/GaborMakesGames/blob/master/code/vector3.js">my reference implementation.</a>
-					</p>
-
-        		<p>There are several books on game math, you should probably grab a copy of <a href="https://www.amazon.com/Mathematics-Programming-Computer-Graphics-Third/dp/1435458869">Mathematics for 3D game programming and computer graphics</a> and <a href="https://www.amazon.com/gp/product/0985811749/">Foundations of Game Engine Development, Volume 1: Mathematics</a> by Eric Lengyel. My own book, the <a href="http://gamephysicscookbook.com/">Game Physics Cookbook</a> also provides an in depth coverage of vector math.</p>
-        
-            <p>If video's are more your style, check out <a href="https://www.youtube.com/watch?v=sKCF8A3XGxQ&list=PLW3Zl3wyJwWOpdhYedlD-yCB7WQoHf-My">Math For Game Developers</a> by Jorge Rodriguez, or <a href="https://www.youtube.com/watch?v=3BAY6smfXx4&list=PLZMkqlPED79zp6E6Je9ZksqaIqJ55ZlyV">Game Math</a> by Nathan Biefeld. And of course, <a href="https://www.khanacademy.org/math/precalculus/vectors-precalc">Pre calc on Khan academy</a> is one of the best video resources on the topic. Not really a video, but another good resource is <a href="https://www.3dgep.com/3d-math-primer-for-game-programmers-vector-operations/">3D Math Primer for Game Programmers</a> on 3DGEP.
-
-            </p>
-
-        </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

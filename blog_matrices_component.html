@@ -1,103 +1,26 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="matrices.html">Introduction</a><a class="sidebar-item" href="blog_matrices_topology.html">Topology</a><a class="sidebar-item" href="blog_matrices_transpose.html">Transpose</a><a class="sidebar-item sidebar-active " href="blog_matrices_component.html">Component Operations</a><a class="sidebar-item" href="blog_matrices_multiplication.html">Multiplication</a><a class="sidebar-item" href="blog_matrices_vectors.html">Vectors</a><a class="sidebar-item" href="blog_matrices_invert.html">Invert</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_2x2determinant.html">2x2 Determinant</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_minors.html">Minors</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_cofactor.html">Cofactor</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_laplace.html">Laplace Expansion</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_adjugate.html">Adjugate</a></div>    
+            <div id="content">
+                <h1>Component Wise Operations</h1>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>There are two component wise functions that are sometimes used in games. The first is addition, the second is scaling. The scaling operation doesn't actually scale the matrix, instead it scales each component of the matrix by a scalar value.</p>
+
+                <p>Component wise functions are trivial to implement, perform the required operation on every component of the matrix. There isn't much more to say about them, component wise addition and scaling are implemented below.</p>
 
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-     <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
-
-  </head>
-
-  <body onload="renderMathInElement(document.body);">
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="matrices.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_matrices_topology.html" class="list-group-item">2. Topology</a>
-            <a href="blog_matrices_transpose.html" class="list-group-item">3. Transpose</a>
-            <a href="blog_matrices_component.html" class="list-group-item active">4. Component Wise Operations</a>
-            <a href="blog_matrices_multiplication.html" class="list-group-item">5. Multiplication</a>
-            <a href="blog_matrices_vectors.html" class="list-group-item">6. Transforming Vectors</a>
-            <a href="blog_matrices_invert.html" class="list-group-item">7. Invert</a>
-            <a href="blog_matrices_2x2determinant.html" class="list-group-item"><span class="pl-4">a. 2x2 Determinant</span></a>
-            <a href="blog_matrices_minors.html" class="list-group-item"><span class="pl-4">b. Minors</span></a>
-            <a href="blog_matrices_cofactor.html" class="list-group-item"><span class="pl-4">c. Cofactor</span></a>
-            <a href="blog_matrices_laplace.html" class="list-group-item"><span class="pl-4">d. Laplace Expansion</span></a>
-            <a href="blog_matrices_adjugate.html" class="list-group-item"><span class="pl-4">e. Adjugate</span></a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Component Wise Operations</h2>
-
-          <p>There are two component wise functions that are sometimes used in games. The first is addition, the secon is "scaling". The scaling operation doesn't actually scale the matrix, instead it scales each component of the matrix by a scalar value.</p>
-
-          <p>Component wise functions are trivial to implement, perform the required operation on every component of the matrix. There isn't much more to say about them, component wise addition and scaling are implemented below.</p>
-
-<pre><code>mat4 Add(mat4 left, mat4 right) {
+<pre class="prettyprint linenums">mat4 Add(mat4 left, mat4 right) {
     mat4 result;
 
     // Consider unrolling these loops for speed
@@ -118,27 +41,8 @@ mat4 Scale(mat4 matrix, float value) {
     return result;
 }
 
-// mat 2 and 3 implementations are trivial, change the argument type and loop limit</code></pre>
-
+// mat 2 and 3 implementations are trivial, change the argument type and loop limit</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

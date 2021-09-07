@@ -1,120 +1,44 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'UA-96941899-3');
-    </script>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
 
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Support functions -->
-        <script src="code/animation/vector.js"></script>
-        <script src="code/animation/matrix.js"></script>
-        <script src="code/animation/quaternion.js"></script>
-        <script src="code/animation/transform.js"></script>
-        <script src="code/animation/graphics.js"></script>
-        <script src="code/animation/animation.js"></script>
-        <script src="code/animation/mesh.js"></script>
+        <script src="js/animation/vector.js"></script>
+        <script src="js/animation/matrix.js"></script>
+        <script src="js/animation/quaternion.js"></script>
+        <script src="js/animation/transform.js"></script>
+        <script src="js/animation/graphics.js"></script>
+        <script src="js/animation/animation.js"></script>
+        <script src="js/animation/mesh.js"></script>
 
         <!-- WebGL Demos -->
-        <script src="code/animation/sample.js"></script>
-        <script src="code/animation/skel.js"></script>
+        <script src="js/animation/sample.js"></script>
+        <script src="js/animation/skel.js"></script>
 
         <!-- Canvas Demos-->
-        <script src="code/animation/sample_main.js"></script>
+        <script src="js/animation/sample_main.js"></script>
 
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    </head>
 
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
+    <body onload="MainNavOnLoad();PR.prettyPrint();main();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="animation.html">Introduction</a><a class="sidebar-item" href="blog_animation_curves.html">Curves</a><a class="sidebar-item" href="blog_animation_pose.html">Pose Generation</a><a class="sidebar-item sidebar-tab" href="blog_animation_frames.html">Frames</a><a class="sidebar-item sidebar-tab" href="blog_animation_tracks.html">Tracks</a><a class="sidebar-item sidebar-tab" href="blog_animation_transformtracks.html">Transform Track</a><a class="sidebar-item sidebar-tab" href="blog_animation_poses.html">Poses</a><a class="sidebar-item sidebar-tab" href="blog_animation_clips.html">Clips</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_animation_sample.html">Sample</a><a class="sidebar-item" href="blog_animation_skin.html">Skinning</a><a class="sidebar-item sidebar-tab" href="blog_animation_skinspace.html">Skin Space</a><a class="sidebar-item sidebar-tab" href="blog_animation_smoothskin.html">Smooth Skinning</a><a class="sidebar-item" href="blog_animation_blend.html">Pose Modification</a></div>    
+            <div id="content">
+                <h1>Try It</h1>
 
-  </head>
+                <p>Everything covered up until this point is what you need to animate a skeleton. In this section, i will provide some sample code that shows how what has been covered so far can be used to draw an animated skeleton.</p>
 
-  <body>
+                <p>Displaying a mesh that deforms with this skeleton is called skinning, we will cover skinning in the next section. If you are implementing your own animation system, take some time to confirm that the hirarchy is animating correctly before tacking skinning.</p>
 
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
+                <p>Let's assume we have a <code>Sample</code> class that contains a list of animation clips, the current animation time, the rest pose of the character being animated and the current animated pose. The Sample can initialize, update, render and shut down.</p>
 
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="animation.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
-            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
-            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
-            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
-            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
-            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
-            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
-            <a href="blog_animation_sample.html" class="list-group-item active"><span class="pl-4">f. Sample</span></a>
-            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
-            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
-            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
-            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Try It</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-            <p>Everything covered up until this point is what you need to animate a skeleton. In this section, i will provide some sample code that shows how what has been covered so far can be used to draw an animated skeleton.</p>
-
-            <p>Displaying a mesh that deforms with this skeleton is called skinning, we will cover skinning in the next section. If you are implementing your own animation system, take some time to confirm that the hirarchy is animating correctly before tacking skinning.</p>
-
-            <p>Let's assume we have a <code>Sample</code> class that contains a list of animation clips, the current animation time, the rest pose of the character being animated and the current animated pose. The Sample can initialize, update, render and shut down.</p>
-
-<pre><code>class Sample : {
+<pre class="prettyprint linenums">class Sample : {
 protected:
     std::vector&lt;Clip&gt; mAnimClips;
     unsigned int mClipIndex;
@@ -126,13 +50,13 @@ public:
     void Update(float inDeltaTime);
     void Render(float inAspectRatio);
     void Shutdown();
-};</code></pre>
+};</pre>                
+                <p>We're only focusing on animating one character. To animate multiple characters, each character would need a unique clip index, animation time, and animated pose. The collection of animation clips and the rest pose could be shared between all of the aniamted models. </p>
 
-            <p>We're only focusing on animating one character. To animate multiple characters, each character would need a unique clip index, animation time, and animated pose. The collection of animation clips and the rest pose could be shared between all of the aniamted models. </p>
+                <p>The initialize function should load animation clips from a file, as well as the rest pose. Setting animation time to 0 isn't accurate as not all animation clips start at 0 seconds in time. Instead use the animation clips start time.</p>
 
-            <p>The initialize function should load animation clips from a file, as well as the rest pose. Setting animation time to 0 isn't accurate as not all animation clips start at 0 seconds in time. Instead use the animation clips start time.</p>
 
-<pre><code>void Sample::Initialize() {
+<pre class="prettyprint linenums">void Sample::Initialize() {
     mAnimClips = LoadAnimationClips("Woman.clips");
     mRestPose = LoadRestPose("Woman.rest");
 
@@ -141,16 +65,16 @@ public:
 
     mClipIndex = 6;
     mAnimTime = mAnimClips[mClipIndex].GetStartTime();
-}</code></pre>
-            <p>The <code>Update</code> function is trivial, it samples the current animation clip into the current pose. <code>mAnimationTime</code> is increased by delta time every frame and passed to the <code>Sample</code> function. The result of the <code>Sample</code> function is stored back in <code>mAnimationTime</code>, keeping <code>mAnimationTime</code> always valid.</p>
+}</pre>                
+                <p>The <code>Update</code> function is trivial, it samples the current animation clip into the current pose. <code>mAnimationTime</code> is increased by delta time every frame and passed to the <code>Sample</code> function. The result of the <code>Sample</code> function is stored back in <code>mAnimationTime</code>, keeping <code>mAnimationTime</code> always valid.</p>
 
-<pre><code>void Sample::Update(float deltaTime) {
+<pre class="prettyprint linenums">void Sample::Update(float deltaTime) {
     float time = mAnimTime + deltaTime;
     mAnimTime = mAnimClips[mClipIndex].Sample(mCurrentPose, time);
-}</code></pre>
-            <p>The render function renders only a debug skeleton. Loop trough all of the joints in the current pose, skipping any joints that don't have a parent. Find the global transform of both this joint and it's parent joint and draw a line between their positions.</p>
+}</pre>
+                <p>The render function renders only a debug skeleton. Loop trough all of the joints in the current pose, skipping any joints that don't have a parent. Find the global transform of both this joint and it's parent joint and draw a line between their positions.</p>
 
-<pre><code>void Sample::Render(float AspectRatio) {
+<pre class="prettyprint linenums">void Sample::Render(float AspectRatio) {
     for (unsigned int i = 0; i &lt; mCurrentPose.Size(); ++i) {
         int p = mCurrentPose.GetParent(i);
         if (p &lt; 0) { continue; }
@@ -160,33 +84,13 @@ public:
 
         DrawLine(self.position, parent.position);
     }
-}</code></pre>
+}</pre>
+                <p>Running the above sample results in an animation like this:</p>
 
-            <p>Running the above sample results in an animation like this:</p>
-
-            <div class="gldemo" class="img-fluid rounded" >
-                <canvas id="skeletonWalkingCanvas" style="width: 100%; height:100%;"></canvas>
+                <div>
+                    <canvas id="skeletonWalkingCanvas" style="width: 100%; height:100%;"></canvas>
+                </div>
             </div>
-        
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

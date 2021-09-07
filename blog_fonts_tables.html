@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item sidebar-active " href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>Tables</h1>
+                
+                <p>A TTF file is orgonized into tables. The definition of these tables can be found in the <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html">Apple True Type Manual</a>. Tables can appear in any order, they are 32 bit aligned, and padded with zeros if necesary.</p>
+
+                <p>The code presented on this page won't be used on later pages. The code is here to introduce parsing tables, but the final code for parsing tables is presented when those tables are first needed.</p>
+
+                <p class="callout">The code in this section demonstrates how to read tables, the structurs are listed to show memory layout and will not be used on other pages.</p>
+
+                <h2>Font Directory</h2>
+
+                <p>The first table in any file is the Font Directory. The font directory serves as an index to the contents of the font. It contains an offset subtable, and a list of table locations called the table directory.</p>
+
+<pre class="prettyprint linenums">struct FontDirectory {
+    OffsetTable offsetTable = { 0 };
+    vector< TableLocation > tableDirectory;
+};</pre>
+                <p>The offset subtable begins with a tag (<code>scaler</code>) that identifies the information in the font. This tag should have a value of <code>"true"</code> (<code>0x74727565</code>), or <code>0x00010000</code>. Next is the number of tables in the font. Finally there are three values for speeding up searches in the font, we will ignore these.</p>
+
+<pre class="prettyprint linenums">struct OffsetTable {
+    u32 scaler; // Should 0x74727565 or 0x00010000
+    u16 numTables;
+    u16 searchRange;
+    u16 entrySelector;
+    u16 rangeShift;
+};</pre>
+                <p>The offset subtable is followed by a list of table location. Each table location is made up of a tag (32 bit int), a checksum, the offset (from the begining of the file), and the length of the table in bytes. The table directory is sorted by ascending tag, there is no padding between elements of the table directory.</p>
+
+<pre class="prettyprint linenums">struct TableLocation {
+    union {
+        char ptag[4];
+        u32 tag;
+    };
+    u32 checkSum;
+    u32 offset;
+    u32 length;
+};</pre>                
+                <p>Reading the font directory is trivial, the offset table makes up the first 96 bytes of the file, take endianess into account when reading the data. The offset table contains the number of tables in the font, which lets us know how much data to read for the table directory.</p>
+
+
+<pre class="prettyprint linenums">FontDirectory ReadFontDirectory(u8* p) {
+    FontDirectory r;
+    
+    // Read offset table
+    r.offsetTable.scaler = read_u32(&p);
+    r.offsetTable.numTables = read_u16(&p);
+    r.offsetTable.searchRange = read_u16(&p);
+    r.offsetTable.entrySelector = read_u16(&p);
+    r.offsetTable.rangeShift = read_u16(&p);
+
+    // Read table directory
+    u16 numTables = r.offsetTable.numTables;
+    r.tableDirectory.resize(numTables);
+
+    for (u16 table = 0; table < numTables; ++table) {
+        r.tableDirectory[table].tag = read_u32(&p);
+        r.tableDirectory[table].checkSum = read_u32(&p);
+        r.tableDirectory[table].offset = read_u32(&p);
+        r.tableDirectory[table].length = read_u32(&p);
+    }
+
+    return r;
+}</pre>
+                <h2>Finding tables</h2>
+
+                <p>The <code>FindTableByTag</code> function below takes a pointer to the contents of a TTF file and a 4 letter c-string that specifies a tag. If the table is in the font, a pointer to it is returned, if the table is not in the font the function returns null. The function is provided for reference, we're not going to be using it later.</p>
+
+<pre class="prettyprint linenums">u8* FindTableByTag(u8* data, const char* sTag) {
+    u8* p = data + 4; // + 4: skip 'u32 scaler'
+    u16 numTables = read_u16(&p);
+
+    // Because tags are read as a big endian u32, they are reversed.
+    u32 intTag = (sTag[0] << 24) | (sTag[1] << 16) | (sTag[2] << 8) | sTag[3];
+    u8* t = data + 12; // + 12: skip sizeof(OffsetTable)
+
+    for (u16 i = 0; i < numTables; ++i) {
+        u32 thisTag = (t[0] << 24) | (t[1] << 16) | (t[2] << 8) | t[3];
+        if (thisTag == intTag) {
+            p = t + 8; // + 8: skip 'u32 tag' and 'u32 checksum'
+            u32 offset = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+
+            return data + offset;
+        }
+        t += 16; // + 16: skip sizeof(TableLocation)
+    }
+
+    return 0;
+}</pre>
+                <p>The <code>FindTableByTag</code> function can be used to find table pointers like this:</p>
+
+<pre class="prettyprint linenums">FILE* fontFile = fopen("arial.ttf", "rb");
+
+fseek(fontFile, 0, SEEK_END);
+u32 fontDataLength = ftell(fontFile);
+fseek(fontFile, 0, SEEK_SET);
+
+u8* data = (u8*)malloc(fontDataLength + 1);
+fread(data, fontDataLength, 1, fontFile);
+data[fontDataLength] = '\0';
+fclose(fontFile);
+
+u8* head = FindTableByTag(data, "head");
+u8* maxp = FindTableByTag(data, "maxp");</pre> 
+
+            </div>
+        </div>
+    </body>
+</html>

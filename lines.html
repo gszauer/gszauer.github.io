@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first sidebar-active " href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item" href="blog_lines_dda.html">Incremental</a><a class="sidebar-item" href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item" href="blog_lines_thick.html">Thickness</a><a class="sidebar-item" href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item" href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Drawing Lines</h1>
+                
+                <p>This blog will cover common methods to drawing lines.To follow along, you should be familiar with <a href="https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86%3Alinear-equations-graphs">Linear Equations</a>, <a href="https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:forms-of-linear-equations/x2f8bb11595b61c86:intro-to-slope-intercept-form/v/less-obvious-slope-intercept-form">Slope intercept form</a>, and <a href="vectors.html">Vectors</a>. The code samples for this blog post are available <a href="https://gist.github.com/gszauer/20c5a797f7ac44027584bd9402337cd6">here</a>. These are my suggested additional resources on line drawing.</p>
+
+                <ul>
+                	<li><a href="https://www.amazon.com/Computer-Graphics-Java-Programmers-Ammeraal/dp/3319633562/">Computer Graphics for Java Programmers, Third Edition</a></li>
+                	<li><a href="https://www.amazon.com/Computer-Graphics-Principles-Practice-2nd/dp/0201848406/">Computer Graphics Principles and Practice, Second Edition</a></li>
+                	<li><a href="https://www.amazon.com/Computer-Graphics-C-Version-2nd/dp/0135309247">Computer Graphics C Version, Second Edition</a></li>
+                	<li><a href="http://www.jagregory.com/abrash-black-book/">Michael Abrash's Graphics Programming Black Book, Online</a></li>
+                	<li><a href="https://web.archive.org/web/20160512213418/http://freespace.virgin.net/hugo.elias/graphics/x_main.htm#3">Hugo Elias's site on Archive.org</a>
+            	</ul>
+
+                <p>Troughout this blog we will implement three algorithms for line drawing. We will implement a floating point version of each, and an integer only version where appropriate. This is the test code that is run to make sure lines are being drawn properly:</p>
+
+<pre class="prettyprint linenums">double TestLine(fnDrawLine DrawLine, const char* output) {
+    Image image(512, 512); // Makes new image, 512 x 512 in size
+    
+    for (int x = 0; x < image.width; ++x) {
+        for (int y = 0; y < image.height; ++y) {
+            PutPixel(image, x, y, Color(42, 42, 42));
+        }
+    }
+
+    Color val(116, 116, 116);
+
+
+    LARGE_INTEGER timerFrequency;
+    QueryPerformanceFrequency(&timerFrequency);
+    LARGE_INTEGER timerStart = { 0 };
+    LARGE_INTEGER timerStop = { 0 };
+    QueryPerformanceCounter(&timerStart);
+
+    for (int angle = 0; angle < 360; angle += 1) {
+        float radians = float(angle) * 0.01745329;
+        float s = sinf(radians);
+        float c = cosf(radians);
+
+        if (angle % 10 == 0) {
+            DrawLine(image, (int)(20.0f * s + 256.0f), (int)(20.0f * c + 256.0f), (int)(60.0f * s + 256.0f), (int)(60.0f * c + 256.0f), val);
+        }
+        if (angle % 7 == 0) {
+            DrawLine(image, (int)(70.0f * s + 256.0f), (int)(70.0f * c + 256.0f), (int)(110.0f * s + 256.0f), (int)(110.0f * c + 256.0f), val);
+        }
+        if (angle % 4 == 0) {
+            DrawLine(image, (int)(120.0f * s + 256.0f), (int)(120.0f * c + 256.0f), (int)(160.0f * s + 256.0f), (int)(160.0f * c + 256.0f), val);
+        }
+        if (angle % 2 == 0) {
+            DrawLine(image, (int)(170.0f * s + 256.0f), (int)(170.0f * c + 256.0f), (int)(210.0f * s + 256.0f), (int)(210.0f * c + 256.0f), val);
+        }
+        DrawLine(image, (int)(220.0f * s + 256.0f), (int)(220.0f * c + 256.0f), (int)(250.0f * s + 256.0f), (int)(250.0f * c + 256.0f), val);
+    }
+
+    DrawLine(image, 256 - 15, 256, 256 + 15, 256, val);
+    DrawLine(image, 256, 256 - 15, 256, 256 + 15, val);
+
+    QueryPerformanceCounter(&timerStop);
+
+    LONGLONG timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+    double ms = (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
+
+    stbi_write_png(output, image.width, image.height, 1, image.data, 0);
+
+    return ms;
+}</pre>
+                <p>It produces consecutive rings of lines, like shown below:</p>
+
+                <img class="img-fluid" src="images/blog_lines_circlesample.png" alt="Successfull Test" />
+
+                <p>A line can be categorized into one of the following eight octants based on its start and end points. <i>The y axis in the image below increases going up, for most graphics API's y increases going down</i>.</p>
+
+                <img class="img-fluid" src="images/blog_lines_octants.png" alt="Line octants" />
+
+                <p>Algorithms to draw lines are often presented only for one of the eight octants. With minimal code modification, the line can be mirrored into the other octants. This blog will also present some algorithms in a few octants at first, but will also present the code to handle all octants.</p>
+
+            </div>
+        </div>
+    </body>
+</html>

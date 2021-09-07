@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item sidebar-active " href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>Unicode Mapping</h1>
+
+                <p>At the moment we can only retrieve glyphs from the font using their index, which is not very helpful. In this section, we're going to implement unicode mapping. Unicode mapping will let us retrieve glyphs based using their <a href="https://www.youtube.com/watch?v=MijmeoH9LT4">unicode code point</a>. We're going to be implementing support for two byte encoding only. All relevant data is stored in the <code>cmap</code> table.</p>
+
+                <table class="blogtab">
+                    <tr><th style="min-width: 75px;">Table</th><th>Why it's needed</th></tr>
+                    <tr><td><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html">cmap</a></td><td>Maps unicode code points to glyphs.</td></tr>
+                </table>
+
+                <p>Let's add a codePoint to each glyph. We're not going to use this code point for anything, it's useful for debugging.</p>
+                
+<pre class="prettyprint linenums">struct Glyph {
+    vector< Edge > edges;
+    Point min;
+    Point max;
+
+    bool isFlipped;
+    u32 index;
+    u16 codePoint; // NEW
+
+    inline Glyph() {
+        index = 0;
+        codePoint = 0;
+        isFlipped = false;
+    }
+    
+    // Methods stay unchanged
+};</pre>
+                <p>Add an <code>unordered_map< u16, u32 ></code> to the font class, this dictionary maps code points to glyph indices. Let's also declare a new function to retrieve a glyph by it's code point, <code>GetGlyphByCodePoint</code>.</p>
+
+<pre class="prettyprint linenums">class Font {
+protected:
+    vector< Glyph > allGlyphs;
+    unordered_map< u16, u32 > unicodeMap; // NEW
+protected:
+    Glyph ParseSimpleGlyph(u16 index, u8* glyf, const vector< u32 >& loca);
+    Glyph ParseCompoundGlyph(u16 index, u8* glyf, const vector< u32 >& loca);
+public:
+    Font(const char* file, bool flip = true);
+
+    u32 NumGlyphs();
+    const Glyph& GetGlyphByIndex(u32 index);
+    const Glyph& GetGlyphByCodePoint(u16 codePoint); // NEW
+};</pre>
+    <p>A ttf file can contain multiple character maps. Find the <code>cmap</code> table, it contains a <code>u16</code> for it's version and a <code>u16</code> for the number of character encoding tables in the file. The character encoding tables follow the cmap table directly, they contain a <code>u16</code> for the platform id, a <code>u16</code> for a platform specific identifier and a <code>u32</code> thats an offset to the actual mapping table.</p>
+
+    <p>The platform id of each cmap subtable will be one of the following:</p>
+
+    <ul>
+        <li><strong>0</strong>: Unicode, this is the only one we will support</li>
+        <li><strong>1</strong>: Mac specific</li>
+        <li><strong>2</strong>: Reserved, don't use</li>
+        <li><strong>3</strong>: Microsoft</li>
+    </ul>
+
+   <p>Let's add some code at the end of the constructor. Find the cmap table, read the number of subtables. Loop torugh all cmap subtables, searching for the unicode subtable.</p>
+
+<pre class="prettyprint linenums">Font::Font(const char* file, bool flip) {
+    // ... Existing constructor code remains unchanged
+
+    u32 cmapTag = ('c' << 24) | ('m' << 16) | ('a' << 8) | 'p';
+    u8* cmap = 0;
+    tableTag = data + sizeofOffsetTable;
+    for (u16 table = 0; table < numTables; ++table) {
+        u32 thisTag = (tableTag[0] << 24) | (tableTag[1] << 16) | (tableTag[2] << 8) | tableTag[3];
+        u8* pOffset = tableTag + 8;
+        u32 offset = (pOffset[0] << 24) | (pOffset[1] << 16) | (pOffset[2] << 8) | pOffset[3];
+        if (thisTag == cmapTag) {
+            cmap = data + offset;
+        }
+        tableTag += tableDirectoryStride;
+    }
+
+    p = cmap + 2; // Skip version
+    u16 numCMapSubTables = read_u16(&p);
+
+    u8* unicodeTable = 0;
+
+    for (u16 i = 0; i < numCMapSubTables; ++i) {
+        u16 platformID = read_u16(&p);
+        p += 2; // Skip platformSpecificID
+        u32 offset = read_u32(&p);
+
+        if (platformID == 0) { // Found UNICODE Platform
+            p = cmap + offset;
+            u16 unicodeTableFormat = read_u16(&p);
+            if (unicodeTableFormat == 4) {
+                unicodeTable = cmap + offset;
+                break;
+            }
+        }
+    }</pre>
+     <p>The unicode platform format is the only one we will cover in this blog. When the platform id of a cmap subtable is 1, the platform specific id will be one of the following:</p>
+
+    <ul>
+        <li><strong>0</strong>: Version 1.0 semantics</li>
+        <li><strong>1</strong>: Version 1.1 semantics</li>
+        <li><strong>2</strong>: Deprecated</li>
+        <li><strong>3</strong>: Unicode 2.0 or later, BMP only</li>
+        <li><strong>4</strong>: Unicode 2.0 or later, this is the only one we will be implementing</li>
+        <li><strong>5</strong>: Unicode variation sequence</li>
+        <li><strong>6</strong>: Last resort</li>
+    </ul>
+
+    <p>This blog only covers format 4, which is a two byte encoding. This is the most common mapping table, most fonts will have one. The format 4 table structure is described <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cmap.html">here</a>. If a unicode table is found, the first two bytes are a <code>u16</code> containing the format of the table.</p>
+
+    <p>This format contains blocks of unicode ranges. The table is made up of 4 parallel arrays describing each range and an array of glyph indices. The <code>startCode</code> and <code>endCode</code> arrays contain the first and last character code of each range. There other two arrays, <code>idDelta</code> and <code>idRangeOffset</code> are used to map a code point to a glyph index.</p>
+
+<pre class="prettyprint linenums">    if (unicodeTable != 0) {
+        std::vector< u16 > endCode;
+        std::vector< u16 > startCode;
+        std::vector< u16 > idDelta;
+        std::vector< u16 > idRangeOffset;
+        u16 segCount = 0;
+
+        p = unicodeTable;
+        u16 unicodeTableFormat = read_u16(&p);
+
+        if (unicodeTableFormat == 4) {</pre>
+        <p>The next <code>u16</code> is the length of the whole subtable, including the header data. This is followed by a language code that we will not use. The next <code>u16</code> is double the number of unicode segments that this table contains. Divide by two to get the number of segments.</p>
+
+
+<pre class="prettyprint linenums">            u16 unicodeTableLength = read_u16(&p);
+            u16 language = read_u16(&p);
+            u16 segCountX2 = read_u16(&p);
+            segCount = segCountX2 / 2;
+            p += 2 * 3; // Skip searchRange, entrySelector, rangeShift
+
+            endCode.resize(segCount);
+            startCode.resize(segCount);
+            idDelta.resize(segCount);
+            idRangeOffset.resize(segCount);</pre>
+            <p>The <code>endCode</code>, <code>startCode</code>, <code>idDelta</code>, and <code>idRangeOffset</code> arrays follow. There are <code>u16</code> arrays immediateley following each other, except for a two byte padding between <code>endCode</code> and <code>startCode</code> which should have a value of 0.</p>
+
+<pre class="prettyprint linenums">            for (u16 i = 0; i < segCount; ++i) {
+                endCode[i] = read_u16(&p);
+            }
+            p += 2; // Skip padding
+
+            for (u16 i = 0; i < segCount; ++i) {
+                startCode[i] = read_u16(&p);
+            }
+
+            for (u16 i = 0; i < segCount; ++i) {
+                idDelta[i] = read_u16(&p);
+            }
+
+            for (u16 i = 0; i < segCount; ++i) {
+                idRangeOffset[i] = read_u16(&p);
+            }</pre>
+            <p>The next two arrays are <code>idRangeOffset</code> which has a size of <code>segCount</code> and <code>glyphIndexArray</code> which has a variable length. The lenght of <code>glyphIndexArray</code> isn't stored, it's just however many bytes are left (divided by two, since it's an array of <code>u16</code>). There is an indexing trick used to retrieve glyph indices that relies on <code>idRangeOffset</code> and <code>glyphIndexArray</code> being contigous in memory. To accomodate for this, we're going to read the data for both into the <code>idRangeOffset</code> array.</p>
+
+<pre class="prettyprint linenums">            // Next is the glyphIndexArray, but idRangeOffset is used to "index" into this data.
+            // Since the indexing scheme relies on this data being laid out contigously in memory
+            // let's read the contents of glyphIndexArray into idRangeOffset
+            u32 bytesLeft = unicodeTableLength - (p - (unicodeTable));
+            idRangeOffset.resize(segCount + bytesLeft / 2);
+            for (int i = 0; i < bytesLeft / 2; ++i) {
+                idRangeOffset[segCount + i] = read_u16(&p);
+            }
+        }</pre>
+            <p>Next, we're going to loop trough every segment, then each code point in those segments. For each code point, we will find the glyph index, and record the pair in the <code>unicodeMap</code> dictionary. There are two ways a code point can map to a glyph index. If the value of <code>idRangeOffset</code> for the current segment is <code>0</code>, the idDelta array is used. If it's not <code>0</code>, then the value in <code>idRangeOffset</code> is used.</p>
+
+            <p>If the id range for the segment is zero, add the character code point to the id delta for the segment. The result has to be modulo 65536. If the idRangeOffset value for the segment is not 0, add the character code offset from startCode (<code>(c - start)</code>) to the idRangeOffset value (<code>(idRangeOffset[s] / 2)</code>). This sum is an offset. If <code>idRangeOffset</code> and <code>glyphIndexArray</code> are contigous in memory (which they are), the offset will index into glyphIndexArray.</p>
+
+<pre class="prettyprint linenums">        for (u16 s = 0; s < segCount; ++s) {
+            u16 start = startCode[s];
+            u16 end = endCode[s];
+
+            for (u16 c = start; c <= end; ++c) {
+                i32 index = 0;
+
+                if (idRangeOffset[s] != 0) {
+                    index = *(&idRangeOffset[s] + (idRangeOffset[s] / 2) + (c - start));
+                }
+                else {
+                    index = i32(idDelta[s] + c) % 65536;
+                }
+                if (index != 0) {
+                    allGlyphs[index].codePoint = c;
+                }
+                unicodeMap[c] = index;
+                if (start == end) {
+                    break;
+                }
+            }
+        }
+    } // End if (unicodeTable != 0) 
+
+    // ... rest of constructor unchanged
+    free(data);
+}</pre>
+        <p>Implementing the <code>GetGlyphByCodePoint</code> function is trivial, given a code point, find it's index in the <code>unicodeMap</code> dictionary and return the glyph at that index. If an invalid code point is provided, indexing the unicodeMap should return a default value of 0 which points to the missing glyph.</p>
+
+<pre class="prettyprint linenums">const Glyph& Font::GetGlyphByCodePoint(u16 codePoint) {
+    u32 index = unicodeMap[codePoint];
+    return allGlyphs[index];
+}</pre>        
+        <p>Consider overriding the <code>operator[]</code> operator for conveniance.</p>
+
+<pre class="prettyprint linenums">const Glyph& Font::operator[](u16 codePoint);
+const Glyph& Font::operator[](u16 codePoint) const</pre>
+            </div>
+        </div>
+    </body>
+</html>

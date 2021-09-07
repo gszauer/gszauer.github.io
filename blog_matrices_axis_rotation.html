@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="matrices2.html">Introduction</a><a class="sidebar-item" href="blog_matrices_transform.html">Transformations</a><a class="sidebar-item  sidebar-tab sidebar-active " href="blog_matrices_axis_rotation.html">Single Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Arbitrary Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Look At</a><a class="sidebar-item  sidebar-tab" href=".html">View</a><a class="sidebar-item  sidebar-tab" href=".html">Decomposition</a><a class="sidebar-item" href="blog_matrices_projections.html">Projections</a><a class="sidebar-item" href="blog_matrices_pipeline.html">3D Pipeline</a><a class="sidebar-item  sidebar-tab" href=".html">Picking</a></div>    
+            <div id="content">
+                <h1>Rotating around an axis</h1>
+                
+               
+
+                <img class="img-fluid" src="images/matrix2_column_major.png" alt="Contents of column major matrix" />
+
+                
+                <p class="callout">These are just conventions. OpenGL doesn't actually define which way "world forward" points. It simply defines NDC (Normalized Device Coordinate) space. You could have world forward be along the positive z axis, moving "into the monitor", and simply flip the z axis as part of the NDC transform. This will be covered in depth in the <a href="blog_matrices_projections.html">projections</a> and <a href="blog_matrices_pipeline.html">3D pipeline</a> sections of this blog post.</p>
+
+<pre class="prettyprint linenums">struct mat4 {
+ 
+};</pre> 
+
+            </div>
+        </div>
+    </body>
+</html>

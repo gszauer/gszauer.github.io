@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item sidebar-active " href="blog_lines_dda.html">Incremental</a><a class="sidebar-item" href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item" href="blog_lines_thick.html">Thickness</a><a class="sidebar-item" href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item" href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Incremental Lines</h1>
+
+                <p>A different approach to drawing a line is to start at one of the points and add a small increment in both directions until the end point is reached. This approach is usually called <a href="https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)">DDA (digital differential analyzer)</a>, the algorithm is easy to express in terms of vector math. Given two points, <code>p0</code> and <code>p1</code>, find the vector between them. Find how many steps the line needs to take and normalize the vector to this value. Set the current point to <code>p0</code>, loop trough all steps in the line and increment the current point by the normalized vector on each iteration.</p>
+
+
+            <img class="img-fluid" src="images/blog_lines_dda.png" alt="Dda line steps" />
+
+                <p>How do we determine how many times the delta vector needs to be added (I'll call this "number of steps")? The line still has a major and a minor axis, the length of the larger axis is the number of steps the algorithm needs to take. The \(\Delta X\) and \(\Delta Y\) variables are the components of hte vector between the two lines. To normalize to the number of steps, divide both values by the number of steps. Next, set the plot pixel to the start x and y coordinates. For each step in the line, plot the current pixel and increment both the <code>x</code> and <code>y</code> coordinates.
+
+<pre class="prettyprint linenums">void Line(Image& image, int x0, int y0, int x1, int y1, Color& val) {
+    float xDelta = float(x1 - x0);
+    float yDelta = float(y1 - y0);
+
+    int steps = max(abs(x1 - x0), abs(y1 - y0));
+    if (steps == 0) {
+        PutPixel(image, x0, y0, val);
+        return;
+    }
+
+    float xStep = xDelta / float(steps);
+    float yStep = yDelta / float(steps);
+
+    float x = float(x0);
+    float y = float(y0);
+
+    for (int i = 0; i <= steps; ++i) {
+        PutPixel(image, (int)(x), (int)(y), val);
+        y += yStep;
+        x += xStep;
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

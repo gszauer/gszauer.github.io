@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item" href="blog_lines_dda.html">Incremental</a><a class="sidebar-item" href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item sidebar-active " href="blog_lines_thick.html">Thickness</a><a class="sidebar-item" href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item" href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Thick Lines</h1>
+                
+                <p>We can make the line thicker by drawing an additional pixel along the minor axis of the line. This method works well with lines up to a thickness of 3. After that, the ends of the line become visually jarring, as they are alway horizontal or vertical.</p>
+
+<pre class="prettyprint linenums">void Line(Image& image, int x0, int y0, int x1, int y1, Color& val) {
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+
+    int xStep = x0 < x1 ? 1 : -1;
+    int yStep = y0 < y1 ? 1 : -1;
+
+    int error = 0;
+    if (dx > dy) {
+        int m = 2 * dy;
+        int scale = 2 * dx;
+        for (int x = x0, y = y0; x != x1 + xStep; x += xStep) {
+            PutPixel(image, x, y, val);
+            PutPixel(image, x, y + yStep, val); // 2 px thick
+
+            error += m;
+            if (error >= dx) {
+                y += yStep;
+                error -= scale;
+            }
+        }
+    }
+    else {
+        int m = 2 * dx;
+        int scale = 2 * dy;
+        for (int y = y0, x = x0; y != y1 + yStep; y += yStep) {
+            PutPixel(image, x, y, val);
+            PutPixel(image, x + xStep, y, val); // 2 px thick
+
+            error += m;
+            if (error >= dy) {
+                x += xStep;
+                error -= scale;
+            }
+        }
+    }
+}</pre>
+                <h2>Really Thick Lines</h2>
+
+                <p>To make thicker lines that don't look jarring we need to stamp a pattern at each pixel. Any time the x or y coordinate changes, the stamp should be repeated to avoid missing pixels.</p>
+
+<pre class="prettyprint linenums">// Stamps some pattern at x / y coord
+void Stamp(Image& image, int x, int y, Color& col);
+
+void Line(Image& image, int x0, int y0, int x1, int y1, Color& val) {
+    int absXDelta = abs(x1 - x0);
+    int absYDelta = abs(y1 - y0);
+
+    int steps = max(absXDelta, absYDelta);
+    int xDir = x0 < x1 ? 1 : -1;
+    int yDir = y0 < y1 ? 1 : -1;
+
+    int x = x0, xNumerator = 0;
+    int y = y0, yNumerator = 0;
+
+    for (int i = 0; i <= steps; ++i) {
+        Stamp(image, x, y, val)
+
+        xNumerator += absXDelta;
+        if (xNumerator >= steps) {
+            x += xDir;
+            xNumerator -= steps;
+            Stamp(image, x, y, val)
+        }
+
+        yNumerator += absYDelta;
+        if (yNumerator >= steps) {
+            y += yDir;
+            yNumerator -= steps;
+            Stamp(image, x, y, val)
+        }
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

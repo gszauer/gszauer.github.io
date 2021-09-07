@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item sidebar-active " href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item" href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>Glyphs</h1>
+                
+                <p>A glyph describes the visual shape that make up a symbol. The outline of a glyph is made up of one or more contours. A contour is a closed loop of lines and  curves. Glyphs are filled with the <a href="https://en.m.wikipedia.org/wiki/Nonzero-rule">Non Zero Winding Rule</a>. The direction, or winding of the contour determines if an area is filled in or not.</p>
+
+                <img class="img-fluid" src="images/blog_font_contourdirection.png" alt="Glyph Contour Direction" />
+                
+
+                <p>There are two types of glyphs, a simple and a compound glyph. Simple glyphs are what we've been discussing, a simple glyph is made up of one or more contours.  A compound glyph is the combination of two or more simple glyphs. Compound glyphs can recursivley include other compound glyphs.</p>
+
+                <img class="img-fluid" src="images/blog_fonts_compound.png" alt="Recrusivley compound" />
+
+                <p>To parse glyph outlines out of a true type font file, we will first load the font directory. Once the font directory is loaded, we need to find the following tables:</p>
+
+                <table class="blogtab">
+                    <tr><th style="min-width: 75px;">Table</th><th>Why it's needed</th></tr>
+                    <tr><td><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6maxp.html">maxp</a></td><td>Contains the number of glyphs contained in the font.</td></tr>
+                    <tr><td><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6loca.html">loca</a></td><td>Glyph data is not stored in a tightly packed array. <code>loca</code> contains offsets to glyphs from the start of the <code>glyf</code> table.</td></tr>
+                    <tr><td><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6head.html">head</a></td><td>Contains <code>indexToLocFormat</code>, which tells us if the <code>loca</code> table is short (16 bit) or long (32 bit).</td></tr>
+                    <tr><td><a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html">glyf</a></td><td>This table holds glyph contours.</td></tr>
+                </table>
+
+                <p>Loading the glyph outline is a multi step process. First, we need to load the maxp table and find the total number of glyphs. Then we need the head table, to check what type the loc table is (16 bit or 32 bit). Once we know the type of the loca table, we can loop trough every glyph offset (<code>0 ... maxp.numGlyphs</code>), and use that offset to finally locate the glyph data.</p>
+
+                <p>The glyph data is stored with some compression, reading glyphs is verbose (code-wise). To make the code a bit easier to follow along, we will first uncompress the glyph data into an array that matches the source data closeley, before converting that array into the glyph structure.</p> 
+
+                <h2>Glyph Structure</h2>
+
+                <p>A glyph is made up of edges grouped into contours. Each edge is either a straight line, or a <a href="http://www.idav.ucdavis.edu/education/CAGDNotes/Quadratic-Bezier-Curves.pdf">quadratic bezier curve</a>. To represent this, we're going to make an <code>Edge</code> structure that has a start point, an end point and an optional control point. The <code>Edge</code> structure also contains a quadratic flag to let us know if the edge is a curve or a straight line.</p>
+
+<pre class="prettyprint linenums">struct Edge {
+    union {
+        struct {
+            Point start;
+            Point end;
+            Point control;
+        };
+        Point points[3];
+    };
+    bool quadratic;
+
+    inline Edge() { quadratic = false; }
+};</pre>
+                <p>Next, let's define the glyph structure, which is a list of edges along with a bounding box (min & max points) and the index of the glyph. Both the edges and min / max are stored in FUnits, unless the glyph has been transformed. We will add more data and functions to the <code>Glyph</code> class as needed.</p>
+
+<pre class="prettyprint linenums">struct Glyph {
+    vector< Edge > edges; // In FUnits until transformed
+
+    Point min; // In FUnits until transformed
+    Point max; // In FUnits until transformed
+
+    u32 index;
+
+    void FlipY();
+    Glyph Transform(f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 m, f32 n);
+
+    // We will add more functions & variables later
+};</pre>
+                    <p>Finally, let's create the <code>Font</code> class. This class contains an array of glyphs, we will add more variables and methods later. Each glyph can be retrieved from the font by it's index, using the <code>GetGlyphByIndex</code> function. The two helper functions, <code>ParseSimpleGlyph</code> and <code>ParseCompoundGlyph</code> are called from the constructor only, they can recursivley call each other. To parse the data of a glyph, we need to know the index of the glyph, the location of the <code>glyf</code> table and the <code>loca</code> table. The <code>loca</code> table is a vector of 32 bit integers. Regardless of what <code>indexToLocFormat</code> is, we will always parse loca into this 32 bit format.</p>
+
+<pre class="prettyprint linenums">class Font { 
+protected:
+    vector< Glyph > allGlyphs;
+protected:
+    Glyph ParseSimpleGlyph(u16 index, u8* glyf, const vector< u32 >& loca);
+    Glyph ParseCompoundGlyph(u16 index, u8* glyf, const vector< u32 >& loca);
+public:
+    Font(const char* file, bool flip = true);
+
+    const Glyph& GetGlyphByIndex(u32 index);
+
+    inline u32 NumGlyphs() {
+        return allGlyphs.size();
+    }
+
+    // We will add more functions & variables later
+};</pre>
+                    <h2>Parsing a ttf file</h2>
+
+                    <p>In this section we will search for the <code>maxp</code>, <code>loca</code>, <code>head</code> and <code>glyf</code> tables. Once loaded we will use these tables to load every glyph in the font. The constructor of the font starts by reading the font file into a large buffer.</p>
+
+<pre class="prettyprint linenums">Font::Font(const char* file, bool flip) { 
+    // Read in the actual file
+    FILE* fontFile = fopen(file, "rb");
+
+    fseek(fontFile, 0, SEEK_END);
+    u32 fontDataLength = ftell(fontFile);
+    fseek(fontFile, 0, SEEK_SET);
+
+    u8* data = (u8*)malloc(fontDataLength + 1);
+    fread(data, fontDataLength, 1, fontFile);
+    data[fontDataLength] = '\0';
+    fclose(fontFile);</pre>
+                    <p>We need to know how many glyphs are contained in the current font. The number of tables is stored in the offset subtable of the <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html">font dictionary</a>, it is at an 8 byte offset from the begening of the file.</p>
+
+<pre class="prettyprint linenums">    u8* p = data + 4; // + sizeof(u32), skip the "scaler type" variable
+    u16 numTables = read_u16(&p);</pre>
+                    <p>Next, we're going to search the table directory for the <code>maxp</code>, <code>loca</code>, <code>glyf</code> and <code>head</code> tables. The table directory is 12 bytes from the start of the file. Check the tag of each table, if a tag has been found, store a pointer to it's offset.</p>
+
+<pre class="prettyprint linenums">    u32 maxpTag = ('m' << 24) | ('a' << 16) | ('x' << 8) | 'p';
+    u32 headTag = ('h' << 24) | ('e' << 16) | ('a' << 8) | 'd';
+    u32 locaTag = ('l' << 24) | ('o' << 16) | ('c' << 8) | 'a';
+    u32 glyfTag = ('g' << 24) | ('l' << 16) | ('y' << 8) | 'f';
+
+    u8* maxp = 0;
+    u8* head = 0;
+    u8* loca = 0;
+    u8* glyf = 0;
+
+    u32 sizeofOffsetTable = 12; // 12: The table directory comes after the offset table, which is a u32 and 4 u16's
+    u32 tableDirectoryStride = 16; // 16: Size of each element in the table directory. The table directory struct is made up of 4 u32's. 
+
+    u8* tableTag = data + sizeofOffsetTable;
+    for (u16 table = 0; table < numTables; ++table) {
+        u32 thisTag = (tableTag[0] << 24) | (tableTag[1] << 16) | (tableTag[2] << 8) | tableTag[3];
+        u8* pOffset = tableTag + 4 + 4; // Move past tag and skip checksum
+        u32 offset = (pOffset[0] << 24) | (pOffset[1] << 16) | (pOffset[2] << 8) | pOffset[3];
+        if (thisTag == maxpTag) {
+            maxp = data + offset;
+        }
+        else if (thisTag == headTag) {
+            head = data + offset;
+        }
+        else if (thisTag == locaTag) {
+            loca = data + offset;
+        }
+        else if (thisTag == glyfTag) {
+            glyf = data + offset;
+        }
+        tableTag += tableDirectoryStride;
+    }</pre>
+                       <p>We also need to know how many glyphs there are in the font. The number of glyphs is stored in the <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6maxp.html">maxp</a> table. The maxp table contains a version code (32 bits), followed by the number of glyphs in the font.</p>
+
+<pre class="prettyprint linenums">    p = maxp + 4; // Skip version, which is a fixed u16.u16
+    u16 numGlyphs = read_u16(&p);</pre>
+                        <p>Glyph data is not tightly packed, each glyph can be padded out with zeros for alginment. The <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6loca.html">loca</a> table is an array of offsets. Each index coresponds to the index of a glyph, and the value at each index is the offset of the glyph from the <code>glyf</code> table (not the start of the file).</p>
+
+                        <p>A font can have a 16 or 32 bit <code>loca</code> table. The format of the <code>loca</code> table is stored in the <code>indexToLocFormat</code> variable of the <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6head.html">head</a> table. The <code>loca</code> table is 16 bit if <code>indexToLocFormat</code> is 0, 32 bit if <code>indexToLocFormat</code> is 1.</p> 
+
+<pre class="prettyprint linenums">    p = head + 50; // indexToLocFormat is the second to last variable in the head table.
+    i16 indexToLocFormat = read_i16(&p);</pre>
+                        <p>We're going to parse the <code>loca</code> table into a std::vector of 32 bit unsigned integers. If <code>indexToLocFormat</code> is 1, we can read a 32 bit unsigned int and add it to the vector. If <code>indexToLocFormat</code> is 0, we need to read a 16 bit unsigned int, and multiply it by 2.</p>
+
+<pre class="prettyprint linenums">    vector< u32 > locations;
+    locations.resize(numGlyphs + 1);
+    for (u16 i = 0; i < numGlyphs + 1; ++i) {
+        u32 offset = 0;
+
+        if (indexToLocFormat == 0) { // Short (16 bit)
+            u8* glyph = (u8*)((u16*)loca + i);
+            offset = read_u16(&glyph);
+            offset = offset * 2;
+        }
+        else { // Long (32 bit)
+            u8* glyph = (u8*)((u32*)loca + i);
+            offset = read_u32(&glyph);
+        }
+
+        locations[i] = offset;
+    }</pre>
+                        <p>The length of each glyphs is not stored, only it's location. We can find the length of a glyph by subtracting the address of the glyph from the address of the next glyph: <code>lengths[i] = locations[i + 1] - locations[i];</code>. There is an extra entry after the offset that points to the last valid index, pointingto the end of the glyph data. This extra offset allows us to find the length of the last glyph.</p>
+
+<pre class="prettyprint linenums">    vector< u32 > lengths;
+    lengths.resize(numGlyphs + 1);
+    for (u16 i = 0; i < numGlyphs; ++i) {
+        lengths[i] = locations[i + 1] - locations[i];
+    }
+    lengths[numGlyphs] = 0; // Because there is an extra</pre>
+                        <p>Next, we're going to parse all of the glyphs contained in this font. To find a glyph by it's index, look up the offset of the glyphs index in <code>loca</code> and add it to the address of the <code>glyf</code> table. The first 2 bytes of the glyph are the number of contours in the glyph. If the number of contours is negative, the glyph is simple. If it's positive, the glyph is a compound glyph. If the number of contours in a glyph is 0, set it's bounding box to have no size.</p>
+
+                        <p>If a glyph is simple, parse it with the <code>ParseSimpleGlyph</code> helper function, or use <code>ParseCompoundGlyph</code> if the glyph is compound. The <code>Font</code> constructor takes an optional argument, <code>flip</code> which will flip each glyph vertically. That's all the code we need in the constructor for now, free the memory that the font is being parsed from. We will parse additional data in this constructor later. </p>
+
+<pre class="prettyprint linenums">    // Parse all glyphs in font file
+    allGlyphs.resize(numGlyphs);
+    for (u16 i = 0; i < numGlyphs; ++i) {
+        u8* glyph = glyf + locations[i];
+        i16 numberOfContours = read_i16(&glyph);
+        
+        if (lengths[i] == 0) {
+            allGlyphs[i].min = allGlyphs[i].max = Point(0, 0);
+        }
+        else if (numberOfContours < 0) {
+            allGlyphs[i] = ParseCompoundGlyph(i, glyf, locations);
+        }
+        else {
+            allGlyphs[i] = ParseSimpleGlyph(i, glyf, locations);
+        }
+
+        allGlyphs[i].index = i;
+        if (flip) {
+            allGlyphs[i].FlipY();
+        }
+    }
+
+    // TODO: Load character map here
+    // TODO: Load layout info here
+
+    free(data);
+}</pre>
+            <h2>Retrieve Glyphs</h2>
+
+            <p>Glyphs are not mapped to characters yet, we can only access them by their index. The <code>GetGlyphByIndex</code> function does a direct lookup in the <code>allGlyphs</code> vector.</p> 
+
+<pre class="prettyprint linenums">const Glyph& Font::GetGlyphByIndex(u32 index) {
+    return allGlyphs[index];
+}</pre>
+<h2>Flipping Glyphs</h2>
+
+            <p>For display systems with an upper left coordinate system, it's convenient to flip a glyph on it's y axis. The layout logic for a flipped glyph will be different, let's store a boolean to track if this glyph has been flipped or not.</p>
+
+<pre class="prettyprint linenums">struct Glyph { 
+    // .. Glyph struct before this is unchanged
+    //    only adding new stuff
+
+    bool isFlipped;
+
+    inline Glyph() {
+        index = 0;
+        isFlipped = false;
+    }
+
+    bool Contains(const Point& p) const;
+    inline bool IsFlipped() const { return isFlipped; }
+};</pre>
+            <p>Flipping a glyph is pretty straight forward, because we're only flipping the symbol inside of it's bounding box. Find the y offset of a point from the max extent of the bounding box and add that offset to the min. The winding order of the triangle created by the start, end, and control points will matter for rendering. If a glyph is flipped, swap the start and end points.</p>
+
+<pre class="prettyprint linenums">void Glyph::FlipY() {
+    for (i32 i = 0, s = edges.size(); i < s; ++i) {
+        edges[i].start.y = max.y - edges[i].start.y + min.y;
+        edges[i].end.y = max.y - edges[i].end.y + min.y;
+        edges[i].control.y = max.y - edges[i].control.y + min.y;
+
+        Point tmp = edges[i].start;
+        edges[i].start = edges[i].end;
+        edges[i].end = tmp;
+    }
+    isFlipped = !isFlipped;
+}</pre>            </div>
+        </div>
+    </body>
+</html>

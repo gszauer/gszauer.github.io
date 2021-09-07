@@ -1,98 +1,29 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="transforms.html">Transform Hierarchies</a></li><a class="sidebar-item" href="blog_transforms_matrices.html">Combining Matrices</a><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_getters.html">World Space Getters</a></li><a class="sidebar-item sidebar-tab sidebar-active " href="blog_transforms_matrix_setters.html">World Space Setters</a></li><a class="sidebar-item" href="blog_transforms_transforms.html">Combining Transforms</a><a class="sidebar-item sidebar-tab" href="blog_transforms_transform_world.html">World Space</a></li><a class="sidebar-item" href="blog_transforms_summary.html">Summary</a></li></div>
+            <div id="content">
+                <h1>World Space Setters</h1>
+                
+                <p>The components of each transform are set realtive to the parent of the transform. Needing to set  global / world space values for these components is a fairly common task. To achieve this we need to figure out what the local values would be if the requested global components where set, then assign those as the local components.</p>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>Setting the global components of a transform generally follow the same formula. Find the parent's global transform representation, invert it and multiply the desired global transform by the inverted parent transform. This effectivley moves whatever component is being set from global space to the local space of the parent, any transformation that's left is local to the parent.</p>
 
+                <h2>Setting Global Rotation</h2>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
+                <p>Setting the global rotation of a transform is trivial, first find the world space rotation of the transforms parent and invert it. Next move the desired global rotation into the local space of the parent transform by multiplying the inverse of the parents rotation. Assign the result of this multiplication as the local rotation of the transform.</p>
 
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="transforms.html" class="list-group-item">1. Transform Hierarchies</a>
-            <a href="blog_transforms_matrices.html" class="list-group-item">2. Combining Matrices</a>
-            <a href="blog_transforms_matrix_getters.html" class="list-group-item"><span class="pl-4">a. World Space Getters</span></a>
-            <a href="blog_transforms_matrix_setters.html" class="list-group-item active"><span class="pl-4">b. World Space Setters</span></a>
-            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
-            <a href="blog_transforms_transform_world.html" class="list-group-item"><span class="pl-4">a. World Space</span></a>
-            <a href="blog_transforms_summary.html" class="list-group-item">4. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>World Space Setters</h2>
-
-          <p>The components of each transform are set realtive to the parent of the transform. Needing to set  global / world space values for these components is a fairly common task. To achieve this we need to figure out what the local values would be if the requested global components where set, then assign those as the local components.</p>
-
-          <p>Setting the global components of a transform generally follow the same formula. Find the parent's global transform representation, invert it and multiply the desired global transform by the inverted parent transform. This effectivley moves whatever component is being set from global space to the local space of the parent, any transformation that's left is local to the parent.</p>
-
-          <h4>Setting Global Rotation</h4>
-
-          <p>Setting the global rotation of a transform is trivial, first find the world space rotation of the transforms parent and invert it. Next move the desired global rotation into the local space of the parent transform by multiplying the inverse of the parents rotation. Assign the result of this multiplication as the local rotation of the transform.</p>
-
-<pre><code>void SetGlobalRotation(Transform t, Quaternion rotation)  {
+<pre class="prettyprint linenums">void SetGlobalRotation(Transform t, Quaternion rotation)  {
     if (t.parent == NULL) {
         t.rotation = rotation;
         return
@@ -102,24 +33,22 @@
     Quaternion invParentGlobal = Inverse(parentGlobal);
 
     t.rotation = invParentGlobal * rotation;
-}</code></pre>
+}</pre>
+                <h2>Setting Global Position</h2>
 
+                <p>To set the global position of a transform, we need to take the global point and transform it by the inverse of the parent transform (If there is one). We could either find the matrix representation of the global parent transform, invert it and multiply the point by that OR we can do it component wise, like the global position getter. Doing it component wise will save a few multiplications.</p>
 
-      <h4>Setting Global Position</h4>
+                <p>To invert a point by a transform, the inverse of each component needs to be applied, in reverse order. Normally you'd transform a point by applying it's scale, rotation then position. To apply the inverse of a transform, apply the inverted position, inverted rotation, then inverted scale.</p>
 
-        <p>To set the global position of a transform, we need to take the global point and transform it by the inverse of the parent transform (If there is one). We could either find the matrix representation of the global parent transform, invert it and multiply the point by that OR we can do it component wise, like the global position getter. Doing it component wise will save a few multiplications.</p>
+                <ul>
+                    <li>inverted positon: position * -1</li>
+                    <li>inverted rotation: quaternion inverse (negative x, y, z)</li>
+                    <li>inverted scale: 1 / scale
+                </ul>
 
-        <p>To invert a point by a transform, the inverse of each component needs to be applied, in reverse order. Normally you'd transform a point by applying it's scale, rotation then position. To apply the inverse of a transform, apply the inverted position, inverted rotation, then inverted scale.</p>
+                <p>That was a very long winded explanation, the code is much simpler:</p>
 
-        <ul>
-            <li>inverted positon: position * -1</li>
-            <li>inverted rotation: quaternion inverse (negative x, y, z)</li>
-            <li>inverted scale: 1 / scale
-        </ul>
-
-        <p>That was a very long winded explanation, the code is much simpler:</p>
-
-<pre><code>Vector3 InverseTransformPoint(Transform t, Vector3 point) {
+<pre class="prettyprint linenums">Vector3 InverseTransformPoint(Transform t, Vector3 point) {
     // Recursive function, apply inverse of parent transform first
     if (t.parent != NULL) {
         point = InverseTransformPoint(t.parent, point)
@@ -136,25 +65,23 @@
     point = point / t.scale; // Component wise vector division
 
     return point
-}</code></pre>
+}</pre>
+                <p>Once we have a function for applying the inverse of a transform to a point, setting the global position of a transform is trivial.</p>
 
-          <p>Once we have a function for applying the inverse of a transform to a point, setting the global position of a transform is trivial.</p>
-
-<pre><code>void SetGlobalPosition(Transform t, Vector3 position) {
+<pre class="prettyprint linenums">void SetGlobalPosition(Transform t, Vector3 position) {
     if (t.parent != NULL) {
         pos = InverseTransformPoint(t.parent, position);
     }
 
     t.position = position;
-}</code></pre>
+}</pre>
+                <h2>Setting Global Scale</h2>
 
-          <h4>Setting Global Scale</h4>
+                <p>Working with global scale is probably the most complicated part of working with a transform hierarchy. Depending on the global basis vectors of the transform, it may contain skew data, not just scale. Because of this, we can't just set global scale. We have to set the entire 3x3 sub matrix where scale data may live.</p>
 
-          <p>Working with global scale is probably the most complicated part of working with a transform hierarchy. Depending on the global basis vectors of the transform, it may contain skew data, not just scale. Because of this, we can't just set global scale. We have to set the entire 3x3 sub matrix where scale data may live.</p>
+                <p>To set this matrix we need to find the global rotation and scale matrix of the transform, where the scale of this transform isn't taken into account but the scale of all parent transforms is. Invert this matrix, and mulyiply the desired 3x3 matrix by the inverted matrix. The main diagonal of this matrix is the new scale.</p>
 
-          <p>To set this matrix we need to find the global rotation and scale matrix of the transform, where the scale of this transform isn't taken into account but the scale of all parent transforms is. Invert this matrix, and mulyiply the desired 3x3 matrix by the inverted matrix. The main diagonal of this matrix is the new scale.</p>
-
-<pre><code>void SetGlobalScaleFromRotationScaleMatrix(Transform t, Matrix3 rsMat) {
+<pre class="prettyprint linenums">void SetGlobalScaleFromRotationScaleMatrix(Transform t, Matrix3 rsMat) {
     // Reset scale to 1, do this so we can get the  global rotation and scale 
     // without the scale of this transform but with the scale of all parents
     t.scale = Vector3(1, 1, 1); 
@@ -168,11 +95,10 @@
     
     // Main diagonal is the new scale
     t.scale = Vector3(localRS[0], localRS[4], localRS[8]);
-}</code></pre>
+}</pre>
+                <p>Setting global scale with a 3x3 matrix that also contains rotation data is un-intuitive at best. We can make a simple wrapper function that takes the desired global scaling vector as an argument and constructs the rotation-scale matrix using the current global rotation of the transform:</p>
 
-      <p>Setting global scale with a 3x3 matrix that also contains rotation data is un-intuitive at best. We can make a simple wrapper function that takes the desired global scaling vector as an argument and constructs the rotation-scale matrix using the current global rotation of the transform:</p>
-
-<pre><code>void SetGlobalScale(Transform t, Vector3 scale) {
+<pre class="prettyprint linenums">void SetGlobalScale(Transform t, Vector3 scale) {
     Quaternion globalRotation = GetGlobalRotation(t)
 
     var x = Vector3(scale.x, 0, 0) * globalRotation;
@@ -186,26 +112,7 @@
     )
 
     SetGlobalScaleFromRotationScaleMatrix(t, rotationAndScaleMat);
-}</code></pre>
+}</pre>            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

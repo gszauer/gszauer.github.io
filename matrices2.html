@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first sidebar-active " href="matrices2.html">Introduction</a><a class="sidebar-item" href="blog_matrices_transform.html">Transformations</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_axis_rotation.html">Single Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Arbitrary Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Look At</a><a class="sidebar-item  sidebar-tab" href=".html">View</a><a class="sidebar-item  sidebar-tab" href=".html">Decomposition</a><a class="sidebar-item" href="blog_matrices_projections.html">Projections</a><a class="sidebar-item" href="blog_matrices_pipeline.html">3D Pipeline</a><a class="sidebar-item  sidebar-tab" href=".html">Picking</a></div>    
+            <div id="content">
+                <h1>Matrices In Games</h1>
+                
+                <p>In my last <a href="blog_matrices.html">matrix blog</a> we covered how to work with matrices, in this blog we will discuss how matrices are used in games.</p>
+
+                <h2>What's in a matrix?</h2>
+
+                <p>The last blog covered that matrices can have different <a href="blog_matrices_topology.html">logical topology and storage topology</a>. Things get a bit more confusing once we introduce handedness. Before talking about handedness, we need to take a detour and talk about what is commonly stored in a matrix. Games often use 4x4 matrices to store a transformation. When storing a transoformation as a 4x4 matrix:</p>
+
+                <ul>
+                  <li>The rotation is stored in the upper 3x3 submatrix</li>
+                  <li>The scale is stored in the main diagonal</li>
+                  <li>Position is stored in the last row or column</li>
+                </ul>
+
+                <img class="img-fluid" src="images/matrix2_column_major.png" alt="Contents of column major matrix" />
+
+                <h2>Ortho normal matrices</h2>
+
+                <p>Each row or column (depending on the logical major of the matrix) is called a basis vector. A 3x3 submatrix has 3 basis vectors representing the X, Y and Z axis of the matrix orientation. Each vector has three components.</p>
+
+                <img class="img-fluid" src="images/matrix2_column_basis.png" alt="Basis vectors" />
+
+                <p>If the basis vectors of a matrix are all 90 degrees from each other, the matrix is orthogonal. If the matrix is orthogonal and the basis vectors have unit length, the matrix is ortho-normal. Ortho normal matrices can represent a 3D coordinate system.</p>
+
+                <p>Recall that the <a href="blog_vectors_cross.html">cross product</a> of two vectors is a third, orthogonal vector. Given forward, up and right basis vectors of a matrix, we can orthogonalize a matrix with two cross products. First the cross product of forward and up gives us right prime. Then the cross product of right prime and up gives us forward prime. Any other combination can work as well.</p>
+
+                <h2>Handedness</h2>
+
+                <p>Handedness is tied to the order of cross products. Let's assume that <code>(1, 0, 0)</code> is the <code>right</code> vector. Also that <code>(0, 1, 0)</code> is the <code>up</code> vector. The next question is, which way is forward? Does it point into the screen <code>(0, 0, -1)</code> (right handed, OpenGL style), or out of the screen <code>(0, 0, 1)</code> (left handed, Direct X style)? Depending on which direction forward is expected to point, the cross product for ortho normalizing a matrix needs to be flipped.</p>
+
+                <ul>
+                  <li><code>right (1, 0, 0)</code> x <code>up (0, 1, 0)</code> = <code>(0, 0, 1)</code></li>
+                  <li><code>up (0, 1, 0)</code> x <code>right (1, 0, 0)</code> = <code>(0, 0, -1)</code></li>
+                </ul>
+
+                <p>So, why is this concept listed under "Handedness"? It's an easy way to remember which way the vectors of a matrix should point. Take both your hands and point your thumb, pointer finger and middle finger in orthogonal directions. Your thumb is the right vector, pointer finger is the up vector and middle finger is the forward vector. Rotate your left hand so both thumbs are facing right. Your right hand shows the z axis coming towards you, while your left hand shows the z axis pointing away from you.</p>
+
+                <img class="img-fluid" src="images/matrix2_column_handedness.png" alt="Matrix Handedness" />
+
+                <p class="callout">These are just conventions. OpenGL doesn't actually define which way "world forward" points. It simply defines NDC (Normalized Device Coordinate) space. You could have world forward be along the positive z axis, moving "into the monitor", and simply flip the z axis as part of the NDC transform. This will be covered in depth in the <a href="blog_matrices_projections.html">projections</a> and <a href="blog_matrices_pipeline.html">3D pipeline</a> sections of this blog post.</p>
+
+                <p>Handedness also implies rotation. In a left handed system, rotations happen clockwise around the axis of rotation. In a right handed coordinate system, rotations happen counter clockwise. This is generalizing rotations to how OpenGL and Direct X work. You could break this convention and rotate counter clockwise in a left handed system.</p>
+
+                <p class="callout">Interchanging the labels of any two axes reverses the handedness. Reversing the direction of one axis (or of all three axes) also reverses the handedness. (If the axes do not have a positive or negative direction then handedness has no meaning.) Reversing two axes amounts to a one hundred eighty degree rotation around the remaining axis</p>
+
+                <h2>Personal preference</h2>
+
+                <p>My personal preference is a right handed, column major matrix where rotations happen counter clockwise, positive z points out of the screen, column major matrix. The <a href="https://github.com/gszauer/GameAnimationProgramming/blob/master/AllChapters/Code/mat4.h">matrix class</a> i wrote for <a href="https://animationprogramming.com/">Hands on C++ Game Animation Programming</a> is the matrix i use in all my projects. My favortite thing about this is the anonymous union, which makes it easy to tell how the matrix is stored.</p>
+
+<pre class="prettyprint linenums">struct mat4 {
+  union {
+    float v[16];
+
+    struct {
+      vec4 right;
+      vec4 up;
+      vec4 forward;
+      vec4 position;
+    };
+
+    struct {
+      //            row 1     row 2     row 3     row 4
+      /* column 1 */float xx; float xy; float xz; float xw;
+      /* column 2 */float yx; float yy; float yz; float yw;
+      /* column 3 */float zx; float zy; float zz; float zw;
+      /* column 4 */float tx; float ty; float tz; float tw;
+    };
+
+    struct {
+      float c0r0; float c0r1; float c0r2; float c0r3;
+      float c1r0; float c1r1; float c1r2; float c1r3;
+      float c2r0; float c2r1; float c2r2; float c2r3;
+      float c3r0; float c3r1; float c3r2; float c3r3;
+    };
+
+    struct {
+      float r0c0; float r1c0; float r2c0; float r3c0;
+      float r0c1; float r1c1; float r2c1; float r3c1;
+      float r0c2; float r1c2; float r2c2; float r3c2;
+      float r0c3; float r1c3; float r2c3; float r3c3;
+    };
+  };
+
+  inline mat4() :
+    xx(1), xy(0), xz(0), xw(0),
+    yx(0), yy(1), yz(0), yw(0),
+    zx(0), zy(0), zz(1), zw(0),
+    tx(0), ty(0), tz(0), tw(1) {}
+
+};</pre> 
+
+                <p class="callout">No blog post about matrices would be complete without linking to <a href="https://www.j3d.org/matrix_faq/matrfaq_latest.html">The matrix and quaternion FAQ</a>.</p>
+
+
+            </div>
+        </div>
+    </body>
+</html>

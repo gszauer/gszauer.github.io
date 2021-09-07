@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+        <script src="js/blog_font_triangle.js"></script>
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();Main_Triangle('TriangleCanvas');">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="fonts.html">Introduction</a><a class="sidebar-item" href="blog_fonts_tables.html">Tables</a><a class="sidebar-item" href="blog_fonts_glyf.html">Glyphs</a><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_simple.html">Simple</a></li><a class="sidebar-item sidebar-tab" href="blog_fonts_glyf_compound.html">Compound</a></li><a class="sidebar-item sidebar-active " href="blog_fonts_rasterization.html">Rasterization</a><a class="sidebar-item" href="blog_fonts_unicode.html">Unicode Mapping</a><a class="sidebar-item" href="blog_fonts_layout.html">Layout</a></div>    
+            <div id="content">
+                <h1>Rasterizing Glyphs</h1>
+
+                <p>There are a lot of approaches to rasterizing a glyph, we're going to be implementing something similar to what is described in <a href="https://medium.com/@evanwallace/easy-scalable-text-rendering-on-the-gpu-c3f4d782c5ac">Easy Scalable Text Rendering On the GPU</a>. Some additional resources to consider:</p>
+
+                <ul>
+                    <li><a href="http://nothings.org/gamedev/rasterize/">How the stb_truetype Anti-Aliased Software Rasterizer v2 Works</a></li>
+                    <li><a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2005/01/p1000-loop.pdf">Resolution Independent Curve Rendering using Programmable Graphics Hardware</a></li>
+                    <li><a href="https://superluminal.eu/16xaa-font-rendering-using-coverage-masks-part-i/">16xAA font rendering using coverage masks</a></li>
+                    <li><a href="http://jcgt.org/published/0006/02/02/paper.pdf">GPU-Centered Font Rendering Directly from Glyph Outlines</a></li>
+                    <li><a href="https://www.youtube.com/watch?v=LaYPoMPRSlk">Math Behind Font Rasterization | How it Works</a></li>
+                </ul>
+
+                <p>TTF files use the <a href="https://en.wikipedia.org/wiki/Nonzero-rule">non-zero winding rule</a> to fill or clear contours. When rasterizing a pixel, we week track of an integer that is the winding order. This integer starts at 0. When deciding if a pixel should be filled or not, we need to take into account all of the edges that intersect the pixels scan line. Each clockwise edge adds one to the winding order, each counter clockwise crossing subtracts one.</p>
+
+                <img class="img-fluid" src="images/blog_font_contourdirection.png" alt="Glyph Contour Direction" />
+
+                <p>Checking if a point is inside of a polygon is discussed in more detail in <a href="http://web.archive.org/web/20190818063056/http://geomalgorithms.com/a03-_inclusion.html">Practical Geometric Algorithms</a> by Daniel Sunday. </p>
+
+                <h2>Curves</h2>
+
+                <p>The next challenge is how to make the curved parts of the font actually curved. We need a way to check if a point is inside the curve or not based on the segment start and end points, and the control point. The method we use for this is from <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2005/01/p1000-loop.pdf">Resolution Independent Curve Rendering using Programmable Graphics Hardware</a>.</p>
+
+                <p>The way this works is we assign the values <code>(0, 0)</code>, <code>(0.5, 0)</code>, and <code>(1, 1)</code> to the vertices of the triangle formed by the start, end and control points of the curve. Then for each coordinate, we interpolate these values using <a href="https://en.wikipedia.org/wiki/Barycentric_coordinate_system">barycentric coordinates.</a>.</p>
+
+                 <canvas id="TriangleCanvas"></canvas>
+
+                <p>Evaluate the value of the current pixels \(u^2 − v\), where \(u\) and \(v\) are the uv coordinates for the point being tested. If the result is less than 0, the pixel is inside the curve, otherwise it's outside.</p>
+
+                <h2>Point in glyph test</h2>
+
+                <p>Start implementing the contains function by looping trough every edge in the glyph.</p>
+
+<pre class="prettyprint linenums">bool Glyph::Contains(const Point& p) const {
+    i32 winding = 0;
+    i32 numEdges = edges.size();
+
+    for (i32 e = 0; e < numEdges; ++e) {
+        f32 startY = edges[e].start.y;
+        f32 endY = edges[e].end.y;
+        f32 startX = edges[e].start.x;
+        f32 endX = edges[e].end.x ;</pre>
+                <p>To find the winding number, we only need to check edges which intersect the scan line of the pixel being tested. Edges who's start y is less than the test point y and end y is greater cross the scan line from top to bottom. Edges where the opposite crossing is true, the start y is greater than the test point y and the end y is less are crossing the scan-line bottom to top. We want to check what side of an edge the point is on, for a top to bottom crossing the right side should decrease winding. For a bottom to top crossing, the left side should increase winding. This algorithm is explained more in depth in <a href="http://web.archive.org/web/20190818063056/http://geomalgorithms.com/a03-_inclusion.html">Practical Geometric Algorithms</a>.</p>
+
+<pre class="prettyprint linenums">        if (startY <= p.y && endY > p.y) { // Crossing from top to bottom
+            float dir = (startX - p.x) * (endY - p.y) - (endX - p.x) * (startY - p.y);
+            if (dir > 0) { // On Right
+                --winding;
+            }
+        }
+        else if (startY > p.y && endY <= p.y) { // Crossing from bottom to top
+            float dir = (startX - p.x) * (endY - p.y) - (endX - p.x) * (startY - p.y);
+            if (dir < 0) { // On Left
+                ++winding;
+            }
+        }</pre>
+                <p>We need to check if the point is inside the triangle formed by the start, end and control points of the edge; but only if the edge is a curve. To do this, we calculate the a, b and c barycentric coordinates of the point. The point is inside the triangle only if all three are greater than 0 but less than 1. </p>
+
+<pre class="prettyprint linenums">        if (edges[e].quadratic) { // Curved
+            f32 controlY = edges[e].control.y;
+            f32 controlX = edges[e].control.x;
+
+            float a = ((startY - endY) * (p.x - endX) + (endX - startX) * (p.y - endY)) / ((startY - endY) * (controlX - endX) + (endX - startX) * (controlY - endY));
+            float b = ((endY   - controlY) * (p.x - endX) + (controlX - endX) * (p.y - endY)) / ((startY - endY) * (controlX - endX) + (endX - startX) * (controlY - endY));
+            float c = 1.0f - a - b;
+
+            if (a >= 0.0f && a <= 1.0f && b >= 0.0f && b <= 1.0f && c >= 0.0f && c <= 1.0f) { // Point in triangle</pre>
+                <p>Next, we check the winding of the triangle. If the triangle is counter clock-wize we need to invert how the triangle is evaluated. We can do this by swapping the u and v values. Adjust the winding number, increasing only if \(u^2 − v\) is less than 0. The point is inside the glyph only if the final winding number is positive.</p>
+
+<pre class="prettyprint linenums">                Point controlToStart = edges[e].start - edges[e].control;
+                Point controlToEnd = edges[e].end - edges[e].control;
+                float crossZ = controlToStart.x * controlToEnd.y - controlToStart.y * controlToEnd.x;
+
+                Point uv_point = Point(0.5f, 0.0f) * a + Point(0, 0) * b + Point(1, 1) * c;
+                float uv_value = uv_point.x * uv_point.x - uv_point.y;
+
+                if (crossZ < 0) {
+                    uv_value = uv_point.y - uv_point.x * uv_point.x;
+                }
+
+                if (uv_value <= 0.0f) {
+                    ++winding;
+                }
+                else {
+                    --winding;
+                }
+            }
+        }
+    }
+    return winding > 0;
+}</pre>
+                <h2>Simple render loop</h2>
+
+                <p>To render a glyph, we loop trough every pixel based on it's bounding box and check if the pixel is contained in the glyph or not. If it is, the pixel is filled. Each bounding box is padded out by one pixel to avoid false negatives from control points on the edge. When checking if a point is in the glyph, scale the point by the inverse of the glyphs scale <code>point * (1/scale)</code> to move the point into the glyphs space.</p>
+
+<pre class="prettyprint linenums">void FillGlyph(const Glyph& glyph, i32 glyphX, i32 glyphY, f32 glyphScale, u8 r, u8 g, u8 b) {
+    i32 minX = (i32)(glyph.min.x * glyphScale) - 1;
+    i32 minY = (i32)(glyph.min.y * glyphScale) - 1;
+    i32 maxX = (i32)(glyph.max.x * glyphScale) + 1;
+    i32 maxY = (i32)(glyph.max.y * glyphScale) + 1;
+
+    for (i32 y = minY; y < maxY; ++y) {
+        for (i32 x = minX; x < maxX; ++x) {
+            if (glyph.Contains(Point(f32(x) / glyphScale, f32(y) / glyphScale))) {
+                DrawPixel(glyphX + x, glyphY + y, r, g, b);
+            }
+        }
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

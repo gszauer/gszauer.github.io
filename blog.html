@@ -1,157 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Gabor Makes Games</title>
+		<meta name="author" content="Gabor Szauer">
 
-  <head>
+		<link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><script type="text/javascript" src="js/navigation.js"></script>		<link rel="stylesheet" type="text/css" href="css/cards.css">
+	</head>
+	<body onload="MainNavOnLoad();">		<div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>		
+		<!-- Planned blogs:
+			1) software renderer
+			2) 2D Physics
+			3) 3D Intersection Testing
+			4) 3D Physics
+			5) Motion Matching
+			6) Crowd Animation
+			7) Ragdolls
+			8) IK
+			10) tiled rendering
+			11) interpreters 
+			12) compilers
+			13) path finding
+			14) finite state machines
+			15) GOAP
+			16) HTN AI
+			17) gltf parser 
+			18) Procedural anim: https://www.youtube.com/watch?v=LNidsMesxSE
+			19) 3D Transform Gizmo
+		--> 
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+		<div class="card-row">
+			<div class="card-col"><a href="animation.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_animation.png">
+				<div class="card-text">Skinned Animation</div>
+			</a></div>
+			<div class="card-col"><a href="quaternions.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_quaternion.png">
+				<div class="card-text">Quaternion Math</div>
+			</a></div>
+			<div class="card-col"><a href="matrices.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_matrices_1.png">
+				<div class="card-text">Matrix Math, Part 1</div>
+			</a></div>
+		</div>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+		<div class="card-row">
+			<!--div class="card-col"><a href="matrices2.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_matrices_2.png">
+				<div class="card-text">Matrix Math, Part 2</div>
+			</a></div-->
+			<div class="card-col"><a href="vectors.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_vector.png">
+				<div class="card-text">Vector Math</div>
+			</a></div>
+			<div class="card-col"><a href="decomposition.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_decompose.png">
+				<div class="card-text">Affine Decomposition</div>
+			</a></div>
+			<div class="card-col"><a href="transforms.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_hierarchy.png">
+				<div class="card-text">Transform Hierarchies</div>
+			</a></div>
+		</div>
 
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-
-
-      <div class="row mt-5">
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Skinned Animation</h4>
-            <a href="animation.html"><img class="card-img-top" src="assets/animation.png" alt="Skinned Animation"></a>
-            <div class="card-body">
-              <a href="animation.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Quaternion Math</h4>
-            <a href="quaternions.html"><img class="card-img-top" src="assets/arcball2.png" alt="Quaternion Math"></a>
-            <div class="card-body">
-              <a href="quaternions.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Matrix Math, Part 1</h4>
-            <a href="matrices.html"><img class="card-img-top" src="assets/blog_matrices.png" alt="Matrix Math"></a>
-            <div class="card-body">
-              <a href="matrices.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Vector Math</h4>
-            <a href="vectors.html"><img class="card-img-top" src="assets/vector_cover.png" alt="Vector Math"></a>
-            <div class="card-body">
-              <a href="vectors.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-      
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Matrix Decomposition</h4>
-            <a href="blog_decomposition_intro.html"><img class="card-img-top" src="assets/blog_decompose.gif" alt="Matrix Decomposition"></a>
-            <div class="card-body">
-              <a href="blog_decomposition_intro.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          <div class="card h-100 text-center">
-            <h4 class="card-header">Transform Hierarchies</h4>
-            <a href="transforms.html"><img class="card-img-top" src="assets/blog_hierarchy.png" alt="Transform Hierarchies"></a>
-            <div class="card-body">
-              <a href="transforms.html" class="btn btn-primary" style="width: 90%">Read &rarr;</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-          &nbsp;
-        </div>
-      </div>
-      <!-- /.row -->
-
-
-
-
-      <!-- Page Heading/Breadcrumbs -->
-      <!--h1 class="mt-4 mb-3">Blog Home Two</h1-->
-
-     
-
-      <!-- Pagination -->
-      <!--ul class="pagination justify-content-center mb-4">
-        <li class="page-item">
-          <a class="page-link" href="#">&larr; Older</a>
-        </li>
-        <li class="page-item disabled">
-          <a class="page-link" href="#">Newer &rarr;</a>
-        </li>
-      </ul-->
-
-    </div>
-
-  </div>
-  <!-- /.container -->
-
-  <!-- Bootstrap core JavaScript -->
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-</body>
-
+		<div class="card-row">
+			<div class="card-col"><a href="lines.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_lines.png">
+				<div class="card-text">Drawing Lines</div>
+			</a></div>
+			<div class="card-col"><a href="fonts.html" class="card-link" target="_self">
+				<img class="card-img" src="images/blog_fonts.png">
+				<div class="card-text">TrueType Fonts</div>
+			</a></div>
+			<!--div class="blank-col"></div-->
+			<div class="blank-col"></div>
+		</div>
+	</body>
 </html>

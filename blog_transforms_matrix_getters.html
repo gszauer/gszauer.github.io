@@ -1,98 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="transforms.html">Transform Hierarchies</a></li><a class="sidebar-item" href="blog_transforms_matrices.html">Combining Matrices</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_transforms_matrix_getters.html">World Space Getters</a></li><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_setters.html">World Space Setters</a></li><a class="sidebar-item" href="blog_transforms_transforms.html">Combining Transforms</a><a class="sidebar-item sidebar-tab" href="blog_transforms_transform_world.html">World Space</a></li><a class="sidebar-item" href="blog_transforms_summary.html">Summary</a></li></div>
+            <div id="content">
+                <h1>World Space Getters</h1>
+                
+                <p>So far, we've only represented a transform in world space as a matrix. How can we retrieve the world space position / rotation / scale of a transform? We can retrieve world position and rotatin, we can't retrieve world scale. Unity calls this global scale, <a href="https://docs.unity3d.com/ScriptReference/Transform-lossyScale.html">lossyScale</a>.</p>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <h2>Getting Global Rotation</h2>
 
+                <p>To get the world rotation of a transform, recursivley multiply the rotation of the transform with it's parents. The code below does this, it uses an iterator instead of recursion.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="transforms.html" class="list-group-item">1. Transform Hierarchies</a>
-            <a href="blog_transforms_matrices.html" class="list-group-item">2. Combining Matrices</a>
-            <a href="blog_transforms_matrix_getters.html" class="list-group-item active"><span class="pl-4">a. World Space Getters</span></a>
-            <a href="blog_transforms_matrix_setters.html" class="list-group-item"><span class="pl-4">b. World Space Setters</span></a>
-            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
-            <a href="blog_transforms_transform_world.html" class="list-group-item"><span class="pl-4">a. World Space</span></a>
-            <a href="blog_transforms_summary.html" class="list-group-item">4. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>World Space Getters</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-          <p>So far, we've only represented a transform in world space as a matrix. How can we retrieve the world space position / rotation / scale of a transform? We can retrieve world position and rotatin, we can't retrieve world scale. Unity calls this global scale, <a href="https://docs.unity3d.com/ScriptReference/Transform-lossyScale.html">lossyScale</a>, a convention i really like.</p>
-
-          <h4>Getting Global Rotation</h4>
-
-          <p>To get the world rotation of a transform, recursivley multiply the rotation of the transform with it's parents. The code below does this, it uses an iterator instead of recursion.</p>
-
-<pre><code>Quaternion GetGlobalRotation(Transform t) {
+<pre class="prettyprint linenums">Quaternion GetGlobalRotation(Transform t) {
     Transform iterator = t.parent
 
     while (iterator != NULL) {
@@ -101,19 +30,18 @@
     }
 
     return rotation;
-}</code></pre>
+}</pre>
+                <h2>Getting Global Position</h2>
 
-          <h4>Getting Global Position</h4>
+                <p>The easy way to get the world position of a transform would be to take the last row of the world matrix of the transform. However, we can save a few multiplications by calculating this value without any matrix operations. We need to take the position of the transform and apply it's parents transform to it in the same order as multiplying matrices would: </p>
 
-          <p>The easy way to get the world position of a transform would be to take the last row of the world matrix of the transform. However, we can save a few multiplications by calculating this value without any matrix operations. We need to take the position of the transform and apply it's parents transform to it in the same order as multiplying matrices would: 
-          </p>
-            <ul>
-              <li>scale first</li>
-              <li>rotate next</li>
-              <li>translate last:</li>
-            </ul>
+                <ul>
+                    <li>scale first</li>
+                    <li>rotate next</li>
+                    <li>translate last:</li>
+                </ul>
 
-<pre><code>Vector GetGlobalPosition(Transform t) {
+<pre class="prettyprint linenums">Vector GetGlobalPosition(Transform t) {
     Vector worldPos = t.position; // Copy, not reference
 
     Transform iter = t.Parent
@@ -129,13 +57,12 @@
     }
 
     return worldPos;
-}</code></pre>
+}</pre>
+                <h2>Getting Global (lossy) Scale</h2>
 
-          <h4>Getting Global (lossy) Scale</h4>
+                <p>The rotation and scale of a parent transform affects the scale of it's child transforms, this can introduce skewing if a parent has a non-uniform scale. Because of this, retrieving the global scale of a transform is difficult. The first step in doing so is to find a <i>3x3 Matrix</i> that holds both the rotation and scale of the transform. To find this matrix, convert the scale and rotation of the transform into matrices, combine them and recirsivley multiply with the parent transforms rotation and scale matrix.</p>
 
-          <p>The rotation and scale of a parent transform affects the scale of it's child transforms, this can introduce skewing if a parent has a non-uniform scale. Because of this, retrieving the global scale of a transform is difficult. The first step in doing so is to find a <i>3x3 Matrix</i> that holds both the rotation and scale of the transform. To find this matrix, convert the scale and rotation of the transform into matrices, combine them and recirsivley multiply with the parent transforms rotation and scale matrix.</p>
-
-<pre><code>Matrix3 GetGlobalRotationAndScale(Transform t) {
+<pre class="prettyprint linenums">Matrix3 GetGlobalRotationAndScale(Transform t) {
     Matrix3 scaleMat = Matrix3(
         t.scale.x, 0, 0,
         0, t.scale.y, 0,
@@ -153,11 +80,10 @@
 
     // Return scale rotation
     return worldRS
-}</code></pre>
+}</pre>
+                <p>Now that we know the global rotation and scale of the transform, we can remove the rotation component, leaving us with just the scale and skew matrix. To do this, find just the global rotation of the transform, invert that quaternion and turn it into a matrix. This new matrix is the inverse global rotation matrix of the transform. Multiply it with the scale and rotation matrix to remove the rotation component. The main diagonal of the resulting scale and skew matrix is the <i>global lossy scale</i> of the transform.</p>
 
-          <p>Now that we know the global rotation and scale of the transform, we can remove the rotation component, leaving us with just the scale and skew matrix. To do this, find just the global rotation of the transform, invert that quaternion and turn it into a matrix. This new matrix is the inverse global rotation matrix of the transform. Multiply it with the scale and rotation matrix to remove the rotation component. The main diagonal of the resulting scale and skew matrix is the <i>global lossy scale</i> of the transform.</p>
-
-<pre><code>Vector3 GetGlobalLossyScale(Transform t) {
+<pre class="prettyprint linenums">Vector3 GetGlobalLossyScale(Transform t) {
     // Find inverse global rotation (rotation only) of transform
     Quaternion rotation = GetGlobalRotation(t);
     Matrix3 invRotation = ToMatrix(Inverse(rotation));
@@ -170,28 +96,9 @@
 
     // Return the main doagonal of the scale & skew matrix
     return Vector3(scaleAndSkew[0], scaleAndSkew[4], scaleAndSkew[8]);
-}</code></pre>
-
-        <p class="bs-callout bs-callout-success">This method of retrieving global scale is covered in more detail in <a href="https://www.amazon.com/GPU-Pro-Advanced-Rendering-Techniques/dp/1482208636">GPU Pro 5</a>, Managing Transformations in Hierarchy by <i>Bartosz Chodorowski and Wojciech Sterna</i></p>
+}</pre>
+                <p class="callout">This method of retrieving global scale is covered in more detail in <a href="https://www.amazon.com/GPU-Pro-Advanced-Rendering-Techniques/dp/1482208636">GPU Pro 5</a>, Managing Transformations in Hierarchy by <i>Bartosz Chodorowski and Wojciech Sterna</i></p>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

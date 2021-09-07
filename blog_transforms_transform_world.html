@@ -1,94 +1,24 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="transforms.html">Transform Hierarchies</a></li><a class="sidebar-item" href="blog_transforms_matrices.html">Combining Matrices</a><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_getters.html">World Space Getters</a></li><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_setters.html">World Space Setters</a></li><a class="sidebar-item" href="blog_transforms_transforms.html">Combining Transforms</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_transforms_transform_world.html">World Space</a></li><a class="sidebar-item" href="blog_transforms_summary.html">Summary</a></li></div>
+            <div id="content">
+                <h1>World Space Getters</h1>
+                
+                <p>When accumulating transforms instead of matrices, getting the world space properties of the transform becomes trivial. You simply need to get the world transform (covered in the <a href="blog_transforms_transforms.html">last section</a>) and return individual components from it.</p>
+                
 
-      gtag('config', 'UA-96941899-3');
-    </script>
-
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="transforms.html" class="list-group-item">1. Transform Hierarchies</a>
-            <a href="blog_transforms_matrices.html" class="list-group-item">2. Combining Matrices</a>
-            <a href="blog_transforms_matrix_getters.html" class="list-group-item"><span class="pl-4">a. World Space Getters</span></a>
-            <a href="blog_transforms_matrix_setters.html" class="list-group-item"><span class="pl-4">b. World Space Setters</span></a>
-            <a href="blog_transforms_transforms.html" class="list-group-item">3. Combining Transforms</a>
-            <a href="blog_transforms_transform_world.html" class="list-group-item active"><span class="pl-4">a. World Space</span></a>
-            <a href="blog_transforms_summary.html" class="list-group-item">4. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>World Space Getters</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-          <p>When accumulating transforms instead of matrices, getting the world space properties of the transform becomes trivial. You simply need to get the world transform (covered in the <a href="blog_transforms_transforms.html">last section</a>) and return individual components from it.</p>
-
-<pre><code>Quaternion Transform_GetGlobalRotation (Transform t) {
+<pre class="prettyprint linenums">Quaternion Transform_GetGlobalRotation (Transform t) {
     Transform worldXForm = GetWorldTransform(t);
     return worldXForm.rotation;
 }
@@ -102,13 +32,12 @@ Vector3 Transform_GetGlobalPosition (Transform t) {
 Vector3 Transform_GetGlobalScale(Transform t) {
     Transform worldXForm = GetWorldTransform(t);
     return worldXForm.scale;
-}</code></pre>
+}</pre>
+                <h2>World Space Setters</h2>
 
-          <h2>World Space Setters</h2>
+                <p>To set a world space transform component, we have to invert the parent of the transform (in world space) and combine it with the desired world space transform. We can invert a transform local to its-self (not taking the parent into consideration) by first inverting the rotation and scale then applying these to the inverted translation.</p>
 
-          <p>To set a world space transform component, we have to invert the parent of the transform (in world space) and combine it with the desired world space transform. We can invert a transform local to its-self (not taking the parent into consideration) by first inverting the rotation and scale then applying these to the inverted translation.</p>
-
-<pre><code>Transform LocalInverse(Transform t) {
+<pre class="prettyprint linenums">Transform LocalInverse(Transform t) {
     Quaternion invRotation = Inverse(t.rotation);
 
     Vector3 invScale = Vector3(0, 0, 0);
@@ -130,12 +59,10 @@ Vector3 Transform_GetGlobalScale(Transform t) {
     result.scale = invScale;
 
     return result;
-}</code></pre>
+}</pre>
+                <p>Now that we can invert a transform, making a function that sets the position, rotation and scale of a transform in world space becomes trivial. Find the parent's world space transform, invert it and multiply it by the desired world space transform. The resulting transform is in the local space of the parent, as expected.</p>
 
-
-          <p>Now that we can invert a transform, making a function that sets the position, rotation and scale of a transform in world space becomes trivial. Find the parent's world space transform, invert it and multiply it by the desired world space transform. The resulting transform is in the local space of the parent, as expected.</p>
-
-<pre><code>void SetGlobalSRT(Transform t, Vector3 s, Quaternion r, Vector3 p) {
+<pre class="prettyprint linenums">void SetGlobalSRT(Transform t, Vector3 s, Quaternion r, Vector3 p) {
     if (t.parent == NULL) {
         t.rotation = r;
         t.position = p;
@@ -156,11 +83,10 @@ Vector3 Transform_GetGlobalScale(Transform t) {
     t.position = worldXForm.position;
     t.rotation = worldXForm.rotation;
     t.scale = worldXForm.scale;
-}</code></pre>
+}</pre>
+                <p>Let's make some conveniance functions that only set one component of the transform. To do so find the world space transform, substitute the desired component and call the <code>SetGlobalSRT</code> written above.</p>
 
-        <p>Let's make some conveniance functions that only set one component of the transform. To do so find the world space transform, substitute the desired component and call the <code>SetGlobalSRT</code> written above.</p>
-
-<pre><code>void SetGlobalRotation (Transform t, Quaternion rotation) {
+<pre class="prettyprint linenums">void SetGlobalRotation (Transform t, Quaternion rotation) {
     Transform worldXForm = GetWorldTransform(t);
     SetGlobalSRT(t, worldXForm.scale, rotation, worldXForm.position);
 }
@@ -173,27 +99,8 @@ void SetGlobalPosition (Transform t, Vector3 position) {
 void SetGlobalScale(Transform t, Vector3 scale) {
     Transform worldXForm = GetWorldTransform(t);
     SetGlobalSRT(t, scale, worldXForm.rotation, worldXForm.position);
-}</code></pre>
-
+}</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

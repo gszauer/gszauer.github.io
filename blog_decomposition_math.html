@@ -1,134 +1,46 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_decomposition_intro.html">Matrix Decomposition</a><a class="sidebar-item" href="blog_decomposition_code.html">Shoemake's Code</a><a class="sidebar-item sidebar-active " href="blog_decomposition_math.html">The Math</a><a class="sidebar-item" href="blog_decomposition_translation.html">Factoring Translation</a><a class="sidebar-item" href="blog_decomposition_polar.html">Polar Decomposition</a><a class="sidebar-item" href="blog_decomposition_qr.html">QR Decomposition</a><a class="sidebar-item" href="blog_decomposition_spect.html">Spectral Decomposition</a><a class="sidebar-item" href="blog_decomposition_adjust.html">Spectral Adjustment</a><a class="sidebar-item" href="blog_decomposition_affine.html">Affine Decomposition</a><a class="sidebar-item" href="blog_decomposition_summary.html">Summary</a></div>    
+            <div id="content">
+            	<!--?php OpenCodeTag(); ?-->
+            	<!--?php CloseCodeTag(); ?-->
+                <!--img src="images/" alt=" " /-->
+                <!--p class="callout"></p-->
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <h1>Understanding The Math</h1>
+                
+                <p class="callout">The math provided here for decomposing an affine transform is mostly regurgitated information from <a href="https://www.amazon.com/Graphics-Gems-IV-IBM-Version/dp/0123361559">Graphics Gems IV</a> and the <a href="http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf">Matrix Animation and Polar Decomposition</a> paper.</p>
 
+                <p>Suppose we want to decompose the <i>affinate transformation</i> stored in matrix \(M\). We can factor \(M\) into a linear transformation, followed by a translation.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
+                <p>Factoring out the translation is trivial, assuming \(M\) is a column matrix, set \(T = M\) and zero out all entries of \(T\) except the last column. Next, set \(X = M\) and zero out only the translation values of the last column. This leaves us with the factorization \(M = TX\) where \(X\) is the original matrix with no translation, and \(T\) is only the translation part of the original matrix.</p>
 
-    <title>Gabor Makes Games</title>
+                <p>Next, we want to find the <a href="https://csmbrannon.net/2013/02/14/illustration-of-polar-decomposition/">polar decomposition</a> of \(X\) such that \(X = QS\) where \(Q\) is a rotation matrix and \(S\) is a symetric matrix describing a deformation. \(S\) is going to contain both scale and skew information. Substituting \(X\) with it's decomposition leaves us with \(M = TQS\).</p>
 
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+                <p>At this point \(Q\) is either a rotation, or the negative of a rotation (a flip). \(Q\) can be factored into \(Q = FR\) where \(R\) is a rotation matrix and \(F\) is either a flip or not \( \pm I\) (negative or positive identity). \(Q\) is a rotation if the determinant of \(Q\) determinent is positive. If the determinent of \(Q\) is negative, the matrix contains a flip. This makes \(F\) easy to compute: \(F = det(Q)I\). Substituting \(Q\) with it's decomposition leaves us with \(M = TFRS\).</p>
 
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
+                <p>Matrix \(S\) contains both scale and skew (stretch) data. The <a href="https://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix">Spectral Decomposition</a> of \(S\) results in two matrices \(U\) and \(K\) such that \(U\) is an orthogonal matrix containing skew data and \(K\) is a diagonal matrix containing only scale information. The result of spectral decomposition is \(S = UKU^{T}\).</p>
 
-    <link href="katex/katex.min.css" rel="stylesheet">
-    <script src="katex/katex.min.js" type="text/javascript"></script>
-    <script src="katex/auto-render.min.js" type="text/javascript"></script>
+                <p>A nother way to think of Spectral Decomposition is that it breaks the matrix down into <a href="https://www.youtube.com/watch?v=PFDu9oVAE-g">eigenvectors and eigenvalues</a>. We factor a matrix into <a href="https://www.khanacademy.org/math/linear-algebra/alternate-bases/eigen-everything/v/linear-algebra-eigenvectors-and-eigenspaces-for-a-3x3-matrix">eigenvalues and eigen vectors</a> using the <a href="https://www.youtube.com/watch?v=_neGVEBjLJA">QR Algorithm</a>, which in turn uses <a href="https://www.youtube.com/watch?v=c_QCR20nTDY">QR Factorization</a></p>
 
-  </head>
+                <p>The Spectral Decomposition of <b>S</b> is not unique. Both <b>U</b> and <b>K</b> can be re-arranged and still be mathematically valid. We need to pick values for these variables that make geometric sense. To do so, consider interpolating accross multiple transforms such that \(S_{1} = U_{1} K_{1} U_{1}^{T}\), then \(S_{2} = U_{2} K_{2} U_{2}^{T}\). We need to make \(U_{1}\) and \(U_{2}\) as similar as possible.</p>
 
-  <body onload="renderMathInElement(document.body);">
+                <p>The transformation that takes \(U_{1}\) into \(U_{2}\) is \(U_{12} = U_{1}^{T} U_{2}\). To make sure that \(U_{1}\) and \(U_{2}\) are as close as possible, we need to minimize the rotation of \(U_{12}\). Since we already know \(U_{1}\), we just need to find \(U_{2}\). There are 24 valid values of \(U_{2}\), all <a href="https://en.wikipedia.org/wiki/Permutation_matrix">axis permutations</a> (6), multiplied by all axis sign combinations (multiply by 8), achievable by a rotation (divide by 2). Next, evaluate \(U_{12}\) for all \(U_{1}\) and \(U_{2}\) combinations and pick the result with the least rotation.</p>
 
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
+                <p>We now know that the complete decomposition is: \(M = TQS = TFRS = TFRUKU^{T}\). Out of this decomposition, we want to build a new matrix using the \(T\), \(R\) and \(K\) terms, ignoring the others. This will yield a new matrix, that does not contain any undesired skew.</p>
 
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
+            </div>
         </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="blog_decomposition_intro.html" class="list-group-item">1. Matrix Decomposition</a>
-            <a href="blog_decomposition_code.html" class="list-group-item">2. Shoemake's Code</a>
-            <a href="blog_decomposition_math.html" class="list-group-item active">3. The Math</a>
-            <a href="blog_decomposition_translation.html" class="list-group-item">4. Factoring Translation</a>
-            <a href="blog_decomposition_polar.html" class="list-group-item">5. Polar Decomposition</a>
-            <a href="blog_decomposition_qr.html" class="list-group-item">6. QR Decomposition</a>
-            <a href="blog_decomposition_spect.html" class="list-group-item">7. Spectral Decomposition</a>
-            <a href="blog_decomposition_adjust.html" class="list-group-item">8. Spectral Adjustment</a>
-            <a href="blog_decomposition_affine.html" class="list-group-item">9. Affine Decomposition</a>
-            <a href="blog_decomposition_summary.html" class="list-group-item">10. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Understanding The Math</h2>
-
-          <p class="bs-callout bs-callout-default">The math provided here for decomposing an affine transform is mostly regurgitated information from <a href="https://www.amazon.com/Graphics-Gems-IV-IBM-Version/dp/0123361559">Graphics Gems IV</a> and the <a href="http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf">Matrix Animation and Polar Decomposition</a> paper.</p>
-
-          <p>Suppose we want to decompose the <i>affinate transformation</i> stored in matrix \(M\). We can factor \(M\) into a linear transformation, followed by a translation.</p>
-
-          <p>Factoring out the translation is trivial, assuming \(M\) is a column matrix, set \(T = M\) and zero out all entries of \(T\) except the last column. Next, set \(X = M\) and zero out only the translation values of the last column. This leaves us with the factorization \(M = TX\) where \(X\) is the original matrix with no translation, and \(T\) is only the translation part of the original matrix.</p>
-
-          <p>Next, we want to find the <a href="https://csmbrannon.net/2013/02/14/illustration-of-polar-decomposition/">polar decomposition</a> of \(X\) such that \(X = QS\) where \(Q\) is a rotation matrix and \(S\) is a symetric matrix describing a deformation. \(S\) is going to contain both scale and skew information. Substituting \(X\) with it's decomposition leaves us with \(M = TQS\).</p>
-
-          <p>At this point \(Q\) is either a rotation, or the negative of a rotation (a flip). \(Q\) can be factored into \(Q = FR\) where \(R\) is a rotation matrix and \(F\) is either a flip or not \( \pm I\) (negative or positive identity). \(Q\) is a rotation if the determinant of \(Q\) determinent is positive. If the determinent of \(Q\) is negative, the matrix contains a flip. This makes \(F\) easy to compute: \(F = det(Q)I\). Substituting \(Q\) with it's decomposition leaves us with \(M = TFRS\).</p>
-
-          <p>Matrix \(S\) contains both scale and skew (stretch) data. The <a href="https://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix">Spectral Decomposition</a> of \(S\) results in two matrices \(U\) and \(K\) such that \(U\) is an orthogonal matrix containing skew data and \(K\) is a diagonal matrix containing only scale information. The result of spectral decomposition is \(S = UKU^{T}\).</p>
-
-          <p>A nother way to think of Spectral Decomposition is that it breaks the matrix down into <a href="https://www.youtube.com/watch?v=PFDu9oVAE-g">eigenvectors and eigenvalues</a>. We factor a matrix into <a href="https://www.khanacademy.org/math/linear-algebra/alternate-bases/eigen-everything/v/linear-algebra-eigenvectors-and-eigenspaces-for-a-3x3-matrix">eigenvalues and eigen vectors</a> using the <a href="https://www.youtube.com/watch?v=_neGVEBjLJA">QR Algorithm</a>, which in turn uses <a href="https://www.youtube.com/watch?v=c_QCR20nTDY">QR Factorization</a></p>
-
-          <p>The Spectral Decomposition of <b>S</b> is not unique. Both <b>U</b> and <b>K</b> can be re-arranged and still be mathematically valid. We need to pick values for these variables that make geometric sense. To do so, consider interpolating accross multiple transforms such that \(S_{1} = U_{1} K_{1} U_{1}^{T}\), then \(S_{2} = U_{2} K_{2} U_{2}^{T}\). We need to make \(U_{1}\) and \(U_{2}\) as similar as possible.</p>
-
-          <p>The transformation that takes \(U_{1}\) into \(U_{2}\) is \(U_{12} = U_{1}^{T} U_{2}\). To make sure that \(U_{1}\) and \(U_{2}\) are as close as possible, we need to minimize the rotation of \(U_{12}\). Since we already know \(U_{1}\), we just need to find \(U_{2}\). There are 24 valid values of \(U_{2}\), all <a href="https://en.wikipedia.org/wiki/Permutation_matrix">axis permutations</a> (6), multiplied by all axis sign combinations (multiply by 8), achievable by a rotation (divide by 2). Next, evaluate \(U_{12}\) for all \(U_{1}\) and \(U_{2}\) combinations and pick the result with the least rotation.</p>
-
-          <p>We now know that the complete decomposition is: \(M = TQS = TFRS = TFRUKU^{T}\). Out of this decomposition, we want to build a new matrix using the \(T\), \(R\) and \(K\) terms, ignoring the others. This will yield a new matrix, that does not contain any undesired skew.</p>
-        </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item" href="blog_lines_dda.html">Incremental</a><a class="sidebar-item" href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item" href="blog_lines_thick.html">Thickness</a><a class="sidebar-item" href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item sidebar-active " href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Clipping</h1>
+
+                <img class="img-fluid" src="images/blog_lines_clip.png" alt="Line Clipping" />
+
+                <p>The image above shows a rectangle defined by four points: \(x_{Min}\), \(y_{Min}\), \(x_{Max}\), and \(y_{Max}\). There is a line (\(PQ\)) that crosses the top (and right) of the rectangle defined by the points \(P\) and \(Q\). The intersection of the line segment and the top of the clip rectangle is \(B\). The clipped line segment is the line \(PB\).</p>
+
+                <p>Because line <code>PQ</code> intersects the top of the rectangle, we know that \(y_{B}\) should have the same <code>y</code> coordinate as the top of the rectangle.</p>
+
+                <p> $$
+                    y_{B} = y_{Max}
+                $$ </p>
+
+                <p>The triangles formed by \(PAB\) and \(PCQ\) are similar:</p>
+                
+                <p> $$
+                    \frac{x_{B} - x_{P}}{y_{B} - y_{P}} = 
+                    \frac{x_{Q} - x_{P}}{y_{Q} - y_{P}}
+                $$ </p>
+
+                <p>Replace \(y_{B}\) with \(y_{Max}\) and multiply both sides of the equation by \(y_{Max} - y_{P}\) to obtain \(x_{B}\).</p>
+
+                <p> $$
+                    x_{B} = x_{P} + 
+                    \frac{
+                        (y_{Max} - y_{P})(x_{Q} - x_{P})
+                    }{
+                        (y_{Q} - y_{P})
+                    }
+                $$ </p>
+
+                <p>The above formula is only valid for one case: where the line ends above the clip region, intersecting the top edge of the clip rectangle. The formula is slightly different for the bottom and side edges. We also have to test the line from the other direction. That makes for a total of 8 possible clip formulas, each of them just slightly different. Deriving them all is the same process as above. </p>
+
+                <h2>Cohen-Southerland Line Clipping</h2>
+
+                <p>The cohen-southerland line clipping algorithm is an iterative algorithm that can clip a line to a rectangle. It classifies the end points of the line into one of 9 spaces (above, below, etc..). Then in a loop, each space is clipped. For example if a line starts outside the lower left of the clipping region, on the first iteration it will be clipped against the left edge, then on the next iteration against the bottom edge. The iterations stop when there are no points outside the clipping rectangle. The image below shows this, with \(P'\) being the first iteration and \(P''\) being the second.</p>
+
+                <img class="img-fluid" src="images/blog_lines_clip_codes.png" alt="Line Clip Codes" />
+
+                <p>The four lines formed by the clipping rectangle divide the \(xy\) plane into \(9\) regions. Each of the \(9\) regions is given a pre-defined unique bitcode. For any point using the bitcodes shown in the above image, the following are true:</p>
+
+                <ul>
+                    <li>bit 3 is set only if \(x < x_{Min}\)</li>
+                    <li>bit 2 is set only if \(x > x_{Max}\)</li>
+                    <li>bit 1 is set only if \(y < y_{Min}\)</li>
+                    <li>bit 0 is set only if \(y > y_{Max}\)</li>
+                    <li>No bits are set if the point is inside the clipping rectangle.</li>
+                </ul>
+
+                <p>In the above image, the point \(P\) (code: <code>1010</code>) is first clipped against the left side of the clipping rectangle, resulting in line \(P'Q\). The new point, \(P'\) has a new code as well, it's <code>0010</code>, this new point only needs to be clipped to the bottom edge of the clipping rectangle.</p>
+
+
+<pre class="prettyprint linenums">struct Point {
+    float x;
+    float y;
+
+    inline Point() : x(0.0f), y(0.0f) { }
+    inline Point(float _x, float _y) : x(_x), y(_y) { }
+    inline Point(int _x, int _y) : x(_x), y(_y) { }
+};
+
+uchar GetClipCode(const Point& p, const Point& min, const Point& max) {
+    return (
+        (p.x < min.x? 8 : 0) | (p.x > max.x? 4 : 0) |
+        (p.y < min.y? 2 : 0) | (p.y > max.y? 1 : 0)
+    );
+}
+
+// Returns true if the line is visible, false if it's outside of clip rect.
+bool Clip_Line(Point& a, Point& b, const Point& min, const Point& max) {
+    unsigned char clipA = GetClipCode(a, min, max);
+    unsigned char clipB = GetClipCode(b, min, max);
+
+    float deltaX, deltaY;
+
+    while ((clipA | clipB) != 0) { // Loop until clipped
+        // Trivial reject case if both points are on 
+        // the same side of a clip plane, we can reject them
+        if ((clipA & clipB) != 0) {
+            return false;
+        }
+
+        deltaX = b.x - a.x;
+        deltaY = b.y - a.y;
+
+        if (clipA != 0) {
+            if ((clipA & 8) == 8) {
+                a.y += (min.x - a.x) * deltaY / deltaX;
+                a.x = min.x;
+            }
+            else if ((clipA & 4) == 4) {
+                a.y += (max.x - a.x) * deltaY / deltaX;
+                a.x = max.x;
+            }
+            else if ((clipA & 2) == 2) {
+                a.x += (min.y - a.y) * deltaX / deltaY;
+                a.y = min.y;
+            }
+            else if ((clipA & 1) == 1) {
+                a.x += (max.y - a.y) * deltaX / deltaY;
+                a.y = max.y;
+            }
+            clipA = GetClipCode(a, min, max);
+        }
+        else if (clipB != 0) {
+            if ((clipB & 8) == 8) {
+                b.y += (min.x - b.x) * deltaY / deltaX;
+                b.x = min.x;
+            }
+            else if ((clipB & 4) == 4) {
+                b.y += (max.x - b.x) * deltaY / deltaX;
+                b.x = max.x;
+            }
+            else if ((clipB & 2) == 2) {
+                b.x += (min.y - b.y) * deltaX / deltaY;
+                b.y = min.y;
+            }
+            else if ((clipB & 1) == 1) {
+                b.x += (max.y - b.y) * deltaX / deltaY;
+                b.y = max.y;
+            }
+            clipB = GetClipCode(b, min, max);
+        }
+    }
+
+    return true;
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

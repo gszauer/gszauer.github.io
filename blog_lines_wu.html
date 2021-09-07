@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="lines.html">Introduction</a><a class="sidebar-item" href="blog_lines_implicit.html">Slope Intercept</a><a class="sidebar-item" href="blog_lines_dda.html">Incremental</a><a class="sidebar-item" href="blog_lines_int.html">Integer Math</a><a class="sidebar-item" href="blog_lines_bresenham.html">Error Based</a><a class="sidebar-item" href="blog_lines_thick.html">Thickness</a><a class="sidebar-item sidebar-active " href="blog_lines_wu.html">Anti Aliasing</a><a class="sidebar-item" href="blog_lines_clip.html">Clipping</a></div>    
+            <div id="content">
+                <h1>Anti Aliasing</h1>
+                
+                <p>Anti-aliasing makes lines look smoother, less jagged, and is surprisingly easy to implement using <a href="https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm">Wu
+                's Line Algorithm</a>.</p>
+
+                <p>The algorithm works by drawing a 2px thick line. The intensity of each pixel is adjusted based on the distance of the pixel from the ideal line. This way, pixels that are nearest to the line are more illuminated. Horizontal, vertical and diagonal lines could be handled as a special case, as they pass trough the exact line and do not need to be anti-aliased. </p>
+
+                <p>Let's adjust the <a href="blog_lines_bresenham.html">error based line drawing function</a> to draw anti-aliased lines. For each pixel, we already know the signed distance of each pixel from the ideal line on the minor axis. We need to subtract the absolute error from one, since the closer error is to 0 the brighter the pixel. Find the intensity of the other pixel by subtracting the initial pixels intensity from one.</p>
+
+                <p>Because the provided implementation handles multiple directions in a loop, we need to figure out which direction to put the additional pixel. It should always be towards the ideal line. If the error is less than 0, we should decrement, otherwise increment. Another consideration here is the direction of the line, as we might be drawing a negative slope. To deal with this, multiply the error direction by the direction of the line.</p>
+
+                <p>We now know what the two intensities are, and where to draw the additional pixel. The last change is actually drawing. We can't just scale the color, anything with no contribution would just draw black. Instead, the drawn color needs to be blended. The error terms we created can be treated as the alpha value for these blends.</p>
+
+<pre class="prettyprint linenums">void Line(Image& image, int x0, int y0, int x1, int y1, Color& val) {
+    int xStep = x0 < x1 ? 1 : -1;
+    int yStep = y0 < y1 ? 1 : -1;
+    float error = 0.0f;
+
+    if (abs(x1 - x0) > abs(y1 - y0)) {
+    	float abs_m = (x0 == x1) ? 0.0f : fabsf(float(y1 - y0) / float(x1 - x0));
+        float y = float(y0);
+        for (int x = x0; x != x1 + xStep; x += xStep) {
+            float scale1 = 1.0f - fabsf(error);
+            float scale2 = 1.0f - scale1;
+
+            // Needs to be alpha blended, or normalized.
+            int errorStep = (error < 0.0f ? -1 : 1) * yStep;
+            PutPixel(image, x, int(y + 0.5f), val * scale1);
+            PutPixel(image, x, int(y + 0.5f) + errorStep, val * scale2);
+
+            error += abs_m;
+            if (error >= 0.5f) {
+                y += float(yStep);
+                error -= 1.0f;
+            }
+        }
+    }
+    else {
+    	float abs_m = (y0 == y1) ? 0.0f : fabsf(float(x1 - x0) / float(y1 - y0));
+        float x = float(x0);
+        for (int y = y0; y != y1 + yStep; y += yStep) {
+            float scale1 = 1.0f - fabsf(error);
+            float scale2 = 1.0f - scale1;
+
+            // Needs to be alpha blended, or normalized.
+            int errorStep = (error < 0.0f ? -1 : 1) * xStep;
+            PutPixel(image, int(x + 0.5f), y, val * scale1);
+            PutPixel(image, int(x + 0.5f) + errorStep, y, val * scale2);
+
+            error += abs_m;
+            if (error >= 0.5f) {
+                x += float(xStep);
+                error -= 1.0f;
+            }
+        }
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

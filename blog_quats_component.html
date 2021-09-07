@@ -1,100 +1,28 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="quaternions.html">Introduction</a><a class="sidebar-item" href="blog_quats_create.html">Creating Quaternions</a><a class="sidebar-item sidebar-active " href="blog_quats_component.html">Component Operations</a><a class="sidebar-item" href="blog_quats_len_norm.html">Length, Normal, Dot</a><a class="sidebar-item" href="blog_quats_inverse.html">Inverse</a><a class="sidebar-item" href="blog_quats_multiply_quat.html">Multiplying Quaternions</a><a class="sidebar-item" href="blog_quats_multiply_vec.html">Multiplying Vectors</a><a class="sidebar-item" href="blog_quats_interpolate.html">Interpolating Quaternions</a><a class="sidebar-item sidebar-tab" href="blog_quats_neighborhood.html">Neighborhood</a><a class="sidebar-item" href="blog_quats_to_matrix.html">Quaternion to Matrix</a><a class="sidebar-item" href="blog_quats_summary.html">Summary</a></div>    
+            <div id="content">
+                <h1>Component Wise Operations</h1>
+                
+                <p>Component wise operations between two quaternions are trivial to implement. The thing to keep in mind is that component wise operations affect the length of the quaternion. In games we mostly deal with unit quaternions, quaternions often need to be normalized after component wise operations.</p>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <h2>Addition, Subtraction, Scale</h2>
 
+                <p>Addition, subtraction and scale are all performed the same way. Apply the operation to each componetn of both quaternions.</p>
+                
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="quaternions.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_quats_create.html" class="list-group-item">2. Creating Quaternions</a>
-            <a href="blog_quats_component.html" class="list-group-item active">3. Component Operations</a>
-            <a href="blog_quats_len_norm.html" class="list-group-item">4. Length, Normal, Dot</a>
-            <a href="blog_quats_inverse.html" class="list-group-item">5. Inverse</a>
-            <a href="blog_quats_multiply_quat.html" class="list-group-item">6. Multiplying Quaternions</a>
-            <a href="blog_quats_multiply_vec.html" class="list-group-item">7. Multiplying Vectors</a>
-            <a href="blog_quats_interpolate.html" class="list-group-item">8. Interpolating Quaternions</a>
-            <a href="blog_quats_neighborhood.html" class="list-group-item"><span class="pl-4">a. Neighborhood</span></a>
-            <a href="blog_quats_to_matrix.html" class="list-group-item">9. Quaternion to Matrix</a>
-            <a href="blog_quats_summary.html" class="list-group-item">10. Summary</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Component Wise Operations</h2>
-
-          <p>Component wise operations between two quaternions are trivial to implement. The thing to keep in mind is that component wise operations affect the length of the quaternion. In games we mostly deal with unit quaternions, quaternions often need to be normalized after component wise operations.</p>
-
-          <h4>Addition, Subtraction, Scale</h4>
-
-          <p>Addition, subtraction and scale are all performed the same way. Apply the operation to each componetn of both quaternions.</p>
-
-<pre><code>Quaternion Add(Quaternion left, Quaternion right) {
+<pre class="prettyprint linenums">Quaternion Add(Quaternion left, Quaternion right) {
     return Quaternion(
         left.x + right.x,
         left.y + right.y,
@@ -119,53 +47,33 @@ Quaternion Scale(Quaternion quat, float scalar) {
         quat.z * scalar,
         quat.w * scalar
     );
-}</code></pre>
+}</pre>
+                <h2>Negation</h2>
 
-            <h4>Negation</h4>
-
-            <p>A quaternion can be negated by scaling it to the negative of its scale. The negative of a quaternion is NOT the same as its inverse. Perhaps un-intuitivley, a negated quaternion performs the same rotation as it's positive counterpart. That's because both the axis of rotation and angle of rotation are flipped when negating a quaternion.</p>
-
-<pre><code>Quaternion Negate(Quaternion quat) {
+                <p>A quaternion can be negated by scaling it to the negative of its scale. The negative of a quaternion is NOT the same as its inverse. Perhaps un-intuitivley, a negated quaternion performs the same rotation as it's positive counterpart. That's because both the axis of rotation and angle of rotation are flipped when negating a quaternion.</p>
+              
+<pre class="prettyprint linenums">Quaternion Negate(Quaternion quat) {
     return Quaternion(
         quat.x * -1.0f,
         quat.y * -1.0f,
         quat.z * -1.0f,
         quat.w * -1.0f
     );
-}</code></pre>
+}</pre>
+                <h2>Comparison</h2>
 
-          <h4>Comparison</h4>
+                <p>Comparing quaternions by component is trivial, but incomplete. A quaternion and it's negative represent the same rotation. To compare if two quaternions are the same, we need to check if the quaternions are component wise equal, or if one of them negated is equal component wise.</p>
 
-          <p>Comparing quaternions by component is trivial, but incomplete. A quaternion and it's negative represent the same rotation. To compare if two quaternions are the same, we need to check if the quaternions are component wise equal, or if one of them negated is equal component wise.</p>
-
-<pre><code>bool Same(Quaternion left, Quaternion right) {
+<pre class="prettyprint linenums">bool Same(Quaternion left, Quaternion right) {
     return (abs(left.x - right.x) <= EPSILON && abs(left.y - right.y) <= EPSILON && abs(left.z - right.z) <= EPSILON && abs(left.w - left.w) <= EPSILON)
         || (abs(left.x + right.x) <= EPSILON && abs(left.y + right.y) <= EPSILON && abs(left.z + right.z) <= EPSILON && abs(left.w + left.w) <= EPSILON);
-}</code></pre>
-        <p>Of course, sometimes you just want a component wise comparison</p>
-<pre><code>bool Equals(Quaternion left, Quaternion right) {
+}</pre>
+                <p>Component wise comparison is still useful to check if a quaternion has changed or not.</p>
+
+<pre class="prettyprint linenums">bool Equals(Quaternion left, Quaternion right) {
     return (abs(left.x - right.x) <= EPSILON && abs(left.y - right.y) <= EPSILON && abs(left.z - right.z) <= EPSILON && abs(left.w - left.w) <= EPSILON);
-}</code></pre>
-
+}</pre>
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

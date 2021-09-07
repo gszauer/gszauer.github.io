@@ -1,123 +1,45 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="animation.html">Introduction</a><a class="sidebar-item" href="blog_animation_curves.html">Curves</a><a class="sidebar-item" href="blog_animation_pose.html">Pose Generation</a><a class="sidebar-item sidebar-tab" href="blog_animation_frames.html">Frames</a><a class="sidebar-item sidebar-tab" href="blog_animation_tracks.html">Tracks</a><a class="sidebar-item sidebar-tab" href="blog_animation_transformtracks.html">Transform Track</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_animation_poses.html">Poses</a><a class="sidebar-item sidebar-tab" href="blog_animation_clips.html">Clips</a><a class="sidebar-item sidebar-tab" href="blog_animation_sample.html">Sample</a><a class="sidebar-item" href="blog_animation_skin.html">Skinning</a><a class="sidebar-item sidebar-tab" href="blog_animation_skinspace.html">Skin Space</a><a class="sidebar-item sidebar-tab" href="blog_animation_smoothskin.html">Smooth Skinning</a><a class="sidebar-item" href="blog_animation_blend.html">Pose Modification</a></div>    
+            <div id="content">
+                <h1>Poses</h1>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>Think of a pose as the skeleton of an animated character at a specific point in time. In practice, a pose is a hierarchy (directed acyclic graph or DAG) of transform objects. The state of each transform affects all of its children. We often say that a skeleton is composed of joints or bones, in practice both joints and bones are represented by Transform objects.</p> 
 
+                <p>There are many strategies for storing the parent child relationship of a Pose, the one used in <strong>Hands-On C++ Game Animation Programming</strong> is keeping two parallel vectors. One vector contains transform objects, the other contains integers that represent the parent of that transform. Not all joints have parents, if a joint doesn’t have a parent, it’s parent value will be nagative.</p>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="animation.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
-            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
-            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
-            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
-            <a href="blog_animation_transformtracks.html" class="list-group-item"><span class="pl-4">c. Transform Tracks</span></a>
-            <a href="blog_animation_poses.html" class="list-group-item active"><span class="pl-4">d. Poses</span></a>
-            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
-            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
-            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
-            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
-            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
-            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Poses</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-            <p>Think of a pose as the skeleton of an animated character at a specific point in time. In practice, a pose is a hierarchy (directed acyclic graph or DAG) of transform objects. The state of each transform affects all of its children. We often say that a skeleton is composed of joints or bones, in practice both joints and bones are represented by Transform objects.</p> 
-
-            <p>There are many strategies for storing the parent child relationship of a Pose, the one used in <strong>Hands-On C++ Game Animation Programming</strong> is keeping two parallel vectors. One vector contains transform objects, the other contains integers that represent the parent of that transform. Not all joints have parents, if a joint doesn’t have a parent, it’s parent value will be nagative.</p>
-
-<pre><code>class Pose {
+<pre class="prettyprint linenums">class Pose {
 protected:
     std::vector&lt;Transform&gt; mJoints;
     std::vector&lt;int&gt; mParents;
-// Rest of class</code></pre>
+// Rest of class</pre>
+                <p>Each of the joints in the pose class exists in it's own local space. To get the world position of a joint, you must combine it with the local transform of all the joints parents up to the root node. That operation looks like this:</p> 
 
-            <p>Each of the joints in the pose class exists in it's own local space. To get the world position of a joint, you must combine it with the local transform of all the joints parents up to the root node. That operation looks like this:</p> 
-
-<pre><code>Transform Pose::GetGlobalTransform(unsigned int index) {
+<pre class="prettyprint linenums">Transform Pose::GetGlobalTransform(unsigned int index) {
     Transform result = mJoints[index];
     for (int parent = mParents[index]; parent &gt;= 0; parent = mParents[parent]) {
         result = combine(mJoints[parent], result);
     }
 
     return result;
-}</code></pre>
+}</pre>
+                <p>The <code>GetMatrixPalette</code> function converts the Pose into a linear array of 4x4 matrices. These matrices can then be used to skin a mesh.</p>
 
-            <p>The <code>GetMatrixPalette</code> function converts the Pose into a linear array of 4x4 matrices. These matrices can then be used to skin a mesh.</p>
+                <p>So long as the parent of a joint has a lower index than the joint its-self, we can re-use the <code>mat4</code> that was already calculated for the parent joint. If a parent has a higher index than one of it's children, this optimization falls appare. The code below handles the optimized case and falls back to the unoptimized case if needed.</p>
 
-            <p>So long as the parent of a joint has a lower index than the joint its-self, we can re-use the <code>mat4</code> that was already calculated for the parent joint. If a parent has a higher index than one of it's children, this optimization falls appare. The code below handles the optimized case and falls back to the unoptimized case if needed.</p>
 
-<pre><code>void Pose::GetMatrixPalette(std::vector&lt;mat4&gt;&amp; out) {
+<pre class="prettyprint linenums">void Pose::GetMatrixPalette(std::vector&lt;mat4&gt;&amp; out) {
     int size = (int)Size();
     if ((int)out.size() != size) { 
         out.resize(size); 
@@ -141,48 +63,34 @@ protected:
         Transform t = GetGlobalTransform(i);
         out[i] = transformToMat4(t);
     }
-}</code></pre>
+}</pre>
+                <p>When we think of a skeleton or pose it’s easy to think of a model that has one root node and many nodes that branch of it. In practice, it’s not uncommon to have two or three root nodes. This might take some getting used to as its rather unintuitive. 3DCC packages like to package up models in a way that the first node of the skeleton is a root node, but there is also a root node that all skinned meshes are children of.</p>
 
-            <p>When we think of a skeleton or pose it’s easy to think of a model that has one root node and many nodes that branch of it. In practice, it’s not uncommon to have two or three root nodes. This might take some getting used to as its rather unintuitive. 3DCC packages like to package up models in a way that the first node of the skeleton is a root node, but there is also a root node that all skinned meshes are children of.</p>
+                <p>There are two essential poses for an animated character: the <strong>current pose</strong> (sometimes called <strong>animated pose</strong>) and the <strong>rest pose</strong>. The rest pose is the default configuration of all bones.  There are actually many more poses, there is no standard terminology and some or all of these poses can be used in an animation system. The poses that you should be aware of are:</p>
 
-            <p>There are two essential poses for an animated character: the <strong>current pose</strong> (sometimes called <strong>animated pose</strong>) and the <strong>rest pose</strong>. The rest pose is the default configuration of all bones.  There are actually many more poses, there is no standard terminology and some or all of these poses can be used in an animation system. The poses that you should be aware of are:</p>
+                <h2>Bind Pose</h2>
 
-            <h4>Bind pose</h4>
-            <p>The bind pose is the pose that a character is skinned to. Much more information on this will be covered in the skinning section. The idea is, this pose matches the general shape that a model was modelled as.</p>
+                <p>The bind pose is the pose that a character is skinned to. Much more information on this will be covered in the skinning section. The idea is, this pose matches the general shape that a model was modelled as.</p>
 
-            <h4>Inverse bind pose</h4>
-            <p>The inverse bind pose is exactly what it sounds like, the inverse of the bind pose. The inverse bind pose is needed for skinning, the skinning section later will cover the inverse bind pose in depth.</p>
+                <h2>Inverse Bind Pose</h2>
 
-            <h4>Rest / Reference pose</h4>
-            <p>Ideally, the rest / reference pose should be the same as the bind pose. This isn't always the case tough. The Rest pose is the pose that the model started to be aniamted from. If there are any joints that are not animated, they need to contain the transform of the joint from the rest pose.</p>
+                <p>The inverse bind pose is exactly what it sounds like, the inverse of the bind pose. The inverse bind pose is needed for skinning, the skinning section later will cover the inverse bind pose in depth.</p>
 
-            <h4>Current / Animated pose</h4>
-            <p>This is the pose that a character mesh will deform to match. This pose is the result of sampling an animation clip. More info on this will be provided in the clips section.</p>
+                <h2>Rest (Reference) Pose</h2>
 
-            <h4>Skeleton</h4>
-            <p>There are a lot of potential poses to keep track of, some animation systems create a <code>Skeleton</code> class to bundle together the bind pose, inverse bind pose, rest pose and joint naames. A <code>Skeleton</code> class is used in the book.</p>
+                <p>Ideally, the rest / reference pose should be the same as the bind pose. This isn't always the case tough. The Rest pose is the pose that the model started to be aniamted from. If there are any joints that are not animated, they need to contain the transform of the joint from the rest pose.</p>
 
-            <p>It is worth re-iterating that <strong>not all animations affect every joint</strong> of a character. This means some animations might not change the value of a joint because we are only storing transform tracks for joints that are animated.</p>
-        
+                <h2>Animated Pose</h2>
+
+                <p>This is the pose that a character mesh will deform to match. This pose is the result of sampling an animation clip. More info on this will be provided in the clips section.</p>
+
+                <h2>Skeleton</h2>
+
+                <p>There are a lot of potential poses to keep track of, some animation systems create a <code>Skeleton</code> class to bundle together the bind pose, inverse bind pose, rest pose and joint naames. A <code>Skeleton</code> class is used in the book.</p>
+
+                <p>It is worth re-iterating that <strong>not all animations affect every joint</strong> of a character. This means some animations might not change the value of a joint because we are only storing transform tracks for joints that are animated.</p>
+
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

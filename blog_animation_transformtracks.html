@@ -1,110 +1,33 @@
+
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
 
-  <head>
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="animation.html">Introduction</a><a class="sidebar-item" href="blog_animation_curves.html">Curves</a><a class="sidebar-item" href="blog_animation_pose.html">Pose Generation</a><a class="sidebar-item sidebar-tab" href="blog_animation_frames.html">Frames</a><a class="sidebar-item sidebar-tab" href="blog_animation_tracks.html">Tracks</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_animation_transformtracks.html">Transform Track</a><a class="sidebar-item sidebar-tab" href="blog_animation_poses.html">Poses</a><a class="sidebar-item sidebar-tab" href="blog_animation_clips.html">Clips</a><a class="sidebar-item sidebar-tab" href="blog_animation_sample.html">Sample</a><a class="sidebar-item" href="blog_animation_skin.html">Skinning</a><a class="sidebar-item sidebar-tab" href="blog_animation_skinspace.html">Skin Space</a><a class="sidebar-item sidebar-tab" href="blog_animation_smoothskin.html">Smooth Skinning</a><a class="sidebar-item" href="blog_animation_blend.html">Pose Modification</a></div>    
+            <div id="content">
+                <h1>Transform Tracks</h1>
 
-      gtag('config', 'UA-96941899-3');
-    </script>
+                <p>With our current setup, there exists tracks for scalars, vectors and quaternions. Next we need a higher order track, one that can encode the change of a <code>Transform</code> object over time. In this context, a <code>Transform</code> object is made up of three components: position, rotation and scale.</p>
 
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Gabor Szauer">
-
-    <title>Gabor Makes Games</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/modern-business.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">Gabor Makes Games</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="blog.html">Blog</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="book.html">Books</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="https://github.com/gszauer"><i class="fa fa-github" aria-hidden="true"></i>&nbsp;Github</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" href="https://twitter.com/gszauer">@gszauer</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container">
-      <!-- Content Row -->
-      <div class="row mt-5">
-        <!-- Sidebar Column -->
-        <div class="col-lg-3 mb-4">
-          <div class="list-group pb-2">
-            <a href="blog.html"  class="list-group-item">&lt; Back</a>
-            <!--a href="blog_transforms.html" class="list-group-item">Source on Github</a>
-            <a href="blog_transforms.html" class="list-group-item">Page on Github Pages</a-->
-          </div>
-          <div class="list-group">
-            <a href="animation.html" class="list-group-item">1. Introduction</a>
-            <a href="blog_animation_curves.html" class="list-group-item">2. Curves</a>
-            <a href="blog_animation_pose.html" class="list-group-item">3. Pose Generation</a>
-            <a href="blog_animation_frames.html" class="list-group-item"><span class="pl-4">a. Frames</span></a>
-            <a href="blog_animation_tracks.html" class="list-group-item"><span class="pl-4">b. Tracks</span></a>
-            <a href="blog_animation_transformtracks.html" class="list-group-item active"><span class="pl-4">c. Transform Tracks</span></a>
-            <a href="blog_animation_poses.html" class="list-group-item"><span class="pl-4">d. Poses</span></a>
-            <a href="blog_animation_clips.html" class="list-group-item"><span class="pl-4">e. Clips</span></a>
-            <a href="blog_animation_sample.html" class="list-group-item"><span class="pl-4">f. Sample</span></a>
-            <a href="blog_animation_skin.html" class="list-group-item">4. Skinning</a>
-            <a href="blog_animation_skinspace.html" class="list-group-item"><span class="pl-4">a. Skin Space</span></a>
-            <a href="blog_animation_smoothskin.html" class="list-group-item"><span class="pl-4">b. Smooth Skinning</span></a>
-            <a href="blog_animation_blend.html" class="list-group-item">5. Pose Modification</a>
-          </div>
-        </div>
-        <!-- Content Column -->
-        <div class="col-lg-9 mb-4">
-          <h2>Transform Tracks</h2>
-
-          <!--p class="bs-callout bs-callout-success"><i>All of the code presented in this blog post is pseudo-code. It's not really any language, but should be pretty simple to read and adapt. My goal with this post is to demonstrate different ways of accumulating transforms in a hierarchy, not to provide 100% functional code.</i></p-->
-
-<p>With our current setup, there exists tracks for scalars, vectors and quaternions. Next we need a higher order track, one that can encode the change of a <code>Transform</code> object over time. In this context, a <code>Transform</code> object is made up of three components: position, rotation and scale.</p>
-
-<pre><code>struct Transform {
+<pre class="prettyprint linenums">struct Transform {
     vec3 position;
     quat rotation;
     vec3 scale;
-}</code></pre>
+}</pre>
 
-            <p>If we where to template the <code>Track</code> class to represent a <code>Transform</code> it would look something like this <code>typedef Track&lt;Transform, 10&gt; TransformTrack_BAD;</code> Not all transform tracks will animate every component of a transform object. Some animation might only animate the rotation for example. Because not all transform components need to be animated, making a frame that has 10 unique floats for every value and tangent is wasteful.</p>
+                <p>If we where to template the <code>Track</code> class to represent a <code>Transform</code> it would look something like this <code>typedef Track&lt;Transform, 10&gt; TransformTrack_BAD;</code> Not all transform tracks will animate every component of a transform object. Some animation might only animate the rotation for example. Because not all transform components need to be animated, making a frame that has 10 unique floats for every value and tangent is wasteful.</p>
 
-            <p>There is an additional piece of data that must be kept somewhere, a reference to the transform object that the transform track is animating. Typically, this type of reference is expressed as an index into the array that contains the scene hierarchy, or sometimes using a pointer. A transform track will always have a target object. Embedding this information in the transform track class would be very useful. The <code>TransformTrack</code> covered in the book has the following member variables:</p>
+                <p>There is an additional piece of data that must be kept somewhere, a reference to the transform object that the transform track is animating. Typically, this type of reference is expressed as an index into the array that contains the scene hierarchy, or sometimes using a pointer. A transform track will always have a target object. Embedding this information in the transform track class would be very useful. The <code>TransformTrack</code> covered in the book has the following member variables:</p>
 
-<pre><code>class TransformTrack {
+<pre class="prettyprint linenums">class TransformTrack {
 protected:
     unsigned int mId;
     VectorTrack mPosition;
@@ -117,43 +40,25 @@ protected:
 pulic:
    Transform Sample(const Transform&amp; t, float time, bool looping);
 // Rest of the class
-}</code></pre>
+}</pre>
+                <p>The <code>TransformTrack</code> class does not need to be templated. It contains the following data:</p>
 
-            <p>The <code>TransformTrack</code> class does not need to be templated. It contains the following data:</p>
 
-            <ul>
-                <li>An id, that represents the index of the transform this track is affecting.</li>
-                <li>A vector track for the position component.</li>
-                <li>A quaternion track for the rotation component.</li>
-                <li>A vector track for the scale component.</li>
-                <li>Cached start and end times.</li>
-            </ul>
+                <ul>
+                    <li>An id, that represents the index of the transform this track is affecting.</li>
+                    <li>A vector track for the position component.</li>
+                    <li>A quaternion track for the rotation component.</li>
+                    <li>A vector track for the scale component.</li>
+                    <li>Cached start and end times.</li>
+                </ul>
 
-            <p>Any of the component tracks (position, rotation or scale) could be empty. When the <code>Sample</code> function is called it must be provided a default <code>Transform</code>. If a <code>TransformTrack</code> has an empty component track, the missing value is taken from the passed in default <code>Transform</code> object.</p>
+                <p>Any of the component tracks (position, rotation or scale) could be empty. When the <code>Sample</code> function is called it must be provided a default <code>Transform</code>. If a <code>TransformTrack</code> has an empty component track, the missing value is taken from the passed in default <code>Transform</code> object.</p>
 
-            <p>The <code>TransformTrack</code> class caches start and end times. Any time one of the tracks changes, the cached times must be re-calculated. The start time is the lowest of the component track start times. The end time is the highest of the component track end times.</p>
+                <p>The <code>TransformTrack</code> class caches start and end times. Any time one of the tracks changes, the cached times must be re-calculated. The start time is the lowest of the component track start times. The end time is the highest of the component track end times.</p>
 
-            <p>The <code>TransformTrack</code> only animates the values of one <code>Transform</code> object over time. Typically a character is made up of many transforms, not all of which are animated. Before exploring how to combine <code>TransformTrack</code> objects into an animation clip, let's explore how the hierarchy that transform tracks animate works.</p>
-        
+                <p>The <code>TransformTrack</code> only animates the values of one <code>Transform</code> object over time. Typically a character is made up of many transforms, not all of which are animated. Before exploring how to combine <code>TransformTrack</code> objects into an animation clip, let's explore how the hierarchy that transform tracks animate works.</p>
+
+            </div>
         </div>
-          
-      </div>
-      <!-- /.row -->
-
-    </div>
-    <!-- /.container -->
-
-    <!-- Footer -->
-    <!--footer class="py-5 bg-dark">
-      <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
-      </div>
-    </footer-->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-  </body>
-
+    </body>
 </html>

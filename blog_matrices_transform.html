@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="matrices2.html">Introduction</a><a class="sidebar-item sidebar-active " href="blog_matrices_transform.html">Transformations</a><a class="sidebar-item  sidebar-tab" href="blog_matrices_axis_rotation.html">Single Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Arbitrary Axis Rotation</a><a class="sidebar-item  sidebar-tab" href=".html">Look At</a><a class="sidebar-item  sidebar-tab" href=".html">View</a><a class="sidebar-item  sidebar-tab" href=".html">Decomposition</a><a class="sidebar-item" href="blog_matrices_projections.html">Projections</a><a class="sidebar-item" href="blog_matrices_pipeline.html">3D Pipeline</a><a class="sidebar-item  sidebar-tab" href=".html">Picking</a></div>    
+            <div id="content">
+                <h1>Matrices as Transformations</h1>
+                
+                <p>There are two common use cases for matrices in video games: using matrices to represent 3D transformations, and to project 3D geometry onto a 2D screen. There are a few common ways to create matrices that hold transform data. The most common is to create three seperate matrices: one for rotation, one for scale and one for translation, then combine them using matrix multiplication. The other common way is with a "Look At" function, both will be covered in this blog.</p>
+
+                <p>When we store transformation in a matrix, what we are doing is storing 3 different basis vectors and a point in space. An easy way to think about what a matrix describes is three vectors to determine the axis of the space the matrix represents and an offset to get to those axis, in other words, the 4x4 matrix is expressed as a collection of 4 vectors. Consider the following 4x4 matrix for example:</p>
+
+<p>$$
+\begin{bmatrix}
+  \textcolor{red}{xAxis.x} & \textcolor{green}{yAxis.x} & \textcolor{blue}{zAxis.x} & \textcolor{yellow}{position.x} \\
+  \textcolor{red}{xAxis.y} & \textcolor{green}{yAxis.y} & \textcolor{blue}{zAxis.y} & \textcolor{yellow}{position.y} \\
+  \textcolor{red}{xAxis.z} & \textcolor{green}{yAxis.z} & \textcolor{blue}{zAxis.z} & \textcolor{yellow}{position.z} \\
+  \textcolor{red}{0} & \textcolor{green}{0} & \textcolor{blue}{0} & \textcolor{yellow}{1}
+\end{bmatrix}
+$$</p>
+
+				<p class="callout">The above matrix is a column major matrix with row storage, it's what you would expect to see in a text book. In code, we would store this matrix one column at a time, which would look like the matrix is transposed.</p>
+
+                <p>Thinking of matrices in terms of vectors might help avoid some confusion about row vs column major matrices. The position is stored in the last vector of the matrix, in a row major matrix that vector is the last row, in a column major matrix that vector is the last column.</p>
+
+                <p>I briefly mentioned this in my <a href="vectors.html">vector blog</a>, a 4 dimensional vector with a W component of 0 is a vector, and a 4 dimensional vector with a W component of 1 is a point. This implies that the first three columns of the above matrix are vectors, but the 4th column is a point.</p>
+
+                <p class="callout">While this analogy isn't 100% correct, it works well for this discussion. For more in-depth information about why the vectors that make up this matrix end with <code>0, 0, 0, 1</code>, check out this 2017 GDC talk: <a href="https://www.youtube.com/watch?v=o1n02xKP138">Math for Game Programmers: Understanding Homogeneous Coordinates</a> by Squirrel Eiserloh</p>
+
+                <h2>Tanslation Matrix</h2>
+
+                <p>Creating a translation matrix is very straight forward. The translation is held in the last vector of the matrix. To make a translation matrix, take the identity matrix and replace it's <code>x</code>, <code>y</code> and <code>z</code> components with the desired translation. The <code>w</code> component should remain <code>1</code>.
+
+<pre class="prettyprint linenums">mat4 MakeTranslation(vec3 translation) {
+    mat4 result; // Identity matrix
+    result.v[12] = translation.x;
+    result.v[13] = translation.y;
+    result.v[14] = translation.z;
+    result.v[15] = 1.0f;
+    return result;
+}</pre> 
+
+                <h2>Scale Matrix</h2>
+
+                <p>Creating a scale matrix is also straight forward. Scale information is help in the main diagonal of the matrix. To make a scale matrix, take the identity matrix and repalce the main diagonal with the scale vector, the last element of the matrix should remain 1.</p>
+
+<pre class="prettyprint linenums">mat4 MakeScale(vec3 scale) {
+    mat4 result; // Identity matrix
+    result.v[0] = scale.x;
+    result.v[5] = scale.y;
+    result.v[10] = scale.z;
+    result.v[15] = 1.0f;
+    return result;
+}</pre> 
+
+                <h2>Rotation Matrix</h2>
+
+                <p>Creating a rotation matrix gets a bit more complicated, the different methods for creating rotation matrices have their own pages in this blog. The important thing for now is where in a 4x4 matrix the rotation data is stored. We can think of rotations as the upper left 3x3 sub-matrix of the rotation matrix, notice that this includes the main diagonal. Scale and rotation are stored in some of the same elements of the matrix. This can cause some artifacts, especially when non-uniform scaling is used.</p> 
+
+                <p>If a matrix contains non uniform scale and a rotation, it can start to skew. This isn't a problem when the matrix is multiplying points, but the error accumulates as matrices are combined trough multiplication. This topic is covered in depth in my <a href="decomposition.html">matrix decomposition</a> blog. A good rule of thumb is to only introduce non uniform scale to the last transform in a chain of transform matrices.</p>
+
+                <h2>Multiplication order</h2>
+
+                <p>When it comes to matrices, <a href="blog_matrices_multiplication.html">Multiplication order matters</a>. When combining translation, rotation and scale into a transform matrix, the effects of each multiplication are cumulative. Consider the following code for example:</p>
+
+<pre class="prettyprint linenums">vec3 pos = vec3(10, 0, 0);
+vec3 scl = vec3(2, 2, 2);
+
+mat4 matrix1 = scl * pos;
+mat4 matrix2 = pos * scl;</pre>
+                <p>Assuming the above example uses <b>post-multiplication</b>, <code>matrix1</code> moves the object to position <code>(10, 0, 0)</code> and then scales it to twice it's size. However, since the translation is already applied, the scale also scales the translation, moving the object to <code>(20, 0, 0)</code>. The other matrix, <code>matrix2</code> scales the object to twice it's size first, then moves this larger object to the right by 10 units.</p>
+
+                <p>
+				$$
+                    \begin{bmatrix}
+                      1 & 0 & 0 & 0 \\
+                      0 & 1 & 0 & 0 \\
+                      0 & 0 & 1 & 0 \\
+                      10 & 0 & 0 & 1
+                    \end{bmatrix}
+                    *
+                    \begin{bmatrix}
+                      2 & 0 & 0 & 0 \\
+                      0 & 2 & 0 & 0 \\
+                      0 & 0 & 2 & 0 \\
+                      0 & 0 & 0 & 1
+                    \end{bmatrix}
+                    =
+					\begin{bmatrix}
+                      2 & 0 & 0 & 0 \\
+                      0 & 2 & 0 & 0 \\
+                      0 & 0 & 2 & 0 \\
+                      10 & 0 & 0 & 1
+                    \end{bmatrix}
+                $$
+                </p>
+
+                 <p>
+				$$
+                    \begin{bmatrix}
+                      2 & 0 & 0 & 0 \\
+                      0 & 2 & 0 & 0 \\
+                      0 & 0 & 2 & 0 \\
+                      0 & 0 & 0 & 1
+                    \end{bmatrix}
+                    *
+                     \begin{bmatrix}
+                      1 & 0 & 0 & 0 \\
+                      0 & 1 & 0 & 0 \\
+                      0 & 0 & 1 & 0 \\
+                      10 & 0 & 0 & 1
+                    \end{bmatrix}
+                    =
+					\begin{bmatrix}
+                      2 & 0 & 0 & 0 \\
+                      0 & 2 & 0 & 0 \\
+                      0 & 0 & 2 & 0 \\
+                      20 & 0 & 0 & 1
+                    \end{bmatrix}
+                $$
+                </p>
+
+                <p class="callout">The formula above uses column major matrices, with column storage, using post multiplication. This is what you might expect to see if you where looking at OpenGL code, and listed the raw memory. Most math text books use column major matrices with row storage, which makes more sense visually and is easier to read.</p>
+
+                <!-- From the OpenGL spec:
+                	Column-major versus row-major is purely a notational convention. Note that post-multiplying with column-major matrices produces the same result as pre-multiplying with row-major matrices. The OpenGL Specification and the OpenGL Reference Manual both use column-major notation. You can use any notation, as long as it's clearly stated.
+                -->
+
+                <p>Because each transformation affects the ones that come before it (if you taranslate first, a later scale will also scale that translation), in games we generally want to follow the below order to combine transformations. The actual code for combining these transforms will be dependant on matrix multiplication order.</p>
+
+                <ul>
+                	<li>Scale First</li>
+                	<li>Rotate Second</li>
+                	<li>Translate Last</li>
+                </ul>
+
+<pre class="prettyprint linenums">mat4 MakeTransform(vec3 pos, quat rot, vec3 scl) {
+    mat4 position = MakeTranslation(pos);
+    mat4 rotation = QuatToMat4(rot);
+    mat4 scale = MakeScale(scl);
+
+   // This uses post multiplication. 
+   // Scale first, rotate second, translate last.
+   return position * rotation * scale;
+}</pre> 
+
+                <p>The above code example is not very efficient, it's only intended to demonstrate mutliplication order. A more optimal way to write this function would be to create only the rotation matrix, then add scale and position, like so:</p>
+
+  <pre class="prettyprint linenums">mat4 MakeTransform(vec3 pos, quat rot, vec3 scl) {
+    // Start with the rotation matrix
+    mat4 result = QuatToMat4(rot);
+
+    // Scale the main diagonal
+    result.v[0] *= scale.x;
+    result.v[5] *= scale.y;
+    result.v[10] *= scale.z;
+
+    // Insert position
+    result.v[12] = translation.x;
+    result.v[13] = translation.y;
+    result.v[14] = translation.z;
+
+    // Make sure last element is 1
+    result.v[15] = 1.0f;
+
+    return result;
+}</pre> 
+
+            </div>
+        </div>
+    </body>
+</html>
