@@ -33,10 +33,10 @@ function GetHallwayConnections() {
 
 function GenerateMaze() {
 	let rooms = [
-		START, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, 
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY
+		START, EMPTY, EMPTY, EMPTY, EMPTY, 
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY
 	];
 
 	let halls = GetHallwayConnections();
