@@ -1,4 +1,4 @@
-  var showLabels = true
+var showLabels = true
 
 var canvas = null;
 var context = null;

@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+        <script type="text/javascript" src="js/blog_polygon_render.js"></script>
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();Init();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_polygons.html">Polygons</a><a class="sidebar-item sidebar-tab" href="blog_polygons_scanline.html">Faster Drawing</a><a class="sidebar-item sidebar-tab" href="blog_polygons_clip.html">Clipping</a><a class="sidebar-item sidebar-tab" href="blog_polygons_antialias.html">Anti Aliasing</a><a class="sidebar-item sidebar-active " href="blog_polygons_triangle.html">Triangles</a><a class="sidebar-item" href="blog_polygons_circle.html">Circles</a></div>    
+            <div id="content">
+                <h1>Drawing Triangles</h1>
+
+                <p>Drawing a filled triangle is easy if you know how to <a href="blog_lines.html">draw a line</a>. The algorithm presented in this blog to draw a triangle is an edge interpolation algorithm. The idea is simple, we treat a triangle as two lines, interpolate along both lines on the y axis, and draw a straight line between the interpolated points.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_triangle.png" alt="Edge Interpolation" />
+
+                <p>This works fine for triangles that have a flat top, or flat bottom, but what about triangles that dont? We can split such a triangle into two other triangles, one with a flat top and one with a flat bottom.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_triangle_split.png" alt="Splitting triangle" />
+
+                <p>The triangle algorithm consists of two steps, first we split the triangle into two, then we rasterize each triangle. Splitting the triangle into two triangles keeps the render loop extreamly simple. These are the steps to follow:</p>
+
+                <p><ul>
+                    <li>Sort vertices from top to bottom</li>
+                    <li>Split the triangle into two if needed</li>
+                    <li>For each scanline<ul>
+                        <li>Calculate the x coordinates (\(x1\) &amp; \(x2\)) of two the triangle sides.</li>
+                        <li>Draw horizontal line from \(x1\) to \(x2\)</li>
+                    </ul></li>
+                </ul></p>
+
+                <p>Let's start with the simple <code>DrawFlatTriangle</code> function. This function assumes that vertex 2 and vertex 3 are horizontal. It uses a simple <a href="blog_lines_dda.html">DDA</a> to trace the left and right sides of the triangle. The code needs to check if the bottom or top of the triangle is flat, and increment or decrement <code>y</code> accordingly.</p>
+
+<pre class="prettyprint linenums">function DrawFlatTriangle(v1, v2, v3) {
+    let height = v2[1] - v1[1];
+
+    if (height == 0) {
+        return;
+    }
+
+    let dx_left = (v2[0] - v1[0]) / height;
+    let dx_right = (v3[0] - v1[0]) / height;
+
+    let cx_left = v1[0];
+    let cx_right = v1[0];
+
+    if (v1[1] < v2[1]) {
+        for (let y = v1[1]; y <= v2[1]; ++y) {
+            game_context.beginPath();
+            game_context.moveTo(cx_left, y);
+            game_context.lineTo(cx_right, y);
+            game_context.stroke();
+
+            cx_left += dx_left;
+            cx_right += dx_right;
+        }
+    }
+    else {
+        for (let y = v1[1]; y >= v2[1]; --y) {
+            game_context.beginPath();
+            game_context.moveTo(cx_left, y);
+            game_context.lineTo(cx_right, y);
+            game_context.stroke();
+
+            cx_left -= dx_left;
+            cx_right -= dx_right;
+        }
+    }
+}</pre>
+                    <p>The <code>DrawFlatTriangle</code> function is not very robust, but it's not meant to be called directly. Instead, we will create a <code>DrawTriangle</code> function. This function will first sort all of the vertices top to bottom. Then, it checks if the triangle is flat topped, flat bottomed, or if it needs to be split, and it will call the <code>DrawFlatTriangle</code> function accordingly.</p>
+
+<pre class="prettyprint linenums">function DrawTriangle(v1, v2, v3) {
+    // Sort vertices top to bottom
+    if (v3[1] < v1[1]) {
+        let tmp = v3;
+        v3 = v1;
+        v1 = tmp;
+    }
+    if (v2[1] < v1[1]) {
+        let tmp = v2;
+        v2 = v1;
+        v1 = tmp;
+    }
+    if (v3[1] < v2[1]) {
+        let tmp = v3;
+        v3 = v2;
+        v2 = tmp;
+    }
+
+    if (v1[1] == v2[1]) { // Flat top
+        if (v1[0] < v2[0]) {
+            DrawFlatTriangle(v3, v2, v1);
+        }
+        else {
+            DrawFlatTriangle(v3, v1, v2);
+        }
+    }
+    else if (v2[1] == v3[1]) { // Flat bottom
+        if (v2[0] < v3[0]) {
+            DrawFlatTriangle(v1, v2, v3);
+        }
+        else {
+            DrawFlatTriangle(v1, v3, v2);
+        }
+    }
+    // Split triangle if it has no horizontal edges
+    // Assuming int's here, use epsilon if floats
+    // else if (v2[1] != v1[1] && v3[1] != v1[1] && v2[1] != v3[1]) {
+    else {
+        let ratio = (v2[1] - v1[1]) / (v3[1] - v1[1]);
+        let newX = (v3[0] - v1[0]) * ratio + v1[0];
+
+        // Draw the split sub-triangles
+        if (newX < v2[0]) {
+            DrawFlatTriangle(v1, [newX, v2[1]], v2);
+            DrawFlatTriangle(v3, v2, [newX, v2[1]]);
+        }
+        else {
+            DrawFlatTriangle(v1, v2, [newX, v2[1]]);
+            DrawFlatTriangle(v3, v2, [newX, v2[1]]);
+        }
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

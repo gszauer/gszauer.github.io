@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><link rel="stylesheet" type="text/css" href="css/katex.min.css"><script type="text/javascript" src="js/katex.min.js"></script><script type="text/javascript" src="js/katex-autorender.min.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();renderMathInElement(document.body);PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_polygons.html">Polygons</a><a class="sidebar-item sidebar-tab" href="blog_polygons_scanline.html">Faster Drawing</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_polygons_clip.html">Clipping</a><a class="sidebar-item sidebar-tab" href="blog_polygons_antialias.html">Anti Aliasing</a><a class="sidebar-item" href="blog_polygons_triangle.html">Triangles</a><a class="sidebar-item" href="blog_polygons_circle.html">Circles</a></div>    
+            <div id="content">
+                <h1>Polygon Clipping</h1>
+
+                <p>In this section we're going to implement a simplified version of the Sutherland-Hodgman polygon clipping algorithm to clip a polygon against a bounding box. This algorithm is iterative. We will clip the polygon against one edge of the bounding box at a time. Clipping against each edge produces a new polygon, which is then clipped against the next edge. The algorithm works like this:</p>
+
+                <ul>
+                    <li>For each edge \((line)\) of bounding box <ul>
+                        <li>For each edge \((P0, P1)\) of polygon<ul>
+                            <li>Add point \(P0\) to the output polygon if it is inside the bounding box</li>
+                            <li>If edge \((P0, P1)\) crosses \((line)\), add the intersection point to the output polygon</li>
+                        </ul></li>
+                    </ul></li>
+                </ul>
+
+                <p>We only check if the first point of an edge is inside the bounding box or not. This is because the polygon is closed, every point will be processed as the first point of an edge.</p>
+
+                <h2>Example</h2>
+
+                <p>Let's walk trough how the following polygon \((ABCDEF)\) would be clipped against the rectangle. The polygon is made up of only one contour. We will generate a new output polyong.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip1.png" alt="Polygon ABCDEF" />
+
+                <p>We need to clip against each side of the rectangle one at a time, let's start with the bottom. We're going to treat the bottom edge as an infinate plane where \(y = ymax\), and clip the polygon against this line. We're going to iterate one edge at a time, starting with edge \(AB\). First, check that the starting point is on the correct side of the line. It is, so we add it to the output polygon. Next, check if the line segment \(AB\) crosses the line \(y = ymax\). It does not, no other points need to be added.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip2.png" alt="No edges clipped" />
+
+                <p>Next, we consider edge \(BC\). The starting point is less than \(ymax\) so we add it to the output polygon. Next, check if the segment \(BC\) crosses the line \(y = ymax\). It does, so we add the intersection point as a new point to the polygon, point \(G\).</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip3.png" alt="BC clipped create G" />
+
+
+                <p>Next, we consider edge \(CD\). The starting point \(C\) is greater than \(ymax\), it is not added to the output polygon. The segment \(CD\) does not cross the line \(y = ymax\), no other points need to be added.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip4.png" alt="C ignored" />
+
+                <p>Next, consider edge \(DE\). The starting point \(D\) is greater than \(ymax\), it is not added to the output polygon. The segment \(DE\) crosses line \(y = ymax\). Add the intersection point \(H\) to the output polygon.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip5.png" alt="D ignored create H" />
+
+                <p>Both \(E\) and \(F\) are above \(y = ymax\), and neither of them cross the line, they will both be added to the output polygon with not additional points created.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip6.png" alt="EF are not clipped" />
+
+                <p>We're done clipping against \(y = ymax\). The order we clip against edges does not matter, let's clip against the top edge \(y = min\) next. We need to take the output polygon from clipping the last edge and treat it as the input polygon for this edge. We will clip polygon \((ABGHEF)\) against  \(y = min\).</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip7.png" alt="Polygon ABGHEF" />
+
+                <p>\(A\), \(B\), \(G\) and \(H\) are all below \(y = ymin\). None of the edges \(AB\), \(BG\), \(GH\) cross \(y = ymin\). All of these points can be added to the output polygon without inserting any additional new points.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip8.png" alt="ABGH are not clipped" />
+
+                <p>The segment \(HE\) crosses \(y = ymin\), find where the edge crosses and add the new point \(I\) to the output polygon. Both points \(E\) and \(F\) are less than \(y = ymin\), they will not be added to the output polygon.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip9.png" alt="HE Clipped, I inserted" />
+
+                <p>Segment \(FA\) crosses \(y = ymin\), find the intersection and add the new point \(J\) to the output polygon.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip10.png" alt="AF Clipped, J inserted" />
+
+                <p>The polygon \((ABGHEF)\) has been clipped against \(y = ymin\), take the output polygon \(ABGHIJ\) and clip it against \(x = xmax\).</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip11.png" alt="Polygon ABGHIJ" />
+
+                <p>Points \(A, B, G, H\) are all less than \(xmax\), they are added to the output polygon. Segment \(HI\) crosses \(x = xmax\). Insert the intersection point \(K\) into the output polygon. </p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip12.png" alt="Insert K" />
+                
+                <p>Segment \(IJ\) crosses \(x = xmax\), add the intersection \(L\) to the output polygon. Point \(J\) is less than \(xmax\), add it to the output polygon as well.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip13.png" alt="Clip I, add J" />
+
+                <p>We're done clipping against \(x = xmax\). All points are greater than \(xmin\), there is nothing to clip against \(x = xmin\). Polygon \(ABGHKLJ\) is the final clipped polygon.</p>
+
+                <img class="img-fluid" src="images/blog_polygon_clip14.png" alt="Polygon ABGHKLJ" />
+
+                <h2>Implementation</h2>
+
+ <pre class="prettyprint linenums">Polygon ClipPolygon(const Polygon& poly, const BoundingBox& box) {
+    unsigned int numContours = (int)poly.size();
+    Polygon bufferA, bufferB;
+    bufferA.resize(poly.size());
+    bufferB.resize(poly.size());
+
+    // Clip left
+    for (int contour = 0; contour < numContours; ++contour) {
+        const Contour& c = poly[contour];
+        bufferA[contour].clear();
+        int numPoints = (int)c.size();
+        for (int point = 0; point < numPoints; ++point) {
+            const Point& p = c[point];
+            if (p.x >= box.min.x) {
+                bufferA[contour].push_back(p);
+            }
+            const Point& n = c[(point + 1) % numPoints];
+            float min_x = p.x < n.x ? p.x : n.x;
+            float max_x = p.x > n.x ? p.x : n.x;
+            if (min_x <= box.min.x && max_x >= box.min.x) {
+                bool vertical = fabsf(n.x - p.x) < 0.0001f;
+                if (!vertical) {
+                    Point clip{ box.min.x, p.y + (n.y - p.y) * (box.min.x - p.x) / (n.x - p.x) };
+                    bufferA[contour].push_back(clip);
+                }
+            }
+        }
+    }
+
+    // Clip right
+    for (int contour = 0; contour < numContours; ++contour) {
+        const Contour& c = bufferA[contour];
+        bufferB[contour].clear();
+        for (int point = 0, numPoints = (int)c.size(); point < numPoints; ++point) {
+            const Point& p = c[point];
+            if (p.x <= box.max.x) {
+                bufferB[contour].push_back(p);
+            }
+            const Point& n = c[(point + 1) % numPoints];
+            float min_x = p.x < n.x ? p.x : n.x;
+            float max_x = p.x > n.x ? p.x : n.x;
+            if (min_x <= box.max.x && max_x >= box.max.x) {
+                bool vertical = fabsf(n.x - p.x) < 0.0001f;
+                if (!vertical) {
+                    Point clip{ box.max.x, p.y + (n.y - p.y) * (box.max.x - p.x) / (n.x - p.x) };
+                    bufferB[contour].push_back(clip);
+                }
+            }
+        }
+    }
+
+    // Clip top
+    for (int contour = 0; contour < numContours; ++contour) {
+        const Contour& c = bufferB[contour];
+        bufferA[contour].clear();
+        for (int point = 0, numPoints = (int)c.size(); point < numPoints; ++point) {
+            const Point& p = c[point];
+            if (p.y >= box.min.y) {
+                bufferA[contour].push_back(p);
+            }
+            const Point& n = c[(point + 1) % numPoints];
+            float min_y = p.y < n.y ? p.y : n.y;
+            float max_y = p.y > n.y ? p.y : n.y;
+            if (min_y <= box.min.y && max_y >= box.min.y) {
+                bool horizontal = fabsf(n.y - p.y) < 0.0001f;
+                if (!horizontal) {
+                    Point clip{ p.x + (n.x - p.x) * (box.min.y - p.y) / (n.y - p.y), box.min.y };
+                    bufferA[contour].push_back(clip);
+                }
+            }
+        }
+    }
+
+    // Clip bottom
+    for (int contour = 0; contour < numContours; ++contour) {
+        const Contour& c = bufferA[contour];
+        bufferB[contour].clear();
+        for (int point = 0, numPoints = (int)c.size(); point < numPoints; ++point) {
+            const Point& p = c[point];
+            if (p.y <= box.max.y) {
+                bufferB[contour].push_back(p);
+            }
+            const Point& n = c[(point + 1) % numPoints];
+            float min_y = p.y < n.y ? p.y : n.y;
+            float max_y = p.y > n.y ? p.y : n.y;
+            if (min_y <= box.max.y && max_y >= box.max.y) {
+                bool horizontal = fabsf(n.y - p.y) < 0.0001f;
+                if (!horizontal) {
+                    Point clip{ p.x + (n.x - p.x) * (box.max.y - p.y) / (n.y - p.y), box.max.y };
+                    bufferB[contour].push_back(clip);
+                }
+            }
+        }
+    }
+
+    // Clean up polygon by removing empty contours
+    for (int i = bufferB.size() - 1; i >= 0; --i) {
+        if (bufferB[i].size() == 0) {
+            bufferB.erase(bufferB.begin() + i);
+        }
+    }
+
+    return bufferB;
+}</pre>
+
+            </div>
+        </div>
+    </body>
+</html>

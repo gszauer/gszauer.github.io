@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_polygons.html">Polygons</a><a class="sidebar-item sidebar-tab sidebar-active " href="blog_polygons_scanline.html">Faster Drawing</a><a class="sidebar-item sidebar-tab" href="blog_polygons_clip.html">Clipping</a><a class="sidebar-item sidebar-tab" href="blog_polygons_antialias.html">Anti Aliasing</a><a class="sidebar-item" href="blog_polygons_triangle.html">Triangles</a><a class="sidebar-item" href="blog_polygons_circle.html">Circles</a></div>    
+            <div id="content">
+                <h1>Scanline Rasterization</h1>
+
+                <p>Looping trough every edge for every pixel is very inefficient. In this section we're going to optimize the <code>DrawPolygon</code> function by tightly coupling it with the code <code>PointInPolygon</code> function.</p>
+
+                <p>Since all we care about are the edges that cross the current scanline, an easy optimization is to keep an active list of edges and only loop trough those. As we're moving from scanline to scanline, we can check if an edge started or stopped crossing the scanline, and update the active edge list accordingly.</p>
+
+                <p>We will need to find where each active edge crosses the scanline, and sort the active edge list left to right based on this coordinate. This makes sure we count every edge as it's passed when rasterizing the scanline. Any time an edge is passed, update the winding number of the scanlie accordingly.</p>
+
+                <h2>Implementation</h2>
+
+                <p>We will need to know where each edge intersects the scanline. We're going to create a <code>RenderEdge</code> structure to help keep track of this data.</p>
+
+ <pre class="prettyprint linenums">struct RenderEdge {
+    Point p0;
+    Point p1;
+    float x;
+};</pre>
+            <p>Follow these steps to implement the algorithm described above. The sample code adds <code>0.5f</code> to all pixel coordinates because it assumes the pixel coordinate represents the center of the pixel.</p>
+
+                <ul>
+                    <li>Sort all edges by their topmost y coordinate</li>
+                    <li>Maintain a list of active edgess for the current scanline</li>
+                    <li>For each scanline<ul>
+                        <li>Add any edge whose top-most point is above the scanline to the active edge list</li>
+                        <li>Remove any edge whose bottom-most point is above the scanline from the active edge list</li>
+                        <li>Find where each eactive edge crosses the scanline (we know the y coordiante is that of the scan line, find the x coordinate)</li>
+                        <li>Sort active edges (left to right) by their intersection point with the scanline</li>
+                        <li>Initialize winding number to 0 and loop trough all intersection (x coordinates)<ul>
+                            <li>Any time the x coordinate passes an edge, update the winding number</li>
+                            <li>Shade pixel if the winding number is not 0.</li>
+                        </ul></li>
+                    </ul></li>
+                </ul>
+
+<pre class="prettyprint linenums">void DrawPolygon(int _x, int _y, const Polygon& poly, unsigned char r, unsigned char g, unsigned char b) {
+    BoundingBox bbox = GetBoundingBox(poly);
+    int s_x = bbox.min.x < 0.0f ? bbox.min.x - 0.5f : bbox.min.x + 0.5f;
+    int e_x = bbox.max.x < 0.0f ? bbox.max.x - 0.5f : bbox.max.x + 0.5f;
+    int s_y = bbox.min.y < 0.0f ? bbox.min.y - 0.5f : bbox.min.y + 0.5f;
+    int e_y = bbox.max.y < 0.0f ? bbox.max.y - 0.5f : bbox.max.y + 0.5f;
+
+    // Build a list of edges for the polygon
+    std::vector< RenderEdge > edges;
+    for (int c = 0, cSize = poly.size(); c < cSize; ++c) {
+        const Contour& countour = poly[c];
+        int numPoints = countour.size();
+        for (int p = 0; p < numPoints; ++p) {
+            const Point& point = countour[p];
+            const Point& next = countour[(p + 1) % numPoints];
+            edges.push_back(RenderEdge{ point, next, 0.0f });
+        }
+    }
+
+    std::sort(edges.begin(), edges.end(), TopmostY());
+    std::list< RenderEdge > active;
+
+    unsigned int numEdges = edges.size();
+    unsigned int firstEdgeBelowScanline = 0;
+
+    for (int y = s_y; y <= e_y; ++y) {
+        // Sample from center of pixel
+        float sample_y = float(y) + 0.5f;
+
+        // Add any edges that start above the scanline
+        while (firstEdgeBelowScanline < numEdges) {
+            const RenderEdge& edge = edges[firstEdgeBelowScanline];
+            float min_y = edge.p0.y < edge.p1.y ? edge.p0.y : edge.p1.y;
+            if (min_y <= sample_y) { // Inclusive of topmost point
+                // firstEdgeBelowScanline was above the scanline
+                active.push_back(edges[firstEdgeBelowScanline]);
+                firstEdgeBelowScanline += 1;
+            }
+            else { // firstEdgeBelowScanline is below the scanline
+                break;
+            }
+        }
+
+        // Horizontal edges are not a problem, 
+        // they are added above and removed immediateley below
+
+        // Remove any active edges that end above the scanline
+        for (std::list< RenderEdge >::iterator it = active.begin(); it != active.end();) {
+            float max_y = it->p0.y > it->p1.y ? it->p0.y : it->p1.y;
+
+            if (max_y <= sample_y) { // Exclusive of bottom most point
+                it = active.erase(it);
+            }
+            else { // Iterator crosses scanline, move to next one
+                it++;
+            }
+        }
+
+        // Find the x value of where each edge intersects the scanline
+        for (std::list< RenderEdge >::iterator it = active.begin(), end = active.end(); it != end; ++it) {
+            if (fabs(it->p0.x - it->p1.x) < 0.0001f) { // Vertical
+                it->x = it->p0.x;
+            }
+            else {
+                float m = (it->p1.y - it->p0.y) / (it->p1.x - it->p0.x);
+                float b = it->p0.y - m * it->p0.x;
+                it->x = (sample_y - b) / m;
+            }
+        }
+
+        // Sort edges by ascending x intersection order
+        active.sort(LeftmostXIntersection);
+
+        // Init winding for scanline
+        int winding = 0;
+
+        // Draw scanline
+        std::list< RenderEdge >::iterator it = active.begin();
+        std::list< RenderEdge >::iterator end = active.end();
+        for (int x = s_x; x <= e_x; ++x) {
+            float sample_x = float(x) + 0.5f;
+                
+            // If any edges are on the left of the sample point
+            // update the running winding number and remove the edge
+            while (it != end && it->x < sample_x) {
+                // Crossing scanline top to bottom
+                if (it->p0.y <= sample_y && it->p1.y > sample_y) { 
+                    winding -= 1;
+                }
+                // Crossing scanline bottom up
+                else if (it->p1.y <= sample_y && it->p0.y > sample_y) { 
+                    winding += 1;
+                }
+                ++it;
+            }
+                
+            if (winding != 0) {
+                DrawPixel(_x + x, _y + y, r, g, b);
+            }
+        }
+    }
+}</pre>
+                <p>These are the sorting functions for the above sample:</p>
+
+
+<pre class="prettyprint linenums">struct TopmostY {
+    inline bool operator() (const RenderEdge& left, const RenderEdge& right) {
+        float lY = left.p0.y < left.p1.y ? left.p0.y : left.p1.y;
+        float rY = right.p0.y < right.p1.y ? right.p0.y : right.p1.y;
+        return lY < rY;
+    }
+};
+
+bool LeftmostXIntersection(const RenderEdge& left, const RenderEdge& right) {
+    return left.x < right.x;
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

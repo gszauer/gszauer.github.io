@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+        <script type="text/javascript" src="js/blog_polygon_render.js"></script>
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();Init();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first sidebar-active " href="blog_polygons.html">Polygons</a><a class="sidebar-item sidebar-tab" href="blog_polygons_scanline.html">Faster Drawing</a><a class="sidebar-item sidebar-tab" href="blog_polygons_clip.html">Clipping</a><a class="sidebar-item sidebar-tab" href="blog_polygons_antialias.html">Anti Aliasing</a><a class="sidebar-item" href="blog_polygons_triangle.html">Triangles</a><a class="sidebar-item" href="blog_polygons_circle.html">Circles</a></div>    
+            <div id="content">
+                <h1>Drawing Polygons</h1>
+
+                <p>In this blog, we're going to explore how to render anti aliased polygons, the complete code samples are <a href="https://gist.github.com/gszauer/fd16f62338decb053c2a7343eed128c6">available here</a>. For this blog, a polygon is a collection of contours. Each contour is a collection of points. The direction of the contour matters, clockwise polygons will be filled while counter clockwise polygons represent a hole in the geometry. Let's make a <code>Point</code> structure, and typedef the <code>Contour</code> and <code>Polygon</code> types.</p>
+
+<pre class="prettyprint linenums">struct Point {
+    float x;
+    float y;
+};
+    
+struct BoundingBox {
+    Point min;
+    Point max;
+};
+
+typedef std::vector< Point > Contour;
+typedef std::vector< Contour > Polygon;</pre>
+                <h2>Point in polygon</h2>
+
+                <p>To determine if a point is inside a polygon, we must find it's <a href="https://en.wikipedia.org/wiki/Winding_number">winding number</a>. The winding number counds how many times the polygon travels around the point counter clockwise. If the winding number is not <code>0</code>, the point is inside the polygon.</p>
+
+                <p>We only need edges that cross the scanline of the point to find it's winding number. The scanline of the point is a horizontal line with <code>y = point.y</code>. The direction of an edge is important. The following demo shows which edges are considered when rasterizing a scanline. The red scanline will follow your mouse, purple edges are the ones that cross the scan line.</p>
+
+                <canvas id="game_canvas" width="800" height="300"  class="img-fluid">
+                    Canvas support required
+                </canvas>
+
+                <p>Edges that cross the scanline top to bottom will decrease the winding number, but only if the point is on the right side of the edge. Wdges that cross bottom to top will increase the winding number, only if the point is on the left side of the edge. The cross product can be used to tell what side of an edge a point lies on.</p>
+
+                <p>We can think of a polygon as a 3D object that happens to be drawn on the <code>xy</code> plane with a <code>z</code> component of <code>0</code>. Given an edge and a point, find a vector from the start point of the edge to the test point and another vector from the end point of the edge to the test point. Take the cross product of these two vectors. The direction of the <code>z</code> axis will tell us if a point is on the right or left side of the edge. If the edge crosses the scanline top to bottom, a positive <code>z</code> axis means the test point is on the right of the edge. If the edge crosses bottom to top, a negative <code>z</code> axis means the test point is on the left of the edge.</p>
+
+
+                <p>The algorithm we have discussed so far is outlined below. For a more in-depth explanation of how the winding number works, check out Dan Sunday's <a href="https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html">Inclusion of a Point in a Polygon</a>, also available in <a href="https://www.amazon.com/dp/B094T8MVJP">Practical Geometry Algorithms</a></p>
+
+                <ul>
+                    <li>Initialize winding number to 0</li>
+                    <li>Loop trough every edge in the polygon</li>
+                    <li>Ignore edges that do not cross the test points scanline</li>
+                    <li>Decrease winding number if edge is crossing scanline from top to bottom and the test point is on the right side of the edge</li>
+                    <li>Increase winding number if edge is crossing scanline from bottom to top and the test point is on the left side of the edge</li>
+                </ul>
+
+<pre class="prettyprint linenums">bool PointInPolygon(const Point& point, const Polygon& poly) {
+    BoundingBox bbox = GetBoundingBox(poly);
+    if (point.x < bbox.min.x || point.x > bbox.max.x) {
+        return false;
+    }
+    if (point.y < bbox.min.y || point.y > bbox.max.y) {
+        return false;
+    }
+
+    int winding = 0;
+    for (int contour = 0, numContours = poly.size(); contour < numContours; ++contour) {
+        const Contour& c = poly[contour];
+        for (int pt = 0, numPoints = c.size(); pt < numPoints; ++pt) {
+            const Point& p = c[pt];
+            const Point& n = c[(pt + 1) % numPoints];
+
+            Point toStart { p.x - point.x, p.y - point.y }; 
+            Point toEnd { n.x - point.x, n.y - point.y }; 
+            float crossZ = toStart.x * toEnd.y - toStart.y * toEnd.x;
+
+            if (p.y <= point.y && n.y > point.y) { // Crossing scanline top to bottom
+                if (crossZ > 0) { // Point is on right of edge
+                    winding -= 1;
+                }
+            }
+            else if (n.y <= point.y && p.y > point.y) { // Crossing scanline bottom up
+                if (crossZ < 0) { // Point is on left of edge
+                    winding += 1;
+                }
+            }
+        }
+    }
+
+    return winding != 0;
+}</pre>                
+                <h2>Drawing a polygon</h2>
+
+                <p>The easiest way to draw a polygon is to loop trough every pixel inside the polygons bounding box, and test if the point is inside the polygon or not. If a point is inside, it gets shaded. In the next section we'll explore optimizing the drawing code.</p>
+
+<pre class="prettyprint linenums">void DrawPolygon(int _x, int _y, const Polygon& poly, unsigned char r, unsigned char g, unsigned char b) {
+    BoundingBox bbox = GetBoundingBox(poly);
+    int s_x = bbox.min.x < 0.0f ? bbox.min.x - 0.5f : bbox.min.x + 0.5f;
+    int e_x = bbox.max.x < 0.0f ? bbox.max.x - 0.5f : bbox.max.x + 0.5f;
+    int s_y = bbox.min.y < 0.0f ? bbox.min.y - 0.5f : bbox.min.y + 0.5f;
+    int e_y = bbox.max.y < 0.0f ? bbox.max.y - 0.5f : bbox.max.y + 0.5f;
+
+    for (int y = s_y; y <= e_y; ++y) {
+        for (int x = s_x; x < e_x; ++x) {
+            if (PointInPolygon(Point{ (float)x, (float)y }, poly)) {
+                DrawPixel(x + _x, y + _y, r, g, b);
+            }
+        }
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>
