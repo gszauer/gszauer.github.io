@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item sidebar-active " href="blog_mem_optimize.html">Optimizations</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Optimizations</h1>
+
+                <h2>Progressive space search</h2>
+
+                <p>Right now, every allocation searches for free pages from the start of the page mask, all the way to the end. Because the scanner starts from the start of the buffer the front is usually denseley allocated. This wastes a decent amount of time searching pages that we know are probably taken. An alternate approach is to search for pages iterativley. To do this, we keep track of an offset to where the last allocation occured. Every time memory is allocted, that offset is moved to just after the allocation. This way, we're always scanning memory that's likeley to be empty when allocating.</p>
+
+                <p>Implementing this search is pretty easy. We're going to add a new member variable to the <code>Allocator</code> structure to keep track of the current allocation offset.</p>
+
+<pre class="prettyprint linenums">struct Allocator {
+    Allocation* free_64;
+    Allocation* free_128;
+    Allocation* free_256;
+    Allocation* free_512;
+    Allocation* free_1024;
+    Allocation* free_2048;
+
+    Allocation* active;
+    u32 size;
+    u32 offsetToAllocatable;
+    u32 scanBit;
+#endif
+};</pre>
+                <p>Next, we're going to add a new argument to the <code>FindRange</code> fucntion, the search start bit. This is the bit at which the search will start. The rest of the function remains unchanged for the most part.</p>
+
+<pre class="prettyprint linenums">u32 FindRange(Allocator* allocator, u32 numPages, u32 searchStartBit) {
+    u32 * mask = (u32*)AllocatorPageMask(allocator);
+    u32 numBitsInMask = allocator->size / PageSize;
+    u32 startBit = 0;
+    u32 numBits = 0;</pre>
+                <p>This loop changes a little bit, instead of looping from <code>0</code> to <code>numBitsInMask</code>, we now want to loop from <code>searchStartBit</code> to <code>numBitsInMask</code>.</p>
+
+<pre class="prettyprint linenums">    for (u32 i = searchStartBit; i < numBitsInMask; ++i) {
+        u32 m = i / TrackingUnitSize;
+        u32 b = i % TrackingUnitSize;
+
+        bool set = mask[m] & (1 << b);
+
+        if (!set) {
+            if (startBit == 0) {
+                startBit = i;
+                numBits = 1;
+            }
+            else {
+                numBits++;
+            }
+        }
+        else {
+            startBit = 0;
+            numBits = 0;
+        }
+
+        if (numBits == numPages) {
+            break;
+        }
+    }</pre>
+                <p>This next bit of code is new, it's how we handle roll-over when the allocator needs to wrap back around. First we check if we have enough bits for a valid allocation. If we don't we loop from <code>0</code> to <code>searchStartBit</code>, the range of numbers the previous loop skipped.</p> 
+
+<pre class="prettyprint linenums">    if (numBits != numPages || startBit == 0) {
+        startBit = 0;
+        numBits = 0;
+
+        for (u32 i = 0; i < searchStartBit; ++i) {
+            u32 m = i / TrackingUnitSize;
+            u32 b = i % TrackingUnitSize;
+
+            bool set = mask[m] & (1 << b);
+
+            if (!set) {
+                if (startBit == 0) {
+                    startBit = i;
+                    numBits = 1;
+                }
+                else {
+                    numBits++;
+                }
+            }
+            else {
+                startBit = 0;
+                numBits = 0;
+            }
+
+            if (numBits == numPages) {
+                break;
+            }
+        }
+    }
+
+    if (numBits != numPages || startBit == 0 || allocator->size % PageSize != 0) {
+        return 0;
+    }
+
+    return startBit;
+}</pre>
+                <h2>Faster Bits</h2>
+
+                <h2>memset and memcpy</h2>
+
+            </div>
+        </div>
+    </body>
+</html>

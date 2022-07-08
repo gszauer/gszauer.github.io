@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first sidebar-active " href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item" href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Custom Memory Allocator</h1>
+
+                <p>In this blog we will explore building a generic custom memory allocator for games and embedded devices. An allocator like this is useful if you have one big chunk of memory and no runtime to rely on. This custom allocator might be faster than the system provided malloc, but a generic allocator will never be truly fast. Games use <a href="https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/c-custom-memory-allocation-r3010/">many types of allocators</a>, the allocator presented here can easily be extended to support a free list or any other allocation strategy. This allocator will help us catch errors, visualize our heap, and easily compile for embedded platforms and WASM. A slightly more robust version of the allocator is available on my <a href="https://github.com/gszauer/GameAllocator">github: github.com/gszauer/GameAllocator</a></p>
+
+                <p>There are a few resources on memory allocation that i would suggest reading before this blog, they are:</p>
+
+                <ul>
+                    <li>Ready, Set, Allocate! on alt dev blog by Paul Laska: <a href="https://web.archive.org/web/20120419125628/http://www.altdevblogaday.com/2011/04/11/ready-set-allocate-part-1/">Part 1</a>, <a href="https://web.archive.org/web/20120419125404/http://www.altdevblogaday.com/2011/04/26/ready-set-allocate-part-2/">Part 2</a>, <a href="https://web.archive.org/web/20120419010208/http://www.altdevblogaday.com/2011/05/15/ready-set-allocate-part-3/">Part 3</a>, <a href="https://web.archive.org/web/20120418212016/http://www.altdevblogaday.com/2011/05/26/ready-set-allocate-part-4/">Part 4</a>, <a href="https://web.archive.org/web/20120413201435/http://www.altdevblogaday.com/2011/06/08/ready-set-allocate-part-5/">Part 5</a>, <a href="https://web.archive.org/web/20120321205231/http://altdevblogaday.com/2011/06/30/ready-set-allocate-part-6/">Part 6</a></li>
+                    <li><a href="https://developer.ibm.com/tutorials/au-memorymanager/">Building your own memory manager</a> by Arpan Sen & Rahul Kardam</li>
+                    <li><a href="https://github.com/mtrebi/memory-allocators">Custom Memory Allocators</a> by Mariano Trebino</li>
+                </ul>
+
+                <p><a href="https://github.com/gszauer/GameAllocator">The code for this blog is on github</a>. There is a <a href="https://gabormakesgames.com/GameAllocator/">Web Assembly Demo</a>, and the github repo contains a debug visualizer. It's a quick page viewer UI that can be used to debug memory allocations:</p>
+                
+                <img class="img-fluid" src="images/blog_mem_win32_preview.png" alt="Memory Allocator visualizer" />
+                
+
+                <h2>Implementing the memory manager</h2>
+
+                <p>The allocator has a header that tracks active and free allocations. It will allocate memory in 4096 byte chunks. The memory is laid out with an allocator structure at the front, followed by a large bitmask. Each bit in this large bitmask represents if a page of memory is in use or not. The next page is a debug page, you can use this for scratch memory. Following the debug page is the allocatable reguin of memory. Each allocation starts with optional padding, followed by an allocation tracker, followed by the acual memory being allocated:</p>
+
+                <img class="img-fluid" src="images/blog_memory_allocator.png" alt="Memory Header and Layout" />
+
+                <p>The 4 KiB page size was chosen because the android allocator uses 4k pages. Having 4k pages makes the amount of overhead needed to manage them small. For example, managing 32 MiB of memory there is 2/8192 pages of overhead, for 512 MiB there is 6/131072 pages of overhead, and for 4 GiB there is 34/1048575 pages of overhead. The bitmask will be an array of 32 bit unsigned integers. If each bit represents one page (4096 bytes), a 32 bit number can represent 32 pages or 128 MiB of memory. So, to track 32 MiB we need the bitmask array to have a size of 256. To recap:</p>
+
+                <ul>
+                    <li>1 Page is 4096 bytes</li>
+                    <li>Each page is tracked by 1 bit in a large <code>uint32</code> array</li>
+                    <li>Number of pages needed to track memory = (size of tracked memory in bytes) / (page size)</li>
+                    <li>Size of page array = (number of pages) / 32, needs to be padded</li>
+                </ul>
+
+                <p>Let's define page size as a global variable. We will also define the size of tracking units (in bits) to be 32. We do this because the mask that tracks if a page is allocated or not is going to be a <code>u32</code> array. Finally, we also have a global allocator pointer. If an allocation doesn't specify an allocator, the global allocator will be used.</p>
+
+<pre class="prettyprint linenums">extern Allocator* GlobalAllocator; // In mem.cpp
+const u32 DefaultPageSize = 4096;
+const u32 TrackingUnitSize = 32;</pre>
+                <p>We will run accross a few numbers that need to be padded. For the tracking array, imagine if we need 42 bits, that is going to need two integers, since the first one holds 32 bits and the second one will hold only 10 bits with 22 bits of padding. To pad a number, we need to add one less than the padding amount to the number. Somewhere in those padding bits will be a bit that's aligned. Then, we check if the number % padding is zero, if it's not we return the difference.</p>
+
+<pre class="prettyprint linenums">// Won't be used later, just sample code
+u32 LeftPadNumber(u32 number, u32 padding) { // Like an align
+    u32 result = 0;
+    if (padding != 0) {
+        if (number % padding != 0) {
+            u32 delta = padding - (number % padding);
+            result = delta;
+        }
+    }
+    // If this was an alignment, we would skip the first "result" bits
+    return result;
+}</pre>
+                <p>There are two core structures to our memory manger, the <code>Allocator</code> and the <code>Allocation.</code> I will cover the <code>Allocator</code> struct in this section, and the <code>Allocation</code> struct in the next section. This memory manager is intrusive. This means both the <code>Allocator</code> struct and the <code>Allocation</code> struct exist inside of the memory they are managing.</p>
+
+                <p>The <code>Allocator</code> needs a variable to keep track of how many bytes are being managed (```size```). The allocator structure is always at the start of the memory being managed, which means the range of managed memory is from <code>(u8*)allocator</code> to <code>(u8*)allocator + allocator->size</code>. It contains callbacks for when memory is allocated or released, a number of free lists to be used by fast sub-allocators, and a list of active allocations. The list of active allocations can be used to check if all allocated memory has been released at shutdown time. The allocator is a first fit allocator, it starts to scan the bitmask for available memory after page of the last successfull allocation. To accomodate tis behavior, the allocator keeps track of a scan bit. There is also utility vairables that keep track of the maximum pages that where used, how much unpadded memory has been requested, and how many pages are currently in use.</p>
+
+
+<pre class="prettyprint linenums">struct Allocation; // We will implement this struct soon
+
+struct Allocator {
+    // Fast free lists for sub-allocators
+    Allocation* free_64;
+    Allocation* free_128; 
+    Allocation* free_256; 
+    Allocation* free_512; 
+    Allocation* free_1024;
+    Allocation* free_2048;
+
+    // List of memory that has been allocated, but not released
+    Allocation* active;			
+
+    // In bytes, how much total memory is the allocator managing
+    u32 size;
+    // How many bytes where requested (unpadded)
+    u32 requested;
+    // Default is 4096, but each allocator can have a unique size
+    u32 pageSize;
+    // Only used if MEM_FIRST_FIT is off
+    u32 scanBit;
+
+    // How many pages are currently in use
+    u32 numPagesUsed;
+    // What's the maximum number of pages that where used
+    // Use this to monitor how much memory your application actually needs
+    u32 peekPagesUsed;
+};</pre>
+                <p>Now that the allocator sructure is defined, let's work on the code to initialize the allocator. To initialize the allocator, we need a pointer to some memory, and to know how many bytes that memory contains. To keep things simple, we're going to assume that the memory being passed in is already 8 byte aligned and a multiple of page size (default 4096 bytes)</p>
+
+<pre class="prettyprint linenums">Allocator* Initialize(void* memory, u32 bytes, u32 pageSize) {
+    // prt should be u32 on 32 bit platform or % will be missing
+    u64 ptr = (u64)((const void*)memory);
+    // Memory being managed should be 8 byte aligned. Consider using AlignAndTrim
+    assert(ptr % AllocatorAlignment == 0);
+    // The size of the memory being managed must be aligned to PageSize 
+    assert(bytes % pageSize == 0);
+    // minimum memory size is 10 pages, page size is PageSize
+    assert(bytes / pageSize >= 10);
+</pre>
+    <p>Let's set up the allocator structure and the bitmask to track which pages are in use. The allocator is easy, it always goes at the start of the memory being tracked. The mask array is a bit tricky. We will implement two helper functions: <code>AllocatorPageMask</code> and <code>AllocatorPageMaskSize</code> in the next section to retrieve the mask as an array of bytes (<code>u8*</code>). We will use these two functions and convert the resulting array into an array of 32 bit integers.</p>
+
+<pre class="prettyprint linenums">    // Set up the global allocator
+    Allocator* allocator = (Allocator*)memory;
+    Set(allocator, 0, sizeof(allocator), "Initialize");
+    allocator->size = bytes;
+    allocator->pageSize = pageSize;
+
+    // Set up the mask that will track our allocation data
+    u32* mask = (u32*)AllocatorPageMask(allocator);
+    u32 maskSize = AllocatorPageMaskSize(allocator); // assuming it's u8 array
+    maskSize =/ (sizeof(u32) / sizeof(u8)); // convert from u8 to u32 array
+    Set(mask, 0, sizeof(u32) * maskSize, __LOCATION__);</pre>
+    <p>At this point the alloctor is mostly set up. All that's left is to mark the pages of memory that the allocator and allocation mask occupy as used. First, we find the size of the allocator meta data in bytes. This is the sum of the padded allocator size and the size of the page tracker bitmask. The number of pages being used needs to be padded, and we need to reserve a debug page. The <code>SetRange</code> helper function is responsible for setting the tracking bits, so we don't have to worry about setting them here.</p>
+    
+<pre class="prettyprint linenums">    // Find how many pages the meta data for the header + allocation mask will take up. 
+    // Store the offset to first allocatable, 
+    u32 metaDataSizeBytes = AllocatorPaddedSize() + (maskSize * sizeof(u32));
+    u32 numberOfMasksUsed = metaDataSizeBytes / pageSize;
+    if (metaDataSizeBytes % pageSize != 0) {
+        numberOfMasksUsed += 1;
+    }
+    // This way, allocatable will start on a page boundary
+    metaDataSizeBytes = numberOfMasksUsed * pageSize; 
+
+    // Add a debug page at the end
+    metaDataSizeBytes += pageSize;
+    numberOfMasksUsed += 1;
+
+    //allocator->offsetToAllocatable = metaDataSizeBytes;
+    allocator->scanBit = 0;
+    SetRange(allocator, 0, numberOfMasksUsed);
+    allocator->requested = 0;</pre>
+    <p>Finally we can return the allocator when the function is done. Before returning the allocator, do a quick sanity check to make sure the memory is aligned correctly and return null if it's not.</p>
+
+<pre class="prettyprint linenums">        if (ptr % AllocatorAlignment != 0 || bytes % pageSize != 0 || bytes / pageSize < 10) {
+        return 0;
+    }
+    
+    return (Allocator*)memory;
+}</pre>
+            <h3>Helper methods</h3>
+
+            <p>Let's work on some of the helper methods used in the above code. The first two are <code>AllocatorPageMask</code> and <code>AllocatorPageMaskSize</code>. This pair of functions returns the mask that tracks which page is in use as a <code>u8</code> pointer. The size of the mask is always a multiple of 32, even if these functions treat the array as a <code>u8</code>. The initializer code has a division to convert the array of bytes into an array of 32 bit integers (<code>u32</code>).
+
+<pre class="prettyprint linenums">u8* AllocatorPageMask(Allocator* allocator) {
+    return ((u8*)allocator) + sizeof(Allocator);
+}
+
+// This function returns the number of u8's that make up the AllocatorPageMask array
+u32 AllocatorPageMaskSize(Allocator* allocator) {
+    // 1 page = 4096 bytes, how many are needed
+    const u32 allocatorNumberOfPages = allocator->size / allocator->pageSize;
+    const u32 allocatorPageArraySize = allocatorNumberOfPages / TrackingUnitSize +
+                                (allocatorNumberOfPages % TrackingUnitSize ? 1 : 0);
+    return allocatorPageArraySize * (TrackingUnitSize / 8); // In bytes, not bits
+}</pre>
+            <p>Next we will implement helper methods to set or clear a range of bits in the array. These functions take an allocator, a start bit and how many bits to modify. We will be using these to mark pages as used or not used when allocating or freeing memory. We will use the previously covered <code>AllocatorPageMask</code> function, and loop trough each bit one by one.</p>
+
+<pre class="prettyprint linenums">void SetRange(Allocator* allocator, u32 startBit, u32 bitCount) {
+    u32* mask = (u32*)AllocatorPageMask(allocator);
+    u32 numElementsInMask = AllocatorPageMaskSize(allocator) / (TrackingUnitSize / 8);
+
+    for (u32 i = startBit; i < startBit + bitCount; ++i) {
+        u32 m = i / TrackingUnitSize;
+        u32 b = i % TrackingUnitSize;
+        mask[m] |= (1 << b);
+    }
+
+    allocator->numPagesUsed += bitCount;
+    if (allocator->numPagesUsed > allocator->peekPagesUsed) {
+        allocator->peekPagesUsed = allocator->numPagesUsed;
+    }
+}
+
+void ClearRange(Allocator* allocator, u32 startBit, u32 bitCount) {
+    u32* mask = (u32*)AllocatorPageMask(allocator);
+    u32 numElementsInMask = AllocatorPageMaskSize(allocator) / (TrackingUnitSize / 8);
+
+    for (u32 i = startBit; i < startBit + bitCount; ++i) {
+        u32 m = i / TrackingUnitSize;
+        u32 b = i % TrackingUnitSize;
+        mask[m] &= ~(1 << b);
+    }
+    allocator->numPagesUsed -= bitCount;
+}</pre>
+                <p>There is one more tracking related helper function i want to implement, <code>FindRange</code>. The <code>FindRange</code> function is used to find multiple consequtive free pages inside the tracking array. It loops trough every bit in the tracking mask, and keeps a counter of how many free bits have been encountered. The first time enough pages (bits) are found to satisfy an allocation, the index of the first page (bit) is returned.</p>
+
+                <p>To speed up finding available memory a little bit, the allocaotr keeps track of where the last allocated page was. When scanning from new memory, the allocator will always start from teh tracker of where the last successfull allocation was.</p>
+
+<pre class="prettyprint linenums">// Returns 0 on error. Since the first page is always tracking overhead it's invalid for a range
+u32 FindRange(Allocator* allocator, u32 numPages, u32 searchStartBit) {
+    u32 * mask = (u32*)AllocatorPageMask(allocator);
+    u32 numBitsInMask = AllocatorPageMaskSize(allocator) * 8;
+    u32 numElementsInMask = AllocatorPageMaskSize(allocator) / (TrackingUnitSize / 8);
+
+    u32 startBit = 0;
+    u32 numBits = 0;
+
+    for (u32 i = searchStartBit; i < numBitsInMask; ++i) {
+        u32 m = i / TrackingUnitSize;
+        u32 b = i % TrackingUnitSize;
+
+        bool set = mask[m] & (1 << b);
+
+        if (!set) {
+            if (startBit == 0) {
+                startBit = i;
+                numBits = 1;
+            }
+            else {
+                numBits++;
+            }
+        }
+        else {
+            startBit = 0;
+            numBits = 0;
+        }
+
+        if (numBits == numPages) {
+            break;
+        }
+    }</pre>
+        <p>Since we looped from search bit to the last bit in the bit mask, we might have missed a large chunk of memory. If no memory was found, start searching from zero to the search bit. Once we're done with this loop, we can return null if not enough memory was found. If enough memory was found, we will advance the scan bit, and return the first bit of memory.</p>
+
+<pre class="prettyprint linenums">    if (numBits != numPages || startBit == 0) {
+        startBit = 0;
+        numBits = 0;
+
+        for (u32 i = 0; i < searchStartBit; ++i) {
+            u32 m = i / TrackingUnitSize;
+            u32 b = i % TrackingUnitSize;
+
+            bool set = mask[m] & (1 << b);
+
+            if (!set) {
+                if (startBit == 0) {
+                    startBit = i;
+                    numBits = 1;
+                }
+                else {
+                    numBits++;
+                }
+            }
+            else {
+                startBit = 0;
+                numBits = 0;
+            }
+
+            if (numBits == numPages) {
+                break;
+            }
+        }
+    }
+
+    if (numBits != numPages || startBit == 0 || allocator->size % allocator->pageSize != 0) {
+        return 0;
+    }
+
+    allocator->scanBit = startBit + numPages;
+
+    return startBit;
+}</pre>
+                <h2>Shutdown</h2>
+
+                <p>Lastly, let's implement the shutdown method. This method will clear the bits used to track the allocator overhead, then do a bunch of asserts to make sure all of the allocated memory was actually released. If there is a memory leak, one of the assert calls should trigger.</p>
+
+<pre class="prettyprint linenums">void Shutdown(Allocator* allocator) {
+    u32* mask = (u32*)AllocatorPageMask(allocator);
+    u32 maskSize = AllocatorPageMaskSize(allocator) / (sizeof(u32) / sizeof(u8)); // convert from u8 to u32
+
+    // Unset tracking bits
+    u32 metaDataSizeBytes = AllocatorPaddedSize() + (maskSize * sizeof(u32));
+    u32 numberOfMasksUsed = metaDataSizeBytes / allocator->pageSize;
+    if (metaDataSizeBytes % allocator->pageSize != 0) {
+        numberOfMasksUsed += 1;
+    }
+    metaDataSizeBytes = numberOfMasksUsed * allocator->pageSize;
+
+    // There is a debug between the memory bitmask and allocatable memory
+    metaDataSizeBytes += allocator->pageSize;
+    numberOfMasksUsed += 1;
+
+    ClearRange(allocator, 0, numberOfMasksUsed);
+
+    assert(allocator->requested == 0);  // Not all memory has been released
+    assert(allocator->active == 0);     // There are active allocations, leaking memory
+    assert(allocator->free_64 == 0);    // Free list is not empty, leaking memory
+    assert(allocator->free_128 == 0);   // Free list is not empty, leaking memory
+    assert(allocator->free_256 == 0);   // Free list is not empty, leaking memory
+    assert(allocator->free_512 == 0);   // Free list is not empty, leaking memory
+    assert(allocator->free_1024 == 0);  // Free list is not empty, leaking memory
+    assert(allocator->free_2048 == 0);  // Free list is not empty, leaking memory
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

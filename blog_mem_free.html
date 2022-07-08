@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item sidebar-active " href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item" href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Releasing memory</h1>
+
+                <p>The function to release memory will mark the size of each allocation header as 0. This way, we can check the size of the memory being released, and if the size is 0 we know the memory was double freed. The allocation size being set to 0 will also be used later when we implement sub and super allocators. Let's start implementing the free function by retrieving the size and alignment meta-data from the allocation header. Knowing this information, we can set the memory pointer to be at the start of the page (or set of pages) that is being released.</p>
+
+<pre class="prettyprint linenums">void Release(void* memory, const char* location, Allocator* allocator) {
+    if (allocator == 0) {
+        allocator = GlobalAllocator;
+    }
+
+    // Retrieve allocation information from header. The allocation header always
+    // preceeds the allocation.
+    u8* mem = (u8*)memory;
+    mem -= sizeof(Allocation);
+    Allocation* allocation = (Allocation*)mem;
+    u32 alignment = allocation->alignment;
+    
+    u32 allocationSize = allocation->size; // Add enough space to pad out for alignment
+    
+    u32 allocationHeaderPadding = 0;
+    if (alignment != 0) {  // Add padding to the header to compensate for alignment
+        allocationHeaderPadding = alignment - 1; // Somewhere in this range, we will be aligned
+    }
+    u32 paddedAllocationSize = allocationSize + allocationHeaderPadding + sizeof(Allocation);
+    allocator->requested -= allocation->size;
+    
+    // Implement sub-allocator here</pre>
+            <p>Now that we know the starting page of this allocation, we can figure out the number of pages, and mark all the pages that where used for this allocation as free.</p>
+
+<pre class="prettyprint linenums">    // Clear the bits that where tracking this memory
+    u8* firstMemory = (u8*)allocator;
+    u64 address = (u64)(mem - firstMemory);
+    u32 firstPage = address / allocator->pageSize;
+    u32 numPages = paddedAllocationSize / allocator->pageSize + (paddedAllocationSize % allocator->pageSize ? 1 : 0);
+    ClearRange(allocator, firstPage, numPages);</pre>
+            <p>Finally, we unlink the allocation from the allocators list of active allocations and set the size of the allocation to zero.</p>
+
+<pre class="prettyprint linenums">    // Unlink tracking
+    if (allocation->next != 0) {
+        allocation->next->prev = allocation->prev;
+    }
+    if (allocation->prev != 0) {
+        allocation->prev->next = allocation->next;
+    }
+    if (allocation == allocator->active) {
+        allocator->active = allocation->next;
+    }
+
+    // Set the size to 0, to indicate that this header has been released
+    u32 oldAllocSize = allocation->size;
+    allocation->size = 0;
+
+    if (allocator->releaseCallback != 0) {
+        allocator->releaseCallback(allocator, allocation, oldAllocSize, paddedAllocationSize, firstPage, numPages);
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

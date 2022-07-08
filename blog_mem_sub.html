@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item sidebar-active " href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item" href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Sub Allocators</h1>
+
+                <p>A sub allocator will always be aligned to <code>DefaultAlignment</code>, this is done so we don't have to keep a matrix of allocation size and alignment when re-using a block of memory. If an allocation has some custom alginment, it will use the default page allocator, not the sub-allocator.</p>
+
+                <h2>Allocating memory</h2>
+
+                <p>The sub allocator needs to know the block size and the free list to release blocks back into. Start implementing the allocate function by checking if there are any free blocks available. If there are no free blocks: we need to reserve one page of memory, initialize as many blocks as it will hold, and add each block to the free list. Basically, if the free list is empty, we populate it before the next step.</p>
+
+<pre class="prettyprint linenums">void* SubAllocate(u32 requestedBytes, u32 blockSize, Allocation** freeList, const char* location, Allocator* allocator) {
+    bool grabNewPage = *freeList == 0;
+    if (*freeList == 0) {
+        // Find and reserve 1 free page
+        const u32 page = FindRange(allocator, 1, allocator->scanBit);
+        SetRange(allocator, page, 1);
+
+        // Zero out the pages memory
+        u8* mem = (u8*)allocator + allocator->pageSize * page;
+        Set(mem, 0, allocator->pageSize, __LOCATION__);
+
+        // Figure out how many blocks fit into this page
+        const u32 numBlocks = allocator->pageSize / blockSize;
+
+        // For each block in this page, initialize it's header
+        for (u32 i = 0; i < numBlocks; ++i) {
+            Allocation* alloc = (Allocation*)mem;
+            mem += blockSize;
+
+            // Initialize the allocation header
+            alloc->prev = 0;
+            alloc->size = 0;
+            alloc->next = *freeList;
+            alloc->alignment = 0;
+            alloc->location = location;
+
+            if (*freeList != 0) {
+                (*freeList)->prev = alloc;
+            }
+            *freeList = alloc;
+        }
+    }</pre>
+    <p>Now that there is guaranteed to be a free block, we pop a free block off the free list and add it to the allocators active list. Finally, we finish the function by returning the memory. This would be a good spot to clear out the memory if you want your allocator to behave like that.</p>
+
+<pre class="prettyprint linenums">    // At this point we know the free list has some number of blocks in it. 
+    // Save a reference to the current header & advance the free list
+    // Advance the free list, we're going to be using this one.
+    Allocation* block = *freeList;
+    if ((*freeList)->next != 0) {
+        (*freeList)->next->prev = 0;
+    }
+    *freeList = (*freeList)->next;</pre>
+
+<pre class="prettyprint linenums">    block->prev = 0;
+    block->size = requestedBytes;
+    block->location = location;
+    block->alignment = 0;
+
+    // Track the sub allocator
+    block->next = allocator->active;
+    if (allocator->active != 0) {
+        allocator->active->prev = block;
+    }
+    allocator->active = block;
+
+    if (allocator->allocateCallback != 0) {
+        u64 firstPage = (u64)(((u8*)block - (u8*)allocator) / allocator->pageSize);
+        allocator->allocateCallback(allocator, block, requestedBytes, blockSize, firstPage, grabNewPage? 1 : 0);
+    }
+
+    // Memory always follows the header
+    return (u8*)block + sizeof(Allocation);
+}</pre>
+                <h2>Releasing memory</h2>
+
+                <p>To release memory form the sub-allocator, first find the allocation header. It is stored immediateley before the memory being freed. Check the size of the allcoation, we are dealing with a double free if the sie is 0. If we are dealing with a double free, return early, otherwise set the size of the header to 0 which will signal that this allocation has already been released.</p>
+
+<pre class="prettyprint linenums">void SubRelease(void* memory, u32 blockSize, Allocation** freeList, const char* location, Allocator* allocator) {
+    // Find the allocation header and mark it as free. Early out on double free to avoid breaking.
+    Allocation* header = (Allocation*)((u8*)memory - sizeof(Allocation));
+    if (header->size == 0) {
+        return;
+    }
+    u32 oldSize = header->size; // Hold on to for callback
+    header->size = 0;</pre>
+    <p>Next, we need to do some housekeeping. Remove the allocation from the active list of the allocator, and add it to the provided free list.</p>
+
+<pre class="prettyprint linenums">    // Now remove from the active list.
+    if (header == allocator->active) { // Removing head
+        if (allocator->active->next != 0) {
+            allocator->active->next->prev = 0;
+        }
+        allocator->active = allocator->active->next;
+    }
+    else { // Removing link
+        if (header->next != 0) {
+            header->next->prev = header->prev;
+        }
+        if (header->prev != 0) {
+            header->prev->next = header->next;
+        }
+    }
+
+    // Add memory back into the free list
+    if (*freeList != 0) {
+        (*freeList)->prev = header;
+    }
+    header->next = *freeList;
+    header->prev = 0;
+    *freeList = header;</pre>
+    <p>Next, we need to check every block in the page. If all of the blocks are free, we release the page. If any of the blocks are in use, the page will remain used. This next bit of code loops trough all the blocks for the current page, and if any of them have a size greater than 0, the page will not be released.</p>
+
+<pre class="prettyprint linenums">    // Find the first allocation inside the page
+    u64 startPage = (u64)((u8*)header - (u8*)allocator) / allocator->pageSize;
+    u8* mem =(u8*)allocator + startPage * allocator->pageSize;
+
+    // Each sub allocator page contains multiple blocks. check if all of the blocks 
+    // belonging to a single page are free, if they are, release the page.
+    bool releasePage = true;
+    
+    const u32 numAllocationsPerPage = allocator->pageSize / blockSize;
+    for (u32 i = 0; i < numAllocationsPerPage; ++i) {
+        Allocation* alloc = (Allocation*)mem;
+        if (alloc->size > 0) {
+            releasePage = false;
+            break;
+        }
+        mem += blockSize;
+    }</pre>
+    <p>Finally, we finish the function by releasing the page if appropraite. Before a page can be free'd, we need to remove all of it's blocks from the allocators free list.</p>
+
+ <pre class="prettyprint linenums">    // If appropriate, release entire page
+    if (releasePage) {
+        // Remove from free list
+        mem = (u8*)allocator + startPage * allocator->pageSize;
+        for (u32 i = 0; i < numAllocationsPerPage; ++i) {
+            Allocation* iter = (Allocation*)mem;
+            mem += blockSize;
+
+            if (*freeList == iter) { // Removing head, advance list
+                *freeList = (*freeList)->next;
+                if ((*freeList) != 0) {
+                    (*freeList)->prev = 0;
+                }
+            }
+            else { // Unlink not head
+                if (iter->next != 0) {
+                    iter->next->prev = iter->prev;
+                }
+                if (iter->prev != 0) {
+                    iter->prev->next = iter->next;
+                }
+            }
+            iter->prev = 0;
+            iter->next = 0;
+        }
+
+        // Clear the tracking bits
+        ClearRange(allocator, startPage, 1);
+    }
+
+    if (allocator->releaseCallback != 0) {
+        allocator->releaseCallback(allocator, header, oldSize, blockSize, startPage, releasePage ? 1 : 0);
+    }
+}</pre>
+            <h2>Calling the sub-allocator</h2>
+
+            <p>Now that the sub-allocator can allocate and release memory, let's actually call it. Note that only allocations with the default alignment take advantage of the sub-allocator. In the <code>Allocate</code> function, right after finding the final <code>allocationSize</code>, if the allocation size is small enough, forward the cal to the sub allocator. </p>
+
+ <pre class="prettyprint linenums">if (alignment == 0) {
+    if (allocationSize <= 64) {
+        return SubAllocate(64, &allocator->free_64, location, allocator);
+    }
+    else if (allocationSize <= 128) {
+        return SubAllocate(128, &allocator->free_128, location, allocator);
+    }
+    else if (allocationSize <= 256) {
+        return SubAllocate(256, &allocator->free_256, location, allocator);
+    }
+    else if (allocationSize <= 512) {
+        return SubAllocate(512, &allocator->free_512, location, allocator);
+    }
+    else if (allocationSize <= 1024) {
+        return SubAllocate(1024, &allocator->free_1024, location, allocator);
+    }
+    else if (allocationSize <= 2048) {
+        return SubAllocate(2048, &allocator->free_2048, location, allocator);
+    }
+}</pre>
+            <p>Releasing the memory is very similar, in the <code>Free</code> function, right after finding the final <code>paddedAllocationSize</code>, call the sub allocator release function if the allocation size is small enough.</p>
+
+<pre class="prettyprint linenums">if (alignment == 0) {
+    if (paddedAllocationSize <= 64) {
+        SubRelease(memory, 64, &allocator->free_64, location, allocator);
+        return;
+    }
+    else if (paddedAllocationSize <= 128) {
+        SubRelease(memory, 128, &allocator->free_128, location, allocator);
+        return;
+    }
+    else if (paddedAllocationSize <= 256) {
+        SubRelease(memory, 256, &allocator->free_256, location, allocator);
+        return;
+    }
+    else if (paddedAllocationSize <= 512) {
+        SubRelease(memory, 512, &allocator->free_512, location, allocator);
+        return;
+    }
+    else if (paddedAllocationSize <= 1024) {
+        SubRelease(memory, 1024, &allocator->free_1024, location, allocator);
+        return;
+    }
+    else if (paddedAllocationSize <= 2048) {
+        SubRelease(memory, 2048, &allocator->free_2048, location, allocator);
+        return;
+    }
+}</pre>    
+            <h2>Super Allocators</h2>
+
+            <p>Depenging on your allocation needs, a super allocator might also make sense. Like a sub-allocator, a super allocator also cuts up pages into smaller fixed size allocations. Unlike the sub-allocator, a super allocator can span multiple pages. This helps with occupancy, consider allocating a 2048 bytes, there would be <code>(4096 - 64 - 2048) = 1984</code> bytes lost. But if the super allocator used two pages, there would be <code>(4096 * 2 - 64 - 2048) = 6080</code> bytes left, which is enough for 2 more allocations. This way, the super allocator manages to use only two pages for 3 blocks.</p>
+
+            <p>When the memory is being released, finding the starting page can be a bit tricky with super allocators. The convention i'd recommend is to align the page index to the number of pages being reserved for each allocation. So, if in the above example we reserve two pages for a three block allocation, the index of the first page would always be a multiple of 2 (or however many pages are being used). I've never had the need to implement a super allocator for any project.</p>
+
+            </div>
+        </div>
+    </body>
+</html>

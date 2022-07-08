@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item sidebar-active " href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Set and Clear Memory</h1>
+
+                <p>Two common functions that CRT provides are <code>memset</code> and <code>memcpy</code>. These functions don't have anything to do with memory allocation, but we should support them, since they are common memory operations.</p>
+
+                <p>Both memset and memcpy can be implemented as a simple loop over some bytes of memory. This is a very un-optimized implementation, but it should work in a pinch:</p>
+
+<pre class="prettyprint linenums">void Set(void* memory, u8 value, u32 size) {
+    u8* mem = (u8*)memory;
+    for (u32 i = 0; i < size; ++i) {
+        mem[i] = value;
+    }
+}
+
+void Copy(void* dest, const void* source, u32 size) {
+    u8* dst = (u8*)dest;
+    const u8* src = (const u8*)source;
+    for (u32 i = 0; i < size; ++i) {
+        dst[i] = src[i];
+    }
+}</pre>
+                <h2>Optimize Set</h2>
+
+                <p>The Set function can be optimized by processing the memory in larger chunks (go wide). For example, looping on a <code>u64</code> instead of a <code>u8</code>, resulting in 8x less code. To do this, we need to apply any padding if the input size isn't divisible by the larger unit. Then, we cast to the largest unit (<code>u64</code>) and process that array. If there are any left over bytes, we process them as a <code>u32</code>, <code>u16</code> and finally <code>u8</code>.</p>
+
+<pre class="prettyprint linenums">void Set(void* memory, u8 value, u32 size) {
+    u64 ptr = (u64)((const void*)(memory));
+    u64 alignment = sizeof(u64);
+    
+    // Algin memory if needed
+    assert(alignment >= (ptr % alignment), "");
+    u32 alignDelta = (u32)(alignment - (ptr % alignment));
+    assert(alignDelta <= alignment, "");
+    assert(size >= alignDelta, "");
+
+    u8* mem = (u8*)(memory);
+    if (alignDelta != 0) {
+        for (u32 iter = 0; iter < alignDelta; ++iter) {
+            mem[iter] = value;
+        }
+
+        mem += alignDelta;
+        size -= alignDelta;
+    }
+
+    u64 size_64 = size / sizeof(u64);
+    u64* ptr_64 = (u64*)mem;
+    u32 v32 = (((u32)value) << 8) | (((u32)value) << 16) 
+            | (((u32)value) << 24) | ((u32)value);
+    u64 val_64 = (((u64)v32) << 32) | ((u64)v32);
+    for (u32 i = 0; i < size_64; ++i) {
+        ptr_64[i] = val_64;
+    }
+
+    u32 size_32 = (size - size_64 * sizeof(u64)) / sizeof(u32);
+    u32* ptr_32 = (u32*)(ptr_64 + size_64);;
+    u32 val_32 = (((u32)value) << 8) | (((u32)value) << 16) 
+               | (((u32)value) << 24) | ((u32)value);
+    for (u32 i = 0; i < size_32; ++i) {
+        ptr_32[i] = val_32;
+    }
+    
+    u32 size_16 = (size - size_64 * sizeof(u64) - size_32 * sizeof(u32)) / sizeof(u16);
+    u16* ptr_16 = (u16*)(ptr_32 + size_32);
+    u32 val_16 = (((u16)value) << 8) | ((u16)value);
+    for (u32 i = 0; i < size_16; ++i) {
+        ptr_16[i] = val_16;
+    }
+
+    u32 size_8 = (size - size_64 * sizeof(u64) - size_32 * sizeof(u32) - size_16 * sizeof(u16));
+    u8* ptr_8 = (u8*)(ptr_16 + size_16);
+    for (u32 i = 0; i < size_8; ++i) {
+        ptr_8[i] = value;
+    }
+
+    assert(size_64 * sizeof(u64) + size_32 * sizeof(u32) + size_16 * sizeof(u16) + size_8 == size);
+}</pre>
+                <h2>Optimizing Copy</h2>
+
+                <p>The Copy function can be optimized the same way that the Set function was. Instead of looping on bytes, we will go wide and loop on larger atomic units. There is an added challenge for copying memory, the memory being copied might not align to the larger unit's boundary. If memory isn't aligned well, we need to process a few bytes first, then process the rest in aligned chunks.</p>
+
+<pre class="prettyprint linenums">void Copy(void* dest, const void* source, u32 size) {
+    u64 dst_ptr = (u64)((const void*)(dest));
+    u64 src_ptr = (u64)((const void*)(source));
+    u64 alignment = sizeof(u64); // Would be different on 32 bit platform
+
+    if (dst_ptr % alignment != 0 || src_ptr % alignment != 0) {
+        // Memory is not aligned well, fall back on slow copy
+        u8* dst = (u8*)dest;
+        const u8* src = (const u8*)source;
+        for (u32 i = 0; i < size; ++i) {
+            dst[i] = src[i];
+        }
+        return;
+    }
+
+    u64 size_64 = size / sizeof(u64);
+    u64* dst_64 = (u64*)dest;
+    const u64* src_64 = (const u64*)source;
+    for (u32 i = 0; i < size_64; ++i) {
+        dst_64[i] = src_64[i];
+    }
+
+    u32 size_32 = (u32)((size - size_64 * sizeof(u64)) / sizeof(u32));
+    u32* dst_32 = (u32*)(dst_64 + size_64);
+    const u32* src_32 = (const u32*)(src_64 + size_64);
+    for (u32 i = 0; i < size_32; ++i) {
+        dst_32[i] = src_32[i];
+    }
+
+    u32 size_16 = (u32)((size - size_64 * sizeof(u64) - size_32 * sizeof(u32)) / sizeof(u16));
+    u16* dst_16 = (u16*)(dst_32 + size_32);
+    const u16* src_16 = (const u16*)(src_32 + size_32);
+    for (u32 i = 0; i < size_16; ++i) {
+        dst_16[i] = src_16[i];
+    }
+
+    u32 size_8 = (u32)(size - size_64 * sizeof(u64) - size_32 * sizeof(u32) - size_16 * sizeof(u16));
+    u8* dst_8 = (u8*)(dst_16 + size_16);
+    const u8* src_8 = (const u8*)(src_16 + size_16);
+    for (u32 i = 0; i < size_8; ++i) {
+        dst_8[i] = src_8[i];
+    }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

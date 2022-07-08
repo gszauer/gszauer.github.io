@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item sidebar-active " href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item" href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item" href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Allocating memory</h1>
+
+                <p>When memory is allocated, some additional space is reserved for the allocation header and some padding. The padding ensures that each memory allocation can specify it's own alignment. The allocation header is an intrusive linked list used to keep track of active allocations. It also contains the size and alignment of the allocation, as well as a pointer to where the allocation was made. This location pointer is intended for debugging only. The minimum amount of data the allocation would need is the size and alignment, the three additonal pointers make debugging much easier.</p>
+
+<pre class="prettyprint linenums">struct Allocation {
+    Allocation* prev;
+    Allocation* next;
+    const char* location;
+    u32 size;
+    u32 alignment;
+};</pre>
+                <p class="callout">We could wrap the <code>prev</code>, <code>next</code>, and <code>location</code> variables in a <code>#if _DEBUG</code> block and have a smaller allocation footprint for release builds. I think having consistent behavior in release and debug builds is worth the minimal overhead these pointers introduce.</p>
+
+                <h2>Implementing malloc</h2>
+
+                <p>Let's implement our allocation function, this is the function that will provide the implementation for malloc / new. We want to follow these steps to allocate new memory:</p>
+
+                <ul>
+                    <li>To align the allocation, pad out the <i>allocation size</i> if needed.</li>
+                    <li>Add the size of the padded allocation header to the <i>allocation size</i>.</li>
+                    <li>Find enough contigous free pages to satisfy the requested <i>allocation size</i>.</li>
+                    <li>Mark the bits in the tracking mask for these pages as in use.</li>
+                    <li>Fill out the allocation header and track the allocation in the allocator.</li>
+                    <li>Return the allocation memory.</li>
+                </ul>
+
+                <p>Start implementing the <code>Allocate</code> function by finding the size of the allocation. To find the allcation size, take the requested size and add any padding needed for alignment. After the alignment padding, reserve enough room for the allocation header. The allocation should immediateley follow this header, but for now we're only concerned with the total size of this allocation.</p>
+
+<pre class="prettyprint linenums">void* Allocate(u32 bytes, u32 alignment, const char* location, Allocator* allocator) {
+    if (bytes == 0) {
+        return 0;
+    }
+    if (allocator == 0) {
+        allocator = GlobalAllocator;
+    }
+
+    u32 allocationHeaderPadding = 0;
+    if (alignment != 0) { // Add padding for alignment if requested
+        allocationHeaderPadding = alignment - 1; 
+    }
+    u32 allocationHeaderSize = sizeof(Allocation) + allocationHeaderPadding;
+
+    // Add the header size to our allocation size
+    u32 allocationSize = bytes; // Add enough space to pad out for alignment
+    allocationSize += allocationHeaderSize;</pre>
+            <p>Next we need to figure how many pages are needed for this allocation, find enough free bits in the tracking mask, and mark those bits as in use. The number of pages is padded out, for example a 1024 byte allocation will only use one page, but a 5043 byte allocation will take up two pages. If an allocation takes up part of a page, it takes up the whole page. We will use the <code>FindRange</code> and <code>SetRange</code> helper functions discussed on the <a href="blog_memory.html">previous page</a> to locate and claim the requested pages.</p>
+
+<pre class="prettyprint linenums">    // Figure out how many pages are going to be needed to hold that much memory
+    u32 numPagesRequested = allocationSize / allocator->pageSize + (allocationSize % allocator->pageSize ? 1 : 0);
+    
+    // We can record the request here. It's made before the allocation callback, and is valid for sub-allocations too.
+    allocator->requested += bytes;
+
+    // Sub allocators will be implemented here
+
+    // Find enough memory to allocate
+    u32 firstPage = FindRange(allocator, numPagesRequested, allocator->scanBit);
+
+    SetRange(allocator, firstPage, numPagesRequested);
+
+    if (firstPage == 0 || allocator->size % allocator->pageSize != 0) {
+        return 0; // Fail this allocation in release mode
+    }</pre>
+            <p>That's about it for the allocate function, we finish it up by filling out the allocation header, adding the header to the allocators active list, and returning the allocated memory that immediateley follows the allocation header.</p>
+    
+<pre class="prettyprint linenums">    // Fill out header
+    u8* mem = (u8*)allocator + firstPage * allocator->pageSize;
+
+    u32 alignmentOffset = 0;
+    if (alignment != 0) { // Move the memory to be at the right alignment
+        u64 mem_addr = (u64)((void*)mem) + sizeof(Allocation);
+        if (mem_addr % alignment != 0) {
+            mem_addr = (mem_addr + (alignment - 1)) / alignment * alignment;
+            mem = (u8*)(mem_addr - sizeof(Allocation));
+        }
+    }
+
+    Allocation* allocation = (Allocation*)mem;
+    mem += sizeof(Allocation);
+
+    allocation->alignment = alignment;
+    allocation->size = bytes;
+    allocation->location = location;
+    allocation->prev = 0;
+    allocation->next = 0;
+
+    // Track allocated memory
+    if (allocator->active != 0) {
+        allocation->next = allocator->active;
+        assert(allocator->active->prev == 0, "");
+        allocator->active->prev = allocation;
+    }
+    allocator->active = allocation;
+
+    // Allocation success, do callback
+    if (allocator->allocateCallback != 0) {
+        u8* _mem = (u8*)allocator + firstPage * allocator->pageSize + allocationHeaderPadding;
+        allocator->allocateCallback(allocator, (Allocation*)_mem, bytes, allocationSize, firstPage, numPagesRequested);
+    }
+
+    return mem;
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

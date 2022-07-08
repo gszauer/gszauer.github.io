@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <!--?php ParserBlogNav('Index'); ?-->
+    
+            <div id="content">
+                <h1>Recursive Descent Parsing</h1>
+
+                <p>A recursive descent parser turns a text file into an abstract syntax tree (AST). Typically, a Scanner will convert text loaded from a file into a series of tokens. A token is some struct or object in code which represents some number of characters.
+                    For example, the following are all tokens: <code>7</code>, <code>null</code>, <code>+</code>, and even <code>;</code></p>
+                    
+                <h2>TODO: Image of above conversion</h2>
+
+                <p>The parser does this conversion by following a set of recursive rules called a grammar. A good grammar should be unambiguous. Being unambiguous means that any valid sequence of tokens can produce only one AST, there is no way to follow the rules of the grammar and end up with two AST's for the same sequence of tokens.</p>
+                
+                <h2>Grammars</h2>
+
+                <p>A grammar can be expressed in a few ways, after all it's just a rule. Consider the rule for converting a floating point number into a token. The number can have one or more numeric characters, we will call all sequential numeric characters a digit. A digit can be considered a number by its-self, but it can optionally be followed by a period. If the last digit of the number is immediateley followed by a period, that period must be immediateley followed by another digit.</p>
+
+                <p>We could express these rules in a few ways, like using a <a href="https://en.wikipedia.org/wiki/Syntax_diagram">syntax diagram</a>, sometimes called a railroad diagram:</p>
+
+                <img class="img-fluid" src="images/blog_parser_railroad.png" alt="Railroad diagram for number" />
+
+                <p>Or we could use a common, formal grammar, like <a href="https://en.wikipedia.org/wiki/Backus–Naur_form">Backus-Naur Form</a> or BNF notation:</p>
+
+                <h2>TODO: BNF:</h2>
+
+                <p>In this blog, i'm going to follow the grammar rules presented in <a href="http://www.craftinginterpreters.com/representing-code.html">Crafting Interpreters</a>:</p>
+
+                 <p><code>number -> "-"? digit+ ("." digit+)?;</code><br />
+                    <code>digit -> "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";</code></p>
+
+                <p>I'll do my best to summize the grammer here. A grammar is made up of semi colon delimited rules. The name of each rule appears first, then an arrow followed by terminals, non terminals and operators. Terminals produce a token (like a number token), they are qouted strings. Non terminals are lower case and not qouted, they mean execute another rule (which will eventually return a terminal). An Upper case non qouted terminal is anything with a complex lexeme, for example, we could use <code>NUMBER</code>. And operators allow us to combine terminals and non temrinals following certain rules. </p>
+
+                <ul>
+                    <li>Each rule is a name (lower case string) followed by an arrow</li>
+                    <li>Each rule ends with a semicolon</li>
+                    <li>Terminals are qouted strings</li>
+                    <li>Non terminals are lower case words, coresponding to the name of a rule</li>
+                    <li>Rules can be grouped with parenthesis</li>
+                    <li>Upper case words represent a terminal with a complex lexeme</li>
+                    <li><code>|</code> - Seperates rules, like an or statement</li>
+                    <li><code>*</code> - Rule can appear 0 or more times</li>
+                    <li><code>+</code> - Rule can appear 1 or more times</li>
+                    <li><code>?</code> - Rule can appear 0 or 1 times</li>
+                </ul>
+
+                <h2>OLD STUFF</h2>
+                
+                <p>This blog will walk you trough how to implement a simple <a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">Recursive Descent Parser</a>, and how to interpret what it parses. There are <a href="http://dmitrysoshnikov.com/courses/parsing-algorithms/">many parsing algorithms</a> to choose from, <a href="https://math.hws.edu/javanotes/c9/s5.html">Recursive Descent is easy to implement</a> and is used by many popular compilers like <a href="https://en.wikipedia.org/wiki/Roslyn_(compiler)">Roslyn</a> and <a href="https://en.wikipedia.org/wiki/V8_(JavaScript_engine)">V8</a>. We will start simple, by implementing a parser for math expressions, and by the end of this blog we will implement a small scripting language.</p>
+
+                <p>Parsing is just one step in the compilation process. A compiler usually runs a Scanner to generate a list of tokens. The tokens are then used by the Parser to generate an Abstract Syntax Tree (AST). Compilers often take several different passes over the AST such as type checking and optimization. These passes may modify the existing AST or create a new one.</p>
+
+                <h2>Grammar rules</h2>
+
+                <p>A programming language is a language, and languages have rules. These rules are called a grammar. The grammar of a programming language estabolishes what is valid syntax, and what isn't. One common way to express a grammar rule is . There are many common BNF variations, the one used in this blog is the one presented in . Aside from BNF, another common way to express a grammar is <a href="https://en.wikipedia.org/wiki/Syntax_diagram">Syntax diagrams</a>, sometimes called railroad diagrams.</p>
+
+                <p>For example, the syntax diagram for a decimal number like 5.7 that has an optional decimal part, meaning 5 would also be valid looks like this:</p>
+
+
+                <p>That same number expressed in our modified BNF notation would look like this:</p>
+
+                <p><code>number -> "-"? digit+ ("." digit+)?</code><br />
+                    <code>digit -> "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"</code></p>
+
+                <p>The modified BNF rules are as follows:</p>
+
+                
+
+                <p>You won't see this number rule in the modified BNF, instead we use capital letters to represent a token that might have a different text representation like NUMBER or IDENTIFIER. An IDENTIFIER is a sequence of characters that don't match any of our grammars reserved keywords, it's assumed to be a variable name. For example, a variable declaration can look like this:</p>
+
+                 <p><code>varDecl -&gt; "var" IDENTIFIER ( "=" NUMBER )? ";";</code></p>
+
+                <h2>Implementation</h2>
+
+                <p>Let's jump right into the deep end and try to evaluate a string of math, specifically <code>9 + 6 ^ 2 / 4 + 6 * 2</code>. Do the math, or paste this into google, the result should be <code>30</code>. But how did we get <code>30</code>? By following some order of operations. Let's parenthesize this equation to make the order of operations clear <code>((9 + ((6 ^ 2) / 4)) + (6 * 2))</code>. We're going to use the following grammar to parse the parenthesized equation:</p>
+
+<p><code>expression -&gt; NUMBER | "(" expression operator expression; ")";</code><br />
+<code>operator -&gt; "+" | "-" | "*" | "/" | "^";</code></p>
+
+                <p>The expression rule calls its-self, making the parser recursive. Each production in this rule (<code>expression</code>, <code>operator</code>, and <code>NUMBER</code>) will get it's own function to parse. In fact, the production rule tarnslates to code almost 1 to 1.</p>
+
+                <ul>
+                    <li>A terminal matches and consumes a token</li>
+                    <li>A non-terminal calls the function that matches its rule</li>
+                    <li><code>|</code> translates to an <code>if</code> statement</li>
+                    <li><code>*</code> translates to a <code>while</code> loop</li>
+                    <li><code>+</code> translates to a <code>while</code> loop</li>
+                    <li><code>?</code> translates to an <code>if</code> statement</li>
+                </ul>
+                
+                <p>Let's make a new class, <code>Program</code>. This class only needs two members, a string to evaluate, and an integer to represent what character in the string is being processed. The constructor will set the source string and initialize the token integer to 0. It will then log the result of evaluating the expression that the source code represents. As the parser finishes parsing each rule, it will evaluate the result and produce a number.</p>
+
+<pre class="prettyprint linenums">class Program {
+    int Token;
+    string Source;
+
+    public Program(string source) {
+        Source = source;
+        Token = 0;
+        Console.WriteLine("Result: " + Expression());
+        Source = null;
+    }</pre>
+                <p>A white space is allowed anywhere in the input string. Let's create a helper function that increments the currently parsed character in the source string until it is no longer a white space.</p>
+
+<pre class="prettyprint linenums">    void SkipWhitespace() {
+        char c = Source[Token];
+
+        while (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+            c = Source[++Token];
+        }
+    }</pre>
+        <p>Let's start with the top rule, this one has the lowest precedence, <code>Expression</code>. An expression can start with a <code>(</code>, or it is a number. If the expression starts with a <code>(</code>, then it should consume the <code>(</code> and recursiveley call <code>Expression</code>. Once an expression is parsed, it should be evaluated.</p>
+
+<pre class="prettyprint linenums">    double Expression() {
+        // expression -&gt; NUMBER | "(" expression operator expression; ")";
+        SkipWhitespace();
+        char c = Source[Token];
+        if (c >= '0' && c <= '9') {
+            return Number();
+        }
+        else if (c == '(') {
+            Token++; // Eat (
+
+            double left = Expression();
+            char op = Operator();
+            double right = Expression();
+
+            SkipWhitespace();
+            c = Source[Token];
+
+            if (c != ')') {
+                throw new Exception("Missing closing parenthesis");
+            }
+            Token++; // Eat )
+
+            switch (op) {
+                case '+': return left + right;
+                case '-': return left - right;
+                case '*': return left * right;
+                case '/': return left / right;
+                case '^': return Math.Pow(left, right);
+            }
+        }
+
+        throw new Exception("Invalid expression");
+    }</pre>
+        <p>The function to parse a number cheats a bit, it builds a string representation of a number, then relies on C#'s <code>Double.Parse</code> to actually generate the number.</p>
+
+<pre class="prettyprint linenums">    double Number() {
+        SkipWhitespace();
+        char c = Source[Token];
+
+        if (c >= '0' && c <= '9') {
+            string tmp = String.Empty;
+
+            while (c >= '0' && c <= '9') {
+                tmp += c.ToString();
+                c = Source[++Token];
+            }
+
+            if (c == '.') {
+                tmp += c.ToString();
+                Token++; // Eat .
+                c = Source[Token];
+
+                if (c >= '0' && c <= '9') {
+                    while (c >= '0' && c <= '9') {
+                        tmp += c.ToString();
+                        c = Source[++Token];
+                    }
+                }
+                else {
+                    throw new Exception("Invalid number format");
+                }
+            }
+
+            return Double.Parse(tmp);
+        }
+
+        throw new Exception("Invalid number");
+    }</pre>
+            <p>Finally, we have a function to parse a single operator. An operator is just any of the <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> or <code>^</code> symbols.</p>
+
+<pre class="prettyprint linenums">    char Operator() {
+        SkipWhitespace();
+        char c = Source[Token];
+
+        if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
+            Token += 1; // eat the operator
+            return c;
+        }
+
+        throw new Exception("Invalid operator");
+    }
+} // End of program</pre>
+                <p>The code presented above is the simplest parser i can think of. The best way to make sure you understand what it's doing is to run the code and step trough it, make sure you understand the basics before moving on.</p>
+
+                <h2>More complex parsing</h2>
+
+                <p>While the previous code works, the resulting parser is no very user friendly. Ideally, we want the parser to be able to handle a simpler, unparenthasized input, like <code>9 + 6 ^ 2 / 4 + 6 * 2</code>. To achieve this, we need to use our grammar to define operator precedance.</p>
+
+<p><code>expression -&gt;  term (("+" | "-") term)*;</code><br />
+<code>term -&gt; unary (("*" | "/") unary)*;</code><br />
+<code>unary -&gt; ("-")? unary | power;</code><br />
+<code>power -&gt; factor ("^" unary)?;</code><br />
+<code>factor -&gt;  NUMBER  | "(" expression ")";</code></p>
+
+                <p>Grammar rules <i>should> match either their own precedence level, or other operators that have a higher level of precedence. The power rule matches the factor rule first, then unary, which can recurse back into power. This isn't entireley currect, but the recursion handles a negative power. Another way to express this would be to make the unary operator have a higher precedance than the power operator, like so:</i>
+
+<p><code>expression ->  term (("+" | "-") term)*;</code><br />
+<code>term ->  power (("*" | "/") power)*;</code><br />
+<code>power -> unary ("^" power)*;</code><br />
+<code>unary -> ("-")? unary | factor;</code><br />
+<code>factor ->  NUMBER  | "(" expression ")";</code></p>
+
+                <p>We will use the first set of rules in the code below, in that rule set, the factor rule also matches its-self or an expression, which is where the recursive nature of the parser is expressed. Unlike the other math operation, the power operator (^) is right associative. This means <code>2^2^3</code> should be parsed as <code>2^(2^3)</code>, not <code>(2^2)^2</code>. Associativity is determined by the order that recursion is expressed. For example:</p>
+
+                <p>Left associative: <code>expression -&gt; expression operator other | other;</code><br />
+                Right associative: <code>expression -&gt; other operator expression | other;</code></p>
+
+                <p>The above sample of what is left recursion vs what is right recursion has a bug in it, it can get caught up in an infinate loop. This infinate loop is the result of left recursion. Left recursion is a rule that matches its-self without consuming any additonal tokens. Left recursion can be direct or indirect. The only way to resolve left recursion is to rewrite the grammar to avoid it. Notice for example, that an expression can match a term, which can match unary, which can match a power, which in turn matches a factor. But, before the factor rule recurses into expression, it must first consume a left parenthesis token.</p>
+
+                <p>Let's jump into implementing a parser for the above grammar. We will have the same program structure, a string to hold the source code and an integer that represents the current token we're parsing.</p>
+
+<pre class="prettyprint linenums">class Program {
+    int Token;
+    string Source;
+
+    public Program(string source) {
+        Source = source;
+        Token = 0;
+        Console.WriteLine("Result: " + Expression());
+        Source = null;
+    }</pre>
+                <p>We still need the <code>SkipWhitespace</code> helper, but also a new helper to get the current character. The helper for getting the current character needs to take into account that the current token might be past the length of the source string. If it's past the length, we need to return <i>something</i>, which in this case is a null terminator.</p>
+
+<pre class="prettyprint linenums">    char Current() {
+        if (Token >= Source.Length) {
+            return '\0';
+        }
+        return Source[Token];
+    }
+
+    void SkipWhitespace() {
+        char c = Current();
+
+        while (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+            Token++;
+            c = Current();
+        }
+    }</pre>
+            <p>The code to parse the expression production becomes a little more interesting. First, the expression parses a term. If there is a plus or minus symbol, another term is persed and the expression is evaluated. But if there isn't an addition or subtraction the original term is returned. As we're about to see, most productions work this way.</p>
+
+<pre class="prettyprint linenums">    double Expression() {
+        double left = Term();
+
+        SkipWhitespace();
+        char c = Current();
+
+        while (c == '+' || c == '-') {
+            Token++; // Eat + or -
+            double right = Term();
+            if (c == '+') {
+                left = left + right;
+            } else if (c == '-') {
+                left = left - right;
+            }
+
+            SkipWhitespace();
+            c = Current();
+        }
+
+        return left;
+    }</pre>
+    <p>The Term production works the same way as the expression production. It first parses a unary production on the left side, then if there is a multiplication or division it parses the right side and evaluates the term. If there was no operator, the unchanged left side is returned.</p>
+
+<pre class="prettyprint linenums">    double Term() {
+        double left = Unary();
+
+        SkipWhitespace();
+        char c = Current();
+
+        while (c == '*' || c == '/') {
+            Token++; // Eat * or /
+            double right = Unary();
+            if (c == '*') {
+                left = left * right;
+            }
+            else if (c == '/') {
+                left = left / right;
+            }
+
+            SkipWhitespace();
+            c = Current();
+        }
+
+        return left;
+    }</pre>
+    <p>The Unary production is a little different. It first checks if there is a negative symbol, if there is, the symbol is consumed and the function recurses into its-self. If there is no negative symbol, this production simply returns a power. Unlike the last two binary productions, this unary one needs to differentiate between it's possible code paths based on the presence of a preceding token (in this case the negative symbol).</p>
+
+<pre class="prettyprint linenums">    double Unary() {
+        SkipWhitespace();
+        char c = Current();
+
+        if (c == '-') {
+            Token++; // Eat negative
+            return -1.0 * Unary();
+        }
+
+        return Power();
+    }</pre>
+    <p>The power production is a binary expression, it works the same way as expression and term. It first calls a production with a lower precdence, then checks for the power operator, and calls another production if the power operator is found. The difference here is that a power could be a negative power, so instead of calling Factor, we again call Unary. This Unary operation will recurse into power again, making the power production right associative instead of left.</p>
+
+<pre class="prettyprint linenums">    double Power() {
+        double factor = Factor();
+
+        SkipWhitespace();
+        char c = Current();
+
+        if (c == '^') {
+            Token++; // Eat ^
+            double power = Unary();
+
+            return Math.Pow(factor, power);
+        }
+
+        return factor;
+    }</pre>
+    <p>Finally, the factor production recurses all the way back to parse a new expression if a <code>(</code> symbol is found. If not, it calls the number production.</p>
+
+<pre class="prettyprint linenums">    double Factor() {
+        SkipWhitespace();
+        char c = Current();
+
+        if (c == '(') {
+            Token++; // Eat (
+
+            double expr = Expression();
+
+            SkipWhitespace();
+            c = Current();
+
+            if (c != ')') {
+                throw new Exception("Invalid expression in factor");
+            }
+            Token++; // Eat )
+
+            return expr;
+        }
+
+        return Number();
+    }</pre>            <p>Like the SkipWhiteSpace function, the number production remains unchanged</p>
+<pre class="prettyprint linenums">    double Number() {
+        SkipWhitespace();
+        char c = Current();
+
+        if (c >= '0' && c <= '9') {
+            string tmp = String.Empty;
+
+            while (c >= '0' && c <= '9') {
+                tmp += c.ToString();
+                Token++;
+                c = Current();
+            }
+
+            if (c == '.') {
+                tmp += c.ToString();
+                Token++; // Eat .
+                c = Current();
+
+                if (c >= '0' && c <= '9') {
+                    while (c >= '0' && c <= '9') {
+                        tmp += c.ToString();
+                        Token++;
+                        c = Current();
+                    }
+                }
+                else {
+                    throw new Exception("Invalid number format");
+                }
+            }
+
+            return Double.Parse(tmp);
+        }
+
+        throw new Exception("Invalid number");
+    }
+} // End Program class</pre>
+
+                <h2>What's next?</h2>
+
+                <p>The code presented on this page is a very simple, adhoc recursive descent parser. This parser is easy to step trough in a debugger and demonstratest the basic concepts of recursive descent parsing. In the next parts of this blog we're going to build a more robust parser, that better resembles a real parser. We will also explore how to interpret the AST that the parser generates to create a simple scripting language. This simple scripting language will have only numbers as its primitive types, but it will support variables, code blocks, constrol flow, and recursive function calls. Our goal is to be able to parse and execute this bit of code:</p>
+
+<pre class="prettyprint linenums">var x = 4;
+var y = 9;
+
+print (9 + 6 ^ 2 / 4 + 6 * -2);
+print(2^2^3);
+
+fun abs(x) {
+    if (x < 0.0) {
+        return x * -1.0;
+    }
+    return x;
+}
+
+fun sqrt(n) {
+    var x = 1;
+    var iter = 0;
+    
+    while (abs(x * x - n) >= 0.0000001) {
+        x = ((n / x) + x) / 2;
+        
+        iter = iter + 1;
+        if (iter > 5000) {
+            return x;
+        }
+    }
+
+    return x;
+}
+
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+print (sqrt(x));
+print (sqrt(y));
+
+var i = 0;
+while (i < 20) {
+    print (fib(i));
+    i = i + 1;
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

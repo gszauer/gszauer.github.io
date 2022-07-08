@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a></li>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a></li>		<li class="item"><a  href="books.html">Books</a></li>		<li class="item"><a  href="https://github.com/gszauer/">Github</a></li>		<li class="item"><a  href="https://twitter.com/gszauer">@gszauer</a></li>		<li class="toggle"><a href="#">Open Menu</a></li>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a></li><a class="sidebar-item sidebar-first" href="blog_memory.html">Managing Memory</a><a class="sidebar-item" href="blog_mem_allocate.html">Allocate Memory</a><a class="sidebar-item" href="blog_mem_free.html">Release Memory</a><a class="sidebar-item" href="blog_mem_sub.html">Sub Allocators</a><a class="sidebar-item" href="blog_mem_optimize.html">Set &amp; Clear Memory</a><a class="sidebar-item sidebar-active " href="blog_mem_integrate.html">Integration</a></div>    
+            <div id="content">
+                <h1>Integrating the allocator</h1>
+
+                <p>At this point we've covered all the code needed to get a memory allocator up and running. In this last section, let's explore how we can make the memory allocator easier to integrate into an existing codebase. We're going to override the standard c allocation functions (malloc, free, memset, memcpy, realloc, calloc), as well as the C++ new / delete operators, and finally we will implement an allocator class that can be used with the standard c++ library containers.</p>
+
+                <h2>C API</h2>
+
+                <p>Implementing the C API is trivial, we have functions to allocate, free, set and copy memory. We can use macro functions to rename the <code>Allocate</code>, <code>Release</code>, <code>Set</code>, and <code>Copy</code> functions to <code>malloc</code>, <code>free</code>, <code>memset</code>, and <code>memcpy</code> respectivley. One bit of code that might look odd is the <code>__LOCATION__</code> macro, it just makes a constant string which contains the file name and line that the macro appeared on.</p>
+
+<pre class="prettyprint linenums">#define xstr(a) str(a)
+#define str(a) #a
+#define __LOCATION__ "On line: " xstr(__LINE__) ", in file: " __FILE__
+
+#define malloc(bytes) Allocate(bytes, DefaultAlignment, __LOCATION__, GlobalAllocator)
+#define free(data) Release(data, __LOCATION__, GlobalAllocator)
+#define memset(mem, val, size) Set(mem, val, size, __LOCATION__)
+#define memcpy(dest, src, size) Copy(dest, src, size, __LOCATION__)</pre>
+                <p>There are two more functions in the C API for memory that we should implement, <code>calloc</code> and <code>realloc</code>. Calloc, which allocates a contigous chunk of memory is similar to malloc, except calloc also clear the allocated memory. This function can be implemented with our existing <code>Allocate</code> and <code>Set</code> functions.</p>
+
+<pre class="prettyprint linenums">void* AllocateContigous(u32 num_elems, u32 elem_size, u32 alignment, const char* location, Allocator* allocator) {
+    if (allocator == 0) {
+        allocator = GlobalAllocator;
+    }
+    void* mem = Allocate(num_elems * elem_size, alignment, location, allocator);
+    if (mem == 0) {
+        return 0;
+    }
+    Set(mem, num_elems * elem_size, 0, location);
+
+    return mem;
+}</pre>
+                <p>The <code>realloc</code> function allocates a new chunk of memory and copies the contents of the old memory to the new allocation. We can implement this function using <code>Allocate</code>, <code>Copy</code> and <code>Release</code>. If the new size being passed in is 0, and the memory being passed in is not 0, the memory will be freed and <code>realloc</code> will return <code>0</code>.</p>
+
+<pre class="prettyprint linenums">void* ReAllocate(void* mem, u32 newSize, u32 newAlignment, const char* location, Allocator* allocator) {
+    if (allocator == 0) {
+        allocator = GlobalAllocator;
+    }
+
+    if (newSize == 0 &amp;&amp; mem != 0) {
+        Release(mem, location, allocator);
+        return 0;
+    }
+
+    void* newMem = Allocate(newSize, newAlignment, location, allocator);
+    u32 oldMemSize = 0;
+    {
+        u8* memory = (u8*)mem;
+        Allocation* header = (Allocation*)(memory - sizeof(Allocation));
+        oldMemSize = header->size - sizeof(Allocation);
+        u32 allocationHeaderPadding = sizeof(Allocation) % header->alignment > 0 ? header->alignment - sizeof(Allocation) % header->alignment : 0;
+        oldMemSize -= allocationHeaderPadding;
+    }
+
+    if (mem != 0 &amp;&amp; newMem != 0) {
+        u32 copySize = newSize;
+        if (newSize > oldMemSize) {
+            copySize = oldMemSize;
+        }
+
+        Copy(newMem, mem, copySize, location);
+        Release(mem, location, allocator);
+    }
+
+    return newMem;
+}</pre>
+                <p>And finally we can define the <code>AllocateContigous</code> and <code>ReAllocate</code> functions as <code>calloc</code> and <code>realloc</code>. You might also want to consider creating actual functions named malloc, free, etc... That way the function can be an extern function and called without including the memory header file.</p>
+
+<pre class="prettyprint linenums">#define calloc(numelem, elemsize) AllocateContigous(numelem, elemsize, DefaultAlignment, __LOCATION__, GlobalAllocator)
+#define realloc(mem, size) ReAllocate(mem, size, DefaultAlignment, __LOCATION__, GlobalAllocator)</pre>
+                <p class="callout">Overloading the standard memory functions can get hairy, compilers do fun things like treat memset as an intrinsic instruction (which is the right call). Check out the <a href="https://microsoft.github.io/mimalloc/overrides.html">mi-malloc</a> docs for a more robust list of functions to re-implement</p>
+
+                <h2>C++ API</h2>
+
+                <p>Implementing the C++ API is a bit more verbose, but the functionality is pretty trivial. All we need to do is override <a href="https://cplusplus.com/reference/new/operator%20new/">new</a>, <a href="https://cplusplus.com/reference/new/operator%20delete/">delete</a>, <a href="https://cplusplus.com/reference/new/operator%20new[]/">new[]</a> and <a href="https://cplusplus.com/reference/new/operator%20delete[]/">delete[]</a>. This implementation isn't 100% to the C++ spec, for example <code>new_handler</code> is ignored. All of these overloaded functions are going to be calling our <code>Allocate</code> and <code>Release</code> functions.</p>
+
+                <p>We will need to override a total of 16 functions (3 new, 5 delete, 3 new[], and 5 delete[])  to cover the broad range of uses for new / delete. The placement new / delete operators are basically stub functions as they don't need to allocate any memory.</p>
+
+<pre class="prettyprint linenums">void* operator new (decltype(sizeof(0)) size) {
+    return Allocate(size, DefaultAlignment, "internal - ::new(size_t)", GlobalAllocator);
+}
+
+void* operator new (decltype(sizeof(0)) size, const std::nothrow_t&amp; nothrow_value) noexcept {
+    return Allocate(size, DefaultAlignment, "internal - ::new(size_t, nothrow_t&amp;)", GlobalAllocator);
+}
+
+void __cdecl operator delete (void* ptr) noexcept {
+    return Release(ptr, "internal - ::delete(void*)", GlobalAllocator);
+}
+
+void __cdecl operator delete (void* ptr, const std::nothrow_t&amp; nothrow_constant) noexcept {
+    return Release(ptr, "internal - ::delete(void*, nothrow_t&amp;)", GlobalAllocator);
+}
+
+void __cdecl operator delete(void* memory, const char* location, Allocator* allocator) {
+    return Release(memory, location, allocator);
+}
+
+void __cdecl operator delete (void* ptr, decltype(sizeof(0)) size) noexcept {
+    return Release(ptr, "internal - ::delete(void*, size_t)", GlobalAllocator);
+}
+
+void __cdecl operator delete (void* ptr, decltype(sizeof(0)) size, const std::nothrow_t&amp; nothrow_constant) noexcept {
+    return Release(ptr, "internal - ::delete(void*, size_t, nothrow_t&amp;)", GlobalAllocator);
+}
+
+void* operator new[](decltype(sizeof(0)) size) {
+    return Allocate(size, DefaultAlignment, "internal - ::new[](size_t)", GlobalAllocator);
+}
+
+void* operator new[](decltype(sizeof(0)) size, const std::nothrow_t&amp; nothrow_value) noexcept {
+    return Allocate(size, DefaultAlignment, "internal - ::new[](size_t, nothrow_t&amp;)", GlobalAllocator);
+}
+
+void __cdecl operator delete[](void* ptr) noexcept {
+    return Release(ptr, "internal - ::delete[](void*)", GlobalAllocator);
+}
+
+void __cdecl operator delete[](void* ptr, const std::nothrow_t&amp; nothrow_constant) noexcept {
+    return Release(ptr, "internal - ::delete[](void*, nothrow_t&amp;)", GlobalAllocator);
+}
+
+void __cdecl operator delete[](void* ptr, decltype(sizeof(0)) size) noexcept {
+    return Release(ptr, "internal - ::delete[](void*, size_t)", GlobalAllocator);
+}
+
+void __cdecl operator delete[](void* ptr, decltype(sizeof(0)) size, const std::nothrow_t&amp; nothrow_constant) noexcept {
+    return Release(ptr, "internal - ::delete[](void*, size_t, nothrow_t&amp;)", GlobalAllocator);
+}</pre>
+                    <p>This works pretty well, but there is one disadvantage, we lost the line number and file name where a memory allocation or release happened. We can solve this for the new function by making a version that takes more robust arguments like the allocation location. We will then #define new to call this version of new with extra arguments.</p>
+
+
+<pre class="prettyprint linenums">void* operator new (decltype(sizeof(0)) size, u32 alignment, const char* location, Allocator* allocator) noexcept {
+    return Allocate(size, alignment, location, allocator);
+}
+
+#define new new(DefaultAlignment, __LOCATION__, GlobalAllocator)</pre>
+                    <p>We won't add additional paramaters to the delete operator. I just ignore the location for delete, but we could make a global pointer / integer and use a #define to set that. Similarly to what is being discussed in <a href="https://stackoverflow.com/questions/619467/macro-to-replace-c-operator-new">this stack overflow post</a>.</p>
+
+                <h2>Allocator API</h2>
+
+                    <p>The last API to integrate with is STL containers. If you make any new STL container, it should be able to use the allocator we just created. Implementing an STL allocator is trivial, it's covered in depth on the <a href="https://anki3d.org/cpp-allocators-for-games/">anki3d</a> blog. We need to provide an allocator class that matches the API provided in the <a href="https://anki3d.org/cpp-allocators-for-games/">linked blog</a>, which will act as a thin wrapper for the allocator.</p>
+                        
+                        
+
+<pre class="prettyprint linenums">template&lt;typename T&gt;
+    struct stl_identity {
+        typedef T type;
+    };
+
+    template &lt;typename T&gt;
+    T&amp;&amp; stl_forward(typename stl_identity&lt;T&gt;::type&amp; param) {
+        return static_cast&lt;T&amp;&amp;&gt;(param);
+    }
+
+template&lt;typename T&gt;
+class STLAllocator {
+public:
+    typedef ptr_type size_type;
+    typedef ptr_type difference_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T&amp; reference;
+    typedef const T&amp; const_reference;
+    typedef T value_type;
+public:
+    /// Default constructor
+    inline STLAllocator() throw() { }
+
+    inline ~STLAllocator() { }
+
+    /// Copy constructor
+    inline STLAllocator(const STLAllocator&amp; other) throw() { }
+
+    /// Copy constructor with another type
+    template&lt;typename U&gt;
+    inline STLAllocator(const STLAllocator&lt;U&gt;&amp;) throw() { }
+
+    /// Copy
+    inline STLAllocator&lt;T&gt;&amp; operator=(const STLAllocator&amp; other) {
+        return *this;
+    }
+
+    /// Copy with another type
+    template&lt;typename U&gt;
+    inline STLAllocator&amp; operator=(const STLAllocator&lt;U&gt;&amp; other) {
+        return *this;
+    }
+
+    /// Get address of a reference
+    inline pointer address(reference x) const {
+        return &amp;x;
+    }
+
+    /// Get const address of a const reference
+    inline const_pointer address(const_reference x) const {
+        return &amp;x;
+    }
+
+    /// Allocate n elements of type T
+    inline pointer allocate(size_type n, const void* hint = 0) {
+        return Allocate(n * sizeof(T), DefaultAlignment, "STLAllocator::allocate", GlobalAllocator);
+    }
+
+    /// Free memory of pointer p
+    inline void deallocate(void* p, size_type n) {
+        Release(p, "STLAllocator::deallocate", GlobalAllocator);
+    }
+
+    /// Call the constructor of p
+    inline void construct(pointer p, const T&amp; val) {
+        new ((T*)p) T(val);
+    }
+
+    /// Call the constructor of p with many arguments. C++11
+    template&lt;typename U, typename... Args&gt;
+    inline void construct(U* p, Args&amp;&amp;... args) {
+        ::new((void*)p) U(stl_forward&lt;Args&gt;(args)...);
+    }
+
+    /// Call the destructor of p
+    inline void destroy(pointer p) {
+        p-&gt;~T();
+    }
+
+    /// Call the destructor of p of type U
+    template&lt;typename U&gt;
+    inline void destroy(U* p) {
+        p-&gt;~U();
+    }
+
+    /// Get the max allocation size
+    inline size_type max_size() const {
+        return size_type(-1);
+    }
+
+    /// A struct to rebind the allocator to another allocator of type U
+    template&lt;typename U&gt;
+    struct rebind {
+        typedef STLAllocator&lt;U&gt; other;
+    };
+};</pre>
+            </div>
+        </div>
+    </body>
+</html>
