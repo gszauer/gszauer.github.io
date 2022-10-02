@@ -2,7 +2,7 @@
 #include "math.h"
 #include "FileLoaders.h"
 
-#define SHADOWMAP_RES 1024
+#define SHADOWMAP_RES 256
 
 Graphics::Index			gLightmapMVP;
 
@@ -122,11 +122,16 @@ void Initialize(Graphics::Dependencies* platform, Graphics::Device* gfx) {
 	gLightmapColor = gfx->CreateTexture(Graphics::TextureFormat::RGBA8, SHADOWMAP_RES, SHADOWMAP_RES);
 	gLightmapDepth = gfx->CreateTexture(Graphics::TextureFormat::Depth, SHADOWMAP_RES, SHADOWMAP_RES, 0, Graphics::TextureFormat::Depth, false);
 	
-	enablePCM = false;
-	lastPCM   = false;
-	gLightmapDepth->SetPCM(false);
-	gPCMState = gLitNoPCM;
-	gLightmapFBO->AttachDepth(*gLightmapDepth, false);
+	enablePCM = true;
+	lastPCM   = enablePCM;
+	if (enablePCM) {
+		gPCMState = gLitWithPCM;
+	}
+	else {
+		gPCMState = gLitNoPCM;
+	}
+	gLightmapFBO->AttachDepth(*gLightmapDepth, enablePCM);
+	//gLightmapFBO->AttachColor(*gLightmapColor);
 
 	//gLightmapFBO->AttachColor(*gLightmapColor);
 	GraphicsAssert(gLightmapFBO->IsValid(), "Invalid fbo");
@@ -477,19 +482,6 @@ void Update(Graphics::Device* g, float deltaTime) {
 	}
 	GraphicsAssert(gLightmapMVP.valid, "(4) INvalid lightmap mvp?");
 
-	if (lastPCM != enablePCM) {
-		gLightmapDepth->SetPCM(enablePCM);
-		if (enablePCM) {
-			gPCMState = gLitWithPCM;
-			gLightmapDepth->SetPCM(true);
-		}
-		else {
-			gPCMState = gLitNoPCM;
-			gLightmapDepth->SetPCM(false);
-		}
-		lastPCM = enablePCM;
-	}
-
 #if 1
 	camTime += deltaTime * 0.25f;
 	while (camTime >= 360.0f) {
@@ -518,6 +510,17 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 		return;
 	}
 
+	if (lastPCM != enablePCM) {
+		gLightmapFBO->AttachDepth(*gLightmapDepth, enablePCM);
+		if (enablePCM) {
+			gPCMState = gLitWithPCM;
+		}
+		else {
+			gPCMState = gLitNoPCM;
+		}
+		lastPCM = enablePCM;
+	}
+
 	GraphicsAssert(gLightmapMVP.valid, "(5) INvalid lightmap mvp?");
 
 	float camX = FastSin(camTime) * cameraRadius;
@@ -543,7 +546,11 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 	vec3 HemiTop = vec3(0.3f, 0.3f, 0.3f);
 	vec3 HemiBottom = vec3(ambient, ambient, ambient);
 	Graphics::Sampler sampler;
-	Graphics::Sampler depthSampler(Graphics::Filter::Nearest, Graphics::Filter::Nearest, Graphics::Filter::Nearest);
+
+	Graphics::Sampler depthSampler(Graphics::WrapMode::Clamp, Graphics::WrapMode::Clamp, Graphics::Filter::Nearest, Graphics::Filter::Nearest, Graphics::Filter::Nearest);
+	if (gPCMState == gLitWithPCM) {
+		depthSampler = Graphics::Sampler(Graphics::WrapMode::Clamp, Graphics::WrapMode::Clamp, Graphics::Filter::Linear, Graphics::Filter::Linear, Graphics::Filter::Linear);
+	}
 
 	vec3 lightCameraPosition = cameraTarget - normalized(lightDir) * 10.0f;
 	mat4 ShadowView = lookAt(lightCameraPosition, cameraTarget, vec3(0, 1, 0));
@@ -559,6 +566,8 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 		gfx->SetRenderTarget(gLightmapFBO);
 		gfx->SetViewport(0, 0, SHADOWMAP_RES, SHADOWMAP_RES);
 		gfx->Clear(1.0f);
+
+		gfx->SetFaceCulling(Graphics::CullFace::Front);
 #if 1
 		gfx->Bind(gLightmapDrawShader);
 		mat4 mvp = ShadowProjection * ShadowView * model1;
@@ -579,7 +588,7 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 		GraphicsAssert(gLightmapMVP.valid, "(e INvalid lightmap mvp?");
 		//gfx->Draw(*gLightmapPlaneLayout, Graphics::DrawMode::Triangles, 0, gLightmapPlaneLayout->GetUserData());
 #endif
-		
+		gfx->SetFaceCulling(Graphics::CullFace::Back);
 	}
 
 	mat4 shadowMatrix1 = shadowMapAdjustment * ShadowProjection * ShadowView * model1;
@@ -636,7 +645,7 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 		gfx->Draw(*gPCMState->planeMesh, Graphics::DrawMode::Triangles, 0, gPCMState->planeMesh->GetUserData());
 	}
 
-	if (ShowDepth) { // Draw debug
+	if (ShowDepth && !(gPCMState == gLitWithPCM)) { // Draw debug
 		gfx->SetViewport(w - 20 - 256, h - 20 - 256, 266, 266);
 		gfx->SetScissorState(true, w - 20 - 256, h - 20 - 256, 266, 266);
 		gfx->Clear(0, 0, 0, 1);
@@ -644,7 +653,6 @@ void Render(Graphics::Device * gfx, int x, int y, int w, int h) {
 		gfx->SetViewport(w - 10 - 5 - 256, h - 10 - 5 - 256, 256, 256);
 
 		gfx->Bind(gLightmapBlitShader);
-		//gfx->Bind(gLightmapFboAttachment, *gLightmapColor, sampler);
 		gfx->Bind(gLightmapFboAttachment, *gLightmapDepth, depthSampler);
 		gfx->Draw(*gLightmapMesh, Graphics::DrawMode::TriangleStrip, 0, gLightmapMesh->GetUserData());
 		gfx->SetViewport(0, 0, 800, 600);
