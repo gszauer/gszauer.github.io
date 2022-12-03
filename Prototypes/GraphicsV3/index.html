@@ -1,0 +1,82 @@
+<!doctype html>  
+<html lang="en">  
+    <head>  
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta charset="utf-8">  
+        <title>Minimal allocator example</title> 
+<!--
+-->
+<script type="text/javascript" src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
+<!--
+-->
+        <style>
+            * {
+                border: 0px;
+                padding: 0px;
+                margin: 0px;
+                color: rgb(220, 220, 220);
+                text-decoration: none;
+                font-size: 14px;
+                font-family: monospace;
+            }
+            html, body {
+                min-height: 100% !important;
+                min-width: 100% !important;
+                height: 100%;
+                width: 100%;
+
+                background-color: rgb(0, 0, 0);
+                color: rgb(220, 220, 220);
+            }
+        </style> 
+        <script type="text/javascript" src="memory.js"></script>
+        <script type="text/javascript" src="graphics.js"></script>
+        <script type="text/javascript" src="math.js"></script>
+        <script type="text/javascript" src="loader.js"></script>
+        <script type="text/javascript">
+            var allocator = null;
+            var graphics = null;
+            var math = null;
+            var loader = null;
+            var wasmInstance = null;
+
+            const init = function(canvasName) {
+                if (window.SPECTOR !== undefined) {
+                    var spector = new SPECTOR.Spector();
+                    spector.displayUI();
+                }
+                
+                const stackSize = 1024 * 1024 * 8; // 8 MiB
+                const dataSize = 1024 * 1024 * 4; // 4 MiB
+                const heapSize = 1024 * 1024 * 52; // 52 MiB
+
+                let importObject = {
+                    module: {},
+                    env: { }
+                };
+                const gl = document.getElementById('webglCanvas').getContext('webgl2');
+                allocator = new MemoryAllocator(heapSize + dataSize + stackSize, importObject);
+                graphics = new GraphicsDevice(importObject, allocator, gl);
+                math = new GameMath(importObject);
+                loader = new FileLoader(importObject, allocator);
+
+                WebAssembly.instantiateStreaming(fetch('test.debug.wasm'), importObject).then(prog => {
+                    wasmInstance = prog.instance;
+                    const exports = wasmInstance.exports;
+                    allocator.AttachToWasmInstance(wasmInstance);
+                    loader.AttachToWasmInstance(wasmInstance);
+
+                    const wasmPointer = exports.Initialize();
+
+                    window.setInterval(function() {
+                        exports.Update(wasmPointer);
+                    }, 16);
+                });
+            }
+        </script>
+        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAvW8cAP///wCjoJ0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREREQAAAAAiIiIiAAAAACIiIiIAAAAAIiIiIgAAAAAiIiIiAAAAACIiIiIAAAAAAAAAAAAAAAAAAAAAAAAAAAMzMzAAAAAAAzMAMAAAAAADMwAwAAAAAAMzADAAAAAAAAAAAAAAAAAAAAAAAAD//wAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADABwAAwA8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+    </head>  
+    <body onload="init('webglCanvas');">
+        <canvas id="webglCanvas" width="800" height="600"></canvas>
+    </body>  
+</html>
