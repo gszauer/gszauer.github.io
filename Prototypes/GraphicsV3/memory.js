@@ -1,5 +1,5 @@
 class MemoryAllocator {
-    constructor(memorySize, wasmImportObject) {
+    constructor(wasmImportObject, memorySize) {
         this.pageSize = 512;
         this.heapBase = 0;
         this.numPages = Math.ceil(memorySize / this.pageSize);
@@ -24,6 +24,11 @@ class MemoryAllocator {
         wasmImportObject.env.memory = this.wasmMemory;
         
         let self = this;
+
+        wasmImportObject.env["MemDbgPrint"] = function(ptr_str) {
+            const stringToPrint = self.PointerToString(ptr_str);
+            console.log("c++: " + stringToPrint);
+        }
 
         wasmImportObject.env["MemAllocate"] = function(bytes, alignment) {
             if (alignment === undefined) {

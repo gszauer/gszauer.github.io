@@ -5,9 +5,7 @@
         <meta charset="utf-8">  
         <title>Minimal allocator example</title> 
 <!--
--->
 <script type="text/javascript" src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
-<!--
 -->
         <style>
             * {
@@ -29,17 +27,12 @@
                 color: rgb(220, 220, 220);
             }
         </style> 
+        <script type="text/javascript" src="window.js"></script>
         <script type="text/javascript" src="memory.js"></script>
-        <script type="text/javascript" src="graphics.js"></script>
         <script type="text/javascript" src="math.js"></script>
         <script type="text/javascript" src="loader.js"></script>
+        <script type="text/javascript" src="graphics.js"></script>
         <script type="text/javascript">
-            var allocator = null;
-            var graphics = null;
-            var math = null;
-            var loader = null;
-            var wasmInstance = null;
-
             const init = function(canvasName) {
                 if (window.SPECTOR !== undefined) {
                     var spector = new SPECTOR.Spector();
@@ -54,29 +47,26 @@
                     module: {},
                     env: { }
                 };
-                const gl = document.getElementById('webglCanvas').getContext('webgl2');
-                allocator = new MemoryAllocator(heapSize + dataSize + stackSize, importObject);
-                graphics = new GraphicsDevice(importObject, allocator, gl);
-                math = new GameMath(importObject);
-                loader = new FileLoader(importObject, allocator);
+
+                let allocator = new MemoryAllocator(importObject, heapSize + dataSize + stackSize);
+                let game = new GameWindow(importObject, "webglCanvas");
+                let graphics = new GraphicsDevice(importObject, allocator, game.gl);
+                let loader = new FileLoader(importObject, allocator);
+                let math = new GameMath(importObject);
 
                 WebAssembly.instantiateStreaming(fetch('test.debug.wasm'), importObject).then(prog => {
-                    wasmInstance = prog.instance;
-                    const exports = wasmInstance.exports;
-                    allocator.AttachToWasmInstance(wasmInstance);
-                    loader.AttachToWasmInstance(wasmInstance);
+                    allocator.AttachToWasmInstance(prog.instance);
+                    // graphics doesn't neeed to attach
+                    loader.AttachToWasmInstance(prog.instance);
+                    // math doesn't need to attach
 
-                    const wasmPointer = exports.Initialize();
-
-                    window.setInterval(function() {
-                        exports.Update(wasmPointer);
-                    }, 16);
+                    game.AttachToWasmInstance(prog.instance); // Will init and start updating
                 });
             }
         </script>
         <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAvW8cAP///wCjoJ0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREREQAAAAAiIiIiAAAAACIiIiIAAAAAIiIiIgAAAAAiIiIiAAAAACIiIiIAAAAAAAAAAAAAAAAAAAAAAAAAAAMzMzAAAAAAAzMAMAAAAAADMwAwAAAAAAMzADAAAAAAAAAAAAAAAAAAAAAAAAD//wAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADABwAAwA8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
     </head>  
     <body onload="init('webglCanvas');">
-        <canvas id="webglCanvas" width="800" height="600"></canvas>
+        <canvas id="webglCanvas" width="800" height="600"  oncontextmenu="return false;"></canvas>
     </body>  
 </html>

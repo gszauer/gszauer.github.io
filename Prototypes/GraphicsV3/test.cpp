@@ -7,15 +7,18 @@ extern "C" void _initialize(void) {
 
 #define export __attribute__ (( visibility( "default" ) )) extern "C"
 
-#include "graphics.h"
+#include "window.h"
 #include "memory.h"
+// Math
 #include "loader.h"
+#include "graphics.h"
+// Audio
 
 #include "calcTangents.cpp"
 
 #define LOAD_BUFFER_SIZE (1024 * 1024 * 26)
 
-MemExposeHeap
+WASM_MEM_EXPOSE_HEAP
 FileLoaderEnableCallbacks
 
 struct AppData {
@@ -463,7 +466,47 @@ export void* Initialize() {
     return app;
 }
 
-export void Update(AppData* app) {
+export void Render(unsigned int x, unsigned int y, unsigned int w, unsigned int h, void* userData) {
+    if (MousePressed(MouseButtonLeft)) {
+        MemDbgPrint("Left mouse pressed");
+    }
+    else if (MouseReleased(MouseButtonLeft)) {
+        MemDbgPrint("Left mouse released");
+    }
+
+    if (KeyboardPressed(KeyboardCodeSpace)) {
+        MemDbgPrint("space pressed");
+    }
+    else if (KeyboardReleased(KeyboardCodeSpace)) {
+        MemDbgPrint("space released");
+    }
+
+    bool stop = KeyboardDown(KeyboardCodeSpace);
+    if (stop) {
+        int x  = 8;
+    }
+    if (KeyboardDown(KeyboardCodeSpace)) {
+        MemDbgPrint("space down");
+    }
+    
+    if (TouchPressed(0)) {
+        MemDbgPrint("touch 0 pressed");
+    }
+    if (TouchReleased(0)) {
+        MemDbgPrint("touch 0 released");
+    }
+
+    if (TouchPressed(1)) {
+        MemDbgPrint("touch 1 pressed");
+    }
+    if (TouchReleased(1)) {
+        MemDbgPrint("touch 1 released");
+    }
+}
+
+
+export void Update(float dt, void* userData) {
+    AppData* app = (AppData*)userData;
     /*GfxClearColor(0, 0, 0.5f, 0.6f, 0.7f);
     GfxClearDepth(0, 0, 1.0f);
     GfxDraw(0, 0, app->vao, GfxDrawModeTriangles, 0, 3, 1);*/
