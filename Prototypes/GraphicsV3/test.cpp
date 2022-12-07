@@ -12,14 +12,22 @@ extern "C" void _initialize(void) {
 // Math
 #include "loader.h"
 #include "graphics.h"
-// Audio
+#include "audio.h"
 
-#include "calcTangents.cpp"
+#include "debt/lodepng.h"
+#include "debt/lodepng.c"
+#if 0
+#include "debt/cgltf.h"
+#include "debt/cgltf.c"
+#endif
+#include "debt/calcTangents.cpp"
 
+// TODO: Reduce so it's not 26MB
 #define LOAD_BUFFER_SIZE (1024 * 1024 * 26)
 
 WASM_MEM_EXPOSE_HEAP
-FileLoaderEnableCallbacks
+WASM_LOADER_ENABLE_CALLBACKS
+WASM_AUDIO_ENABLE_CALLBACKS
 
 struct AppData {
     u32 vbo;
@@ -62,7 +70,7 @@ struct AppData {
     u32 skullUniformLightDir;
     u32 skullUniformLightColor;
     u32 skullUniformViewPos;
-    u32 skullUniformTexture;
+    u32 skullAlbedoTexture;
     u32 skullNormalTexture;
     bool canDisplaySkull;
 
@@ -70,6 +78,12 @@ struct AppData {
     float* view;
     float* proj;
     float cam[3];
+
+    u32 oneShotBufffer;
+    u32 oneShotBus;
+    u32 loopingBus;
+    u32 loopingBuffer;
+    u32 loopingSound;
 };
 
 export void* Initialize() {
@@ -81,6 +95,8 @@ export void* Initialize() {
 
     AppData* app = (AppData*)MemAllocate(sizeof(AppData), 0);
     app->canDisplaySkull = false;
+    app->oneShotBus = AudioCreateBus();
+    app->loopingBus = AudioCreateBus();
 
     app->model = (float*)MemAllocate(sizeof(float) * 16, 0);
     app->view = (float*)MemAllocate(sizeof(float) * 16, 0);
@@ -329,40 +345,51 @@ export void* Initialize() {
         MemRelease(interleaved);
         MemRelease(tanArray);
 
-        LoadFileAsynch("assets/Skull_AlbedoSpec.texture", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+        LoadFileAsynch("assets/Skull_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
             AppData* app = (AppData*)userData;
 
-            u32* u32_data = (u32*)data;
-
-            u32 width = u32_data[0];
-            u32 height = u32_data[1];
-            u32 channels = u32_data[2];
-            unsigned char* img_data = (unsigned char*)data;
-            img_data = img_data + 12; // Skip width / height / channels
-
+            u32 width = 0;
+            u32 height = 0;
+            u32 channels = 3;
+            LodePNGState state;
+            lodepng_state_init(&state);
+            lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
             unsigned int format = GfxTextureFormatRGB8;
-            if (channels == 4) {
+            if (lodepng_get_channels(&state.info_raw) == 4) {
                 format = GfxTextureFormatRGBA8;
-            }            
+                channels = 4;
+            }   
+            unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
+            lodepng_decode_memory(&img_data, &width, &height,
+                               (const unsigned char*)data, bytes,
+                               state.info_raw.colortype, state.info_raw.bitdepth);
+            lodepng_state_cleanup(&state);
+            app->skullAlbedoTexture = GfxCreateTexture(img_data, width, height, format, format, true);
+            GfxSetTextureSampler(app->skullAlbedoTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
+            MemRelease(img_data);
 
-            app->skullUniformTexture = GfxCreateTexture(img_data, width, height, format, format, true);
-            GfxSetTextureSampler(app->skullUniformTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
-
-            LoadFileAsynch("assets/Skull_Normal.texture", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+            LoadFileAsynch("assets/Skull_Normal.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                 AppData* app = (AppData*)userData;
-                u32* u32_data = (u32*)data;
-                u32 width = u32_data[0];
-                u32 height = u32_data[1];
-                u32 channels = u32_data[2];
-                unsigned char* img_data = (unsigned char*)data;
-                img_data = img_data + 12; // Skip width / height / channels
+               
+                u32 width = 0;
+                u32 height = 0;
+                u32 channels = 3;
+                LodePNGState state;
+                lodepng_state_init(&state);
+                lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
                 unsigned int format = GfxTextureFormatRGB8;
-                if (channels == 4) {
+                if (lodepng_get_channels(&state.info_raw) == 4) {
                     format = GfxTextureFormatRGBA8;
-                }            
-                
-                app->skullNormalTexture =  GfxCreateTexture(img_data, width, height, format, format, true);
-                GfxSetTextureSampler(app->skullUniformTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
+                    channels = 4;
+                }   
+                unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
+                lodepng_decode_memory(&img_data, &width, &height,
+                                (const unsigned char*)data, bytes,
+                                state.info_raw.colortype, state.info_raw.bitdepth);
+                lodepng_state_cleanup(&state);
+                app->skullNormalTexture = GfxCreateTexture(img_data, width, height, format, format, true);
+                GfxSetTextureSampler(app->skullNormalTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
+                MemRelease(img_data);          
                 
                 LoadFileAsynch("assets/plane.mesh", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                     AppData* app = (AppData*)userData;
@@ -422,38 +449,67 @@ export void* Initialize() {
                     MemRelease(interleaved);
                     MemRelease(tanArray);
 
-                    LoadFileAsynch("assets/Plane_AlbedoSpec.texture", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                    LoadFileAsynch("assets/Plane_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                         AppData* app = (AppData*)userData;
-                        u32* u32_data = (u32*)data;
-                        u32 width = u32_data[0];
-                        u32 height = u32_data[1];
-                        u32 channels = u32_data[2];
-                        unsigned char* img_data = (unsigned char*)data;
-                        img_data = img_data + 12; // Skip width / height / channels
+
+                        u32 width = 0;
+                        u32 height = 0;
+                        u32 channels = 3;
+                        LodePNGState state;
+                        lodepng_state_init(&state);
+                        lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
                         unsigned int format = GfxTextureFormatRGB8;
-                        if (channels == 4) {
+                        if (lodepng_get_channels(&state.info_raw) == 4) {
                             format = GfxTextureFormatRGBA8;
-                        }            
+                            channels = 4;
+                        }   
+                        unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
+                        lodepng_decode_memory(&img_data, &width, &height,
+                                        (const unsigned char*)data, bytes,
+                                        state.info_raw.colortype, state.info_raw.bitdepth);
+                        lodepng_state_cleanup(&state);
                         app->PlaneTextureColorSpec =  GfxCreateTexture(img_data, width, height, format, format, true);
                         GfxSetTextureSampler(app->PlaneTextureColorSpec, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
+                        MemRelease(img_data);  
                 
-                        LoadFileAsynch("assets/Plane_Normal.texture", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                        LoadFileAsynch("assets/Plane_Normal.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                             AppData* app = (AppData*)userData;
-                            u32* u32_data = (u32*)data;
-                            u32 width = u32_data[0];
-                            u32 height = u32_data[1];
-                            u32 channels = u32_data[2];
-                            unsigned char* img_data = (unsigned char*)data;
-                            img_data = img_data + 12; // Skip width / height / channels
+                            u32 width = 0;
+                            u32 height = 0;
+                            u32 channels = 3;
+                            LodePNGState state;
+                            lodepng_state_init(&state);
+                            lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
                             unsigned int format = GfxTextureFormatRGB8;
-                            if (channels == 4) {
+                            if (lodepng_get_channels(&state.info_raw) == 4) {
                                 format = GfxTextureFormatRGBA8;
-                            }            
+                                channels = 4;
+                            }   
+                            unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
+                            lodepng_decode_memory(&img_data, &width, &height,
+                                            (const unsigned char*)data, bytes,
+                                            state.info_raw.colortype, state.info_raw.bitdepth);
+                            lodepng_state_cleanup(&state);
                             app->PlaneTextureNormal =  GfxCreateTexture(img_data, width, height, format, format, true);
                             GfxSetTextureSampler(app->PlaneTextureNormal, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
+                            MemRelease(img_data);        
+                            
+                            LoadFileAsynch("assets/oneshot.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                                AppData* app = (AppData*)userData;
+                                app->oneShotBufffer = AudioCreateBufferFromOgg(data, bytes, [](u32 bufferId, void* data, u32 bytes, void* userData) {
+                                    AppData* app = (AppData*)userData;
+                                    LoadFileAsynch("assets/piano.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                                        AppData* app = (AppData*)userData;
+                                        app->loopingBuffer = AudioCreateBufferFromOgg(data, bytes, [](u32 bufferId, void* data, u32 bytes, void* userData) {
+                                            AppData* app = (AppData*)userData;
+                                            app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
 
-                            MemRelease(data);
-                            app->canDisplaySkull = true;
+                                            MemRelease(data);
+                                            app->canDisplaySkull = true;
+                                        }, app);
+                                    }, app);
+                                }, app);
+                            }, app);
                         }, app);
                     }, app);
                 }, app);
@@ -467,40 +523,50 @@ export void* Initialize() {
 }
 
 export void Render(unsigned int x, unsigned int y, unsigned int w, unsigned int h, void* userData) {
+    AppData* app = (AppData*)userData;
+
     if (MousePressed(MouseButtonLeft)) {
-        MemDbgPrint("Left mouse pressed");
+        AudioPlay2D(app->oneShotBufffer, app->oneShotBus, false, 1.0f, 0.0f);
+        MemDbgPrintStr("Left mouse pressed");
     }
     else if (MouseReleased(MouseButtonLeft)) {
-        MemDbgPrint("Left mouse released");
+        MemDbgPrintStr("Left mouse released");
     }
 
     if (KeyboardPressed(KeyboardCodeSpace)) {
-        MemDbgPrint("space pressed");
+        MemDbgPrintStr("space pressed");
+        AudioSetVolume(app->oneShotBus, 0.5f);
     }
     else if (KeyboardReleased(KeyboardCodeSpace)) {
-        MemDbgPrint("space released");
+        MemDbgPrintStr("space released");
     }
 
-    bool stop = KeyboardDown(KeyboardCodeSpace);
-    if (stop) {
-        int x  = 8;
-    }
     if (KeyboardDown(KeyboardCodeSpace)) {
-        MemDbgPrint("space down");
+        MemDbgPrintStr("space down");
     }
     
     if (TouchPressed(0)) {
-        MemDbgPrint("touch 0 pressed");
+        if (app->loopingSound != 0) {
+            AudioStop(app->loopingSound);
+            app->loopingSound = 0;
+        }
+        else {
+            app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+        }
+        MemDbgPrintStr("touch 0 pressed");
     }
     if (TouchReleased(0)) {
-        MemDbgPrint("touch 0 released");
+        MemDbgPrintStr("touch 0 released");
     }
 
     if (TouchPressed(1)) {
-        MemDbgPrint("touch 1 pressed");
+        if (app->loopingSound != 0) {
+            AudioSetPan(app->loopingSound, -1.0f);
+        }
+        MemDbgPrintStr("touch 1 pressed");
     }
     if (TouchReleased(1)) {
-        MemDbgPrint("touch 1 released");
+        MemDbgPrintStr("touch 1 released");
     }
 }
 
@@ -542,7 +608,7 @@ export void Update(float dt, void* userData) {
             GfxSetUniform(app->skullShader, app->skullUniformView, (void*)view, GfxUniformTypeFloat16, 1); 
             GfxSetUniform(app->skullShader, app->skullUniformProj, (void*)proj, GfxUniformTypeFloat16, 1); 
             
-            GfxSetUniformTexture(app->skullShader, app->skullUniformAlbedo, app->skullUniformTexture);
+            GfxSetUniformTexture(app->skullShader, app->skullUniformAlbedo, app->skullAlbedoTexture);
             GfxSetUniformTexture(app->skullShader, app->skullUniformNormal, app->skullNormalTexture);
             
             GfxSetUniform(app->skullShader, app->skullUniformTop, (void*)hemiTop, GfxUniformTypeFloat3, 1); 

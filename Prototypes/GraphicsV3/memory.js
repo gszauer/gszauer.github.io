@@ -25,9 +25,44 @@ class MemoryAllocator {
         
         let self = this;
 
-        wasmImportObject.env["MemDbgPrint"] = function(ptr_str) {
+        wasmImportObject.env["lodepng_malloc"] = function(u32_size) {
+            return self.Allocate(u32_size, 0);
+        }
+
+        wasmImportObject.env["lodepng_free"] = function(ptr_mem) {
+            if (ptr_mem != 0) {
+                return self.Release(ptr_mem);
+            }
+        }
+
+        wasmImportObject.env["lodepng_realloc"] = function(ptr_old, u32_newSize) {
+            let newAlloc = self.Allocate(u32_newSize, 0);
+
+            let bytes = u32_newSize;
+            if (ptr_old != 0) {
+                if (self.allocations.hasOwnProperty(ptr_old)) {
+                    let descriptor = self.allocations[ptr_old];
+                    if (descriptor.bytes < u32_newSize) {
+                        bytes = descriptor.bytes;
+                    }
+                }
+                else {
+                    console.error("Trying to realloc untracked memory: " + ptr_old);
+                }
+
+                self.Copy(newAlloc, ptr_old, bytes);
+                self.Release(ptr_old);
+            }
+            return newAlloc;
+        }
+
+        wasmImportObject.env["MemDbgPrintStr"] = function(ptr_str) {
             const stringToPrint = self.PointerToString(ptr_str);
             console.log("c++: " + stringToPrint);
+        }
+
+        wasmImportObject.env["MemDbgPrintUInt"] = function(uint) {
+            console.log("c++: " + uint);
         }
 
         wasmImportObject.env["MemAllocate"] = function(bytes, alignment) {
@@ -111,7 +146,9 @@ class MemoryAllocator {
         let allocationDescriptor = {
             start: first_page,
             length: num_pages,
-        }
+            bytes: bytes,
+            alignment: alignment
+        };
 
         if (this.allocations.hasOwnProperty(alignedPtr)) {
             console.error("Trying to double allocate the same pointer: " + pointer);
@@ -134,7 +171,7 @@ class MemoryAllocator {
             delete this.allocations[alignedPtr];
         }
         else {
-            console.error("Trying to release untracked memory: " + pointer + ", " + alignedPtr);
+            console.error("Trying to release untracked memory: " + alignedPtr);
         }
     }
 

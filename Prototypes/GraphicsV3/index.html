@@ -5,7 +5,9 @@
         <meta charset="utf-8">  
         <title>Minimal allocator example</title> 
 <!--
+-->
 <script type="text/javascript" src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
+<!--
 -->
         <style>
             * {
@@ -32,6 +34,7 @@
         <script type="text/javascript" src="math.js"></script>
         <script type="text/javascript" src="loader.js"></script>
         <script type="text/javascript" src="graphics.js"></script>
+        <script type="text/javascript" src="audio.js"></script>
         <script type="text/javascript">
             const init = function(canvasName) {
                 if (window.SPECTOR !== undefined) {
@@ -53,12 +56,12 @@
                 let graphics = new GraphicsDevice(importObject, allocator, game.gl);
                 let loader = new FileLoader(importObject, allocator);
                 let math = new GameMath(importObject);
+                let sound = new AudioDevice(importObject, allocator, "webglCanvas");
 
                 WebAssembly.instantiateStreaming(fetch('test.debug.wasm'), importObject).then(prog => {
                     allocator.AttachToWasmInstance(prog.instance);
-                    // graphics doesn't neeed to attach
                     loader.AttachToWasmInstance(prog.instance);
-                    // math doesn't need to attach
+                    sound.AttachToWasmInstance(prog.instance);
 
                     game.AttachToWasmInstance(prog.instance); // Will init and start updating
                 });
