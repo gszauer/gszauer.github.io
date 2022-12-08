@@ -61,8 +61,6 @@
                 WebAssembly.instantiateStreaming(fetch('test.debug.wasm'), importObject).then(prog => {
                     allocator.AttachToWasmInstance(prog.instance);
                     loader.AttachToWasmInstance(prog.instance);
-                    sound.AttachToWasmInstance(prog.instance);
-
                     game.AttachToWasmInstance(prog.instance); // Will init and start updating
                 });
             }

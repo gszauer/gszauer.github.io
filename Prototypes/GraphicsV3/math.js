@@ -1,10 +1,3 @@
-/*
-extern "C" float MathSin(float x);
-extern "C" float MathCos(float x);
-extern "C" float MathTan(float x);
-extern "C" float MathSqrt(float x);
-extern "C" float MathRandom();
-*/
 class GameMath {
     constructor(wasmImportObject) {
         if (!wasmImportObject.hasOwnProperty("env")) {
@@ -30,6 +23,57 @@ class GameMath {
 
         wasmImportObject.env["MathRandom"] = function() {
             return Math.random();
+        };
+
+        wasmImportObject.env["MathExp"] = function(x) {
+            return Math.exp(x)
+        };
+
+        wasmImportObject.env["MathLog"] = function(x) {
+            return Math.log(x)
+        };
+
+        wasmImportObject.env["MathPow"] = function(x, y) {
+            return Math.pow(x, y)
+        };
+
+        wasmImportObject.env["MathFloor"] = function(x) {
+            return Math.floor(x)
+        };
+
+        wasmImportObject.env["MathCeil"] = function(x) {
+            return Math.ceil(x)
+        };
+
+        wasmImportObject.env["MathRound"] = function(x) {
+            return Math.round(x)
+        };
+
+        // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
+        const frexp = function(value) {
+            if (value === 0) return [value, 0];
+            var data = new DataView(new ArrayBuffer(8));
+            data.setFloat64(0, value);
+            var bits = (data.getUint32(0) >>> 20) & 0x7FF;
+            if (bits === 0) { // denormal
+                data.setFloat64(0, value * Math.pow(2, 64));  // exp + 64
+                bits = ((data.getUint32(0) >>> 20) & 0x7FF) - 64;
+            }
+            var exponent = bits - 1022;
+            var mantissa = ldexp(value, -exponent);
+            return [mantissa, exponent];
+        }
+        
+        const ldexp = function(mantissa, exponent) {
+            var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
+            var result = mantissa;
+            for (var i = 0; i < steps; i++)
+                result *= Math.pow(2, Math.floor((exponent + i) / steps));
+            return result;
+        }
+
+        wasmImportObject.env["ldexp"] = function(x,y) {
+            return ldexp(x, y)
         };
     }
 }

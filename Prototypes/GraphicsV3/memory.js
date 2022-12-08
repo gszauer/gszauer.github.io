@@ -35,7 +35,7 @@ class MemoryAllocator {
             }
         }
 
-        wasmImportObject.env["lodepng_realloc"] = function(ptr_old, u32_newSize) {
+        const ReallocFun = function(ptr_old, u32_newSize) {
             let newAlloc = self.Allocate(u32_newSize, 0);
 
             let bytes = u32_newSize;
@@ -55,6 +55,9 @@ class MemoryAllocator {
             }
             return newAlloc;
         }
+
+        wasmImportObject.env["MemRealloc"] = ReallocFun;
+        wasmImportObject.env["lodepng_realloc"] = ReallocFun;
 
         wasmImportObject.env["MemDbgPrintStr"] = function(ptr_str) {
             const stringToPrint = self.PointerToString(ptr_str);
@@ -86,6 +89,14 @@ class MemoryAllocator {
         wasmImportObject.env["MemClear"] = function(dst, bytes) {
             return self.Clear(dst, bytes);
         };
+
+        wasmImportObject.env["MemSet"] = function(dst, val, bytes) {
+            return self.Set(dst, val, bytes);
+        };
+
+        wasmImportObject.env["MemCmp"] = function(ptr_a, ptr_b, u32_bytes) {
+            return self.Compare(ptr_a,ptr_b,u32_bytes);
+        }
 
         wasmImportObject.env["memcpy"] = function(ptr_dest, ptr_src, int_len) {
             return self.Copy(ptr_dest,ptr_src,int_len);
@@ -143,6 +154,10 @@ class MemoryAllocator {
         let pointer = first_page * this.pageSize  + this.heapBase;
         let alignedPtr = pointer + ((alignment != 0)? (pointer % alignment) : 0);
 
+        if (alignedPtr == 0 || pointer == 0) {
+            console.error("malloc about to return 0");
+        }
+
         let allocationDescriptor = {
             start: first_page,
             length: num_pages,
@@ -185,6 +200,28 @@ class MemoryAllocator {
     Clear(mem, bytes) {
         for (let i = 0; i < bytes; ++i) {
             this.mem_u8[mem + i] = 0;
+        }
+        return mem;
+    }
+
+    Compare(ptr_a, ptr_b, bytes) {
+        for (let i = 0; i < bytes; ++i) {
+            const va = this.mem_u8[ptr_a + i];
+            const vb = this.mem_u8[ptr_b + i];
+            if (va < vb) {
+                return -1;
+            }
+            else if (vb < va) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    Set(mem, val, bytes) {
+        for (let i = 0; i < bytes; ++i) {
+            this.mem_u8[mem + i] = val;
         }
         return mem;
     }

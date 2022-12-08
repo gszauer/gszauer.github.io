@@ -6,12 +6,10 @@ class AudioDevice {
         
         this.mem = allocator;
         this.context = new (window.AudioContext || window.webkitAudioContext)();
-        this.wasmInstance = null;
         this.canvas = document.getElementById(canvasName);
         this.resources = [];
         this.resourceCounter = 1;
         this.u32_max = 4294967295;
-        this.callbacksEnabled = false;
 
         let self = this;
 
@@ -81,33 +79,34 @@ class AudioDevice {
         wasmImportObject.env["AudioDestroyBus"] = DestroyResource;
         wasmImportObject.env["AudioStop"] = DestroyResource;
 
-        wasmImportObject.env["AudioCreateBufferFromOgg"] = function(ptr_data, u32_byteLen, ptr_optCallback, ptr_optuserdata) {
+        wasmImportObject.env["AudioCreateBuffer"] = function(u32_numChannels, u32_sampleRate, u32_numSamples, ptr_pcmData) {
             let bufferId = GetNextResourceId();
             self.resources[bufferId].state = "loading";
 
-            //let dataBuffer = new Uint8Array(self.mem.wasmMemory.buffer, ptr_data, u32_byteLen);
+            let pcmData = new Int16Array(self.mem.wasmMemory.buffer, ptr_pcmData, u32_numChannels * u32_numSamples);
             
-            let dataBuffer = new Uint8Array( u32_byteLen );
-            let srcBuffer = new Uint8Array(self.mem.wasmMemory.buffer, ptr_data, u32_byteLen);
-            dataBuffer.set( srcBuffer );
-            
-            self.context.decodeAudioData(dataBuffer.buffer, function (buffer) {
-                self.resources[bufferId].audioBuffer = buffer;
-                self.resources[bufferId].state = "ready";
+            const short_range = 32767 + 32768;
 
-                if (ptr_optCallback != 0) {
-                    if (!self.callbacksEnabled) {
-                        console.error("AudioDevice.AudioCreateBufferFromOgg: callbacks not enabled!");
-                    }
-                    if (self.wasmInstance == null) {
-                        console.error("AudioDevice.AudioCreateBufferFromOgg: wasm instance is null!");
-                    }
-
-                    self.wasmInstance.exports.TriggerAudioDecodeCallback(ptr_optCallback, bufferId, ptr_data, u32_byteLen, ptr_optuserdata);
+            let audioBuffer = self.context.createBuffer(u32_numChannels, u32_numSamples, u32_sampleRate);
+            self.resources[bufferId].audioBuffer = audioBuffer;
+           
+            for (let channel = 0; channel < u32_numChannels; channel++) {
+                const channelBuffer = audioBuffer.getChannelData(channel);
+                if (u32_numSamples != channelBuffer.length) {
+                    console.error("AudioDevice.AudioCreateBuffer buffer has wrong number of channels");
                 }
-            },
-            (err) => console.error("AudioDevice.AudioCreateBufferFromOgg: Error with decoding audio data:" + err));;
 
+                for (let sample = 0; sample < u32_numSamples; sample++) {
+                    const index = sample * u32_numChannels + channel //Math.floor(sample / u32_numChannels) + channel;
+                    const shortSample = pcmData[index];
+                    let floatSample =  shortSample / short_range;
+                    
+                    channelBuffer[sample] = floatSample
+                }
+            }
+
+            self.resources[bufferId].state = "ready";
+            
             return bufferId;
         };
 
@@ -237,10 +236,5 @@ class AudioDevice {
             
             return resourceID;
         }
-    }
-
-    AttachToWasmInstance(wasmInstance) {
-        this.wasmInstance = wasmInstance;
-        this.callbacksEnabled = true;
     }
 }

@@ -9,17 +9,14 @@ extern "C" void _initialize(void) {
 
 #include "window.h"
 #include "memory.h"
-// Math
+#include "math.h"
 #include "loader.h"
 #include "graphics.h"
 #include "audio.h"
 
 #include "debt/lodepng.h"
 #include "debt/lodepng.c"
-#if 0
-#include "debt/cgltf.h"
-#include "debt/cgltf.c"
-#endif
+#include "debt/stb_vorbis.c"
 #include "debt/calcTangents.cpp"
 
 // TODO: Reduce so it's not 26MB
@@ -27,7 +24,6 @@ extern "C" void _initialize(void) {
 
 WASM_MEM_EXPOSE_HEAP
 WASM_LOADER_ENABLE_CALLBACKS
-WASM_AUDIO_ENABLE_CALLBACKS
 
 struct AppData {
     u32 vbo;
@@ -496,18 +492,37 @@ export void* Initialize() {
                             
                             LoadFileAsynch("assets/oneshot.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                                 AppData* app = (AppData*)userData;
-                                app->oneShotBufffer = AudioCreateBufferFromOgg(data, bytes, [](u32 bufferId, void* data, u32 bytes, void* userData) {
-                                    AppData* app = (AppData*)userData;
-                                    LoadFileAsynch("assets/piano.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
-                                        AppData* app = (AppData*)userData;
-                                        app->loopingBuffer = AudioCreateBufferFromOgg(data, bytes, [](u32 bufferId, void* data, u32 bytes, void* userData) {
-                                            AppData* app = (AppData*)userData;
-                                            app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
 
-                                            MemRelease(data);
-                                            app->canDisplaySkull = true;
-                                        }, app);
-                                    }, app);
+                                int channels = 0;
+                                int sampleRate = 0;
+                                short* decodedData = 0;
+                                int numSamples = stb_vorbis_decode_memory((const uint8*)data, (int)bytes, &channels, &sampleRate, &decodedData);
+                                app->oneShotBufffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
+                                MemRelease(decodedData);
+
+                                if (numSamples <= 0 || decodedData == 0) {
+                                    MemDbgPrintStr("oneshot.ogg, bad data");
+                                }
+                                
+                                LoadFileAsynch("assets/piano.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                                    AppData* app = (AppData*)userData;
+
+                                    int channels = 0;
+                                    int sampleRate = 0;
+                                    short* decodedData = 0;
+                                    int numSamples = stb_vorbis_decode_memory((const uint8*)data, (int)bytes, &channels, &sampleRate, &decodedData);
+                                    app->loopingBuffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
+
+                                    if (numSamples <= 0 || decodedData == 0) {
+                                        MemDbgPrintStr("piano.ogg, bad data");
+                                    }
+                                    
+                                    MemRelease(decodedData);
+
+                                    app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+
+                                    MemRelease(data);
+                                    app->canDisplaySkull = true;
                                 }, app);
                             }, app);
                         }, app);
