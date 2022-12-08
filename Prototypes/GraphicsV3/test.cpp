@@ -17,6 +17,7 @@ extern "C" void _initialize(void) {
 #include "debt/lodepng.h"
 #include "debt/lodepng.c"
 #include "debt/stb_vorbis.c"
+#include "debt/fast_obj.c"
 #include "debt/calcTangents.cpp"
 
 // TODO: Reduce so it's not 26MB
@@ -24,6 +25,78 @@ extern "C" void _initialize(void) {
 
 WASM_MEM_EXPOSE_HEAP
 WASM_LOADER_ENABLE_CALLBACKS
+
+struct ObjBufferData {
+    unsigned int numVerts;
+    u32 buffer;
+};
+
+ObjBufferData ObjToBuffer(void* data, unsigned int bytes) {
+    fastObjMesh* mesh = fast_obj_parse_from_memory((const char*)data, bytes);
+    unsigned int numVerts = mesh->face_count * 3;
+    unsigned int interleaved_size = sizeof(float) * (mesh->face_count * 3) * (3 + 3 + 3 + 2);
+    float* interleaved = (float*)MemAllocate(interleaved_size, 0);
+
+    for (unsigned int face = 0, index = 0, j = 0; face < mesh->face_count; ++face) {
+        unsigned int faceIndexCount = mesh->face_vertices[face];
+        if (faceIndexCount != 3) {
+            MemDbgPrintStr("Non triangulated mesh!");
+        }
+
+        for (int i = 0; i < 3; ++i) {
+            fastObjIndex* faceIndex = &mesh->indices[index++];
+
+            if (mesh->position_count == 0) {
+                interleaved[j++] = 0.0f;
+                interleaved[j++] = 0.0f;
+                interleaved[j++] = 0.0f;
+            }
+            else {
+                interleaved[j++] = mesh->positions[faceIndex->p * 3 + 0];
+                interleaved[j++] = mesh->positions[faceIndex->p * 3 + 1];
+                interleaved[j++] = mesh->positions[faceIndex->p * 3 + 2];
+            }
+
+            if (mesh->normal_count == 0) {
+                interleaved[j++] = 0.0f;
+                interleaved[j++] = 0.0f;
+                interleaved[j++] = 0.0f;
+            }
+            else {
+                interleaved[j++] = mesh->normals[faceIndex->n * 3 + 0];
+                interleaved[j++] = mesh->normals[faceIndex->n * 3 + 1];
+                interleaved[j++] = mesh->normals[faceIndex->n * 3 + 2];
+            }
+            
+            if (mesh->texcoord_count == 0) {
+                interleaved[j++] = 0.0f;
+                interleaved[j++] = 0.0f;
+            }
+            else {
+                interleaved[j++] = mesh->texcoords[faceIndex->t * 2 + 0];
+                interleaved[j++] = mesh->texcoords[faceIndex->t * 2 + 1];
+            }
+            
+            interleaved[j++] = 0.0f;
+            interleaved[j++] = 0.0f;
+            interleaved[j++] = 0.0f;
+        }
+    }
+    if (mesh->position_count != 0 && mesh->texcoord_count != 0) { 
+        CalculateMeshTangents::CalculateTangentArrayInline(numVerts, interleaved);
+    }
+    fast_obj_destroy(mesh);
+
+    u32 buffer = GfxCreateBuffer();
+    GfxFillArrayBuffer(buffer, interleaved, interleaved_size, true);
+    MemRelease(interleaved);
+
+    ObjBufferData result;
+    result.numVerts = numVerts;
+    result.buffer = buffer;
+
+    return result;
+}
 
 struct AppData {
     u32 vbo;
@@ -286,44 +359,12 @@ export void* Initialize() {
 
 
     void* loadArena = MemAllocate(LOAD_BUFFER_SIZE, 0);
-    LoadFileAsynch("assets/skull.mesh", false, loadArena, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+    LoadFileAsynch("assets/skull.obj", false, loadArena, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
         AppData* app = (AppData*)userData;
 
-        unsigned int* uint_data = (unsigned int*)data;
-        unsigned int numVerts = uint_data[0];  // Ignore 1, and 2. Always the same anyway
-        app->skullNumVerts = numVerts;
-       
-        float* srcPos = (float*)(uint_data + 3);
-        float* srcNrm = srcPos + numVerts * 3;
-        float* srcTex = srcNrm + numVerts * 3;
-
-        unsigned int tanArray_size = sizeof(float) * 3 * numVerts;
-        float* tanArray = (float*)MemAllocate(tanArray_size, 0);
-        MemClear(tanArray, tanArray_size);
-        CalculateMeshTangents::CalculateTangentArray(numVerts, srcPos, srcNrm, srcTex, tanArray);
-
-        unsigned int interleaved_size = sizeof(float) * numVerts * (3 + 3 + 3 + 2);
-        float* interleaved = (float*)MemAllocate(interleaved_size, 0);
-
-        for (int i = 0, j = 0; i < numVerts; ++i, j += 11) {
-            interleaved[j + 0] = srcPos[i * 3 + 0];
-            interleaved[j + 1] = srcPos[i * 3 + 1];
-            interleaved[j + 2] = srcPos[i * 3 + 2];
-
-            interleaved[j + 3] = srcNrm[i * 3 + 0];
-            interleaved[j + 4] = srcNrm[i * 3 + 1];
-            interleaved[j + 5] = srcNrm[i * 3 + 2];
-
-            interleaved[j + 6] = srcTex[i * 2 + 0];
-            interleaved[j + 7] = srcTex[i * 2 + 1];
-
-            interleaved[j + 8] = tanArray[i * 3 + 0];
-            interleaved[j + 9] = tanArray[i * 3 + 1];
-            interleaved[j + 10] = tanArray[i * 3 + 2];
-        }
-
-        app->skullVbo = GfxCreateBuffer();
-        GfxFillArrayBuffer(app->skullVbo, interleaved, interleaved_size, true);
+        auto objMesh = ObjToBuffer(data, bytes);
+        app->skullNumVerts = objMesh.numVerts;
+        app->skullVbo = objMesh.buffer;
 
         app->skullVao = GfxCreateShaderVertexLayout(app->skullShader);
         GfxAddBufferToLayout(app->skullVao, "aPos", app->skullVbo , 3, sizeof(float) * 11, GfxBufferTypeFloat32, 0); 
@@ -337,9 +378,6 @@ export void* Initialize() {
 
         app->shadowMapVao = GfxCreateShaderVertexLayout(app->shadowMapShader);
         GfxAddBufferToLayout(app->shadowMapVao, "position", app->skullVbo , 3, sizeof(float) * 11, GfxBufferTypeFloat32, 0); 
-
-        MemRelease(interleaved);
-        MemRelease(tanArray);
 
         LoadFileAsynch("assets/Skull_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
             AppData* app = (AppData*)userData;
@@ -387,41 +425,12 @@ export void* Initialize() {
                 GfxSetTextureSampler(app->skullNormalTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
                 MemRelease(img_data);          
                 
-                LoadFileAsynch("assets/plane.mesh", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                LoadFileAsynch("assets/plane.obj", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                     AppData* app = (AppData*)userData;
-                    unsigned int* uint_data = (unsigned int*)data;
-                    unsigned int numVerts = uint_data[0];  // Ignore 1, and 2. Always the same anyway
-                    app->planeNumVerts = numVerts;
-                
-                    float* srcPos = (float*)(uint_data + 3);
-                    float* srcNrm = srcPos + numVerts * 3;
-                    float* srcTex = srcNrm + numVerts * 3;
-
-                    unsigned int tanArray_size = sizeof(float) * 3 * numVerts;
-                    float* tanArray = (float*)MemAllocate(tanArray_size, 0);
-                    MemClear(tanArray, tanArray_size);
-                    CalculateMeshTangents::CalculateTangentArray(numVerts, srcPos, srcNrm, srcTex, tanArray);
-                    unsigned int interleaved_size = sizeof(float) * numVerts * (3 + 3 + 3 + 2);
-                    float* interleaved = (float*)MemAllocate(interleaved_size, 0);
-                    for (int i = 0, j = 0; i < numVerts; ++i, j += 11) {
-                        interleaved[j + 0] = srcPos[i * 3 + 0];
-                        interleaved[j + 1] = srcPos[i * 3 + 1];
-                        interleaved[j + 2] = srcPos[i * 3 + 2];
-
-                        interleaved[j + 3] = srcNrm[i * 3 + 0];
-                        interleaved[j + 4] = srcNrm[i * 3 + 1];
-                        interleaved[j + 5] = srcNrm[i * 3 + 2];
-
-                        interleaved[j + 6] = srcTex[i * 2 + 0];
-                        interleaved[j + 7] = srcTex[i * 2 + 1];
-
-                        interleaved[j + 8] = tanArray[i * 3 + 0];
-                        interleaved[j + 9] = tanArray[i * 3 + 1];
-                        interleaved[j + 10] = tanArray[i * 3 + 2];
-                    }
-
-                    app->planeVBO = GfxCreateBuffer();
-                    GfxFillArrayBuffer(app->planeVBO, interleaved, interleaved_size, true);
+                   
+                    auto objMesh = ObjToBuffer(data, bytes);
+                    app->planeNumVerts = objMesh.numVerts;
+                    app->planeVBO = objMesh.buffer;
 
                     app->planeVAO = GfxCreateShaderVertexLayout(app->planeShader);
                     GfxAddBufferToLayout(app->planeVAO, "aPos", app->planeVBO , 3, sizeof(float) * 11, GfxBufferTypeFloat32, 0); 
@@ -441,9 +450,6 @@ export void* Initialize() {
                     app->PlaneUniformLightDirection = GfxGetUniformSlot(app->planeShader, "LightDirection");
                     app->PlaneUniformLightColor = GfxGetUniformSlot(app->planeShader, "LightColor");
                     app->PlaneUniformViewPos = GfxGetUniformSlot(app->planeShader, "ViewPos");
-
-                    MemRelease(interleaved);
-                    MemRelease(tanArray);
 
                     LoadFileAsynch("assets/Plane_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                         AppData* app = (AppData*)userData;

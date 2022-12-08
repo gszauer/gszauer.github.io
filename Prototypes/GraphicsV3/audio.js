@@ -10,6 +10,7 @@ class AudioDevice {
         this.resources = [];
         this.resourceCounter = 1;
         this.u32_max = 4294967295;
+        this.listener = this.context.listener;
 
         let self = this;
 
@@ -44,6 +45,7 @@ class AudioDevice {
                 source2D: null,
                 panner: null,
                 gain: null,
+                spatializer: null
             }
 
             return bufferId;
@@ -58,6 +60,9 @@ class AudioDevice {
                 console.error("AudioDevice.AudioDestroyBuffer: destroying non-ready buffer id(" + u32_bufferId + ")");
             }
 
+            if (resource.spatializer != null) {
+                resource.spatializer.disconnect();
+            }
             if (resource.panner != null) {
                 resource.panner.disconnect();
             }
@@ -78,6 +83,23 @@ class AudioDevice {
         wasmImportObject.env["AudioDestroyBuffer"] = DestroyResource;
         wasmImportObject.env["AudioDestroyBus"] = DestroyResource;
         wasmImportObject.env["AudioStop"] = DestroyResource;
+
+        const panningModel = 'equalpower';
+        const distanceModel = 'linear';
+
+
+        wasmImportObject.env["AudioSetListener"] = function(float_px, float_py, float_pz, float_upx, float_upy, float_upz, float_fwdx, float_fwdy, float_fwdz) {
+            self.listener.positionX.value = float_px;
+            self.listener.positionY.value = float_py;
+            self.listener.positionZ.value = float_pz;
+            self.listener.forwardX.value = float_fwdx;
+            self.listener.forwardY.value = float_fwdy;
+            self.listener.forwardZ.value = float_fwdz;
+            self.listener.upX.value = float_upx;
+            self.listener.upY.value = float_upy;
+            self.listener.upZ.value = float_upz;
+        }
+
 
         wasmImportObject.env["AudioCreateBuffer"] = function(u32_numChannels, u32_sampleRate, u32_numSamples, ptr_pcmData) {
             let bufferId = GetNextResourceId();
@@ -234,6 +256,20 @@ class AudioDevice {
                 oneShot.source2D.start(0);
             }
             
+            return resourceID;
+        }
+
+        wasmImportObject.env["AudioPlay3D"] = function(u32_buffer, u32_bus, bool_looping, float_olume, float_px, float_py, float_pz, float_minattenuation, float_maxattenuation) {
+            let resourceID = 0;
+
+            if (float_volume < 0.0) {
+                float_volume = 0.0;
+            }
+            if (float_volume > 1.0) {
+                float_volume = 1.0;
+            }
+
+
             return resourceID;
         }
     }

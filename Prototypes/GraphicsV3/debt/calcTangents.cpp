@@ -955,14 +955,68 @@ namespace CalculateMeshTangents {
 		for (long a = 0; a < vertexCount; a++) {
 			vec3 n = normal[a];
 			vec3 t = tan1[a];
-
 			// Gram-Schmidt orthogonalize
 			outTangent[a] = normalized(t - n * dot(n, t));
-
 			// Calculate handedness
-			//tangent[a].w = (dot(cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
+			//outTangent[a].w = (dot(cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
 		}
 
 		MemRelease(tan1);
 	}
+
+    void CalculateTangentArrayInline(unsigned int vertexCount, float* interleaved) {
+        vec3* tan1 = (vec3*)MemAllocate(vertexCount * 2 * sizeof(vec3), 0);
+        vec3* tan2 = tan1 + vertexCount;
+
+        for (long a = 0; a < vertexCount; a += 3) { // 3 verts at a time
+            vec3 v1 = *(vec3*)&interleaved[(a + 0) * 11 + 0];
+            vec3 v2 = *(vec3*)&interleaved[(a + 1) * 11 + 0];
+            vec3 v3 = *(vec3*)&interleaved[(a + 2) * 11 + 0];
+
+            vec2 w1 = *(vec2*)&interleaved[(a + 0) * 11 + 6];
+            vec2 w2 = *(vec2*)&interleaved[(a + 1) * 11 + 6];
+            vec2 w3 = *(vec2*)&interleaved[(a + 2) * 11 + 6];
+
+            float x1 = v2.x - v1.x;
+            float x2 = v3.x - v1.x;
+            float y1 = v2.y - v1.y;
+            float y2 = v3.y - v1.y;
+            float z1 = v2.z - v1.z;
+            float z2 = v3.z - v1.z;
+
+            float s1 = w2.x - w1.x;
+            float s2 = w3.x - w1.x;
+            float t1 = w2.y - w1.y;
+            float t2 = w3.y - w1.y;
+
+            float r = 1.0f / (s1 * t2 - s2 * t1);
+            vec3 sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+                (t2 * z1 - t1 * z2) * r);
+            vec3 tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+                (s1 * z2 - s2 * z1) * r);
+
+            tan1[a + 0] = tan1[a + 0] + sdir;
+            tan1[a + 1] = tan1[a + 1] + sdir;
+            tan1[a + 2] = tan1[a + 2] + sdir;
+
+            tan2[a + 0] = tan2[a + 0] + tdir;
+            tan2[a + 1] = tan2[a + 1] + tdir;
+            tan2[a + 2] = tan2[a + 2] + tdir;
+        }
+
+        for (long a = 0; a < vertexCount; a++) {
+            vec3 n = *(vec3*)&interleaved[a  * 11 + 3];
+            vec3 t = tan1[a];
+            // Gram-Schmidt orthogonalize
+            long a_index = a * 11 + 8;
+
+            vec3 result = normalized(t - n * dot(n, t));
+
+            interleaved[a * 11 + 8 + 0] = result.x;
+            interleaved[a * 11 + 8 + 1] = result.y;
+            interleaved[a * 11 + 8 + 2] = result.z;
+        }
+
+        MemRelease(tan1);
+    }
 }
