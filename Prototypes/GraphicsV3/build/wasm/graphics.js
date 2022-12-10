@@ -199,6 +199,9 @@ class GraphicsDevice {
             let uniforms = self.glShaders[u32_shaderId].uniforms;
 
             let uniformObject = gl.getUniformLocation(program, uniformName);
+            if (uniformObject == null) {
+                console.error("GraphicsDevice.GfxGetUniformSlot: invalid uniform: " + uniformName);
+            }
             uniformObject.debugName = uniformName;
             
             let uniformIndex = -1;
@@ -300,9 +303,11 @@ class GraphicsDevice {
                 let attribName = self.mem.PointerToString(ptr_name);
                 let attribLocation = gl.getAttribLocation(program, attribName);
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                gl.vertexAttribPointer(attribLocation, u32_numComponents, int_type, false, u32_strideBytes, u32_dataOffsetBytes);
-                gl.enableVertexAttribArray(attribLocation);
+                if (attribLocation >= 0) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                    gl.vertexAttribPointer(attribLocation, u32_numComponents, int_type, false, u32_strideBytes, u32_dataOffsetBytes);
+                    gl.enableVertexAttribArray(attribLocation);
+                }
             }
             else {
                 if (!self.glBuffers[u32_bufferId].isIndexBuffer) {

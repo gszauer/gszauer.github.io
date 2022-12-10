@@ -422,8 +422,8 @@ enum STBVorbisError
 
 #ifndef STB_VORBIS_HEADER_ONLY
 
-#include "../memory.h"
-#include "../math.h"
+#include "../platform/memory.h"
+#include "../platform/math.h"
 #include "qsort.h"
 
 #define STB_VORBIS_NO_CRT

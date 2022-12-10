@@ -7,12 +7,12 @@ extern "C" void _initialize(void) {
 
 #define export __attribute__ (( visibility( "default" ) )) extern "C"
 
-#include "window.h"
-#include "memory.h"
-#include "math.h"
-#include "loader.h"
-#include "graphics.h"
-#include "audio.h"
+#include "platform/window.h"
+#include "platform/memory.h"
+#include "platform/math.h"
+#include "platform/loader.h"
+#include "platform/graphics.h"
+#include "platform/audio.h"
 
 #include "debt/lodepng.h"
 #include "debt/lodepng.c"
@@ -20,8 +20,8 @@ extern "C" void _initialize(void) {
 #include "debt/fast_obj.c"
 #include "debt/calcTangents.cpp"
 
-// TODO: Reduce so it's not 26MB
-#define LOAD_BUFFER_SIZE (1024 * 1024 * 26)
+#define LOAD_BUFFER_SIZE (1024 * 1024 * 12)
+#define LIGHTMAP_SIZE 1024
 
 WASM_MEM_EXPOSE_HEAP
 WASM_LOADER_ENABLE_CALLBACKS
@@ -98,6 +98,33 @@ ObjBufferData ObjToBuffer(void* data, unsigned int bytes) {
     return result;
 }
 
+u32 PngToTexture(void* data, unsigned int bytes) {
+    u32 width = 0;
+    u32 height = 0;
+
+    LodePNGState state;
+    lodepng_state_init(&state);
+    lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
+    
+    unsigned int format = GfxTextureFormatRGB8;
+    u32 channels = 3;
+    if (lodepng_get_channels(&state.info_raw) == 4) {
+        format = GfxTextureFormatRGBA8;
+        channels = 4;
+    }   
+
+    unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
+    lodepng_decode_memory(&img_data, &width, &height,
+                        (const unsigned char*)data, bytes,
+                        state.info_raw.colortype, state.info_raw.bitdepth);
+
+    lodepng_state_cleanup(&state);
+    u32 result = GfxCreateTexture(img_data, width, height, format, format, true);
+    MemRelease(img_data);
+
+    return result;
+}
+
 struct AppData {
     u32 vbo;
     u32 shader;
@@ -112,17 +139,13 @@ struct AppData {
     u32 planeUniformProj;
     u32 planeUniformShadow;
     u32 PlaneUniformColorSpec;
-    u32 PlaneUniformNormal;
     u32 PlaneUniformShadowMap; 
-    u32 PlaneUniformLightDirection;
-    u32 PlaneUniformLightColor;
-    u32 PlaneUniformViewPos;
     u32 PlaneTextureColorSpec;
-    u32 PlaneTextureNormal;
 
     u32 shadowMapShader;
     u32 shadowMapUniformMvp;
     u32 shadowMapTexture;
+    u32 shadowMapColorTexture;
     u32 shadowMapVao;
 
     u32 skullShader;
@@ -153,6 +176,8 @@ struct AppData {
     u32 loopingBus;
     u32 loopingBuffer;
     u32 loopingSound;
+
+    float audioPos[3];
 };
 
 export void* Initialize() {
@@ -162,10 +187,16 @@ export void* Initialize() {
         0.0f,  0.5f, 0.0f
     };  
 
+    AudioSetListener(0, 0, 0, 0, 1, 0, 0, 0, -1);
+
     AppData* app = (AppData*)MemAllocate(sizeof(AppData), 0);
     app->canDisplaySkull = false;
     app->oneShotBus = AudioCreateBus();
     app->loopingBus = AudioCreateBus();
+
+    app->audioPos[0] = 0.0f;
+    app->audioPos[1] = 0.0f;
+    app->audioPos[2] = 1.0f;
 
     app->model = (float*)MemAllocate(sizeof(float) * 16, 0);
     app->view = (float*)MemAllocate(sizeof(float) * 16, 0);
@@ -203,9 +234,7 @@ export void* Initialize() {
     app->cam[1] = 3.00000f;
     app->cam[2] = 6.90875f;
 
-    app->shadowMapTexture = GfxCreateDepthTexture(4096, 4096);
-    GfxSetTextureSampler(app->shadowMapTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterNearest, GfxFilterNone, GfxFilterNearest);
-
+    
     app->vbo = GfxCreateBuffer();
     GfxFillArrayBuffer(app->vbo, vertices, sizeof(float) * 9, true);
 
@@ -238,58 +267,28 @@ export void* Initialize() {
 
     v_shader =  "#version 300 es\nprecision highp float;\nprecision highp int;\n"
                 "in vec3 aPos;\n"
-                "in vec3 aNorm;\n"
-                "in vec3 aTan;\n"
                 "in vec2 aTexCoord;\n"
                 "uniform mat4 model;\n"
                 "uniform mat4 view;\n"
                 "uniform mat4 projection;\n"
                 "uniform mat4 shadow;\n"
-                "out mat3 TBN;\n"
                 "out vec2 TexCoord;\n"
-                "out vec3 FragPos;\n"
                 "out vec4 LightViewPos;\n"
                 "void main() {\n"
-                "	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-                "	FragPos = vec3(model * vec4(aPos, 1.0));\n"
                 "	LightViewPos = shadow * vec4(aPos, 1.0);\n"
-                "	vec3 biTangent = cross(aNorm, aTan);\n"
-                "	vec3 T = normalize(vec3(model * vec4(aTan,   0.0)));\n"
-                "	vec3 B = normalize(vec3(model * vec4(biTangent, 0.0)));\n"
-                "	vec3 N = normalize(vec3(model * vec4(aNorm,    0.0)));\n"
-                "	TBN = mat3(T, B, N);\n"
                 "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+                "	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
                 "}\n";
     f_shader =  "#version 300 es\nprecision highp float;\nprecision highp int;\n"
                 "in vec2 TexCoord;\n"
-                "in vec3 FragPos;\n"
-                "in mat3 TBN;\n"
                 "in vec4 LightViewPos;\n"
                 "out vec4 FragColor;\n"
                 "uniform sampler2D uColorSpec;\n"
-                "uniform sampler2D uNormal;\n"
                 "uniform sampler2D uShadowMap; \n"
-                "uniform mat4 model;\n"
-                "uniform vec3 LightDirection;\n"
-                "uniform vec3 LightColor;\n"
-                "uniform vec3 ViewPos;\n"
                 "void main() {\n"
-                "	vec3 normal = texture(uNormal, TexCoord).rgb; \n"
-                "	normal = normal * 2.0 - 1.0;\n"
-                "	normal = normalize(TBN * normal); // World space normal\n"
                 "	vec4 colorSpec = texture(uColorSpec, TexCoord);\n"
-                "	vec3 objectColor = colorSpec.rgb;\n"
-                "	vec3 lightDir = normalize(-LightDirection);\n"
-                "	float diff = max(dot(normal, lightDir), 0.0);\n"
-                "	vec3 diffuse = diff * LightColor;\n"
-                "	vec3 ambient = 0.2 * LightColor;\n"
-                "	vec3 viewDir = normalize(ViewPos - FragPos);\n"
-                "	vec3 reflectDir = reflect(-lightDir, normal);\n"
-                "	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n"
-                "	vec3 specular = colorSpec.a * spec * LightColor;  \n"
-                "	vec4 FinalColor = vec4((ambient+diffuse+specular) * objectColor, 1.0);\n"
                 "	vec3 p = LightViewPos.xyz / LightViewPos.w;\n"
-                "	FragColor = FinalColor * (texture(uShadowMap, p.xy).r < p.z? 0.0 : 1.0);\n"
+                "	FragColor = vec4(colorSpec.rgb * (texture(uShadowMap, p.xy).r < p.z? 0.5 : 1.0), 1.0);\n"
                 "}\n";
     app->planeShader = GfxCreateShader(v_shader, f_shader);
 
@@ -376,54 +375,20 @@ export void* Initialize() {
         app->skullUniformView  = GfxGetUniformSlot(app->skullShader, "view");
         app->skullUniformProj  = GfxGetUniformSlot(app->skullShader, "projection");
 
-        app->shadowMapVao = GfxCreateShaderVertexLayout(app->shadowMapShader);
-        GfxAddBufferToLayout(app->shadowMapVao, "position", app->skullVbo , 3, sizeof(float) * 11, GfxBufferTypeFloat32, 0); 
+       
 
         LoadFileAsynch("assets/Skull_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
             AppData* app = (AppData*)userData;
 
-            u32 width = 0;
-            u32 height = 0;
-            u32 channels = 3;
-            LodePNGState state;
-            lodepng_state_init(&state);
-            lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
-            unsigned int format = GfxTextureFormatRGB8;
-            if (lodepng_get_channels(&state.info_raw) == 4) {
-                format = GfxTextureFormatRGBA8;
-                channels = 4;
-            }   
-            unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
-            lodepng_decode_memory(&img_data, &width, &height,
-                               (const unsigned char*)data, bytes,
-                               state.info_raw.colortype, state.info_raw.bitdepth);
-            lodepng_state_cleanup(&state);
-            app->skullAlbedoTexture = GfxCreateTexture(img_data, width, height, format, format, true);
+            app->skullAlbedoTexture = PngToTexture(data, bytes);
             GfxSetTextureSampler(app->skullAlbedoTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
-            MemRelease(img_data);
 
             LoadFileAsynch("assets/Skull_Normal.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                 AppData* app = (AppData*)userData;
                
-                u32 width = 0;
-                u32 height = 0;
-                u32 channels = 3;
-                LodePNGState state;
-                lodepng_state_init(&state);
-                lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
-                unsigned int format = GfxTextureFormatRGB8;
-                if (lodepng_get_channels(&state.info_raw) == 4) {
-                    format = GfxTextureFormatRGBA8;
-                    channels = 4;
-                }   
-                unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
-                lodepng_decode_memory(&img_data, &width, &height,
-                                (const unsigned char*)data, bytes,
-                                state.info_raw.colortype, state.info_raw.bitdepth);
-                lodepng_state_cleanup(&state);
-                app->skullNormalTexture = GfxCreateTexture(img_data, width, height, format, format, true);
+                
+                app->skullNormalTexture = PngToTexture(data, bytes);
                 GfxSetTextureSampler(app->skullNormalTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
-                MemRelease(img_data);          
                 
                 LoadFileAsynch("assets/plane.obj", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                     AppData* app = (AppData*)userData;
@@ -444,92 +409,56 @@ export void* Initialize() {
                     app->planeUniformShadow = GfxGetUniformSlot(app->planeShader, "shadow");
 
                     app->PlaneUniformColorSpec = GfxGetUniformSlot(app->planeShader, "uColorSpec");
-                    app->PlaneUniformNormal = GfxGetUniformSlot(app->planeShader, "uNormal");
                     app->PlaneUniformShadowMap = GfxGetUniformSlot(app->planeShader, "uShadowMap");
-
-                    app->PlaneUniformLightDirection = GfxGetUniformSlot(app->planeShader, "LightDirection");
-                    app->PlaneUniformLightColor = GfxGetUniformSlot(app->planeShader, "LightColor");
-                    app->PlaneUniformViewPos = GfxGetUniformSlot(app->planeShader, "ViewPos");
 
                     LoadFileAsynch("assets/Plane_AlbedoSpec.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                         AppData* app = (AppData*)userData;
 
-                        u32 width = 0;
-                        u32 height = 0;
-                        u32 channels = 3;
-                        LodePNGState state;
-                        lodepng_state_init(&state);
-                        lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
-                        unsigned int format = GfxTextureFormatRGB8;
-                        if (lodepng_get_channels(&state.info_raw) == 4) {
-                            format = GfxTextureFormatRGBA8;
-                            channels = 4;
-                        }   
-                        unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
-                        lodepng_decode_memory(&img_data, &width, &height,
-                                        (const unsigned char*)data, bytes,
-                                        state.info_raw.colortype, state.info_raw.bitdepth);
-                        lodepng_state_cleanup(&state);
-                        app->PlaneTextureColorSpec =  GfxCreateTexture(img_data, width, height, format, format, true);
+                        app->PlaneTextureColorSpec = PngToTexture(data, bytes);
                         GfxSetTextureSampler(app->PlaneTextureColorSpec, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
-                        MemRelease(img_data);  
-                
-                        LoadFileAsynch("assets/Plane_Normal.png", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                 
+                        LoadFileAsynch("assets/oneshot.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                             AppData* app = (AppData*)userData;
-                            u32 width = 0;
-                            u32 height = 0;
-                            u32 channels = 3;
-                            LodePNGState state;
-                            lodepng_state_init(&state);
-                            lodepng_inspect(&width, &height, &state, (const unsigned char*)data, bytes); 
-                            unsigned int format = GfxTextureFormatRGB8;
-                            if (lodepng_get_channels(&state.info_raw) == 4) {
-                                format = GfxTextureFormatRGBA8;
-                                channels = 4;
-                            }   
-                            unsigned char* img_data = (unsigned char*) MemAllocate(sizeof(char) * width * height * channels, 0);
-                            lodepng_decode_memory(&img_data, &width, &height,
-                                            (const unsigned char*)data, bytes,
-                                            state.info_raw.colortype, state.info_raw.bitdepth);
-                            lodepng_state_cleanup(&state);
-                            app->PlaneTextureNormal =  GfxCreateTexture(img_data, width, height, format, format, true);
-                            GfxSetTextureSampler(app->PlaneTextureNormal, GfxWrapClamp, GfxWrapClamp, GfxFilterLinear,GfxFilterLinear, GfxFilterLinear);
-                            MemRelease(img_data);        
+
+                            int channels = 0;
+                            int sampleRate = 0;
+                            short* decodedData = 0;
+                            int numSamples = stb_vorbis_decode_memory((const uint8*)data, (int)bytes, &channels, &sampleRate, &decodedData);
+                            app->oneShotBufffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
+                            MemRelease(decodedData);
+
+                            if (numSamples <= 0 || decodedData == 0) {
+                                MemDbgPrintStr("oneshot.ogg, bad data");
+                            }
                             
-                            LoadFileAsynch("assets/oneshot.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
+                            LoadFileAsynch("assets/piano.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
                                 AppData* app = (AppData*)userData;
 
                                 int channels = 0;
                                 int sampleRate = 0;
                                 short* decodedData = 0;
                                 int numSamples = stb_vorbis_decode_memory((const uint8*)data, (int)bytes, &channels, &sampleRate, &decodedData);
-                                app->oneShotBufffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
-                                MemRelease(decodedData);
+                                app->loopingBuffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
 
                                 if (numSamples <= 0 || decodedData == 0) {
-                                    MemDbgPrintStr("oneshot.ogg, bad data");
+                                    MemDbgPrintStr("piano.ogg, bad data");
                                 }
                                 
-                                LoadFileAsynch("assets/piano.ogg", false, data, LOAD_BUFFER_SIZE, [](const char* path, void* data, unsigned int bytes, void* userData) {
-                                    AppData* app = (AppData*)userData;
+                                MemRelease(decodedData);
 
-                                    int channels = 0;
-                                    int sampleRate = 0;
-                                    short* decodedData = 0;
-                                    int numSamples = stb_vorbis_decode_memory((const uint8*)data, (int)bytes, &channels, &sampleRate, &decodedData);
-                                    app->loopingBuffer = AudioCreateBuffer(channels, sampleRate, numSamples, decodedData);
+                                //app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+                                app->loopingSound = AudioPlay3D(app->loopingBuffer, app->loopingBus, true, 0.75f, app->audioPos[0], app->audioPos[1], app->audioPos[2], 2.0f, 6.0f);
 
-                                    if (numSamples <= 0 || decodedData == 0) {
-                                        MemDbgPrintStr("piano.ogg, bad data");
-                                    }
-                                    
-                                    MemRelease(decodedData);
+                                MemRelease(data);
 
-                                    app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+                                app->shadowMapTexture = GfxCreateDepthTexture(LIGHTMAP_SIZE, LIGHTMAP_SIZE);
+                                app->shadowMapColorTexture = GfxCreateTexture(0, LIGHTMAP_SIZE, LIGHTMAP_SIZE, GfxTextureFormatRGBA8, GfxTextureFormatRGBA8, false);
+                                GfxSetTextureSampler(app->shadowMapTexture, GfxWrapClamp, GfxWrapClamp, GfxFilterNearest, GfxFilterNone, GfxFilterNearest);
+                                app->shadowMapVao = GfxCreateShaderVertexLayout(app->shadowMapShader);
+                                GfxAddBufferToLayout(app->shadowMapVao, "position", app->skullVbo , 3, sizeof(float) * 11, GfxBufferTypeFloat32, 0); 
 
-                                    MemRelease(data);
-                                    app->canDisplaySkull = true;
-                                }, app);
+
+                                app->canDisplaySkull = true;
                             }, app);
                         }, app);
                     }, app);
@@ -572,7 +501,8 @@ export void Render(unsigned int x, unsigned int y, unsigned int w, unsigned int 
             app->loopingSound = 0;
         }
         else {
-            app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+            //app->loopingSound = AudioPlay2D(app->loopingBuffer, app->loopingBus, true, 0.75f, 0.0f);
+            app->loopingSound = AudioPlay3D(app->loopingBuffer, app->loopingBus, true, 0.75f, app->audioPos[0], app->audioPos[1], app->audioPos[2], 2.0f, 6.0f);
         }
         MemDbgPrintStr("touch 0 pressed");
     }
@@ -588,6 +518,49 @@ export void Render(unsigned int x, unsigned int y, unsigned int w, unsigned int 
     }
     if (TouchReleased(1)) {
         MemDbgPrintStr("touch 1 released");
+    }
+
+    if (app->loopingSound != 0) {
+        if (KeyboardReleased(KeyboardCode1)) {
+            app->audioPos[2] = 1;
+        }
+        else if (KeyboardReleased(KeyboardCode2)) {
+            app->audioPos[2] = 2;
+        }
+        else if (KeyboardReleased(KeyboardCode3)) {
+            app->audioPos[2] = 3;
+        }
+        else if (KeyboardReleased(KeyboardCode4)) {
+            app->audioPos[2] = 4;
+        }
+        else if (KeyboardReleased(KeyboardCode5)) {
+            app->audioPos[2] = 5;
+        }
+        else if (KeyboardReleased(KeyboardCode6)) {
+            app->audioPos[2] = 6;
+        }
+        else if (KeyboardReleased(KeyboardCode7)) {
+            app->audioPos[2] = 7;
+        }
+
+        if (KeyboardReleased(KeyboardCode8)) {
+            app->audioPos[0] = -4;
+        }
+        else if (KeyboardReleased(KeyboardCode9)) {
+            app->audioPos[0] = 4;
+        }
+        else if (KeyboardReleased(KeyboardCode0)) {
+            app->audioPos[0] = 0;
+        }
+
+        AudioSetPosition(app->loopingSound, app->audioPos[0], app->audioPos[1], app->audioPos[2]);
+
+        if (KeyboardReleased(KeyboardCodeMinus)) {
+            AudioSetAttenuation(app->loopingSound, 3, 9);
+        }
+        else if (KeyboardReleased(KeyboardCodeEquals)) {
+            AudioSetAttenuation(app->loopingSound, 1, 6);
+        }
     }
 }
 
@@ -607,11 +580,12 @@ export void Update(float dt, void* userData) {
 
     if (app->canDisplaySkull) {
         { // Draw lightmap
-            GfxSetViewport(0, 0, 4096, 4096);
-            GfxClearDepth(0, 0, 1.0f);
+            GfxSetViewport(0, 0, LIGHTMAP_SIZE, LIGHTMAP_SIZE);
+            GfxClearColor(app->shadowMapColorTexture, app->shadowMapTexture, 1.0f, 1.0f, 1.0f);
+            GfxClearDepth(app->shadowMapColorTexture, app->shadowMapTexture, 1.0f);
             GfxSetCullState(GfxCullFaceFront, GfxFaceWindCounterClockwise);
             GfxSetUniform(app->shadowMapShader, app->shadowMapUniformMvp, (void*)shadow_mvp, GfxUniformTypeFloat16, 1); 
-            GfxDraw(0, app->shadowMapTexture, app->shadowMapVao, GfxDrawModeTriangles, 0, app->skullNumVerts, 1);
+            GfxDraw(app->shadowMapColorTexture, app->shadowMapTexture, app->shadowMapVao, GfxDrawModeTriangles, 0, app->skullNumVerts, 1);
             GfxSetCullState(GfxCullFaceBack, GfxFaceWindCounterClockwise);
             GfxSetViewport(0, 0, 800, 600);
         }
@@ -647,12 +621,7 @@ export void Update(float dt, void* userData) {
             GfxSetUniform(app->planeShader, app->planeUniformProj, (void*)proj, GfxUniformTypeFloat16, 1);
             GfxSetUniform(app->planeShader, app->planeUniformShadow,  (void*)plane_shadow, GfxUniformTypeFloat16, 1); 
 
-            GfxSetUniform(app->planeShader, app->PlaneUniformLightDirection,(void*)lightDir, GfxUniformTypeFloat3, 1); 
-            GfxSetUniform(app->planeShader, app->PlaneUniformLightColor, (void*)lightColor, GfxUniformTypeFloat3, 1); 
-            GfxSetUniform(app->planeShader, app->PlaneUniformViewPos, app->cam, GfxUniformTypeFloat3, 1); 
-
             GfxSetUniformTexture(app->planeShader, app->PlaneUniformColorSpec, app->PlaneTextureColorSpec);
-            GfxSetUniformTexture(app->planeShader, app->PlaneUniformNormal, app->PlaneTextureNormal);
             GfxSetUniformTexture(app->planeShader, app->PlaneUniformShadowMap, app->shadowMapTexture);
 
             GfxDraw(0, 0, app->planeVAO, GfxDrawModeTriangles, 0, app->planeNumVerts, 1);

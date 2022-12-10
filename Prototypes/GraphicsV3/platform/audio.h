@@ -2,9 +2,7 @@
 #define _H_AUDIO_
 
 typedef unsigned int u32;
-typedef float f32;
 static_assert (sizeof(u32) == 4, "u32 should be a 4 byte type");
-static_assert (sizeof(f32) == 4, "f32 should be a 4 byte type");
 
 extern "C" u32 AudioCreateBuffer(u32 numChannels, u32 sampleRate, u32 numSamples, short* pcmData);
 extern "C" void AudioDestroyBuffer(u32 buffer);

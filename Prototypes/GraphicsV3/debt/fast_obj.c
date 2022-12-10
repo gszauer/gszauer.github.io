@@ -24,7 +24,7 @@
  *
  */
 
-#include "../memory.h"
+#include "../platform/memory.h"
 
 #define FAST_OBJ_REALLOC MemRealloc
 #define FAST_OBJ_FREE MemRelease
