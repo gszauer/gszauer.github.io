@@ -9,33 +9,6 @@ class FileLoader {
             console.log("File loader, caching disabled");
         }
         this.disableCache = disableCache;
-        
-        wasmImportObject.env["LoadFileAsynch"] = function(_path, target, bytes, callback, userData) {
-            let iter = _path;
-            while(self.mem_u8[iter] != 0) {
-                iter += 1;
-                if (iter - _path > 5000) {
-                    console.error("FileLoader.FileLoad string decode loop took too long");
-                    break;
-                }
-            }
-            let stringPath = self.decoder.decode(new Uint8Array(self.mem_buffer, _path, iter - _path));
-            if (stringPath == null || stringPath.length == 0) {
-                console.error("FileLoader.FileLoad file path was empty, pointer:" + _path);
-            }
-
-            if (disableCache) {
-                self.LoadFile(_path, stringPath, target, bytes, callback, userData);
-            }
-            else {
-                self.HasCached(stringPath, function() { // Success
-                    self.LoadCache(_path, stringPath, target, bytes, callback, userData);
-                }, 
-                function(stringPath) { // Fail
-                    self.LoadFile(_path, stringPath, target, bytes, callback, userData);
-                });
-            }
-        }
 
         this.callbacksEnabled = false;
         this.queuedCallbacks = null;
@@ -69,6 +42,33 @@ class FileLoader {
                 db.createObjectStore("PersistentData");
             }
 
+        }
+
+        wasmImportObject.env["LoadFileAsynch"] = function(_path, target, bytes, callback, userData) {
+            let iter = _path;
+            while(self.mem_u8[iter] != 0) {
+                iter += 1;
+                if (iter - _path > 5000) {
+                    console.error("FileLoader.FileLoad string decode loop took too long");
+                    break;
+                }
+            }
+            let stringPath = self.decoder.decode(new Uint8Array(self.mem_buffer, _path, iter - _path));
+            if (stringPath == null || stringPath.length == 0) {
+                console.error("FileLoader.FileLoad file path was empty, pointer:" + _path);
+            }
+
+            if (disableCache) {
+                self.LoadFile(_path, stringPath, target, bytes, callback, userData);
+            }
+            else {
+                self.HasCached(stringPath, function() { // Success
+                    self.LoadCache(_path, stringPath, target, bytes, callback, userData);
+                }, 
+                function(stringPath) { // Fail
+                    self.LoadFile(_path, stringPath, target, bytes, callback, userData);
+                });
+            }
         }
     }
 
@@ -112,6 +112,8 @@ class FileLoader {
             console.log("Disabling cace");
             LoadFile(_path, _stringPath, _target, _bytes, _callback, _userData);
         }
+
+        transaction.commit();
     }
 
     HasCached(stringPath, onSuccess, onFailure) {

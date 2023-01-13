@@ -367,70 +367,85 @@ class GameWindow {
         const userPtr = this.userDataPtr;
         this.running = true;
 
-        let thisTime = performance.now();
-        let lastTime = thisTime;
+        let lastTime = 0;
+        let deltaTime = 0.0;
 
         let self = this;
        
         const GameWindowUpdate = function(timestamp) {
-            thisTime = timestamp;
-            let deltaTime = (thisTime - lastTime);
-            lastTime = thisTime;
+            deltaTime += timestamp - lastTime;
+            lastTime = timestamp;
+            
+            const frameGuardMs = 10; // Should be less than 16.6ms. If greater, we're guaranteed to miss a frame
+            const frameGuardIter = 3;
 
-            let boundingRect = self.canvas.getBoundingClientRect();
-            const windowHeight = (window.innerHeight || document.documentElement.clientHeight);
-            const windowWidth = (window.innerWidth || document.documentElement.clientWidth)
+            let loopCount = 0;
 
-            let vVis = boundingRect.bottom >= 0  && boundingRect.top <= windowHeight;
-            let hVis = boundingRect.right >= 0 && boundingRect.left <= windowWidth;
-            let visible = hVis && vVis;
+            while (deltaTime > frameGuardMs && loopCount < frameGuardIter) {
+                //console.log("delta time: " + deltaTime);
+                deltaTime -= frameGuardMs;
+                if (++loopCount >= frameGuardIter) { // Only process up to 3 frames at a time
+                    deltaTime = 0.0;
+                }
 
-            let expectedDisplayWidth = windowWidth;//boundingRect.width;
-            let expectedDisplayHeight = windowHeight;//boundingRect.height;
-            let expectedBufferWidth = Math.floor(expectedDisplayWidth * self.dpi);
-            let expectedBufferHeight = Math.floor(expectedDisplayHeight * self.dpi);
+                let boundingRect = self.canvas.getBoundingClientRect();
+                const windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+                const windowWidth = (window.innerWidth || document.documentElement.clientWidth)
 
-            if (expectedDisplayWidth != self.lastDisplayWidth || expectedDisplayHeight != self.lastDisplayHeight || 
-            expectedBufferWidth != self.lastBufferWidth || expectedBufferHeight != self.lastBufferHeight) {
-                //console.log("Resizing canvas, Display(" + expectedDisplayWidth + ", " + expectedDisplayHeight + "), Buffer(" + expectedBufferWidth + ", " + expectedBufferHeight + ")");
+                let vVis = boundingRect.bottom >= 0  && boundingRect.top <= windowHeight;
+                let hVis = boundingRect.right >= 0 && boundingRect.left <= windowWidth;
+                let visible = hVis && vVis;
 
-                self.canvas.style.width = expectedDisplayWidth + "px";
-                self.canvas.style.height = expectedDisplayHeight + "px";
-                self.canvas.width = expectedBufferWidth;
-                self.canvas.height = expectedBufferHeight;
+                let expectedDisplayWidth = windowWidth;//boundingRect.width;
+                let expectedDisplayHeight = windowHeight;//boundingRect.height;
+                let expectedBufferWidth = Math.floor(expectedDisplayWidth * self.dpi);
+                let expectedBufferHeight = Math.floor(expectedDisplayHeight * self.dpi);
 
-                self.lastDisplayWidth = expectedDisplayWidth;
-                self.lastDisplayHeight = expectedDisplayHeight;
-                self.lastBufferWidth = expectedBufferWidth;
-                self.lastBufferHeight = expectedBufferHeight;
+                if (expectedDisplayWidth != self.lastDisplayWidth || expectedDisplayHeight != self.lastDisplayHeight || 
+                expectedBufferWidth != self.lastBufferWidth || expectedBufferHeight != self.lastBufferHeight) {
+                    //console.log("Resizing canvas, Display(" + expectedDisplayWidth + ", " + expectedDisplayHeight + "), Buffer(" + expectedBufferWidth + ", " + expectedBufferHeight + ")");
+
+                    self.canvas.style.width = expectedDisplayWidth + "px";
+                    self.canvas.style.height = expectedDisplayHeight + "px";
+                    self.canvas.width = expectedBufferWidth;
+                    self.canvas.height = expectedBufferHeight;
+
+                    self.lastDisplayWidth = expectedDisplayWidth;
+                    self.lastDisplayHeight = expectedDisplayHeight;
+                    self.lastBufferWidth = expectedBufferWidth;
+                    self.lastBufferHeight = expectedBufferHeight;
+                }
+
+                if (self.running) {
+                    exports.Update(deltaTime, userPtr);
+                    if (visible && deltaTime < frameGuardMs) {
+                        exports.Render(0, 0, expectedBufferWidth, expectedBufferHeight, self.dpi, userPtr);
+                    }
+
+                    self.previousButtonState[0] = self.currentButtonState[0];
+                    self.previousButtonState[1] = self.currentButtonState[1];
+                    self.prevX = self.mouseX;
+                    self.prevY = self.mouseY;
+                    self.prevScroll = self.mouseScroll;
+                    self.mouseScroll = 0;
+                    self.prevNumTouches = self.numTouches;
+                    self.prevTouches[0].x = self.touches[0].x;
+                    self.prevTouches[0].y = self.touches[0].y;
+                    self.prevTouches[1].x = self.touches[1].x;
+                    self.prevTouches[1].y = self.touches[1].y;
+                }
             }
 
             if (self.running) {
-                exports.Update(deltaTime, userPtr);
-                if (visible) {
-                    exports.Render(0, 0, expectedBufferWidth, expectedBufferHeight, self.dpi, userPtr);
-                }
-
-                self.previousButtonState[0] = self.currentButtonState[0];
-                self.previousButtonState[1] = self.currentButtonState[1];
-                self.prevX = self.mouseX;
-                self.prevY = self.mouseY;
-                self.prevScroll = self.mouseScroll;
-                self.mouseScroll = 0;
-                self.prevNumTouches = self.numTouches;
-                self.prevTouches[0].x = self.touches[0].x;
-                self.prevTouches[0].y = self.touches[0].y;
-                self.prevTouches[1].x = self.touches[1].x;
-                self.prevTouches[1].y = self.touches[1].y;
                 window.requestAnimationFrame(GameWindowUpdate);
             }
         }
 
         const GameWindowFirstUpdate = function(timestamp) {
-            thisTime = timestamp;
             lastTime = timestamp;
             window.requestAnimationFrame(GameWindowUpdate);
         }
+
         window.requestAnimationFrame(GameWindowFirstUpdate);
         // If requestAnimationFrame is not available, fall back to window.setInterval
     }
