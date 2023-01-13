@@ -36,6 +36,9 @@ class GraphicsDevice {
         this.boundFbo = null;
 
         let self = this;
+
+        wasmImportObject.env["GfxInitialize"] = function(user_data) {}
+        wasmImportObject.env["GfxShutdown"] = function(user_data) {}
         
         wasmImportObject.env["GfxCreateBuffer"] = function() {
             self.glBufferCounter = (self.glBufferCounter + 1) % (self.u32_max - 1) + 1;
@@ -307,6 +310,7 @@ class GraphicsDevice {
                     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
                     gl.vertexAttribPointer(attribLocation, u32_numComponents, int_type, false, u32_strideBytes, u32_dataOffsetBytes);
                     gl.enableVertexAttribArray(attribLocation);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, null); //  probably not needed....
                 }
             }
             else {
@@ -570,7 +574,7 @@ class GraphicsDevice {
 
             if (u32_uniformType == 0) { // GfxUniformTypeInt1
                 const intData = new Int32Array(self.mem_buffer, ptr_data, u32_count * 1);
-                gl.Uniform1iv(slot, intData);
+                gl.uniform1iv(slot, intData);
             }
             else if (u32_uniformType == 1) { // GfxUniformTypeInt2
                 const intData = new Int32Array(self.mem_buffer, ptr_data, u32_count * 2);

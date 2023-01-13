@@ -49,6 +49,10 @@ class GameMath {
             return Math.round(x)
         };
 
+        wasmImportObject.env["MathACos"] = function(a) {
+            return Math.acos(a);
+        }
+
         // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
         const frexp = function(value) {
             if (value === 0) return [value, 0];
@@ -72,7 +76,8 @@ class GameMath {
             return result;
         }
 
-        wasmImportObject.env["ldexp"] = function(x,y) {
+        wasmImportObject.env["ldexp"] = 
+        wasmImportObject.env["MathLdexp"] = function(x,y) {
             return ldexp(x, y)
         };
     }

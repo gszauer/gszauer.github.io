@@ -1,15 +1,23 @@
 
 class GameWindow {
-    constructor(wasmImportObject, canvasName) {
+    constructor(wasmImportObject, allocator, canvasName) {
         if (!wasmImportObject.hasOwnProperty("env")) {
             wasmImportObject.env = {};
         }
         
+        this.dpi = window.devicePixelRatio || 1;
+        this.mem = allocator;
         this.wasmInstance = null;
         this.userDataPtr = 0;
-        this.gl = document.getElementById(canvasName).getContext('webgl2');
         this.canvas = document.getElementById(canvasName);
+        this.gl = this.canvas.getContext('webgl2');
         this.running = false;
+
+        let boundingRect = this.canvas.getBoundingClientRect();
+        this.lastDisplayWidth = boundingRect.width;
+        this.lastDisplayHeight = boundingRect.height;
+        this.lastBufferWidth = this.canvas.width;
+        this.lastBufferHeight = this.canvas.height;
 
         this.currentButtonState = new Uint32Array(2);
         this.previousButtonState = new Uint32Array(2);
@@ -33,6 +41,7 @@ class GameWindow {
         let self = this;
 
         const HandleTouchEvent = function(event) {
+            let devicePixelRatio = window.devicePixelRatio || 1;
             if (event.defaultPrevented) {
                 return false;
             }
@@ -40,16 +49,16 @@ class GameWindow {
             self.numTouches = event.touches.length;
 
             if (self.numTouches >= 1) {
-                self.touches[0].x = event.touches[0].clientX;
-                self.touches[0].y = event.touches[0].clientY;
+                self.touches[0].x = (event.touches[0].clientX - self.canvas.offsetLeft) * devicePixelRatio;
+                self.touches[0].y = (event.touches[0].clientY - self.canvas.offsetTop) * devicePixelRatio;
             }
             else {
                 self.touches[0].x = 0;
                 self.touches[0].y = 0;
             }
             if (self.numTouches >= 2) {
-                self.touches[1].x = event.touches[1].clientX;
-                self.touches[1].y = event.touches[1].clientY;
+                self.touches[1].x = (event.touches[1].clientX - self.canvas.offsetLeft) * devicePixelRatio;
+                self.touches[1].y = (event.touches[1].clientY - self.canvas.offsetTop) * devicePixelRatio;
             }
             else {
                 self.touches[1].x = 0;
@@ -86,8 +95,9 @@ class GameWindow {
         };
 
         const MouseMotionHandler = (event) => {
-            self.mouseX = event.clientX;
-            self.mouseY = event.clientY;
+            let devicePixelRatio = window.devicePixelRatio || 1;
+            self.mouseX = (event.pageX - self.canvas.offsetLeft) * devicePixelRatio;
+            self.mouseY = (event.pageY - self.canvas.offsetTop) * devicePixelRatio;
         };
 
         this.canvas.addEventListener("mousemove",  MouseMotionHandler, true);
@@ -216,6 +226,10 @@ class GameWindow {
             }
 
             return 0; // error
+        }
+
+        wasmImportObject.env["WindowUpdateTitle"] = function(titlePtr) {
+            window.document.title = self.mem.PointerToString(titlePtr);
         }
 
         wasmImportObject.env["ScanCodeToAscii"] = function(u32_scanCode) {
@@ -371,10 +385,30 @@ class GameWindow {
             let hVis = boundingRect.right >= 0 && boundingRect.left <= windowWidth;
             let visible = hVis && vVis;
 
+            let expectedDisplayWidth = windowWidth;//boundingRect.width;
+            let expectedDisplayHeight = windowHeight;//boundingRect.height;
+            let expectedBufferWidth = Math.floor(expectedDisplayWidth * self.dpi);
+            let expectedBufferHeight = Math.floor(expectedDisplayHeight * self.dpi);
+
+            if (expectedDisplayWidth != self.lastDisplayWidth || expectedDisplayHeight != self.lastDisplayHeight || 
+            expectedBufferWidth != self.lastBufferWidth || expectedBufferHeight != self.lastBufferHeight) {
+                //console.log("Resizing canvas, Display(" + expectedDisplayWidth + ", " + expectedDisplayHeight + "), Buffer(" + expectedBufferWidth + ", " + expectedBufferHeight + ")");
+
+                self.canvas.style.width = expectedDisplayWidth + "px";
+                self.canvas.style.height = expectedDisplayHeight + "px";
+                self.canvas.width = expectedBufferWidth;
+                self.canvas.height = expectedBufferHeight;
+
+                self.lastDisplayWidth = expectedDisplayWidth;
+                self.lastDisplayHeight = expectedDisplayHeight;
+                self.lastBufferWidth = expectedBufferWidth;
+                self.lastBufferHeight = expectedBufferHeight;
+            }
+
             if (self.running) {
                 exports.Update(deltaTime, userPtr);
                 if (visible) {
-                    exports.Render(0, 0, boundingRect.width, boundingRect.height, userPtr);
+                    exports.Render(0, 0, expectedBufferWidth, expectedBufferHeight, self.dpi, userPtr);
                 }
 
                 self.previousButtonState[0] = self.currentButtonState[0];
