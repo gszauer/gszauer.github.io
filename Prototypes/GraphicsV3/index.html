@@ -40,6 +40,9 @@
                     var spector = new SPECTOR.Spector();
                     spector.displayUI();
                 }
+
+                const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
+                let request = indexedDB.open("bootstrap", 1);
                 
                 const stackSize = 1024 * 1024 * 8; // 8 MiB
                 const dataSize = 1024 * 1024 * 4; // 4 MiB
