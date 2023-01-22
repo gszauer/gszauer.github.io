@@ -8,7 +8,7 @@ class FileLoader {
         if (disableCache) {
             console.log("File loader, caching disabled");
         }
-        this.disableCache = disableCache;
+        this.disableCache = true;// IndexDB cache doesn't work on mobile devices :()
 
         this.callbacksEnabled = false;
         this.queuedCallbacks = null;
@@ -102,14 +102,12 @@ class FileLoader {
             }
             else {
                 self.disableCache = true;
-                console.error("CAn't load file from cache. Disable caching and load file");
                 console.log("Disabling cace");
                 LoadFile(_path, _stringPath, _target, _bytes, _callback, _userData);
             }
         };
         request.onerror = function(event) {
             self.disableCache = true;
-            console.error("CAn't load file from cache. Disable caching and load file");
             console.log("Disabling cace");
             LoadFile(_path, _stringPath, _target, _bytes, _callback, _userData);
         }
@@ -178,7 +176,6 @@ class FileLoader {
                 let writtenBytes = 0;
                 if (arrayBuffer == null) {
                     _target = 0; // Set data to null
-                    console.error("Can't load buffer");
                 }
                 else {
                     let dst_array = new Uint8Array(self.mem_buffer, _target, _bytes);

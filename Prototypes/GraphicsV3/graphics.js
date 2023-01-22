@@ -39,6 +39,7 @@ class GraphicsDevice {
 
         wasmImportObject.env["GfxInitialize"] = function(user_data) {}
         wasmImportObject.env["GfxShutdown"] = function(user_data) {}
+        wasmImportObject.env["GfxFinish"] = function() {}
         
         wasmImportObject.env["GfxCreateBuffer"] = function() {
             self.glBufferCounter = (self.glBufferCounter + 1) % (self.u32_max - 1) + 1;
@@ -89,7 +90,7 @@ class GraphicsDevice {
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         };
 
-        wasmImportObject.env["GfxFillIndexBuffer"] = function(u32_bufferId, ptr_input, u32_bytes, u32_bufferType) {
+        wasmImportObject.env["GfxFillIndexBuffer"] = function(u32_bufferId, ptr_input, u32_bytes, u32_bufferType, bool_static) {
             if (!self.glBuffers.hasOwnProperty(u32_bufferId)) {
                 console.error("GraphicsDevice.GfxFillIndexBuffer: accessing invalid buffer id(" + u32_bufferId + ")");
             }
@@ -116,7 +117,7 @@ class GraphicsDevice {
             self.glBuffers[u32_bufferId].indexType = indexBufferType;
             
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObject);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, self.mem_u8, gl.STATIC_DRAW, ptr_input, u32_bytes);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, self.mem_u8, bool_static? gl.STATIC_DRAW : gl.DYNAMIC_DRAW, ptr_input, u32_bytes);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         };
 
@@ -244,6 +245,7 @@ class GraphicsDevice {
                 arrayObject: gl.createVertexArray(),
                 hasIndexBuffer: false,
                 indexBuffer: null,
+                indexBufferID: 0,
                 shaderId: u32_shaderId
             };
 
@@ -284,7 +286,8 @@ class GraphicsDevice {
                     console.error("GraphicsDevice.GfxAddBufferToLayout: adding two index buffers");
                 }
                 self.glArrayObjects[u32_layoutId].hasIndexBuffer = true;
-                self.glArrayObjects[u32_layoutId].hasIndexBuffer.indexBuffer = buffer;
+                self.glArrayObjects[u32_layoutId].indexBuffer = buffer;
+                self.glArrayObjects[u32_layoutId].indexBufferID = u32_bufferId;
             }
 
             gl.bindVertexArray(vao);
@@ -308,7 +311,12 @@ class GraphicsDevice {
 
                 if (attribLocation >= 0) {
                     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                    gl.vertexAttribPointer(attribLocation, u32_numComponents, int_type, false, u32_strideBytes, u32_dataOffsetBytes);
+                    if (u32_bufferType == 3 || u32_bufferType == 5) {
+                        gl.vertexAttribIPointer(attribLocation, u32_numComponents, int_type, u32_strideBytes, u32_dataOffsetBytes);
+                    }
+                    else {
+                        gl.vertexAttribPointer(attribLocation, u32_numComponents, int_type, false, u32_strideBytes, u32_dataOffsetBytes);
+                    }
                     gl.enableVertexAttribArray(attribLocation);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null); //  probably not needed....
                 }
@@ -891,7 +899,7 @@ class GraphicsDevice {
 
             gl.bindVertexArray(vao);
             if (vertexLayout.hasIndexBuffer) {
-                let indexBufferType = vertexLayout.indexBuffer.indexType;
+                let indexBufferType = self.glBuffers[vertexLayout.indexBufferID].indexType;
                 if (u32_instanceCount <= 1) {
                     gl.drawElements(drawMode, u32_indexCount, indexBufferType, u32_startIndex);
                 }

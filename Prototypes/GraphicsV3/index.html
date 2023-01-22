@@ -40,9 +40,6 @@
                     var spector = new SPECTOR.Spector();
                     spector.displayUI();
                 }
-
-                const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
-                let request = indexedDB.open("bootstrap", 1);
                 
                 const stackSize = 1024 * 1024 * 8; // 8 MiB
                 const dataSize = 1024 * 1024 * 4; // 4 MiB
@@ -57,11 +54,11 @@
                 let allocator = MemInjectAllocator(importObject, heapSize + dataSize + stackSize);
                 let game = new GameWindow(importObject, allocator, "webglCanvas");
                 let graphics = new GraphicsDevice(importObject, allocator, game.gl);
-                let loader = new FileLoader("dev.gabor.demo", importObject, allocator);
+                let loader = new FileLoader("com.gabor.demo", importObject, allocator);
                 let math = new GameMath(importObject);
                 let sound = new AudioDevice(importObject, allocator, "webglCanvas");
 
-                WebAssembly.instantiateStreaming(fetch('application.wasm'), importObject).then(prog => {
+                WebAssembly.instantiateStreaming(fetch('application.debug.wasm'), importObject).then(prog => {
                     let heapPtr = MemInitializeHeap(allocator, prog.instance);
                     loader.AttachToWasmInstance(prog.instance);
                     game.AttachToWasmInstance(prog.instance); // Will init and start updating
