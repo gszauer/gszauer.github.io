@@ -4,10 +4,6 @@ class FileLoader {
             wasmImportObject.env = {};
         }
         let self = this;
-        const disableCache = packageName.startsWith("dev.");
-        if (disableCache) {
-            console.log("File loader, caching disabled");
-        }
         this.disableCache = true;// IndexDB cache doesn't work on mobile devices :()
 
         this.callbacksEnabled = false;
@@ -56,7 +52,7 @@ class FileLoader {
                 console.error("FileLoader.FileLoad file path was empty, pointer:" + _path);
             }
 
-            if (disableCache) {
+            if (self.disableCache) {
                 self.LoadFile(_path, stringPath, target, bytes, callback, userData);
             }
             else {
