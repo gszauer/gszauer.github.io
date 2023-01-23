@@ -58,7 +58,18 @@
                 let math = new GameMath(importObject);
                 let sound = new AudioDevice(importObject, allocator, "webglCanvas");
 
-                WebAssembly.instantiateStreaming(fetch('application.debug.wasm'), importObject).then(prog => {
+                let file = 'application.debug.wasm';
+                const FileExists = function(url) {
+                    let http = new XMLHttpRequest();
+                    http.open('HEAD', url, false);
+                    http.send();
+                    return http.status!=404;
+                }
+                if (!FileExists(file)) {
+                    file = 'application.wasm';
+                }
+
+                WebAssembly.instantiateStreaming(fetch(file), importObject).then(prog => {
                     let heapPtr = MemInitializeHeap(allocator, prog.instance);
                     loader.AttachToWasmInstance(prog.instance);
                     game.AttachToWasmInstance(prog.instance); // Will init and start updating
