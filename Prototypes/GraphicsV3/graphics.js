@@ -193,6 +193,16 @@ class GraphicsDevice {
             delete self.glShaders[u32_shaderId];
         };
 
+        wasmImportObject.env["GfxGetAttributeSlot"] = function(u32_shaderId, ptr_name) {
+            if (!self.glShaders.hasOwnProperty(u32_shaderId)) {
+                console.error("GraphicsDevice.GfxGetUniformSlot: accessing invalid shader id(" + u32_shaderId + ")");
+            }
+
+            let program = self.glShaders[u32_shaderId].program;
+            let attribName = self.mem.PointerToString(ptr_name);
+            return gl.getAttribLocation(program, attribName);
+        }
+
         wasmImportObject.env["GfxGetUniformSlot"] = function(u32_shaderId, ptr_name) {
             if (!self.glShaders.hasOwnProperty(u32_shaderId)) {
                 console.error("GraphicsDevice.GfxGetUniformSlot: accessing invalid shader id(" + u32_shaderId + ")");
@@ -261,7 +271,8 @@ class GraphicsDevice {
             delete self.glArrayObjects[u32_layoutId];
         };
 
-        wasmImportObject.env["GfxAddBufferToLayout"] = function(u32_layoutId, ptr_name, u32_bufferId, u32_numComponents, u32_strideBytes, u32_bufferType, u32_dataOffsetBytes) {
+        const GfxAddBufferToLayout = 
+        wasmImportObject.env["GfxAddBufferToLayout"] = function(u32_layoutId, attribLocation, u32_bufferId, u32_numComponents, u32_strideBytes, u32_bufferType, u32_dataOffsetBytes) {
             if (!self.glBuffers.hasOwnProperty(u32_bufferId)) {
                 console.error("GraphicsDevice.GfxAddBufferToLayout: accessing invalid buffer id(" + u32_bufferId + ")");
             }
@@ -278,10 +289,9 @@ class GraphicsDevice {
             }
             let program = self.glShaders[u32_shaderId].program;
 
-            if (self.glBuffers[u32_bufferId].isIndexBuffer) {
-                if (ptr_name != 0) {
-                    console.error("GraphicsDevice.GfxAddBufferToLayout: can't add named index buffer");
-                }
+            const isIndexBuffer = self.glBuffers[u32_bufferId].isIndexBuffer;
+
+            if (isIndexBuffer) {
                 if (self.glArrayObjects[u32_layoutId].hasIndexBuffer) {
                     console.error("GraphicsDevice.GfxAddBufferToLayout: adding two index buffers");
                 }
@@ -291,7 +301,7 @@ class GraphicsDevice {
             }
 
             gl.bindVertexArray(vao);
-            if (ptr_name != 0) {
+            if (!isIndexBuffer) {
                 let int_type = null;
                 if (u32_bufferType == 0) { // GfxBufferTypeFloat32
                     int_type = gl.FLOAT;
@@ -305,9 +315,6 @@ class GraphicsDevice {
                 else {
                     console.error("GraphicsDevice.GfxAddBufferToLayout: invalid buffer type(" + u32_bufferType + ")");
                 }
-
-                let attribName = self.mem.PointerToString(ptr_name);
-                let attribLocation = gl.getAttribLocation(program, attribName);
 
                 if (attribLocation >= 0) {
                     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -328,6 +335,15 @@ class GraphicsDevice {
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
             }
             gl.bindVertexArray(null);
+        };
+
+        wasmImportObject.env["GfxAddBufferToLayoutByName"] = function(u32_layoutId, ptr_name, u32_bufferId, u32_numComponents, u32_strideBytes, u32_bufferType, u32_dataOffsetBytes) {
+            let u32_shaderId = self.glArrayObjects[u32_layoutId].shaderId;
+            let program = self.glShaders[u32_shaderId].program;
+            let attribName = self.mem.PointerToString(ptr_name);
+            let attribLocation = gl.getAttribLocation(program, attribName);
+
+            GfxAddBufferToLayout(u32_layoutId, attribLocation, u32_bufferId, u32_numComponents, u32_strideBytes, u32_bufferType, u32_dataOffsetBytes);
         };
 
         wasmImportObject.env["GfxCreateTexture"] = function(ptr_data, u32_width, u32_height, u32_sourceFormat, u32_targetFormat, bool_genMips) {
