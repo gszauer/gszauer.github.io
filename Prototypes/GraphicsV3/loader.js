@@ -14,28 +14,29 @@ class FileLoader {
         this.decoder = new TextDecoder();
         this.database = null;
 
-        const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
-        let request = indexedDB.open(packageName, 1);
+        if (!this.disableCache) {
+            const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
+            let request = indexedDB.open(packageName, 2);
 
-        request.onerror = function(event) {
-            console.error("Failed to open database (" + packageName + ")");
-        }
-
-        request.onsuccess = function (event) {
-            self.database = request.result;
-        }
-
-        request.onupgradeneeded = function (event) {
-            self.database = event.target.result;
-            let db = event.target.result;
-
-            if (!db.objectStoreNames.contains("CachedAssets")) {
-                db.createObjectStore("CachedAssets");
-            }
-            if (!db.objectStoreNames.contains("PersistentData")) {
-                db.createObjectStore("PersistentData");
+            request.onerror = function(event) {
+                console.error("Failed to open database (" + packageName + ")");
             }
 
+            request.onsuccess = function (event) {
+                self.database = request.result;
+            }
+
+            request.onupgradeneeded = function (event) {
+                self.database = event.target.result;
+                let db = event.target.result;
+
+                if (!db.objectStoreNames.contains("CachedAssets")) {
+                    db.createObjectStore("CachedAssets");
+                }
+                if (!db.objectStoreNames.contains("PersistentData")) {
+                    db.createObjectStore("PersistentData");
+                }
+            }
         }
 
         wasmImportObject.env["LoadFileAsynch"] = function(_path, target, bytes, callback, userData) {
@@ -80,6 +81,11 @@ class FileLoader {
     }
 
     LoadCache(_path, _stringPath, _target, _bytes, _callback, _userData) {
+        if (this.disableCache) {
+            console.error("Cache disabled");
+            LoadFile(_path, _stringPath, _target, _bytes, _callback, _userData);
+            return;
+        }
         console.log("Retrieving: " + _stringPath);
         let self = this;
 
@@ -112,6 +118,14 @@ class FileLoader {
     }
 
     HasCached(stringPath, onSuccess, onFailure) {
+        if (this.disableCache) {
+            console.error("Cache disabled");
+            if (onFailure) {
+                onFailure(stringPath);
+            }
+            return;
+        }
+
         let transaction = this.database.transaction("CachedAssets", "readonly");
         let objectStore = transaction.objectStore("CachedAssets");
 
@@ -120,7 +134,7 @@ class FileLoader {
             let cursor = e.target.result; 
             if (cursor) { // key already exist
                 if (onSuccess) {
-                    onSuccess(); // TODO!
+                    onSuccess();
                 }
             } else { // key not exist
                 if (onFailure) {
