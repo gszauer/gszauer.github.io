@@ -442,16 +442,18 @@ class GameWindow {
             window.requestAnimationFrame(GameWindowUpdate);
         }
         else {
-            console.log("Update driven by set interval");
+            console.log("Update driven by set interval (30 ms)");
             this.userDataPtr = exports.Initialize();
 
             lastTime = performance.now();
-            window.setInterval(GameWindowUpdate, 14, 0);
+            window.setInterval(GameWindowUpdate, 30, 0); // Run at 30 fps to give phones some room to breathe
         }
     }
 
     DestroyWindow() {
         this.running = false;
-        this.wasmInstance.exports.Shutdown(userPtr);
+        if (this.userDataPtr != null) {
+            this.wasmInstance.exports.Shutdown(this.userDataPtr);
+        }
     }
 }
