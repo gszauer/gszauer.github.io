@@ -60,6 +60,7 @@ class FileLoader {
                 userData: _userData
             };
             this.queuedCallbacks.push(_callback);
+            console.error("file queued");
         }
         else {
             this.LoadFileAsArrayBuffer(_stringPath, function(path, arrayBuffer) {

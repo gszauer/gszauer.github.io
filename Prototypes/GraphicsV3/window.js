@@ -365,8 +365,7 @@ class GameWindow {
 
         this.wasmInstance = wasmInstance;
         const exports = wasmInstance.exports;
-        this.userDataPtr = exports.Initialize();
-        const userPtr = this.userDataPtr;
+        this.userDataPtr = null;
         this.running = true;
 
         let lastTime = 0;
@@ -410,9 +409,9 @@ class GameWindow {
             }
 
             if (self.running) {
-                exports.Update(deltaTime, userPtr);
+                exports.Update(deltaTime, self.userDataPtr);
                 if (visible) {
-                    exports.Render(0, 0, expectedBufferWidth, expectedBufferHeight, self.dpi, userPtr);
+                    exports.Render(0, 0, expectedBufferWidth, expectedBufferHeight, self.dpi, self.userDataPtr);
                 }
 
                 self.previousButtonState[0] = self.currentButtonState[0];
@@ -436,18 +435,18 @@ class GameWindow {
         }
 
         if (useRequestAnimFrames) {
-            const GameWindowFirstUpdate = function(timestamp) {
-                lastTime = timestamp;
-                window.requestAnimationFrame(GameWindowUpdate);
-            }
-
-            window.requestAnimationFrame(GameWindowFirstUpdate);
             console.log("Update driven by request animation farme");
+            this.userDataPtr = exports.Initialize();
+
+            lastTime = performance.now();
+            window.requestAnimationFrame(GameWindowUpdate);
         }
         else {
+            console.log("Update driven by set interval");
+            this.userDataPtr = exports.Initialize();
+
             lastTime = performance.now();
             window.setInterval(GameWindowUpdate, 14, 0);
-            console.log("Update driven by set interval");
         }
     }
 
