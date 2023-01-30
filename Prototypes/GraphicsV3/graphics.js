@@ -292,9 +292,6 @@ class GraphicsDevice {
             const isIndexBuffer = self.glBuffers[u32_bufferId].isIndexBuffer;
 
             if (isIndexBuffer) {
-                if (self.glArrayObjects[u32_layoutId].hasIndexBuffer) {
-                    console.error("GraphicsDevice.GfxAddBufferToLayout: adding two index buffers");
-                }
                 self.glArrayObjects[u32_layoutId].hasIndexBuffer = true;
                 self.glArrayObjects[u32_layoutId].indexBuffer = buffer;
                 self.glArrayObjects[u32_layoutId].indexBufferID = u32_bufferId;
@@ -346,6 +343,53 @@ class GraphicsDevice {
             GfxAddBufferToLayout(u32_layoutId, attribLocation, u32_bufferId, u32_numComponents, u32_strideBytes, u32_bufferType, u32_dataOffsetBytes);
         };
 
+        wasmImportObject.env["GfxWriteToTexture"] = function(u32_textureId, ptr_data, u32_targetFormat, u32_x, u32_y, u32_w, u32_h) {
+            let textureFormat = 0;
+            let textureDataType = 0;
+            let components = 1;
+            
+            if (u32_targetFormat == 0) { // GfxTextureFormatRGB8
+                textureFormat = gl.RGB;
+				textureDataType = gl.UNSIGNED_BYTE;
+                components = 3;
+            }
+            else if (u32_targetFormat == 1) { // GfxTextureFormatRGBA8
+                textureFormat = gl.RGBA;
+				textureDataType = gl.UNSIGNED_BYTE;
+                components = 4;
+            }
+            else if (u32_targetFormat == 2) { // GfxTextureFormatR32F
+                textureFormat = gl.RED;
+				textureDataType = gl.FLOAT;
+                components = 1;
+            }
+            else if (u32_targetFormat == 3) { // GfxTextureFormatRGB32F
+                textureFormat = gl.RGB;
+				textureDataType = gl.FLOAT;
+                components = 3;
+            }
+            else if (u32_targetFormat == 4) { // GfxTextureFormatDepth
+                textureFormat = gl.DEPTH_COMPONENT;
+				textureDataType = gl.FLOAT;
+                components = 1;
+            }
+            else if (u32_targetFormat == 5) { // GfxTextureFormatR8
+                textureFormat = gl.RED;
+				textureDataType = gl.UNSIGNED_BYTE;
+                components = 1;
+            }
+            else {
+                console.error("GraphicsDevice.GfxCreateTexture: invalid target format")
+            }
+        
+            let textureObject = self.glTextures[u32_textureId].textureObject;
+            gl.bindTexture(gl.TEXTURE_2D, textureObject); 
+
+            const textureData = new Uint8Array(self.mem_buffer, ptr_data, u32_w * u32_h * components);
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, u32_x, u32_y, u32_w, u32_h, textureFormat, textureDataType, textureData);
+            gl.bindTexture(gl.TEXTURE_2D, null); 
+        };
+
         wasmImportObject.env["GfxCreateTexture"] = function(ptr_data, u32_width, u32_height, u32_sourceFormat, u32_targetFormat, bool_genMips) {
             if (u32_targetFormat == 4) {
                 if (ptr_data != 0) {
@@ -380,8 +424,11 @@ class GraphicsDevice {
             else if (u32_sourceFormat == 3) { // GfxTextureFormatRGB32F
                 internalFormat = gl.RGB32F;
             }
-            else if (u32_sourceFormat == 4) {
+            else if (u32_sourceFormat == 4) { // GfxTextureFormatDepth
                 internalFormat = gl.DEPTH_COMPONENT32F;
+            }
+            else if (u32_sourceFormat == 5) { // GfxTextureFormatR8
+                internalFormat = gl.R8;
             }
             else {
                 console.error("GraphicsDevice.GfxCreateTexture: invalid internal format");
@@ -408,6 +455,10 @@ class GraphicsDevice {
             else if (u32_targetFormat == 4) { // GfxTextureFormatDepth
                 textureFormat = gl.DEPTH_COMPONENT;
 				textureDataType = gl.FLOAT;
+            }
+            else if (u32_targetFormat == 5) { // GfxTextureFormatR8
+                textureFormat = gl.RED;
+				textureDataType = gl.UNSIGNED_BYTE;
             }
             else {
                 console.error("GraphicsDevice.GfxCreateTexture: invalid target format")
