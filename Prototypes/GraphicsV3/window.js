@@ -361,7 +361,7 @@ class GameWindow {
     }
 
     AttachToWasmInstance(wasmInstance) {
-        const useRequestAnimFrames = true;
+        const useRequestAnimFrames = false;
 
         this.wasmInstance = wasmInstance;
         const exports = wasmInstance.exports;
