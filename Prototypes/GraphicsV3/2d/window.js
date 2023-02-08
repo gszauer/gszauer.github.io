@@ -285,17 +285,11 @@ class GameWindow {
             return result != 0;
         }
 
-        wasmImportObject.env["MouseGetX"] = function(bool_dpi) {
-            if (bool_dpi) {
-                return self.mouseX / self.dpi;
-            }
+        wasmImportObject.env["MouseGetX"] = function() {
             return self.mouseX;
         };
 
-        wasmImportObject.env["MouseGetY"] = function(bool_dpi) {
-            if (bool_dpi) {
-                return self.mouseY / self.dpi;
-            }
+        wasmImportObject.env["MouseGetY"] = function() {
             return self.mouseY;
         };
 
@@ -303,17 +297,11 @@ class GameWindow {
             return self.mouseScroll;
         };
 
-        wasmImportObject.env["MousePrevLastX"] = function(bool_dpi) {
-            if (bool_dpi) {
-                return self.prevX / self.dpi;
-            }
+        wasmImportObject.env["MousePrevLastX"] = function() {
             return self.prevX;
         };
 
-        wasmImportObject.env["MousePrevLastY"] = function(bool_dpi) {
-            if (bool_dpi) {
-                return self.prevY / self.dpi;
-            }
+        wasmImportObject.env["MousePrevLastY"] = function() {
             return self.prevY;
         };
 
@@ -325,15 +313,7 @@ class GameWindow {
             return 2;//self.maxNumTouches;
         };
 
-        wasmImportObject.env["TouchGetX"] = function(u32_touchIndex, bool_dpi) {
-            if (bool_dpi) {
-                if (u32_touchIndex == 0) {
-                    return self.touches[0].x / self.dpi;
-                }
-                else if (u32_touchIndex == 1) {
-                    return self.touches[1].x / self.dpi;
-                }
-            }
+        wasmImportObject.env["TouchGetX"] = function(u32_touchIndex) {
             if (u32_touchIndex == 0) {
                 return self.touches[0].x;
             }
@@ -343,15 +323,7 @@ class GameWindow {
             return 0;
         }
 
-        wasmImportObject.env["TouchGetY"] = function(u32_touchIndex, bool_dpi) {
-            if (bool_dpi) {
-                if (u32_touchIndex == 0) {
-                    return self.touches[0].y / self.dpi;
-                }
-                else if (u32_touchIndex == 1) {
-                    return self.touches[1].y / self.dpi;
-                }
-            }
+        wasmImportObject.env["TouchGetY"] = function(u32_touchIndex) {
             if (u32_touchIndex == 0) {
                 return self.touches[0].y;
             }
@@ -365,15 +337,7 @@ class GameWindow {
             return u32_touchIndex < self.numTouches;
         }
 
-        wasmImportObject.env["TouchGetPrevX"] = function(u32_touchIndex, bool_dpi) {
-            if (bool_dpi) {
-                if (u32_touchIndex == 0) {
-                    return self.prevTouches[0].x / self.dpi;
-                }
-                else if (u32_touchIndex == 1) {
-                    return self.prevTouches[1].x / self.dpi;
-                }
-            }
+        wasmImportObject.env["TouchGetPrevX"] = function(u32_touchIndex) {
             if (u32_touchIndex == 0) {
                 return self.prevTouches[0].x;
             }
@@ -382,15 +346,7 @@ class GameWindow {
             }
             return 0;
         }
-        wasmImportObject.env["TouchGetPrevY"] = function(u32_touchIndex, bool_dpi) {
-            if (bool_dpi) {
-                if (u32_touchIndex == 0) {
-                    return self.prevTouches[0].x / self.dpi;
-                }
-                else if (u32_touchIndex == 1) {
-                    return self.prevTouches[1].x / self.dpi;
-                }
-            }
+        wasmImportObject.env["TouchGetPrevY"] = function(u32_touchIndex) {
             if (u32_touchIndex == 0) {
                 return self.prevTouches[0].x;
             }
