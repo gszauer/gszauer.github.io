@@ -362,7 +362,13 @@ class GameWindow {
     }
 
     AttachToWasmInstance(wasmInstance) {
-        const useRequestAnimFrames = false;
+        let useRequestAnimFrames = false;
+
+        window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+            if (key=="fast") {
+                useRequestAnimFrames = ture;
+            }
+        });
 
         this.wasmInstance = wasmInstance;
         const exports = wasmInstance.exports;
@@ -443,11 +449,11 @@ class GameWindow {
             window.requestAnimationFrame(GameWindowUpdate);
         }
         else {
-            console.log("Update driven by set interval (30 ms)");
+            console.log("Update driven by set interval (16 ms)");
             this.userDataPtr = exports.Initialize();
 
             lastTime = performance.now();
-            window.setInterval(GameWindowUpdate, 30, 0); // Run at 30 fps to give phones some room to breathe
+            window.setInterval(GameWindowUpdate, 16, 0); // Run at 16 fps to give phones some room to breathe
         }
     }
 
