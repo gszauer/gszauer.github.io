@@ -366,7 +366,7 @@ class GameWindow {
 
         window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
             if (key=="fast") {
-                useRequestAnimFrames = ture;
+                useRequestAnimFrames = true;
             }
         });
 
