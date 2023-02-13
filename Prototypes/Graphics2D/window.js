@@ -32,50 +32,106 @@ class GameWindow {
         this.prevY = 0;
         this.prevScroll = 0;
 
-        this.maxNumTouches = 2;
+        this.maxNumTouches = 5;
         this.numTouches = 0;
         this.prevNumTouches = 0;
-        this.touches = [ { x: 0, y: 0 }, { x: 0, y: 0 } ];
-        this.prevTouches = [ { x: 0, y: 0 }, { x: 0, y: 0 } ];
+        this.touches = [ 
+            { x: 0, y: 0, id: null }, { x: 0, y: 0, id: null }, 
+            { x: 0, y: 0, id: null }, { x: 0, y: 0, id: null },
+            { x: 0, y: 0, id: null }
+         ];
+        this.prevTouches = [ 
+            { x: 0, y: 0, id: null }, { x: 0, y: 0, id: null },
+            { x: 0, y: 0, id: null }, { x: 0, y: 0, id: null },
+            { x: 0, y: 0, id: null }
+         ];
 
         let self = this;
 
-        const HandleTouchEvent = function(event) {
+        this.canvas.addEventListener('touchstart', (event) => {
             let devicePixelRatio = window.devicePixelRatio || 1;
             if (event.defaultPrevented) {
                 return false;
             }
 
             self.numTouches = event.touches.length;
-
-            if (self.numTouches >= 1) {
-                self.touches[0].x = (event.touches[0].clientX - self.canvas.offsetLeft) * devicePixelRatio;
-                self.touches[0].y = (event.touches[0].clientY - self.canvas.offsetTop) * devicePixelRatio;
-            }
-            else {
-                self.touches[0].x = 0;
-                self.touches[0].y = 0;
-            }
-            if (self.numTouches >= 2) {
-                self.touches[1].x = (event.touches[1].clientX - self.canvas.offsetLeft) * devicePixelRatio;
-                self.touches[1].y = (event.touches[1].clientY - self.canvas.offsetTop) * devicePixelRatio;
-            }
-            else {
-                self.touches[1].x = 0;
-                self.touches[1].y = 0;
+           
+            for (let i = 0; i < self.numTouches; ++i) {
+                let found = false;
+                for (let j = 0; j < self.maxNumTouches; ++j) {
+                    if (self.touches[j].id == event.touches[i].identifier) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    for (let j = 0; j < self.maxNumTouches; ++j) {
+                        if (self.touches[j].id == null) {
+                            self.touches[j].id = event.touches[i].identifier;
+                            self.touches[j].x = (event.touches[i].clientX - self.canvas.offsetLeft) * devicePixelRatio;
+                            self.touches[j].y = (event.touches[i].clientY - self.canvas.offsetTop) * devicePixelRatio;
+                            break;
+                        }
+                    }
+                }
             }
 
             event.preventDefault();
             return false;
-        }
+        }, false);
 
-        this.canvas.addEventListener('touchstart', HandleTouchEvent, false);
-        this.canvas.addEventListener('touchmove', HandleTouchEvent, false);
-        this.canvas.addEventListener('touchend', HandleTouchEvent, false);
+        this.canvas.addEventListener('touchmove', (event) => {
+            let devicePixelRatio = window.devicePixelRatio || 1;
+            if (event.defaultPrevented) {
+                return false;
+            }
 
-          this.canvas.addEventListener('touchcancel', (e) => {
-            self.numTouches = 0;
-          }, true);
+            self.numTouches = event.touches.length;
+            let updated = 0;
+            for (let i = 0; i < self.numTouches; ++i) { // Find and update each touch
+                for (let j = 0; j < self.maxNumTouches; ++j) {
+                    if (self.touches[j].id == event.touches[i].identifier) {
+                        self.touches[j].x = (event.touches[i].clientX - self.canvas.offsetLeft) * devicePixelRatio;
+                        self.touches[j].y = (event.touches[i].clientY - self.canvas.offsetTop) * devicePixelRatio;
+                        updated += 1;
+                        break;
+                    }
+                }
+            }
+
+            if (updated != self.numTouches) {
+                console.error("Mismatched number of touches");
+            }
+
+            event.preventDefault();
+            return false;
+        }, false);
+
+        const TouchEndHandler = function(event) {
+            self.numTouches = event.touches.length;
+            for (let i = 0; i < self.maxNumTouches; ++i) {
+                if (self.touches[i].id == null) {
+                    continue;
+                }
+                let found = false;
+                for (let j = 0; j < self.numTouches; ++j) {
+                    if (self.touches[i].id == event.touches[j].identifier) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    self.touches[i].id = null;
+                }
+            }
+
+            event.preventDefault();
+            return false;
+        };
+
+        this.canvas.addEventListener('touchend', TouchEndHandler, false);
+
+          this.canvas.addEventListener('touchcancel', TouchEndHandler, true);
 
 
         const KeyMap = {
@@ -197,7 +253,7 @@ class GameWindow {
             return false;
         }, false);
 
-        wasmImportObject.env["AsciiToScancode"] = function(char_code) { 
+        /*wasmImportObject.env["AsciiToScancode"] = function(char_code) { 
             const lowercase_a = 'a'.charCodeAt(0);
             if (char_code >= lowercase_a && char_code <= 'z'.charCodeAt(0)) {
                 return char_code - lowercase_a + 27;
@@ -226,13 +282,13 @@ class GameWindow {
             }
 
             return 0; // error
-        }
+        }*/
 
         wasmImportObject.env["WindowUpdateTitle"] = function(titlePtr) {
             window.document.title = self.mem.PointerToString(titlePtr);
         }
 
-        wasmImportObject.env["ScanCodeToAscii"] = function(u32_scanCode) {
+        /*wasmImportObject.env["ScanCodeToAsciiU32"] = function(u32_scanCode, bool_shift) {
             if (u32_scanCode == 3) {
                 return '\b';
             }
@@ -241,17 +297,27 @@ class GameWindow {
             }
 
             if (u32_scanCode >= 27 && u32_scanCode <= 52) {
-                return 'abcdefghijklmnopqrstuvwxyz'.charAt(u32_scanCode - 27);
+                if (bool_shift) {
+                    return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(u32_scanCode - 27);
+                }
+                let result = 97;// TODO: 'abcdefghijklmnopqrstuvwxyz'.charAt(u32_scanCode - 27);
+                return result;
             }
             if (u32_scanCode >= 17 && u32_scanCode <= 26) {
+                if (bool_shift) {
+                    return ')!@#$%^&*('.charAt(u32_scanCode - 17);
+                }
                 return '0123456789'.charAt(u32_scanCode - 17);
             }
             if (u32_scanCode >= 53 && u32_scanCode <= 64) {
-                ';=,-./~[|]\t'.charAt(u32_scanCode - 53);
+                if (bool_shift) {
+                    ':+<_>?~{|}\t'.charAt(u32_scanCode - 53);
+                }
+                ';=,-./`[\\]\t'.charAt(u32_scanCode - 53);
             }
 
             return '\0';
-        }
+        }*/
 
         wasmImportObject.env["KeyboardDown"] = function(u32_scanCode) {
             const index = ~~(u32_scanCode / 32);
@@ -310,54 +376,48 @@ class GameWindow {
         };
 
         wasmImportObject.env["TouchGetMaxContacts"] = function() {
-            return 2;//self.maxNumTouches;
+            return self.maxNumTouches;
         };
 
         wasmImportObject.env["TouchGetX"] = function(u32_touchIndex) {
-            if (u32_touchIndex == 0) {
-                return self.touches[0].x;
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
             }
-            else if (u32_touchIndex == 1) {
-                return self.touches[1].x;
-            }
-            return 0;
+            return self.touches[u32_touchIndex].x;
         }
 
         wasmImportObject.env["TouchGetY"] = function(u32_touchIndex) {
-            if (u32_touchIndex == 0) {
-                return self.touches[0].y;
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
             }
-            else if (u32_touchIndex == 1) {
-                return self.touches[1].y;
-            }
-            return 0;
-        }
-
-        wasmImportObject.env["TouchIsActive"] = function(u32_touchIndex) {
-            return u32_touchIndex < self.numTouches;
+            return self.touches[u32_touchIndex].y;
         }
 
         wasmImportObject.env["TouchGetPrevX"] = function(u32_touchIndex) {
-            if (u32_touchIndex == 0) {
-                return self.prevTouches[0].x;
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
             }
-            else if (u32_touchIndex == 1) {
-                return self.prevTouches[1].x;
-            }
-            return 0;
+            return self.prevTouches[u32_touchIndex].x;
         }
         wasmImportObject.env["TouchGetPrevY"] = function(u32_touchIndex) {
-            if (u32_touchIndex == 0) {
-                return self.prevTouches[0].x;
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
             }
-            else if (u32_touchIndex == 1) {
-                return self.prevTouches[1].x;
+            return self.prevTouches[u32_touchIndex].y;
+        }
+
+        wasmImportObject.env["TouchIsActive"] = function(u32_touchIndex) {
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
             }
-            return 0;
+            return self.touches[u32_touchIndex].id != null;
         }
 
         wasmImportObject.env["TouchWasActive"] = function(u32_touchIndex) {
-            return u32_touchIndex < self.prevNumTouches;
+            if (u32_touchIndex >= self.maxNumTouches) {
+                console.error("Touch index out of bounds: " + u32_touchIndex + " / " + self.maxNumTouches);
+            }
+            return self.prevTouches[u32_touchIndex].id != null;
         }
     }
 
@@ -428,10 +488,11 @@ class GameWindow {
                 self.prevScroll = self.mouseScroll;
                 self.mouseScroll = 0;
                 self.prevNumTouches = self.numTouches;
-                self.prevTouches[0].x = self.touches[0].x;
-                self.prevTouches[0].y = self.touches[0].y;
-                self.prevTouches[1].x = self.touches[1].x;
-                self.prevTouches[1].y = self.touches[1].y;
+                for (let i = 0; i < self.maxNumTouches; ++i) {
+                    self.prevTouches[i]. x = self.touches[i].x;
+                    self.prevTouches[i].y  = self.touches[i].y;
+                    self.prevTouches[i].id = self.touches[i].id;
+                }
             }
 
             if (self.running) {
