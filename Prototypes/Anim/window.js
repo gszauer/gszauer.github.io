@@ -165,10 +165,10 @@ class GameWindow {
             }
 
             if (event.deltaY < 0.0) {
-                this.mouseScroll = -1;
+                this.mouseScroll = 1;
             }
             else if (event.deltaY > 0.0) {
-                this.mouseScroll = 1;
+                this.mouseScroll = -1;
             }
             else {
                 this.mouseScroll = 0;
@@ -363,15 +363,15 @@ class GameWindow {
             return self.mouseScroll;
         };
 
-        wasmImportObject.env["MousePrevLastX"] = function() {
+        wasmImportObject.env["MousePrevX"] = function() {
             return self.prevX;
         };
 
-        wasmImportObject.env["MousePrevLastY"] = function() {
+        wasmImportObject.env["MousePrevY"] = function() {
             return self.prevY;
         };
 
-        wasmImportObject.env["MousePrevLastScroll"] = function() {
+        wasmImportObject.env["MousePrevScroll"] = function() {
             return self.prevScroll;
         };
 
