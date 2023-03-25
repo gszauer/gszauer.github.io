@@ -7,7 +7,9 @@ function MemInjectAllocator(wasmImportObject, wasmMemoryObjectOrMemorySize) {
     allocatorInstance.wasmMemory = null;
     allocatorInstance.gHeap = 0;
     allocatorInstance.decoder = new TextDecoder();
+    allocatorInstance.encoder = new TextEncoder();
     allocatorInstance.wasmInstance = null;
+    allocatorInstance.nullChar = allocatorInstance.encoder.encode('\0')[0];
 
     if (typeof(wasmMemoryObjectOrMemorySize) == 'number') {
         const wasmPageSize = 64 * 1024; // 64 KiB
@@ -47,6 +49,15 @@ function MemInjectAllocator(wasmImportObject, wasmMemoryObjectOrMemorySize) {
         return allocatorInstance.decoder.decode(new Uint8Array(this.wasmMemory.buffer, ptr, iter - ptr));
     };
 
+    allocatorInstance.WriteStringToPointer = function(jsString, cPointer) {
+        let len = jsString.length;
+        const utf8_stirng = allocatorInstance.encoder.encode(jsString);
+        for (let i = 0; i < len; ++i) {
+            allocatorInstance.u8[cPointer + i] = utf8_stirng[i];
+        }
+        allocatorInstance.u8[cPointer + len] = allocatorInstance.nullChar;
+    }
+
     allocatorInstance.PrintDebugString = 
     wasmImportObject.env.PrintDebugString = 
     function(ptr) {
@@ -78,9 +89,15 @@ function MemInitializeHeap(allocatorInstance, wasmInstance) {
     const memorySizeBytes = allocatorInstance.wasmMemory.buffer.byteLength;
     let heapSize = memorySizeBytes - allocatorInstance.heapBase;
 
-    return wasmInstance.exports.MemInitializeHeap(allocatorInstance.heapBase, heapSize);
-}
+    let heapPtr = wasmInstance.exports.MemInitializeHeap(allocatorInstance.heapBase, heapSize);
 
-/*function InitializeGameAllocator(allocatorInstance, wasmInstance) {
-    // TODO: this might not even be needed!?!?!
-}*/
+    allocatorInstance.Realloc = function(ptr_data, u32_size) {
+        return wasmInstance.exports.MemReallocateOnHeap(heapPtr, ptr_data, u32_size, 0);
+    }
+
+    allocatorInstance.Release = function(ptr_data) {
+        return  wasmInstance.exports.MemReleaseFromHeap(heapPtr, ptr_data);
+    }
+
+    return heapPtr;
+}

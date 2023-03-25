@@ -4,7 +4,7 @@ class GameWindow {
         if (!wasmImportObject.hasOwnProperty("env")) {
             wasmImportObject.env = {};
         }
-        
+
         this.dpi = window.devicePixelRatio || 1;
         this.mem = allocator;
         this.wasmInstance = null;
@@ -12,6 +12,7 @@ class GameWindow {
         this.canvas = document.getElementById(canvasName);
         this.gl = this.canvas.getContext('webgl2');
         this.running = false;
+        this.queue = [];
 
         let boundingRect = this.canvas.getBoundingClientRect();
         this.lastDisplayWidth = boundingRect.width;
@@ -31,6 +32,10 @@ class GameWindow {
         this.prevX = 0;
         this.prevY = 0;
         this.prevScroll = 0;
+
+        this.clipboard = "";
+        this.clipboard_ptr = 0;
+        this.clipboard_len = 0;
 
         this.maxNumTouches = 5;
         this.numTouches = 0;
@@ -228,6 +233,8 @@ class GameWindow {
                 const bit = ~~(code % 32);
 
                 self.currentButtonState[index] |= (1 << bit);
+                
+                self.queue.push(code);
             }
 
             // Cancel the default action to avoid it being handled twice
@@ -253,71 +260,50 @@ class GameWindow {
             return false;
         }, false);
 
-        /*wasmImportObject.env["AsciiToScancode"] = function(char_code) { 
-            const lowercase_a = 'a'.charCodeAt(0);
-            if (char_code >= lowercase_a && char_code <= 'z'.charCodeAt(0)) {
-                return char_code - lowercase_a + 27;
-            }
-            const capital_a = 'A'.charCodeAt(0);
-            if (char_code >= capital_a && char_code <= 'Z'.charCodeAt(0)) {
-                return char_code - capital_a + 27;
-            }
-                const zero = '0'.charCodeAt(0);
-                if (char_code >= zero && char_code <= '9'.charCodeAt(0)) {
-                return char_code - zero + 17;
-            }
-
-            const charMap = { '\t': 64, '\\': 61, '\'': 63,
-                '`': 59, '~': 59, '!': 18, '@': 19, '#': 20, 
-                '$': 21, '%': 22, '^': 23, '&': 24, '*': 25, 
-                '(': 26, ')': 17, '_': 56, '+': 54, '-': 56, 
-                '=': 54, '[': 60, '{': 60, ']': 62, '}': 62, 
-                '|': 61, ';': 53, ':': 53, '"': 63, ',': 55, 
-                '<': 55, '.': 57, '>': 57, '/': 58, '?': 58
-            };
-            
-            const charVal = String.fromCharCode(char_code);
-            if (charMap.hasOwnProperty(charVal)) {
-                return charMap[charVal];
-            }
-
-            return 0; // error
-        }*/
-
         wasmImportObject.env["WindowUpdateTitle"] = function(titlePtr) {
             window.document.title = self.mem.PointerToString(titlePtr);
         }
 
-        /*wasmImportObject.env["ScanCodeToAsciiU32"] = function(u32_scanCode, bool_shift) {
-            if (u32_scanCode == 3) {
-                return '\b';
-            }
-            if (u32_scanCode == 11) {
-                return ' ';
+        wasmImportObject.env["PushKey"] = function(u32_scanCode) {
+            self.queue.push(u32_scanCode);
+        }
+
+        wasmImportObject.env["ConsumeKeyQueue"] = function() {
+            if (self.queue.length == 0) {
+                return 1; // KeyboardCodeLeftMouse
             }
 
-            if (u32_scanCode >= 27 && u32_scanCode <= 52) {
-                if (bool_shift) {
-                    return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(u32_scanCode - 27);
-                }
-                let result = 97;// TODO: 'abcdefghijklmnopqrstuvwxyz'.charAt(u32_scanCode - 27);
-                return result;
+            let key = self.queue[0];
+            self.queue.shift();
+            return key;
+        }
+
+        wasmImportObject.env["ClearKeyQueue"] = function() {
+            self.queue.length = 0;
+        }
+
+        wasmImportObject.env["WriteClipboard"] = function(ptr_string) {
+            if (ptr_string == 0) {
+                self.clipboard = "";
             }
-            if (u32_scanCode >= 17 && u32_scanCode <= 26) {
-                if (bool_shift) {
-                    return ')!@#$%^&*('.charAt(u32_scanCode - 17);
-                }
-                return '0123456789'.charAt(u32_scanCode - 17);
+            else {
+                self.clipboard = self.mem.PointerToString(ptr_string);
             }
-            if (u32_scanCode >= 53 && u32_scanCode <= 64) {
-                if (bool_shift) {
-                    ':+<_>?~{|}\t'.charAt(u32_scanCode - 53);
-                }
-                ';=,-./`[\\]\t'.charAt(u32_scanCode - 53);
+        }
+
+        wasmImportObject.env["ReadClipboard"] = function() {
+            if (self.clipboard.length == 0) {
+                return 0;
             }
 
-            return '\0';
-        }*/
+            if (self.clipboard_len < self.clipboard.length) {
+                self.clipboard_ptr = self.mem.Realloc(self.clipboard_ptr, self.clipboard.length + 1);
+                self.clipboard_len = self.clipboard.length;
+                self.mem.WriteStringToPointer(self.clipboard, self.clipboard_ptr);
+            }
+
+            return self.clipboard_ptr;
+        }
 
         wasmImportObject.env["KeyboardDown"] = function(u32_scanCode) {
             const index = ~~(u32_scanCode / 32);
@@ -521,6 +507,11 @@ class GameWindow {
     DestroyWindow() {
         this.running = false;
         if (this.userDataPtr != null) {
+            if (this.clipboard_ptr != 0) {
+                this.mem.Release(this.clipboard_ptr);
+                this.clipboard_ptr = 0;
+                this.clipboard_len = 0;
+            }
             this.wasmInstance.exports.Shutdown(this.userDataPtr);
         }
     }
