@@ -5,12 +5,64 @@ class FileLoader {
         }
         let self = this;
 
+        // Add input field for file upload
+        //<input  type="file" id="fileElem" accept="image/png" style="display:none" />
+        this.fileElement = document.getElementById("fileUploader"); // This should just exist
+        /*this.fileElement = document.createElement("fileElem");
+        this.fileElement.setAttribute("type", "file");
+        this.fileElement.setAttribute("id", "fileUploader");
+        this.fileElement.setAttribute("accept", "image/png");
+        this.fileElement.setAttribute("style", "display:none");
+        document.body.appendChild(this.fileElement );*/
+        // End input field
+
         this.callbacksEnabled = false;
         this.queuedCallbacks = null;
         this.wasmInstance = null;
         this.mem_u8 = memoryAllocator.mem_u8;
         this.mem_buffer = memoryAllocator.wasmMemory.buffer;
         this.decoder = new TextDecoder();
+
+        const FileUploadChangeDetector = () => {
+            window.removeEventListener('focus', FileUploadCancelDetector);
+           
+            if (self.fileElement.files === undefined || self.fileElement.files.length === 0) {
+                alert("uploaded-none");
+            }
+            else {
+                alert("uploaded!");
+            }
+
+            self.fileElement.removeEventListener('change', FileUploadChangeDetector);
+            self.fileElement.value = "";
+            self.fileElement.addEventListener('change', FileUploadChangeDetector);
+        }
+        
+        const FileUploadCancelDetector = () => {
+            window.removeEventListener('focus', FileUploadCancelDetector);
+           
+            if (self.fileElement.files === undefined || self.fileElement.files.length === 0) {
+                alert("canceled");
+            }
+            else {
+                alert("canceled-recover");
+            }
+
+            self.fileElement.removeEventListener('change', FileUploadChangeDetector);
+            self.fileElement.value = "";
+            self.fileElement.addEventListener('change', FileUploadChangeDetector);
+        };
+
+        this.fileElement.addEventListener('click', function() {
+            window.addEventListener('focus', FileUploadCancelDetector);
+        });
+        this.fileElement.addEventListener('change', FileUploadChangeDetector);
+
+        wasmImportObject.env["RequestFileAsynch"] = function(ptr_callback, ptr_userData) {
+            if (self.fileElement) {
+                self.fileElement.click();
+            }
+        }
 
         wasmImportObject.env["LoadFileAsynch"] = function(_path, target, bytes, callback, userData) {
             let iter = _path;
@@ -40,6 +92,10 @@ class FileLoader {
             document.body.appendChild(element);
             element.click();
             document.body.removeChild(element);
+        }
+
+        const RequestFileAsynch = function(ptr_callback, ptr_userdata) {
+
         }
 
         wasmImportObject.env["SaveFile"] = function(ptr_path, ptr_data, u32_bytes) {
