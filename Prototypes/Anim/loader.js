@@ -14,6 +14,7 @@ class FileLoader {
         this.mem_u8 = memoryAllocator.mem_u8;
         this.mem_buffer = memoryAllocator.wasmMemory.buffer;
         this.decoder = new TextDecoder();
+        this.encoder = new TextEncoder();
 
         this.requestFileCallback = null;
         this.requestFileUserData = null;
@@ -38,9 +39,22 @@ class FileLoader {
                     let dst_ptr = memoryAllocator.Realloc(0, arrayBuffer.byteLength + 1);
                     let dst_array = new Uint8Array(self.mem_buffer, dst_ptr, arrayBuffer.byteLength);
                     let src_array = new Uint8Array(arrayBuffer);
+
+                    let name_ptr = 0;
+                    if (file.name !== undefined && file.name.length > 0) {
+                        name_ptr = memoryAllocator.Realloc(0, file.name.length + 1);
+                        let name_array = new Uint8Array(self.mem_buffer, name_ptr, file.name.length + 1);
+                        let name_source = self.encoder.encode(file.name);
+                        for (let i = 0; i < file.name.length; name_array[i] = name_source[i++]);
+                        name_array[file.name.length] = 0;
+                    }
                     
                     for (let i = 0; i < arrayBuffer.byteLength; dst_array[i] = src_array[i++]);
-                    self.wasmInstance.exports.TriggerFileLoaderCallback(self.requestFileCallback, 0, dst_ptr, arrayBuffer.byteLength, self.requestFileUserData);
+                    self.wasmInstance.exports.TriggerFileLoaderCallback(self.requestFileCallback, name_ptr, dst_ptr, arrayBuffer.byteLength, self.requestFileUserData);
+
+                    if (name_ptr != 0) {
+                        memoryAllocator.Release(name_ptr);
+                    }
 
                     self.requestFileCallback = null;
                     self.requestFileUserData = null;
@@ -57,7 +71,10 @@ class FileLoader {
         wasmImportObject.env["RequestFileAsynch"] = function(ptr_callback, ptr_userData) {
             if (self.requestFileCallback != null ||  self.requestFileUserData != null) {
                 console.error("Still waiting for other file");
-                return;
+                
+                self.fileElement.removeEventListener('change', FileUploadChangeDetector);
+                self.fileElement.value = "";
+                self.fileElement.addEventListener('change', FileUploadChangeDetector);
             }
             
             if (self.fileElement) {
