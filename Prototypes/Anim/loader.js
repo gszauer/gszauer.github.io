@@ -19,30 +19,47 @@ class FileLoader {
         this.requestFileUserData = null;
 
         const FileUploadChangeDetector = () => {
-            window.removeEventListener('focus', FileUploadCancelDetector);
-           
             if (self.fileElement.files === undefined || self.fileElement.files.length === 0) {
                 console.log("no file");
+
+                self.fileElement.removeEventListener('change', FileUploadChangeDetector);
+                self.fileElement.value = "";
+                self.fileElement.addEventListener('change', FileUploadChangeDetector);
             }
             else {
                 self.requestFileCallback
                 self.requestFileUserData
 
-                // TODO: Marshal file into C++ memory
-                // TODO: Trigger appropriate callbacks
+                let file = self.fileElement.files[0];
+                file.arrayBuffer().then(arrayBuffer=>{
+                    let ui8 = new Uint8Array(arrayBuffer);
+                    
+                    // Marshal file into C++ memory
+                    let dst_ptr = memoryAllocator.Realloc(0, arrayBuffer.byteLength + 1);
+                    let dst_array = new Uint8Array(self.mem_buffer, dst_ptr, arrayBuffer.byteLength);
+                    let src_array = new Uint8Array(arrayBuffer);
+                    
+                    for (let i = 0; i < arrayBuffer.byteLength; dst_array[i] = src_array[i++]);
+                    self.wasmInstance.exports.TriggerFileLoaderCallback(self.requestFileCallback, 0, dst_ptr, arrayBuffer.byteLength, self.requestFileUserData);
 
-                self.requestFileCallback = null;
-                self.requestFileUserData = null;
+                    self.requestFileCallback = null;
+                    self.requestFileUserData = null;
+
+                    self.fileElement.removeEventListener('change', FileUploadChangeDetector);
+                    self.fileElement.value = "";
+                    self.fileElement.addEventListener('change', FileUploadChangeDetector);
+                });
             }
-
-            self.fileElement.removeEventListener('change', FileUploadChangeDetector);
-            self.fileElement.value = "";
-            self.fileElement.addEventListener('change', FileUploadChangeDetector);
         }
         
         this.fileElement.addEventListener('change', FileUploadChangeDetector);
 
         wasmImportObject.env["RequestFileAsynch"] = function(ptr_callback, ptr_userData) {
+            if (self.requestFileCallback != null ||  self.requestFileUserData != null) {
+                console.error("Still waiting for other file");
+                return;
+            }
+            
             if (self.fileElement) {
                 self.requestFileCallback = ptr_callback;
                 self.requestFileUserData = ptr_userData;
