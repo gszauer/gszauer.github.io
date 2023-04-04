@@ -496,11 +496,11 @@ class GameWindow {
             window.requestAnimationFrame(GameWindowUpdate);
         }
         else {
-            console.log("Update driven by set interval (16 ms)");
+            console.log("Update driven by set interval (14 ms)");
             this.userDataPtr = exports.Initialize();
 
             lastTime = performance.now();
-            window.setInterval(GameWindowUpdate, 16, 0); // Run at 16 fps to give phones some room to breathe
+            window.setInterval(GameWindowUpdate, 14, 0); 
         }
     }
 
