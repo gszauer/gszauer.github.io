@@ -24,6 +24,10 @@ class GraphicsDevice {
         this.glTextures = {};
         this.glTextureCounter = 1;
 
+        this.enableStats = false;
+        this.indexCount = 0;
+        this.drawCount = 0;
+
         this.boundShaderId = 0;
 
         this.canUseIntIndices = false;
@@ -37,9 +41,25 @@ class GraphicsDevice {
 
         let self = this;
 
-        wasmImportObject.env["GfxInitialize"] = function(user_data) {}
-        wasmImportObject.env["GfxShutdown"] = function(user_data) {}
-        wasmImportObject.env["GfxFinish"] = function() {}
+        wasmImportObject.env["GfxInitialize"] = function(user_data) {};
+        wasmImportObject.env["GfxShutdown"] = function(user_data) {};
+        wasmImportObject.env["GfxFinish"] = function() {};
+
+        wasmImportObject.env["GfxEnableStats"] = function(bool_enableds) {
+            self.enableStats = bool_enableds;
+        };
+
+        wasmImportObject.env["GfxStatsIndexCount"] = function() {
+            let result = self.indexCount;
+            self.indexCount = 0;
+            return result;
+        };
+
+        wasmImportObject.env["GfxStatsDrawCount"] = function() {
+            let result = self.drawCount;
+            self.drawCount = 0;
+            return result;
+        };
         
         wasmImportObject.env["GfxCreateBuffer"] = function() {
             self.glBufferCounter = (self.glBufferCounter + 1) % (self.u32_max - 1) + 1;
@@ -982,6 +1002,12 @@ class GraphicsDevice {
                     gl.drawArraysInstanced(drawMode, u32_startIndex, u32_indexCount, u32_instanceCount);
                 }
             }
+
+            if (self.enableStats) {
+                self.drawCount += 1;
+                self.indexCount += u32_indexCount;
+            }
+
             gl.bindVertexArray(null); 
         };
     }
