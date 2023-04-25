@@ -47,7 +47,7 @@
                 
                 const stackSize = 1024 * 1024 * 8; // 8 MiB
                 const dataSize = 1024 * 1024 * 4; // 4 MiB
-                const heapSize = 1024 * 1024 * 256; 
+                const heapSize = 1024 * 1024 * 128 - stackSize - dataSize; 
 
                 let importObject = {
                     module: {},
