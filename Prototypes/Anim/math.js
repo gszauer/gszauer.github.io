@@ -21,6 +21,10 @@ class GameMath {
             return Math.sqrt(x);
         };
 
+        wasmImportObject.env["MathAtan2"] = function(y, x) {
+            return Math.atan2(y, x);
+        };
+
         wasmImportObject.env["MathRandom"] = function() {
             return Math.random();
         };
