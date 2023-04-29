@@ -291,6 +291,13 @@ class GameWindow {
             }
         }
 
+        wasmImportObject.env["WindowOpenURL"] = function(ptr_string) {
+            if (ptr_string != 0) {
+                let urlString = self.mem.PointerToString(ptr_string);
+                window.open(urlString, '_blank');
+            }
+        }
+
         wasmImportObject.env["ReadClipboard"] = function() {
             if (self.clipboard.length == 0) {
                 return 0;
