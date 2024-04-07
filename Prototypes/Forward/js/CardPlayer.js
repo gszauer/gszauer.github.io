@@ -4,23 +4,24 @@ export default class CardPlayer extends CardDraggable {
     constructor(data) {
         let {scene, health} = data;
         super(data);
-        this.textHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, -102, 'pressstart', health);
-        this.textMaxHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, -75, 'pressstart', health, 12);
-        this.textArmor = new Phaser.GameObjects.BitmapText(this.scene, 0, -102, 'pressstart');
-        this.spriteArmor = new Phaser.GameObjects.Sprite(scene, 50, -80, 'armor')
-        this.textHealth.tint = 0;
+        this.textHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, 94, 'pressstart', health);
+        this.textMaxHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, 94, 'pressstart', health, 12);
+        this.textArmor = new Phaser.GameObjects.BitmapText(this.scene, 0, 94, 'pressstart');
+        //this.spriteArmor = new Phaser.GameObjects.Sprite(scene, 50, -80, 'armor')
+        //this.textHealth.tint = 0;
         this.textMaxHealth.tint = 0;
         this.add([this.textHealth, this.textMaxHealth, 
-            this.spriteArmor, this.textArmor]);
+            /*this.spriteArmor,*/ this.textArmor]);
         this.health = health;
         this.maxHealth = health;
         this.armor = 0;
+        this.spriteImage.alpha = 0;
     }
 
     set health (newHealth) {
         this._health = newHealth;
         this.textHealth.text = this._health;
-        this.textHealth.x = -44 - this.textHealth.width / 2;
+        this.textHealth.x = 46 - this.textHealth.width / 2;
     }
     
     get health() {
@@ -41,9 +42,9 @@ export default class CardPlayer extends CardDraggable {
     set armor(newArmor) {
         this._armor = newArmor;
         this.textArmor.text = this._armor;
-        this.textArmor.x = 46 - this.textArmor.width / 2;
-        this.textArmor.alpha = this._armor == 0? 0 : 1;
-        this.spriteArmor.alpha = this._armor == 0 ? 0 : 1;
+        this.textArmor.x = -44 - this.textArmor.width / 2;
+        //this.textArmor.alpha = this._armor == 0? 0 : 1;
+        //this.spriteArmor.alpha = this._armor == 0 ? 0 : 1;
     }
 
     get armor() {
