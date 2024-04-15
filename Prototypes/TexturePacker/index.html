@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Packer</title>
+    <link rel="stylesheet" type="text/css" href="layout.css" />
+    <script src="packer.js"></script> 
+    <script src="logic.js"></script> 
+    <!-- https://github.com/jakesgordon/bin-packing?tab=readme-ov-file -->
+
+    <style>
+
+    </style>
+</head>
+<body>
+    <div class="topnav">
+        <input id="file-upload" type="file" multiple accept="image/*" onchange="LoadImages(event)" />
+        <label for="file-upload" class="custom-file-upload">
+            Upload File
+        </label>
+        <a href="#" onclick="BuildAtlas(event)">Build Spritesheet</a>
+        <a href="#" onclick="ExportProject(event)">Export</a>
+      </div>
+
+
+      <div class="row">
+        <div id="file-list" class="column-left files">
+        </div>
+        
+        <div id="file-preview" class="column-center">
+            
+        </div>
+        
+        <div class="column-right settings">
+            <div>
+                <span style="width: 100px; display: block; float: left;">Name: </span><input id="canvas-name" value="atlas" />
+            </div>
+            <div>
+                <span style="width: 100px; display: block; float: left;">Width: </span><input type="number" id="canvas-width" min="2" max="65536" value="4096" />
+            </div>
+            <div>
+                <span style="width: 100px; display: block; float: left;">Height: </span><input type="number" id="canvas-height" min="2" max="65536" value="4096" />
+            </div>
+            <div>
+                <span style="width: 100px; display: block; float: left;">Padding: </span><input type="number" id="canvas-padding" min="0" max="128" value="1" />
+            </div>
+            <div>
+                <span style="width: 100px; display: block; float: left;">Background: </span> 
+                <input  style="width: 25px; display: block; float: left;" type="color" id="canvas-background" value="#252324" /> 
+                <input  style="width: 75px; display: block; float: left;" type="number" id="canvas-alpha" min="0" max="1" value="0" step=".01" />
+            </div>
+        </div>
+      
+</body>
+</html>
