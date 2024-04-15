@@ -10,14 +10,14 @@ export default class SceneDungeon extends Phaser.Scene {
         this.load.bitmapFont('morgamon', 'assets/morgamon_0.png', 'assets/morgamon.fnt');
         this.cardNameFont = 'morgamon';
         this.cardNameFontSize  = 56;
-
+        this.scaleFactor = 0.482;
     }
 
     create() {
         
-        const cardWidth = 632;
-        const cardHeight = 714;
-        const cardPadding = 20;
+        const cardWidth = 632 * this.scaleFactor;
+        const cardHeight = 714 * this.scaleFactor;
+        const cardPadding = 28;
 
         for (let i = 0; i < 3; ++i) {
             for (let j = 0; j < 4; ++j) {

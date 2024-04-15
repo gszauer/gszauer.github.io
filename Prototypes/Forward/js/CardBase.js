@@ -22,6 +22,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.nameText = nameText;
 
         this.Name = name;
+        this.setScale(scene.scaleFactor, scene.scaleFactor);
         
         this.scene.add.existing(this);
     }
