@@ -1,39 +1,37 @@
 export default class CardBase extends Phaser.GameObjects.Container {
+    
     constructor(data) {
-        let {scene, x, y, name, card, image, depth}  = data;
-        let spriteCard = new Phaser.GameObjects.Sprite(scene, 0, 0, card);
-        let spriteImage = new Phaser.GameObjects.Sprite(scene, 0, 20, image);
-        let textName = new Phaser.GameObjects.BitmapText(scene, 0, 0, 
-            'pressstart', name, 16, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
-        super(scene, x, y, [spriteCard, spriteImage, textName]);
-        this.spriteCard = spriteCard;
-        this.spriteImage = spriteImage;
-        this.textName = textName;
-        this.cardName = name;
+        let { scene, x, y, name, sprite, depth} = data;
+        
+        const footerSprite = scene.add.sprite(0, 537, "tarotcards", "Nameplate.png");
+        footerSprite.setOrigin(0, 0);
+
+        const faceSprite = scene.add.sprite(0, 0, "tarotcards", sprite);
+        faceSprite.setOrigin(0, 0);
+
+        const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        
+        super(scene, x, y, [footerSprite, faceSprite, nameText]);
+
         this.depth = depth;
         this.scene = scene;
+        this.sprite = sprite;
+
+        this.footerSprite = footerSprite;
+        this.faceSprite = faceSprite;
+        this.nameText = nameText;
+
+        this.Name = name;
+        
         this.scene.add.existing(this);
     }
 
-    set cardName(newName) {
-        this._cardName = newName;
-        this.textName.text = this._cardName;
-        this.textName.maxWidth = this.spriteCard.width;
-        this.textName.tint = 0;
-        this.textName.x = -this.textName.width / 2;
-        this.textName.y = 120 - this.textName.height;
-    }
-
-    deadAnimation() {
-        this.scene.tweens.add({
-            targets: this.spriteImage,
-            alpha: 0,
-            duration: 100,
-            repeat: 1,
-            yoyo: true,
-            onComplete: () => {
-                this.spriteImage.setTexture('dead');
-            } 
-        })
+    set Name(newName) {
+        this.name = newName;
+        this.nameText.text = this.name;
+        this.nameText.maxWidth = this.footerSprite.width;
+        this.nameText.setTint(0xe1b95c);
+        this.nameText.x = this.footerSprite.width / 2 - this.nameText.width / 2;
+        this.nameText.y = this.footerSprite.y + this.footerSprite.height / 2 - this.nameText.height / 2 - 10;
     }
 }
