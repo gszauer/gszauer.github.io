@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Texture Packer</title>
     <link rel="stylesheet" type="text/css" href="layout.css" />
-    <script src="packer.js"></script> 
-    <script src="logic.js"></script> 
     <style>
 body {
   margin: 0;
@@ -121,19 +119,33 @@ display: none;
                 <span style="width: 100px; display: block; float: left;">Name: </span><input id="canvas-name" value="atlas" />
             </div>
             <div>
-                <span style="width: 100px; display: block; float: left;">Width: </span><input type="number" id="canvas-width" min="2" max="65536" value="4096" />
-            </div>
+              <span style="width: 100px; display: block; float: left;">Preset: </span>
+              <select id="presets" onchange="SetPreset()">
+                <option value="twofivtysix">256</option>
+                <option value="fivetwelve">512</option>
+                <option value="tentwentyfour">1024</option>
+                <option value="twentyfourtyeight">2048</option>
+                <option value="fourtynintysix" selected>4096</option>
+                <option value="eightyoneninetytwo">8192</option>
+              </select>
+          </div>
+          <div>
+            <span style="width: 100px; display: block; float: left;">Width: </span><input type="number" id="canvas-width" min="2" max="65536" value="4096" />
+        </div>
             <div>
                 <span style="width: 100px; display: block; float: left;">Height: </span><input type="number" id="canvas-height" min="2" max="65536" value="4096" />
             </div>
             <div>
-                <span style="width: 100px; display: block; float: left;">Padding: </span><input type="number" id="canvas-padding" min="0" max="128" value="1" />
+                <span style="width: 100px; display: block; float: left;">Padding: </span><input type="number" id="canvas-padding" min="0" max="128" value="4" />
             </div>
             <div>
                 <span style="width: 100px; display: block; float: left;">Background: </span> 
                 <input  style="width: 25px; display: block; float: left;" type="color" id="canvas-background" value="#252324" /> 
-                <input  style="width: 75px; display: block; float: left;" type="number" id="canvas-alpha" min="0" max="1" value="0" step=".01" />
+                <input  style="width: 75px; display: block; float: left;" type="number" id="canvas-alpha" min="0" max="1" value="0.0" step=".01" />
             </div>
+            <div>
+              <span style="width: 100px; display: block; float: left;">Split name _: </span><input type="checkbox" id="name-fixer" checked />
+          </div>
         </div>
       
 </body>
@@ -252,6 +264,35 @@ Packer.prototype = {
 
 const GlobalLoadedAtlasSets = [];
 
+function SetPreset() {
+    const width  = document.getElementById('canvas-width');
+    const height = document.getElementById('canvas-height');
+    const preset = document.getElementById('presets').value;
+
+    let value = 128;
+    if (preset === "twofivtysix") {
+      value = 256;
+    }
+    else if (preset === "fivetwelve") {
+      value = 512;
+    }
+    else if (preset === "tentwentyfour") {
+      value = 1024;
+    }
+    else if (preset === "twentyfourtyeight") {
+      value = 2048;
+    }
+    else if (preset === "fourtynintysix") {
+      value = 4096;
+    }
+    else if (preset === "eightyoneninetytwo") {
+      value = 8192;
+    }
+
+    width.value = value;
+    height.value = value;
+}
+
 // https://stackoverflow.com/questions/22087076/how-to-make-a-simple-image-upload-using-javascript-html
 function LoadImages(event) {
     event.preventDefault();
@@ -259,6 +300,7 @@ function LoadImages(event) {
     const fileInput = document.getElementById("file-upload");
     const fileList = document.getElementById("file-list");
     const filePreview = document.getElementById("file-preview");
+    const fixNames = document.getElementById('name-fixer').checked;
 
     const result = {
         requested: 0,
@@ -283,7 +325,15 @@ function LoadImages(event) {
 
             const img = new Image();
             img.onload = function() {
-                fileList.innerHTML = fileList.innerHTML +  "<div>" + selectedFiles[i].name + "</div>";
+              let fixedName = selectedFiles[i].name;
+              if (fixNames) {
+                if (fixedName.includes("_")) {
+                  let split = fixedName.split("_");
+                  fixedName = split[split.length - 1];
+                }
+              }
+
+                fileList.innerHTML = fileList.innerHTML +  "<div>" + fixedName + "</div>";
                 //filePreview.appendChild(img);
 
                 result.images.push({
@@ -326,6 +376,7 @@ function BuildAtlas(event) {
     const padding = Number(document.getElementById('canvas-padding').value);
     const background = document.getElementById('canvas-background').value;
     const alpha = Number(document.getElementById('canvas-alpha').value);
+    const fixNames = document.getElementById('name-fixer').checked;
 
     const canvas = document.createElement('canvas');
     const context = canvas.getContext("2d");
@@ -397,6 +448,7 @@ function ExportProject(event) {
     const targets = atlas.targets;
     const image = canvas.toDataURL();
     const padding = Number(document.getElementById('canvas-padding').value);
+    const fixNames = document.getElementById('name-fixer').checked;
 
     const fileName = document.getElementById('canvas-name').value || "Export";
     if (fileName == null || fileName.length == 0) {
@@ -418,11 +470,19 @@ function ExportProject(event) {
             const w = Number(target.width);
             const h = Number(target.height);
 
+            let fixedName = target.name;
+            if (fixNames) {
+              if (fixedName.includes("_")) {
+                let split = fixedName.split("_");
+                fixedName = split[split.length - 1];
+              }
+            }
+
             // Guessing format from https://github.com/phaserjs/examples/blob/master/public/assets/atlas/megaset-0.json
-            exportJson += '{ "filename": "' + target.name + '", ';
+            exportJson += '{ "filename": "' + fixedName + '", ';
             exportJson += '"frame": {"x":' + x + ',"y":' + y + ',"w":' + w + ',"h":' + h + '}, ';
-            exportJson += '"spriteSourceSize": {"x":0,"y":0,"w":' + w + ',"h":' + h + '},';
-            exportJson += '"sourceSize": {"w":' + w + ',"h":' + h + '},';
+            //exportJson += '"spriteSourceSize": {"x":0,"y":0,"w":' + w + ',"h":' + h + '},';
+            //exportJson += '"sourceSize": {"w":' + w + ',"h":' + h + '},';
             exportJson += '"pivot": {"x":0.5,"y":0.5} }';
 
             if (n + 1 < n_len) {
