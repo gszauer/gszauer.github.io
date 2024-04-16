@@ -7,10 +7,94 @@
     <link rel="stylesheet" type="text/css" href="layout.css" />
     <script src="packer.js"></script> 
     <script src="logic.js"></script> 
-    <!-- https://github.com/jakesgordon/bin-packing?tab=readme-ov-file -->
-
     <style>
+body {
+  margin: 0;
+  padding: 0;
 
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.files {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings {
+    display: flex;
+    flex-direction: column;
+  }
+
+/* The navbar container */
+.topnav {
+  overflow: hidden;
+  background-color: #333;
+}
+
+/* Navbar links */
+.topnav a {
+    float: left;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
+
+  .topnav label {
+    float: left;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
+
+input[type="file"] {
+display: none;
+}
+
+/* Links - change color on hover */
+.topnav a:hover {
+    background-color: #ddd;
+    color: black;
+  } 
+
+  .topnav label:hover {
+    background-color: #ddd;
+    color: black;
+    cursor: pointer;
+  } 
+
+.row {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+}
+
+ /* Create three equal columns that float next to each other */
+ .column-center {
+  flex-grow: 1;
+  height: 100%;
+  /*background-color: yellow;*/
+  overflow: scroll;
+}
+
+.column-left {
+    width: 250px;
+    min-width: 250px;
+    height: 100%;
+    background-color: #ddd;
+}
+
+.column-right {
+    width: 300px;
+    min-width: 300px;
+    height: 100%;
+    background-color: #ddd;
+}
     </style>
 </head>
 <body>
@@ -53,4 +137,307 @@
         </div>
       
 </body>
+<script type="text/javascript">
+/******************************************************************************
+
+Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016 Jake Gordon and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+This is a very simple binary tree based bin packing algorithm that is initialized
+with a fixed width and height and will fit each block into the first node where
+it fits and then split that node into 2 parts (down and right) to track the
+remaining whitespace.
+
+Best results occur when the input blocks are sorted by height, or even better
+when sorted by max(width,height).
+
+Inputs:
+------
+
+  w:       width of target rectangle
+  h:      height of target rectangle
+  blocks: array of any objects that have .w and .h attributes
+
+Outputs:
+-------
+
+  marks each block that fits with a .fit attribute pointing to a
+  node with .x and .y coordinates
+
+Example:
+-------
+
+  var blocks = [
+    { w: 100, h: 100 },
+    { w: 100, h: 100 },
+    { w:  80, h:  80 },
+    { w:  80, h:  80 },
+    etc
+    etc
+  ];
+
+  var packer = new Packer(500, 500);
+  packer.fit(blocks);
+
+  for(var n = 0 ; n < blocks.length ; n++) {
+    var block = blocks[n];
+    if (block.fit) {
+      Draw(block.fit.x, block.fit.y, block.w, block.h);
+    }
+  }
+
+
+******************************************************************************/
+
+Packer = function(w, h) {
+  this.init(w, h);
+};
+
+Packer.prototype = {
+
+  init: function(w, h) {
+    this.root = { x: 0, y: 0, w: w, h: h };
+  },
+
+  fit: function(blocks) {
+    var n, node, block;
+    for (n = 0; n < blocks.length; n++) {
+      block = blocks[n];
+      if (node = this.findNode(this.root, block.w, block.h))
+        block.fit = this.splitNode(node, block.w, block.h);
+    }
+  },
+
+  findNode: function(root, w, h) {
+    if (root.used)
+      return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
+    else if ((w <= root.w) && (h <= root.h))
+      return root;
+    else
+      return null;
+  },
+
+  splitNode: function(node, w, h) {
+    node.used = true;
+    node.down  = { x: node.x,     y: node.y + h, w: node.w,     h: node.h - h };
+    node.right = { x: node.x + w, y: node.y,     w: node.w - w, h: h          };
+    return node;
+  }
+
+}
+
+
+</script> 
+<script type="text/javascript">
+"use strict";
+
+const GlobalLoadedAtlasSets = [];
+
+// https://stackoverflow.com/questions/22087076/how-to-make-a-simple-image-upload-using-javascript-html
+function LoadImages(event) {
+    event.preventDefault();
+
+    const fileInput = document.getElementById("file-upload");
+    const fileList = document.getElementById("file-list");
+    const filePreview = document.getElementById("file-preview");
+
+    const result = {
+        requested: 0,
+        served: 0,
+        images: []
+    };
+
+    // Check if any files are selected
+    const selectedFiles = fileInput.files;
+    result.requested = selectedFiles.length;
+    if (selectedFiles.length === 0) {
+        alert("Please select at least one file to upload.");
+        return;
+    }
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+        const reader = new FileReader();
+
+        reader.onload = function(){
+            /*let output = document.getElementById('output_image');
+            output.src = reader.result;*/
+
+            const img = new Image();
+            img.onload = function() {
+                fileList.innerHTML = fileList.innerHTML +  "<div>" + selectedFiles[i].name + "</div>";
+                //filePreview.appendChild(img);
+
+                result.images.push({
+                    width: this.width,
+                    height: this.height,
+                    name: selectedFiles[i].name,
+                    image: img
+                });
+                result.served += 1;
+            }
+
+            img.src =  reader.result;
+        }
+
+        reader.readAsDataURL(selectedFiles[i]);
+    }
+
+    GlobalLoadedAtlasSets.push(result);
+    return result;
+}
+
+function HexToRGBA(hex, a){
+    let c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c = hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',' + a +')';
+    }
+    throw new Error('Bad Hex');
+}
+
+function BuildAtlas(event) {
+    event.preventDefault();
+
+    const width = Number(document.getElementById('canvas-width').value);
+    const height = Number(document.getElementById('canvas-height').value);
+    const padding = Number(document.getElementById('canvas-padding').value);
+    const background = document.getElementById('canvas-background').value;
+    const alpha = Number(document.getElementById('canvas-alpha').value);
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext("2d");
+    canvas.id = "atlas-canvas";
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Clear canvas background
+    context.beginPath();
+    context.rect(0, 0, width, height);
+    context.fillStyle = HexToRGBA(background, alpha) ;//background;//"#FF0000";
+    context.fill();
+    context.closePath();
+
+    // Prepare rects to be packed
+    let packTargets = [];
+    for (let i = 0, i_len = GlobalLoadedAtlasSets.length; i < i_len; ++i) {
+        const atlasSet = GlobalLoadedAtlasSets[i];
+        if (atlasSet.requested == 0) {
+            continue;
+        }
+        if (atlasSet.requested !== atlasSet.served) {
+            console.error('atlases not done loading. Abandoning set');
+            alert('atlases not done loading. Abandoning set');
+            continue;
+        }
+
+        for (let j = 0, j_len = atlasSet.images.length; j < j_len; ++j) {
+            const image = atlasSet.images[j];
+
+            image.w = image.width + padding * 2;
+            image.h = image.height + padding * 2;
+            packTargets.push(image);
+        }
+    }
+
+    // Pack rects
+    let packer = new Packer(width, height);
+    packTargets.sort(function(a,b) { return (a.h < b.h); }); // sort inputs for best results
+    packer.fit(packTargets);
+
+    for(let n = 0, n_len = packTargets.length ; n < n_len; ++n) {
+        let block = packTargets[n];
+        if (block.fit) {
+            let drawX = Number(block.fit.x) + padding;
+            let drawY = Number(block.fit.y) + padding;
+            context.drawImage(block.image, drawX, drawY);
+            console.log(block.name + ', x: ' + drawX + ', y: ' + drawY + ', w: ' + block.width + ', h' + block.height);
+        }
+        else {
+            alert('sprite ' + block.name + ' did not fit');
+            console.error('sprite ' + block.name + ' did not fit');
+        }
+    }
+
+    const filePreview = document.getElementById('file-preview');
+    filePreview.innerHTML = "";
+    filePreview.appendChild(canvas);
+
+    return {
+        targets: packTargets,
+        canvas: canvas
+    };
+}
+
+function ExportProject(event) {
+    const atlas = BuildAtlas(event);
+    const canvas = atlas.canvas;
+    const targets = atlas.targets;
+    const image = canvas.toDataURL();
+    const padding = Number(document.getElementById('canvas-padding').value);
+
+    const fileName = document.getElementById('canvas-name').value || "Export";
+    if (fileName == null || fileName.length == 0) {
+        fileName == "Export";
+    }
+
+    let link = document.createElement('a');
+    link.download = fileName + '.png';
+    link.href = image;
+    link.click();
+    link.remove();
+
+    let exportJson = '{"frames": [';
+    for(let n = 0, n_len = targets.length ; n < n_len; ++n) {
+        const target = targets[n];
+        if (target.fit) {
+            const x = Number(target.fit.x) + padding;
+            const y = Number(target.fit.y) + padding;
+            const w = Number(target.width);
+            const h = Number(target.height);
+
+            // Guessing format from https://github.com/phaserjs/examples/blob/master/public/assets/atlas/megaset-0.json
+            exportJson += '{ "filename": "' + target.name + '", ';
+            exportJson += '"frame": {"x":' + x + ',"y":' + y + ',"w":' + w + ',"h":' + h + '}, ';
+            exportJson += '"spriteSourceSize": {"x":0,"y":0,"w":' + w + ',"h":' + h + '},';
+            exportJson += '"sourceSize": {"w":' + w + ',"h":' + h + '},';
+            exportJson += '"pivot": {"x":0.5,"y":0.5} }';
+
+            if (n + 1 < n_len) {
+                exportJson += ", ";
+            }
+        }
+    }
+   
+    exportJson += ']}';
+
+    link = document.createElement('a');
+    link.download = fileName + '.json';
+    link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportJson);
+    link.click();
+    link.remove();
+} 
+</script> 
 </html>
