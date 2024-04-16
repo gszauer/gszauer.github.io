@@ -1,7 +1,7 @@
 export default class CardBase extends Phaser.GameObjects.Container {
     
     constructor(data) {
-        let { scene, x, y, name, sprite, depth} = data;
+        const { scene, x, y, name, sprite, depth} = data;
         
         const footerSprite = scene.add.sprite(0, 330, "set2", "BottomFrame.png");
         footerSprite.setOrigin(0, 0);
@@ -37,7 +37,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
     set Name(newName) {
         this.name = newName;
         this.nameText.text = this.name;
-        this.nameText.setScale(0.5, 0.5);
+        this.nameText.setScale(0.48, 0.48);
         this.nameText.maxWidth = this.footerSprite.width;
         this.nameText.setTint(0xe1b95c);
         this.nameText.x = this.footerSprite.width / 2 - this.nameText.width / 2;

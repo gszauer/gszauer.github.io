@@ -1,4 +1,5 @@
 import CardBase from "./CardBase.js";
+import CardMonster from "./CardMonster.js";
 
 export default class SceneDungeon extends Phaser.Scene {
     constructor() {
@@ -9,9 +10,12 @@ export default class SceneDungeon extends Phaser.Scene {
         this.load.atlas('set1', 'assets/set1.jpg', 'assets/set1.json');
         this.load.atlas('set2', 'assets/set2.png', 'assets/set2.json');
         this.load.bitmapFont('morgamon', 'assets/morgamon_0.png', 'assets/morgamon.fnt');
+        this.load.bitmapFont('magicstary', 'assets/magicstary_0.png', 'assets/magicstary.fnt');
         
         this.cardNameFont = 'morgamon';
+        this.cardValueFont = 'magicstary';
         this.cardNameFontSize  = 56;
+        this.cardValueFontSize  = 96;
         
         this.scaleFactor = 1.0;
         this.set1 = ["Anubis.png","Sword.png","Death.png","Justice.png","Merchant.png","TheEmperor.png","TheEmpress.png","TheFool.png","TheHangedMan.png","TheHeirophant.png","TheHermit.png","TheHighPriestess.png","TheMagician.png","TheMoon.png","TheStar.png","Treasure.png","ClownTown.png","Jester.png","Judgement.png","Ninja.png","SkullPile1.png","SkullPile2.png","SkullPile3.png","Strength.png","Temperance.png","TheChariot.png","TheDevil.png","TheLovers.png","TheSun.png","TheTower.png","TheWorld.png","WheelOfFortune.png","WhereWolf.png","Wizard.png","WorldKnight.png","Assasin.png"];
@@ -31,14 +35,22 @@ export default class SceneDungeon extends Phaser.Scene {
                 const x = i * cardWidth + cardPadding + cardPadding * i + padLeft;
                 const y = j * cardHeight + cardPadding + cardPadding * j;
 
-                let random =  Math.floor(Math.random() * this.set1.length);
+                let randomCard =  Math.floor(Math.random() * this.set1.length);
+                let randomValue = Math.floor(Math.random() * 21) + 1;
+                let randomType = "random"; // TODO: monster, heal, shield, sword, chest
 
-                new CardBase({
+                if (this.names1[randomCard] == "Dead Bones") {
+                    randomValue = -1;
+                }
+
+                new CardMonster({
                     scene: this, 
                     x: x, y: y, 
-                    name: this.names1[random],
-                    sprite: this.set1[random],
-                    depth: 1
+                    name: this.names1[randomCard],
+                    sprite: this.set1[randomCard],
+                    depth: 1,
+                    value: randomValue,
+                    type: randomType 
                 });
             }
         }
