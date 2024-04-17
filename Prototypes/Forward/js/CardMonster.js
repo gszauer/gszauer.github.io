@@ -10,7 +10,7 @@ export default class CardMonster extends CardBase {
         // values for self
         const { value, type } = data;
         
-        const valueSprite = scene.add.sprite(205, 2, "set2", "Value.png");
+        const valueSprite = scene.add.sprite(205, 2, scene.GetSet("Value.png"), "Value.png");
         valueSprite.setOrigin(0, 0);
 
         const valueText = new Phaser.GameObjects.BitmapText(scene, 0,0, 

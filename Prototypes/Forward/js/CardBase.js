@@ -3,7 +3,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
     constructor(data) {
         const { scene, x, y, name, sprite, depth} = data;
         
-        const footerSprite = scene.add.sprite(0, 330, "set2", "BottomFrame.png");
+        const footerSprite = scene.add.sprite(0, 370, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
         footerSprite.setOrigin(0, 0);
 
         let set = 'set1';
@@ -16,7 +16,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
 
         const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         
-        super(scene, x, y, [footerSprite, faceSprite, nameText]);
+        super(scene, x, y, [faceSprite, footerSprite, nameText]);
 
         this.depth = depth;
         this.scene = scene;
