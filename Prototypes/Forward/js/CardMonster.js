@@ -28,7 +28,6 @@ export default class CardMonster extends CardBase {
     set Value(newValue) {
         this.value = newValue;
         this.valueText.text = this.value;
-        this.valueText.maxWidth = this.valueSprite.width;
         this.valueText.setTint(0);
         this.valueText.x = this.valueSprite.x + this.valueSprite.width / 2 - this.valueText.width / 2;
         const valueSquareHeight = 107; // not: this.valueSprite.height

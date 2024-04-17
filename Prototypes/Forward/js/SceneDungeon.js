@@ -55,7 +55,7 @@ export default class SceneDungeon extends Phaser.Scene {
             }
         }
 
-        const playerY = numRows * cardHeight + cardPadding + cardPadding * numRows + padTop + 100;
+        const playerY = numRows * cardHeight + cardPadding + cardPadding * numRows + padTop + 120;
         const playerX = cardWidth + cardPadding + cardPadding + padLeft;
 
         new CardBase({
@@ -68,21 +68,37 @@ export default class SceneDungeon extends Phaser.Scene {
 
         const dividerSprite = this.add.sprite(0, 2, this.GetSet("Divider.png"), "Divider.png");
         dividerSprite.setOrigin(0, 0);
-        dividerSprite.y = playerY + cardHeight + cardPadding * 2 + 5;
+        dividerSprite.y = playerY + cardHeight + cardPadding  + 5;
         dividerSprite.setScale(8, 1);
 
-        const shieldSprite = this.add.sprite(40, 2, this.GetSet("Shield.png"), "Shield.png");
+        const shieldSprite = this.add.sprite(40, dividerSprite.y + cardPadding, this.GetSet("Shield.png"), "Shield.png");
         shieldSprite.setOrigin(0, 0);
-        shieldSprite.y = dividerSprite.y + cardPadding;
+
+        const shieldText = this.add.bitmapText(0, 0, this.cardValueFont, Math.floor(Math.random() * 21), this.cardValueFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        shieldText.x = (shieldSprite.x + shieldSprite.width / 2) - (shieldText.width / 2);
+        shieldText.y = (shieldSprite.y + shieldSprite.height / 2) - (shieldText.height / 2) + 5;
+        shieldText.setTint(0);
 
         const heartSprite = this.add.sprite(shieldSprite.x + shieldSprite.width + 100, shieldSprite.y, this.GetSet("Heart.png"), "Heart.png");
         heartSprite.setOrigin(0, 0);
 
+        const currentHeartText = this.add.bitmapText(0, 0, this.cardValueFont, Math.floor(Math.random() * 21) + 10, this.cardValueFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        currentHeartText.x = (heartSprite.x + heartSprite.width / 2) - (currentHeartText.width / 2);
+        currentHeartText.y = (heartSprite.y + heartSprite.height / 2) - (currentHeartText.height / 2);
+        currentHeartText.setTint(0);
+
         const coinSprite = this.add.sprite(heartSprite.x + heartSprite.width + 100, shieldSprite.y, this.GetSet("Coin.png"), "Coin.png");
         coinSprite.setOrigin(0, 0);
 
+        const coinText = this.add.bitmapText(0, 0, this.cardValueFont, Math.floor(Math.random() * 21), this.cardValueFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        coinText.x = (coinSprite.x + coinSprite.width / 2) - (coinText.width / 2) - 20;
+        coinText.y = (coinSprite.y + coinSprite.height / 2) - (coinText.height / 2) + 5;
+        coinText.setTint(0);
+
         const cogSprite = this.add.sprite(coinSprite.x + coinSprite.width + 100, shieldSprite.y - 5, this.GetSet("Cog.png"), "Cog.png");
         cogSprite.setOrigin(0, 0);
+
+
     }
 
     GetSet(spriteName) {
