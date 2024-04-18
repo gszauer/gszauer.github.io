@@ -1,5 +1,6 @@
 export default class CardBase extends Phaser.GameObjects.Container {
-    
+    static rotationCounter = 0;
+
     constructor(data) {
         const { scene, x, y, name, sprite, depth} = data;
 
@@ -29,13 +30,17 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.Name = name;
 
         this.setSize( footerSprite.width,  footerSprite.height + faceSprite.height); // TODO: footersprite.width, footerSprite.height + facesprite.height
-        this.setScale(0.95, 0.95); // To give wiggle room for rotation
+        this.setScale(0.92, 0.92); // To give wiggle room for rotation
 
-        if (Math.random() < 0.5) {
-            this.angle = -(Math.random() * 4);
+        const maxRotationDegrees = 3;
+        if (CardBase.rotationCounter++ % 2 == 0) {
+            this.angle = -(Math.random() * maxRotationDegrees);
         }
         else {
-            this.angle = Math.random() * 4;
+            this.angle = Math.random() * maxRotationDegrees;
+        }
+        if (CardBase.rotationCounter > 10) {
+            CardBase.rotationCounter -= 10;
         }
 
         this.scene.add.existing(this);
