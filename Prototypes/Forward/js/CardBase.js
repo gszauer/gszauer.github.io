@@ -10,19 +10,18 @@ export default class CardBase extends Phaser.GameObjects.Container {
         }
 
         const faceSprite = scene.add.sprite(0, 0, set, sprite);
-        faceSprite.setOrigin(0, 0);
-
-        const footerSprite = scene.add.sprite(0, faceSprite.height, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
-        footerSprite.setOrigin(0, 0);
+        const footerSprite = scene.add.sprite(0, faceSprite.height / 2, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
 
         const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         
-        const valueSprite = scene.add.sprite(205, 2, scene.GetSet("Value.png"), "Value.png");
-        valueSprite.setOrigin(0, 0);
+        const valueSprite = scene.add.sprite(0, 0, scene.GetSet("Value.png"), "Value.png");
+        valueSprite.y = -faceSprite.height / 2 + valueSprite.height / 2 + 2;
+        valueSprite.x = -faceSprite.width / 2 + valueSprite.width / 2 + 205;
 
         const valueText = new Phaser.GameObjects.BitmapText(scene, 0,0, 
             scene.cardValueFont, value, scene.cardValueFontSize, 
             Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        valueText.y = valueSprite.y - valueText.height / 2 - 10;
 
         super(scene, x, y, [faceSprite, footerSprite, valueSprite, nameText, valueText]);
 
@@ -36,10 +35,16 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.valueSprite = valueSprite;
 
         this.Name = name;
-        this.Value = value;
+        { //this.Value = value;
+            this.value = value;
+            this.valueText.text = this.value;
+            this.valueText.setTint(0);
+            this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
+        }
 
+        //this.setSize(scene.cardWidth, scene.cardHeight); 
+        //this.setOrigin(0.5, 0.5);
         this.setSize( footerSprite.width,  footerSprite.height + faceSprite.height); 
-        //this.setScale(0.92, 0.92); // To give wiggle room for rotation
 
         const maxRotationDegrees = 3;
         if (CardBase.rotationCounter++ % 2 == 0) {
@@ -61,34 +66,33 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.nameText.setScale(0.48, 0.48);
         this.nameText.maxWidth = this.footerSprite.width;
         this.nameText.setTint(0xe1b95c);
-        this.nameText.x = this.footerSprite.width / 2 - this.nameText.width / 2;
-        this.nameText.y = this.footerSprite.y + this.footerSprite.height / 2 - this.nameText.height / 2;
+        this.nameText.x = -this.nameText.width / 2;
+        this.nameText.y = this.footerSprite.y  - this.nameText.height / 2;
     }
 
     set Value(newValue) {
         this.value = newValue;
         this.valueText.text = this.value;
         this.valueText.setTint(0);
-        this.valueText.x = this.valueSprite.x + this.valueSprite.width / 2 - this.valueText.width / 2;
-        const valueSquareHeight = 107; // not: this.valueSprite.height
-        this.valueText.y = this.valueSprite.y + valueSquareHeight / 2 - this.valueText.height / 2;
+        this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
+       
 
         if (newValue < 0) {
-            this.valueSprite.visible = false;
-            this.valueText.visible = false;
+            this.valueSprite.setActive(false).setVisible(false);
+            this.valueText.setActive(false).setVisible(false);
         }
         else {
-            this.valueSprite.visible = true;
-            this.valueText.visible = true;
+            this.valueSprite.setActive(true).setVisible(true);
+            this.valueText.setActive(true).setVisible(true);
         }
     }
 
     SetVisibility(newValue) {
-        this.faceSprite.visible = newValue;
-        this.footerSprite.visible = newValue;
-        this.footerSprite.visible = newValue;
-        this.nameText.visible = newValue;
-        this.valueSprite.visible = newValue;
-        this.valueText.visible = newValue;
+        this.faceSprite.setActive(newValue).setVisible(newValue);
+        this.footerSprite.setActive(newValue).setVisible(newValue);
+        this.footerSprite.setActive(newValue).setVisible(newValue);
+        this.nameText.setActive(newValue).setVisible(newValue);
+        this.valueSprite.setActive(newValue).setVisible(newValue);
+        this.valueText.setActive(newValue).setVisible(newValue);
     }
 }
