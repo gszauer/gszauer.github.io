@@ -9,7 +9,7 @@ export default class SceneDungeon extends Phaser.Scene {
         this.load.atlas('set1', 'assets/set1.png', 'assets/set1.json');
         this.load.bitmapFont('morgamon', 'assets/morgamon_0.png', 'assets/morgamon.fnt');
         this.load.bitmapFont('magicstary', 'assets/magicstary_0.png', 'assets/magicstary.fnt');
-        this.load.image('background', 'assets/background.png');
+        this.load.image('background', 'assets/background.jpg');
         
         this.cardNameFont = 'morgamon';
         this.cardValueFont = 'magicstary';
