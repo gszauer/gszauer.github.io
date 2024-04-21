@@ -27,6 +27,7 @@ export default class CardPlayer extends CardBase {
 
         this.OnDragStart = null;
         this.OnDragEnd = null;
+        this.OnDrag = null;
         this.dragging = false;
 
         this.startX = x;
@@ -35,30 +36,43 @@ export default class CardPlayer extends CardBase {
         this.setInteractive();
         this.scene.input.setDraggable(this);
 
+        const self = this;
+
         this.scene.input.on('dragstart', (pointer, gameObject) => {
-            this.dragging = true;
-            this.setScale(1.1, 1.1); 
+            self.dragging = true;
+            self.setScale(1.1, 1.1); 
+            self.ApplyRandomRotation();
             // TODO: Set tint? Or Show moves? Not sure!
-            if (this.OnDragStart !== null) {
-                this.OnDragStart(pointer, gameObject);
+            if (self.OnDragStart !== null) {
+                self.OnDragStart(pointer, gameObject);
             }
         });
 
         this.scene.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            this.dragging = true;
+            self.dragging = true;
             gameObject.x = dragX;
             gameObject.y = dragY;
-        });
-        this.scene.input.on('dragend', (pointer, gameObject) => {
-            this.dragging = false;
-            this.setScale(1.0, 1.0); 
-            if (this.OnDragEnd !== null) {
-                this.OnDragEnd(pointer, gameObject);
+
+            if (self.OnDrag !== null) {
+                self.OnDrag(pointer, gameObject, dragX, dragY);
             }
-            gameObject.x = this.startX;
-            gameObject.y = this.startY;
+        });
+
+        this.scene.input.on('dragend', (pointer, gameObject) => {
+            gameObject.x = self.startX;
+            gameObject.y = self.startY;
+
+            self.dragging = false;
+            self.setScale(1.0, 1.0); 
+            self.ApplyRandomRotation();
+
+            if (self.OnDragEnd !== null) {
+                self.OnDragEnd(pointer, gameObject);
+            }
         });
     }
+
+
 
     set Value(newValue) {
         super.Value = newValue;

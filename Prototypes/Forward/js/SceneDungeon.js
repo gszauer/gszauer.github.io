@@ -1,5 +1,6 @@
 import CardBase from "./CardBase.js";
 import CardPlayer from "./CardPlayer.js";
+import EnemyGrid from "./EnemyGrid.js";
 
 export default class SceneDungeon extends Phaser.Scene {
     constructor() {
@@ -29,8 +30,6 @@ export default class SceneDungeon extends Phaser.Scene {
     create() {
         const numRows = 3;
         const numColumns = 3;
-        const padLeft = this.cardWidth / 2 + 10; // Add to card padding on left to center playing field
-        const padTop = 60;
 
         const cardWidth = this.cardWidth;
         const cardHeight = this.cardHeight;
@@ -44,37 +43,15 @@ export default class SceneDungeon extends Phaser.Scene {
         cogSprite.y -= cogSprite.height / 2 + cardPadding;
         cogSprite.setScale(0.90, 0.90);
 
-        const monsters = [];
-        for (let i = 0; i < numColumns; ++i) {
-            for (let j = 0; j < numRows; ++j) {
-                const x = (i * cardWidth)  + cardPadding + (cardPadding * i) + padLeft;
-                const y = (j * cardHeight) + cardPadding + (cardPadding * j) + padTop;
-
-                let randomCard =  Math.floor(Math.random() * this.set1.length);
-                let randomValue = Math.floor(Math.random() * 21) + 1;
-                let randomType = "random"; // TODO: monster, heal, shield, sword, chest, empty
-               
-                let monster = new CardBase({
-                    scene: this, 
-                    x: x, y: y, 
-                    name: this.names1[randomCard],
-                    sprite: this.set1[randomCard],
-                    depth: 1,
-                    value: randomValue,
-                    type: randomType 
-                });
-                monsters.push(monster);
-                //monster.SetVisibility(false);
-            }
-        }
+        let grid = new EnemyGrid(this);
+        
 
         const playerY = numRows * cardHeight + cardPadding + 
-                        cardPadding * numRows + padTop + 150;
-        const playerX = cardWidth + cardPadding + cardPadding + padLeft;
+                        cardPadding * numRows + 140;
 
         const player = new CardPlayer({
             scene: this, 
-            x: playerX, y: playerY, 
+            x: grid.xCoords[1], y: playerY, 
             name: "The Fool",
             sprite: "TheFool.png",
             depth: 1,
@@ -83,11 +60,33 @@ export default class SceneDungeon extends Phaser.Scene {
         });
 
         this.player = player;
-        this.monsters = monsters;
         this.cogSprite = cogSprite;
 
 
         this.Coins = Math.floor(Math.random() * 21) + 1;
+
+        this.player.OnDragStart = (pointer, gameObject) => {
+            grid.HighlightActive = true;
+        }
+
+        this.player.OnDrag = (pointer, gameObject, dragX, dragY) => {
+            grid.SetHighlightPosition(dragX, dragY);
+
+            
+        }
+
+        this.player.OnDragEnd = (pointer, gameObject) => {
+            grid.HighlightActive = false;
+            if (pointer.x < grid.xCoords[0] + this.cardWidth / 2) {
+                gameObject.x = grid.xCoords[0];
+            }
+            else if (pointer.x < grid.xCoords[1] + this.cardWidth / 2) {
+                gameObject.x = grid.xCoords[1];
+            }
+            else {
+                gameObject.x = grid.xCoords[2];
+            }
+        };
 
 
         // Debug code

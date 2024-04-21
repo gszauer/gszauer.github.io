@@ -42,10 +42,13 @@ export default class CardBase extends Phaser.GameObjects.Container {
             this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
         }
 
-        //this.setSize(scene.cardWidth, scene.cardHeight); 
-        //this.setOrigin(0.5, 0.5);
         this.setSize( footerSprite.width,  footerSprite.height + faceSprite.height); 
+        this.ApplyRandomRotation();
 
+        this.scene.add.existing(this);
+    }
+
+    ApplyRandomRotation() {
         const maxRotationDegrees = 3;
         if (CardBase.rotationCounter++ % 2 == 0) {
             this.angle = -(Math.random() * maxRotationDegrees);
@@ -53,11 +56,15 @@ export default class CardBase extends Phaser.GameObjects.Container {
         else {
             this.angle = Math.random() * maxRotationDegrees;
         }
-        if (CardBase.rotationCounter > 10) {
-            CardBase.rotationCounter -= 10;
+        if (CardBase.rotationCounter > 100) {
+            CardBase.rotationCounter -= 100;
         }
-
-        this.scene.add.existing(this);
+    }
+    
+    TintCard(color) {
+        this.faceSprite.tint = color;
+        this.footerSprite.tint = color;
+        this.valueSprite.tint = color;
     }
 
     set Name(newName) {
@@ -68,6 +75,10 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.nameText.setTint(0xe1b95c);
         this.nameText.x = -this.nameText.width / 2;
         this.nameText.y = this.footerSprite.y  - this.nameText.height / 2;
+    }
+
+    get Name() {
+        return this.name;
     }
 
     set Value(newValue) {
@@ -85,6 +96,10 @@ export default class CardBase extends Phaser.GameObjects.Container {
             this.valueSprite.setActive(true).setVisible(true);
             this.valueText.setActive(true).setVisible(true);
         }
+    }
+
+    get Value() {
+        return this.value;
     }
 
     SetVisibility(newValue) {
