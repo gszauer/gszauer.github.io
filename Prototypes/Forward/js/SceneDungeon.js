@@ -45,9 +45,9 @@ export default class SceneDungeon extends Phaser.Scene {
 
         let grid = new EnemyGrid(this);
         
-
+        const playerYOffset = (cardHeight + cardPadding) * 0.2;
         const playerY = numRows * cardHeight + cardPadding + 
-                        cardPadding * numRows + 140;
+                        cardPadding * numRows - playerYOffset + 140;
 
         const player = new CardPlayer({
             scene: this, 
@@ -55,7 +55,7 @@ export default class SceneDungeon extends Phaser.Scene {
             name: "The Fool",
             sprite: "TheFool.png",
             depth: 1,
-            value: 10,
+            value: 100,
             type: "fool" 
         });
 
@@ -63,7 +63,7 @@ export default class SceneDungeon extends Phaser.Scene {
         this.cogSprite = cogSprite;
 
 
-        this.Coins = Math.floor(Math.random() * 21) + 1;
+        this.Coins = Math.floor(Math.random() * 21) + 100;
 
         this.player.OnDragStart = (pointer, gameObject) => {
             grid.HighlightActive = true;
@@ -71,20 +71,17 @@ export default class SceneDungeon extends Phaser.Scene {
 
         this.player.OnDrag = (pointer, gameObject, dragX, dragY) => {
             grid.SetHighlightPosition(dragX, dragY);
-
-            
         }
 
         this.player.OnDragEnd = (pointer, gameObject) => {
+            const moveTarget = grid.TryToMove(gameObject, pointer.x, pointer.y);
             grid.HighlightActive = false;
-            if (pointer.x < grid.xCoords[0] + this.cardWidth / 2) {
-                gameObject.x = grid.xCoords[0];
-            }
-            else if (pointer.x < grid.xCoords[1] + this.cardWidth / 2) {
-                gameObject.x = grid.xCoords[1];
+
+            if (moveTarget < 0) {
+                gameObject.x = gameObject.startX;
             }
             else {
-                gameObject.x = grid.xCoords[2];
+                gameObject.x = gameObject.startX = grid.monsters[moveTarget].x;
             }
         };
 
@@ -109,6 +106,14 @@ export default class SceneDungeon extends Phaser.Scene {
 
     set Coins(newValue) {
         this.player.Value = newValue;
+    }
+
+    get Coins() {
+        return this.player.Value;
+    }
+
+    GetCoins() {
+        return this.player.Value;
     }
 
     GetSet(spriteName) {

@@ -75,17 +75,24 @@ export default class CardPlayer extends CardBase {
 
 
     set Value(newValue) {
-        super.Value = newValue;
 
         if (newValue < 0) { // Always show coins
             this.valueSprite.setActive(true).setVisible(true);
             this.valueText.setActive(true).setVisible(true);
+            super.Value = 0;
+        }
+        else {
+            super.Value = newValue;
         }
         this.valueText.x = (this.valueSprite.x) - (this.valueText.width / 2) - 20;
 
         if (this.OnValueChanged != null) {
             this.OnValueChanged(newValue);
         }
+    }
+
+    get Value() {
+        return super.Value;
     }
 
     SetVisibility(newValue) {

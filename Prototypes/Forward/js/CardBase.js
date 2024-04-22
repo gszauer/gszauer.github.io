@@ -10,7 +10,8 @@ export default class CardBase extends Phaser.GameObjects.Container {
         }
 
         const faceSprite = scene.add.sprite(0, 0, set, sprite);
-        const footerSprite = scene.add.sprite(0, faceSprite.height / 2, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
+        const footerSprite = scene.add.sprite(0, 0, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
+        footerSprite.y = faceSprite.height / 2 + footerSprite.height / 2;
 
         const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         

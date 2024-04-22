@@ -33,9 +33,10 @@ export default class EnemyGrid {
             halfStage.h + (cardHeight + cardPadding),
         ];
         // Adjust to go off screen
-        yCoords[0] -= cardHeight + cardPadding * 2;
-        yCoords[1] -= cardHeight + cardPadding * 2;
-        yCoords[2] -= cardHeight + cardPadding * 2;
+        const yOFfset = cardHeight + cardPadding * 2 + (cardHeight + cardPadding) * 0.2;
+        yCoords[0] -= yOFfset;
+        yCoords[1] -= yOFfset;
+        yCoords[2] -= yOFfset;
 
         const monsters = [];
         for (let i = 0; i < numColumns; ++i) {
@@ -65,6 +66,9 @@ export default class EnemyGrid {
         this._highlightActive = false;
         this.cardHeight = cardHeight;
         this.cardWidth = cardWidth;
+        this.cardPadding = cardPadding;
+        this.scene = scene;
+        this.yOffset = yOFfset;
     }
 
     get HighlightActive() {
@@ -78,9 +82,8 @@ export default class EnemyGrid {
         }
     }
 
-    SetHighlightPosition(x, y) {
+    _GetTargetIndex(x, y) {
         let highlight = -1;
-
         const allowHighlight = y <= this.yCoords[2] + this.cardHeight + this.cardHeight / 2;
         
         if (allowHighlight && this._highlightActive) {
@@ -95,6 +98,12 @@ export default class EnemyGrid {
                 highlight = 8;
             }
         }
+
+        return highlight;
+    }
+
+    SetHighlightPosition(x, y) {
+        const highlight = this._GetTargetIndex(x, y);
         
         let color = 0xFFFFFF;
         for (let i = 0, size = this.monsters.length; i < size; ++i) {
@@ -104,5 +113,104 @@ export default class EnemyGrid {
         if (highlight >= 0) {
             this.monsters[highlight].TintCard(0xCCCC88);
         }
+    }
+
+    TryToMove(gameObject, x, y) {
+        const targetIndex = this._GetTargetIndex(x, y);
+        
+        if (targetIndex < 0) {
+            return -1;
+        }
+        
+        const playerIndex = this._GetTargetIndex(gameObject.x, this.yCoords[2]);
+        
+        if (playerIndex == targetIndex) {
+            // Always allow?
+        }
+        else if (playerIndex == 2 || playerIndex == 8) {
+            if (targetIndex != 5) {
+                return -1;
+            }
+        }
+        else if (playerIndex == 5) {
+            if (targetIndex != 2 && targetIndex != 8) {
+                return -1;
+            }
+        }
+        else {
+            return -1;
+        }
+
+
+        const monster = this.monsters[targetIndex];
+
+        this.scene.Coins -= monster.Value;
+        if (this.scene.Coins > 0) {
+            console.error("Kill Monster Sequence Start");
+            monster.Value = 0;
+            this.scene.tweens.add({ // Flash
+                targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
+                alpha: 0,
+                duration: 120,
+                repeat: 1,
+                yoyo: true,
+            });
+
+            setTimeout(() => {
+                const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
+                const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
+                const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
+                this.scene.tweens.add( {
+                    targets: row1,
+                    duration: 400,
+                    y: this.yCoords[1],
+                });
+                this.scene.tweens.add( {
+                    targets: row2,
+                    duration: 400,
+                    y: this.yCoords[2],
+                });
+                this.scene.tweens.add( {
+                    targets: row3,
+                    duration: 400,
+                    y: this.yCoords[2] + this.cardHeight + this.cardPadding,
+                });
+                this.scene.tweens.add( {
+                    targets: row3,
+                    duration: 400,
+                    alpha: 0,
+                    onComplete: () => {
+                        console.error("Monster Killed, move stack down started");
+                        for (let i = 0; i < 3; ++i) {
+                            row1[i].y = this.yCoords[0];
+                            row2[i].y = this.yCoords[1];
+                            row3[i].y = this.yCoords[2];
+                            row3[i].alpha = 1;
+
+                            row3[i].Value = row2[i].Value;
+                            row3[i].Name  = row2[i].Name;
+                            row3[i].angle = row2[i].angle;
+                            row3[i].faceSprite.setFrame(row2[i].faceSprite.frame.name);
+
+                            row2[i].Value = row1[i].Value;
+                            row2[i].Name  = row1[i].Name;
+                            row2[i].angle = row1[i].angle;
+                            row2[i].faceSprite.setFrame(row1[i].faceSprite.frame.name);
+
+                            // Redo Row 1
+                        }
+
+                    } 
+                });
+            }, 100);
+            // Kill Monster
+        }
+        else {
+            // Kill player
+            console.error("Kill Player");
+        }
+
+        
+        return targetIndex;
     }
 }
