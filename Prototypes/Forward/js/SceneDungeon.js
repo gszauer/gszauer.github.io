@@ -63,15 +63,18 @@ export default class SceneDungeon extends Phaser.Scene {
         this.grid = grid;
         this.cogSprite = cogSprite;
 
-
-        this.Coins = Math.floor(Math.random() * 21) + 100;
+        this.Reset();
 
         this.player.OnDragStart = (pointer, gameObject) => {
             grid.HighlightActive = true;
+            gameObject.x = pointer.x;
+            gameObject.y = pointer.y;
         }
 
         this.player.OnDrag = (pointer, gameObject, dragX, dragY) => {
-            grid.SetHighlightPosition(dragX, dragY);
+            grid.SetHighlightPosition(pointer.x, pointer.y);
+            gameObject.x = pointer.x;
+            gameObject.y = pointer.y;
         }
 
         this.player.OnDragEnd = (pointer, gameObject) => {
@@ -108,7 +111,7 @@ export default class SceneDungeon extends Phaser.Scene {
     Reset() {
         this.player.x = this.grid.xCoords[1];
         this.player.startX = this.grid.xCoords[1];
-        this.player.Value = 100;
+        this.player.Value = 15;
     }
 
     set Coins(newValue) {
@@ -129,5 +132,9 @@ export default class SceneDungeon extends Phaser.Scene {
 
     update(time, delta) {
        
+    }
+
+    GenerateNextCardValue() {
+        return Math.floor(Math.random() * 9) + 1;
     }
 }

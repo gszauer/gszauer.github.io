@@ -41,21 +41,21 @@ export default class EnemyGrid {
         const monsters = [];
         for (let i = 0; i < numColumns; ++i) {
             for (let j = 0; j < numRows; ++j) {
-                let randomCard =  Math.floor(Math.random() * scene.set1.length);
-                let randomValue = Math.floor(Math.random() * 21) + 1;
-                let randomType = "random"; 
-               
                 let monster = new CardBase({
                     scene: scene, 
                     x: xCoords[i], y: yCoords[j], 
-                    name: scene.names1[randomCard],
-                    sprite: scene.set1[randomCard],
+                    name: "The Fool",
+                    sprite: "TheFool.png",
                     depth: 1,
-                    value: randomValue,
-                    type: randomType 
+                    value: 0,
+                    type: "random" 
                 });
+
                 monsters.push(monster);
             }
+        }
+        for (let i = 0, size = monsters.length; i < size; ++i) {
+            monsters[i].ReplaceWithRandom(monsters);
         }
 
         this.xCoords = xCoords;
@@ -78,7 +78,7 @@ export default class EnemyGrid {
     set HighlightActive(newVal) {
         this._highlightActive = newVal;
         if (!newVal) {
-            this.SetHighlightPosition(0, 0); // unhighlight
+            this.SetHighlightPosition(0, this.scene.game.config.height); // unhighlight
         }
     }
 
@@ -87,7 +87,6 @@ export default class EnemyGrid {
         const allowHighlight = y <= this.yCoords[2] + this.cardHeight + this.cardHeight / 2;
         
         if (allowHighlight && this._highlightActive) {
-            const last = this.monsters.length - 1;
             if (x < this.xCoords[0] + this.cardWidth / 2) {
                 highlight = 2;
             }
@@ -99,19 +98,50 @@ export default class EnemyGrid {
             }
         }
 
+        if (highlight < 0) {
+            return -1;
+        }
+
+        let player = -1;
+        const playerX = this.scene.player.startX;
+        if (playerX < this.xCoords[0] + this.cardWidth / 2) {
+            player = 2;
+        }
+        else if (playerX < this.xCoords[1] + this.cardWidth / 2) {
+            player = 5;
+        }
+        else {
+            player = 8;
+        }
+
+
+        if (player == highlight) {
+            // Always allow?
+        }
+        else if (player == 2 || player == 8) {
+            if (highlight != 5) {
+                highlight = -1;
+            }
+        }
+        else if (player == 5) {
+            if (highlight != 2 && highlight != 8) {
+                highlight = -1;
+            }
+        }
+
         return highlight;
     }
 
     SetHighlightPosition(x, y) {
-        const highlight = this._GetTargetIndex(x, y);
+        let targetIndex = this._GetTargetIndex(x, y);
         
         let color = 0xFFFFFF;
         for (let i = 0, size = this.monsters.length; i < size; ++i) {
             this.monsters[i].TintCard(color);
         }
 
-        if (highlight >= 0) {
-            this.monsters[highlight].TintCard(0xCCCC88);
+        if (targetIndex >= 0) {
+            this.monsters[targetIndex].TintCard(0xCCCC88);
         }
     }
 
@@ -123,26 +153,6 @@ export default class EnemyGrid {
         if (targetIndex < 0) {
             return -1;
         }
-        
-        const playerIndex = this._GetTargetIndex(gameObject.x, this.yCoords[2]);
-        
-        if (playerIndex == targetIndex) {
-            // Always allow?
-        }
-        else if (playerIndex == 2 || playerIndex == 8) {
-            if (targetIndex != 5) {
-                return -1;
-            }
-        }
-        else if (playerIndex == 5) {
-            if (targetIndex != 2 && targetIndex != 8) {
-                return -1;
-            }
-        }
-        else {
-            return -1;
-        }
-
 
         const monster = this.monsters[targetIndex];
 
@@ -190,7 +200,7 @@ export default class EnemyGrid {
 
                             row3[i].ReplaceWith(row2[i]);
                             row2[i].ReplaceWith(row1[i]);
-                            row1[i].ReplaceWithRandom();
+                            row1[i].ReplaceWithRandom(this.monsters);
 
                             row3[i].alpha = 1;
 
@@ -212,6 +222,7 @@ export default class EnemyGrid {
                     this.scene.Reset();
                 }
             });
+            // Kill Player
         }
 
         

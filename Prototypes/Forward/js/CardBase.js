@@ -62,12 +62,35 @@ export default class CardBase extends Phaser.GameObjects.Container {
         }
     }
 
-    ReplaceWithRandom() {
+    ReplaceWithRandom(set) {
         const scene = this.scene;
         
-        const randomCard =  Math.floor(Math.random() * scene.set1.length);
-        const randomValue = Math.floor(Math.random() * 21) + 1;
-        const name = scene.names1[randomCard];
+        if (set === undefined || set === null) {
+            set = [];
+        }
+        let randomCard =  Math.floor(Math.random() * scene.set1.length);
+        let randomCardName =  scene.names1[randomCard];
+        while(true) {
+            let contains = false;
+            if (randomCardName != "The Fool") {
+                for (let i = 0, size = set.length; i < size; ++i) {
+                    if (set[i].Name == randomCardName) {
+                        contains = true;
+                        break;
+                    }
+                }
+
+                if (!contains) {
+                    break;
+                }
+            }
+
+            randomCard =  Math.floor(Math.random() * scene.set1.length);
+            randomCardName =  scene.names1[randomCard];
+        }
+
+        const randomValue = this.scene.GenerateNextCardValue();
+        const name = randomCardName;
         const sprite = scene.set1[randomCard];
 
         this.Value = randomValue;
