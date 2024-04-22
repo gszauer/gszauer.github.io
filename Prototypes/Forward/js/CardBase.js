@@ -61,6 +61,27 @@ export default class CardBase extends Phaser.GameObjects.Container {
             CardBase.rotationCounter -= 100;
         }
     }
+
+    ReplaceWithRandom() {
+        const scene = this.scene;
+        
+        const randomCard =  Math.floor(Math.random() * scene.set1.length);
+        const randomValue = Math.floor(Math.random() * 21) + 1;
+        const name = scene.names1[randomCard];
+        const sprite = scene.set1[randomCard];
+
+        this.Value = randomValue;
+        this.Name  = name;
+        this.faceSprite.setFrame(sprite);
+        this.ApplyRandomRotation();
+    }
+
+    ReplaceWith(other) {
+        this.Value = other.Value;
+        this.Name  = other.Name;
+        this.angle = other.angle;
+        this.faceSprite.setFrame(other.faceSprite.frame.name);
+    }
     
     TintCard(color) {
         this.faceSprite.tint = color;

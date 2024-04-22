@@ -115,6 +115,8 @@ export default class EnemyGrid {
         }
     }
 
+   
+
     TryToMove(gameObject, x, y) {
         const targetIndex = this._GetTargetIndex(x, y);
         
@@ -146,7 +148,8 @@ export default class EnemyGrid {
 
         this.scene.Coins -= monster.Value;
         if (this.scene.Coins > 0) {
-            console.error("Kill Monster Sequence Start");
+            this.scene.player.disableInteractive();
+
             monster.Value = 0;
             this.scene.tweens.add({ // Flash
                 targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
@@ -180,34 +183,35 @@ export default class EnemyGrid {
                     duration: 400,
                     alpha: 0,
                     onComplete: () => {
-                        console.error("Monster Killed, move stack down started");
                         for (let i = 0; i < 3; ++i) {
                             row1[i].y = this.yCoords[0];
                             row2[i].y = this.yCoords[1];
                             row3[i].y = this.yCoords[2];
+
+                            row3[i].ReplaceWith(row2[i]);
+                            row2[i].ReplaceWith(row1[i]);
+                            row1[i].ReplaceWithRandom();
+
                             row3[i].alpha = 1;
 
-                            row3[i].Value = row2[i].Value;
-                            row3[i].Name  = row2[i].Name;
-                            row3[i].angle = row2[i].angle;
-                            row3[i].faceSprite.setFrame(row2[i].faceSprite.frame.name);
-
-                            row2[i].Value = row1[i].Value;
-                            row2[i].Name  = row1[i].Name;
-                            row2[i].angle = row1[i].angle;
-                            row2[i].faceSprite.setFrame(row1[i].faceSprite.frame.name);
-
-                            // Redo Row 1
+                            this.scene.player.setInteractive();
                         }
-
                     } 
                 });
             }, 100);
             // Kill Monster
         }
         else {
-            // Kill player
-            console.error("Kill Player");
+            this.scene.tweens.add({ // Flash
+                targets: [this.scene.player],
+                alpha: 0,
+                duration: 120,
+                repeat: 1,
+                yoyo: true,
+                onComplete: () => {
+                    this.scene.Reset();
+                }
+            });
         }
 
         

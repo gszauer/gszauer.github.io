@@ -60,6 +60,7 @@ export default class SceneDungeon extends Phaser.Scene {
         });
 
         this.player = player;
+        this.grid = grid;
         this.cogSprite = cogSprite;
 
 
@@ -102,6 +103,12 @@ export default class SceneDungeon extends Phaser.Scene {
                 monsters[i].SetVisibility(true);
             }
         });
+    }
+
+    Reset() {
+        this.player.x = this.grid.xCoords[1];
+        this.player.startX = this.grid.xCoords[1];
+        this.player.Value = 100;
     }
 
     set Coins(newValue) {
