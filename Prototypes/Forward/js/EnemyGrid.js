@@ -44,8 +44,8 @@ export default class EnemyGrid {
                 let monster = new CardBase({
                     scene: scene, 
                     x: xCoords[i], y: yCoords[j], 
-                    name: "The Fool",
-                    sprite: "TheFool.png",
+                    name: "",
+                    sprite: "CardBackTopOnly.png",
                     depth: 1,
                     value: 0,
                     type: "random" 
@@ -55,7 +55,7 @@ export default class EnemyGrid {
             }
         }
         for (let i = 0, size = monsters.length; i < size; ++i) {
-            monsters[i].ReplaceWithRandom(monsters);
+            monsters[i].Value = 0;
         }
 
         this.cardBacks = [
@@ -186,104 +186,71 @@ export default class EnemyGrid {
 
         const monster = this.monsters[targetIndex];
 
-        if (monster.cardType == "monster" || monster.cardType == "coin") {
-            if (monster.cardType == "monster") {
-                this.scene.Coins -= monster.Value;
-            }
-            else {
-                this.scene.Coins += monster.Value;
+        if (monster.cardType == "empty") {
+            
+        }
+        else if (monster.cardType == "sword") {
+            let deadMonsters = [];
+
+            for (let i = 0; i < this.numColumns * this.numRows; ++i) {
+                const target = this.monsters[i];
+                if (target.cardType == "monster" && target.Value > 0) {
+                    target.Value -= monster.Value;
+                    if (target.Value <= 0) {
+                        target.Value = 0;
+                        deadMonsters.push(target);
+                    }
+                }
             }
 
-            if (this.scene.Coins > 0) {
+            if (deadMonsters.length > 0) {
                 this.scene.player.disableInteractive();
 
-                monster.Value = 0;
-                this.scene.tweens.add({ // Flash
-                    targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
+                this.scene.tweens.add({ // Flash dead monsters
+                    targets: deadMonsters,
                     alpha: 0,
-                    duration: 120,
+                    duration: 100,
                     repeat: 1,
                     yoyo: true,
-                });
-
-                setTimeout(() => {
-                    this.SetCardBackVisibility(true);
-                    this.PositionCardBacksAtRow0();
-
-                    const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
-                    const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
-                    const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
-                    this.scene.tweens.add( {
-                        targets: this.cardBacks,
-                        duration: 400,
-                        y: this.yCoords[0],
-                    });
-                    this.scene.tweens.add( {
-                        targets: row1,
-                        duration: 400,
-                        y: this.yCoords[1],
-                    });
-                    this.scene.tweens.add( {
-                        targets: row2,
-                        duration: 400,
-                        y: this.yCoords[2],
-                    });
-                    this.scene.tweens.add( {
-                        targets: row3,
-                        duration: 400,
-                        y: this.yCoords[2] + this.cardHeight + this.cardPadding,
-                    });
-                    this.scene.tweens.add( {
-                        targets: row3,
-                        duration: 400,
-                        alpha: 0,
-                        onComplete: () => {
-                            for (let i = 0; i < 3; ++i) {
-                                row1[i].y = this.yCoords[0];
-                                row2[i].y = this.yCoords[1];
-                                row3[i].y = this.yCoords[2];
-
-                                row3[i].ReplaceWith(row2[i]);
-                                row2[i].ReplaceWith(row1[i]);
-                                row1[i].ReplaceWithRandom(this.monsters);
-
-                                let randomNumber = Math.floor(Math.random() * 18);
-                                if (randomNumber == 0 || randomNumber == 7 || randomNumber == 12) { //One in three chance for a coin
-                                    row1[i].ReplaceWithCoin();
+                    onComplete: () => {
+                        this.scene.tweens.add( { // Flip dead monsters
+                            targets: deadMonsters,
+                            duration: 150,
+                            scaleX: 0,
+                            onComplete: () => {
+                                for (let i = 0, len = deadMonsters.length; i < len; ++i) {
+                                    deadMonsters[i].ReplaceOnDeath();
                                 }
-                                else {
-                                    randomNumber = Math.floor(Math.random() * 24);
-                                    if (randomNumber == 1 || randomNumber == 4 || randomNumber == 11 || randomNumber == 17) { //One in three
-                                        //row1[i].ReplaceWithSword();
+
+                                this.scene.tweens.add( { // Flip them back!
+                                    targets: deadMonsters,
+                                    duration: 150,
+                                    scaleX: 1,
+                                    onComplete: () => {
+                                        this._AdvanceBoard(monster);
                                     }
-                                }
-
-                                row3[i].alpha = 1;
-                                row1[i].scaleX = 0;
+                                });
                             }
-
-                            this.scene.player.setInteractive();
-
-                            this.scene.tweens.add( {
-                                targets: this.cardBacks,
-                                duration: 300,
-                                scaleX: 0,
-                                onComplete: () => {
-                                    this.scene.tweens.add( {
-                                        targets: row1,
-                                        duration: 300,
-                                        scaleX: 1,
-                                        onComplete: () => {
-                                        }
-                                    });
-                                }
-                            });
-                        } 
-                    });
-                }, 100);
-                // Kill Monster
+                        });
+                    }
+                });
             }
             else {
+                this._AdvanceBoard(monster);
+            }
+        }
+        else if (monster.cardType == "coin") {
+            this.scene.Coins += monster.Value;
+            this._AdvanceBoard(monster);
+        }
+        else if (monster.cardType == "monster") {
+            this.scene.Coins -= monster.Value;
+
+            if (this.scene.Coins > 0) { // Kill Monster
+                monster.Value = 0;
+                this._AdvanceBoard(monster);
+            }
+            else { // Kill Player
                 this.scene.tweens.add({ // Flash
                     targets: [this.scene.player],
                     alpha: 0,
@@ -294,10 +261,142 @@ export default class EnemyGrid {
                         this.scene.Reset();
                     }
                 });
-                // Kill Player
+                
             }
         }
         
         return targetIndex;
+    }
+
+    _AdvanceBoard(monster) {
+        this.scene.player.disableInteractive();
+        this.scene.tweens.add({ // Flash
+            targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
+            alpha: 0,
+            duration: 120,
+            repeat: 1,
+            yoyo: true,
+        });
+
+        setTimeout(() => {
+            this.SetCardBackVisibility(true);
+            this.PositionCardBacksAtRow0();
+
+            const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
+            const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
+            const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
+            this.scene.tweens.add( {
+                targets: this.cardBacks,
+                duration: 400,
+                y: this.yCoords[0],
+            });
+            this.scene.tweens.add( {
+                targets: row1,
+                duration: 400,
+                y: this.yCoords[1],
+            });
+            this.scene.tweens.add( {
+                targets: row2,
+                duration: 400,
+                y: this.yCoords[2],
+            });
+            this.scene.tweens.add( {
+                targets: row3,
+                duration: 400,
+                y: this.yCoords[2] + this.cardHeight + this.cardPadding,
+            });
+            this.scene.tweens.add( {
+                targets: row3,
+                duration: 400,
+                alpha: 0,
+                onComplete: () => {
+                    for (let i = 0; i < 3; ++i) {
+                        row1[i].y = this.yCoords[0];
+                        row2[i].y = this.yCoords[1];
+                        row3[i].y = this.yCoords[2];
+
+                        row3[i].ReplaceWith(row2[i]);
+                        row2[i].ReplaceWith(row1[i]);
+                        row1[i].ReplaceWithRandom(this.monsters);
+
+                        let randomNumber = Math.floor(Math.random() * 18);
+                        if (randomNumber == 0 || randomNumber == 7 || randomNumber == 12) { //One in three chance for a coin
+                            row1[i].ReplaceWithCoin();
+                        }
+                        else {
+                            randomNumber = Math.floor(Math.random() *  24);
+                            if (randomNumber == 1 || randomNumber == 4 || randomNumber == 11 || randomNumber == 17) { //One in three
+                                row1[i].ReplaceWithSword();
+                            }
+                        }
+
+                        row3[i].alpha = 1;
+                        row1[i].scaleX = 0;
+                    }
+
+                    this.scene.player.setInteractive();
+
+                    this.scene.tweens.add( {
+                        targets: this.cardBacks,
+                        duration: 300,
+                        scaleX: 0,
+                        onComplete: () => {
+                            this.scene.tweens.add( {
+                                targets: row1,
+                                duration: 300,
+                                scaleX: 1,
+                                onComplete: () => {
+                                }
+                            });
+                        }
+                    });
+                } 
+            });
+        }, 100);
+    }
+
+    Reset() {
+        this.scene.player.disableInteractive();
+
+        this.scene.tweens.add( { // Flip  monsters
+            targets: this.monsters,
+            duration: 300,
+            scaleX: 0,
+            onComplete: () => {
+                for (let i = 0, len = this.monsters.length; i < len; ++i) {
+                    this.monsters[i].ReplaceWithRandom(this.monsters);
+                }
+
+                const limit = Math.floor(Math.random() * 2) + 1;
+                for (let i = 0; i < limit; ++i) {
+                    let rando = Math.floor(Math.random() * 3);
+                    if (rando == 0) {
+                        rando = 1;
+                    }
+                    else if (rando == 1) {
+                        rando = 4;
+                    }
+                    else if (rando == 2) {
+                        rando = 7;
+                    }
+
+                    if (this.monsters[0]._OneInFive()) {
+                        this.monsters[rando].ReplaceWithCoin();
+                    }
+                    else if (this.monsters[0]._OneInFive()) {
+                        this.monsters[rando].ReplaceWithSword();
+                    }
+                }
+
+                this.scene.tweens.add( { // Flip them back!
+                    targets: this.monsters,
+                    duration: 300,
+                    scaleX: 1,
+                    onComplete: () => {
+                        this.scene.player.setInteractive();
+                    }
+                });
+            }
+        });
     }
 }

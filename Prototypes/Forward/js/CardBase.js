@@ -115,14 +115,14 @@ export default class CardBase extends Phaser.GameObjects.Container {
     ReplaceWithCoin() {
         this.cardType = "coin";
         this.Value = this.scene.GenerateNextCardValue();
-        this.Name  = this.value + " Coins";
+        this.Name  = "Coins";
         this.faceSprite.setFrame("Coins.png");
     }
 
     ReplaceWithSword() {
         this.cardType = "sword";
         this.Value = this.scene.GenerateNextCardValue();
-        this.Name  = this.value + " Attack";
+        this.Name  = "Sword";
         this.faceSprite.setFrame("Sword.png");
     }
 
@@ -132,6 +132,39 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.angle = other.angle;
         this.cardType = other.cardType;
         this.faceSprite.setFrame(other.faceSprite.frame.name);
+    }
+
+    ReplaceOnDeath() {
+        if (this._OneInFive()) { // Make coin
+            this.ReplaceWithCoin();
+            this.Value = Math.floor(Math.random() * 3) + 1;
+        }
+        else if (this._OneInFive()) { // Make Sword
+            this.ReplaceWithSword();
+            this.Value = Math.floor(Math.random() * 4) + 1;
+        }
+        else if (this._OneInTen()) { // Make monster
+            this.ReplaceWithRandom(this.scene.grid.monsters);
+            this.Value = 1;
+        }
+        else {
+            this.cardType = "monster";
+            this.Value = 0;
+            this.Name  = "dead";
+            this.faceSprite.setFrame("DeadMonster.png");
+        }
+    }
+
+    _OneInFive() {
+        return Math.floor(Math.random() * 5) == 3;
+    }
+
+    _OneInTen() {
+        return Math.floor(Math.random() * 10) == 7;
+    }
+
+    _OneInTwenty() {
+        return Math.floor(Math.random() * 20) == 13;
     }
     
     TintCard(color) {
@@ -161,7 +194,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
        
 
-        if (newValue < 0) {
+        if (newValue <= 0) {
             this.valueSprite.setActive(false).setVisible(false);
             this.valueText.setActive(false).setVisible(false);
         }

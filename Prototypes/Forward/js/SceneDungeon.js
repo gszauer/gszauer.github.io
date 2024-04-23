@@ -109,6 +109,7 @@ export default class SceneDungeon extends Phaser.Scene {
         this.player.x = this.grid.xCoords[1];
         this.player.startX = this.grid.xCoords[1];
         this.player.Value = 15;
+        this.grid.Reset();
     }
 
     set Coins(newValue) {
