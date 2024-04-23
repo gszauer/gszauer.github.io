@@ -13,7 +13,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
         const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         
         const valueSprite = scene.add.sprite(0, 0, scene.GetSet("Value.png"), "Value.png");
-        valueSprite.y = -faceSprite.height / 2 + valueSprite.height / 2 + 2;
+        valueSprite.y = faceSprite.y - faceSprite.height / 2 + valueSprite.height / 2 + 2;
         valueSprite.x = -faceSprite.width / 2 + valueSprite.width / 2 + 205;
 
         const valueText = new Phaser.GameObjects.BitmapText(scene, 0,0, 
