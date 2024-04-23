@@ -18,7 +18,6 @@ export default class SceneDungeon extends Phaser.Scene {
         this.cardNameFontSize  = 56;
         this.cardValueFontSize  = 96;
         
-        this.scaleFactor = 1.0;
         this.set1 = [ "Death.png", "Justice.png", "Strength.png", "TheEmperor.png", "TheEmpress.png", "TheFool.png", "TheHangedMan.png", "TheHeriophant.png", "TheHermit.png", "TheHighPriestess.png", "TheMagician.png", "TheMoon.png", "TheStar.png", "TheSun.png", "TheTower.png", "Judgement.png", "Temperance.png", "TheChariot.png", "TheDevil.png", "TheLovers.png", "TheWheelOfFortune.png" ];
         this.names1 = [ "Death", "Justice", "Strength", "The Emperor", "The Empress", "The Fool", "The HangedMan", "The Heriophant", "The Hermit", "The High Priestess", "The Magician", "The Moon", "The Star", "The Sun", "The Tower", "Judgement", "Temperance", "The Chariot", "The Devil", "The Lovers", "The Wheel Of Fortune" ];
    
@@ -45,9 +44,7 @@ export default class SceneDungeon extends Phaser.Scene {
 
         let grid = new EnemyGrid(this);
         
-        const playerYOffset = (cardHeight + cardPadding) * 0.2;
-        const playerY = numRows * cardHeight + cardPadding + 
-                        cardPadding * numRows - playerYOffset + 140;
+        const playerY = (numRows * cardHeight) + (numRows * cardHeight  / 2) - grid.yOffset + (cardPadding * numRows) + cardPadding;
 
         const player = new CardPlayer({
             scene: this, 
@@ -68,13 +65,13 @@ export default class SceneDungeon extends Phaser.Scene {
         this.player.OnDragStart = (pointer, gameObject) => {
             grid.HighlightActive = true;
             gameObject.x = pointer.x;
-            gameObject.y = pointer.y;
+            gameObject.y = pointer.y - this.cardHeight / 3;
         }
 
         this.player.OnDrag = (pointer, gameObject, dragX, dragY) => {
             grid.SetHighlightPosition(pointer.x, pointer.y);
             gameObject.x = pointer.x;
-            gameObject.y = pointer.y;
+            gameObject.y = pointer.y - this.cardHeight / 3;
         }
 
         this.player.OnDragEnd = (pointer, gameObject) => {

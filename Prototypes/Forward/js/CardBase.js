@@ -4,14 +4,11 @@ export default class CardBase extends Phaser.GameObjects.Container {
     constructor(data) {
         const { scene, x, y, name, sprite, depth, value, type} = data;
 
-        let set = 'set1';
-        if (!scene.set1.includes(sprite)) {
-            set = 'set2';
-        }
+        const faceSprite = scene.add.sprite(0, 0, scene.GetSet(sprite), sprite);
+        faceSprite.y -= (scene.cardHeight - faceSprite.height) / 2;
 
-        const faceSprite = scene.add.sprite(0, 0, set, sprite);
         const footerSprite = scene.add.sprite(0, 0, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
-        footerSprite.y = faceSprite.height / 2 + footerSprite.height / 2;
+        footerSprite.y = (faceSprite.height / 2 + footerSprite.height / 2) - (scene.cardHeight - faceSprite.height) / 2;
 
         const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         
@@ -43,7 +40,9 @@ export default class CardBase extends Phaser.GameObjects.Container {
             this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
         }
 
-        this.setSize( footerSprite.width,  footerSprite.height + faceSprite.height); 
+        this.setSize(footerSprite.width,  footerSprite.height + faceSprite.height); 
+        //console.log("size: " + (footerSprite.height + faceSprite.height))
+        //this.setOrigin(0.5, 0.5);
         this.ApplyRandomRotation();
 
         this.scene.add.existing(this);
@@ -60,6 +59,22 @@ export default class CardBase extends Phaser.GameObjects.Container {
         if (CardBase.rotationCounter > 100) {
             CardBase.rotationCounter -= 100;
         }
+
+        //this.angle = 0;
+    }
+
+    static GetRandomRotation() {
+        const maxRotationDegrees = 3;
+        let result = Math.random() * maxRotationDegrees;
+        if (CardBase.rotationCounter++ % 2 == 0) {
+            result = -(Math.random() * maxRotationDegrees);
+        }
+       
+        if (CardBase.rotationCounter > 100) {
+            CardBase.rotationCounter -= 100;
+        }
+
+        return result;
     }
 
     ReplaceWithRandom(set) {

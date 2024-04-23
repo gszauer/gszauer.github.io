@@ -33,7 +33,7 @@ export default class EnemyGrid {
             halfStage.h + (cardHeight + cardPadding),
         ];
         // Adjust to go off screen
-        const yOFfset = cardHeight + cardPadding * 2 + (cardHeight + cardPadding) * 0.2;
+        const yOFfset = cardHeight + cardPadding * 4;
         yCoords[0] -= yOFfset;
         yCoords[1] -= yOFfset;
         yCoords[2] -= yOFfset;
@@ -58,6 +58,14 @@ export default class EnemyGrid {
             monsters[i].ReplaceWithRandom(monsters);
         }
 
+        this.cardBacks = [
+            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png"),
+            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png"),
+            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png")
+        ];
+        this.SetCardBackVisibility(false);
+        
+
         this.xCoords = xCoords;
         this.yCoords = yCoords;
         this.monsters = monsters;
@@ -69,6 +77,30 @@ export default class EnemyGrid {
         this.cardPadding = cardPadding;
         this.scene = scene;
         this.yOffset = yOFfset;
+    }
+
+    SetCardBackVisibility(newVal) {
+        this.cardBacks[0].setActive(newVal).setVisible(newVal);
+        this.cardBacks[1].setActive(newVal).setVisible(newVal);
+        this.cardBacks[2].setActive(newVal).setVisible(newVal);
+    }
+
+    PositionCardBacksAtRow0() {
+        this.cardBacks[0].x = this.xCoords[0];
+        this.cardBacks[1].x = this.xCoords[1];
+        this.cardBacks[2].x = this.xCoords[2];
+
+        this.cardBacks[0].y = this.yCoords[0] - this.cardHeight - this.cardPadding;
+        this.cardBacks[1].y = this.yCoords[0] - this.cardHeight - this.cardPadding;
+        this.cardBacks[2].y = this.yCoords[0] - this.cardHeight - this.cardPadding;
+
+        this.cardBacks[0].scaleX = 1;
+        this.cardBacks[1].scaleX = 1;
+        this.cardBacks[2].scaleX = 1;
+
+        this.cardBacks[0].angle = CardBase.GetRandomRotation();
+        this.cardBacks[1].angle = CardBase.GetRandomRotation();
+        this.cardBacks[2].angle = CardBase.GetRandomRotation();
     }
 
     get HighlightActive() {
@@ -145,8 +177,6 @@ export default class EnemyGrid {
         }
     }
 
-   
-
     TryToMove(gameObject, x, y) {
         const targetIndex = this._GetTargetIndex(x, y);
         
@@ -170,9 +200,17 @@ export default class EnemyGrid {
             });
 
             setTimeout(() => {
+                this.SetCardBackVisibility(true);
+                this.PositionCardBacksAtRow0();
+
                 const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
                 const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
                 const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
+                this.scene.tweens.add( {
+                    targets: this.cardBacks,
+                    duration: 400,
+                    y: this.yCoords[0],
+                });
                 this.scene.tweens.add( {
                     targets: row1,
                     duration: 400,
@@ -203,9 +241,25 @@ export default class EnemyGrid {
                             row1[i].ReplaceWithRandom(this.monsters);
 
                             row3[i].alpha = 1;
-
-                            this.scene.player.setInteractive();
+                            row1[i].scaleX = 0;
                         }
+
+
+                        this.scene.tweens.add( {
+                            targets: this.cardBacks,
+                            duration: 300,
+                            scaleX: 0,
+                            onComplete: () => {
+                                this.scene.tweens.add( {
+                                    targets: row1,
+                                    duration: 300,
+                                    scaleX: 1,
+                                    onComplete: () => {
+                                        this.scene.player.setInteractive();
+                                    }
+                                });
+                            }
+                        });
                     } 
                 });
             }, 100);
