@@ -31,6 +31,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.faceSprite = faceSprite;
         this.nameText = nameText;
         this.valueSprite = valueSprite;
+        this.cardType = type;
 
         this.Name = name;
         { //this.Value = value;
@@ -59,8 +60,6 @@ export default class CardBase extends Phaser.GameObjects.Container {
         if (CardBase.rotationCounter > 100) {
             CardBase.rotationCounter -= 100;
         }
-
-        //this.angle = 0;
     }
 
     static GetRandomRotation() {
@@ -79,10 +78,10 @@ export default class CardBase extends Phaser.GameObjects.Container {
 
     ReplaceWithRandom(set) {
         const scene = this.scene;
-        
         if (set === undefined || set === null) {
             set = [];
         }
+        
         let randomCard =  Math.floor(Math.random() * scene.set1.length);
         let randomCardName =  scene.names1[randomCard];
         while(true) {
@@ -104,20 +103,34 @@ export default class CardBase extends Phaser.GameObjects.Container {
             randomCardName =  scene.names1[randomCard];
         }
 
-        const randomValue = this.scene.GenerateNextCardValue();
-        const name = randomCardName;
-        const sprite = scene.set1[randomCard];
-
-        this.Value = randomValue;
-        this.Name  = name;
-        this.faceSprite.setFrame(sprite);
+        const spriteName = scene.set1[randomCard];
+            
+        this.cardType = "monster";
+        this.Name  = randomCardName;
+        this.faceSprite.setFrame(spriteName);
+        this.Value = this.scene.GenerateNextCardValue();
         this.ApplyRandomRotation();
+    }
+
+    ReplaceWithCoin() {
+        this.cardType = "coin";
+        this.Value = this.scene.GenerateNextCardValue();
+        this.Name  = this.value + " Coins";
+        this.faceSprite.setFrame("Coins.png");
+    }
+
+    ReplaceWithSword() {
+        this.cardType = "sword";
+        this.Value = this.scene.GenerateNextCardValue();
+        this.Name  = this.value + " Attack";
+        this.faceSprite.setFrame("Sword.png");
     }
 
     ReplaceWith(other) {
         this.Value = other.Value;
         this.Name  = other.Name;
         this.angle = other.angle;
+        this.cardType = other.cardType;
         this.faceSprite.setFrame(other.faceSprite.frame.name);
     }
     

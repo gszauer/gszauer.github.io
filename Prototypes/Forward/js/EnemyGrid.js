@@ -186,99 +186,117 @@ export default class EnemyGrid {
 
         const monster = this.monsters[targetIndex];
 
-        this.scene.Coins -= monster.Value;
-        if (this.scene.Coins > 0) {
-            this.scene.player.disableInteractive();
+        if (monster.cardType == "monster" || monster.cardType == "coin") {
+            if (monster.cardType == "monster") {
+                this.scene.Coins -= monster.Value;
+            }
+            else {
+                this.scene.Coins += monster.Value;
+            }
 
-            monster.Value = 0;
-            this.scene.tweens.add({ // Flash
-                targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
-                alpha: 0,
-                duration: 120,
-                repeat: 1,
-                yoyo: true,
-            });
+            if (this.scene.Coins > 0) {
+                this.scene.player.disableInteractive();
 
-            setTimeout(() => {
-                this.SetCardBackVisibility(true);
-                this.PositionCardBacksAtRow0();
-
-                const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
-                const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
-                const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
-                this.scene.tweens.add( {
-                    targets: this.cardBacks,
-                    duration: 400,
-                    y: this.yCoords[0],
-                });
-                this.scene.tweens.add( {
-                    targets: row1,
-                    duration: 400,
-                    y: this.yCoords[1],
-                });
-                this.scene.tweens.add( {
-                    targets: row2,
-                    duration: 400,
-                    y: this.yCoords[2],
-                });
-                this.scene.tweens.add( {
-                    targets: row3,
-                    duration: 400,
-                    y: this.yCoords[2] + this.cardHeight + this.cardPadding,
-                });
-                this.scene.tweens.add( {
-                    targets: row3,
-                    duration: 400,
+                monster.Value = 0;
+                this.scene.tweens.add({ // Flash
+                    targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
                     alpha: 0,
-                    onComplete: () => {
-                        for (let i = 0; i < 3; ++i) {
-                            row1[i].y = this.yCoords[0];
-                            row2[i].y = this.yCoords[1];
-                            row3[i].y = this.yCoords[2];
-
-                            row3[i].ReplaceWith(row2[i]);
-                            row2[i].ReplaceWith(row1[i]);
-                            row1[i].ReplaceWithRandom(this.monsters);
-
-                            row3[i].alpha = 1;
-                            row1[i].scaleX = 0;
-                        }
-
-
-                        this.scene.tweens.add( {
-                            targets: this.cardBacks,
-                            duration: 300,
-                            scaleX: 0,
-                            onComplete: () => {
-                                this.scene.tweens.add( {
-                                    targets: row1,
-                                    duration: 300,
-                                    scaleX: 1,
-                                    onComplete: () => {
-                                        this.scene.player.setInteractive();
-                                    }
-                                });
-                            }
-                        });
-                    } 
+                    duration: 120,
+                    repeat: 1,
+                    yoyo: true,
                 });
-            }, 100);
-            // Kill Monster
-        }
-        else {
-            this.scene.tweens.add({ // Flash
-                targets: [this.scene.player],
-                alpha: 0,
-                duration: 120,
-                repeat: 1,
-                yoyo: true,
-                onComplete: () => {
-                    this.scene.Reset();
-                }
-            });
-            // Kill Player
-        }
 
+                setTimeout(() => {
+                    this.SetCardBackVisibility(true);
+                    this.PositionCardBacksAtRow0();
+
+                    const row1 = [this.monsters[0], this.monsters[3], this.monsters[6]];
+                    const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
+                    const row3 = [this.monsters[2], this.monsters[5], this.monsters[8]];
+                    this.scene.tweens.add( {
+                        targets: this.cardBacks,
+                        duration: 400,
+                        y: this.yCoords[0],
+                    });
+                    this.scene.tweens.add( {
+                        targets: row1,
+                        duration: 400,
+                        y: this.yCoords[1],
+                    });
+                    this.scene.tweens.add( {
+                        targets: row2,
+                        duration: 400,
+                        y: this.yCoords[2],
+                    });
+                    this.scene.tweens.add( {
+                        targets: row3,
+                        duration: 400,
+                        y: this.yCoords[2] + this.cardHeight + this.cardPadding,
+                    });
+                    this.scene.tweens.add( {
+                        targets: row3,
+                        duration: 400,
+                        alpha: 0,
+                        onComplete: () => {
+                            for (let i = 0; i < 3; ++i) {
+                                row1[i].y = this.yCoords[0];
+                                row2[i].y = this.yCoords[1];
+                                row3[i].y = this.yCoords[2];
+
+                                row3[i].ReplaceWith(row2[i]);
+                                row2[i].ReplaceWith(row1[i]);
+                                row1[i].ReplaceWithRandom(this.monsters);
+
+                                let randomNumber = Math.floor(Math.random() * 18);
+                                if (randomNumber == 0 || randomNumber == 7 || randomNumber == 12) { //One in three chance for a coin
+                                    row1[i].ReplaceWithCoin();
+                                }
+                                else {
+                                    randomNumber = Math.floor(Math.random() * 24);
+                                    if (randomNumber == 1 || randomNumber == 4 || randomNumber == 11 || randomNumber == 17) { //One in three
+                                        //row1[i].ReplaceWithSword();
+                                    }
+                                }
+
+                                row3[i].alpha = 1;
+                                row1[i].scaleX = 0;
+                            }
+
+                            this.scene.player.setInteractive();
+
+                            this.scene.tweens.add( {
+                                targets: this.cardBacks,
+                                duration: 300,
+                                scaleX: 0,
+                                onComplete: () => {
+                                    this.scene.tweens.add( {
+                                        targets: row1,
+                                        duration: 300,
+                                        scaleX: 1,
+                                        onComplete: () => {
+                                        }
+                                    });
+                                }
+                            });
+                        } 
+                    });
+                }, 100);
+                // Kill Monster
+            }
+            else {
+                this.scene.tweens.add({ // Flash
+                    targets: [this.scene.player],
+                    alpha: 0,
+                    duration: 120,
+                    repeat: 1,
+                    yoyo: true,
+                    onComplete: () => {
+                        this.scene.Reset();
+                    }
+                });
+                // Kill Player
+            }
+        }
         
         return targetIndex;
     }
