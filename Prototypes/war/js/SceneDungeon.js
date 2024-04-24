@@ -37,11 +37,6 @@ export default class SceneDungeon extends Phaser.Scene {
         const backgroundImage = this.add.image(0, 0, 'background');
         backgroundImage.setOrigin(0, 0);
 
-        const cogSprite = this.add.sprite(0, 2048, this.GetSet("Cog.png"), "Cog.png");
-        cogSprite.x += cogSprite.width / 2 + cardPadding;
-        cogSprite.y -= cogSprite.height / 2 + cardPadding;
-        cogSprite.setScale(0.90, 0.90);
-
         let grid = new EnemyGrid(this);
         
         const playerY = (numRows * cardHeight) + (numRows * cardHeight  / 2) - grid.yOffset + (cardPadding * numRows) + cardPadding;
@@ -58,7 +53,6 @@ export default class SceneDungeon extends Phaser.Scene {
 
         this.player = player;
         this.grid = grid;
-        this.cogSprite = cogSprite;
 
         this.Reset();
 
