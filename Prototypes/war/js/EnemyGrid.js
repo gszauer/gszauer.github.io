@@ -46,7 +46,7 @@ export default class EnemyGrid {
                     x: xCoords[i], y: yCoords[j], 
                     name: "",
                     sprite: "CardBackTopOnly.png",
-                    depth: 1,
+                    depth: -2,
                     value: 0,
                     type: "random" 
                 });

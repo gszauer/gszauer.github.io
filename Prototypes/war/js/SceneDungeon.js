@@ -27,6 +27,7 @@ export default class SceneDungeon extends Phaser.Scene {
     }
 
     create() {
+
         const numRows = 3;
         const numColumns = 3;
 
@@ -35,6 +36,7 @@ export default class SceneDungeon extends Phaser.Scene {
         const cardPadding = this.cardPadding;
 
         const backgroundImage = this.add.image(0, 0, 'background');
+        backgroundImage.depth = -3;
         backgroundImage.setOrigin(0, 0);
 
         let grid = new EnemyGrid(this);
@@ -46,7 +48,7 @@ export default class SceneDungeon extends Phaser.Scene {
             x: grid.xCoords[1], y: playerY, 
             name: "The Fool",
             sprite: "TheFool.png",
-            depth: 1,
+            depth: -1,
             value: 100,
             type: "fool" 
         });
@@ -111,4 +113,6 @@ export default class SceneDungeon extends Phaser.Scene {
     GenerateNextCardValue() {
         return Math.floor(Math.random() * 9) + 1;
     }
+
+    
 }

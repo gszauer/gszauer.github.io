@@ -1,0 +1,418 @@
+{
+	"textures": [
+		{
+			"image": "Clear",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 1024
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "Logo.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 955,
+						"h": 766
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 955,
+						"h": 766
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 955,
+						"h": 766
+					}
+				},
+				{
+					"filename": "WindowBat.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 625,
+						"h": 230
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 625,
+						"h": 230
+					},
+					"frame": {
+						"x": 2,
+						"y": 772,
+						"w": 625,
+						"h": 230
+					}
+				},
+				{
+					"filename": "ButtonIdle.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 823,
+						"h": 251
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 823,
+						"h": 251
+					},
+					"frame": {
+						"x": 961,
+						"y": 2,
+						"w": 823,
+						"h": 251
+					}
+				},
+				{
+					"filename": "SettingsDeco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 275,
+						"h": 215
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 275,
+						"h": 215
+					},
+					"frame": {
+						"x": 631,
+						"y": 772,
+						"w": 275,
+						"h": 215
+					}
+				},
+				{
+					"filename": "ButtonOver.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 823,
+						"h": 251
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 823,
+						"h": 251
+					},
+					"frame": {
+						"x": 961,
+						"y": 257,
+						"w": 823,
+						"h": 251
+					}
+				},
+				{
+					"filename": "SettingsClose.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 187,
+						"h": 187
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 187,
+						"h": 187
+					},
+					"frame": {
+						"x": 1788,
+						"y": 2,
+						"w": 187,
+						"h": 187
+					}
+				},
+				{
+					"filename": "VolumeKnob.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 103,
+						"h": 153
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 103,
+						"h": 153
+					},
+					"frame": {
+						"x": 910,
+						"y": 772,
+						"w": 103,
+						"h": 153
+					}
+				},
+				{
+					"filename": "Skull.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 153,
+						"h": 152
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 153,
+						"h": 152
+					},
+					"frame": {
+						"x": 1788,
+						"y": 193,
+						"w": 153,
+						"h": 152
+					}
+				},
+				{
+					"filename": "BlueBanner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 109,
+						"h": 129
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 109,
+						"h": 129
+					},
+					"frame": {
+						"x": 961,
+						"y": 512,
+						"w": 109,
+						"h": 129
+					}
+				},
+				{
+					"filename": "VolumeTrack.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 701,
+						"h": 94
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 701,
+						"h": 94
+					},
+					"frame": {
+						"x": 961,
+						"y": 645,
+						"w": 701,
+						"h": 94
+					}
+				},
+				{
+					"filename": "ButtonsCorner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 271,
+						"h": 271
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 271,
+						"h": 271
+					},
+					"frame": {
+						"x": 1017,
+						"y": 743,
+						"w": 271,
+						"h": 271
+					}
+				},
+				{
+					"filename": "WindowCorner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 283,
+						"h": 283
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 283,
+						"h": 283
+					},
+					"frame": {
+						"x": 1666,
+						"y": 512,
+						"w": 283,
+						"h": 283
+					}
+				},
+				{
+					"filename": "RedBanner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 109,
+						"h": 129
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 109,
+						"h": 129
+					},
+					"frame": {
+						"x": 1788,
+						"y": 349,
+						"w": 109,
+						"h": 129
+					}
+				},
+				{
+					"filename": "CardBlackout.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 128,
+						"h": 128
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 128,
+						"h": 128
+					},
+					"frame": {
+						"x": 1074,
+						"y": 512,
+						"w": 128,
+						"h": 128
+					}
+				},
+				{
+					"filename": "TitleCorner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 95,
+						"h": 101
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 95,
+						"h": 101
+					},
+					"frame": {
+						"x": 1945,
+						"y": 193,
+						"w": 95,
+						"h": 101
+					}
+				},
+				{
+					"filename": "PauseButton.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 128,
+						"h": 127
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 128,
+						"h": 127
+					},
+					"frame": {
+						"x": 1292,
+						"y": 799,
+						"w": 128,
+						"h": 127
+					}
+				},
+				{
+					"filename": "CheckboxOff.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 119,
+						"h": 119
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 119,
+						"h": 119
+					},
+					"frame": {
+						"x": 1901,
+						"y": 349,
+						"w": 119,
+						"h": 119
+					}
+				},
+				{
+					"filename": "CheckboxOn.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 119,
+						"h": 119
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 119,
+						"h": 119
+					},
+					"frame": {
+						"x": 1206,
+						"y": 512,
+						"w": 119,
+						"h": 119
+					}
+				},
+				{
+					"filename": "TaglineCorner.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 119,
+						"h": 119
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 119,
+						"h": 119
+					},
+					"frame": {
+						"x": 1424,
+						"y": 799,
+						"w": 119,
+						"h": 119
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}

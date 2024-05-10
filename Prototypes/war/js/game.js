@@ -1,4 +1,5 @@
 import SceneDungeon from './SceneDungeon.js'
+import SceneMenu from './SceneMenu.js'
 
 window.addEventListener('load', () => {
     const config = {
@@ -7,18 +8,14 @@ window.addEventListener('load', () => {
         backgroundColor: '#1d1d1d',
         type: Phaser.AUTO,
         parent: 'phaser-game',
-        scene: [SceneDungeon],
+        scene: [SceneMenu, SceneDungeon],
         scale: {
             mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
             autoCenter: Phaser.Scale.CENTER_BOTH,
         },
     }
 
-    const game = new Phaser.Game(config);
-
     const resize = () => {
-        const canvas = document.querySelector("canvas");
-        
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         const windowRatio = windowWidth / windowHeight;
@@ -38,6 +35,8 @@ window.addEventListener('load', () => {
             game.scale.setParentSize(targetWidth, targetHeight);
         }
     };
+
+    const game = new Phaser.Game(config);
     resize();
     window.addEventListener("resize", resize, false);
 });

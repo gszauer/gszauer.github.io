@@ -1,0 +1,586 @@
+{
+	"textures": [
+		{
+			"image": "texture",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "TitleConnect.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 788,
+						"h": 15
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 788,
+						"h": 15
+					},
+					"frame": {
+						"x": 4,
+						"y": 4,
+						"w": 788,
+						"h": 15
+					}
+				},
+				{
+					"filename": "WindowConnector.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 615,
+						"h": 29
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 615,
+						"h": 29
+					},
+					"frame": {
+						"x": 800,
+						"y": 4,
+						"w": 615,
+						"h": 29
+					}
+				},
+				{
+					"filename": "ButtonsConnect.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 540,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 540,
+						"h": 32
+					},
+					"frame": {
+						"x": 1423,
+						"y": 4,
+						"w": 540,
+						"h": 32
+					}
+				},
+				{
+					"filename": "TitleBackground.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 467,
+						"h": 452
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 467,
+						"h": 452
+					},
+					"frame": {
+						"x": 4,
+						"y": 27,
+						"w": 467,
+						"h": 452
+					}
+				},
+				{
+					"filename": "CardBack.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 479,
+						"y": 27,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "ButtonsBackground.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 460,
+						"h": 463
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 460,
+						"h": 463
+					},
+					"frame": {
+						"x": 4,
+						"y": 487,
+						"w": 460,
+						"h": 463
+					}
+				},
+				{
+					"filename": "WindowBackground.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 434,
+						"h": 428
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 434,
+						"h": 428
+					},
+					"frame": {
+						"x": 787,
+						"y": 41,
+						"w": 434,
+						"h": 428
+					}
+				},
+				{
+					"filename": "TaglineConnect.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 348,
+						"h": 17
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 348,
+						"h": 17
+					},
+					"frame": {
+						"x": 787,
+						"y": 477,
+						"w": 348,
+						"h": 17
+					}
+				},
+				{
+					"filename": "CardBarbarian.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 472,
+						"y": 495,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardBeholder.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 4,
+						"y": 958,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardBoy.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 4,
+						"y": 1426,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardChest.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1229,
+						"y": 44,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardCoins.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 780,
+						"y": 502,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardDead.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 780,
+						"y": 970,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardGhost.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 780,
+						"y": 1438,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardGirl.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 312,
+						"y": 963,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardMage.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 312,
+						"y": 1431,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardMantis.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1537,
+						"y": 44,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardOrc.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1088,
+						"y": 512,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardPortal.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1396,
+						"y": 512,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardScorpion.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1704,
+						"y": 512,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardSkeleton.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1088,
+						"y": 980,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardSnake.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1088,
+						"y": 1448,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardSword.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1396,
+						"y": 980,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardTree.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1704,
+						"y": 980,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardTroll.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1396,
+						"y": 1448,
+						"w": 300,
+						"h": 460
+					}
+				},
+				{
+					"filename": "CardWizard.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 460
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 460
+					},
+					"frame": {
+						"x": 1704,
+						"y": 1448,
+						"w": 300,
+						"h": 460
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}
