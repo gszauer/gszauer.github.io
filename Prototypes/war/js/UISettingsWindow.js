@@ -1,14 +1,13 @@
 import UITextButton from "./UITextButton.js";
 import UISlider from "./UISlider.js";
+import UIToggle from "./UIToggle.js";
 
 export default class UISettingsWindow extends Phaser.GameObjects.Container {
     constructor(data) {
         let {
             scene = null, 
-            onVolume = null, 
-            onMute = null, 
             onClose = null,
-            onOpen = null
+            onOpen = null,
         } = data;
 
         const blackout = scene.add.sprite(0, 0, "Clear", "CardBlackout.png");
@@ -44,13 +43,33 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
             x: 917, y: 597,
         });
 
-        const volume = new UISlider({
+        const mute = new UIToggle({
             scene: scene,
-            x: 512, y: 910
+            x: 395, y: 1080,
+            text: "Mute"
         });
 
+        const volume = new UISlider({
+            scene: scene,
+            x: 512, y: 910,
+            onValueChanged: (t) => {
+                scene.sound.volume = t * mute.Scale;
+            },
+            text: "Volume"
+        });
+
+        mute.onToggled = () => {
+            scene.sound.volume = volume.Value * mute.Scale;
+        }
+
+        const volLabel = scene.add.bitmapText(0, 0, 'Adventure', "Mute");
+        volLabel.setScale(1.28, 1.28);
+        volLabel.setTint(0xb88151);
+        volLabel.x = mute.x - volLabel.width - mute.ticked.width / 2 - 15;
+        volLabel.y = mute.y - volLabel.height / 2;
+
         const children = [
-            blackout, background, L, R, T, B, TL, TR, BL, BR, skull, closeBtn, titleTextShadow, titleText, volume
+            blackout, background, L, R, T, B, TL, TR, BL, BR, skull, closeBtn, titleTextShadow, titleText, volume, mute, volLabel
         ];
         super(scene, 0, 0, children);
 
@@ -59,11 +78,11 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
 
         closeBtn.UpdateSprites({
             idle: "SettingsClose.png",
-            hover: "SettingsClose.png"
+            hover: "SettingsClose.png",
+            tintIdle: 0xffffff,
+            tintHover: 0xb2b2b2,
+            tintDown: 0xffb2b2,
         });
-        closeBtn.OnEnter = () => {
-            closeBtn.imgHover.setTint(closeBtn._darkerColor);
-        };
         closeBtn.OnClick = () => {
             self.Close();
         }
@@ -90,6 +109,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         self.closeBtn = closeBtn;
         self.titleTextShadow = titleTextShadow;
         self.volume = volume;
+        self.mute = mute;
         self.TL = TL;
         self.TR = TR;
         self.BL = BL;
@@ -99,12 +119,11 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         self.T = T;
         self.B = B;
         self.skull = skull;
+        self.muteLabel = volLabel;
 
         self.x = self.y = 0;
         self.setSize(scene.sys.game.config.width,  scene.sys.game.config.height);
 
-        self.OnVolume = onVolume;
-        self.OnMute = onMute;
         self.OnClose = onClose;
         self.OnOpen = onOpen;
 
@@ -128,6 +147,8 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         this.titleText.setActive(state).setVisible(state);
         this.titleTextShadow.setActive(state).setVisible(state);
         this.volume.setActive(state).setVisible(state);
+        this.mute.setActive(state).setVisible(state);
+        this.muteLabel.setActive(state).setVisible(state);
     }
 
     Open() {

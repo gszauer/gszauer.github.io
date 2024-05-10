@@ -8,7 +8,13 @@ export default class UITextButton extends Phaser.GameObjects.Container {
             onEnter = null, 
             onExit = null, 
             onClick = null,
-            text = null
+            text = null,
+            tintIdle = 0xffffff,
+            tintHover = 0xffffff,
+            tintDown = 0xffb2b2,
+            textTintIdle = 0xffffff,
+            textTintHover = 0xd4d4d4,
+            textTintDown = 0xd28080,
         } = data;
 
         const imgIdle = scene.add.sprite(0, 0, "Clear", "ButtonIdle.png");
@@ -20,16 +26,18 @@ export default class UITextButton extends Phaser.GameObjects.Container {
 
         const self = this;
 
-        self.imgIdle = imgIdle ;
+        self.imgIdle = imgIdle;
         self.imgHover = imgHover;
         self.bitmapText = bitmapText;
         self.bitmapText.setScale(2, 2);
 
-        self._clearColor = 0xFFFFFF;
-        self._darkerColor = 0xc6c6c6;
-        self._tinterColor = 0xc58282;
-        self._tintColor = 0xffc1c1;
-        
+        self.tintIdle  = tintIdle ;
+        self.tintHover = tintHover;
+        self.tintDown  = tintDown ;
+        self.textTintIdle  = textTintIdle ;
+        self.textTintHover = textTintHover;
+        self.textTintDown  = textTintDown ;
+
         self.isDown = false;
         self.scene = scene;
         self.isDisabled = false;
@@ -56,8 +64,8 @@ export default class UITextButton extends Phaser.GameObjects.Container {
 
             self.imgIdle.setVisible(false);
             self.imgHover.setVisible(true);   // needs to be true for tint
-            self._tint = self._tintColor; // over visible = true
-            self.bitmapText.setTint(self._tinterColor);
+            self.imgHover.setTint(self.tintDown);
+            self.bitmapText.setTint(self.textTintDown);
         });
 
         scene.input.on('pointerup', function(pointer) {
@@ -80,9 +88,9 @@ export default class UITextButton extends Phaser.GameObjects.Container {
 
             if (contained) {
                 self.imgIdle.setVisible(false);
-                self.imgHover.setVisible(true);
-                self._tint = self._clearColor; // over visible = false
-                self.bitmapText.setTint(self._darkerColor);
+                self.imgHover.setVisible(true);   // needs to be true for tint
+                self.imgHover.setTint(self.tintHover);
+                self.bitmapText.setTint(self.textTintHover);
 
                 if (wasDown) {
                     if (self.OnClick != null) {
@@ -92,8 +100,9 @@ export default class UITextButton extends Phaser.GameObjects.Container {
             }
             else {
                 self.imgIdle.setVisible(true);
-                self.imgHover.setVisible(false);
-                self._tint = self._clearColor; // over visible = false
+                self.imgIdle.setTint(self.tintIdle);
+                self.imgHover.setVisible(false);   // needs to be true for tint
+                self.bitmapText.setTint(self.textTintIdle);
             }
         });
 
@@ -103,14 +112,14 @@ export default class UITextButton extends Phaser.GameObjects.Container {
             if (self.isDown) {
                 self.imgIdle.setVisible(false);
                 self.imgHover.setVisible(true);   // needs to be true for tint
-                self._tint = self._tintColor; // over visible = true
-                self.bitmapText.setTint(self._tinterColor);
+                self.imgHover.setTint(self.tintDown);
+                self.bitmapText.setTint(self.textTintDown);
             }
             else {
                 self.imgIdle.setVisible(false);
-                self.imgHover.setVisible(true);  
-                self._tint = self._clearColor; // over visible = false
-                self.bitmapText.setTint(self._darkerColor);
+                self.imgHover.setVisible(true);   // needs to be true for tint
+                self.imgHover.setTint(self.tintHover);
+                self.bitmapText.setTint(self.textTintHover);
             }
 
             if (self.OnEnter !== null) {
@@ -124,24 +133,20 @@ export default class UITextButton extends Phaser.GameObjects.Container {
             if (self.isDown) {
                 self.imgIdle.setVisible(false);
                 self.imgHover.setVisible(true);   // needs to be true for tint
-                self._tint = self._tintColor; // over visible = true
-                self.bitmapText.setTint(self._tinterColor);
+                self.imgHover.setTint(self.tintDown);
+                self.bitmapText.setTint(self.textTintDown);
             }
             else {
                 self.imgIdle.setVisible(true);
-                self.imgHover.setVisible(false);
-                self._tint = self._clearColor; // over visible = false
+                self.imgIdle.setTint(self.tintIdle);
+                self.imgHover.setVisible(false);   // needs to be true for tint
+                self.bitmapText.setTint(self.textTintIdle);
             }
 
             if (self.OnExit !== null) {
                 self.OnExit(self, pointer);
             }
         });
-    }
-
-    set _tint(newTint) {
-        this.imgHover.setTint(newTint);
-        this.bitmapText.setTint(newTint);
     }
 
     set text(newText) {
@@ -167,8 +172,10 @@ export default class UITextButton extends Phaser.GameObjects.Container {
     set Disabled(newVal) {
         // Reset button state
         this.imgIdle.setVisible(true);
-        this.imgHover.setVisible(false);
-        this._tint = this._clearColor; // over visible = false
+        this.imgIdle.setTint(this.tintIdle);
+        this.imgHover.setVisible(false);   // needs to be true for tint
+        this.imgHover.setTint(this.tintHover);
+        this.bitmapText.setTint(this.textTintIdle);
 
         if (newVal) {
             this.isDisabled = true;
@@ -189,16 +196,23 @@ export default class UITextButton extends Phaser.GameObjects.Container {
         let {
             idle = null,
             hover = null,
-            clearColor = 0xFFFFFF,
-            darkerColor = 0xc6c6c6,
-            tinterColor = 0xc58282,
-            tintColor = 0xffc1c1
+            tintIdle = 0xffffff,
+            tintHover = 0xffffff,
+            tintDown = 0xffffff,
+            textTintIdle = 0xffffff,
+            textTintHover = 0xffffff,
+            textTintDown = 0xffffff,
         } = data;
 
-        this._clearColor = clearColor;
-        this._darkerColor = darkerColor;
-        this._tinterColor = tinterColor;
-        this._tintColor = tintColor;
+        this.tintIdle  = tintIdle ;
+        this.tintHover = tintHover;
+        this.tintDown  = tintDown ;
+        this.textTintIdle  = textTintIdle ;
+        this.textTintHover = textTintHover;
+        this.textTintDown  = textTintDown ;
+
+        this.imgIdle.setTint(this.tintIdle);
+        this.imgHover.setTint(this.tintHover);
 
         this.imgIdle.setFrame(idle);
         this.imgHover.setFrame(hover);

@@ -5,7 +5,8 @@ export default class UISlider extends Phaser.GameObjects.Container {
             x = 0, y = 0, 
             onValueChanged = null, 
             onClick = null,
-            text = "Volume"
+            text = "Volume",
+            t = 1.0
         } = data;
 
         const imgTrack = scene.add.sprite(0, 0, "Clear", "VolumeTrack.png");
@@ -17,12 +18,18 @@ export default class UISlider extends Phaser.GameObjects.Container {
 
         const self = this;
 
+        self._value = t;
+
+        const left = -imgTrack.width / 2 + imgHandle.width / 2;
+        const right = imgTrack.width / 2 - imgHandle.width / 2;
+        imgHandle.x  = (right - left) * (t - 0.5);
+
         self.imgTrack = imgTrack ;
         self.imgHandle = imgHandle;
         self.txtLabel = txtLabel;
 
         self.txtLabel.setTint(0xb88151);
-        self.txtLabel.setScale(0.7, 0.7);
+        self.txtLabel.setScale(0.8, 0.8);
         self.txtLabel.x = -(imgTrack.width / 2) - 15;
         self.txtLabel.y = -(imgHandle.height / 2)- self.txtLabel.height - 10;
 
@@ -49,9 +56,9 @@ export default class UISlider extends Phaser.GameObjects.Container {
             const wasDown = self.isDown;
             self.isDown = false;
 
-            const left   = self.x - imgHandle.width / 2;
+            const left   = imgHandle.x - imgHandle.width / 2;
             const right  = left   + imgHandle.width;
-            const top    = self.y - imgHandle.height / 2;
+            const top    = imgHandle.y - imgHandle.height / 2;
             const bottom = top    + imgHandle.height;
 
             let contained = (pointer.x >= left && pointer.x <= right) && 
@@ -102,7 +109,9 @@ export default class UISlider extends Phaser.GameObjects.Container {
                 gameObject.x = right;
             }
 
-            const t = gameObject.x / (right - left);
+            const t = gameObject.x / (right - left) + 0.5;
+            self._value = t;
+
             if (self.OnValueChanged != null) {
                 self.OnValueChanged(t);
             }
@@ -112,5 +121,9 @@ export default class UISlider extends Phaser.GameObjects.Container {
         imgHandle.setInteractive();
         scene.input.setDraggable(imgHandle);
         self.scene.add.existing(self);
+    }
+
+    get Value() {
+        return this._value;
     }
 }

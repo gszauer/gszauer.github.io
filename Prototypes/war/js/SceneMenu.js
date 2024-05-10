@@ -85,7 +85,10 @@ export default class SceneMenu extends Phaser.Scene {
         this.buttons.play = new UITextButton({
             scene: this,
             x: 512, y: 1206,
-            text: "Play"
+            text: "Play",
+            onClick: () => {
+                self.scene.stop('SceneMenu').launch('SceneDungeon');
+            }
         });
         this.buttons.tutorial = new UITextButton({
             scene: this,
@@ -110,8 +113,9 @@ export default class SceneMenu extends Phaser.Scene {
                 self.buttons.tutorial.Disabled = false;
                 self.buttons.options.Disabled = false;
             }
+            
         });
-        this.settings.Open();
+        //this.settings.Open();
 
         this.buttons.options.OnClick = () => {
             self.settings.Open();
