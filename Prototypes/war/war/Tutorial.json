@@ -1,0 +1,145 @@
+{
+	"textures": [
+		{
+			"image": "Tutorial",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "Tutorial1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 814,
+						"h": 547
+					}
+				},
+				{
+					"filename": "Tutorial2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 820,
+						"y": 2,
+						"w": 814,
+						"h": 547
+					}
+				},
+				{
+					"filename": "Tutorial3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 2,
+						"y": 553,
+						"w": 814,
+						"h": 547
+					}
+				},
+				{
+					"filename": "Tutorial4.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 2,
+						"y": 1104,
+						"w": 814,
+						"h": 547
+					}
+				},
+				{
+					"filename": "Tutorial5.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 820,
+						"y": 553,
+						"w": 814,
+						"h": 547
+					}
+				},
+				{
+					"filename": "Tutorial6.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 814,
+						"h": 547
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 814,
+						"h": 547
+					},
+					"frame": {
+						"x": 820,
+						"y": 1104,
+						"w": 814,
+						"h": 547
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}

@@ -2,7 +2,7 @@ import UITextButton from "./UITextButton.js";
 import UISlider from "./UISlider.js";
 import UIToggle from "./UIToggle.js";
 
-export default class UISettingsWindow extends Phaser.GameObjects.Container {
+export default class UIGameOverWindow extends Phaser.GameObjects.Container {
     constructor(data) {
         let {
             scene = null, 
@@ -21,80 +21,64 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         background.x = 93;
         background.y = 586;
         background.scaleX = 1.93;
-        background.scaleY = 1.6;
+        background.scaleY = 1.7;
+
 
         const TL = scene.add.sprite(220, 714, "Clear", "WindowCorner.png");
         const TR = scene.add.sprite(804, 714, "Clear", "WindowCorner.png");
-        const BL = scene.add.sprite(220, 1142, "Clear", "WindowCorner.png");
-        const BR = scene.add.sprite(804, 1142, "Clear", "WindowCorner.png");
+        const BL = scene.add.sprite(220, 1142 + 60, "Clear", "WindowCorner.png");
+        const BR = scene.add.sprite(804, 1142 + 60, "Clear", "WindowCorner.png");
 
         const L = scene.add.sprite(92, 930, "Solid", "WindowConnector.png");
         const R = scene.add.sprite(932, 930, "Solid", "WindowConnector.png");
         const T = scene.add.sprite(516, 587, "Solid", "WindowConnector.png");
-        const B = scene.add.sprite(516, 1269, "Solid", "WindowConnector.png");
+        const B = scene.add.sprite(516, 1269 + 60, "Solid", "WindowConnector.png");
 
-        const skull = scene.add.sprite(507, 1285, "Clear", "SettingsDeco.png");
+        const skull = scene.add.sprite(507, T.y - 65, "Clear", "WindowBat.png");
 
-        const titleText = scene.add.bitmapText(505, 684, 'LifeCraft', 'SETTINGS');
-        const titleTextShadow = scene.add.bitmapText(515, 694, 'LifeCraft', 'SETTINGS');
+        const titleText = scene.add.bitmapText(505, 684, 'LifeCraft', 'GAME OVER');
+        const titleTextShadow = scene.add.bitmapText(515, 694, 'LifeCraft', 'GAME OVER');
 
-        const closeBtn = new UITextButton({
+        const retButton = new UITextButton({
             scene: scene,
-            x: 917, y: 597,
+            x: 512, y: 900 ,
+            text: "Try Again"
+            // on click added later
         });
 
-        const mute = new UIToggle({
+        const quitBtn = new UITextButton({
             scene: scene,
-            x: 395, y: 1080,
-            text: "Mute",
-            // On toggled added below
+            x: 512, y: 1180,
+            text: "Quit Game"
+            // on click added later
         });
-
-        const volume = new UISlider({
-            scene: scene,
-            x: 512, y: 910,
-            onValueChanged: (t) => {
-                scene.sound.volume = t * mute.Scale;
-            },
-            text: "Volume"
-        });
-
-        mute.onToggled = () => {
-            scene.sound.volume = volume.Value * mute.Scale;
-        }
-
-        const volLabel = scene.add.bitmapText(0, 0, 'Adventure', "Mute");
-        volLabel.setScale(1.28, 1.28);
-        volLabel.setTint(0xb88151);
-        volLabel.x = mute.x - volLabel.width - mute.ticked.width / 2 - 15;
-        volLabel.y = mute.y - volLabel.height / 2;
 
         const children = [
-            blackout, background, L, R, T, B, TL, TR, BL, BR, skull, closeBtn, titleTextShadow, titleText, volume, mute, volLabel
+            blackout, background, L, R, T, B, TL, TR, BL, BR, retButton, quitBtn, skull, titleTextShadow, titleText
         ];
         super(scene, 0, 0, children);
 
         const self = this;
         self.scene = scene;
 
-        closeBtn.UpdateSprites({
-            idle: "SettingsClose.png",
-            hover: "SettingsClose.png",
-            tintIdle: 0xffffff,
-            tintHover: 0xb2b2b2,
-            tintDown: 0xffb2b2,
-        });
-        closeBtn.OnClick = () => {
+        retButton.OnClick = () => {
+            scene.Reset();
             self.Close();
         }
 
+        quitBtn.OnClick = () => {
+            self.Close();
+            scene.Reset();
+            scene.scene.switch('SceneMenu'); 
+        }
+
         titleText.setTint(0xc42a2a);
-        titleText.setScale(1.75, 1.75);
+        titleText.setScale(1.5, 1.5);
         titleText.x = titleText.x - titleText.width / 2;
         titleText.y = titleText.y - titleText.height / 2;
 
         titleTextShadow.setTint(0x000000);
-        titleTextShadow.setScale(1.75, 1.75);
+        titleTextShadow.setScale(1.5, 1.5);
         titleTextShadow.x = titleTextShadow.x - titleTextShadow.width / 2;
         titleTextShadow.y = titleTextShadow.y - titleTextShadow.height / 2;
 
@@ -107,10 +91,9 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         self.blackout = blackout;
         self.background = background;
         self.titleText = titleText;
-        self.closeBtn = closeBtn;
+        self.returnToGameBtn = retButton;
+        self.quitToMenuBtn = quitBtn;
         self.titleTextShadow = titleTextShadow;
-        self.volume = volume;
-        self.mute = mute;
         self.TL = TL;
         self.TR = TR;
         self.BL = BL;
@@ -120,7 +103,6 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         self.T = T;
         self.B = B;
         self.skull = skull;
-        self.muteLabel = volLabel;
 
         self.x = self.y = 0;
         self.setSize(scene.sys.game.config.width,  scene.sys.game.config.height);
@@ -144,12 +126,10 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         this.B.setActive(state).setVisible(state);
         this.skull.setActive(state).setVisible(state);
         this.background.setActive(state).setVisible(state);
-        this.closeBtn.setActive(state).setVisible(state);
+        this.returnToGameBtn.setActive(state).setVisible(state);
         this.titleText.setActive(state).setVisible(state);
         this.titleTextShadow.setActive(state).setVisible(state);
-        this.volume.setActive(state).setVisible(state);
-        this.mute.setActive(state).setVisible(state);
-        this.muteLabel.setActive(state).setVisible(state);
+        this.quitToMenuBtn.setActive(state).setVisible(state);
     }
 
     Open() {

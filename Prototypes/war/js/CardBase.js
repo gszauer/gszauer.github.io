@@ -144,6 +144,13 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.faceSprite.visible = false;
     }
 
+    ReplaceDead() {
+        this.cardType = "monster";
+        this.Value = 0;
+        this.faceSprite.setFrame("CardDead.png");
+        this.faceSprite.visible = true;
+    }
+
     ReplaceWith(other) {
         this.Value = other.Value;
         this.angle = other.angle;

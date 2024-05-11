@@ -24,6 +24,7 @@ export default class CardPlayer extends CardBase {
         const self = this;
 
         this.scene.input.on('dragstart', (pointer, gameObject) => {
+            if (gameObject != self) { return; }
             self.dragging = true;
             self.setScale(1.1, 1.1); 
             self.ApplyRandomRotation();
@@ -34,6 +35,7 @@ export default class CardPlayer extends CardBase {
         });
 
         this.scene.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+            if (gameObject != self) { return; }
             self.dragging = true;
             gameObject.x = dragX;
             gameObject.y = dragY;
@@ -44,6 +46,7 @@ export default class CardPlayer extends CardBase {
         });
 
         this.scene.input.on('dragend', (pointer, gameObject) => {
+            if (gameObject != self) { return; }
             gameObject.x = self.startX;
             gameObject.y = self.startY;
 

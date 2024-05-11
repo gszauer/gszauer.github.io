@@ -29,9 +29,9 @@ export default class UISlider extends Phaser.GameObjects.Container {
         self.txtLabel = txtLabel;
 
         self.txtLabel.setTint(0xb88151);
-        self.txtLabel.setScale(0.8, 0.8);
+        self.txtLabel.setScale(1.2, 1.2);
         self.txtLabel.x = -(imgTrack.width / 2) - 15;
-        self.txtLabel.y = -(imgHandle.height / 2)- self.txtLabel.height - 10;
+        self.txtLabel.y = -(imgHandle.height / 2)- self.txtLabel.height + 5;
 
         self.isDown = false;
         self.scene = scene;

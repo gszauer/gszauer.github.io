@@ -2,6 +2,8 @@ import CardBase from "./CardBase.js";
 import CardPlayer from "./CardPlayer.js";
 import EnemyGrid from "./EnemyGrid.js";
 import UITextButton from "./UITextButton.js";
+import UIPauseWindow from "./UIPauseWindow.js";
+import UIGameOverWindow from "./UIGameOverWindow.js";
 
 export default class SceneDungeon extends Phaser.Scene {
     constructor() {
@@ -24,6 +26,7 @@ export default class SceneDungeon extends Phaser.Scene {
     }
 
     create() {
+        const self = this;
         const numRows = 3;
         const numColumns = 3;
 
@@ -45,6 +48,11 @@ export default class SceneDungeon extends Phaser.Scene {
             this.background.bottom.depth = -100;
         }
 
+        const settingsButton = new UITextButton({
+            scene: this,
+            x: 1024 -128, y: 2048 - 128,
+        });
+
         let grid = new EnemyGrid(this);
         
         const playerY = (numRows * cardHeight) + (numRows * cardHeight  / 2) - grid.yOffset + (cardPadding * numRows) + cardPadding;
@@ -63,10 +71,34 @@ export default class SceneDungeon extends Phaser.Scene {
 
         this.Reset();
 
-        const settingsButton = new UITextButton({
-            scene: this,
-            x: 1024 -128, y: 2048 - 128,
+        const pause = new UIPauseWindow({
+            scene: self,
+
+            onOpen: () => {
+                self.input.setDraggable(player, false);
+                settingsButton.Disabled = true;
+            },
+            onClose: () => {
+                self.input.setDraggable(player, true);
+                settingsButton.Disabled = false;
+            }
         });
+
+        const gameOver = new UIGameOverWindow( {
+            scene: self,
+
+            onOpen: () => {
+                self.input.setDraggable(player, false);
+                settingsButton.Disabled = true;
+            },
+            onClose: () => {
+                self.input.setDraggable(player, true);
+                settingsButton.Disabled = false;
+            }
+        });
+        //gameOver.Open();
+
+        this.gameOver = gameOver;
 
         settingsButton.UpdateSprites({
             idle:  "PauseButton.png",
@@ -75,6 +107,9 @@ export default class SceneDungeon extends Phaser.Scene {
             tintHover: 0xb2b2b2,
             tintDown: 0xffb2b2,
         });
+        settingsButton.OnClick = () => {
+            pause.Open();
+        }
 
         this.player.OnDragStart = (pointer, gameObject) => {
             grid.HighlightActive = true;
@@ -102,8 +137,9 @@ export default class SceneDungeon extends Phaser.Scene {
     }
 
     GameOver() {
-        this.Reset();
-        this.scene.switch('SceneMenu');
+        //this.Reset();
+        //this.scene.switch('SceneMenu');
+        this.gameOver.Open();
     }
 
     Reset() {

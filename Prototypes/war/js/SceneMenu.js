@@ -1,5 +1,6 @@
 import UITextButton from "./UITextButton.js";
 import UISettingsWindow from "./UISettingsWindow.js";
+import UITutorialWindow from "./UITutorialWindow.js";
 
 export default class SceneMenu extends Phaser.Scene {
     constructor() {
@@ -7,6 +8,7 @@ export default class SceneMenu extends Phaser.Scene {
     }
 
     preload() {
+        this.load.atlas('Tutorial', 'war/Tutorial.jpg', 'war/Tutorial.json');
         this.load.atlas('Solid', 'war/Solid.jpg', 'war/Solid.json');
         this.load.atlas('Clear', 'war/Clear.png', 'war/Clear.json');
         this.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
@@ -87,7 +89,7 @@ export default class SceneMenu extends Phaser.Scene {
             x: 512, y: 1206,
             text: "Play",
             onClick: () => {
-                self.scene.switch('SceneDungeon'); // TODO: Call reset somehow?
+                self.scene.switch('SceneDungeon'); 
             }
         });
         this.buttons.tutorial = new UITextButton({
@@ -102,7 +104,7 @@ export default class SceneMenu extends Phaser.Scene {
         });
 
         this.settings = new UISettingsWindow({
-            scene: this,
+            scene: self,
             onOpen: () => {
                 self.buttons.play.Disabled = true;
                 self.buttons.tutorial.Disabled = true;
@@ -113,11 +115,28 @@ export default class SceneMenu extends Phaser.Scene {
                 self.buttons.tutorial.Disabled = false;
                 self.buttons.options.Disabled = false;
             }
-            
+        });
+
+        this.tutorial = new UITutorialWindow({
+            scene: self,
+            onOpen: () => {
+                self.buttons.play.Disabled = true;
+                self.buttons.tutorial.Disabled = true;
+                self.buttons.options.Disabled = true;
+            },
+            onClose: () => {
+                self.buttons.play.Disabled = false;
+                self.buttons.tutorial.Disabled = false;
+                self.buttons.options.Disabled = false;
+            }
         });
 
         this.buttons.options.OnClick = () => {
             self.settings.Open();
+        }
+
+        this.buttons.tutorial.OnClick = () => {
+            self.tutorial.Open();
         }
     }
 }

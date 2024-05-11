@@ -450,6 +450,10 @@ export default class EnemyGrid {
     Reset() {
         this.scene.player.disableInteractive();
 
+        for (let i = 0, len = this.monsters.length; i < len; ++i) {
+            this.monsters[i].ReplaceDead();
+        }
+
         this.scene.tweens.add( { // Flip  monsters
             targets: this.monsters,
             duration: 300,
