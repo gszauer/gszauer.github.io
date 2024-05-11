@@ -15,7 +15,7 @@ window.addEventListener('load', () => {
         },
     }
 
-    const resize = () => {
+    /*const resize = () => {
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         const windowRatio = windowWidth / windowHeight;
@@ -34,9 +34,9 @@ window.addEventListener('load', () => {
             let targetHeight = windowHeight;
             game.scale.setParentSize(targetWidth, targetHeight);
         }
-    };
+    };*/
 
     const game = new Phaser.Game(config);
-    resize();
-    window.addEventListener("resize", resize, false);
+    //resize();
+    //window.addEventListener("resize", resize, false);
 });

@@ -48,6 +48,12 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         tutorialTextBg.scaleY = 3.5;
         tutorialTextBg.alpha = 0.7;
 
+        const tutorialLAbel = scene.add.bitmapText(0, 0, 'Adventure', "Tutorial Text");
+        tutorialLAbel.setTint(0xb88151);
+        tutorialLAbel.x = tutorialTextBg.x + 15;
+        tutorialLAbel.y =  tutorialTextBg.y + 15;
+
+
         const closeBtn = new UITextButton({
             scene: scene,
             x: 917, y: 597 - 260,
@@ -74,7 +80,7 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
 
         const children = [
             blackout, background, L, R, T, B, TL, TR, BL, BR, skull, 
-            tutorial, tutorialTextBg, closeBtn, prevBtn, nextBtn
+            tutorial, tutorialTextBg, closeBtn, prevBtn, nextBtn, tutorialLAbel
         ];
         super(scene, 0, 0, children);
 
@@ -117,6 +123,7 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         self.tutorialTextBg = tutorialTextBg;
         this.prevBtn = prevBtn;
         this.nextBtn = nextBtn;
+        this.tutorialLAbel = tutorialLAbel;
 
         self.x = self.y = 0;
         self.setSize(scene.sys.game.config.width,  scene.sys.game.config.height);
@@ -157,6 +164,7 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         this.tutorialTextBg.setActive(state).setVisible(state);
         this.prevBtn.setActive(state).setVisible(state);
         this.nextBtn.setActive(state).setVisible(state);
+        this.tutorialLAbel.setActive(state).setVisible(state);
 
         if (this.TutorialIndex == 1) {
             this.prevBtn.setActive(false).setVisible(false);
@@ -185,6 +193,26 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         }
         else {
             this.nextBtn.setActive(true).setVisible(true);
+        }
+
+        if (this.TutorialIndex == 1) {
+            this.tutorialLAbel.text = "Drag the hero card up \nor diagonally to move.";
+        }
+        else if (this.TutorialIndex == 2) {
+            this.tutorialLAbel.text = "You can only move up or \ndiagonally by one square. \nThis means you can't move \nfrom the right side to the left \nside without going to the \nmiddle first.";
+        }
+        else if (this.TutorialIndex == 3) {
+            this.tutorialLAbel.text = "Your hero has a value (blue), \nand enemy monsters have \na value (red). Inspired by \n'war', the bigger value wins. \nThe losing cards value is \nsubtracted from the winners.";
+        }
+        else if (this.TutorialIndex == 4) {
+            this.tutorialLAbel.text = "Enemy monsters don't have \nspecial abilities, only power. \nTheir value is always in a \nred banner.";
+        }
+        else if (this.TutorialIndex == 5) {
+            this.tutorialLAbel.text = "When defeated, a monster \nwill drop loot or a skull. \nSkulls don't do anything, \nthey are a free move. Loot \ncan be any item.";
+        }
+        else if (this.TutorialIndex == 6) {
+            this.tutorialLAbel.text = "Loot is any of the following \nitems: \nCoins: Increase hero value\nSword: Damage monsters\nTreasure: Change next row\nPortal: Change all cards";
+
         }
 
         this.tutorial.setFrame("Tutorial" + this.TutorialIndex + ".png");
