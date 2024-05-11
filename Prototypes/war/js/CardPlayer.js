@@ -9,9 +9,7 @@ export default class CardPlayer extends CardBase {
 
         this.OnValueChanged = null;
 
-        this.Name = name;
         this.Value = value;
-
         this.OnDragStart = null;
         this.OnDragEnd = null;
         this.OnDrag = null;
@@ -57,8 +55,9 @@ export default class CardPlayer extends CardBase {
                 self.OnDragEnd(pointer, gameObject);
             }
         });
-    }
 
+        this.valueSprite.setFrame("BlueBanner.png");
+    }
 
 
     set Value(newValue) {

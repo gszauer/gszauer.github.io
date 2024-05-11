@@ -19,11 +19,11 @@ export default class SceneMenu extends Phaser.Scene {
 
         this.background = {};
         {
-            this.background.top = this.add.sprite(0, 0, "Background", "Background.jpg");
+            this.background.top = this.add.image(0, 0, "Background");
             this.background.top.x += this.background.top.width / 2;
             this.background.top.y += this.background.top.height / 2;
 
-            this.background.bottom = this.add.sprite(0, 0, "Background", "Background.jpg");
+            this.background.bottom = this.add.image(0, 0, "Background");
             this.background.bottom.x = this.background.top.x;
             this.background.bottom.y = this.background.top.y + this.background.top.height;
             this.background.bottom.flipY = true;
@@ -87,7 +87,7 @@ export default class SceneMenu extends Phaser.Scene {
             x: 512, y: 1206,
             text: "Play",
             onClick: () => {
-                self.scene.stop('SceneMenu').launch('SceneDungeon');
+                self.scene.switch('SceneDungeon'); // TODO: Call reset somehow?
             }
         });
         this.buttons.tutorial = new UITextButton({
@@ -115,7 +115,6 @@ export default class SceneMenu extends Phaser.Scene {
             }
             
         });
-        //this.settings.Open();
 
         this.buttons.options.OnClick = () => {
             self.settings.Open();

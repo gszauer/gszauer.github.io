@@ -1,18 +1,19 @@
 export default class CardBase extends Phaser.GameObjects.Container {
     static rotationCounter = 0;
+    static monsterCardsPool = [
+        "CardBarbarian.png", "CardBeholder.png", "CardGhost.png",
+        "CardMage.png", "CardMantis.png", "CardOrc.png",
+        "CardScorpion.png", "CardSkeleton.png", "CardSnake.png",
+        "CardTree.png", "CardTroll.png", "CardWizard.png"
+    ];
 
     constructor(data) {
         const { scene, x, y, name, sprite, depth, value, type} = data;
 
-        const faceSprite = scene.add.sprite(0, 0, scene.GetSet(sprite), sprite);
-        faceSprite.y -= (scene.cardHeight - faceSprite.height) / 2;
+        const faceSprite = scene.add.sprite(0, 0, "Solid", sprite);
+        //faceSprite.y -= faceSprite.height / 2;
 
-        const footerSprite = scene.add.sprite(0, 0, scene.GetSet("BottomFrame.png"), "BottomFrame.png");
-        footerSprite.y = (faceSprite.height / 2 + footerSprite.height / 2) - (scene.cardHeight - faceSprite.height) / 2;
-
-        const nameText = new Phaser.GameObjects.BitmapText(scene, 0,0, scene.cardNameFont, name, scene.cardNameFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
-        
-        const valueSprite = scene.add.sprite(0, 0, scene.GetSet("Value.png"), "Value.png");
+        const valueSprite = scene.add.sprite(0, 0, "Clear", "RedBanner.png");
         valueSprite.y = faceSprite.y - faceSprite.height / 2 + valueSprite.height / 2 + 2;
         valueSprite.x = -faceSprite.width / 2 + valueSprite.width / 2 + 205;
 
@@ -21,19 +22,16 @@ export default class CardBase extends Phaser.GameObjects.Container {
             Phaser.GameObjects.BitmapText.ALIGN_CENTER);
         valueText.y = valueSprite.y - valueText.height / 2 - 10;
 
-        super(scene, x, y, [faceSprite, footerSprite, valueSprite, nameText, valueText]);
+        super(scene, x, y, [faceSprite, valueSprite, valueText]);
 
         this.depth = depth;
         this.scene = scene;
         this.sprite = sprite;
         this.valueText = valueText;
-        this.footerSprite = footerSprite;
         this.faceSprite = faceSprite;
-        this.nameText = nameText;
         this.valueSprite = valueSprite;
         this.cardType = type;
 
-        this.Name = name;
         { //this.Value = value;
             this.value = value;
             this.valueText.text = this.value;
@@ -41,9 +39,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
             this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
         }
 
-        this.setSize(footerSprite.width,  footerSprite.height + faceSprite.height); 
-        //console.log("size: " + (footerSprite.height + faceSprite.height))
-        //this.setOrigin(0.5, 0.5);
+        this.setSize(faceSprite.width,  faceSprite.height); 
         this.ApplyRandomRotation();
 
         this.scene.add.existing(this);
@@ -78,12 +74,9 @@ export default class CardBase extends Phaser.GameObjects.Container {
 
     ReplaceWithRandom(set) {
         const scene = this.scene;
-        if (set === undefined || set === null) {
-            set = [];
-        }
         
-        let randomCard =  Math.floor(Math.random() * scene.set1.length);
-        let randomCardName =  scene.names1[randomCard];
+        let randomCardIndex =  Math.floor(Math.random() * CardBase.monsterCardsPool.length);
+        let randomCardName =  CardBase.monsterCardsPool[randomCardIndex];
         while(true) {
             let contains = false;
             for (let i = 0, size = set.length; i < size; ++i) {
@@ -97,80 +90,69 @@ export default class CardBase extends Phaser.GameObjects.Container {
                 break;
             }
 
-            randomCard =  Math.floor(Math.random() * scene.set1.length);
-            randomCardName =  scene.names1[randomCard];
+            randomCardIndex = Math.floor(Math.random() * CardBase.monsterCardsPool.length);
+            randomCardName =  CardBase.monsterCardsPool[randomCardIndex];
         }
 
-        const spriteName = scene.set1[randomCard];
-            
         this.cardType = "monster";
-        this.Name  = randomCardName;
-        this.faceSprite.setFrame(spriteName);
+        this.faceSprite.setFrame(randomCardName);
         this.Value = this.scene.GenerateNextCardValue();
         this.ApplyRandomRotation();
+        this.valueSprite.setFrame("RedBanner.png");
 
         this.faceSprite.visible = true;
-        this.footerSprite.visible = true;
     }
 
     ReplaceWithCoin() {
         this.cardType = "coin";
         this.Value = this.scene.GenerateNextCardValue();
-        this.Name  = "Coins";
-        this.faceSprite.setFrame("Coins.png");
+        this.faceSprite.setFrame("CardCoins.png");
+        this.valueSprite.setFrame("BlueBanner.png");
 
         this.faceSprite.visible = true;
-        this.footerSprite.visible = true;
     }
 
     ReplaceWithSword() {
         this.cardType = "sword";
         this.Value = this.scene.GenerateNextCardValue();
-        this.Name  = "Sword";
-        this.faceSprite.setFrame("Sword.png");
+        this.faceSprite.setFrame("CardSword.png");
+        this.valueSprite.setFrame("BlueBanner.png");
 
         this.faceSprite.visible = true;
-        this.footerSprite.visible = true;
     }
 
     ReplaceWithPortal() {
         this.cardType = "portal";
         this.Value = 0;
-        this.Name  = "Portal";
-        this.faceSprite.setFrame("DarkPortal.png");
+        this.faceSprite.setFrame("CardPortal.png");
 
         this.faceSprite.visible = true;
-        this.footerSprite.visible = true;
     }
 
     ReplaceWithChest() {
         this.cardType = "chest";
         this.Value = 0;
-        this.Name  = "Treasure";
-        this.faceSprite.setFrame("TreasureChest.png");
+        this.faceSprite.setFrame("CardChest.png");
 
         this.faceSprite.visible = true;
-        this.footerSprite.visible = true;
     }
 
     ReplaceWithEmpty() {
         this.cardType = "empty";
         this.Value = 0;
-        this.Name  = "";
 
         this.faceSprite.visible = false;
-        this.footerSprite.visible = false;
     }
 
     ReplaceWith(other) {
         this.Value = other.Value;
-        this.Name  = other.Name;
         this.angle = other.angle;
         this.cardType = other.cardType;
         this.faceSprite.setFrame(other.faceSprite.frame.name);
+        this.valueSprite.setFrame(other.valueSprite.frame.name);
+
 
         this.faceSprite.visible = other.cardType !== "empty";
-        this.footerSprite.visible = other.cardType !== "empty";
     }
 
     ReplaceOnDeath() {
@@ -189,8 +171,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
         else {
             this.cardType = "monster";
             this.Value = 0;
-            this.Name  = "dead";
-            this.faceSprite.setFrame("DeadMonster.png");
+            this.faceSprite.setFrame("CardDead.png");
         }
     }
 
@@ -208,22 +189,7 @@ export default class CardBase extends Phaser.GameObjects.Container {
     
     TintCard(color) {
         this.faceSprite.tint = color;
-        this.footerSprite.tint = color;
         this.valueSprite.tint = color;
-    }
-
-    set Name(newName) {
-        this.name = newName;
-        this.nameText.text = this.name;
-        this.nameText.setScale(0.48, 0.48);
-        this.nameText.maxWidth = this.footerSprite.width;
-        this.nameText.setTint(0xe1b95c);
-        this.nameText.x = -this.nameText.width / 2;
-        this.nameText.y = this.footerSprite.y  - this.nameText.height / 2;
-    }
-
-    get Name() {
-        return this.name;
     }
 
     set Value(newValue) {
@@ -231,7 +197,6 @@ export default class CardBase extends Phaser.GameObjects.Container {
         this.valueText.text = this.value;
         this.valueText.setTint(0);
         this.valueText.x = this.valueSprite.x - this.valueText.width / 2;
-       
 
         if (newValue <= 0) {
             this.valueSprite.setActive(false).setVisible(false);
@@ -249,9 +214,6 @@ export default class CardBase extends Phaser.GameObjects.Container {
 
     SetVisibility(newValue) {
         this.faceSprite.setActive(newValue).setVisible(newValue);
-        this.footerSprite.setActive(newValue).setVisible(newValue);
-        this.footerSprite.setActive(newValue).setVisible(newValue);
-        this.nameText.setActive(newValue).setVisible(newValue);
         this.valueSprite.setActive(newValue).setVisible(newValue);
         this.valueText.setActive(newValue).setVisible(newValue);
     }

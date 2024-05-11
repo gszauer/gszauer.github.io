@@ -44,8 +44,7 @@ export default class EnemyGrid {
                 let monster = new CardBase({
                     scene: scene, 
                     x: xCoords[i], y: yCoords[j], 
-                    name: "",
-                    sprite: "CardBackTopOnly.png",
+                    sprite: "CardBack.png",
                     depth: -2,
                     value: 0,
                     type: "random" 
@@ -59,12 +58,11 @@ export default class EnemyGrid {
         }
 
         this.cardBacks = [
-            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png"),
-            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png"),
-            scene.add.sprite(0, 0, scene.GetSet("CardBack.png"), "CardBack.png")
+            scene.add.sprite(0, 0, "Solid", "CardBack.png"),
+            scene.add.sprite(0, 0, "Solid", "CardBack.png"),
+            scene.add.sprite(0, 0, "Solid", "CardBack.png")
         ];
         this.SetCardBackVisibility(false);
-        
 
         this.xCoords = xCoords;
         this.yCoords = yCoords;
@@ -321,7 +319,7 @@ export default class EnemyGrid {
                     repeat: 1,
                     yoyo: true,
                     onComplete: () => {
-                        this.scene.Reset(); // Re-enables interactivity
+                        this.scene.GameOver(); // Re-enables interactivity
                     }
                 });
                 
@@ -334,7 +332,7 @@ export default class EnemyGrid {
     _AdvanceBoard(monster) {
         this.scene.player.disableInteractive();
         this.scene.tweens.add({ // Flash
-            targets: [monster.faceSprite, monster.footerSprite, monster.valueSprite, monster.valueText, monster.nameText],
+            targets: [monster.faceSprite, monster.valueSprite, monster.valueText],
             alpha: 0,
             duration: 120,
             repeat: 1,
