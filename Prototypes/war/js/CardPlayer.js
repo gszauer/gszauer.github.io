@@ -3,6 +3,8 @@
 import CardBase from "./CardBase.js";
 
 export default class CardPlayer extends CardBase {
+    static playerFrame = "CardBoy.png";
+    
     constructor(data) {
         super(data);
         const { scene, x, y, name, sprite, depth, value, type} = data;

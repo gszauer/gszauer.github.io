@@ -69,8 +69,6 @@ export default class SceneDungeon extends Phaser.Scene {
         this.player = player;
         this.grid = grid;
 
-        this.Reset();
-
         const pause = new UIPauseWindow({
             scene: self,
 
@@ -134,6 +132,8 @@ export default class SceneDungeon extends Phaser.Scene {
                 gameObject.x = gameObject.startX = grid.monsters[moveTarget].x;
             }
         };
+
+        this.Reset();
     }
 
     GameOver() {
@@ -143,10 +143,17 @@ export default class SceneDungeon extends Phaser.Scene {
     }
 
     Reset() {
+        this.player.faceSprite.setFrame(CardPlayer.playerFrame);
         this.player.x = this.grid.xCoords[1];
         this.player.startX = this.grid.xCoords[1];
         this.player.Value = 15;
         this.grid.Reset();
+    }
+
+    UpdatePlayerSprite() {
+        if (this.player) {
+            this.player.faceSprite.setFrame(CardPlayer.playerFrame);
+        }
     }
 
     set Coins(newValue) {

@@ -1,6 +1,7 @@
 import UITextButton from "./UITextButton.js";
 import UISettingsWindow from "./UISettingsWindow.js";
 import UITutorialWindow from "./UITutorialWindow.js";
+import CardPlayer from "./CardPlayer.js";
 
 export default class SceneMenu extends Phaser.Scene {
     constructor() {
@@ -89,6 +90,13 @@ export default class SceneMenu extends Phaser.Scene {
             x: 512, y: 1206,
             text: "Play",
             onClick: () => {
+                if (Math.floor(Math.random() * 10) < 5) {
+                    CardPlayer.playerFrame = "CardBoy.png";
+                }
+                else {
+                    CardPlayer.playerFrame = "CardGirl.png";
+                }
+                self.scene.get('SceneDungeon').UpdatePlayerSprite();
                 self.scene.switch('SceneDungeon'); 
             }
         });

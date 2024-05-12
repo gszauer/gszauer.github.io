@@ -12,9 +12,10 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
 
         const blackout = scene.add.sprite(0, 0, "Clear", "CardBlackout.png");
         blackout.setOrigin(0, 0);
-        blackout.x = blackout.y = 0;
-        blackout.scaleX = 8;
-        blackout.scaleY = 16;
+        blackout.alpha = 0.85;
+        blackout.x = blackout.y = -5;
+        blackout.scaleX = 8.1;
+        blackout.scaleY = 16.1;
 
         const background = scene.add.sprite(0, 0, "Solid", "WindowBackground.png");
         background.setOrigin(0, 0);
@@ -153,6 +154,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
     }
 
     Open() {
+        this.scene.game.SetHTMLTint(true);
         this._ApplyOpenVisuals(true);
         if (this.OnOpen != null) {
             this.OnOpen();
@@ -160,6 +162,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
     }
 
     Close() {
+        this.scene.game.SetHTMLTint(false);
         this._ApplyOpenVisuals(false);
         if (this.OnClose != null) {
             this.OnClose();

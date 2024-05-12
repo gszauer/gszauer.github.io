@@ -37,6 +37,22 @@ window.addEventListener('load', () => {
     };*/
 
     const game = new Phaser.Game(config);
+    game.backgroundElement = null;
+
+    game.SetHTMLTint = (state) => {
+        if (game.backgroundElement == null) {
+            game.backgroundElement = document.getElementById('phaser-game');
+        }
+
+        if (state) {
+            game.backgroundElement.style.backgroundColor  ="rgb(0, 0, 0)";            
+            game.backgroundElement.style.backgroundImage="url(war/WebBGDark.jpg)";            
+        }
+        else {
+            game.backgroundElement.style.backgroundColor  = "rgb(24, 24, 24)";          
+            game.backgroundElement.style.backgroundImage="url(war/WebBG.jpg)";            
+        }
+    }
     //resize();
     //window.addEventListener("resize", resize, false);
 });
