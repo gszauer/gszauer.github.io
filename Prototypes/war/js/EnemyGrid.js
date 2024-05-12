@@ -243,7 +243,7 @@ export default class EnemyGrid {
             this.scene.SoundPortal();
             this.scene.player.disableInteractive();
             const oldVal = this.scene.player.Value;
-            this.scene.Reset(); // Will re-enable interactive at end
+            this.scene.Reset(true); // Will re-enable interactive at end
             this.scene.player.Value = oldVal;
             return -1;
         }

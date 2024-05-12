@@ -19,26 +19,36 @@ export default class SceneDungeon extends Phaser.Scene {
        
         this.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
         this.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
+        this.load.audio("Die", ["war/die.ogg", "war/die.mp3", "war/die.m4a"]);
+        this.load.audio("Died", ["war/died.ogg", "war/died.mp3", "war/died.m4a"]);
+        this.load.audio("Portal", ["war/portal.ogg", "war/portal.mp3", "war/portal.m4a"]);
+        this.load.audio("GameOver", ["war/GameOver.ogg", "war/GameOver.mp3", "war/GameOver.m4a"]);
+
         this.load.audio("Hit0", ["war/hit0.ogg", "war/hit0.mp3", "war/hit0.m4a"]);
         this.load.audio("Hit1", ["war/hit1.ogg", "war/hit1.mp3", "war/hit1.m4a"]);
         this.load.audio("Hit2", ["war/hit2.ogg", "war/hit2.mp3", "war/hit2.m4a"]);
         this.load.audio("Hit3", ["war/hit3.ogg", "war/hit3.mp3", "war/hit3.m4a"]);
         this.load.audio("Hit4", ["war/hit4.ogg", "war/hit4.mp3", "war/hit4.m4a"]);
-        this.load.audio("Die", ["war/die.ogg", "war/die.mp3", "war/die.m4a"]);
-        this.load.audio("Died", ["war/died.ogg", "war/died.mp3", "war/died.m4a"]);
-        this.load.audio("Portal", ["war/portal.ogg", "war/portal.mp3", "war/portal.m4a"]);
+       
         this.load.audio("Coin0", ["war/coin0.ogg", "war/coin0.mp3", "war/coin0.m4a"]);
         this.load.audio("Coin1", ["war/coin1.ogg", "war/coin1.mp3", "war/coin1.m4a"]);
         this.load.audio("Coin2", ["war/coin2.ogg", "war/coin2.mp3", "war/coin2.m4a"]);
+
         this.load.audio("Sword0", ["war/sword0.ogg", "war/sword0.mp3", "war/sword0.m4a"]);
         this.load.audio("Sword1", ["war/sword1.ogg", "war/sword1.mp3", "war/sword1.m4a"]);
         this.load.audio("Sword2", ["war/sword2.ogg", "war/sword2.mp3", "war/sword2.m4a"]);
-        this.load.audio("Rustle0", ["war/rustle0.ogg", "war/rustle0.mp3", "war/rustle.m4a"]);
-        this.load.audio("Rustle1", ["war/rustle1.ogg", "war/rustle1.mp3", "war/rustle.m4a"]);
-        this.load.audio("Rustle2", ["war/rustle2.ogg", "war/rustle2.mp3", "war/rustle.m4a"]);
-        this.load.audio("Chest0", ["war/chest0.ogg", "war/chest0.mp3", "war/chest.m4a"]);
-        this.load.audio("Chest1", ["war/chest1.ogg", "war/chest1.mp3", "war/chest.m4a"]);
-        this.load.audio("Chest2", ["war/chest2.ogg", "war/chest2.mp3", "war/chest.m4a"]);
+
+        this.load.audio("Rustle0", ["war/rustle0.ogg", "war/rustle0.mp3", "war/rustle0.m4a"]);
+        this.load.audio("Rustle1", ["war/rustle1.ogg", "war/rustle1.mp3", "war/rustle1.m4a"]);
+        this.load.audio("Rustle2", ["war/rustle2.ogg", "war/rustle2.mp3", "war/rustle2.m4a"]);
+
+        this.load.audio("Chest0", ["war/chest0.ogg", "war/chest0.mp3", "war/chest0.m4a"]);
+        this.load.audio("Chest1", ["war/chest1.ogg", "war/chest1.mp3", "war/chest1.m4a"]);
+        this.load.audio("Chest2", ["war/chest2.ogg", "war/chest2.mp3", "war/chest2.m4a"]);
+
+        this.load.audio("Bgm0", ["war/bgm0.ogg", "war/bgm0.mp3", "war/bgm0.m4a"]);
+        this.load.audio("Bgm1", ["war/bgm1.ogg", "war/bgm1.mp3", "war/bgm1.m4a"]);
+        this.load.audio("Bgm2", ["war/bgm2.ogg", "war/bgm2.mp3", "war/bgm2.m4a"]);
         
         this.cardValueFont = 'LifeCraft';
         this.cardValueFontSize  = 70;
@@ -114,6 +124,7 @@ export default class SceneDungeon extends Phaser.Scene {
             onOpen: () => {
                 self.input.setDraggable(player, false);
                 settingsButton.Disabled = true;
+                self.PlayGameOverMusic();
             },
             onClose: () => {
                 self.input.setDraggable(player, true);
@@ -193,6 +204,21 @@ export default class SceneDungeon extends Phaser.Scene {
             this.sound.add("Chest2"),
         ];
 
+        this.backgroundMusics = [
+            this.sound.add("Bgm0"),
+            this.sound.add("Bgm1"),
+            this.sound.add("Bgm2"),
+        ];
+        this.gameOverMusic =  this.sound.add("GameOver"),
+        this.backgroundMusics[0].loop = true;
+        this.backgroundMusics[1].loop = true;
+        this.backgroundMusics[2].loop = true;
+        this.gameOverMusic.loop = true;
+        this.backgroundMusics[0].volume = 0.5;
+        this.backgroundMusics[1].volume = 0.5;
+        this.backgroundMusics[2].volume = 0.5;
+        this.backgroundMusic = null;
+
         this.Reset();
     }
 
@@ -202,12 +228,35 @@ export default class SceneDungeon extends Phaser.Scene {
         this.gameOver.Open();
     }
 
-    Reset() {
+    Reset(dontResetMusic) {
+        const resetMusic = !dontResetMusic;
+        
+        if (resetMusic) {
+            this.StopBgm();
+
+            const rando = Math.floor(Math.random() * this.backgroundMusics.length);
+            this.backgroundMusic = this.backgroundMusics[rando];
+            this.backgroundMusic.play();
+        }
+
         this.player.faceSprite.setFrame(CardPlayer.playerFrame);
         this.player.x = this.grid.xCoords[1];
         this.player.startX = this.grid.xCoords[1];
         this.player.Value = 15;
         this.grid.Reset();
+    }
+
+    PlayGameOverMusic() {
+        this.StopBgm();
+        this.backgroundMusic = this.gameOverMusic;
+        this.backgroundMusic.play();
+    }
+
+    StopBgm() {
+        if (this.backgroundMusic != null) {
+            this.backgroundMusic.stop();
+            this.backgroundMusic = null;
+        }
     }
 
     UpdatePlayerSprite() {

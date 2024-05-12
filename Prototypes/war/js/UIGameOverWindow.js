@@ -75,9 +75,10 @@ export default class UIGameOverWindow extends Phaser.GameObjects.Container {
         }
 
         quitBtn.OnClick = () => {
+            scene.StopBgm();
             scene.ButtonClick();
             self.Close();
-            scene.Reset();
+            scene.Reset(true);
             scene.scene.switch('SceneMenu'); 
         }
 
