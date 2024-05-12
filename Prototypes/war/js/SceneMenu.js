@@ -15,6 +15,9 @@ export default class SceneMenu extends Phaser.Scene {
         this.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
         this.load.bitmapFont('LifeCraft', 'war/LifeCraft.png', 'war/LifeCraft.fnt');
         this.load.image('Background', 'war/Background.jpg');
+
+        this.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
+        this.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
     }
 
     create() {
@@ -90,6 +93,7 @@ export default class SceneMenu extends Phaser.Scene {
             x: 512, y: 1206,
             text: "Play",
             onClick: () => {
+                self.ButtonClick();
                 if (Math.floor(Math.random() * 10) < 5) {
                     CardPlayer.playerFrame = "CardBoy.png";
                 }
@@ -98,17 +102,26 @@ export default class SceneMenu extends Phaser.Scene {
                 }
                 self.scene.get('SceneDungeon').UpdatePlayerSprite();
                 self.scene.switch('SceneDungeon'); 
+            },
+            onEnter: () => {
+                self.ButtonHover();
             }
         });
         this.buttons.tutorial = new UITextButton({
             scene: this,
             x: 512, y: 1513,
-            text: "Tutorial"
+            text: "Tutorial",
+            onEnter: () => {
+                self.ButtonHover();
+            }
         });
         this.buttons.options = new UITextButton({
             scene: this,
             x: 512, y: 1820,
-            text: "Settings"
+            text: "Settings",
+            onEnter: () => {
+                self.ButtonHover();
+            }
         });
 
         this.settings = new UISettingsWindow({
@@ -140,11 +153,24 @@ export default class SceneMenu extends Phaser.Scene {
         });
 
         this.buttons.options.OnClick = () => {
+            self.ButtonClick();
             self.settings.Open();
         }
 
         this.buttons.tutorial.OnClick = () => {
+            self.ButtonClick();
             self.tutorial.Open();
         }
+
+        this.buttonHoverSound = this.sound.add("ButtonHover");
+        this.buttonClickSound = this.sound.add("ButtonClick");
+    }
+
+    ButtonHover() {
+        this.buttonHoverSound.play();
+    }
+
+    ButtonClick() {
+        this.buttonClickSound.play();
     }
 }

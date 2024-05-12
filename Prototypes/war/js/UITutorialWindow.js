@@ -54,15 +54,20 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         tutorialLAbel.x = tutorialTextBg.x + 15;
         tutorialLAbel.y =  tutorialTextBg.y + 15;
 
-
         const closeBtn = new UITextButton({
             scene: scene,
             x: 917, y: 597 - 260,
+            onEnter: () => {
+                scene.ButtonHover();
+            }
         });
 
         const prevBtn = new UITextButton({
             scene: scene,
             text: "Prev",
+            onEnter: () => {
+                scene.ButtonHover();
+            }
         });
         prevBtn.setScale(0.4, 0.4);
         prevBtn.x = (tutorialTextBg.x) + (prevBtn.width * prevBtn.scaleX / 2);
@@ -71,7 +76,10 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
 
         const nextBtn = new UITextButton({
             scene: scene,
-            text: "Next"
+            text: "Next",
+            onEnter: () => {
+                scene.ButtonHover();
+            }
         });
         nextBtn.setScale(0.4, 0.4);
         nextBtn.x = (tutorialTextBg.x + tutorialTextBg.width * tutorialTextBg.scaleX) 
@@ -92,11 +100,13 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         prevBtn.OnClick = () => {
             self.TutorialIndex -= 1;
             self.UpdateTutorial();
+            scene.ButtonClick();
         }
 
         nextBtn.OnClick = () => {
             self.TutorialIndex += 1;
             self.UpdateTutorial();
+            scene.ButtonClick();
         }
 
         TL.flipY = TR.flipY = true;
@@ -141,6 +151,7 @@ export default class UITutorialWindow extends Phaser.GameObjects.Container {
         });
         closeBtn.OnClick = () => {
             self.Close();
+            scene.ButtonClick();
         }
 
         self.scene.add.existing(self);

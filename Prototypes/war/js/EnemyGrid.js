@@ -176,6 +176,7 @@ export default class EnemyGrid {
     }
 
     TryToMove(gameObject, x, y) {
+        const self = this;
         const targetIndex = this._GetTargetIndex(x, y);
         
         if (targetIndex < 0) {
@@ -187,7 +188,7 @@ export default class EnemyGrid {
         if (monster.cardType == "chest") {
             this.scene.player.disableInteractive();
             const row2 = [this.monsters[1], this.monsters[4], this.monsters[7]];
-
+            this.scene.SoundChest();
 
             this.scene.tweens.add( { // Flip  monsters
                 targets: row2,
@@ -239,6 +240,7 @@ export default class EnemyGrid {
             });
         }
         else if (monster.cardType == "portal") {
+            this.scene.SoundPortal();
             this.scene.player.disableInteractive();
             const oldVal = this.scene.player.Value;
             this.scene.Reset(); // Will re-enable interactive at end
@@ -246,10 +248,12 @@ export default class EnemyGrid {
             return -1;
         }
         else if (monster.cardType == "empty") {
+            this.scene.SoundRustle();
             return -1;
         }
         else if (monster.cardType == "sword") {
             let deadMonsters = [];
+            this.scene.SoundSword();
 
             for (let i = 0; i < this.numColumns * this.numRows; ++i) {
                 const target = this.monsters[i];
@@ -260,6 +264,12 @@ export default class EnemyGrid {
                         deadMonsters.push(target);
                     }
                 }
+            }
+
+            if (deadMonsters.length > 0) {
+                setTimeout(() => {
+                    this.scene.SoundHit();
+                }, 150);
             }
 
             if (deadMonsters.length > 0) {
@@ -300,17 +310,29 @@ export default class EnemyGrid {
         }
         else if (monster.cardType == "coin") {
             this.scene.Coins += monster.Value;
+            this.scene.SoundCoin();
             this._AdvanceBoard(monster);
         }
         else if (monster.cardType == "monster") {
             this.scene.Coins -= monster.Value;
 
             if (this.scene.Coins > 0) { // Kill Monster
+                if (monster.Value == 0) {
+                    this.scene.SoundRustle();
+                }
+                else {
+                    this.scene.SoundHit();
+                }
                 monster.Value = 0;
                 this._AdvanceBoard(monster);
             }
             else { // Kill Player
                 this.scene.player.disableInteractive();
+                this.scene.SoundHit();
+
+                setTimeout(() => {
+                    this.scene.SoundDie();
+                }, 90);
 
                 this.scene.tweens.add({ // Flash
                     targets: [this.scene.player],
@@ -319,7 +341,7 @@ export default class EnemyGrid {
                     repeat: 1,
                     yoyo: true,
                     onComplete: () => {
-                        this.scene.GameOver(); // Re-enables interactivity
+                    this.scene.GameOver(); // Re-enables interactivity
                     }
                 });
                 

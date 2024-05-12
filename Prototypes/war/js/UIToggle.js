@@ -4,6 +4,7 @@ export default class UISlider extends Phaser.GameObjects.Container {
             scene = null, 
             x = 0, y = 0, 
             onToggled = null, 
+            onEnter = null
         } = data;
 
         const unticked = scene.add.sprite(0, 0, "Clear", "CheckboxOff.png");
@@ -16,6 +17,7 @@ export default class UISlider extends Phaser.GameObjects.Container {
         self.state = false;
         self.isDown = false;
 
+        self.OnEnter = onEnter;
         self.OnToggled = onToggled;
         self.ticked = ticked;
         self.unticked = unticked;
@@ -98,6 +100,10 @@ export default class UISlider extends Phaser.GameObjects.Container {
             else {
                 unticked.setTint(hoverTint);
                 ticked.setTint(hoverTint);
+            }
+
+            if (self.OnEnter !== null) {
+                self.OnEnter(self, pointer);
             }
         });
         

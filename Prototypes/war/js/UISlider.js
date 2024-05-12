@@ -5,6 +5,7 @@ export default class UISlider extends Phaser.GameObjects.Container {
             x = 0, y = 0, 
             onValueChanged = null, 
             onClick = null,
+            onEnter = null,
             text = "Volume",
             t = 1.0
         } = data;
@@ -18,15 +19,12 @@ export default class UISlider extends Phaser.GameObjects.Container {
 
         const self = this;
 
-        self._value = t;
-
-        const left = -imgTrack.width / 2 + imgHandle.width / 2;
-        const right = imgTrack.width / 2 - imgHandle.width / 2;
-        imgHandle.x  = (right - left) * (t - 0.5);
-
         self.imgTrack = imgTrack ;
         self.imgHandle = imgHandle;
         self.txtLabel = txtLabel;
+
+        self._value = 0;
+        self.Value = t;
 
         self.txtLabel.setTint(0xb88151);
         self.txtLabel.setScale(1.2, 1.2);
@@ -39,6 +37,7 @@ export default class UISlider extends Phaser.GameObjects.Container {
 
         self.OnValueChanged = onValueChanged;
         self.OnClick = onClick;
+        self.OnEnter = onEnter;
         self.text = text;
 
         const idleTint = 0xefefef;
@@ -52,17 +51,18 @@ export default class UISlider extends Phaser.GameObjects.Container {
             imgHandle.setTint(downTint);
         });
 
-        scene.input.on('pointerup', function(pointer) {
+        scene.input.on('pointerup', function(pointer, gameObject) {
             const wasDown = self.isDown;
             self.isDown = false;
 
-            const left   = imgHandle.x - imgHandle.width / 2;
+            const left   = self.x + imgHandle.x - imgHandle.width / 2;
             const right  = left   + imgHandle.width;
-            const top    = imgHandle.y - imgHandle.height / 2;
+            const top    = self.y + imgHandle.y - imgHandle.height / 2;
             const bottom = top    + imgHandle.height;
 
-            let contained = (pointer.x >= left && pointer.x <= right) && 
-                            (pointer.y >= top && pointer.y <= bottom);
+            const containedX =(pointer.x >= left && pointer.x <= right);
+            const containedY = (pointer.y >= top && pointer.y <= bottom);
+            const contained = containedX && containedY;
 
             if (contained) {
                 imgHandle.setTint(hoverTint);
@@ -84,6 +84,10 @@ export default class UISlider extends Phaser.GameObjects.Container {
             }
             else {
                 imgHandle.setTint(hoverTint);
+            }
+
+            if (self.OnEnter !== null) {
+                self.OnEnter(self, pointer);
             }
         });
         
@@ -121,6 +125,20 @@ export default class UISlider extends Phaser.GameObjects.Container {
         imgHandle.setInteractive();
         scene.input.setDraggable(imgHandle);
         self.scene.add.existing(self);
+    }
+
+    set Value(newVal) {
+        if (newVal < 0) {
+            newVal = 0;
+        }
+        else if (newVal > 1) {
+            newVal = 1;
+        }
+        this._value = newVal;
+        
+        const left = (-this.imgTrack.width / 2) + (this.imgHandle.width / 2);
+        const right = left + this.imgTrack.width - this.imgHandle.width;
+        this.imgHandle.x = (right - left) * (newVal - 0.5);
     }
 
     get Value() {

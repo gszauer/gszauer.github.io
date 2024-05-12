@@ -42,26 +42,40 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         const closeBtn = new UITextButton({
             scene: scene,
             x: 917, y: 597,
+            onEnter: () => {
+                scene.ButtonHover();
+            }
         });
 
         const mute = new UIToggle({
             scene: scene,
             x: 395, y: 1080,
             text: "Mute",
+            onEnter: () => {
+                scene.ButtonHover();
+            }
             // On toggled added below
         });
 
         const volume = new UISlider({
             scene: scene,
             x: 512, y: 910,
+            t: scene.sound.volume,
             onValueChanged: (t) => {
-                scene.sound.volume = t * mute.Scale;
+                scene.sound.volume = t * (1.0 - mute.Scale);
             },
-            text: "Volume"
+            text: "Volume",
+            onEnter: () => {
+                scene.ButtonHover();
+            },
+            onClick: () => {
+                scene.ButtonClick();
+            }
         });
 
-        mute.onToggled = () => {
-            scene.sound.volume = volume.Value * mute.Scale;
+        mute.OnToggled = () => {
+            scene.sound.volume = volume.Value * (1.0 - mute.Scale);
+            scene.ButtonClick();
         }
 
         const volLabel = scene.add.bitmapText(0, 0, 'Adventure', "Mute");
@@ -86,6 +100,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
             tintDown: 0xffb2b2,
         });
         closeBtn.OnClick = () => {
+            scene.ButtonClick();
             self.Close();
         }
 
@@ -134,6 +149,8 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
     }
 
     _ApplyOpenVisuals(state) {
+        this.volume.Value = this.scene.sound.volume,
+
         this.blackout.setActive(state).setVisible(state);
         this.TL.setActive(state).setVisible(state);
         this.TR.setActive(state).setVisible(state);

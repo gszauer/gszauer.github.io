@@ -43,14 +43,20 @@ export default class UIGameOverWindow extends Phaser.GameObjects.Container {
         const retButton = new UITextButton({
             scene: scene,
             x: 512, y: 900 ,
-            text: "Try Again"
+            text: "Try Again",
+            onEnter: () => {
+                scene.ButtonHover();
+            }
             // on click added later
         });
 
         const quitBtn = new UITextButton({
             scene: scene,
             x: 512, y: 1180,
-            text: "Quit Game"
+            text: "Quit Game",
+            onEnter: () => {
+                scene.ButtonHover();
+            }
             // on click added later
         });
 
@@ -65,9 +71,11 @@ export default class UIGameOverWindow extends Phaser.GameObjects.Container {
         retButton.OnClick = () => {
             scene.Reset();
             self.Close();
+            scene.ButtonClick();
         }
 
         quitBtn.OnClick = () => {
+            scene.ButtonClick();
             self.Close();
             scene.Reset();
             scene.scene.switch('SceneMenu'); 
