@@ -1,5 +1,6 @@
 import SceneDungeon from './SceneDungeon.js'
 import SceneMenu from './SceneMenu.js'
+import ScenePreloader from './ScenePreloader.js'
 
 window.addEventListener('load', () => {
     const config = {
@@ -8,7 +9,7 @@ window.addEventListener('load', () => {
         backgroundColor: '#1d1d1d',
         type: Phaser.AUTO,
         parent: 'phaser-game',
-        scene: [SceneMenu, SceneDungeon],
+        scene: [ScenePreloader, SceneMenu, SceneDungeon],
         scale: {
             mode: Phaser.Scale.HEIGHT_CONTROLS_WIDTH,
             autoCenter: Phaser.Scale.CENTER_BOTH,

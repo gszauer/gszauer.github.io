@@ -8,16 +8,20 @@ export default class SceneMenu extends Phaser.Scene {
         super('SceneMenu');
     }
 
-    preload() {
-        this.load.atlas('Tutorial', 'war/Tutorial.jpg', 'war/Tutorial.json');
-        this.load.atlas('Solid', 'war/Solid.jpg', 'war/Solid.json');
-        this.load.atlas('Clear', 'war/Clear.png', 'war/Clear.json');
-        this.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
-        this.load.bitmapFont('LifeCraft', 'war/LifeCraft.png', 'war/LifeCraft.fnt');
-        this.load.image('Background', 'war/Background.jpg');
+    static DoPreload(scene) {
+        scene.load.atlas('Tutorial', 'war/Tutorial.jpg', 'war/Tutorial.json');
+        scene.load.atlas('Solid', 'war/Solid.jpg', 'war/Solid.json');
+        scene.load.atlas('Clear', 'war/Clear.png', 'war/Clear.json');
+        scene.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
+        scene.load.bitmapFont('LifeCraft', 'war/LifeCraft.png', 'war/LifeCraft.fnt');
+        scene.load.image('Background', 'war/Background.jpg');
 
-        this.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
-        this.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
+        scene.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
+        scene.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
+    }
+
+    preload() {
+        
     }
 
     create() {

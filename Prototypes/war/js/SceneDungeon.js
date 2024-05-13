@@ -10,46 +10,48 @@ export default class SceneDungeon extends Phaser.Scene {
         super('SceneDungeon');
     }
 
+    static DoPreload(scene) {
+        scene.load.atlas('Solid', 'war/Solid.jpg', 'war/Solid.json');
+        scene.load.atlas('Clear', 'war/Clear.png', 'war/Clear.json');
+        scene.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
+        scene.load.bitmapFont('LifeCraft', 'war/LifeCraft.png', 'war/LifeCraft.fnt');
+        scene.load.image('Background', 'war/Background.jpg');
+       
+        scene.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
+        scene.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
+        scene.load.audio("Die", ["war/die.ogg", "war/die.mp3", "war/die.m4a"]);
+        scene.load.audio("Died", ["war/died.ogg", "war/died.mp3", "war/died.m4a"]);
+        scene.load.audio("Portal", ["war/portal.ogg", "war/portal.mp3", "war/portal.m4a"]);
+        scene.load.audio("GameOver", ["war/GameOver.ogg", "war/GameOver.mp3", "war/GameOver.m4a"]);
+
+        scene.load.audio("Hit0", ["war/hit0.ogg", "war/hit0.mp3", "war/hit0.m4a"]);
+        scene.load.audio("Hit1", ["war/hit1.ogg", "war/hit1.mp3", "war/hit1.m4a"]);
+        scene.load.audio("Hit2", ["war/hit2.ogg", "war/hit2.mp3", "war/hit2.m4a"]);
+        scene.load.audio("Hit3", ["war/hit3.ogg", "war/hit3.mp3", "war/hit3.m4a"]);
+        scene.load.audio("Hit4", ["war/hit4.ogg", "war/hit4.mp3", "war/hit4.m4a"]);
+       
+        scene.load.audio("Coin0", ["war/coin0.ogg", "war/coin0.mp3", "war/coin0.m4a"]);
+        scene.load.audio("Coin1", ["war/coin1.ogg", "war/coin1.mp3", "war/coin1.m4a"]);
+        scene.load.audio("Coin2", ["war/coin2.ogg", "war/coin2.mp3", "war/coin2.m4a"]);
+
+        scene.load.audio("Sword0", ["war/sword0.ogg", "war/sword0.mp3", "war/sword0.m4a"]);
+        scene.load.audio("Sword1", ["war/sword1.ogg", "war/sword1.mp3", "war/sword1.m4a"]);
+        scene.load.audio("Sword2", ["war/sword2.ogg", "war/sword2.mp3", "war/sword2.m4a"]);
+
+        scene.load.audio("Rustle0", ["war/rustle0.ogg", "war/rustle0.mp3", "war/rustle0.m4a"]);
+        scene.load.audio("Rustle1", ["war/rustle1.ogg", "war/rustle1.mp3", "war/rustle1.m4a"]);
+        scene.load.audio("Rustle2", ["war/rustle2.ogg", "war/rustle2.mp3", "war/rustle2.m4a"]);
+
+        scene.load.audio("Chest0", ["war/chest0.ogg", "war/chest0.mp3", "war/chest0.m4a"]);
+        scene.load.audio("Chest1", ["war/chest1.ogg", "war/chest1.mp3", "war/chest1.m4a"]);
+        scene.load.audio("Chest2", ["war/chest2.ogg", "war/chest2.mp3", "war/chest2.m4a"]);
+
+        scene.load.audio("Bgm0", ["war/bgm0.ogg", "war/bgm0.mp3", "war/bgm0.m4a"]);
+        scene.load.audio("Bgm1", ["war/bgm1.ogg", "war/bgm1.mp3", "war/bgm1.m4a"]);
+        scene.load.audio("Bgm2", ["war/bgm2.ogg", "war/bgm2.mp3", "war/bgm2.m4a"]);
+    }
+
     preload() {
-        this.load.atlas('Solid', 'war/Solid.jpg', 'war/Solid.json');
-        this.load.atlas('Clear', 'war/Clear.png', 'war/Clear.json');
-        this.load.bitmapFont('Adventure', 'war/Adventure.png', 'war/Adventure.fnt');
-        this.load.bitmapFont('LifeCraft', 'war/LifeCraft.png', 'war/LifeCraft.fnt');
-        this.load.image('Background', 'war/Background.jpg');
-       
-        this.load.audio("ButtonHover", ["war/Hover.ogg", "war/Hover.mp3", "war/Hover.m4a"]);
-        this.load.audio("ButtonClick", ["war/Click.ogg", "war/Click.mp3", "war/Click.m4a"]);
-        this.load.audio("Die", ["war/die.ogg", "war/die.mp3", "war/die.m4a"]);
-        this.load.audio("Died", ["war/died.ogg", "war/died.mp3", "war/died.m4a"]);
-        this.load.audio("Portal", ["war/portal.ogg", "war/portal.mp3", "war/portal.m4a"]);
-        this.load.audio("GameOver", ["war/GameOver.ogg", "war/GameOver.mp3", "war/GameOver.m4a"]);
-
-        this.load.audio("Hit0", ["war/hit0.ogg", "war/hit0.mp3", "war/hit0.m4a"]);
-        this.load.audio("Hit1", ["war/hit1.ogg", "war/hit1.mp3", "war/hit1.m4a"]);
-        this.load.audio("Hit2", ["war/hit2.ogg", "war/hit2.mp3", "war/hit2.m4a"]);
-        this.load.audio("Hit3", ["war/hit3.ogg", "war/hit3.mp3", "war/hit3.m4a"]);
-        this.load.audio("Hit4", ["war/hit4.ogg", "war/hit4.mp3", "war/hit4.m4a"]);
-       
-        this.load.audio("Coin0", ["war/coin0.ogg", "war/coin0.mp3", "war/coin0.m4a"]);
-        this.load.audio("Coin1", ["war/coin1.ogg", "war/coin1.mp3", "war/coin1.m4a"]);
-        this.load.audio("Coin2", ["war/coin2.ogg", "war/coin2.mp3", "war/coin2.m4a"]);
-
-        this.load.audio("Sword0", ["war/sword0.ogg", "war/sword0.mp3", "war/sword0.m4a"]);
-        this.load.audio("Sword1", ["war/sword1.ogg", "war/sword1.mp3", "war/sword1.m4a"]);
-        this.load.audio("Sword2", ["war/sword2.ogg", "war/sword2.mp3", "war/sword2.m4a"]);
-
-        this.load.audio("Rustle0", ["war/rustle0.ogg", "war/rustle0.mp3", "war/rustle0.m4a"]);
-        this.load.audio("Rustle1", ["war/rustle1.ogg", "war/rustle1.mp3", "war/rustle1.m4a"]);
-        this.load.audio("Rustle2", ["war/rustle2.ogg", "war/rustle2.mp3", "war/rustle2.m4a"]);
-
-        this.load.audio("Chest0", ["war/chest0.ogg", "war/chest0.mp3", "war/chest0.m4a"]);
-        this.load.audio("Chest1", ["war/chest1.ogg", "war/chest1.mp3", "war/chest1.m4a"]);
-        this.load.audio("Chest2", ["war/chest2.ogg", "war/chest2.mp3", "war/chest2.m4a"]);
-
-        this.load.audio("Bgm0", ["war/bgm0.ogg", "war/bgm0.mp3", "war/bgm0.m4a"]);
-        this.load.audio("Bgm1", ["war/bgm1.ogg", "war/bgm1.mp3", "war/bgm1.m4a"]);
-        this.load.audio("Bgm2", ["war/bgm2.ogg", "war/bgm2.mp3", "war/bgm2.m4a"]);
-        
         this.cardValueFont = 'LifeCraft';
         this.cardValueFontSize  = 70;
         
