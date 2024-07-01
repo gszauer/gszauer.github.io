@@ -11,20 +11,25 @@ import AnimationsView from './AnimationsView.js'
 import AssetsView from './AssetsView.js'
 import HierarchyView from './HierarchyView.js'
 import * as TextEditPlugin from './rextexteditplugin.js';
+import XForm from './Transform.js'
 
 
 export default class Application extends Phaser.Scene {
-    _menu = null;
+    /* Layout */
     _toolBar = null;
     _toolBox = null;
-
     _mainSplitter = null; // Need to call layout (it's recursive)
 
+    /* rendering and plugins */
     _atlas = null;
     rextexteditplugin = null;
 
     constructor() {
         super('Application');
+    }
+
+    AddNewNode() {
+        
     }
 
     preload() {
@@ -56,47 +61,21 @@ export default class Application extends Phaser.Scene {
         Phaser.GameObjects.BitmapText.ParseFromAtlas(self, UIGlobals.Font400, UIGlobals.Atlas, UIGlobals.Font400 + ".png", UIGlobals.Font400 + ".xml");
         Phaser.GameObjects.BitmapText.ParseFromAtlas(self, UIGlobals.Font500, UIGlobals.Atlas, UIGlobals.Font500 + ".png", UIGlobals.Font500 + ".xml");
 
-        self._menu = new UIMenu(self);
         self._toolBar = new UIToolBar(self);
         self._toolBox = new UIToolBox(self);
 
-        const fileMenu = new UIPopup(self);
-        self._menu.Add("File", fileMenu);
-        fileMenu.Add("New", null);
-        fileMenu.Add("Open", null);
-        fileMenu.Add("Save", null);
-        fileMenu.Add("", null);
-        fileMenu.Add("Import Asset", null);
-        fileMenu.Add("", null);
-        fileMenu.Add("Load Sample Project", null);
+        this._toolBox.AddTop(UIGlobals.IconMove, null);
+        this._toolBox.AddTop(UIGlobals.IconRotate, null);
+        this._toolBox.AddTop(UIGlobals.IconScale, null);
+        this._toolBox.AddTop("", null);
+        this._toolBox.AddTop(UIGlobals.IconHand, null);
+        this._toolBox.AddTop(UIGlobals.IconZoomIn, null);
+        this._toolBox.AddTop(UIGlobals.IconGrid, null);
 
-        const editMenu = new UIPopup(self);
-        self._menu.Add("Edit", editMenu);
-        editMenu.Add("Undo", null);
-        editMenu.Add("Redo", null);
-
-        const sceneMenu = new UIPopup(self);
-        self._menu.Add("Scene", sceneMenu);
-        sceneMenu.Add("New Node", null);
-        sceneMenu.Add("Delete Node", null);
-
-        const animation = new UIPopup(self);
-        self._menu.Add("Animation", animation);
-        animation.Add("New Animation", null);
-
-        const helpMenu = new UIPopup(self);
-        self._menu.Add("Help", helpMenu);
-        helpMenu.Add("About", null);
-        helpMenu.Add("Documentation", null);
-        helpMenu.Add("Source Code", null);
-
-        this._toolBox.Add(UIGlobals.IconMove, null);
-        this._toolBox.Add(UIGlobals.IconRotate, null);
-        this._toolBox.Add(UIGlobals.IconScale, null);
-        this._toolBox.Add("", null);
-        this._toolBox.Add(UIGlobals.IconHand, null);
-        this._toolBox.Add(UIGlobals.IconZoomIn, null);
-        this._toolBox.Add(UIGlobals.IconGrid, null);
+        this._toolBox.AddBottom("IconHelp.png", null);
+        this._toolBox.AddBottom("IconDownload.png", null);
+        this._toolBox.AddBottom("IconUpload.png", null);
+        this._toolBox.AddBottom("IconNew.png", null);
 
         this._mainSplitter = new UISplitView(this, null);
         this._mainSplitter._distance = 300;
@@ -112,13 +91,19 @@ export default class Application extends Phaser.Scene {
         toolSplitter._distance = 430;
 
         const inspectorTabs = toolSplitter.a = new UITabView(this, toolSplitter.a);
-        inspectorTabs.Add("Inspector", new InspectorView(this,  inspectorTabs));
+        const inspectorView = new InspectorView(this,  inspectorTabs);
+        inspectorTabs.Add("Inspector", inspectorView);
         inspectorTabs.Add("Draw Order", new DrawOrderView(this, inspectorTabs));
 
         const sceneTabs = toolSplitter.b = new UITabView(this, toolSplitter.b);
-        sceneTabs.Add("Hierarchy", new HierarchyView(this, sceneTabs));
+        const hierarchyView = new HierarchyView(this, sceneTabs)
+        sceneTabs.Add("Hierarchy", hierarchyView);
         sceneTabs.Add("Assets", new AssetsView(this, sceneTabs));
         sceneTabs.Add("Animations", new AnimationsView(this, sceneTabs));
+
+        hierarchyView.onSelectionChanged = (oldNode, newNode) => {
+            inspectorView.FocusOn(newNode);
+        };
 
         self.Layout();
         self.scale.on('resize', function(gameSize, baseSize, displaySize, previousWidth, previousHeight) {
@@ -127,12 +112,11 @@ export default class Application extends Phaser.Scene {
     }
 
     Layout() {
-        this._menu.Layout();
         this._toolBar.Layout();
         this._toolBox.Layout();
 
         const x = this._toolBox._width;
-        const y = this._menu._height + this._toolBar._height;
+        const y = this._toolBar._height;
         const width = this.scale.width - x;
         const height = this.scale.height - y;
         this._mainSplitter.Layout(x, y, width, height);

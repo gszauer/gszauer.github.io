@@ -24,6 +24,7 @@ export default class UITree {
     _numButtons = 0;
 
     onSelected = null; //onSelected(UITreeNode node);
+    onRearranged = null; // onRearranged(UITreeNode target);
 
     constructor(scene) {
         this._scene = scene;
@@ -120,7 +121,6 @@ export default class UITree {
             if (selectionIndex < 0 || selectionIndex >= self._numButtons) {
                 selectionIndex = -1;
             }
-            //console.log("Get index under mouse: " + selectionIndex);
             return selectionIndex;
         }
         const UpdateDragIndicator = function(pointer) {
@@ -197,7 +197,6 @@ export default class UITree {
                 }
                 
                 self._pressedIndex = -1;
-                console.log("pressed index (MouseUp): " + self._pressedIndex);
                 UIGlobals.Active = null;
                 self.UpdateColors();
             }
@@ -233,6 +232,10 @@ export default class UITree {
                 self._hoverIndex = -1;
                 self.UpdateColors();
             });
+            this._inputItem.on('wheel', (pointer, deltaX, deltaY, deltaZ, event) => {
+                if (deltaY > 0) { self._scrollView.ScrollUp(); }
+                else if (deltaY < 0) { self._scrollView.ScrollDown(); }
+            });
         }
         { // Drag events
             // Drag start / mouse down
@@ -242,7 +245,6 @@ export default class UITree {
 
                 UIGlobals.Active = self._inputItem;
                 self._pressedIndex = self._selectedIndex =  GetNodeIndexUnderMouse(pointer);
-                console.log("pressed index (dragstart): " + self._pressedIndex);
                 
                 if (self.onSelected != null) {
                     const node = GetNodeByIndex(self._pressedIndex);
@@ -349,12 +351,14 @@ export default class UITree {
                                 }
                                 else {
                                     const newRoot = GetNodeByIndex(dragStartIndex);
+                                    if (newRoot == null) {
+                                        console.error("Debugging, stop here");
+                                    }
                                     if (newRoot.parent != null) {
                                         newRoot.SetParent(null);
                                     }
                                     self._RemoveFromRoots(newRoot);
                                     self._AddToRootsAfter(newRoot, topNode);
-                                    //console.log("Add " + newRoot.name + " after " + topNode.name);
                                     reLayout = true;
                                     self._selectedIndex = GetIndexByNode(newRoot);
                                 }
@@ -390,6 +394,9 @@ export default class UITree {
                                             self._selectedIndex = GetIndexByNode(newChildNode);
                                         }
                                         else {
+                                            if (newChildNode == null) {
+                                                console.error("Going to crash, newChildNode should not be null!");
+                                            }
                                             if (newChildNode.parent != null) {
                                                 newChildNode.SetParent(null);
                                             }
@@ -404,7 +411,10 @@ export default class UITree {
                         }
 
                         if (reLayout) {
-                            // TODO: Fire off re-order event
+                            if (self.onRearranged != null) {
+                                let callbackNode = GetNodeByIndex(self._selectedIndex);
+                                self.onRearranged(callbackNode);
+                            }
                             self.Layout(self._x, self._y, self._width, self._height);
                         }
                     }
@@ -421,13 +431,36 @@ export default class UITree {
                             if (self.onSelected != null) {
                                 self.onSelected(GetNodeByIndex(self._selectedIndex));
                             }
-
-                            //self.Layout(self._x, self._y, self._width, self._height);
+                            self.UpdateColors();
                         }
                     }
                 }
             });
         }
+    }
+
+    Remove(node) {
+        if (node._parent != null) {
+            node._parent._RemoveChild(node);
+        }
+        this._RemoveFromRoots(node);
+        // The node should be orphaned at this point
+        this._UpdateNumButtons();
+        this.Layout();
+        this.UpdateColors();
+        node.Destroy();
+    }
+
+    Deselect() {
+        if (this._selectedIndex == -1) {
+            return;
+        }
+
+        this._selectedIndex = -1;
+        if (this.onSelected != null) {
+            this.onSelected(null);
+        }
+        this.UpdateColors();
     }
 
     UpdateColors() {
@@ -450,9 +483,6 @@ export default class UITree {
         const pressedIndex = this._pressedIndex;
         const hoverIndex = this._hoverIndex;
 
-        //console.log("[Update Colors] Pressed index: " + this._pressedIndex);
-        //console.log("[Update Colors] Selected index: " + this._selectedIndex);
-        
         let current = 0;
         for (let i = 0; i < length; ++i) {
             roots[i].ForEach((node, depth) => {
@@ -492,10 +522,12 @@ export default class UITree {
             }
         }
         this._roots.push(element);
-        this._UpdateNumButtons();
 
         element._parent = null;
         element._nextSibling = null;
+
+        this._UpdateNumButtons();
+
     }
 
     _AddToRootsAfter(newElement, addAfterThis) {
@@ -517,11 +549,14 @@ export default class UITree {
         if (newIndex != -1 && oldIndex != -1 && newIndex < length) {
             UITree.ArrayMove(this._roots, oldIndex, newIndex);
         }
+
+        this._UpdateNumButtons();
     }
 
     _AddToRootsFront(element) {
         this._AddToRoots(element);
         UITree.ArrayMove(this._roots, this._roots.length - 1, 0);
+        this._UpdateNumButtons();
     }
 
     _RemoveFromRoots(element) {
@@ -537,13 +572,20 @@ export default class UITree {
         if (toRemove != -1) {
             this._roots.splice(toRemove, 1);
         }
-        this._UpdateNumButtons();
 
         element._parent = null;
         element._nextSibling = null;
+
+        this._UpdateNumButtons();
     }
 
     Layout(x, y, width, height) {
+        if (x === undefined && y === undefined && width === undefined && height === undefined) {
+            x = this._x;
+            y = this._y;
+            width = this._width;
+            height = this._height;
+        }
         if (width < 0) { width = 0; }
         if (height < 0) { height = 0; }
 
@@ -569,14 +611,32 @@ export default class UITree {
             height -= scrollSize;
         }
 
+        const horizontalScrollBar = this._scrollView.horizontalScrollBar;
+
         const roots = this._roots;
         const length = this._roots.length;
+        let right = this._width;
+
         for (let i = 0; i < length; ++i) {
             roots[i].ForEach((node, depth) => {
                 node.Layout(x, y, width, height, depth);
+                if (node._label.x + node._label.width > right) {
+                    right = node._label.x + node._label.width;
+                }
                 y += height;
             });
         }
+
+        // Make sure BG graphics are wide enough
+        if (right != this._width) {
+            const itemHeight = UIGlobals.Sizes.TreeItemHeight;
+            for (let i = 0; i < length; ++i) {
+                roots[i].ForEach((node, depth) => {
+                    node._background.setScale(right, itemHeight);
+                });
+            }
+        }
+
 
         this._scrollView.Layout(this._x, this._y, this._width, this._height);
 

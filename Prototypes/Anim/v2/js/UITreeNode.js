@@ -19,6 +19,14 @@ export default class UITreeNode {
     _label = null;
     _userData = null;
 
+    get indentLevel() {
+        let result = 0;
+        for (let iter = this._parent; iter != null; iter = iter._parent) {
+            result += 1;
+        }
+        return result;
+    }
+
     constructor(tree, name = "New Node", parent = null) {
         this._tree = tree;
         this._name = name;
@@ -37,6 +45,33 @@ export default class UITreeNode {
         this._label.setDepth(UIGlobals.WidgetLayer);
         this._label.setOrigin(0, 0);
         this._label.text = name;
+    }
+
+    Destroy() {
+        const toDestroy = [];
+        this.ForEach((obj, depth) => {
+            toDestroy.push(obj);
+        });
+        for (let i = 0; i < toDestroy.length; ++i) {
+            const target = toDestroy[i];
+
+            target._userData = null;
+            target._tree = null;
+            target._name = null;
+        
+            target._parent = null;
+            target._firstChild = null;
+            target._nextSibling = null;
+            
+            if (target._background != null) {
+                target._background.destroy();
+            }
+            if (target._label != null) {
+                target._label.destroy();
+            }
+            target._background = null;
+            target._label = null;
+        }
     }
 
     _SetColor(background = 0x000000, text = 0xffffff) {
@@ -125,6 +160,8 @@ export default class UITreeNode {
             }
             iter._nextSibling = child;
         }
+
+        this._tree._UpdateNumButtons();
     }
 
     AddChildFront(child) {
@@ -134,6 +171,7 @@ export default class UITreeNode {
         // Add to the front of the tree list
         child._nextSibling = this._firstChild;
         this._firstChild = child;
+        this._tree._UpdateNumButtons();
     }
 
     AddChildAfter(newChild, addAfterThisChild) {
@@ -163,6 +201,7 @@ export default class UITreeNode {
             newChild._nextSibling = addAfterThisChild._nextSibling;
             addAfterThisChild._nextSibling = newChild;
         }
+        this._tree._UpdateNumButtons();
     }
 
     Layout(x, y, width, height, depth = 0) {
@@ -226,6 +265,15 @@ export default class UITreeNode {
 
     get name() {
         return this._name;
+    }
+
+    set name(value) {
+        if (value === undefined || value == null) {
+            value = "";
+        }
+
+        this._name = value;
+        this._label.text = value;
     }
 
     get parent() {
