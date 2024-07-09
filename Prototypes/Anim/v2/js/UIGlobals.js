@@ -33,8 +33,8 @@ export default class UIGlobals {
     static Layers = {
         // TODO: Move the below elements into this container
     };
-    static WidgetLayer = 50;
-    static OverlayLayer = 100;
+    static WidgetLayer = 500;
+    static OverlayLayer = 1000;
 
     static Sizes = {
         TopMenuHeight: 32,
@@ -48,20 +48,20 @@ export default class UIGlobals {
         PopupMenuBorderSize: 2,
         EditorBarHeight: 40,
         DropdownMenuHeight: 24,
-        DrowdownBorderSize: 1,
+                                                DrowdownBorderSize: 2,
         DropdownTextIndent: 5,
         CheckboxSize:21,
         CheckboxBorder: 1,
         CheckboxMargin: 4,
         TextboxHeight: 24,
         TextboxTextMargin: 4,
-        TextBoxBorderSize: 1,
+                                                TextBoxBorderSize: 2,
         ToolboxWidth: 42,
         ToolboxPadding: 1,
         ToolboxButtonSize: 28,
         ToolboxButtonIconSize: 20,
         ToolboxButtonPadding: 8,
-        ToolboxButtonDividerHeight: 2,
+        ToolboxButtonDividerHeight: 4,
         SplitViewSplitterSize: 3,
         TabHeight: 30,
         TabBorderSize: 2,
@@ -71,7 +71,7 @@ export default class UIGlobals {
         ScrollBorderSize: 2,
         InspectorTitleMargin: 10,
         InspectorTitleSkip: 5,
-        ColorButtonBorderSize: 2,
+                                                ColorButtonBorderSize: 2,
         ColorButtonMarginSize: 3,
         ColorPickerDefaultWidth: 238,
         ColorPickerDefaultHeight: 204,
@@ -88,6 +88,11 @@ export default class UIGlobals {
         TreeFooterMargin: 4,
         ImageButtonBorderSize: 2,
         ImageButtonMarginSize: 3,
+
+        ToolBarShelfIndent: 10,
+        ToolBarShelfTextTopOffset: 6,
+        ToolBarShelfItemsGap: 6,
+        ToolBarShelfTextBoxWidth: 75,
     };
 
     // https://spectrum.adobe.com/page/color-system/#Static-color-palette

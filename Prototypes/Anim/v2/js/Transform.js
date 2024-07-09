@@ -1,10 +1,11 @@
+import UIGlobals from './UIGlobals.js'
 
 // https://github.com/phaserjs/phaser/blob/v3.80.0/src/gameobjects/components/Transform.js
 // https://github.com/phaserjs/phaser/blob/master/src/gameobjects/components/TransformMatrix.js#L39
 
 // Transforms are not stand-alone. The parent / child relationship comes from the owning UITreeNode
 export default class XForm {
-    _uiTreeNode = null;
+    _uiTreeNode = null; // Node that this transform is attached to
 
     x = 0;
     y = 0;
@@ -105,6 +106,74 @@ export default class XForm {
 
     set degrees(valuue) {
         this.rotation = valuue * 0.0174533; 
+    }
+
+    ApplyTransform(sprite, view = null) {
+        const identity = () => {
+            return {
+                x: 0, y: 0,
+                rotation: 0,
+                scaleX: 1, scaleY: 1
+            };
+        }
+        const worldTransform = identity();
+        if (view === null || view === undefined) {
+            view = identity();
+        }
+
+        for (let iter = this; iter != null; iter = iter.parent) {
+            XForm.Mul(iter, worldTransform, worldTransform)
+        }
+
+        XForm.Mul(view, worldTransform, worldTransform)
+
+        sprite.setPosition(worldTransform.x, worldTransform.y);
+        sprite.setRotation(worldTransform.rotation);
+        sprite.setScale(worldTransform.scaleX, worldTransform.scaleY);
+    }
+
+    static Mul(a /*parent*/, b /*transform*/, c /*out*/) {
+        const RotateClockwise = (_x, _y, radians) => {
+            const cs = Math.cos(radians);
+            const sn = Math.sin(radians);
+            
+            return {
+                x: _x * cs - _y * sn,
+                y: _x * sn + _y * cs
+            };
+        };
+
+        const MakeIdentity = () => {
+            return {
+                x: 0, y: 0,
+                rotation: 0,
+                scaleX: 1, scaleY: 1
+            };
+        };
+
+        if (a === null || a === undefined) {
+            a = MakeIdentity();
+        }
+        if (c === null || c === undefined) {
+            c = MakeIdentity();
+        }
+        if (b === null || b === undefined) {
+            b = MakeIdentity();
+        }
+
+
+        c.scaleX = a.scaleX * b.scaleX;
+        c.scaleY = a.scaleY * b.scaleY;
+
+        c.rotation = a.rotation + b.rotation;
+
+        // parent scale times child position, rotated by parent rotation:
+        const rotated = RotateClockwise(a.scaleX * b.x, a.scaleY * b.y, a.rotation)
+        // combine positions
+        c.x = a.x + rotated.x;
+        c.y = a.y + rotated.y;
+
+        return c;
     }
 }
 

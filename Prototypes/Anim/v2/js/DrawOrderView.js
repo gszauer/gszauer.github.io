@@ -6,15 +6,35 @@ import UIListBoxItem from './UIListBoxItem.js'
 
 export default class DrawOrderView extends UIView {
     _listbox = null;
+    _hierarchyView = null; // Injected when hiararchy view is created
+
+    get count() {
+        return this._listbox.count;
+    }
 
     constructor(scene, parent = null) {
         super(scene, parent);
         const self = this;
 
         this._listbox = new UIListBox(scene);
-        for (let i = 0; i < 20; ++i) {
-            this._listbox.Add("Sprite " + i);
+        this._listbox.onReodered = (startIndex, stopIndex, delta) => {
+            if (self._hierarchyView == null) {
+                return;
+            }
+            
+            const hierarchy = self._hierarchyView;
+            const listBoxButtons = self._listbox._buttons;
+            const count = listBoxButtons.length;
+
+            for (let i = 0; i < count; ++i) {
+                const uiListBoxItem = listBoxButtons[i];
+                hierarchy.UpdateSortingIndex(uiListBoxItem, UIGlobals.WidgetLayer - i);
+            }
         }
+    }
+
+    Add(name, callback = null) {
+        return this._listbox.Add(name, callback);
     }
 
     UpdateColors() {

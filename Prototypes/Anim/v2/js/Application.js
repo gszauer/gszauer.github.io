@@ -10,6 +10,7 @@ import DrawOrderView from './DrawOrderView.js'
 import AnimationsView from './AnimationsView.js'
 import AssetsView from './AssetsView.js'
 import HierarchyView from './HierarchyView.js'
+import SceneView from './SceneView.js'
 import * as TextEditPlugin from './rextexteditplugin.js';
 import XForm from './Transform.js'
 
@@ -62,20 +63,8 @@ export default class Application extends Phaser.Scene {
         Phaser.GameObjects.BitmapText.ParseFromAtlas(self, UIGlobals.Font500, UIGlobals.Atlas, UIGlobals.Font500 + ".png", UIGlobals.Font500 + ".xml");
 
         self._toolBar = new UIToolBar(self);
-        self._toolBox = new UIToolBox(self);
-
-        this._toolBox.AddTop(UIGlobals.IconMove, null);
-        this._toolBox.AddTop(UIGlobals.IconRotate, null);
-        this._toolBox.AddTop(UIGlobals.IconScale, null);
-        this._toolBox.AddTop("", null);
-        this._toolBox.AddTop(UIGlobals.IconHand, null);
-        this._toolBox.AddTop(UIGlobals.IconZoomIn, null);
-        this._toolBox.AddTop(UIGlobals.IconGrid, null);
-
-        this._toolBox.AddBottom("IconHelp.png", null);
-        this._toolBox.AddBottom("IconDownload.png", null);
-        this._toolBox.AddBottom("IconUpload.png", null);
-        this._toolBox.AddBottom("IconNew.png", null);
+        
+        
 
         this._mainSplitter = new UISplitView(this, null);
         this._mainSplitter._distance = 300;
@@ -86,6 +75,29 @@ export default class Application extends Phaser.Scene {
         timelineSplitter._distance = 280;
         timelineSplitter.pinTop = false;
 
+        const sceneView = timelineSplitter.a = new SceneView(this, timelineSplitter);
+        sceneView.CreateToolShelves(self._toolBar);
+
+        self._toolBox = new UIToolBox(self, (btnName, btnObj) => {
+            sceneView.activeShelf = self._toolBar.Activate(btnName);
+            self._toolBar.Layout();
+            sceneView.Layout();
+        });
+
+        this._toolBox.AddTop(UIGlobals.IconMove, null);
+        this._toolBox.AddTop(UIGlobals.IconRotate, null);
+        this._toolBox.AddTop(UIGlobals.IconScale, null);
+        this._toolBox.AddTop("", null);
+        this._toolBox.AddTop(UIGlobals.IconHand, null);
+        this._toolBox.AddTop(UIGlobals.IconZoomIn, null);
+        this._toolBox.AddBottom("IconHelp.png", null);
+        this._toolBox.AddBottom("IconDownload.png", null);
+        this._toolBox.AddBottom("IconUpload.png", null);
+        this._toolBox.AddBottom("IconNew.png", null);
+
+        sceneView.activeShelf = self._toolBar.Activate(UIGlobals.IconHand);
+        self._toolBox.SelectButton(UIGlobals.IconHand);
+
         const toolSplitter = this._mainSplitter.b = new UISplitView(this, this._mainSplitter);
         toolSplitter.horizontal = false;
         toolSplitter._distance = 430;
@@ -93,13 +105,17 @@ export default class Application extends Phaser.Scene {
         const inspectorTabs = toolSplitter.a = new UITabView(this, toolSplitter.a);
         const inspectorView = new InspectorView(this,  inspectorTabs);
         inspectorTabs.Add("Inspector", inspectorView);
-        inspectorTabs.Add("Draw Order", new DrawOrderView(this, inspectorTabs));
+        const drawOrderView = new DrawOrderView(this, inspectorTabs);
+        inspectorTabs.Add("Draw Order", drawOrderView);
 
         const sceneTabs = toolSplitter.b = new UITabView(this, toolSplitter.b);
-        const hierarchyView = new HierarchyView(this, sceneTabs)
+        const hierarchyView = new HierarchyView(this, sceneTabs, drawOrderView, sceneView);
         sceneTabs.Add("Hierarchy", hierarchyView);
         sceneTabs.Add("Assets", new AssetsView(this, sceneTabs));
         sceneTabs.Add("Animations", new AnimationsView(this, sceneTabs));
+
+        sceneView._hierarchyView = hierarchyView;
+        inspectorView._hierarchyView = hierarchyView;
 
         hierarchyView.onSelectionChanged = (oldNode, newNode) => {
             inspectorView.FocusOn(newNode);

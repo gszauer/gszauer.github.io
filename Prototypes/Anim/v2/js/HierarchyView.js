@@ -3,6 +3,7 @@ import UIView from './UIView.js'
 import UITree from './UITree.js'
 import UIImageButton from './UIImageButton.js'
 import XForm from './Transform.js'
+import SpriteImg from './Sprite.js'
 
 export default class HierarchyView extends UIView {
     static _nameCounter = 0;
@@ -11,7 +12,68 @@ export default class HierarchyView extends UIView {
     _buttons = [];
     _active = null;
 
+    _drawOrderView = null;
+    _drawOrderToHiararchyNodeMap = null;
+    _sceneView = null;
+
+
     onSelectionChanged = null; // (oldActive, newActive)
+
+    constructor(scene, parent, drawOrderView, sceneView) {
+        super(scene, parent);
+        const self = this;
+        this._sceneView = sceneView;
+
+        drawOrderView._hierarchyView = this;
+        self._drawOrderView = drawOrderView;
+        this._drawOrderToHiararchyNodeMap = new Map();
+
+        this._tree = new UITree(scene);
+        this._tree.canReorder = false;
+
+        this._tree.onRearranged = (targetNode) => {
+            /*self._tree.ForEach((node) => {
+                node._userData.transform.ApplyTransform(node._userData.sprite.sprite);
+            })*/
+           self._UpdateTransforms();
+        }
+
+        this._tree.onSelected = (treeNode) => {
+            self.active = treeNode;
+        }
+
+        this._footer =  scene.add.sprite(0, 0, UIGlobals.Atlas, UIGlobals.Solid);
+        this._footer.setDepth(UIGlobals.WidgetLayer);
+        this._footer.setOrigin(0, 0);
+
+        const newNodeButton = new UIImageButton(scene, "SmallIconHierarchyNew.png", () => {
+            const hierarchyNode = self.AddNewNode();
+            
+        });
+        const deleteNodeButton = new UIImageButton(scene, "SmallIconTrash.png", () => {
+            self.Delete();
+        });
+        const deselectButton = new UIImageButton(scene, "SmallIconDeselect.png", () => {
+            self.Deselect();
+        });
+        this._buttons.push(deselectButton);
+        this._buttons.push(deleteNodeButton);
+        this._buttons.push(newNodeButton);
+    }
+
+    _UpdateTransforms() {
+        const ui = {
+            x: UIGlobals.Sizes.ToolboxWidth, y: UIGlobals.Sizes.EditorBarHeight,
+            rotation: 0,
+            scaleX: 1, scaleY: 1
+        };
+        const camera = this._sceneView._cameraTransform;
+        const view = XForm.Mul(ui, camera, null);
+
+        this._tree.ForEach((node) => {
+            node._userData.transform.ApplyTransform(node._userData.sprite.sprite, view);
+        });
+    }
 
     get active() {
         return this._active;
@@ -26,34 +88,8 @@ export default class HierarchyView extends UIView {
         this._active = valeu;
     }
 
-    constructor(scene, parent = null) {
-        super(scene, parent);
-        const self = this;
-
-        this._tree = new UITree(scene);
-        this._tree.canReorder = false;
-
-        this._tree.onSelected = (treeNode) => {
-            self.active = treeNode;
-        }
-
-        this._footer =  scene.add.sprite(0, 0, UIGlobals.Atlas, UIGlobals.Solid);
-        this._footer.setDepth(UIGlobals.WidgetLayer);
-        this._footer.setOrigin(0, 0);
-
-        const newNodeButton = new UIImageButton(scene, "SmallIconHierarchyNew.png", () => {
-            const hierarchyNode = self.AddNewNode();
-            const transformNode = new XForm(hierarchyNode);
-        });
-        const deleteNodeButton = new UIImageButton(scene, "SmallIconTrash.png", () => {
-            self.Delete();
-        });
-        const deselectButton = new UIImageButton(scene, "SmallIconDeselect.png", () => {
-            self.Deselect();
-        });
-        this._buttons.push(newNodeButton);
-        this._buttons.push(deleteNodeButton);
-        this._buttons.push(deselectButton);
+    UpdateSortingIndex(node, newDepth) {
+        this._drawOrderToHiararchyNodeMap.get(node)._userData.sprite.sprite.setDepth(newDepth);
     }
 
     Delete() {
@@ -61,8 +97,15 @@ export default class HierarchyView extends UIView {
             return;
         }
         const toRemove = this.active;
+        
+
+        this._drawOrderToHiararchyNodeMap.delete(toRemove._userData.drawOrder);
+        toRemove._userData.drawOrder.Destroy();
+        toRemove._userData.sprite.Destroy();
         this.Deselect();
         this._tree.Remove(toRemove);
+        this._UpdateTransforms();
+        this.active = null;
     }
 
     Deselect() {
@@ -85,7 +128,13 @@ export default class HierarchyView extends UIView {
             newNode.SetParent(parent);
         }
 
+        const transformNode = new XForm(newNode);
+        const spriteNode = new SpriteImg(newNode, this._drawOrderView);
+        newNode._userData.drawOrder = this._drawOrderView.Add(newNode.name);
+        this._drawOrderToHiararchyNodeMap.set(newNode._userData.drawOrder, newNode);
+
         this.Layout(this._x, this._y, this._width, this._height);
+        this._UpdateTransforms();
         return newNode;
     }
 
@@ -113,13 +162,13 @@ export default class HierarchyView extends UIView {
         this._footer.setPosition(x, y);
         this._footer.setScale(width, footerHeight);
 
-        let xPos = x + padding + (size / 2);
+        let xPos = x + width - padding - (size / 2);// x + padding + (size / 2);
         let yPos = y + margin + (size / 2);
 
         const length = this._buttons.length;
         for (let i = 0; i < length; ++i) {
             this._buttons[i].Layout(xPos, yPos, size, size);
-            xPos += (size + padding);
+            xPos -= (size + padding);
         }
     }
 
