@@ -50,6 +50,23 @@ export default class XForm {
         return result;
     }
 
+    get worldTransform() {
+        const identity = () => {
+            return {
+                x: 0, y: 0,
+                rotation: 0,
+                scaleX: 1, scaleY: 1
+            };
+        }
+        const worldXform = identity();
+
+        for (let iter = this; iter != null; iter = iter.parent) {
+            XForm.Mul(iter, worldXform, worldXform);
+        }
+
+        return worldXform;
+    }
+
     get name() {
         if (this._uiTreeNode == null) {
             return null;
@@ -108,28 +125,92 @@ export default class XForm {
         this.rotation = valuue * 0.0174533; 
     }
 
-    ApplyTransform(sprite, view = null) {
-        const identity = () => {
+    static Right(xform) {
+        const RotateClockwise = (_x, _y, radians) => {
+            const cs = Math.cos(radians);
+            const sn = Math.sin(radians);
+            
             return {
-                x: 0, y: 0,
-                rotation: 0,
-                scaleX: 1, scaleY: 1
+                x: _x * cs - _y * sn,
+                y: _x * sn + _y * cs
             };
+        };
+        return RotateClockwise(1, 0, xform.rotation);
+    }
+
+    static Up(xform) {
+        const RotateClockwise = (_x, _y, radians) => {
+            const cs = Math.cos(radians);
+            const sn = Math.sin(radians);
+            
+            return {
+                x: _x * cs - _y * sn,
+                y: _x * sn + _y * cs
+            };
+        };
+        return RotateClockwise(0, 1, xform.rotation);
+    }
+
+    static Inverse(xfrm) {
+        const RotateClockwise = (_x, _y, radians) => {
+            const cs = Math.cos(radians);
+            const sn = Math.sin(radians);
+            
+            return {
+                x: _x * cs - _y * sn,
+                y: _x * sn + _y * cs
+            };
+        };
+
+        const result = {
+            x: 0, y: 0,
+            rotation: 0,
+            scaleX: 1, scaleY: 1
+        };
+
+        result.rotation = -xfrm.rotation;
+        
+        if (Math.abs(xfrm.scaleX) > 0.00001) {
+            result.scaleX = 1.0 / xfrm.scaleX;
         }
-        const worldTransform = identity();
-        if (view === null || view === undefined) {
-            view = identity();
+        if (Math.abs(xfrm.scaleY) > 0.00001) {
+            result.scaleY = 1.0 / xfrm.scaleY;
         }
 
-        for (let iter = this; iter != null; iter = iter.parent) {
-            XForm.Mul(iter, worldTransform, worldTransform)
-        }
+        result.x = (-xfrm.x) * result.scaleX;
+        result.y = (-xfrm.y) * result.scaleY;
 
-        XForm.Mul(view, worldTransform, worldTransform)
+        const rotated = RotateClockwise(result.x, result.y, result.rotation);
+        result.x = rotated.x;
+        result.y = rotated.y;
+        
+        return result;
+    }
 
-        sprite.setPosition(worldTransform.x, worldTransform.y);
-        sprite.setRotation(worldTransform.rotation);
-        sprite.setScale(worldTransform.scaleX, worldTransform.scaleY);
+    ApplyTransform(sprite, view = null) {
+        const worldXform = this.worldTransform;
+        XForm.Mul(view, worldXform, worldXform);
+
+        sprite.setPosition(worldXform.x, worldXform.y);
+        sprite.setRotation(worldXform.rotation);
+        sprite.setScale(worldXform.scaleX, worldXform.scaleY);
+    }
+
+    static ApplyToPoint(xfrm, pnt) {
+        const RotateClockwise = (_x, _y, radians) => {
+            const cs = Math.cos(radians);
+            const sn = Math.sin(radians);
+            
+            return {
+                x: _x * cs - _y * sn,
+                y: _x * sn + _y * cs
+            };
+        };
+
+        const result = RotateClockwise(xfrm.scaleX * pnt.x, xfrm.scaleY * pnt.y, xfrm.rotation);
+        result.x += xfrm.x;
+        result.y += xfrm.y;
+        return result;
     }
 
     static Mul(a /*parent*/, b /*transform*/, c /*out*/) {
