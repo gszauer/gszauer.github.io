@@ -28,6 +28,18 @@ export default class XForm {
         }
     }
 
+    Copy() {
+        const result = new XForm(null);
+        result._uiTreeNode = this._uiTreeNode;
+        result.x = this.x;
+        result.y = this.y;
+        result.rotation = this.rotation;
+        result.scaleX = this.scaleX;
+        result.scaleY = this.scaleY;
+        result.uniform = this.uniform;
+        return result;
+    }
+
     get localMatrix() {
         let result = new Mat3();
         result.setTRS(this.x, this.y, this.rotation, this.scaleX, this.scaleY);
@@ -162,13 +174,17 @@ export default class XForm {
             };
         };
 
+        const InvertAngle = (angle) => {
+            return (angle + Math.PI) % (2 * Math.PI);
+        }
+
         const result = {
             x: 0, y: 0,
             rotation: 0,
             scaleX: 1, scaleY: 1
         };
 
-        result.rotation = -xfrm.rotation;
+        result.rotation = InvertAngle(xfrm.rotation);
         
         if (Math.abs(xfrm.scaleX) > 0.00001) {
             result.scaleX = 1.0 / xfrm.scaleX;
@@ -196,7 +212,7 @@ export default class XForm {
         sprite.setScale(worldXform.scaleX, worldXform.scaleY);
     }
 
-    static ApplyToPoint(xfrm, pnt) {
+    static ApplyToPoint(xfrm, pnt, view = null) {
         const RotateClockwise = (_x, _y, radians) => {
             const cs = Math.cos(radians);
             const sn = Math.sin(radians);

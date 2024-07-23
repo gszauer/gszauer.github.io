@@ -64,15 +64,15 @@ export default class Application extends Phaser.Scene {
 
         self._toolBar = new UIToolBar(self);
         
-        
-
         this._mainSplitter = new UISplitView(this, null);
         this._mainSplitter._distance = 300;
+        this._mainSplitter.pinnedMinSize = 280;
         this._mainSplitter.pinLeft = false;
 
         const timelineSplitter = this._mainSplitter.a = new UISplitView(this, this._mainSplitter);
         timelineSplitter.horizontal = false;
         timelineSplitter._distance = 280;
+        timelineSplitter.pinnedMinSize = 33;
         timelineSplitter.pinTop = false;
 
         const sceneView = timelineSplitter.a = new SceneView(this, timelineSplitter);
@@ -100,25 +100,31 @@ export default class Application extends Phaser.Scene {
 
         const toolSplitter = this._mainSplitter.b = new UISplitView(this, this._mainSplitter);
         toolSplitter.horizontal = false;
-        toolSplitter._distance = 430;
+        toolSplitter._distance = 440;
+        toolSplitter.pinnedMinSize = 33;
 
         const inspectorTabs = toolSplitter.a = new UITabView(this, toolSplitter.a);
         const inspectorView = new InspectorView(this,  inspectorTabs);
-        inspectorTabs.Add("Inspector", inspectorView);
         const drawOrderView = new DrawOrderView(this, inspectorTabs);
-        inspectorTabs.Add("Draw Order", drawOrderView);
-
+        const assetsView = new AssetsView(this, inspectorTabs);
         const sceneTabs = toolSplitter.b = new UITabView(this, toolSplitter.b);
+
+        inspectorTabs.Add("Inspector", inspectorView);
+        inspectorTabs.Add("Draw Order", drawOrderView);
+        inspectorTabs.Add("Sprite Sheet", assetsView);
+
         const hierarchyView = new HierarchyView(this, sceneTabs, drawOrderView, sceneView);
         sceneTabs.Add("Hierarchy", hierarchyView);
-        sceneTabs.Add("Assets", new AssetsView(this, sceneTabs));
         sceneTabs.Add("Animations", new AnimationsView(this, sceneTabs));
 
-        sceneView._hierarchyView = hierarchyView;
-        sceneView._inspectorView = inspectorView;
+        inspectorView._assetsView = assetsView;
         inspectorView._sceneView = sceneView;
+        sceneView._inspectorView = inspectorView;
+        sceneView._hierarchyView = hierarchyView;
+        sceneView._assetsView = assetsView;
         inspectorView._hierarchyView = hierarchyView;
-
+        assetsView._hierarchyView= hierarchyView;
+        assetsView._inspectorView = inspectorView;
 
         hierarchyView.onSelectionChanged = (oldNode, newNode) => {
             inspectorView.FocusOn(newNode);

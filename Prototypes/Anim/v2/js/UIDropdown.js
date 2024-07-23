@@ -43,7 +43,7 @@ export default class UIDropdown {
         self._chevronSprite = scene.add.sprite(0, 0, UIGlobals.Atlas, UIGlobals.Icons.ChevronDown);
         self._chevronSprite.setDepth(UIGlobals.WidgetLayer);
 
-        self._displayText = scene.add.bitmapText(0, 0, UIGlobals.Font100, name);
+        self._displayText = scene.add.bitmapText(0, 0, UIGlobals.Font100, "");
         self._displayText.setDepth(UIGlobals.WidgetLayer);
         self._displayText.text = "";
 
@@ -129,6 +129,7 @@ export default class UIDropdown {
 
     SetMenu(popupMenu) {
         if (this._popupMenu != null) {
+            this._popupMenu.Destroy();
             this._popupMenu._uiOnPointerUp = null;
         }
 
@@ -144,7 +145,6 @@ export default class UIDropdown {
             if (this._popupMenu._labels != null && this._popupMenu._labels.length > 0) {
                 self._displayText.text = this._popupMenu._labels[0];
             }
-
         }
 
         this._ShowActiveMenu();

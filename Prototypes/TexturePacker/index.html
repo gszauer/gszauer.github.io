@@ -320,9 +320,6 @@ function LoadImages(event) {
         const reader = new FileReader();
 
         reader.onload = function(){
-            /*let output = document.getElementById('output_image');
-            output.src = reader.result;*/
-
             const img = new Image();
             img.onload = function() {
               let fixedName = selectedFiles[i].name;
@@ -334,7 +331,6 @@ function LoadImages(event) {
               }
 
                 fileList.innerHTML = fileList.innerHTML +  "<div>" + fixedName + "</div>";
-                //filePreview.appendChild(img);
 
                 result.images.push({
                     width: this.width,

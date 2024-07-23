@@ -81,6 +81,7 @@ export default class HierarchyView extends UIView {
         this._sceneView.UpdateActiveShelf();
     }
 
+    
     get active() {
         return this._active;
     }
@@ -98,19 +99,28 @@ export default class HierarchyView extends UIView {
         this._drawOrderToHiararchyNodeMap.get(node)._userData.sprite.sprite.setDepth(newDepth);
     }
 
-    Delete() {
-        if (this.active == null) {
+    Delete(toRemove) {
+        const self = this;
+        if (toRemove === undefined) {
+            if (this.active != null) {
+                this.active.Recursive((node) => {
+                    self.Delete(node);
+                });
+            }
             return;
         }
-        const toRemove = this.active;
-        
 
-        this._drawOrderToHiararchyNodeMap.delete(toRemove._userData.drawOrder);
-        toRemove._userData.drawOrder.Destroy();
-        toRemove._userData.sprite.Destroy();
+        //if (toRemove._userData !== null) {
+            this._drawOrderToHiararchyNodeMap.delete(toRemove._userData.drawOrder);
+            toRemove._userData.drawOrder.Destroy();
+            toRemove._userData.sprite.Destroy();
+        //}
+        toRemove._userData = null;
+
         this.Deselect();
         this._tree.Remove(toRemove);
         this._UpdateTransforms();
+        
         this.active = null;
     }
 
@@ -135,12 +145,16 @@ export default class HierarchyView extends UIView {
         }
 
         const transformNode = new XForm(newNode);
-        const spriteNode = new SpriteImg(newNode, this._drawOrderView);
+        const spriteNode = new SpriteImg(newNode, this._sceneView, this._drawOrderView);
         newNode._userData.drawOrder = this._drawOrderView.Add(newNode.name);
         this._drawOrderToHiararchyNodeMap.set(newNode._userData.drawOrder, newNode);
 
         this.Layout(this._x, this._y, this._width, this._height);
         this._UpdateTransforms();
+
+        const assetsView = this._sceneView._assetsView;
+        assetsView.UpdateFrames();
+
         return newNode;
     }
 
@@ -154,6 +168,11 @@ export default class HierarchyView extends UIView {
     }
 
     Layout(x, y, width, height) {
+        if (x === undefined) {  x = this._x; }
+        if (y === undefined) {  y = this._y; }
+        if (width === undefined) {  width = this._width; }
+        if (height === undefined) {  height = this._height; }
+        
         if (width < 0) { width = 0; }
         if (height < 0) { height = 0; }
         super.Layout(x, y, width, height);
@@ -194,5 +213,9 @@ export default class HierarchyView extends UIView {
 
     Show() {
         this.SetVisibility(true);
+    }
+
+    ForEach(callback) { // callback(node: UITreeNode, depth: number): void
+        this._tree.ForEach(callback);
     }
 }

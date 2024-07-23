@@ -13,6 +13,7 @@ export default class UIToggle {
     _check2 = null;
     onToggle = null; // arguments: bool value, UIToggle this
     _visible = true;
+    _enabled = true;
 
     constructor(scene, text="", _onToggle = null) {
         this._scene = scene;
@@ -37,12 +38,15 @@ export default class UIToggle {
         self._check2.setOrigin(0.5, 0.5);
         self._check2.setDepth(UIGlobals.WidgetLayer);
 
-        self._text = scene.add.bitmapText(0, 0, UIGlobals.Font100, name);
+        self._text = scene.add.bitmapText(0, 0, UIGlobals.Font100, "");
         self._text.setDepth(UIGlobals.WidgetLayer);
         self._text.text = text;
 
         borderSprite.setInteractive();
         borderSprite.on("pointerover", function (pointer, localX, localY, event) {
+            if (!self._enabled) {
+                return;
+            }
             if (UIGlobals.Active == null) {
                 UIGlobals.Hot = borderSprite;
             }
@@ -50,6 +54,9 @@ export default class UIToggle {
             self.UpdateColors();
         });
         borderSprite.on("pointerout", function (pointer, event) {
+            if (!self._enabled) {
+                return;
+            }
             if (UIGlobals.Hot == borderSprite) {
                 UIGlobals.Hot = null;
             }
@@ -57,12 +64,18 @@ export default class UIToggle {
             self.UpdateColors();
         });
         borderSprite.on("pointerdown", function (pointer, localX, localY, event) {
+            if (!self._enabled) {
+                return;
+            }
             UIGlobals.Active = borderSprite;
 
             self.UpdateColors();
         });
 
         scene.input.on("pointerup", function(pointer, currentlyOver) {
+            if (!self._enabled) {
+                return;
+            }
             if (UIGlobals.Active != null && UIGlobals.Active == borderSprite) {
                 let left = borderSprite.x;
                 let right = left + borderSprite.scaleX;
@@ -71,7 +84,7 @@ export default class UIToggle {
 
                 if (pointer.x >= left && pointer.x <= right && pointer.y >= top && pointer.y <= bottom) {
                     self._state = !self._state;
-                    console.log("Toggle " + self._text.text + " to " + self._state);
+                    //console.log("Toggle " + self._text.text + " to " + self._state);
                     if (self.onToggle != null) {
                         self.onToggle(self._state, self);
                     }
@@ -81,6 +94,14 @@ export default class UIToggle {
                 self.UpdateColors();
             }
         });
+    }
+
+    SetState(value) {
+        this._state = !this.value;
+        if (this.onToggle != null) {
+            this.onToggle(this._state, this);
+        }
+        this.UpdateColors();
     }
 
     UpdateColors() {
@@ -97,6 +118,11 @@ export default class UIToggle {
             borderTint = UIGlobals.Colors.ElementBorderTintActive;
             backgroundTint = UIGlobals.Colors.BackgroundLayer2;
         }
+
+        if (!this._enabled) {
+            backgroundTint = UIGlobals.Colors.BackgroundLayer1;
+            borderTint = UIGlobals.Colors.IconDisabled;
+        }
         
         self._text.setTint(borderTint);
 
@@ -108,6 +134,10 @@ export default class UIToggle {
 
         this._check1.setActive(this._visible && self._state).setVisible(this._visible && self._state);
         this._check2.setActive(this._visible && self._state).setVisible(this._visible && self._state);
+    }
+
+    setPosition(x, y) {
+        this.Layout(x, y);
     }
 
     Layout(x, y) {
@@ -161,5 +191,15 @@ export default class UIToggle {
             this.SetVisibility(true);
             this._visible = true;
         }
+    }
+
+    Disable() {
+        this._enabled = false;
+        this.UpdateColors();
+    }
+
+    Enable() {
+        this._enabled = true;
+        this.UpdateColors();
     }
 }
