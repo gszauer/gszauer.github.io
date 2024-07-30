@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bookdown</title>
+
+        <!-- https://split.js.org/#/ -->
+        <script src="js/split.js"></script>
+        <link href="css/split.css" rel="stylesheet" />
+
+        <!-- https://github.com/marcantondahmen/sortable-tree -->
+        <script src="js/sortable-tree.js"></script>
+        <link href="css/sortable-tree.css" rel="stylesheet" />
+
+        <!-- https://simplemde.com/ >
+        <script src="js/simplemde.js"></script>
+        <link href="css/simplemde.css" rel="stylesheet" /-->
+
+        <!-- https://github.com/Ionaru/easy-markdown-editor -->
+        <script src="js/easymde.js"></script>
+        <link href="css/easymde.css" rel="stylesheet" />
+
+        <style>
+            html,
+            body {
+                border: 0;
+                margin: 0;
+                padding: 0;
+                height: 100vh;
+                width: 100vw;
+            }
+
+            .EasyMDEContainer  {
+                height: 100%;
+            }
+
+            .CodeMirror {
+                height: 100%;
+            }
+
+            #main {
+                height: calc(100% - 50px);
+            }
+        </style>
+    </head>
+    <body>
+            <div>
+                <div class="editor-toolbar" role="toolbar"><button class="bold" type="button" title="Bold (Ctrl-B)" aria-label="Bold" tabindex="-1"><i class="fa fa-bold"></i></button><button class="italic" type="button" title="Italic (Ctrl-I)" aria-label="Italic" tabindex="-1"><i class="fa fa-italic"></i></button><button class="heading" type="button" title="Heading (Ctrl-H)" aria-label="Heading" tabindex="-1"><i class="fa fa-header fa-heading"></i></button><i class="separator">|</i><button class="quote" type="button" title="Quote (Ctrl-')" aria-label="Quote" tabindex="-1"><i class="fa fa-quote-left"></i></button><button class="unordered-list" type="button" title="Generic List (Ctrl-L)" aria-label="Generic List" tabindex="-1"><i class="fa fa-list-ul"></i></button><button class="ordered-list" type="button" title="Numbered List (Ctrl-Alt-L)" aria-label="Numbered List" tabindex="-1"><i class="fa fa-list-ol"></i></button><i class="separator">|</i><button class="link" type="button" title="Create Link (Ctrl-K)" aria-label="Create Link" tabindex="-1"><i class="fa fa-link"></i></button><button class="image" type="button" title="Insert Image (Ctrl-Alt-I)" aria-label="Insert Image" tabindex="-1"><i class="fa fa-image"></i></button><i class="separator">|</i><button class="preview no-disable" type="button" title="Toggle Preview (Ctrl-P)" aria-label="Toggle Preview" tabindex="-1"><i class="fa fa-eye"></i></button><button class="side-by-side no-disable no-mobile active" type="button" title="Toggle Side by Side (F9)" aria-label="Toggle Side by Side" tabindex="-1"><i class="fa fa-columns"></i></button><button class="fullscreen no-disable no-mobile" type="button" title="Toggle Fullscreen (F11)" aria-label="Toggle Fullscreen" tabindex="-1"><i class="fa fa-arrows-alt"></i></button><i class="separator">|</i><button class="guide no-disable" type="button" title="Markdown Guide" aria-label="Markdown Guide" tabindex="-1"><i class="fa fa-question-circle"></i></button></div>
+            </div>
+            <div id="main" class="split-veritcally">
+                <div id="split-left">
+                    <div class="split-horizontally">
+                        <div id="split-top" class="tree"></div>
+                        <div id="split-bottom"></div>
+                    </div>
+                </div>
+                <div id="split-right">
+                    <textarea id="markdown">
+__Advertisement :)__
+
+- __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image
+  resize in browser.
+- __[babelfish](https://github.com/nodeca/babelfish/)__ - developer friendly
+  i18n with plurals support and easy syntax.
+
+You will like those projects!
+
+---
+
+# h1 Heading 8-)
+## h2 Heading
+### h3 Heading
+#### h4 Heading
+##### h5 Heading
+###### h6 Heading
+
+
+## Horizontal Rules
+
+___
+
+---
+
+***
+
+
+## Typographic replacements
+
+Enable typographer option to see result.
+
+(c) (C) (r) (R) (tm) (TM) (p) (P) +-
+
+test.. test... test..... test?..... test!....
+
+!!!!!! ???? ,,  -- ---
+
+"Smartypants, double quotes" and 'single quotes'
+
+
+## Emphasis
+
+**This is bold text**
+
+__This is bold text__
+
+*This is italic text*
+
+_This is italic text_
+
+~~Strikethrough~~
+
+
+## Blockquotes
+
+
+> Blockquotes can also be nested...
+>> ...by using additional greater-than signs right next to each other...
+> > > ...or with spaces between arrows.
+
+
+## Lists
+
+Unordered
+
++ Create a list by starting a line with `+`, `-`, or `*`
++ Sub-lists are made by indenting 2 spaces:
+  - Marker character change forces new list start:
+    * Ac tristique libero volutpat at
+    + Facilisis in pretium nisl aliquet
+    - Nulla volutpat aliquam velit
++ Very easy!
+
+Ordered
+
+1. Lorem ipsum dolor sit amet
+2. Consectetur adipiscing elit
+3. Integer molestie lorem at massa
+
+
+1. You can use sequential numbers...
+1. ...or keep all the numbers as `1.`
+
+Start numbering with offset:
+
+57. foo
+1. bar
+
+
+## Code
+
+Inline `code`
+
+Indented code
+
+    // Some comments
+    line 1 of code
+    line 2 of code
+    line 3 of code
+
+
+Block code "fences"
+
+```
+Sample text here...
+```
+
+Syntax highlighting
+
+``` js
+var foo = function (bar) {
+  return bar++;
+};
+
+console.log(foo(5));
+```
+
+## Tables
+
+| Option | Description |
+| ------ | ----------- |
+| data   | path to data files to supply the data that will be passed into templates. |
+| engine | engine to be used for processing templates. Handlebars is the default. |
+| ext    | extension to be used for dest files. |
+
+Right aligned columns
+
+| Option | Description |
+| ------:| -----------:|
+| data   | path to data files to supply the data that will be passed into templates. |
+| engine | engine to be used for processing templates. Handlebars is the default. |
+| ext    | extension to be used for dest files. |
+
+
+## Links
+
+[link text](http://dev.nodeca.com)
+
+[link with title](http://nodeca.github.io/pica/demo/ "title text!")
+
+Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
+
+
+## Images
+
+![Minion](https://octodex.github.com/images/minion.png)
+![Stormtroopocat](https://octodex.github.com/images/stormtroopocat.jpg "The Stormtroopocat")
+
+Like links, Images also have a footnote style syntax
+
+![Alt text][id]
+
+With a reference later in the document defining the URL location:
+
+[id]: https://octodex.github.com/images/dojocat.jpg  "The Dojocat"
+
+
+## Plugins
+
+The killer feature of `markdown-it` is very effective support of
+[syntax plugins](https://www.npmjs.org/browse/keyword/markdown-it-plugin).
+
+
+### [Emojies](https://github.com/markdown-it/markdown-it-emoji)
+
+> Classic markup: :wink: :cry: :laughing: :yum:
+>
+> Shortcuts (emoticons): :-) :-( 8-) ;)
+
+see [how to change output](https://github.com/markdown-it/markdown-it-emoji#change-output) with twemoji.
+
+
+### [Subscript](https://github.com/markdown-it/markdown-it-sub) / [Superscript](https://github.com/markdown-it/markdown-it-sup)
+
+- 19^th^
+- H~2~O
+
+
+### [\<ins>](https://github.com/markdown-it/markdown-it-ins)
+
+++Inserted text++
+
+
+### [\<mark>](https://github.com/markdown-it/markdown-it-mark)
+
+==Marked text==
+
+
+### [Footnotes](https://github.com/markdown-it/markdown-it-footnote)
+
+Footnote 1 link[^first].
+
+Footnote 2 link[^second].
+
+Inline footnote^[Text of inline footnote] definition.
+
+Duplicated footnote reference[^second].
+
+[^first]: Footnote **can have markup**
+
+    and multiple paragraphs.
+
+[^second]: Footnote text.
+
+
+### [Definition lists](https://github.com/markdown-it/markdown-it-deflist)
+
+Term 1
+
+:   Definition 1
+with lazy continuation.
+
+Term 2 with *inline markup*
+
+:   Definition 2
+
+        { some code, part of Definition 2 }
+
+    Third paragraph of definition 2.
+
+_Compact style:_
+
+Term 1
+  ~ Definition 1
+
+Term 2
+  ~ Definition 2a
+  ~ Definition 2b
+
+
+### [Abbreviations](https://github.com/markdown-it/markdown-it-abbr)
+
+This is HTML abbreviation example.
+
+It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
+
+*[HTML]: Hyper Text Markup Language
+
+### [Custom containers](https://github.com/markdown-it/markdown-it-container)
+
+::: warning
+*here be dragons*
+:::
+
+                    </textarea>
+                </div>
+            </div>
+    </body>
+
+    <script>
+        var easymde = new EasyMDE({ 
+            element: document.getElementById("markdown"),
+            sideBySideFullscreen: false,
+            status: false,
+            toolbar: false,
+            syncSideBySidePreviewScroll: true,
+        });
+
+        easymde.toggleSideBySide();
+
+        Split(['#split-left', '#split-right'], {
+            minSize: 250,
+            gutterSize: 5,
+            expandToMin: true,
+            sizes: [1, 99]
+        });
+
+        Split(['#split-top', '#split-bottom'], {
+            direction: 'vertical',
+            minSize: 200,
+            gutterSize: 5,
+            expandToMin: true
+        });
+
+        const nodes = [ {
+            data: { title: 'Home' },
+            nodes: [
+            { data: { title: 'Page 1' }, nodes: [] },
+            {
+            data: { title: 'Page 2' },
+            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
+            },
+            {
+            data: { title: 'Page 2' },
+            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
+            },
+            {
+            data: { title: 'Page 2' },
+            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
+            },
+            {
+            data: { title: 'Page 2' },
+            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
+            },
+            {
+            data: { title: 'Page 2' },
+            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
+            },
+            ],
+        }];
+
+        const tree = new SortableTree({
+            nodes: nodes,
+            element: document.querySelector('#split-top'),
+            renderLabel: (data) => {
+                return `<span>${data.title}</span>`;
+            },
+            onChange: ({ nodes, movedNode, srcParentNode, targetParentNode }) => {
+                console.log(movedNode.data);
+            },
+            onClick: (event, node) => {
+                console.log(node.data);
+            },
+        });
+    </script>
+</html>
