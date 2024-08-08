@@ -120,6 +120,15 @@ export default class UIScrollBar {
         });
     }
 
+    SetVisibility(val) {
+        if (val) {
+            this.Show();
+        }
+        else {
+            this.Hide();
+        }
+    }
+
     Hide() {
         this._trackSprite.setActive(false).setVisible(false);
         this._gripSprite.setActive(false).setVisible(false);

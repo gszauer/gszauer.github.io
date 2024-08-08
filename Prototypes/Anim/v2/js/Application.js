@@ -5,12 +5,14 @@ import UIToolBar from './UIToolBar.js'
 import UIToolBox from './UIToolBox.js'
 import UISplitView from './UISplitView.js'
 import UITabView from './UITabView.js'
-import InspectorView from './InspectorView.js'
+import InspectorView from './HierarchyInspectorView.js'
+import AnimationInspectorView from './AnimationInspectorView.js'
 import DrawOrderView from './DrawOrderView.js'
 import AnimationsView from './AnimationsView.js'
 import AssetsView from './AssetsView.js'
 import HierarchyView from './HierarchyView.js'
 import SceneView from './SceneView.js'
+import KeyframesView from './KeyframesView.js'
 import * as TextEditPlugin from './rextexteditplugin.js';
 import XForm from './Transform.js'
 
@@ -78,6 +80,8 @@ export default class Application extends Phaser.Scene {
         const sceneView = timelineSplitter.a = new SceneView(this, timelineSplitter);
         sceneView.CreateToolShelves(self._toolBar);
 
+        const keyframeView = timelineSplitter.b = new KeyframesView(this, timelineSplitter);
+
         self._toolBox = new UIToolBox(self, (btnName, btnObj) => {
             sceneView.activeShelf = self._toolBar.Activate(btnName);
             self._toolBar.Layout();
@@ -90,7 +94,7 @@ export default class Application extends Phaser.Scene {
         this._toolBox.AddTop("", null);
         this._toolBox.AddTop(UIGlobals.IconHand, null);
         this._toolBox.AddTop(UIGlobals.IconZoomIn, null);
-        this._toolBox.AddBottom("IconHelp.png", null);
+        //this._toolBox.AddBottom("IconHelp.png", null);
         this._toolBox.AddBottom("IconDownload.png", null);
         this._toolBox.AddBottom("IconUpload.png", null);
         this._toolBox.AddBottom("IconNew.png", null);
@@ -104,18 +108,26 @@ export default class Application extends Phaser.Scene {
         toolSplitter.pinnedMinSize = 33;
 
         const inspectorTabs = toolSplitter.a = new UITabView(this, toolSplitter.a);
-        const inspectorView = new InspectorView(this,  inspectorTabs);
-        const drawOrderView = new DrawOrderView(this, inspectorTabs);
-        const assetsView = new AssetsView(this, inspectorTabs);
         const sceneTabs = toolSplitter.b = new UITabView(this, toolSplitter.b);
+        const drawOrderView = new DrawOrderView(this, inspectorTabs);
+        
+        const inspectorView = new InspectorView(this,  inspectorTabs);
+        const animationsView = new AnimationsView(this, sceneTabs);
+        const animInspectorView = new AnimationInspectorView(this, inspectorTabs, animationsView);
+        
+        const subTabs = new UITabView(this, inspectorTabs, true);
+        subTabs.Add("Hierarchy", inspectorView);//inspectorView);
+        subTabs.Add("Animations", animInspectorView);//inspectorView);
+        
+        const assetsView = new AssetsView(this, inspectorTabs);
 
-        inspectorTabs.Add("Inspector", inspectorView);
+        inspectorTabs.Add("Inspector", subTabs);//inspectorView);
         inspectorTabs.Add("Draw Order", drawOrderView);
         inspectorTabs.Add("Sprite Sheet", assetsView);
 
         const hierarchyView = new HierarchyView(this, sceneTabs, drawOrderView, sceneView);
         sceneTabs.Add("Hierarchy", hierarchyView);
-        sceneTabs.Add("Animations", new AnimationsView(this, sceneTabs));
+        sceneTabs.Add("Animations", animationsView);
 
         inspectorView._assetsView = assetsView;
         inspectorView._sceneView = sceneView;
@@ -125,9 +137,16 @@ export default class Application extends Phaser.Scene {
         inspectorView._hierarchyView = hierarchyView;
         assetsView._hierarchyView= hierarchyView;
         assetsView._inspectorView = inspectorView;
+        animInspectorView._animView = animationsView;
+        animationsView._keyframesView = keyframeView;
+        inspectorView._keyframesView = keyframeView;
 
         hierarchyView.onSelectionChanged = (oldNode, newNode) => {
             inspectorView.FocusOn(newNode);
+        };
+
+        sceneTabs.onViewChanged = (view, tag) => {
+            subTabs.Activate(tag);
         };
 
         self.Layout();

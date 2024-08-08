@@ -6,7 +6,6 @@ import XForm from './Transform.js'
 import SpriteImg from './Sprite.js'
 
 export default class HierarchyView extends UIView {
-    static _nameCounter = 0;
     _tree = null;
     _footer = null;
     _buttons = [];
@@ -15,7 +14,6 @@ export default class HierarchyView extends UIView {
     _drawOrderView = null;
     _drawOrderToHiararchyNodeMap = null;
     _sceneView = null;
-
 
     onSelectionChanged = null; // (oldActive, newActive)
 
@@ -42,6 +40,8 @@ export default class HierarchyView extends UIView {
         this._tree.onSelected = (treeNode) => {
             self.active = treeNode;
             self._sceneView.UpdateColors();
+            self._drawOrderView.Layout();
+            self._drawOrderView.UpdateColors();
         }
 
         this._footer =  scene.add.sprite(0, 0, UIGlobals.Atlas, UIGlobals.Solid);
@@ -51,14 +51,20 @@ export default class HierarchyView extends UIView {
         const newNodeButton = new UIImageButton(scene, "SmallIconHierarchyNew.png", () => {
             const hierarchyNode = self.AddNewNode();
             self._sceneView.UpdateColors();
+            self._drawOrderView.UpdateColors();
+            self._drawOrderView.Layout();
         });
         const deleteNodeButton = new UIImageButton(scene, "SmallIconTrash.png", () => {
             self.Delete();
             self._sceneView.UpdateColors();
+            self._drawOrderView.Layout();
+            self._drawOrderView.UpdateColors();
         });
         const deselectButton = new UIImageButton(scene, "SmallIconDeselect.png", () => {
             self.Deselect();
             self._sceneView.UpdateColors();
+            self._drawOrderView.Layout();
+            self._drawOrderView.UpdateColors();
         });
         this._buttons.push(deselectButton);
         this._buttons.push(deleteNodeButton);
@@ -80,7 +86,6 @@ export default class HierarchyView extends UIView {
 
         this._sceneView.UpdateActiveShelf();
     }
-
     
     get active() {
         return this._active;
@@ -131,7 +136,7 @@ export default class HierarchyView extends UIView {
 
     AddNewNode(nodeName) {
         if (!nodeName) {
-            nodeName = "Unnamed Node " + (HierarchyView._nameCounter++);;
+            nodeName = "Unnamed node";//"" + UIGlobals.uuid;;
         }
 
         let parent = null;
