@@ -3,23 +3,35 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!--meta name="color-scheme" content="light dark"-->
         <title>Bookdown</title>
 
         <!-- https://split.js.org/#/ -->
         <script src="js/split.js"></script>
         <link href="css/split.css" rel="stylesheet" />
 
-        <!-- https://github.com/marcantondahmen/sortable-tree -->
-        <script src="js/sortable-tree.js"></script>
-        <link href="css/sortable-tree.css" rel="stylesheet" />
-
-        <!-- https://simplemde.com/ >
-        <script src="js/simplemde.js"></script>
-        <link href="css/simplemde.css" rel="stylesheet" /-->
-
         <!-- https://github.com/Ionaru/easy-markdown-editor -->
         <script src="js/easymde.js"></script>
         <link href="css/easymde.css" rel="stylesheet" />
+        <link href="css/dark.css" rel="stylesheet" />
+
+        <!-- https://github.com/mlveis/idbfs -->
+        <script src="js/idbfs.js"></script>
+
+        <!-- https://blog.quentinra.dev/programming-languages/others/documents/markdown/easymde/index.md -->
+        <script src="js/tex-mml-chtml.min.js"></script>
+        <script src="js/marked.min.js"></script>
+        <script src="katex/katex.min.js"></script>
+        <link href="katex/katex.min.css" rel="stylesheet" />
+
+        <!--https://phosphoricons.com/ /-->
+        <link href="phospor/src/regular/style.css" rel="stylesheet" />
+
+        <!-- https://www.w3schools.com/html/html5_draganddrop.asp -->
+        <!-- https://www.w3schools.com/howto/howto_js_treeview.asp -->
+        <link href="css/tree.css" rel="stylesheet" />
+        <script src="js/tree.js"></script>
+
 
         <style>
             html,
@@ -34,25 +46,146 @@
             .EasyMDEContainer  {
                 height: 100%;
             }
-
             .CodeMirror {
                 height: 100%;
             }
 
+            .EasyMDEContainer .CodeMirror {
+                border: 0px;
+            }
+
+            .EasyMDEContainer.sided--no-fullscreen .CodeMirror-sided {
+                border-left: 0px;
+                border-top: 0px;
+                border-bottom: 0px;
+            }
+
+            .EasyMDEContainer .editor-preview-active-side {
+                border-right: 0px;
+                border-top: 0px;
+                border-bottom: 0px;
+            }
+
+            .editor-preview {
+                border: 0px;
+            }
+
+            #header {
+                height: 50px;
+                padding-left: 5px;
+                padding-right: 10px;
+                overflow: hidden;
+
+                border-top: 0px;
+                border-left: 0px;
+                border-right: 0px;
+
+                display: flex;
+            }
+
             #main {
-                height: calc(100% - 50px);
+                height: calc(100% - 55px);
+            }
+
+            button {
+                width: 30px;
+                height: 30px;
+                margin-top: 10px;
+                margin-left: 5px;
+                border-radius: 8px;
+            }
+
+            .ph {
+                font-size: 18px;
+            }
+
+            #menupush {
+                flex-grow: 1;
+                max-width: 140px;
+            }
+
+            .spacer {
+                flex-grow: 1;
+                min-width: 10px;
+            }
+
+            button.left,
+            button.left:hover,
+            button.left:active {
+                border-right: 0px;
+                border-radius: 8px  0  0 8px;
+                margin-right: 0px;
+                padding-right: 0px;
+            }
+
+            button.right,
+            button.right:hover,
+            button.right:active {
+                border-left: 0px;
+                border-radius: 0 8px 8px 0;
+                margin-left: 0px;
+                padding-left: 0px;
+            }
+
+            button.center,
+            button.center:hover,
+            button.center:active {
+                border-radius: 0;
+
+                border-left: 0px;
+                margin-left: 0px;
+                padding-left: 0px;
+
+                border-right: 0px;
+                margin-right: 0px;
+                padding-right: 0px;
             }
         </style>
     </head>
     <body>
-            <div>
-                <div class="editor-toolbar" role="toolbar"><button class="bold" type="button" title="Bold (Ctrl-B)" aria-label="Bold" tabindex="-1"><i class="fa fa-bold"></i></button><button class="italic" type="button" title="Italic (Ctrl-I)" aria-label="Italic" tabindex="-1"><i class="fa fa-italic"></i></button><button class="heading" type="button" title="Heading (Ctrl-H)" aria-label="Heading" tabindex="-1"><i class="fa fa-header fa-heading"></i></button><i class="separator">|</i><button class="quote" type="button" title="Quote (Ctrl-')" aria-label="Quote" tabindex="-1"><i class="fa fa-quote-left"></i></button><button class="unordered-list" type="button" title="Generic List (Ctrl-L)" aria-label="Generic List" tabindex="-1"><i class="fa fa-list-ul"></i></button><button class="ordered-list" type="button" title="Numbered List (Ctrl-Alt-L)" aria-label="Numbered List" tabindex="-1"><i class="fa fa-list-ol"></i></button><i class="separator">|</i><button class="link" type="button" title="Create Link (Ctrl-K)" aria-label="Create Link" tabindex="-1"><i class="fa fa-link"></i></button><button class="image" type="button" title="Insert Image (Ctrl-Alt-I)" aria-label="Insert Image" tabindex="-1"><i class="fa fa-image"></i></button><i class="separator">|</i><button class="preview no-disable" type="button" title="Toggle Preview (Ctrl-P)" aria-label="Toggle Preview" tabindex="-1"><i class="fa fa-eye"></i></button><button class="side-by-side no-disable no-mobile active" type="button" title="Toggle Side by Side (F9)" aria-label="Toggle Side by Side" tabindex="-1"><i class="fa fa-columns"></i></button><button class="fullscreen no-disable no-mobile" type="button" title="Toggle Fullscreen (F11)" aria-label="Toggle Fullscreen" tabindex="-1"><i class="fa fa-arrows-alt"></i></button><i class="separator">|</i><button class="guide no-disable" type="button" title="Markdown Guide" aria-label="Markdown Guide" tabindex="-1"><i class="fa fa-question-circle"></i></button></div>
+            <div id="header">
+                <!--button><i class="ph ph-file-text"></i></button-->
+                <button><i class="ph ph-file-arrow-up"></i></button>
+                <button><i class="ph ph-file-arrow-down"></i></button>
+                <div id="menupush"></div>
+                <!-- h1 --><button id="tool-h1"><i class="ph ph-text-h-one"></i></button>
+                <!-- h2 --><button id="tool-h2"><i class="ph ph-text-h-two"></i></button>
+                <!-- h3 --><button id="tool-h3"><i class="ph ph-text-h-three"></i></button>
+                <!-- SEPERATOR -->
+                <!-- Bold --><button id="tool-bold"><i class="ph ph-text-b"></i></button>
+                <!-- Italic --><button id="tool-italic"><i class="ph ph-text-italic"></i></button>
+                <!-- Striketrough --><button id="tool-strike"><i class="ph ph-text-strikethrough"></i></button>
+                <!-- SEPERATOR -->
+                <!-- qoute --><button id="tool-qoute"><i class="ph ph-quotes"></i></button>
+                <!-- code --><button id="tool-code"><i class="ph ph-brackets-curly"></i></button>
+                <!-- math --><button id="tool-math"><i class="ph ph-sigma"></i></button>
+                <!-- SEPERATOR -->
+                <!--bullet--><button id="tool-ul"><i class="ph ph-list-bullets"></i></button>
+                <!--number--><button id="tool-ol"><i class="ph ph-list-numbers"></i></button>
+                <!--table--><button id="tool-table"><i class="ph ph-grid-four"></i></button>
+                <!-- SEPERATOR -->
+                <!-- link --><button id="tool-link"><i class="ph ph-link"></i></button>
+                <!-- image --><button id="tool-image"><i class="ph ph-image"></i></button>
+                <div class="spacer"></div>
+                <!-- locked --><button id="tool-lock" class="left highlighted"><i class="ph ph-lock-simple"></i></button>
+                <!-- free --><button id="tool-unlock" class="right"><i class="ph ph-lock-simple-open"></i></button>
+                <!-- SEPERATOR -->
+                <!-- markdown --><button id="tool-edit" class="left"><i class="ph ph-article-medium"></i></button>
+                <!-- both --> <button id="tool-both" class="center highlighted"><i class="ph ph-square-split-horizontal"></i></button>
+                <!-- preview --><button id="tool-preview" class="right"><i class="ph ph-read-cv-logo"></i></button>
+                <!-- SEPERATOR -->
+                <!-- light --><button class="left"><i class="ph ph-sun"></i></button>
+                <!-- dark --><button class="right highlighted"><i class="ph ph-moon"></i></button>
             </div>
             <div id="main" class="split-veritcally">
                 <div id="split-left">
                     <div class="split-horizontally">
-                        <div id="split-top" class="tree"></div>
-                        <div id="split-bottom"></div>
+                        <div id="split-top" class="tree">
+                        </div>
+                        <div id="split-bottom">
+                            <ul id="assetfiles" class="tree-root">
+                            </ul> 
+                        </div>
                     </div>
                 </div>
                 <div id="split-right">
@@ -77,6 +210,8 @@ You will like those projects!
 
 
 ## Horizontal Rules
+
+$ x = \frac{x}{y} $
 
 ___
 
@@ -308,21 +443,384 @@ It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
     </body>
 
     <script>
-        var easymde = new EasyMDE({ 
+        var MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['@', '@'], ['\\[', '\\]']],
+            }
+        };
+
+        const mainDiv = document.getElementById("main");
+        const splitLeft = document.getElementById("split-left");
+        const menuSpacer = document.getElementById("menupush");
+        const toolBold = document.getElementById("tool-bold");
+        const toolItalic = document.getElementById("tool-italic");
+        const toolStrike = document.getElementById("tool-strike");
+        const toolQoute = document.getElementById("tool-qoute");
+        const toolH1 = document.getElementById("tool-h1");
+        const toolH2 = document.getElementById("tool-h2");
+        const toolH3 = document.getElementById("tool-h3");
+        const toolUl = document.getElementById("tool-ul");
+        const toolOl = document.getElementById("tool-ol");
+        const toolTable = document.getElementById("tool-table");
+        const toolImage = document.getElementById("tool-image");
+        const toolLink = document.getElementById("tool-link");
+        const toolCode = document.getElementById("tool-code");
+        const toolMath = document.getElementById("tool-math");
+        const toolEdit = document.getElementById("tool-edit");
+        const toolPreview = document.getElementById("tool-preview");
+        const toolBoth = document.getElementById("tool-both");
+        const toolLock = document.getElementById("tool-lock");
+        const toolUnlock = document.getElementById("tool-unlock");
+
+        const easymde = new EasyMDE({ 
             element: document.getElementById("markdown"),
             sideBySideFullscreen: false,
             status: false,
             toolbar: false,
             syncSideBySidePreviewScroll: true,
+            spellChecker: false,
+            previewRender: function(plainText) {
+                return marked(plainText); // Returns HTML from a custom parser
+            },
+        });
+
+        /*const Filer = window.Filer;
+        const fs = Filer.fs;
+        const path = Filer.path;
+        fs.exists("/docs", (exists) => {
+            if (exists) {
+                const filename = path.join('/docs', 'first.txt');
+                fs.stat(filename, (err, stats) =>  {
+                    if (err) {
+                        return console.error('Unable to stat /docs/first.txt', err);
+                    }
+
+                    console.log('Stats for /docs/first.txt:', stats);
+                });
+                return;
+            }
+            fs.mkdir('/docs', (err) => {
+                if (err) {
+                    return console.error('Unable to create /docs dir', err);
+                }
+                
+                const filename = path.join('/docs', 'first.txt');
+                const data = 'Hello World!\n';
+
+                fs.writeFile(filename, data, (err) => {
+                    if (err) {
+                        return console.error('Unable to write /docs/first.txt', err);
+                    }
+
+                    fs.stat(filename, (err, stats) =>  {
+                        if (err) {
+                            return console.error('Unable to stat /docs/first.txt', err);
+                        }
+
+                        console.log('Stats for /docs/first.txt:', stats);
+                    });
+                });
+            });
+        });*/
+
+        var fs = new IDBFS.FileSystem('BookDown');
+        fs.open('/myfile', 'w+', function(err, fd) {
+            if (err) throw err;
+            
+            fs.close(fd, function(err) {
+                if (err) throw err;
+                    fs.stat('/myfile', function(err, stats) {
+                if (err) throw err;
+                    console.log('stats: ' + JSON.stringify(stats));
+                });
+            });
         });
 
         easymde.toggleSideBySide();
+
+        toolLock.onclick = (e) => {
+            easymde.options.syncSideBySidePreviewScroll = true;
+            toolUnlock.classList.remove("highlighted");
+            toolLock.classList.add("highlighted");
+            return false;
+        };
+
+        toolUnlock.onclick = (e) => {
+            easymde.options.syncSideBySidePreviewScroll = false;
+            toolLock.classList.remove("highlighted");
+            toolUnlock.classList.add("highlighted");
+            return false;
+        };
+
+        toolH1.onclick = (e) => {
+            easymde.toggleHeading1();
+            return false;
+        };
+
+        toolH2.onclick = (e) => {
+            easymde.toggleHeading2();
+            return false;
+        };
+
+        toolH3.onclick = (e) => {
+            easymde.toggleHeading3();
+            return false;
+        };
+
+        toolBold.onclick = (e) => {
+            easymde.toggleBold();
+            return false;
+        };
+
+        toolItalic.onclick = (e) => {
+            easymde.toggleItalic();
+            return false;
+        };
+
+        toolStrike.onclick = (e) => {
+            easymde.toggleStrikethrough();
+            return false;
+        };
+        
+        toolQoute.onclick = (e) => {
+            easymde.toggleBlockquote();
+            return false;
+        };
+
+        toolUl.onclick = (e) => {
+            easymde.toggleUnorderedList();
+            return false;
+        };
+
+        toolOl.onclick = (e) => {
+            easymde.toggleOrderedList();
+            return false;
+        };
+
+        toolTable.onclick = (e) => {
+            easymde.drawTable();
+            return false;
+        };
+
+        toolImage.onclick = (e) => {
+            easymde.drawImage();
+            return false;
+        };
+
+        toolLink.onclick = (e) => {
+            easymde.drawLink();
+            return false;
+        };
+
+        toolCode.onclick = (e) => {
+            easymde.toggleCodeBlock();
+            return false;
+        }
+
+        toolEdit.onclick = (e) => {
+            toolBoth.classList.remove("highlighted");
+            toolPreview.classList.remove("highlighted");
+            toolEdit.classList.add("highlighted");
+            if (easymde.isPreviewActive()) {
+                easymde.togglePreview();
+            }
+            if (easymde.isSideBySideActive()) {
+                easymde.toggleSideBySide();
+            }
+            return false;
+        };
+
+        toolBoth.onclick = (e) => {
+            toolEdit.classList.remove("highlighted");
+            toolPreview.classList.remove("highlighted");
+            toolBoth.classList.add("highlighted");
+            easymde.toggleSideBySide();
+            if (easymde.isPreviewActive()) {
+                easymde.togglePreview();
+            }
+            if (!easymde.isSideBySideActive()) {
+                easymde.toggleSideBySide();
+            }
+            return false;
+        };
+
+        toolPreview.onclick = (e) => {
+            toolBoth.classList.remove("highlighted");
+            toolEdit.classList.remove("highlighted");
+            toolPreview.classList.add("highlighted");
+
+            if (!easymde.isPreviewActive()) {
+                easymde.togglePreview();
+            }
+            if (easymde.isSideBySideActive()) {
+                easymde.toggleSideBySide();
+            }
+            return false;
+        };
+    
+
+        { // Custom for math equations
+            const getState = (cm, pos) => {
+                pos = pos || cm.getCursor('start');
+                var stat = cm.getTokenAt(pos);
+                if (!stat.type) return {};
+
+                var types = stat.type.split(' ');
+
+                var ret = {},
+                    data, text;
+                for (var i = 0; i < types.length; i++) {
+                    data = types[i];
+                    if (data === 'strong') {
+                        ret.bold = true;
+                    } else if (data === 'variable-2') {
+                        text = cm.getLine(pos.line);
+                        if (/^\s*\d+\.\s/.test(text)) {
+                            ret['ordered-list'] = true;
+                        } else {
+                            ret['unordered-list'] = true;
+                        }
+                    } else if (data === 'atom') {
+                        ret.quote = true;
+                    } else if (data === 'em') {
+                        ret.italic = true;
+                    } else if (data === 'quote') {
+                        ret.quote = true;
+                    } else if (data === 'strikethrough') {
+                        ret.strikethrough = true;
+                    } else if (data === 'comment') {
+                        ret.code = true;
+                    } else if (data === 'link' && !ret.image) {
+                        ret.link = true;
+                    } else if (data === 'image') {
+                        ret.image = true;
+                    } else if (data.match(/^header(-[1-6])?$/)) {
+                        ret[data.replace('header', 'heading')] = true;
+                    }
+                }
+                return ret;
+            }
+            const _toggleBlock = (editor, type, start_chars, end_chars) => {
+                if (!editor.codemirror || editor.isPreviewActive()) {
+                    return;
+                }
+
+                end_chars = (typeof end_chars === 'undefined') ? start_chars : end_chars;
+                var cm = editor.codemirror;
+                var stat = getState(cm);
+
+                var text;
+                var start = start_chars;
+                var end = end_chars;
+
+                var startPoint = cm.getCursor('start');
+                var endPoint = cm.getCursor('end');
+
+                if (stat[type]) {
+                    text = cm.getLine(startPoint.line);
+                    start = text.slice(0, startPoint.ch);
+                    end = text.slice(startPoint.ch);
+                    if (type == 'bold') {
+                        start = start.replace(/(\*\*|__)(?![\s\S]*(\*\*|__))/, '');
+                        end = end.replace(/(\*\*|__)/, '');
+                    } else if (type == 'italic') {
+                        start = start.replace(/(\*|_)(?![\s\S]*(\*|_))/, '');
+                        end = end.replace(/(\*|_)/, '');
+                    } else if (type == 'strikethrough') {
+                        start = start.replace(/(\*\*|~~)(?![\s\S]*(\*\*|~~))/, '');
+                        end = end.replace(/(\*\*|~~)/, '');
+                    }
+                    else if (type == 'math') {
+                        start = start.replace(/(\*\*|\$)(?![\s\S]*(\*\*|\$))/, '');
+                        end = end.replace(/(\*\*|\$)/, '');
+                    }
+                    cm.replaceRange(start + end, {
+                        line: startPoint.line,
+                        ch: 0,
+                    }, {
+                        line: startPoint.line,
+                        ch: 99999999999999,
+                    });
+
+                    if (type == 'bold' || type == 'strikethrough') {
+                        startPoint.ch -= 2;
+                        if (startPoint !== endPoint) {
+                            endPoint.ch -= 2;
+                        }
+                    } else if (type == 'italic' || type == 'math') {
+                        startPoint.ch -= 1;
+                        if (startPoint !== endPoint) {
+                            endPoint.ch -= 1;
+                        }
+                    }
+                } else {
+                    text = cm.getSelection();
+                    if (type == 'bold') {
+                        text = text.split('**').join('');
+                        text = text.split('__').join('');
+                    } else if (type == 'italic') {
+                        text = text.split('*').join('');
+                        text = text.split('_').join('');
+                    } else if (type == 'strikethrough') {
+                        text = text.split('~~').join('');
+                    }
+                    else if (type == 'math') {
+                        text = text.split('$').join('');
+                    }
+                    cm.replaceSelection(start + text + end);
+
+                    startPoint.ch += start_chars.length;
+                    endPoint.ch = startPoint.ch + text.length;
+                }
+
+                cm.setSelection(startPoint, endPoint);
+                cm.focus();
+            }
+
+            toolMath.onclick = (e) => {
+                _toggleBlock(easymde, 'math', '$');
+                return false;
+            };
+        }
+
+        const resizeCallback = (sizes) => {
+            const precent = sizes[0] / 100;
+            const width = Math.floor(precent * mainDiv.clientWidth);
+            const cssWidth = Math.floor(width - 80) + "px";
+            menuSpacer.style.maxWidth = cssWidth;
+            menuSpacer.style.width = cssWidth;
+        };
+
+        let lastWidth = 0;
+        let lastHeight = 0;
+        const resizeWatcher = () => {
+            const windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+            const windowWidth = (window.innerWidth || document.documentElement.clientWidth);
+
+            if (lastWidth !== windowWidth || lastHeight !== windowHeight) {
+                const part = splitLeft.clientWidth;
+                const whole = mainDiv.clientWidth;
+
+                const precent = Math.floor(part / whole * 100);
+                resizeCallback([precent]);
+
+                //console.log("Resize: " + part + " / " + whole);
+
+                lastWidth = windowWidth;
+                lastHeight = windowHeight;
+            }
+        }
+        window.setInterval(resizeWatcher, 100, 0);
 
         Split(['#split-left', '#split-right'], {
             minSize: 250,
             gutterSize: 5,
             expandToMin: true,
-            sizes: [1, 99]
+            sizes: [1, 99],
+            onDrag: resizeCallback,
+            onDragStart: resizeCallback,
+            onDragEnd: resizeCallback,
         });
 
         Split(['#split-top', '#split-bottom'], {
@@ -332,45 +830,55 @@ It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
             expandToMin: true
         });
 
-        const nodes = [ {
-            data: { title: 'Home' },
-            nodes: [
-            { data: { title: 'Page 1' }, nodes: [] },
-            {
-            data: { title: 'Page 2' },
-            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
-            },
-            {
-            data: { title: 'Page 2' },
-            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
-            },
-            {
-            data: { title: 'Page 2' },
-            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
-            },
-            {
-            data: { title: 'Page 2' },
-            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
-            },
-            {
-            data: { title: 'Page 2' },
-            nodes: [{ data: { title: 'Subpage' }, nodes: [] }],
-            },
-            ],
-        }];
+        const renderMath = (matches, text, inline=true, size=2) => {
+            if (matches != null) {
+                const options = inline ? {output: "html"} :  { displayMode: true, output: "html" };
+                for (const m of matches) {
+                    let latex = m.substring(size, m.length - size);
+                    let parsed;
+                    try {
+                        parsed = katex.renderToString(latex, options);
+                    } catch (e) {
+                        if (e.name === "ParseError"){
+                            if (latex.indexOf("&") !== -1) {
+                                latex = latex.replaceAll("&lt;", "<")
+                                latex = latex.replaceAll("&gt;", ">")
+                                parsed = katex.renderToString(latex, options);
+                            }
+                        }
+                    }
+                    text = text.replace(m, parsed)
+                }
+            }
+            return text;
+        }
 
-        const tree = new SortableTree({
-            nodes: nodes,
-            element: document.querySelector('#split-top'),
-            renderLabel: (data) => {
-                return `<span>${data.title}</span>`;
-            },
-            onChange: ({ nodes, movedNode, srcParentNode, targetParentNode }) => {
-                console.log(movedNode.data);
-            },
-            onClick: (event, node) => {
-                console.log(node.data);
-            },
+        marked.use({
+            renderer: {
+                text(text) {
+                    // rendering $$
+                    if (text.indexOf("$") !== -1) {
+                        text = renderMath(text.match(/\$+([^$]+)\$+/g), text, true, 1)
+                    }
+                    // rendering @@
+                    if (text.indexOf("@") !== -1) {
+                        text = renderMath(text.match(/@+([^@]+)@+/g), text, false, 1)
+                    }
+                    return text;
+                },
+                html(text) {
+                    if (text.indexOf("\(") !== -1) {
+                        text = renderMath(text.match(/\\\(([^)]+)\\\)+/g), text)
+                    }
+                    if (text.indexOf("\[") !== -1) {
+                        text = renderMath(text.match(/\\\[[^\]]+\\]/g), text, false)
+                    }
+                    return text;
+                }
+            }
         });
     </script>
+
+
+    
 </html>

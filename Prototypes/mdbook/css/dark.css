@@ -1,0 +1,131 @@
+.EasyMDEContainer .CodeMirror,
+.EasyMDEContainer .editor-preview-active-side,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap,
+.editor-preview {
+    color: #b2b2b2; /* gray 600 */
+    border-color: #707070; /* gray 400 */
+    background-color: #1d1d1d; /* gray 50*/ 
+}
+
+.cm-s-easymde .CodeMirror-cursor {
+    border-color:#b2b2b2; /* gray 600 */
+}
+
+.EasyMDEContainer .editor-preview-active-side code,
+.EasyMDEContainer .editor-preview-active-side pre,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap code,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap pre,
+.editor-preview code,
+.editor-preview pre  {
+    background-color: #3f3f3f; /* gray 200*/ 
+}
+
+.editor-preview pre  {
+    padding: 10px;
+}
+
+.EasyMDEContainer .editor-preview-active-side a:link,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap a:link,
+.editor-preview a:link {
+    color: #1379f3/* blue 600 */
+}
+
+.EasyMDEContainer .editor-preview-active-side a:visited,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap a:visited,
+.editor-preview a:visited {
+    color: #004da3; /* blue 300 #0367e0; /* blue 500 */
+}
+
+.EasyMDEContainer .editor-preview-active-side a:hover,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap a:hover,
+.editor-preview a:hover {
+    color: #348ff4; /* blue 700 */
+}
+
+.EasyMDEContainer .editor-preview-active-side a:active,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap a:active,
+.editor-preview a:active {
+    color: #72b7f9; /* blue 900 */
+}
+
+#header {
+    background-color: #262626; /* gray 75*/ 
+    border: 5px solid #3f3f3f; /* gray 200 */
+}
+
+.gutter {
+    background-color: #3f3f3f; /* gray 200 */
+    background-blend-mode: overlay;
+}
+
+.EasyMDEContainer .editor-preview-active-side,
+.CodeMirror .cm-s-easymde .CodeMirror-wrap,
+.editor-preview  {
+    border: 3px solid #3f3f3f; /* gray 200 */
+    border-right: 0px;
+    border-top: 0px;
+    border-bottom: 0px;
+}
+
+.CodeMirror .cm-s-easymde .CodeMirror-wrap,
+.editor-preview {
+    border-left: 0px;;
+}
+
+.split-horizontally {
+    background-color: #262626; /* gray 75*/ 
+}
+
+button {
+    color: #b2b2b2; /* gray 600 */
+    border: none;
+    background-color: #262626; /* gray 75*/ 
+    border: 2px solid #262626; /* gray 75*/ 
+}
+
+button.left,
+button.right, 
+button.center {
+    border: 2px solid #545454; /* gray 300 */
+}
+
+button:hover {
+    border: 2px solid #707070; /* gray 400 */
+    background-color: #323232; /* gray 100 */
+}
+
+button.highlighted {
+    background-color: #3f3f3f; /* gray 200*/ 
+}
+
+button.highlighted:hover {
+    background-color: #545454; /* gray 300*/ 
+    border: 2px solid #909090; /* gray 500 */
+}
+
+button:active {
+    border: 2px solid #b2b2b2; /* gray 600 */
+}
+
+.tree__label,
+.tree__collapse {
+    color: #b2b2b2; /* gray 600 */
+}
+
+.tree__label:hover {
+    background-color: #3f3f3f; /* gray 200 */
+
+    background-clip: padding-box;
+    box-shadow: -20px 0px 0px 0px #3f3f3f; /* gray 200 */
+}
+
+
+.tree-expand::before,
+.tree-span {
+    color: #b2b2b2; /* gray 600 */
+  }
+
+  .tree-drag-over,
+  .tree-span:hover {
+    background-color: #323232; /* gray 100 */
+  }
