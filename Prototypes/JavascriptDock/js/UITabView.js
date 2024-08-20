@@ -105,11 +105,13 @@ class UITabView {
                 ev.dataTransfer.effectAllowed = "move";
             }
 
-            UpdateCSSRules('.UIDockTarget', 'display', 'initial');
-            const allHighlighted = document.querySelectorAll(".UIDockTargetHighlight"); 
-            for (let i = 0, len = allHighlighted.length; i < len; ++i) {
-                allHighlighted[i].classList.remove("UIDockTargetHighlight");
-            }
+            setTimeout(() => { // Don't touch DOM in drag start
+                UpdateCSSRules('.UIDockTarget', 'display', 'initial');
+                const allHighlighted = document.querySelectorAll(".UIDockTargetHighlight"); 
+                for (let i = 0, len = allHighlighted.length; i < len; ++i) {
+                    allHighlighted[i].classList.remove("UIDockTargetHighlight");
+                }
+            }, 1);
 
             UITabView.dragSource = tab.dragSource;
             UITabView.dragTabIndex = tab.dragIndex;
