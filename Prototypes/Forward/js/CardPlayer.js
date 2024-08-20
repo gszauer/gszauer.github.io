@@ -1,104 +1,77 @@
-"use strict";
+import CardDraggable from "./CardDraggable.js";
 
-import CardBase from "./CardBase.js";
-
-export default class CardPlayer extends CardBase {
+export default class CardPlayer extends CardDraggable {
     constructor(data) {
+        let {scene, health} = data;
         super(data);
-        const { scene, x, y, name, sprite, depth, value, type} = data;
-
-        this.valueText.destroy();
-        this.valueSprite.destroy();
-
-        this.valueSprite = scene.add.sprite(1024,2048, scene.GetSet("Coin.png"), "Coin.png");
-        this.valueSprite.x -= this.valueSprite.width / 2 + scene.cardPadding;
-        this.valueSprite.y -= this.valueSprite.height / 2 + scene.cardPadding;
-        this.valueSprite.setScale(0.98, 0.98);
-
-        this.valueText = scene.add.bitmapText(0, 0, scene.cardValueFont, "-", scene.cardValueFontSize, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
-        this.valueText.x = (this.valueSprite.x) - (this.valueText.width / 2) - 20;
-        this.valueText.y = (this.valueSprite.y) - (this.valueText.height / 2) + 5;
-        this.valueText.setTint(0);
-
-        this.OnValueChanged = null;
-
-        this.Name = name;
-        this.Value = value;
-
-        this.OnDragStart = null;
-        this.OnDragEnd = null;
-        this.OnDrag = null;
-        this.dragging = false;
-
-        this.startX = x;
-        this.startY = y;
-
-        this.setInteractive();
-        this.scene.input.setDraggable(this);
-
-        const self = this;
-
-        this.scene.input.on('dragstart', (pointer, gameObject) => {
-            self.dragging = true;
-            self.setScale(1.1, 1.1); 
-            self.ApplyRandomRotation();
-            // TODO: Set tint? Or Show moves? Not sure!
-            if (self.OnDragStart !== null) {
-                self.OnDragStart(pointer, gameObject);
-            }
-        });
-
-        this.scene.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            self.dragging = true;
-            gameObject.x = dragX;
-            gameObject.y = dragY;
-
-            if (self.OnDrag !== null) {
-                self.OnDrag(pointer, gameObject, dragX, dragY);
-            }
-        });
-
-        this.scene.input.on('dragend', (pointer, gameObject) => {
-            gameObject.x = self.startX;
-            gameObject.y = self.startY;
-
-            self.dragging = false;
-            self.setScale(1.0, 1.0); 
-            self.ApplyRandomRotation();
-
-            if (self.OnDragEnd !== null) {
-                self.OnDragEnd(pointer, gameObject);
-            }
-        });
+        this.textHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, -102, 'pressstart', health);
+        this.textMaxHealth = new Phaser.GameObjects.BitmapText(this.scene, 0, -75, 'pressstart', health, 12);
+        this.textArmor = new Phaser.GameObjects.BitmapText(this.scene, 0, -102, 'pressstart');
+        this.spriteArmor = new Phaser.GameObjects.Sprite(scene, 50, -80, 'armor')
+        this.textHealth.tint = 0;
+        this.textMaxHealth.tint = 0;
+        this.add([this.textHealth, this.textMaxHealth, 
+            this.spriteArmor, this.textArmor]);
+        this.health = health;
+        this.maxHealth = health;
+        this.armor = 0;
     }
 
+    set health (newHealth) {
+        this._health = newHealth;
+        this.textHealth.text = this._health;
+        this.textHealth.x = -44 - this.textHealth.width / 2;
+    }
+    
+    get health() {
+        return this._health;
+    }
 
+    set maxHealth(newHealth) {
+        this._maxHealth = newHealth;
 
-    set Value(newValue) {
+        this.textMaxHealth.text = this._maxHealth;
+        this.textMaxHealth.x = -30 - this.textHealth.width / 2;
+    }
 
-        if (newValue < 0) { // Always show coins
-            this.valueSprite.setActive(true).setVisible(true);
-            this.valueText.setActive(true).setVisible(true);
-            super.Value = 0;
+    get maxHealth() {
+        return this._maxHealth;
+    }
+
+    set armor(newArmor) {
+        this._armor = newArmor;
+        this.textArmor.text = this._armor;
+        this.textArmor.x = 46 - this.textArmor.width / 2;
+        this.textArmor.alpha = this._armor == 0? 0 : 1;
+        this.spriteArmor.alpha = this._armor == 0 ? 0 : 1;
+    }
+
+    get armor() {
+        return this._armor;
+    }
+
+    attack(attackValue) {
+        if (attackValue <= this.armor) {
+            this.armor = this.armor - attackValue;
         }
         else {
-            super.Value = newValue;
+            this.health = this.health - (attackValue - this.armor);
+            this.armor = 0;
         }
-        this.valueText.x = (this.valueSprite.x) - (this.valueText.width / 2) - 20;
 
-        if (this.OnValueChanged != null) {
-            this.OnValueChanged(newValue);
+        if (this.health <= 0) {
+            this.dead = true;
         }
     }
 
-    get Value() {
-        return super.Value;
+    set dead(value) {
+        this.health = 0;
+        this.cardName = 'DEAD';
+        this.draggable = false;
+        this.deadAnimation();
     }
 
-    SetVisibility(newValue) {
-        super.SetVisibility(newValue);
-
-        this.valueSprite.setActive(true).setVisible(true);
-        this.valueText.setActive(true).setVisible(true);
+    get dead() {
+        return this._cardName == 'DEAD';
     }
 }

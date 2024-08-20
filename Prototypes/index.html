@@ -16,32 +16,80 @@
 			ul { margin-top: 0px;}
 			/*body { padding-left: 50px; padding-top: 25px; }*/
 		</style>    
+
+		<style>
+			.table {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.row {
+				display: flex;
+				flex-direction: row;
+				width: 100%;
+				min-width: 100%;
+				min-height: 100%;
+				flex-grow: 0;
+				flex-shrink: 0;
+			}
+
+			.column {
+				width: 50%;
+				height: 50%;
+				max-width: 50%;
+				min-width: 150px;
+
+				flex-grow: 0.5;
+				flex-shrink: 0.5;
+			}
+
+		</style>
     </head>
     <body>
 		<h1>Prototypes</h1>
 		<p>These are prototypes in various states of completeness / abandonment.</p>
-		<p>Games:</p>
-		<ul>
-			<li><a href="Treasure/index.html">Treasure</a></li>
-			<!--li><a href="Loot/index.html">Loot</a></li-->
-			<li><a href="Wompus/index.html">Wompus</a></li>
-			<li><a href="Forward/index.html">Tarot</a></li>
-			<li><a href="war/index.html">War</a></li>
-		</ul>
 
-		<p>Tools:</p>
-		<ul>
-			<li><a href="TexturePacker/index.html">Texture Packer</a></li>
-			<li><a href="Anim/v1/index.html">Key Frame Studio V1</a></li>
-			<li><a href="Anim/v2/index.html">Key Frame Studio V2</a></li>
-			<li><a href="mdbook/index.html">Markdown Book Editor</a></li>
-		</ul>
+		<div class="table">
 
-		<p>Everything else:</p>
-		<ul>
-			<li><a href="GraphicsV2/index.html">Wasm C graphics framework V2</a></li>
-			<li><a href="GraphicsV3/index.html">Wasm C graphics framework V3</a></li>
-			
-		</ul>
+			<div class="row">
+				<div class="column">
+					<p>Games:</p>
+					<ul>
+						<li><a href="Treasure/index.html">Treasure</a></li>
+						<!--li><a href="Loot/index.html">Loot</a></li-->
+						<li><a href="Wompus/index.html">Wompus</a></li>
+						<li><a href="Forward/index.html">Tarot</a> / <a href="war/index.html">War</a></li>
+					</ul>
+				</div>
+
+				<div class="column">
+					<p>Tools:</p>
+					<ul>
+						<li><a href="TexturePacker/index.html">Texture Packer</a></li>
+						<li><a href="Anim/v1/index.html">Key Frame Studio V1</a></li>
+					</ul>
+				</div>
+			</div> <!-- end row -->
+
+			<div class="row">
+				<div class="column">
+					<p>Abandoned:</p>
+					<ul>
+						<li><a href="Anim/v2/index.html">Key Frame Studio V2</a></li>
+						<li><a href="mdbook/index.html">Markdown Book Editor</a></li>
+						<li><a href="JavascriptDock/index.html">Javascript Layout Manager</a></li>
+					</ul>
+				</div>
+
+				<div class="column">
+					<p>Everything else:</p>
+					<ul>
+						<li><a href="GraphicsV2/index.html">Wasm C graphics framework V2</a></li>
+						<li><a href="GraphicsV3/index.html">Wasm C graphics framework V3</a></li>
+					</ul>
+				</div>
+			</div> <!-- end row -->
+
+		</div> <!-- end container -->
 	</body>
 </html>
