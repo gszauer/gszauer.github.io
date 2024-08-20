@@ -1,0 +1,102 @@
+
+.UITabView {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+.UITabViewScroll.UITabNavShown {
+    display:initial;
+}
+
+.UITabViewScroll.UITabNavHidden {
+    display:none;
+}
+
+.UITabViewTabs {
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 1;
+    height: 30px;
+    overflow: hidden;
+    border: 0;
+}
+
+.UITabViewNavigation {
+    display: flex;
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 30px;
+    width: 100%;
+    overflow: hidden;
+    border: 0;
+    border-bottom: 2px solid magenta;
+}
+
+.UITabViewScroll {
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 30px;
+    border: 0;
+    margin: 0;
+    margin-left: 2px;
+}
+
+.UITabViewScroll > button {
+    height: 22px; 
+    width: 22px;
+    border: 1px solid magenta;
+    margin: 2px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+
+    text-align: center;
+    line-height: 11px;
+}
+
+.UITabViewContent {
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    width: 100%;
+    height: 100%;
+}
+
+.UITab {
+    font-size: 18px;
+    border: 1px solid magenta;
+    height: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    text-decoration: none;
+    border-bottom: 0px;
+    border-top: 0px;
+    
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.ActiveTab,
+.UITab.ActiveTab {
+    text-decoration: underline;
+    vertical-align: top;
+    padding-top: 0px;
+    /*margin-top: -5px;
+    padding-bottom: 5px;
+    height: 35px;*/
+}
+
+.TabContentDisabled {
+    display: none;
+}
+
+.TabContentEnabled {
+    display: initial;
+}

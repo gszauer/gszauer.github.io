@@ -1,0 +1,52 @@
+@font-face {
+    font-family: AdobeClean;
+    font-style: normal;
+    font-weight: normal;
+    src: url("../font/AdobeClean-Regular.otf") format("opentype"),
+         url("../font/AdobeClean-Regular.ttf") format("truetype");
+         /* TODO: WOFF file: url("webfont.woff") format("woff"),  */
+}
+
+@font-face {
+    font-family: AdobeClean;
+    font-style: normal;
+    font-weight: bold;
+    src: url("../font/AdobeClean-Bold.otf") format("opentype"),
+         url("../font/AdobeClean-Bold.ttf") format("truetype");
+         /* TODO: WOFF file: url("webfont.woff") format("woff"),  */
+}
+
+@font-face {
+    font-family: AdobeClean;
+    font-style: italic;
+    font-weight: normal;
+    src: url("../font/AdobeClean-It.otf") format("opentype"),
+         url("../font/AdobeClean-It.ttf") format("truetype");
+         /* TODO: WOFF file: url("webfont.woff") format("woff"),  */
+}
+
+@font-face {
+    font-family: AdobeClean;
+    font-style: italic;
+    font-weight: bold;
+    src: url("../font/AdobeClean-BoldIt.otf") format("opentype"),
+         url("../font/AdobeClean-BoldIt.ttf") format("truetype");
+         /* TODO: WOFF file: url("webfont.woff") format("woff"),  */
+}
+
+* {
+    font-family: 'AdobeClean';
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+}

@@ -1,0 +1,99 @@
+:root {
+    --dockTargetDropZoneSize: 40px;
+}
+
+.UIDockable {
+    position: relative;
+}
+
+.UIDockTarget {
+    display: none;
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.UIDockTargetTint {
+    width: 100%;
+    height: 100%;
+}
+
+.UIDockTargetCenter {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: var(--dockTargetDropZoneSize);
+    height: var(--dockTargetDropZoneSize);
+
+    margin-left: calc(var(--dockTargetDropZoneSize) * -0.5);
+    margin-top: calc(var(--dockTargetDropZoneSize) * -0.5);
+}
+
+.UIDockTargetTop {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width:  var(--dockTargetDropZoneSize);
+    height: var(--dockTargetDropZoneSize);
+
+    margin-left: calc(var(--dockTargetDropZoneSize) * -0.5);
+    margin-top: calc(var(--dockTargetDropZoneSize) * -2);
+}
+
+.UIDockTargetBottom {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width:  var(--dockTargetDropZoneSize);
+    height: var(--dockTargetDropZoneSize);
+
+    margin-left: calc(var(--dockTargetDropZoneSize) * -0.5);
+    margin-top: var(--dockTargetDropZoneSize);
+}
+
+.UIDockTargetLeft {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width:  var(--dockTargetDropZoneSize);
+    height: var(--dockTargetDropZoneSize);
+
+    margin-left: calc(var(--dockTargetDropZoneSize) * -2);
+    margin-top: calc(var(--dockTargetDropZoneSize) * -0.5);
+}
+
+.UIDockTargetRight {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width:  var(--dockTargetDropZoneSize);
+    height: var(--dockTargetDropZoneSize);
+
+    margin-left: var(--dockTargetDropZoneSize);
+    margin-top: calc(var(--dockTargetDropZoneSize) * -0.5);
+}
+
+.UIDockTargetIcon {
+    pointer-events: none;
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    line-height: var(--dockTargetDropZoneSize);
+    font-size: 30px;
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Layout</title>
+
+        <link href="phospor/src/regular/style.css" rel="stylesheet" />
+        <link href="css/layout.css" rel="stylesheet" />
+        <link href="css/UISplitView.css" rel="stylesheet" />
+        <link href="css/UITabView.css" rel="stylesheet" />
+        <link href="css/UIDockTarget.css" rel="stylesheet" />
+        <link href="css/dark.css" rel="stylesheet" />
+
+        <script src="js/UIGlobals.js"></script>
+        <script src="js/UISplitView.js"></script>
+        <script src="js/UITabView.js"></script>
+        <script src="js/UIDockTarget.js"></script>
+    </head>
+    <body>
+        
+    </body>
+    <script>
+        const mainSplit = new UISplitView();
+        document.body.appendChild(mainSplit.html.root);
+        mainSplit.pin = 'B';
+        mainSplit.distance = 600;
+
+        const sceneLogSplit = new UISplitView();
+        {
+            const sceneScript = new UITabView();
+            sceneLogSplit.AppendChild(sceneScript, 'A');
+            let text = document.createElement('span');
+            text.innerHTML = "Scene Editor";
+            sceneScript.AppendChild(text, text.innerHTML);
+            text = document.createElement('span');
+            text.innerHTML = "Script Editor";
+            sceneScript.AppendChild(text, text.innerHTML);
+        }
+        {
+            const logsConsole = new UITabView();
+            sceneLogSplit.AppendChild(logsConsole, 'B');
+            text = document.createElement('span');
+            text.innerHTML = "Logs";
+            logsConsole.AppendChild(text, text.innerHTML);
+            text = document.createElement('span');
+            text.innerHTML = "Console";
+            logsConsole.AppendChild(text, text.innerHTML);
+        }
+
+        const inspectorHierarchySplit = new UISplitView();
+        { 
+            const inspector = new UITabView();
+            inspectorHierarchySplit.AppendChild(inspector, 'A');
+            text = document.createElement('span');
+            text.innerHTML = "Inspector";
+            inspector.AppendChild(text, text.innerHTML);
+        }
+        const hierarchyFilesSplit = new UISplitView();
+        {
+            inspectorHierarchySplit.AppendChild(hierarchyFilesSplit, 'B');
+            hierarchyFilesSplit.horizontal = false;
+
+            const hierarchy = new UITabView();
+            hierarchyFilesSplit.AppendChild(hierarchy, 'A');
+            let text = document.createElement('span');
+            text.innerHTML = "Hierarchy";
+            hierarchy.AppendChild(text, text.innerHTML);
+
+            const files = new UITabView();
+            hierarchyFilesSplit.AppendChild(files, 'B');
+            text = document.createElement('span');
+            text.innerHTML = "Files";
+            files.AppendChild(text, text.innerHTML);
+
+        }
+
+
+        mainSplit.AppendChild(sceneLogSplit, 'A');
+        mainSplit.AppendChild(inspectorHierarchySplit, 'B');
+        inspectorHierarchySplit.distance = 300;
+        sceneLogSplit.horizontal = false;
+        sceneLogSplit.pin = 'B';
+        sceneLogSplit.distance = 300;
+        hierarchyFilesSplit.distance = 400;
+
+
+        //UpdateCSSRules('.UIDockTarget', 'display', 'initial');
+    </script>
+</html>

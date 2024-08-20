@@ -1,0 +1,141 @@
+/* https://spectrum.adobe.com/page/color-system/ */
+/* https://spectrum.adobe.com/page/using-color/ */
+
+:root {
+    --gray50: #1d1d1d;
+    --gray75: #262626;
+    --gray100: #323232;
+    --gray200: #3f3f3f;
+    --gray300: #545454;
+    --gray400: #707070;
+    --gray500: #909090;
+    --gray600: #b2b2b2;
+    --gray700: #d1d1d1;
+    --gray800: #ebebeb;
+    --gray900: #ffffff;
+}
+
+:root {
+    --backgroundLayer0: var(--gray50);
+    --backgroundLayer1: var(--gray75);
+    --backgroundLayer2: var(--gray100);
+    --backgroundLayer3: var(--gray200);
+    --decorativeBorder: var(--gray300);
+    --fieldBorder: var(--gray400);
+    --controlBorder: var(--gray600);
+    --headingText: var(--gray900);
+    --normalText: var(--gray800);
+    --subText: var(--gray700);
+    --disabledText: var(--gray500);
+}
+
+* {
+    color: var(--normalText);
+}
+
+.UISplitView {
+    background-color: var(--backgroundLayer0);
+}
+
+.UISplitViewGrow {
+    background-color: var(--backgroundLayer0);
+}
+
+.UISplitViewShrink {
+    background-color: var(--backgroundLayer0);
+}
+
+.UISplitViewSplitter {
+    background-color: var(--controlBorder);
+}
+
+.UITabView {
+    background-color: var(--backgroundLayer0);
+}
+
+.UITabViewNavigation {
+    background-color: var(--backgroundLayer0);
+    border-bottom-color: var(--decorativeBorder);
+}
+
+.UITabViewContent {
+    background-color: var(--backgroundLayer0);
+}
+
+.UITab {
+    background-color: var(--backgroundLayer2);
+    border-color: var(--decorativeBorder);
+    color: var(--subText);
+}
+
+.ActiveTab,
+.UITab.ActiveTab {
+    background-color: var(--backgroundLayer1);
+    color: var(--normalText);
+}
+
+.UITab:hover {
+    background-color: var(--backgroundLayer1);
+}
+
+.UIDockTargetTint {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.UIDockTargetLeft,
+.UIDockTargetRight,
+.UIDockTargetBottom,
+.UIDockTargetTop,
+.UIDockTargetCenter {
+    background-color: var(--backgroundLayer1);
+    border: 2px solid var(--fieldBorder);
+}
+
+.UIDockTargetHighlight,
+.UIDockTargetLeft.UIDockTargetHighlight,
+.UIDockTargetRight.UIDockTargetHighlight,
+.UIDockTargetBottom.UIDockTargetHighlight,
+.UIDockTargetTop.UIDockTargetHighlight,
+.UIDockTargetCenter.UIDockTargetHighlight {
+    background-color: var(--backgroundLayer3);
+    border: 2px solid var(--controlBorder);
+}
+
+.UIDockTargetLeft > .UIDockTargetIcon,
+.UIDockTargetRight > .UIDockTargetIcon,
+.UIDockTargetBottom > .UIDockTargetIcon,
+.UIDockTargetTop > .UIDockTargetIcon,
+.UIDockTargetCenter > .UIDockTargetIcon {
+    color: var(--fieldBorder);
+}
+
+.UIDockTargetHighlight > .UIDockTargetIcon {
+    color: var(--controlBorder);
+}
+
+.UITabViewScroll>button {
+    background-color: var(--backgroundLayer3);
+    border: 1px solid var(--controlBorder);
+    color: var(--controlBorder);
+}
+
+.UITabViewScroll>button:hover{
+    background-color: var(--backgroundLayer2);
+    border: 1px solid var(--fieldBorder);
+    color: var(--controlBorder);
+}
+
+.UITabViewScroll>button:active{
+    background-color: var(--backgroundLayer2);
+    border: 1px solid var(--fieldBorder);
+    color: var(--fieldBorder);
+}
+
+.UITabViewScroll>button>span{
+    color: var(--controlBorder);
+}
+
+.UITabViewScroll>button:active>span{
+    color: var(--fieldBorder);
+}
+

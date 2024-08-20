@@ -1,0 +1,93 @@
+/* Layout */
+.UISplitView {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+}
+
+.UISplitViewColumns {
+    flex-direction: row;
+}
+
+.UISplitViewRows {
+    flex-direction: column;
+}
+
+.UISplitViewGrow {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.UISplitViewShrink {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+
+    min-width: 5%;
+    min-height: 5%;
+}
+
+.UISplitViewVertical {
+    width: 100%;
+}
+
+.UISplitViewHorizontal {
+    height: 100%;
+}
+
+.UISplitViewGrow.UISplitViewVertical {
+    min-height: 10%;
+    max-height: 90%; 
+}
+
+.UISplitViewGrow.UISplitViewHorizontal {
+    min-width: 10%;
+    max-width: 90%; 
+}
+
+@media only screen and (max-width: 400px) {
+    .UISplitViewGrow.UISplitViewVertical {
+        min-height: 20%;
+        max-height: 80%; 
+    }
+    
+    .UISplitViewGrow.UISplitViewHorizontal {
+        min-width: 20%;
+        max-width: 80%; 
+    }
+}
+
+.UISplitViewSplitter {
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.UISplitViewSplitterColumn {
+    cursor: col-resize;
+    width: 4px;
+    height: 100%;
+}
+
+.UISplitViewSplitterRow {
+    cursor: row-resize;
+    width: 100%;
+    height: 4px;
+}
