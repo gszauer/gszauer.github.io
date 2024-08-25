@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="js/tweedle.js"></script>
+        <script src="js/typed-signals.js"></script>
+
+        <script src="js/pixi.js"></script>
+        <script src="js/pixi-ui.js"></script>
+
+        <script src="js/mainmenu.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                border: 0;
+                
+                width: 100%;
+                height: 100vh;
+
+                /*background-color: #1d1d1d;*/
+                background-color: #000000;
+            }
+        </style>
+
+        <script type="module">
+            PIXI.AbstractRenderer.defaultOptions.resolution = window.devicePixelRatio || 1;
+            const app = new PIXI.Application();
+
+            const targetWidth = 1126;
+            const targetHeight = 2436;
+
+            const FitContainerToWindow = (container) => {
+                const { width, height } = app.screen;
+                const targetAspect = targetWidth / targetHeight;
+                const invTargetAspect = targetHeight / targetWidth;
+
+                const isWidthConstrained = width < height * targetAspect;
+                const isHeightConstrained = width * invTargetAspect > height;
+                
+                const actualWidth = isWidthConstrained ? width : height * targetAspect;
+                const actualHeight =  isHeightConstrained ? height : width * invTargetAspect;
+
+                container.scale.x = actualWidth / targetWidth;
+                container.scale.y = actualHeight / targetHeight;
+                
+                container.x = app.screen.width / 2 - actualWidth / 2;
+                container.y = app.screen.height / 2 - actualHeight / 2;
+            };
+
+            await app.init({ 
+                resizeTo: document.body,//window, // Auto fill the screen
+                autoDensity: true, // Handles high DPI screens
+                //backgroundColor: 0x1d1d1d,
+                backgroundColor: 0x000000,
+            });
+
+            document.body.appendChild(app.canvas);
+
+            app.stage.removeChildren();
+            const container = new PIXI.Container();
+            container.width = targetWidth;
+            container.height = targetHeight;
+            FitContainerToWindow(container);
+            app.stage.addChild(container);
+
+            const menu = await CreateMainMenu(targetWidth, targetHeight);
+            container.addChild(menu);
+
+            menu.onPlay = () => {
+                console.log("PLAY GAME");
+            };
+            menu.onSettings = () => {
+                console.log("SETTINGS");
+            };
+            menu.onTutorial = () => {
+                console.log("TUTORIAL");
+            };
+
+            app.ticker.add((ticker) => {
+                FitContainerToWindow(container);
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

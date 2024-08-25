@@ -1,0 +1,255 @@
+{
+  "frames": {
+    "play_btn.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 491,
+        "h": 178
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 491,
+        "h": 178
+      },
+      "sourceSize": {
+        "w": 491,
+        "h": 178
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "settings_btn.png": {
+      "frame": {
+        "x": 497,
+        "y": 2,
+        "w": 200,
+        "h": 187
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 187
+      },
+      "sourceSize": {
+        "w": 200,
+        "h": 187
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "tutorial_btn.png": {
+      "frame": {
+        "x": 701,
+        "y": 2,
+        "w": 757,
+        "h": 201
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 757,
+        "h": 201
+      },
+      "sourceSize": {
+        "w": 757,
+        "h": 201
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "wrestler_back.png": {
+      "frame": {
+        "x": 1462,
+        "y": 2,
+        "w": 258,
+        "h": 366
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 366
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 366
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "wrestler_side.png": {
+      "frame": {
+        "x": 1724,
+        "y": 2,
+        "w": 282,
+        "h": 416
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 282,
+        "h": 416
+      },
+      "sourceSize": {
+        "w": 282,
+        "h": 416
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ring_top.png": {
+      "frame": {
+        "x": 2,
+        "y": 207,
+        "w": 1125,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1125,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 1125,
+        "h": 258
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ladder.png": {
+      "frame": {
+        "x": 1131,
+        "y": 207,
+        "w": 283,
+        "h": 538
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 283,
+        "h": 538
+      },
+      "sourceSize": {
+        "w": 283,
+        "h": 538
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "wrestler_front.png": {
+      "frame": {
+        "x": 1418,
+        "y": 422,
+        "w": 341,
+        "h": 444
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 341,
+        "h": 444
+      },
+      "sourceSize": {
+        "w": 341,
+        "h": 444
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "ring_bottom.png": {
+      "frame": {
+        "x": 2,
+        "y": 469,
+        "w": 1125,
+        "h": 426
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1125,
+        "h": 426
+      },
+      "sourceSize": {
+        "w": 1125,
+        "h": 426
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "logo.png": {
+      "frame": {
+        "x": 2,
+        "y": 899,
+        "w": 1068,
+        "h": 660
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1068,
+        "h": 660
+      },
+      "sourceSize": {
+        "w": 1068,
+        "h": 660
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://free-tex-packer.com",
+    "version": "0.6.7",
+    "image": "atlas1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 2048
+    },
+    "scale": 1
+  }
+}
