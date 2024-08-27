@@ -8,6 +8,7 @@
         <script src="js/pixi-ui.js"></script>
 
         <script src="js/mainmenu.js"></script>
+        <script src="js/game.js"></script>
         <style>
             body {
                 margin: 0;
@@ -56,6 +57,20 @@
 
             document.body.appendChild(app.canvas);
 
+            const altas1 = await PIXI.Assets.load('img/atlas1.png');
+            PIXI.Assets.add({
+                alias: 'atlas1',
+                src: 'img/atlas1.json',
+                data: {texture: altas1}
+            });
+
+            const altas2 = await PIXI.Assets.load('img/atlas2.png');
+            PIXI.Assets.add({
+                alias: 'atlas2',
+                src: 'img/atlas2.json',
+                data: {texture: altas2}
+            });
+
             app.stage.removeChildren();
             const container = new PIXI.Container();
             container.width = targetWidth;
@@ -66,8 +81,15 @@
             const menu = await CreateMainMenu(targetWidth, targetHeight);
             container.addChild(menu);
 
+            const game = new Game();
+            await game.Initialize(targetWidth, targetHeight);
+            container.addChild(game.container);
+
+            game.container.visible = false;
+
             menu.onPlay = () => {
-                console.log("PLAY GAME");
+                menu.visible = false;
+                game.container.visible = true;
             };
             menu.onSettings = () => {
                 console.log("SETTINGS");
@@ -75,6 +97,11 @@
             menu.onTutorial = () => {
                 console.log("TUTORIAL");
             };
+
+            game.onReturnToMenu = () => {
+                menu.visible = true;
+                game.container.visible = false;
+            }
 
             app.ticker.add((ticker) => {
                 FitContainerToWindow(container);

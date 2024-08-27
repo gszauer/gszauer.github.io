@@ -2,12 +2,6 @@
 async function CreateMainMenu(targetWidth, targetHeight) {
     const container = new PIXI.Container();
 
-    const spriteSheetTexture = await PIXI.Assets.load('img/atlas1.png');
-    PIXI.Assets.add({
-        alias: 'atlas1',
-        src: 'img/atlas1.json',
-        data: {texture: spriteSheetTexture}
-    });
     const spriteSheet = await PIXI.Assets.load('atlas1');
 
     const logoSprite = new PIXI.Sprite(spriteSheet.textures['logo.png']);
@@ -70,16 +64,19 @@ async function CreateMainMenu(targetWidth, targetHeight) {
         if (container.onPlay !== null && container.onPlay !== undefined) {
             container.onPlay();
         }
+        playBtnSprite.tint = 0xffffff;
     });
     settingsBtn.onPress.connect(() => {
         if (container.onSettings !== null && container.onSettings !== undefined) {
             container.onSettings();
         }
+        settingsBtnSprite.tint = 0xffffff;
     });
     tutorialBtn.onPress.connect(() => {
         if (container.onTutorial !== null && container.onTutorial !== undefined) {
             container.onTutorial();
         }
+        tutorialBtnSprite.tint = 0xffffff;
     });
     
     playBtn.onHover.connect(() => {

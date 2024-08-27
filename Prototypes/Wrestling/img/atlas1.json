@@ -1,47 +1,23 @@
 {
   "frames": {
-    "play_btn.png": {
+    "ring_bottom.png": {
       "frame": {
         "x": 2,
         "y": 2,
-        "w": 491,
-        "h": 178
+        "w": 1125,
+        "h": 426
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 491,
-        "h": 178
+        "w": 1125,
+        "h": 426
       },
       "sourceSize": {
-        "w": 491,
-        "h": 178
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "settings_btn.png": {
-      "frame": {
-        "x": 497,
-        "y": 2,
-        "w": 200,
-        "h": 187
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 200,
-        "h": 187
-      },
-      "sourceSize": {
-        "w": 200,
-        "h": 187
+        "w": 1125,
+        "h": 426
       },
       "pivot": {
         "x": 0.5,
@@ -50,7 +26,7 @@
     },
     "tutorial_btn.png": {
       "frame": {
-        "x": 701,
+        "x": 1131,
         "y": 2,
         "w": 757,
         "h": 201
@@ -72,48 +48,72 @@
         "y": 0.5
       }
     },
-    "wrestler_back.png": {
+    "logo.png": {
       "frame": {
-        "x": 1462,
-        "y": 2,
-        "w": 258,
-        "h": 366
+        "x": 1131,
+        "y": 207,
+        "w": 1068,
+        "h": 660
       },
-      "rotated": false,
+      "rotated": true,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 258,
-        "h": 366
+        "w": 1068,
+        "h": 660
       },
       "sourceSize": {
-        "w": 258,
-        "h": 366
+        "w": 1068,
+        "h": 660
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "wrestler_side.png": {
+    "playarea_bottom.png": {
       "frame": {
-        "x": 1724,
-        "y": 2,
-        "w": 282,
-        "h": 416
+        "x": 2,
+        "y": 432,
+        "w": 1125,
+        "h": 406
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 282,
-        "h": 416
+        "w": 1125,
+        "h": 406
       },
       "sourceSize": {
-        "w": 282,
-        "h": 416
+        "w": 1125,
+        "h": 406
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "playarea_top.png": {
+      "frame": {
+        "x": 2,
+        "y": 842,
+        "w": 1125,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1125,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 1125,
+        "h": 338
       },
       "pivot": {
         "x": 0.5,
@@ -123,7 +123,7 @@
     "ring_top.png": {
       "frame": {
         "x": 2,
-        "y": 207,
+        "y": 1184,
         "w": 1125,
         "h": 258
       },
@@ -138,6 +138,30 @@
       "sourceSize": {
         "w": 1125,
         "h": 258
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "settings_btn.png": {
+      "frame": {
+        "x": 1795,
+        "y": 207,
+        "w": 200,
+        "h": 187
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 187
+      },
+      "sourceSize": {
+        "w": 200,
+        "h": 187
       },
       "pivot": {
         "x": 0.5,
@@ -146,8 +170,8 @@
     },
     "ladder.png": {
       "frame": {
-        "x": 1131,
-        "y": 207,
+        "x": 2,
+        "y": 1446,
         "w": 283,
         "h": 538
       },
@@ -162,6 +186,30 @@
       "sourceSize": {
         "w": 283,
         "h": 538
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "play_btn.png": {
+      "frame": {
+        "x": 1795,
+        "y": 398,
+        "w": 491,
+        "h": 178
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 491,
+        "h": 178
+      },
+      "sourceSize": {
+        "w": 491,
+        "h": 178
       },
       "pivot": {
         "x": 0.5,
@@ -170,8 +218,8 @@
     },
     "wrestler_front.png": {
       "frame": {
-        "x": 1418,
-        "y": 422,
+        "x": 289,
+        "y": 1446,
         "w": 341,
         "h": 444
       },
@@ -192,48 +240,48 @@
         "y": 0.5
       }
     },
-    "ring_bottom.png": {
+    "wrestler_side.png": {
       "frame": {
-        "x": 2,
-        "y": 469,
-        "w": 1125,
-        "h": 426
+        "x": 634,
+        "y": 1446,
+        "w": 282,
+        "h": 416
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1125,
-        "h": 426
+        "w": 282,
+        "h": 416
       },
       "sourceSize": {
-        "w": 1125,
-        "h": 426
+        "w": 282,
+        "h": 416
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "logo.png": {
+    "wrestler_back.png": {
       "frame": {
-        "x": 2,
-        "y": 899,
-        "w": 1068,
-        "h": 660
+        "x": 920,
+        "y": 1446,
+        "w": 258,
+        "h": 366
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1068,
-        "h": 660
+        "w": 258,
+        "h": 366
       },
       "sourceSize": {
-        "w": 1068,
-        "h": 660
+        "w": 258,
+        "h": 366
       },
       "pivot": {
         "x": 0.5,
