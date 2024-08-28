@@ -90,6 +90,7 @@
             menu.onPlay = () => {
                 menu.visible = false;
                 game.container.visible = true;
+                game.Reset();
             };
             menu.onSettings = () => {
                 console.log("SETTINGS");
@@ -103,7 +104,13 @@
                 game.container.visible = false;
             }
 
+            const tick = (ticker) => {
+                tweedle_js.Group.shared.update();
+                FitContainerToWindow(container);
+            };
+
             app.ticker.add((ticker) => {
+                tweedle_js.Group.shared.update();
                 FitContainerToWindow(container);
             });
         </script>

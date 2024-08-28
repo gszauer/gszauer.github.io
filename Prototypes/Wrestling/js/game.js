@@ -41,6 +41,10 @@ class Game {
     allMoves = [];
     actionQueue = [];
 
+    player1 = null;
+    player2 = null;
+    centerPositions = [];
+
     constructor() {
         this.container = new PIXI.Container();
         this.movesContainer = new PIXI.Container();
@@ -50,6 +54,19 @@ class Game {
         for (let i = 0; i < 12; i++) {
             this.allMoves.push(null);
         }
+
+        this.centerPositions.push({x: 193, y: 768});
+        this.centerPositions.push({x: 566, y: 768});
+        this.centerPositions.push({x: 929, y: 768});
+        this.centerPositions.push({x: 193, y: 1170});
+        this.centerPositions.push({x: 566, y: 1170});
+        this.centerPositions.push({x: 929, y: 1170});
+        this.centerPositions.push({x: 193, y: 1570});
+        this.centerPositions.push({x: 566, y: 1570});
+        this.centerPositions.push({x: 929, y: 1570});
+        this.centerPositions.push({x: 193, y: 1968});
+        this.centerPositions.push({x: 566, y: 1968});
+        this.centerPositions.push({x: 929, y: 1968});
     }
 
     async Initialize(width, height) {
@@ -58,7 +75,7 @@ class Game {
             .fill(0x1d1d1d);
         this.container.addChild(background);
 
-        const blackout = new PIXI.Graphics()
+        const blackout = this._blackout = new PIXI.Graphics()
             .rect(0, 0, width, height)
             .fill(0x000000);
         blackout.alpha = 0.75;
@@ -67,7 +84,7 @@ class Game {
         const movesContainer = this.movesContainer;
         const allMoves = this.allMoves;
         const atlas1 = await PIXI.Assets.load('atlas1');
-        const atlas2 = await PIXI.Assets.load('atlas2');
+        const atlas2 = this._atlas2 = await PIXI.Assets.load('atlas2');
 
         { // Header
             const topSprite = new PIXI.Sprite(atlas1.textures['playarea_top.png']);
@@ -133,6 +150,16 @@ class Game {
             this.container.addChild(gridCol4);
         }
 
+        const player1 = this.player1 = new PIXI.Sprite(atlas2.textures['player1.png']);
+        const player2 = this.player2 = new PIXI.Sprite(atlas2.textures['player2.png']);
+        player1.x = this.centerPositions[9].x; player1.y = this.centerPositions[9].y;
+        player2.x = this.centerPositions[2].x; player2.y = this.centerPositions[2].y;
+        player1.anchor.set(0.5, 1);
+        player2.anchor.set(0.5, 1);
+        this.container.addChild(player1);
+        this.container.addChild(player2);
+        //new tweedle_js.Tween(player2).to({ x:player1.x, y:player1.y }, 2500).start();
+
         this.container.addChild(blackout);
 
         const bottomSprite = new PIXI.Sprite(atlas1.textures['playarea_bottom.png']);
@@ -183,6 +210,7 @@ class Game {
             menuSprite.visible = false;
             return true;
         }
+        this.OpenSelectCards = selectCards;
 
         const cardSelectBtn = new PIXI.ui.Button(selectCardSprite);
         cardSelectBtn.onPress.connect(selectCards);
@@ -224,6 +252,9 @@ class Game {
         }
 
         const moveClicked = (moveButton) => {
+            if (!self.interactive) {
+                return;
+            }
             if (!blackout.visible) {
                 return;
             }
@@ -256,6 +287,9 @@ class Game {
         }
 
         const clickedCardSelector = (index) => {
+            if (!self.interactive) {
+                return;
+            }
             if (!selectCards()) {
                 const card = cards[index];
                 const button = findButton(card.texture);
@@ -277,5 +311,77 @@ class Game {
         new PIXI.ui.Button(card3).onPress.connect(() => {
             clickedCardSelector(2);
         });
+
+        // countdown
+        const countdownContainer = this._countdownContainer = new PIXI.Container();
+        countdownContainer.x = Math.floor(width / 2);
+        countdownContainer.y = Math.floor(height / 2);
+        this.container.addChild(countdownContainer);
+
+        const countdownBg = this._countdownBg = new PIXI.Sprite(atlas2.textures['countdown_bg.png']);
+        const countdownNumber = this._countdownNumber = new PIXI.Sprite(atlas2.textures['countdown_3.png']);
+        countdownBg.anchor.set(0.5, 0.5);
+        countdownNumber.anchor.set(0.5, 0.5);
+        countdownContainer.addChild(countdownBg);
+        countdownContainer.addChild(countdownNumber);
+    }
+
+    _countdownContainer = null;
+    _countdownNumber = null;
+    _countdownBg = null;
+    _atlas2 = null;
+    _blackout = null;
+
+    interactive = true;
+    OpenSelectCards = null;
+
+    Reset() {
+        const countdownContainer = this._countdownContainer;
+        const countdownNumber = this._countdownNumber;
+        const countdownBg = this._countdownBg;
+        const atlas2 = this._atlas2;
+        const selectCards = this.OpenSelectCards;
+        const blackout = this._blackout;
+        const movesContainer = this.movesContainer;
+        const self = this;
+        this.interactive = false;
+
+        blackout.visible = false;
+        movesContainer.visible = false;
+
+        countdownNumber.visible = true;
+        countdownBg.visible = true;
+        countdownBg.texture = atlas2.textures['countdown_bg.png']
+        countdownNumber.texture = atlas2.textures['countdown_3.png'];
+
+        countdownContainer.scale.set(0.25, 0.25);
+        const startupTween = new tweedle_js.Tween(countdownContainer.scale).to({ x:1.25, y:1.25 }, 750);
+        startupTween.onComplete((tweener, target) => {
+            new tweedle_js.Tween(countdownContainer.scale).to({ x:0.5, y:0.5 }, 250).onComplete((tweener, target) => {
+                countdownNumber.texture = atlas2.textures['countdown_2.png'];
+                new tweedle_js.Tween(countdownContainer.scale).to({ x:1.25, y:1.25 }, 550).onComplete((tweener, target) => {
+                    new tweedle_js.Tween(countdownContainer.scale).to({ x:0.5, y:0.5 }, 250).onComplete((tweener, target) => {
+                        countdownNumber.texture = atlas2.textures['countdown_1.png'];
+                        new tweedle_js.Tween(countdownContainer.scale).to({ x:1.25, y:1.25 }, 550).onComplete((tweener, target) => {
+                            new tweedle_js.Tween(countdownContainer.scale).to({ x:0.5, y:0.5 }, 250).onComplete((tweener, target) => {
+                                countdownNumber.visible = false;
+                                countdownBg.texture = atlas2.textures['countdown_done.png']
+                                new tweedle_js.Tween(countdownContainer.scale).to({ x:1.3, y:1.3 }, 500).onComplete((tweener, target) => {
+                                    new tweedle_js.Tween(countdownContainer.scale).to({ x:1, y:1 }, 250).onComplete((tweener, target) => {
+                                        setTimeout(() => {
+                                            countdownNumber.visible = false;
+                                            countdownBg.visible = false;
+                                            selectCards();
+                                            self.interactive = true;
+                                        }, 500);
+                                    }).start();
+                                }).start();
+                            }).start();
+                        }).start();
+                    }).start();
+                }).start();
+            }).start();
+        });
+        startupTween.start();
     }
 }
