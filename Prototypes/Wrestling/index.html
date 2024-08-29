@@ -24,6 +24,17 @@
         </style>
 
         <script type="module">
+            /*async function quickTest() {
+                return new Promise((resolve, reject) => {
+                    console.log("About to resolve");
+                    resolve(7);
+                    return 2;
+                });
+            }
+            const testResult = await quickTest();
+            console.log("Test result: " + testResult);*/
+
+
             PIXI.AbstractRenderer.defaultOptions.resolution = window.devicePixelRatio || 1;
             const app = new PIXI.Application();
 
