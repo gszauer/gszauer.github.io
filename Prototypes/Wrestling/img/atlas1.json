@@ -287,6 +287,30 @@
         "x": 0.5,
         "y": 0.5
       }
+    },
+    "indicator.png": {
+      "frame": {
+        "x": 1182,
+        "y": 1446,
+        "w": 326,
+        "h": 344
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 326,
+        "h": 344
+      },
+      "sourceSize": {
+        "w": 326,
+        "h": 344
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
     }
   },
   "meta": {

@@ -43,6 +43,8 @@ class Game {
     movesContainer = null;
 
     _cards = [];
+    _indicators = [];
+    _attackPatterns = [];
 
     player1 = null;
     player2 = null;
@@ -66,6 +68,31 @@ class Game {
         this.centerPositions.push({x: 193, y: 1968});
         this.centerPositions.push({x: 566, y: 1968});
         this.centerPositions.push({x: 929, y: 1968});
+
+        // TODO: _attackPatterns
+        for (let i = 0; i < 8; ++i) {
+            this._attackPatterns.push([]);
+        }
+
+        this._attackPatterns[1].push({row: 0, col: 0});
+        this._attackPatterns[2].push(
+            {row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}, {row: 0, col: 3}, 
+            {row: 0, col: -1}, {row: 0, col: -2}, {row: 0, col: -3}
+        );
+        this._attackPatterns[3].push(
+            {row: 0, col: 0}, {row: -1, col: 1}, {row: 1, col: 1}, 
+            {row: -1, col: -1},  {row: 1, col: -1}
+        );
+        this._attackPatterns[4].push(
+            {row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: -1}, 
+            {row: 1, col: 0},  {row: -1, col: 0}
+        );
+        // TODO: Redo move 5
+        // TODO: Redo move 6
+        this._attackPatterns[7].push(
+            {row: 0, col: 0}, {row: 1, col: 0}, {row: 2, col: 0}, 
+            {row: -1, col: 0},  {row: -2, col: 0}
+        );
     }
 
     async Initialize(width, height) {
@@ -75,7 +102,7 @@ class Game {
         this.container.addChild(background);
 
         const blackout = this._blackout = new PIXI.Graphics()
-            .rect(0, 0, width, height)
+            .rect(-width / 2, 0, width * 2, height)
             .fill(0x000000);
         blackout.alpha = 0.75;
 
@@ -148,6 +175,19 @@ class Game {
             this.container.addChild(gridCol4);
         }
 
+        { // Selectors
+            for (let i = 0, len = this.centerPositions.length; i < len; ++i) {
+                const pos = this.centerPositions[i];
+                const indicator = new PIXI.Sprite(atlas1.textures["indicator.png"]);
+                indicator.x = pos.x;
+                indicator.y = pos.y - 10;
+                indicator.anchor.set(0.5, 1);
+                indicator.visible = false;
+                this._indicators.push(indicator);
+                this.container.addChild(indicator);
+            }
+        }
+
         const player1 = this.player1 = new PIXI.Sprite(atlas2.textures["player1.png"]);
         const player2 = this.player2 = new PIXI.Sprite(atlas2.textures["player2.png"]);
         player1.x = this.centerPositions[9].x; player1.y = this.centerPositions[9].y;
@@ -157,6 +197,9 @@ class Game {
         this.container.addChild(player1);
         this.container.addChild(player2);
         //new tweedle_js.Tween(player2).to({ x:player1.x, y:player1.y }, 2500).start();
+
+        player1.hasDefenseBuff = false;
+        player2.hasDefenseBuff = false;
 
         this.container.addChild(blackout);
 
@@ -226,6 +269,15 @@ class Game {
         cardSelectBtn.onPress.connect(selectCards);
         const wrestleBtn = new PIXI.ui.Button(wrestleSprite);
         wrestleBtn.onPress.connect(() => {
+            if (card1.texture === selectCardTexture || card2.texture === selectCardTexture || card3.texture === selectCardTexture) {
+                return; // Not all cards are filled, don't do anything on click
+            }
+
+            // Reset buttons in case wrestle was pressed while cards where hidden
+            ringSpriteOpen.texture = atlas2.textures["ring_open_btn.png"];
+            movesContainer.visible = true;
+            blackout.visible = true;
+
             selectCardSprite.visible = true;
             menuSprite.visible = true;
             self.ExecuteAllMoves();
@@ -233,7 +285,7 @@ class Game {
 
         const ringPreviewBtn = new PIXI.ui.Button(ringSpriteOpen);
 
-        ringPreviewBtn.onDown.connect(()=>{
+        /*ringPreviewBtn.onDown.connect(()=>{
             ringSpriteOpen.texture = atlas2.textures["ring_closed_btn.png"];
             movesContainer.visible = false;
             blackout.visible = false;
@@ -242,7 +294,21 @@ class Game {
             ringSpriteOpen.texture = atlas2.textures["ring_open_btn.png"];
             movesContainer.visible = true;
             blackout.visible = true;
+        });*/
+
+        ringPreviewBtn.onPress.connect(() => {
+            if (ringSpriteOpen.texture === atlas2.textures["ring_open_btn.png"]) {
+                ringSpriteOpen.texture = atlas2.textures["ring_closed_btn.png"];
+                movesContainer.visible = false;
+                blackout.visible = false;
+            }
+            else {
+                ringSpriteOpen.texture = atlas2.textures["ring_open_btn.png"];
+                movesContainer.visible = true;
+                blackout.visible = true;
+            }
         });
+
 
         const getFreeCard = () => {
             for (let i = 0, len = cards.length; i < len; ++i) {
@@ -572,12 +638,14 @@ class Game {
                     targetTile = FindClosestTile(player1.x + 360, player1.y);
                 }
 
-                // TODO: SHOW MOVE TARGET INDICATOR
+                const indicator = self._indicators[targetTile.index];
+                indicator.visible = true;
+                indicator.tint = 0x8f8f8f;
                 new tweedle_js.Tween(player1.position)
                     .to({ x:targetTile.x, y:targetTile.y }, 500)
                     .onComplete((tweener, target) => {
                         setTimeout(() => {
-                            // TODO: HIDE MOVE TARGET INDICATOR
+                            indicator.visible = false;
                             card.texture = selectCardTexture;
                             resolve(null);
                         }, 250);
@@ -597,19 +665,64 @@ class Game {
                         new tweedle_js.Tween(player2.anchor).to({ x:0.5 }, 250).start();
                     }
                 }
+                player1.hasDefenseBuff = false;
                 return null;
             }
             // Handle buffs
             else if (texture === block) {
-                // TODO: BUFF and resolve
-                card.texture = selectCardTexture;
-                        resolve(null); // Can't move right, early out
-                        return null;
+                const playerTile = FindClosestTile(player1.x, player1.y);
+                const indicator = self._indicators[playerTile.index];
+                indicator.visible = true;
+                indicator.tint = 0x0059c1;
+                setTimeout(() => {
+                    card.texture = selectCardTexture;
+                    indicator.visible = false;
+                    player1.hasDefenseBuff = true;
+                    resolve(null); // Can't move right, early out
+                }, 1000);
+                return null;
             }
             // Handle attacks
             else { 
-                card.texture = selectCardTexture;
-                resolve(null); // Can't move right, early out
+                let label = card.texture.label; // something like card_attack_1.png
+                if (!(label.startsWith("card_attack_") && label.endsWith(".png"))) {
+                    throw new Error("Invalid attack");
+                }
+                label = label.substring("card_attack_".length);
+                label = label.substring(0, label.length - ".png".length);
+                const attack = Number(label);
+                const pattern = self._attackPatterns[attack];
+
+                const playerTile = FindClosestTile(player1.x, player1.y);
+                const indicators = [];
+
+                for (let i = 0, len = pattern.length; i < len; ++i) {
+                    const attackRow = playerTile.row + pattern[i].row;
+                    const attackCol = playerTile.col + pattern[i].col;
+                    if (attackRow < 0 || attackCol < 0) {
+                        continue;
+                    }
+                    if (attackRow > 3 || attackCol > 2) {
+                        continue;
+                    }
+                    const attackIndicator = self._indicators[attackRow * 3 + attackCol];
+                    attackIndicator.visible = true;
+                    attackIndicator.tint = 0xbe0000;
+                    indicators.push(attackIndicator);
+                }
+
+                setTimeout(() => {
+                    card.texture = selectCardTexture;
+                    for (let i = 0, len = indicators.length; i < len; ++i) {
+                        indicators[i].visible = false;
+                    }
+
+                    // TODO: Attack logic (and damage ike!)
+
+                    resolve(null); 
+                }, 1000);
+
+                player1.hasDefenseBuff = false;
                 return null;
             }
         });
