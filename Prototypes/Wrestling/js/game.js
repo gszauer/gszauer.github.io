@@ -5,15 +5,20 @@ class Move {
     sprite = null;
     button = null;
     onClick = null;
+    damage = 0;
+    cooldown = 0;
 
     static counter = 0;
     static all = new Map();
 
-    constructor(frameName, atlas, container) {
+    constructor(frameName, atlas, container, damage, cooldown) {
         this.frame = frameName;
         this.texture = atlas.textures[frameName];
         this.sprite = new PIXI.Sprite(this.texture);
         container.addChild(this.sprite);
+
+        this.damage = damage;
+        this.cooldown = cooldown;
 
         const index = Move.counter++;
         const row = Math.floor(index / 3);
@@ -69,15 +74,13 @@ class Game {
         this.centerPositions.push({x: 566, y: 1968});
         this.centerPositions.push({x: 929, y: 1968});
 
-        // TODO: _attackPatterns
         for (let i = 0; i < 8; ++i) {
             this._attackPatterns.push([]);
-        }
-
+        } // Attack patterns (obciously)
         this._attackPatterns[1].push({row: 0, col: 0});
         this._attackPatterns[2].push(
-            {row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}, {row: 0, col: 3}, 
-            {row: 0, col: -1}, {row: 0, col: -2}, {row: 0, col: -3}
+            {row: 0, col: 0}, {row: 1, col: 0}, {row: 2, col: 0}, 
+            {row: -1, col: 0},  {row: -2, col: 0}
         );
         this._attackPatterns[3].push(
             {row: 0, col: 0}, {row: -1, col: 1}, {row: 1, col: 1}, 
@@ -87,15 +90,26 @@ class Game {
             {row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: -1}, 
             {row: 1, col: 0},  {row: -1, col: 0}
         );
-        // TODO: Redo move 5
-        // TODO: Redo move 6
+        this._attackPatterns[5].push(
+            {row: -2, col: -1 }, { row: -2, col: 0 }, {row:-2, col: 1},
+            {row: -1, col: 0}
+        );
+        this._attackPatterns[6].push(
+            {row: 2, col: -1 }, { row: 2, col: 0 }, {row:2, col: 1},
+            {row: 1, col: 0}
+        );
         this._attackPatterns[7].push(
-            {row: 0, col: 0}, {row: 1, col: 0}, {row: 2, col: 0}, 
-            {row: -1, col: 0},  {row: -2, col: 0}
+            {row: 0, col: 0}, {row: 0, col: 1}, {row: 0, col: 2}, {row: 0, col: 3}, 
+            {row: 0, col: -1}, {row: 0, col: -2}, {row: 0, col: -3}
         );
     }
 
     async Initialize(width, height) {
+        const p1HealthMask = new PIXI.Graphics();
+        this.container.addChild(p1HealthMask);
+        const p2HealthMask = new PIXI.Graphics();
+        this.container.addChild(p2HealthMask);
+
         const background = new PIXI.Graphics()
             .rect(0, 0, width, height)
             .fill(0x1d1d1d);
@@ -111,6 +125,9 @@ class Game {
         const atlas1 = await PIXI.Assets.load("atlas1");
         const atlas2 = this._atlas2 = await PIXI.Assets.load("atlas2");
 
+        const player1 = this.player1 = new PIXI.Sprite(atlas2.textures["player1.png"]);
+        const player2 = this.player2 = new PIXI.Sprite(atlas2.textures["player2.png"]);
+       
         { // Header
             const topSprite = new PIXI.Sprite(atlas1.textures["playarea_top.png"]);
             this.container.addChild(topSprite);
@@ -135,6 +152,16 @@ class Game {
             this.container.addChild(p2HealthFill);
             this.container.addChild(p1HealthStroke);
             this.container.addChild(p2HealthStroke);
+            p1HealthFill.mask = p1HealthMask;
+            p2HealthFill.mask = p2HealthMask;
+
+            p1HealthMask.clear();
+            p1HealthMask.rect(p1HealthFill.x , p1HealthFill.y ,  p1HealthFill.width / 2, p1HealthFill.height );
+            p1HealthMask.fill(0xff0000);
+
+            p2HealthMask.clear();
+            p2HealthMask.rect(p2HealthFill.x - p2HealthFill.width, p2HealthFill.y ,  p2HealthFill.width, p2HealthFill.height );
+            p2HealthMask.fill(0xff0000);
 
             const mike = new PIXI.Sprite(atlas2.textures["name1.png"]);
             const ike = new PIXI.Sprite(atlas2.textures["name2.png"]);
@@ -142,6 +169,43 @@ class Game {
             ike.x = 676; ike.y = 131;
             this.container.addChild(mike);
             this.container.addChild(ike);
+
+            const maxHealth = 100;
+            //Object.defineProperty(player1, '_health', maxHealth);
+            //Object.defineProperty(player2, '_health', maxHealth);
+            player1._health = maxHealth;
+            player2._health = maxHealth;
+
+            Object.defineProperty(player1, 'health', {
+                get: function() {return this._health;},
+                set: function(v) {
+                    if (v > 0) { v = 0; }
+                    if (v > maxHealth) { v = maxHealth; }
+                    const t = v / maxHealth;
+        
+                    p1HealthMask.clear();
+                    p1HealthMask.rect(p1HealthFill.x , p1HealthFill.y ,  Math.floor(p1HealthFill.width * t), p1HealthFill.height);
+                    p1HealthMask.fill(0xff0000);
+
+                    this._health = v;
+                }
+            });
+            Object.defineProperty(player2, 'health', {
+                get: function() {return this._health;},
+                set: function(v) {
+                    if (v < 0) { v = 0; }
+                    if (v > maxHealth) { v = maxHealth; }
+                    const t = v / maxHealth;
+
+                    //console.log("Old health: " + this._health + ", new health: " + v);
+        
+                    p2HealthMask.clear();
+                    p2HealthMask.rect(p2HealthFill.x - p2HealthFill.width, p2HealthFill.y ,  Math.floor(p2HealthFill.width * t), p2HealthFill.height );
+                    p2HealthMask.fill(0xff0000);
+
+                    this._health = v;
+                }
+            });
         }
 
         { // Grid
@@ -183,13 +247,13 @@ class Game {
                 indicator.y = pos.y - 10;
                 indicator.anchor.set(0.5, 1);
                 indicator.visible = false;
+                indicator.row = Math.floor(i / 3);
+                indicator.col = Math.floor(i % 3);
                 this._indicators.push(indicator);
                 this.container.addChild(indicator);
             }
         }
-
-        const player1 = this.player1 = new PIXI.Sprite(atlas2.textures["player1.png"]);
-        const player2 = this.player2 = new PIXI.Sprite(atlas2.textures["player2.png"]);
+        
         player1.x = this.centerPositions[9].x; player1.y = this.centerPositions[9].y;
         player2.x = this.centerPositions[2].x; player2.y = this.centerPositions[2].y;
         player1.anchor.set(0.5, 1);
@@ -233,14 +297,14 @@ class Game {
         this.container.addChild(wrestleSprite);
 
         { // Card Selection
-            new Move("card_block.png", atlas2, movesContainer);
+            new Move("card_block.png", atlas2, movesContainer, 0, 0);
             for (let i = 1; i <= 7; ++i) {
-                new Move("card_attack_" + i + ".png", atlas2, movesContainer);
+                new Move("card_attack_" + i + ".png", atlas2, movesContainer, 25, 0);
             }
-            new Move("card_move_down.png" , atlas2, movesContainer);
-            new Move("card_move_up.png"   , atlas2, movesContainer);
-            new Move("card_move_left.png" , atlas2, movesContainer);
-            new Move("card_move_right.png", atlas2, movesContainer);
+            new Move("card_move_down.png" , atlas2, movesContainer, 0, 0);
+            new Move("card_move_up.png"   , atlas2, movesContainer, 0, 0);
+            new Move("card_move_left.png" , atlas2, movesContainer, 0, 0);
+            new Move("card_move_right.png", atlas2, movesContainer, 0, 0);
         }
         this.container.addChild(movesContainer);
         movesContainer.visible = false;
@@ -248,6 +312,9 @@ class Game {
 
         const selectCards = () => {
             if (blackout.visible) {
+                return false;
+            }
+            if (!self.interactive) {
                 return false;
             }
 
@@ -269,6 +336,9 @@ class Game {
         cardSelectBtn.onPress.connect(selectCards);
         const wrestleBtn = new PIXI.ui.Button(wrestleSprite);
         wrestleBtn.onPress.connect(() => {
+            if (!self.interactive) {
+                return;
+            }
             if (card1.texture === selectCardTexture || card2.texture === selectCardTexture || card3.texture === selectCardTexture) {
                 return; // Not all cards are filled, don't do anything on click
             }
@@ -295,6 +365,8 @@ class Game {
             movesContainer.visible = true;
             blackout.visible = true;
         });*/
+
+        
 
         ringPreviewBtn.onPress.connect(() => {
             if (ringSpriteOpen.texture === atlas2.textures["ring_open_btn.png"]) {
@@ -685,15 +757,17 @@ class Game {
             // Handle attacks
             else { 
                 let label = card.texture.label; // something like card_attack_1.png
+                const move = Move.all.get(label);
                 if (!(label.startsWith("card_attack_") && label.endsWith(".png"))) {
                     throw new Error("Invalid attack");
                 }
                 label = label.substring("card_attack_".length);
                 label = label.substring(0, label.length - ".png".length);
-                const attack = Number(label);
-                const pattern = self._attackPatterns[attack];
+                const attackIndex = Number(label);
+                const pattern = self._attackPatterns[attackIndex];
 
                 const playerTile = FindClosestTile(player1.x, player1.y);
+                const enemyTile = FindClosestTile(player2.x, player2.y);
                 const indicators = [];
 
                 for (let i = 0, len = pattern.length; i < len; ++i) {
@@ -709,6 +783,15 @@ class Game {
                     attackIndicator.visible = true;
                     attackIndicator.tint = 0xbe0000;
                     indicators.push(attackIndicator);
+
+                    if (attackIndicator.row === enemyTile.row && attackIndicator.col === enemyTile.col) {
+                        let damage = move.damage;
+                        if (player2.hasDefenseBuff) {
+                            damage = Math.floor(damage / 3);
+                            player2.hasDefenseBuff = false;
+                        }
+                        player2.health = player2.health - damage;
+                    }
                 }
 
                 setTimeout(() => {
@@ -716,9 +799,6 @@ class Game {
                     for (let i = 0, len = indicators.length; i < len; ++i) {
                         indicators[i].visible = false;
                     }
-
-                    // TODO: Attack logic (and damage ike!)
-
                     resolve(null); 
                 }, 1000);
 
