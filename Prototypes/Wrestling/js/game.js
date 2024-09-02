@@ -48,6 +48,7 @@ class Game {
     movesContainer = null;
 
     _cards = [];
+    _aiCards = [];
     _indicators = [];
     _attackPatterns = [];
 
@@ -156,7 +157,7 @@ class Game {
             p2HealthFill.mask = p2HealthMask;
 
             p1HealthMask.clear();
-            p1HealthMask.rect(p1HealthFill.x , p1HealthFill.y ,  p1HealthFill.width / 2, p1HealthFill.height );
+            p1HealthMask.rect(p1HealthFill.x , p1HealthFill.y ,  p1HealthFill.width, p1HealthFill.height );
             p1HealthMask.fill(0xff0000);
 
             p2HealthMask.clear();
@@ -176,9 +177,36 @@ class Game {
             player1._health = maxHealth;
             player2._health = maxHealth;
 
+            const _p1HealthDisplay = [];
+            const _p2HealthDisplay = [];
+            const initialSprites = [
+                atlas1.textures["num_1.png"], atlas1.textures["num_0.png"], atlas1.textures["num_0.png"],
+                atlas1.textures["slash.png"],
+                atlas1.textures["num_1.png"], atlas1.textures["num_0.png"], atlas1.textures["num_0.png"]
+            ];
+            for (let i = 0; i < 7; ++i) {
+                const texture = initialSprites[i];
+                const p1Sprite = new PIXI.Sprite(texture);
+                const p2Sprite = new PIXI.Sprite(texture);
+                _p1HealthDisplay.push(p1Sprite);
+                _p2HealthDisplay.push(p2Sprite);
+                this.container.addChild(p1Sprite);
+                this.container.addChild(p2Sprite);
+                p1Sprite.x = p1HealthFill.x + p1Sprite.width * i;
+                p1Sprite.x = Math.floor(p1Sprite.x  + p1HealthFill.width / 2);
+                p1Sprite.x -= Math.floor(p1Sprite.width * 7 / 2)
+                p1Sprite.y = Math.floor(p1HealthFill.y + p1HealthFill.height / 2 - p1Sprite.height / 2);
+                p2Sprite.x = p2HealthFill.x - p2HealthFill.width + p2Sprite.width * i;
+                p2Sprite.y = Math.floor(p2HealthFill.y + p2HealthFill.height / 2 - p1Sprite.height / 2);
+                p2Sprite.x = Math.floor(p2Sprite.x + p2HealthFill.width / 2);
+                p2Sprite.x -= Math.floor(p2Sprite.width * 7 / 2)
+            }
+            // End tODO
+
             Object.defineProperty(player1, 'health', {
                 get: function() {return this._health;},
                 set: function(v) {
+                    //v = Number(v);
                     if (v > 0) { v = 0; }
                     if (v > maxHealth) { v = maxHealth; }
                     const t = v / maxHealth;
@@ -188,22 +216,71 @@ class Game {
                     p1HealthMask.fill(0xff0000);
 
                     this._health = v;
+
+                    if (v == 100) {
+                        _p1HealthDisplay[0].visible = true;
+                        _p1HealthDisplay[1].visible = true;
+                        _p1HealthDisplay[2].visible = true;
+                        _p1HealthDisplay[0].texture = atlas1.textures["num_1.png"];
+                        _p1HealthDisplay[1].texture = atlas1.textures["num_2.png"];
+                        _p1HealthDisplay[2].texture = atlas1.textures["num_3.png"];
+                    }
+                    else {
+                        _p1HealthDisplay[0].visible = false;
+                        if (v < 10) {
+                            _p1HealthDisplay[1].visible = false;
+                            _p1HealthDisplay[2].visible = true;
+                            _p1HealthDisplay[2].texture = atlas1.textures["num_" + v + ".png"];
+                        }
+                        else {
+                            _p1HealthDisplay[1].visible = true;
+                            _p1HealthDisplay[2].visible = true;
+                            let _v = Math.floor(v / 10);
+                            _p1HealthDisplay[1].texture = atlas1.textures["num_" + _v + ".png"];
+                            _v = v - _v;
+                            _p1HealthDisplay[2].texture = atlas1.textures["num_" + _v + ".png"];
+                        }
+                    }
                 }
             });
             Object.defineProperty(player2, 'health', {
                 get: function() {return this._health;},
                 set: function(v) {
+                    //v = Number(v);
                     if (v < 0) { v = 0; }
                     if (v > maxHealth) { v = maxHealth; }
                     const t = v / maxHealth;
 
-                    //console.log("Old health: " + this._health + ", new health: " + v);
-        
                     p2HealthMask.clear();
                     p2HealthMask.rect(p2HealthFill.x - p2HealthFill.width, p2HealthFill.y ,  Math.floor(p2HealthFill.width * t), p2HealthFill.height );
                     p2HealthMask.fill(0xff0000);
 
                     this._health = v;
+
+                    if (v == 100) {
+                        _p2HealthDisplay[0].visible = true;
+                        _p2HealthDisplay[1].visible = true;
+                        _p2HealthDisplay[2].visible = true;
+                        _p2HealthDisplay[0].texture = atlas1.textures["num_1.png"];
+                        _p2HealthDisplay[1].texture = atlas1.textures["num_2.png"];
+                        _p2HealthDisplay[2].texture = atlas1.textures["num_3.png"];
+                    }
+                    else {
+                        _p2HealthDisplay[0].visible = false;
+                        if (v < 10) {
+                            _p2HealthDisplay[1].visible = false;
+                            _p2HealthDisplay[2].visible = true;
+                            _p2HealthDisplay[2].texture = atlas1.textures["num_" + v + ".png"];
+                        }
+                        else {
+                            _p2HealthDisplay[1].visible = true;
+                            _p2HealthDisplay[2].visible = true;
+                            let _v = Math.floor(v / 10);
+                            _p2HealthDisplay[1].texture = atlas1.textures["num_" + _v + ".png"];
+                            _v = v - _v * 10;
+                            _p2HealthDisplay[2].texture = atlas1.textures["num_" + _v + ".png"];
+                        }
+                    }
                 }
             });
         }
@@ -260,7 +337,6 @@ class Game {
         player2.anchor.set(0.5, 1);
         this.container.addChild(player1);
         this.container.addChild(player2);
-        //new tweedle_js.Tween(player2).to({ x:player1.x, y:player1.y }, 2500).start();
 
         player1.hasDefenseBuff = false;
         player2.hasDefenseBuff = false;
@@ -282,6 +358,17 @@ class Game {
         this.container.addChild(card2);
         this.container.addChild(card3);
         const cards = this._cards = [card1, card2, card3];
+        
+        const aiCard1 = new PIXI.Sprite(selectCardTexture);
+        const aiCard2 = new PIXI.Sprite(selectCardTexture);
+        const aiCard3 = new PIXI.Sprite(selectCardTexture);
+        aiCard1.x = 18 + width; aiCard1.y = 2086 - 700;
+        aiCard2.x = 18 + width; aiCard2.y = 2086 - 350;
+        aiCard3.x = 18 + width; aiCard3.y = 2086;
+        this.container.addChild(aiCard1);
+        this.container.addChild(aiCard2);
+        this.container.addChild(aiCard3);
+        const aiCards = this._aiCards = [aiCard1, aiCard2, aiCard3];
 
         const menuSprite = new PIXI.Sprite(atlas2.textures["menu_button.png"]);
         const selectCardSprite = new PIXI.Sprite(atlas2.textures["select_button.png"]);
@@ -354,19 +441,6 @@ class Game {
         });
 
         const ringPreviewBtn = new PIXI.ui.Button(ringSpriteOpen);
-
-        /*ringPreviewBtn.onDown.connect(()=>{
-            ringSpriteOpen.texture = atlas2.textures["ring_closed_btn.png"];
-            movesContainer.visible = false;
-            blackout.visible = false;
-        });
-        ringPreviewBtn.onUp.connect(()=>{
-            ringSpriteOpen.texture = atlas2.textures["ring_open_btn.png"];
-            movesContainer.visible = true;
-            blackout.visible = true;
-        });*/
-
-        
 
         ringPreviewBtn.onPress.connect(() => {
             if (ringSpriteOpen.texture === atlas2.textures["ring_open_btn.png"]) {
@@ -573,35 +647,35 @@ class Game {
     }
 
     async ExecuteAllMoves() {
-        const countdownContainer = this._countdownContainer;
-        const countdownNumber = this._countdownNumber;
-        const countdownBg = this._countdownBg;
-        const atlas2 = this._atlas2;
-        const selectCards = this.OpenSelectCards;
-        const blackout = this._blackout;
-        const movesContainer = this.movesContainer;
-        const self = this;
-
         this._ringOpen.visible = false;
         this._wrestleSprite.visible = false;
         this._wrestleSprite.tint = 0x7f7f7f;
 
-        blackout.visible = false;
-        movesContainer.visible = false;
-        countdownNumber.visible = false;
-        countdownBg.visible = false;
+        this._blackout.visible = false;
+        this.movesContainer.visible = false;
+        this._countdownNumber.visible = false;
+        this._countdownBg.visible = false;
 
+        this.player1.hasDefenseBuff = false;
+        this.player2.hasDefenseBuff = false;
 
         this.interactive = false;
-        await this._ExecuteNextMove();
-        // TODO: Execute AI Move
-        // TODO: Clear buff visuals from board
-        await this._ExecuteNextMove();
-        // TODO: Execute AI Move
-        // TODO: Clear buff visuals from board
-        await this._ExecuteNextMove();
-        // TODO: Execute AI Move
-        // TODO: Clear buff visuals from board
+        {
+            this._QueueUpAiMoves();
+
+            await this._ExecuteNextMove(this.player1, this.player2, this._cards);
+            await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
+            // TODO: Clear buff visuals from board
+            // TODO: Check for game over
+            await this._ExecuteNextMove(this.player1, this.player2, this._cards);
+            await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
+            // TODO: Clear buff visuals from board
+            // TODO: Check for game over
+            await this._ExecuteNextMove(this.player1, this.player2, this._cards);
+            await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
+            // TODO: Clear buff visuals from board
+            // TODO: Check for game over
+        }
         this.interactive = true;
 
         return new Promise((resolve, reject) => {
@@ -609,8 +683,21 @@ class Game {
         });
     }
 
-    async _ExecuteNextMove() {
+    _QueueUpAiMoves() {
+        const cards = this._aiCards;
+
+        const moveDown =  Move.all.get("card_move_down.png").texture;
+        const moveLeft = Move.all.get("card_move_left.png").texture;
+        const block =     Move.all.get("card_block.png").texture;
+        
+        cards[0].texture = moveDown;
+        cards[1].texture = moveLeft;
+        cards[2].texture = block;
+    }
+
+    async _ExecuteNextMove(player1, player2, cards) {
         const self = this;
+
         const FindClosestTile = (x, y) => {
             const centerPositions = self.centerPositions;
             let shortestDistSq = 9999999;
@@ -641,17 +728,15 @@ class Game {
         }
 
         const atlas2 = this._atlas2;
-        const player1 = this.player1;
-        const player2 = this.player2;
-        const cards = this._cards;
         const selectCardTexture = atlas2.textures["select_card.png"];
         const moveUp =    Move.all.get("card_move_up.png").texture;
         const moveDown =  Move.all.get("card_move_down.png").texture;
         const moveLeft =  Move.all.get("card_move_left.png").texture;
         const moveRight = Move.all.get("card_move_right.png").texture;
         const block =     Move.all.get("card_block.png").texture;
+        
+        const attacks = []; // Collect available attacks
         const ignore = ["select_card.png", "card_move_up.png", "card_move_down.png", "card_move_left.png", "card_move_right.png", "card_block.png"];
-        const attacks = [];
         for (const [key, value] of Move.all) {
             if (!ignore.includes(key)) {
                 attacks.push(value);
@@ -791,6 +876,7 @@ class Game {
                             player2.hasDefenseBuff = false;
                         }
                         player2.health = player2.health - damage;
+                        Game._FlashSprite(player2, 0xff0000);
                     }
                 }
 
@@ -806,5 +892,31 @@ class Game {
                 return null;
             }
         });
+    }
+
+    static _FlashSprite(sprite, color) {
+        const duration = 170;
+        sprite.tint = color;
+        setTimeout(() => {
+            sprite.tint = sprite.tint === color? 0xffffff : color;
+            setTimeout(() => {
+                sprite.tint = sprite.tint === color? 0xffffff : color;
+                setTimeout(() => {
+                    sprite.tint = sprite.tint === color? 0xffffff : color;
+                    setTimeout(() => {
+                        sprite.tint = sprite.tint === color? 0xffffff : color;
+                        setTimeout(() => {
+                            sprite.tint = sprite.tint === color? 0xffffff : color;
+                            /*setTimeout(() => {
+                                sprite.tint = sprite.tint === color? 0xffffff : color;
+                                setTimeout(() => {
+                                    sprite.tint = sprite.tint === color? 0xffffff : color;
+                                }, duration);
+                            }, duration);*/
+                        }, duration);
+                    }, duration);
+                }, duration);
+            }, duration);
+        }, duration);
     }
 }
