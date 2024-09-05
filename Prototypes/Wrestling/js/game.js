@@ -46,19 +46,31 @@ class Game {
     container = null;
     onReturnToMenu = null;
     movesContainer = null;
+    winLooseContainer = null;
+    countdownContainer = null;
+    pauseContainer = null;
+
 
     _cards = [];
     _aiCards = [];
     _indicators = [];
     _attackPatterns = [];
+    
+    _atlas1 = null;
+    _atlas2 = null;
+    _atlas3 = null;
 
     player1 = null;
     player2 = null;
     centerPositions = [];
 
+    onBackToMenu = null;
+
     constructor() {
         this.container = new PIXI.Container();
         this.movesContainer = new PIXI.Container();
+        this.winLooseContainer = new PIXI.Container();
+        this.pauseContainer = new PIXI.Container();
 
         // X +/- ~360
         // Y +/- ~400
@@ -75,7 +87,7 @@ class Game {
         this.centerPositions.push({x: 566, y: 1968});
         this.centerPositions.push({x: 929, y: 1968});
 
-        for (let i = 0; i < 8; ++i) {
+        for (let i = 0; i < 8 + 4; ++i) {
             this._attackPatterns.push([]);
         } // Attack patterns (obciously)
         this._attackPatterns[1].push({row: 0, col: 0});
@@ -121,10 +133,16 @@ class Game {
             .fill(0x000000);
         blackout.alpha = 0.75;
 
+        const fullBlackout = this._fullBlackout = new PIXI.Graphics()
+            .rect(-width / 2, 0, width * 2, height)
+            .fill(0x000000);
+        fullBlackout.alpha = 0.75;
+
         const self = this;
         const movesContainer = this.movesContainer;
-        const atlas1 = await PIXI.Assets.load("atlas1");
+        const atlas1 = this._atlas1 = await PIXI.Assets.load("atlas1");
         const atlas2 = this._atlas2 = await PIXI.Assets.load("atlas2");
+        const atlas3 = this._atlas3 = await PIXI.Assets.load("atlas3");
 
         const player1 = this.player1 = new PIXI.Sprite(atlas2.textures["player1.png"]);
         const player2 = this.player2 = new PIXI.Sprite(atlas2.textures["player2.png"]);
@@ -201,13 +219,12 @@ class Game {
                 p2Sprite.x = Math.floor(p2Sprite.x + p2HealthFill.width / 2);
                 p2Sprite.x -= Math.floor(p2Sprite.width * 7 / 2)
             }
-            // End tODO
 
             Object.defineProperty(player1, 'health', {
                 get: function() {return this._health;},
                 set: function(v) {
                     //v = Number(v);
-                    if (v > 0) { v = 0; }
+                    if (v < 0) { v = 0; }
                     if (v > maxHealth) { v = maxHealth; }
                     const t = v / maxHealth;
         
@@ -237,7 +254,7 @@ class Game {
                             _p1HealthDisplay[2].visible = true;
                             let _v = Math.floor(v / 10);
                             _p1HealthDisplay[1].texture = atlas1.textures["num_" + _v + ".png"];
-                            _v = v - _v;
+                            _v = v - _v * 10;
                             _p1HealthDisplay[2].texture = atlas1.textures["num_" + _v + ".png"];
                         }
                     }
@@ -384,18 +401,31 @@ class Game {
         this.container.addChild(wrestleSprite);
 
         { // Card Selection
-            new Move("card_block.png", atlas2, movesContainer, 0, 0);
+            let move = new Move("card_block.png", atlas2, movesContainer, 0, 0);
+            move.pattern = [];
+
             for (let i = 1; i <= 7; ++i) {
-                new Move("card_attack_" + i + ".png", atlas2, movesContainer, 25, 0);
+                move = new Move("card_attack_" + i + ".png", atlas2, movesContainer, 25, 0);
+                move.pattern = self._attackPatterns[i];
             }
-            new Move("card_move_down.png" , atlas2, movesContainer, 0, 0);
-            new Move("card_move_up.png"   , atlas2, movesContainer, 0, 0);
-            new Move("card_move_left.png" , atlas2, movesContainer, 0, 0);
-            new Move("card_move_right.png", atlas2, movesContainer, 0, 0);
+            move = new Move("card_move_down.png" , atlas2, movesContainer, 0, 0);
+            move.pattern = [];
+            
+            move = new Move("card_move_up.png"   , atlas2, movesContainer, 0, 0);
+            move.pattern = [];
+            
+            move = new Move("card_move_left.png" , atlas2, movesContainer, 0, 0);
+            move.pattern = [];
+            
+            move = new Move("card_move_right.png", atlas2, movesContainer, 0, 0);
+            move.pattern = [];
         }
         this.container.addChild(movesContainer);
         movesContainer.visible = false;
         blackout.visible = false;
+
+        this.container.addChild(fullBlackout);
+        fullBlackout.visible = false;
 
         const selectCards = () => {
             if (blackout.visible) {
@@ -440,9 +470,22 @@ class Game {
             self.ExecuteAllMoves();
         });
 
+        new PIXI.ui.Button(menuSprite).onPress.connect(() => {
+            if (!self.interactive) {
+                return;
+            }
+            self.interactive = false;
+            self._fullBlackout.visible = true;
+            self.pauseContainer.visible = true;
+        });
+
         const ringPreviewBtn = new PIXI.ui.Button(ringSpriteOpen);
 
         ringPreviewBtn.onPress.connect(() => {
+            if (!self.interactive) {
+                return;
+            }
+
             if (ringSpriteOpen.texture === atlas2.textures["ring_open_btn.png"]) {
                 ringSpriteOpen.texture = atlas2.textures["ring_closed_btn.png"];
                 movesContainer.visible = false;
@@ -454,7 +497,6 @@ class Game {
                 blackout.visible = true;
             }
         });
-
 
         const getFreeCard = () => {
             for (let i = 0, len = cards.length; i < len; ++i) {
@@ -562,42 +604,177 @@ class Game {
             });
         }
 
-        // countdown
-        const countdownContainer = this._countdownContainer = new PIXI.Container();
-        countdownContainer.x = Math.floor(width / 2);
-        countdownContainer.y = Math.floor(height / 2);
-        this.container.addChild(countdownContainer);
+        { // countdown
+            const countdownContainer = this.countdownContainer = new PIXI.Container();
+            countdownContainer.x = Math.floor(width / 2);
+            countdownContainer.y = Math.floor(height / 2);
+            this.container.addChild(countdownContainer);
 
-        const countdownBg = this._countdownBg = new PIXI.Sprite(atlas2.textures["countdown_bg.png"]);
-        const countdownNumber = this._countdownNumber = new PIXI.Sprite(atlas2.textures["countdown_3.png"]);
-        countdownBg.anchor.set(0.5, 0.5);
-        countdownNumber.anchor.set(0.5, 0.5);
-        countdownContainer.addChild(countdownBg);
-        countdownContainer.addChild(countdownNumber);
+            const countdownBg = this._countdownBg = new PIXI.Sprite(atlas2.textures["countdown_bg.png"]);
+            const countdownNumber = this._countdownNumber = new PIXI.Sprite(atlas2.textures["countdown_3.png"]);
+            countdownBg.anchor.set(0.5, 0.5);
+            countdownNumber.anchor.set(0.5, 0.5);
+            countdownContainer.addChild(countdownBg);
+            countdownContainer.addChild(countdownNumber);
+        }
+
+        { // Win / loosw
+            const winLooseContainer = this.winLooseContainer;
+            winLooseContainer.x = Math.floor(width / 2);
+            winLooseContainer.y = Math.floor(height / 2) - 120;
+
+            this.container.addChild(winLooseContainer);
+            const belt = new PIXI.Sprite(atlas3.textures["belt.png"]);
+            belt.anchor.set(0.5, 0.5);
+            winLooseContainer.addChild(belt);
+            const winSprite = this._winSprite = new PIXI.Sprite(atlas3.textures["win.png"]);
+            winSprite.anchor.set(0.5, 0.5);
+            winSprite.x = 10;
+            winSprite.y = 50;
+            winLooseContainer.addChild(winSprite);
+            winSprite.visible = false;
+            
+            const looseSprite = this._looseSprite = new PIXI.Sprite(atlas3.textures["loose.png"]);
+            looseSprite.anchor.set(0.5, 0.5);
+            looseSprite.x = 15;
+            looseSprite.y = 60;
+            winLooseContainer.addChild(looseSprite);
+            looseSprite.visible = false;
+
+            const tieSprite = this._tieSprite = new PIXI.Sprite(atlas3.textures["tie.png"]);
+            tieSprite.anchor.set(0.5, 0.5);
+            tieSprite.x = 5;
+            tieSprite.y = 60;
+            winLooseContainer.addChild(tieSprite);
+
+            const backToMenu = this._backSprite = new PIXI.Sprite(atlas3.textures["menu.png"]);
+            backToMenu.y = Math.floor(belt.height / 2 + backToMenu.height );
+            backToMenu.anchor.set(0.5, 0.5);
+            winLooseContainer.addChild(backToMenu);
+            
+            const replay = this._replaySprite = new PIXI.Sprite(atlas3.textures["play.png"]);
+            replay.y = Math.floor(belt.height / 2 + backToMenu.height * 2 + 40 );
+            replay.anchor.set(0.5, 0.5);
+            winLooseContainer.addChild(replay);
+
+            new PIXI.ui.Button(backToMenu).onPress.connect(() => {
+                if (self.onBackToMenu !== null) {
+                    self.onBackToMenu();
+                }
+            });
+
+            new PIXI.ui.Button(replay).onPress.connect(() => {
+                self.Reset();
+            });
+
+            winLooseContainer.visible = false;
+        }
+
+        { // Pause
+            const pauseContainer = self.pauseContainer;
+            this.container.addChild(pauseContainer);
+
+            const pauseBg = new PIXI.Graphics()
+                .rect(0, 555, width, 1901 - 555)
+                .fill(0x323232);
+            const pauseHeader = new PIXI.Sprite(atlas3.textures["settings_header.png"]);
+            const pausefooter = new PIXI.Sprite(atlas3.textures["settings_footer.png"]);
+            pauseContainer.addChild(pauseBg);
+            pauseContainer.addChild(pauseHeader);
+            pauseContainer.addChild(pausefooter);
+            pauseHeader.x = 0; pauseHeader.y = 542;
+            pauseHeader.x = 0; pausefooter.y = 1888;
+
+            const volumeLabel = new PIXI.Sprite(atlas3.textures["volume_label.png"]);
+            const volumeBar = new PIXI.Sprite(atlas3.textures["volume_track.png"]);
+            const volumeKnob = new PIXI.Sprite(atlas3.textures["volume_knob.png"]);
+            volumeKnob.anchor.set(0.5, 0.5);
+            pauseContainer.addChild(volumeLabel);
+            pauseContainer.addChild(volumeBar);
+            pauseContainer.addChild(volumeKnob);
+            volumeLabel.x = 63; volumeLabel.y = 882;
+            volumeBar.x = 180; volumeBar.y = 1005;
+            volumeKnob.x = 342; volumeKnob.y = 1036;
+
+            const aiLabel = new PIXI.Sprite(atlas3.textures["ai_label.png"]);
+            pauseContainer.addChild(aiLabel);
+            aiLabel.x = 63; aiLabel.y = 1126;
+
+            const checkNormal = new PIXI.Sprite(atlas3.textures["checkbox.png"]);
+            const tickNormal = new PIXI.Sprite(atlas3.textures["check_mark.png"]);
+            const labelnormal = new PIXI.Sprite(atlas3.textures["normal.png"]);
+            checkNormal.x = 127; checkNormal.y = 1278;
+            tickNormal.x = 146; tickNormal.y = 1255;
+            labelnormal.x = 226; labelnormal.y = 1272;
+            pauseContainer.addChild(checkNormal);
+            pauseContainer.addChild(tickNormal);
+            pauseContainer.addChild(labelnormal);
+
+            const checkRandom = new PIXI.Sprite(atlas3.textures["checkbox.png"]);
+            const tickRandom = new PIXI.Sprite(atlas3.textures["check_mark.png"]);
+            const labelRandom = new PIXI.Sprite(atlas3.textures["random.png"]);
+            checkRandom.x = 618; checkRandom.y = 1278;
+            tickRandom.x = 634; tickRandom.y = 1255;
+            labelRandom.x = 717; labelRandom.y = 1278;
+            pauseContainer.addChild(checkRandom);
+            pauseContainer.addChild(tickRandom);
+            pauseContainer.addChild(labelRandom);
+
+            const buttonReset = new PIXI.Sprite(atlas3.textures["reset_btn.png"]);
+            buttonReset.x = 127; buttonReset.y = 1481;
+            pauseContainer.addChild(buttonReset);
+
+            const buttonExit = new PIXI.Sprite(atlas3.textures["exit_btn.png"]);
+            buttonExit.x = 606; buttonExit.y = 1483;
+            pauseContainer.addChild(buttonExit);
+
+            const buttonResume = new PIXI.Sprite(atlas3.textures["resume_btn.png"]);
+            buttonResume.x = 292; buttonResume.y = 1703;
+            pauseContainer.addChild(buttonResume);
+
+            new PIXI.ui.Button(buttonResume).onPress.connect(() => {
+                self.interactive = true;
+                self._fullBlackout.visible = false;
+                self.pauseContainer.visible = false;
+            });
+        }
+
+        
     }
 
-    _countdownContainer = null;
+    _winSprite = null;
+    _looseSprite = null;
+    _tieSprite = null;
+    _backSprite = null;
+    _replaySprite = null;
+
     _countdownNumber = null;
     _countdownBg = null;
-    _atlas2 = null;
     _blackout = null;
+    _fullBlackout = null;
     _ringOpen = null;
     _wrestleSprite = null;
 
     interactive = true;
     OpenSelectCards = null;
 
-    
-
     Reset() {
-        const countdownContainer = this._countdownContainer;
+        const countdownContainer = this.countdownContainer;
         const countdownNumber = this._countdownNumber;
         const countdownBg = this._countdownBg;
         const atlas2 = this._atlas2;
         const selectCards = this.OpenSelectCards;
         const blackout = this._blackout;
+        const fullBlackout = this._fullBlackout;
         const movesContainer = this.movesContainer;
         const self = this;
+
+        self.pauseContainer.visible = false;
+        self.winLooseContainer.visible = false;
+        self.player1.health = 100;
+        self.player2.health = 100;
+        self.player1.x = this.centerPositions[9].x; self.player1.y = this.centerPositions[9].y;
+        self.player2.x = this.centerPositions[2].x; self.player2.y = this.centerPositions[2].y;
 
         // TODO: RESET The 3 cards so they all say "select card"
 
@@ -606,14 +783,13 @@ class Game {
         this._wrestleSprite.tint = 0x7f7f7f;
 
         blackout.visible = false;
+        fullBlackout.visible = false;
         movesContainer.visible = false;
 
-        countdownNumber.visible = false;
-        countdownBg.visible = false;
-
-
-        this.interactive = true; // set to false if intro
-        /*countdownBg.texture = atlas2.textures["countdown_bg.png"]
+        this.interactive = false;
+        countdownNumber.visible = true;
+        countdownBg.visible = true;
+        countdownBg.texture = atlas2.textures["countdown_bg.png"]
         countdownNumber.texture = atlas2.textures["countdown_3.png"];
         countdownContainer.scale.set(0.25, 0.25);
         const startupTween = new tweedle_js.Tween(countdownContainer.scale).to({ x:1.25, y:1.25 }, 750);
@@ -643,15 +819,73 @@ class Game {
                 }).start();
             }).start();
         });
-        startupTween.start();*/
+        startupTween.start();
     }
 
+    async CheckIfGameOver() {
+        const player1 = this.player1;
+        const player2 = this.player2;
+        const winLooseContainer = this.winLooseContainer;
+        const fullBlackout = this._fullBlackout;
+        const backSprite = this._backSprite;
+        const replaySprite = this._replaySprite;
+
+        if (player1.health === 0 && player2.health === 0) {
+            this._winSprite.visible = false;
+            this._looseSprite.visible = false;
+            this._tieSprite.visible = true;
+        }
+        else if (player1.health === 0) {
+            this._looseSprite.visible = true;
+            this._winSprite.visible = false;
+            this._tieSprite.visible = false;
+        }
+        else if (player2.health === 0) {
+            this._winSprite.visible = true;
+            this._looseSprite.visible = false;
+            this._tieSprite.visible = false;
+        }
+       
+        if (player1.health === 0 || player2.health === 0) {
+            return new Promise((resolve, reject) => {
+                winLooseContainer.visible = true;
+                fullBlackout.visible = true;
+                backSprite.visible = false;
+                replaySprite.visible = false;
+
+                winLooseContainer.scale.x = 0.25;
+                winLooseContainer.scale.y = 0.25;
+
+                new tweedle_js.Tween(winLooseContainer.scale)
+                    .to({ x:1.25, y:1.25 }, 500)
+                    .onComplete((tweener, target) => {
+                        new tweedle_js.Tween(winLooseContainer.scale)
+                            .to({ x:1.0, y:1.0 }, 120)
+                            .onComplete((tweener, target) => {
+                                backSprite.visible = true;
+                                replaySprite.visible = true;
+                                resolve(player1.health === 0 || player2.health === 0);
+                            })
+                        .start();
+                    })
+                .start();
+            });
+        }
+
+        return new Promise((resolve, reject) => {
+            resolve(player1.health === 0 || player2.health === 0);
+        });
+    };
+
     async ExecuteAllMoves() {
+        let isGameOver = false;
+        
         this._ringOpen.visible = false;
         this._wrestleSprite.visible = false;
         this._wrestleSprite.tint = 0x7f7f7f;
 
         this._blackout.visible = false;
+        this._fullBlackout.visible = false;
         this.movesContainer.visible = false;
         this._countdownNumber.visible = false;
         this._countdownBg.visible = false;
@@ -665,67 +899,189 @@ class Game {
 
             await this._ExecuteNextMove(this.player1, this.player2, this._cards);
             await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
-            // TODO: Clear buff visuals from board
-            // TODO: Check for game over
-            await this._ExecuteNextMove(this.player1, this.player2, this._cards);
-            await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
-            // TODO: Clear buff visuals from board
-            // TODO: Check for game over
-            await this._ExecuteNextMove(this.player1, this.player2, this._cards);
-            await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
-            // TODO: Clear buff visuals from board
-            // TODO: Check for game over
+            isGameOver = await this.CheckIfGameOver();
+
+            if (!isGameOver) {
+                await this._ExecuteNextMove(this.player1, this.player2, this._cards);
+                await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
+                isGameOver = await this.CheckIfGameOver();
+                if (!isGameOver) {
+                    await this._ExecuteNextMove(this.player1, this.player2, this._cards);
+                    await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
+                    isGameOver = await this.CheckIfGameOver();
+                }
+            }
         }
-        this.interactive = true;
+
+        if (!isGameOver) {
+            this.interactive = true;
+        }
 
         return new Promise((resolve, reject) => {
-            resolve(null);
+            resolve(isGameOver);
         });
+    }
+
+    _GetMoveUpDown(player1, player2) {
+        const moveDown =  Move.all.get("card_move_down.png");
+        const moveUp =  Move.all.get("card_move_up.png");
+
+        const p1Tile = this.FindClosestTile(player1.x, player1.y);
+        const p2Tile = this.FindClosestTile(player2.x, player2.y);
+
+        if (p2Tile.row < p1Tile.row) {
+            return moveUp;
+        }
+        else if (p2Tile.row > p1Tile.row) {
+            return moveDown;
+        }
+        return null;
+    }
+
+    _GetMoveLeftRight(player1, player2) {
+        const moveLeft =  Move.all.get("card_move_left.png");
+        const movRight =  Move.all.get("card_move_right.png");
+
+        const p1Tile = this.FindClosestTile(player1.x, player1.y);
+        const p2Tile = this.FindClosestTile(player2.x, player2.y);
+
+        if (p2Tile.col < p1Tile.col) {
+            return moveLeft;
+        }
+        else if (p2Tile.col > p1Tile.col) {
+            return movRight;
+        }
+        return null;
     }
 
     _QueueUpAiMoves() {
         const cards = this._aiCards;
+        const atlas2 = this._atlas2;
+        const selectCardTexture = atlas2.textures["select_card.png"];
 
-        const moveDown =  Move.all.get("card_move_down.png").texture;
-        const moveLeft = Move.all.get("card_move_left.png").texture;
-        const block =     Move.all.get("card_block.png").texture;
+        cards[0].texture = selectCardTexture;
+        cards[1].texture = selectCardTexture;
+        cards[2].texture = selectCardTexture;
+
+        let canMoveUpDown = true;
+        let canMoveLeftRight = true;
+        let canDefend = true;
+
+        const attacks = []; // Collect available attacks
+        const ignore = ["select_card.png", "card_move_up.png", "card_move_down.png", "card_move_left.png", "card_move_right.png", "card_block.png"];
+        for (const [key, value] of Move.all) {
+            if (!ignore.includes(key)) {
+                attacks.push(value);
+            }
+        }
+
+        const playerTile = this.FindClosestTile(this.player1.x, this.player1.y);
+        const enemyTile = this.FindClosestTile(this.player2.x, this.player2.y);
+
+        const RemoveAttackIfOneIsAvailable = () => {
+            for (let i = 0, len = attacks.length; i < len; ++i) {
+                const pattern = attacks[i].pattern;
+                for (let j = 0, count = pattern.length; j < count; ++j) {
+                    const newRow = enemyTile.row + pattern[j].row;
+                    const newCol = enemyTile.col + pattern[j].col;
+                    if (newRow === playerTile.row && newCol === playerTile.col) {
+                        const result = attacks[i];
+                        attacks.splice(i, 1);
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
         
-        cards[0].texture = moveDown;
-        cards[1].texture = moveLeft;
-        cards[2].texture = block;
+        let card = cards[0];
+        const AdvanceIterator = () => {
+            if (card === cards[0]) { 
+                card = cards[1]; 
+            }
+            else if (card === cards[1]) { 
+                card = cards[2];
+            }
+            else {  // Breaks loop
+                card = null; 
+            } 
+        }
+
+        while (card != null) {
+            let availableAttack = RemoveAttackIfOneIsAvailable();
+            if (availableAttack) {
+                card.texture = availableAttack.texture;
+                AdvanceIterator();
+                continue;
+            }
+
+            const moveUpDown = this._GetMoveUpDown(this.player2, this.player1);
+            if (canMoveUpDown && moveUpDown != null) {
+                card.texture = moveUpDown.texture;
+                canMoveUpDown = false;
+                AdvanceIterator();
+                continue;
+            }
+
+            const moveLeftRight = this._GetMoveLeftRight(this.player2, this.player1);
+            if (canMoveLeftRight && moveLeftRight != null) {
+                card.texture = moveLeftRight.texture;
+                canMoveLeftRight = false;
+                AdvanceIterator();
+                continue;
+            }
+
+            if (canDefend) {
+                card.texture = Move.all.get("card_block.png").texture;
+                canDefend = false;
+                AdvanceIterator();
+                continue;
+            }
+
+            // PICK RANDOM ATTACK
+            const randomAttackIndex = Math.floor(Math.random() * attacks.length);
+            const randomAttack = attacks[randomAttackIndex];
+            attacks.splice(randomAttackIndex, 1);
+            card.texture = randomAttack.texture;
+            AdvanceIterator();
+        }
+    }
+
+    FindClosestTile(x, y) {
+        const self = this;
+        if (self === null || self === undefined) {
+            throw new Error("Undefined this");
+        }
+        const centerPositions = self.centerPositions;
+        let shortestDistSq = 9999999;
+        let closestTilePoint = null;
+        let closestTileIndex = -1;
+        for (let i = 0, len = centerPositions.length; i < len; ++i) {
+            const deltaX = centerPositions[i].x - x;
+            const deltaY = centerPositions[i].y - y;
+            const distSq = deltaX * deltaX + deltaY * deltaY;
+            if (distSq < shortestDistSq) {
+                closestTilePoint = centerPositions[i];
+                closestTileIndex = i;
+                shortestDistSq = distSq;
+            }
+        }
+
+        let row = Math.floor(closestTileIndex / 3);
+        let col = Math.floor(closestTileIndex % 3);
+        
+        return {
+            closest: closestTilePoint,
+            x: closestTilePoint.x,
+            y: closestTilePoint.y,
+            index: closestTileIndex,
+            row: row,
+            col: col
+        };
     }
 
     async _ExecuteNextMove(player1, player2, cards) {
         const self = this;
-
-        const FindClosestTile = (x, y) => {
-            const centerPositions = self.centerPositions;
-            let shortestDistSq = 9999999;
-            let closestTilePoint = null;
-            let closestTileIndex = -1;
-            for (let i = 0, len = centerPositions.length; i < len; ++i) {
-                const deltaX = centerPositions[i].x - x;
-                const deltaY = centerPositions[i].y - y;
-                const distSq = deltaX * deltaX + deltaY * deltaY;
-                if (distSq < shortestDistSq) {
-                    closestTilePoint = centerPositions[i];
-                    closestTileIndex = i;
-                    shortestDistSq = distSq;
-                }
-            }
-    
-            let row = Math.floor(closestTileIndex / 3);
-            let col = Math.floor(closestTileIndex % 3);
-            
-            return {
-                closest: closestTilePoint,
-                x: closestTilePoint.x,
-                y: closestTilePoint.y,
-                index: closestTileIndex,
-                row: row,
-                col: col
-            };
-        }
 
         const atlas2 = this._atlas2;
         const selectCardTexture = atlas2.textures["select_card.png"];
@@ -735,13 +1091,13 @@ class Game {
         const moveRight = Move.all.get("card_move_right.png").texture;
         const block =     Move.all.get("card_block.png").texture;
         
-        const attacks = []; // Collect available attacks
+        /*const attacks = []; // Collect available attacks
         const ignore = ["select_card.png", "card_move_up.png", "card_move_down.png", "card_move_left.png", "card_move_right.png", "card_block.png"];
         for (const [key, value] of Move.all) {
             if (!ignore.includes(key)) {
                 attacks.push(value);
             }
-        }
+        }*/
 
         return new Promise((resolve, reject) => {
             // Grab a move
@@ -760,7 +1116,7 @@ class Game {
             // Handle moves
             const texture = card.texture;
             if (texture === moveUp || texture === moveDown || texture === moveLeft || texture === moveRight) {
-                const playerTile = FindClosestTile(player1.x, player1.y);
+                const playerTile = self.FindClosestTile(player1.x, player1.y);
                 let targetTile = null;
                 if (texture === moveUp) {
                     if (playerTile.row === 0) {
@@ -768,7 +1124,7 @@ class Game {
                         resolve(null); // Can't move up, early out
                         return null;
                     }
-                    targetTile = FindClosestTile(player1.x, player1.y - 400);
+                    targetTile = self.FindClosestTile(player1.x, player1.y - 400);
                 }
                 else if (texture === moveDown) {
                     if (playerTile.row === 3) {
@@ -776,7 +1132,7 @@ class Game {
                         resolve(null); // Can't move down, early out
                         return null;
                     }
-                    targetTile = FindClosestTile(player1.x, player1.y + 400);
+                    targetTile = self.FindClosestTile(player1.x, player1.y + 400);
                 }
                 else if (texture === moveLeft) {
                     if (playerTile.col === 0) {
@@ -784,7 +1140,7 @@ class Game {
                         resolve(null); // Can't move left, early out
                         return null;
                     }
-                    targetTile = FindClosestTile(player1.x - 360, player1.y);
+                    targetTile = self.FindClosestTile(player1.x - 360, player1.y);
                 }
                 else if (texture === moveRight) {
                     if (playerTile.col === 2) {
@@ -792,7 +1148,7 @@ class Game {
                         resolve(null); // Can't move right, early out
                         return null;
                     }
-                    targetTile = FindClosestTile(player1.x + 360, player1.y);
+                    targetTile = self.FindClosestTile(player1.x + 360, player1.y);
                 }
 
                 const indicator = self._indicators[targetTile.index];
@@ -809,17 +1165,17 @@ class Game {
                     })
                     .start();
 
-                const enemyTile = FindClosestTile(player2.x, player2.y);
+                const enemyTile = self.FindClosestTile(player2.x, player2.y);
                 if (enemyTile.row === targetTile.row && enemyTile.col === targetTile.col) {
-                    new tweedle_js.Tween(player1.anchor).to({ x:1 }, 250).start();
-                    new tweedle_js.Tween(player2.anchor).to({ x:0 }, 250).start();
+                    new tweedle_js.Tween(self.player1.anchor).to({ x:1 }, 250).start();
+                    new tweedle_js.Tween(self.player2.anchor).to({ x:0 }, 250).start();
                 }
                 else {
-                    if (player1.anchor.x !== 0.5) {
-                        new tweedle_js.Tween(player1.anchor).to({ x:0.5 }, 250).start();
+                    if (self.player1.anchor.x !== 0.5) {
+                        new tweedle_js.Tween(self.player1.anchor).to({ x:0.5 }, 250).start();
                     }
-                    if (player2.anchor.x !== 0.5) {
-                        new tweedle_js.Tween(player2.anchor).to({ x:0.5 }, 250).start();
+                    if (self.player2.anchor.x !== 0.5) {
+                        new tweedle_js.Tween(self.player2.anchor).to({ x:0.5 }, 250).start();
                     }
                 }
                 player1.hasDefenseBuff = false;
@@ -827,7 +1183,7 @@ class Game {
             }
             // Handle buffs
             else if (texture === block) {
-                const playerTile = FindClosestTile(player1.x, player1.y);
+                const playerTile = self.FindClosestTile(player1.x, player1.y);
                 const indicator = self._indicators[playerTile.index];
                 indicator.visible = true;
                 indicator.tint = 0x0059c1;
@@ -839,7 +1195,7 @@ class Game {
                 }, 1000);
                 return null;
             }
-            // Handle attacks
+            // Handle attack moves
             else { 
                 let label = card.texture.label; // something like card_attack_1.png
                 const move = Move.all.get(label);
@@ -851,8 +1207,8 @@ class Game {
                 const attackIndex = Number(label);
                 const pattern = self._attackPatterns[attackIndex];
 
-                const playerTile = FindClosestTile(player1.x, player1.y);
-                const enemyTile = FindClosestTile(player2.x, player2.y);
+                const playerTile = self.FindClosestTile(player1.x, player1.y);
+                const enemyTile = self.FindClosestTile(player2.x, player2.y);
                 const indicators = [];
 
                 for (let i = 0, len = pattern.length; i < len; ++i) {

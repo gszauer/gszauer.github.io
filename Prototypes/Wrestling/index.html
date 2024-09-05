@@ -82,6 +82,14 @@
                 data: {texture: altas2}
             });
 
+
+            const altas3 = await PIXI.Assets.load('img/atlas3.png');
+            PIXI.Assets.add({
+                alias: 'atlas3',
+                src: 'img/atlas3.json',
+                data: {texture: altas3}
+            });
+
             app.stage.removeChildren();
             const container = new PIXI.Container();
             container.width = targetWidth;
@@ -97,6 +105,11 @@
             container.addChild(game.container);
 
             game.container.visible = false;
+
+            game.onBackToMenu = () => {
+                menu.visible = true;
+                game.container.visible = false;
+            }
 
             menu.onPlay = () => {
                 menu.visible = false;
