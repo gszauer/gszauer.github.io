@@ -50,6 +50,9 @@ class Game {
     countdownContainer = null;
     pauseContainer = null;
 
+    _useRandomAi = false;
+    _aiCheckboxNormal = null;
+    _aiCheckboxRandom = null;
 
     _cards = [];
     _aiCards = [];
@@ -65,6 +68,22 @@ class Game {
     centerPositions = [];
 
     onBackToMenu = null;
+
+    _winSprite = null;
+    _looseSprite = null;
+    _tieSprite = null;
+    _backSprite = null;
+    _replaySprite = null;
+
+    _countdownNumber = null;
+    _countdownBg = null;
+    _blackout = null;
+    _fullBlackout = null;
+    _ringOpen = null;
+    _wrestleSprite = null;
+
+    interactive = true;
+    OpenSelectCards = null;
 
     constructor() {
         this.container = new PIXI.Container();
@@ -700,33 +719,71 @@ class Game {
             pauseContainer.addChild(aiLabel);
             aiLabel.x = 63; aiLabel.y = 1126;
 
-            const checkNormal = new PIXI.Sprite(atlas3.textures["checkbox.png"]);
-            const tickNormal = new PIXI.Sprite(atlas3.textures["check_mark.png"]);
+            const normalOff = new PIXI.Sprite(atlas3.textures["checkbox_off.png"]);
+            const normalOn = new PIXI.Sprite(atlas3.textures["checkbox_on.png"]);
             const labelnormal = new PIXI.Sprite(atlas3.textures["normal.png"]);
-            checkNormal.x = 127; checkNormal.y = 1278;
-            tickNormal.x = 146; tickNormal.y = 1255;
+            normalOff.x = 127; normalOff.y = 1253;
+            normalOn.x = 127; normalOn.y = 1253;
             labelnormal.x = 226; labelnormal.y = 1272;
-            pauseContainer.addChild(checkNormal);
-            pauseContainer.addChild(tickNormal);
             pauseContainer.addChild(labelnormal);
+            const checkboxNormal = self._aiCheckboxNormal = new PIXI.ui.CheckBox({
+                checked: true,
+                style: {
+                    unchecked: normalOff,
+                    checked: normalOn,
+                }
+            });
+            pauseContainer.addChild(checkboxNormal);
 
-            const checkRandom = new PIXI.Sprite(atlas3.textures["checkbox.png"]);
-            const tickRandom = new PIXI.Sprite(atlas3.textures["check_mark.png"]);
+            const randomOff = new PIXI.Sprite(atlas3.textures["checkbox_off.png"]);
+            const randomOn = new PIXI.Sprite(atlas3.textures["checkbox_on.png"]);
             const labelRandom = new PIXI.Sprite(atlas3.textures["random.png"]);
-            checkRandom.x = 618; checkRandom.y = 1278;
-            tickRandom.x = 634; tickRandom.y = 1255;
+            randomOn.x = 615; randomOn.y = 1253;
+            randomOff.x = 615; randomOff.y = 1253;
             labelRandom.x = 717; labelRandom.y = 1278;
-            pauseContainer.addChild(checkRandom);
-            pauseContainer.addChild(tickRandom);
             pauseContainer.addChild(labelRandom);
+            const checkboxRandom = self._aiCheckboxRandom = new PIXI.ui.CheckBox({
+                style: {
+                    unchecked: randomOff,
+                    checked: randomOn,
+                }
+            });
+            pauseContainer.addChild(checkboxRandom);
+
+
+
+            checkboxRandom.onCheck.connect((checked) => {
+                if (checked) {
+                    checkboxNormal.checked = false;
+                    self._useRandomAi = true;
+                }
+            });
+
+            checkboxNormal.onCheck.connect((checked) => {
+                if (checked) {
+                    checkboxRandom.checked = false;
+                    self._useRandomAi = false;
+                }
+            });
+
 
             const buttonReset = new PIXI.Sprite(atlas3.textures["reset_btn.png"]);
             buttonReset.x = 127; buttonReset.y = 1481;
             pauseContainer.addChild(buttonReset);
 
+            new PIXI.ui.Button(buttonReset).onPress.connect(() => {
+                self.Reset();
+            });
+
             const buttonExit = new PIXI.Sprite(atlas3.textures["exit_btn.png"]);
             buttonExit.x = 606; buttonExit.y = 1483;
             pauseContainer.addChild(buttonExit);
+
+            new PIXI.ui.Button(buttonExit).onPress.connect(() => {
+                if (self.onBackToMenu !== null) {
+                    self.onBackToMenu();
+                }
+            });
 
             const buttonResume = new PIXI.Sprite(atlas3.textures["resume_btn.png"]);
             buttonResume.x = 292; buttonResume.y = 1703;
@@ -738,25 +795,7 @@ class Game {
                 self.pauseContainer.visible = false;
             });
         }
-
-        
     }
-
-    _winSprite = null;
-    _looseSprite = null;
-    _tieSprite = null;
-    _backSprite = null;
-    _replaySprite = null;
-
-    _countdownNumber = null;
-    _countdownBg = null;
-    _blackout = null;
-    _fullBlackout = null;
-    _ringOpen = null;
-    _wrestleSprite = null;
-
-    interactive = true;
-    OpenSelectCards = null;
 
     Reset() {
         const countdownContainer = this.countdownContainer;
@@ -769,14 +808,26 @@ class Game {
         const movesContainer = this.movesContainer;
         const self = this;
 
+        self._useRandomAi = false;
+        self._aiCheckboxNormal.checked = true;
+        self._aiCheckboxRandom.checked = false;
+
+        const selectCardTexture = this._atlas2.textures["select_card.png"];
+        this._aiCards[0].texture = selectCardTexture;
+        this._aiCards[1].texture = selectCardTexture;
+        this._aiCards[2].texture = selectCardTexture;
+        this._cards[0].texture = selectCardTexture;
+        this._cards[1].texture = selectCardTexture;
+        this._cards[2].texture = selectCardTexture;
+
         self.pauseContainer.visible = false;
         self.winLooseContainer.visible = false;
         self.player1.health = 100;
         self.player2.health = 100;
         self.player1.x = this.centerPositions[9].x; self.player1.y = this.centerPositions[9].y;
         self.player2.x = this.centerPositions[2].x; self.player2.y = this.centerPositions[2].y;
-
-        // TODO: RESET The 3 cards so they all say "select card"
+        self.player1.anchor.set(0.5, 1);
+        self.player2.anchor.set(0.5, 1);
 
         this._ringOpen.visible = false;
         this._wrestleSprite.visible = false;
@@ -895,7 +946,12 @@ class Game {
 
         this.interactive = false;
         {
-            this._QueueUpAiMoves();
+            if (this._useRandomAi) {
+                this._QueueUpRandomAiMoves();
+            }
+            else {
+                this._QueueUpAiMoves();
+            }
 
             await this._ExecuteNextMove(this.player1, this.player2, this._cards);
             await this._ExecuteNextMove(this.player2, this.player1, this._aiCards);
@@ -952,6 +1008,35 @@ class Game {
             return movRight;
         }
         return null;
+    }
+
+    _QueueUpRandomAiMoves() {
+        const cards = this._aiCards;
+        const selectCardTexture = this._atlas2.textures["select_card.png"];
+
+        cards[0].texture = selectCardTexture;
+        cards[1].texture = selectCardTexture;
+        cards[2].texture = selectCardTexture;
+
+        const allMoves = []; // Collect available attacks
+        for (const [key, value] of Move.all) {
+            allMoves.push(value);
+        }
+
+        let randomIndex = Math.floor(Math.random() * allMoves.length);
+        let randomMove = allMoves[randomIndex];
+        allMoves.splice(randomIndex, 1);
+        cards[0].texture = randomMove.texture;
+
+        randomIndex = Math.floor(Math.random() * allMoves.length);
+        randomMove = allMoves[randomIndex];
+        allMoves.splice(randomIndex, 1);
+        cards[1].texture = randomMove.texture;
+
+        randomIndex = Math.floor(Math.random() * allMoves.length);
+        randomMove = allMoves[randomIndex];
+        allMoves.splice(randomIndex, 1);
+        cards[2].texture = randomMove.texture;
     }
 
     _QueueUpAiMoves() {
@@ -1091,14 +1176,6 @@ class Game {
         const moveRight = Move.all.get("card_move_right.png").texture;
         const block =     Move.all.get("card_block.png").texture;
         
-        /*const attacks = []; // Collect available attacks
-        const ignore = ["select_card.png", "card_move_up.png", "card_move_down.png", "card_move_left.png", "card_move_right.png", "card_block.png"];
-        for (const [key, value] of Move.all) {
-            if (!ignore.includes(key)) {
-                attacks.push(value);
-            }
-        }*/
-
         return new Promise((resolve, reject) => {
             // Grab a move
             let card = null;
