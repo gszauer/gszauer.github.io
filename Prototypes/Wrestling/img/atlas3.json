@@ -264,14 +264,38 @@
         "y": 0.5
       }
     },
-    "resume_btn.png": {
+    "close_btn.png": {
       "frame": {
         "x": 1678,
         "y": 620,
+        "w": 487,
+        "h": 166
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 487,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 487,
+        "h": 166
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "resume_btn.png": {
+      "frame": {
+        "x": 1131,
+        "y": 668,
         "w": 543,
         "h": 161
       },
-      "rotated": true,
+      "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
@@ -291,7 +315,7 @@
     "win.png": {
       "frame": {
         "x": 1131,
-        "y": 668,
+        "y": 833,
         "w": 524,
         "h": 395
       },
@@ -312,24 +336,48 @@
         "y": 0.5
       }
     },
-    "checkbox_off.png": {
+    "tie.png": {
       "frame": {
-        "x": 1843,
-        "y": 721,
-        "w": 131,
-        "h": 107
+        "x": 1659,
+        "y": 1111,
+        "w": 501,
+        "h": 384
       },
-      "rotated": false,
+      "rotated": true,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 131,
-        "h": 107
+        "w": 501,
+        "h": 384
       },
       "sourceSize": {
-        "w": 131,
-        "h": 107
+        "w": 501,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "random.png": {
+      "frame": {
+        "x": 348,
+        "y": 1616,
+        "w": 310,
+        "h": 100
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 310,
+        "h": 100
+      },
+      "sourceSize": {
+        "w": 310,
+        "h": 100
       },
       "pivot": {
         "x": 0.5,
@@ -338,8 +386,8 @@
     },
     "volume_knob.png": {
       "frame": {
-        "x": 1978,
-        "y": 721,
+        "x": 417,
+        "y": 1930,
         "w": 53,
         "h": 114
       },
@@ -354,30 +402,6 @@
       "sourceSize": {
         "w": 53,
         "h": 114
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "checkbox_on.png": {
-      "frame": {
-        "x": 1843,
-        "y": 832,
-        "w": 131,
-        "h": 107
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 131,
-        "h": 107
-      },
-      "sourceSize": {
-        "w": 131,
-        "h": 107
       },
       "pivot": {
         "x": 0.5,
@@ -386,12 +410,12 @@
     },
     "check_mark.png": {
       "frame": {
-        "x": 1843,
-        "y": 943,
+        "x": 474,
+        "y": 1930,
         "w": 113,
         "h": 87
       },
-      "rotated": false,
+      "rotated": true,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
@@ -410,12 +434,12 @@
     },
     "ai_label.png": {
       "frame": {
-        "x": 1843,
-        "y": 1034,
+        "x": 565,
+        "y": 1930,
         "w": 108,
         "h": 87
       },
-      "rotated": false,
+      "rotated": true,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
@@ -434,8 +458,8 @@
     },
     "normal.png": {
       "frame": {
-        "x": 1955,
-        "y": 1034,
+        "x": 452,
+        "y": 1616,
         "w": 302,
         "h": 88
       },
@@ -456,48 +480,48 @@
         "y": 0.5
       }
     },
-    "random.png": {
+    "checkbox_off.png": {
       "frame": {
-        "x": 1843,
-        "y": 1125,
-        "w": 310,
-        "h": 100
+        "x": 1848,
+        "y": 721,
+        "w": 131,
+        "h": 107
       },
-      "rotated": true,
+      "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 310,
-        "h": 100
+        "w": 131,
+        "h": 107
       },
       "sourceSize": {
-        "w": 310,
-        "h": 100
+        "w": 131,
+        "h": 107
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "tie.png": {
+    "checkbox_on.png": {
       "frame": {
-        "x": 348,
-        "y": 1439,
-        "w": 501,
-        "h": 384
+        "x": 1848,
+        "y": 832,
+        "w": 131,
+        "h": 107
       },
-      "rotated": true,
+      "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 501,
-        "h": 384
+        "w": 131,
+        "h": 107
       },
       "sourceSize": {
-        "w": 501,
-        "h": 384
+        "w": 131,
+        "h": 107
       },
       "pivot": {
         "x": 0.5,

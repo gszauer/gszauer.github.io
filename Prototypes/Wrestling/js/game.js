@@ -85,6 +85,14 @@ class Game {
     interactive = true;
     OpenSelectCards = null;
 
+    GetGlobalVolume = null;
+    SetGlobalVolume = null;
+    _volumeSlider = null;
+
+    _soundWalk = null;
+    _soundHit = null;
+    _soundBlock = null;
+
     constructor() {
         this.container = new PIXI.Container();
         this.movesContainer = new PIXI.Container();
@@ -136,7 +144,7 @@ class Game {
         );
     }
 
-    async Initialize(width, height) {
+    async Initialize(allSounds, width, height) {
         const p1HealthMask = new PIXI.Graphics();
         this.container.addChild(p1HealthMask);
         const p2HealthMask = new PIXI.Graphics();
@@ -163,6 +171,19 @@ class Game {
         const atlas2 = this._atlas2 = await PIXI.Assets.load("atlas2");
         const atlas3 = this._atlas3 = await PIXI.Assets.load("atlas3");
 
+        { // sfx
+            PIXI.Assets.add({ alias: 'walk', src: 'sound/walk.wav' });
+            this._soundWalk = await PIXI.Assets.load('walk');
+            allSounds.push(this._soundWalk);
+
+            PIXI.Assets.add({ alias: 'hit', src: 'sound/hit.wav' });
+            this._soundHit = await PIXI.Assets.load('hit');
+            allSounds.push(this._soundHit);
+
+            PIXI.Assets.add({ alias: 'block', src: 'sound/block.wav' });
+            this._soundBlock = await PIXI.Assets.load('block');
+            allSounds.push(this._soundBlock);
+        }
         const player1 = this.player1 = new PIXI.Sprite(atlas2.textures["player1.png"]);
         const player2 = this.player2 = new PIXI.Sprite(atlas2.textures["player2.png"]);
        
@@ -398,9 +419,9 @@ class Game {
         const aiCard1 = new PIXI.Sprite(selectCardTexture);
         const aiCard2 = new PIXI.Sprite(selectCardTexture);
         const aiCard3 = new PIXI.Sprite(selectCardTexture);
-        aiCard1.x = 18 + width; aiCard1.y = 2086 - 700;
-        aiCard2.x = 18 + width; aiCard2.y = 2086 - 350;
-        aiCard3.x = 18 + width; aiCard3.y = 2086;
+        aiCard1.x = 18 + width; aiCard1.y = -5000;//2086 - 700;
+        aiCard2.x = 18 + width; aiCard2.y = -5000;//2086 - 350;
+        aiCard3.x = 18 + width; aiCard3.y = -5000;//2086;
         this.container.addChild(aiCard1);
         this.container.addChild(aiCard2);
         this.container.addChild(aiCard3);
@@ -496,6 +517,10 @@ class Game {
             self.interactive = false;
             self._fullBlackout.visible = true;
             self.pauseContainer.visible = true;
+            const volume = self.GetGlobalVolume();
+            self._volumeSlider.value = Math.floor(volume * 100);
+            self._aiCheckboxNormal.checked = !self._useRandomAi;
+            self._aiCheckboxRandom.checked = self._useRandomAi;
         });
 
         const ringPreviewBtn = new PIXI.ui.Button(ringSpriteOpen);
@@ -707,13 +732,31 @@ class Game {
             const volumeLabel = new PIXI.Sprite(atlas3.textures["volume_label.png"]);
             const volumeBar = new PIXI.Sprite(atlas3.textures["volume_track.png"]);
             const volumeKnob = new PIXI.Sprite(atlas3.textures["volume_knob.png"]);
-            volumeKnob.anchor.set(0.5, 0.5);
             pauseContainer.addChild(volumeLabel);
-            pauseContainer.addChild(volumeBar);
-            pauseContainer.addChild(volumeKnob);
             volumeLabel.x = 63; volumeLabel.y = 882;
-            volumeBar.x = 180; volumeBar.y = 1005;
-            volumeKnob.x = 342; volumeKnob.y = 1036;
+            volumeBar.x = 0; volumeBar.y = 1005;
+            volumeKnob.x = 342 - 180; 
+            volumeKnob.y = Math.floor(1036 - volumeKnob.height * 0.25);
+
+            const volumeSlider = self._volumeSlider =  new PIXI.ui.Slider({
+                bg: volumeBar,
+                fill: volumeBar,
+                slider: volumeKnob,
+                min: 0,
+                max: 100,
+                step: 1,
+                value: 80,
+                showValue: false,
+            });
+            volumeSlider.x = 180;
+            pauseContainer.addChild(volumeSlider);
+
+            volumeSlider.onChange.connect((value) => {
+                if (value < 0) { value = 0; }
+                value = value / 100;
+                if (value > 1) { value = 1; }
+                self.SetGlobalVolume(value);
+            });
 
             const aiLabel = new PIXI.Sprite(atlas3.textures["ai_label.png"]);
             pauseContainer.addChild(aiLabel);
@@ -750,8 +793,6 @@ class Game {
             });
             pauseContainer.addChild(checkboxRandom);
 
-
-
             checkboxRandom.onCheck.connect((checked) => {
                 if (checked) {
                     checkboxNormal.checked = false;
@@ -765,7 +806,6 @@ class Game {
                     self._useRandomAi = false;
                 }
             });
-
 
             const buttonReset = new PIXI.Sprite(atlas3.textures["reset_btn.png"]);
             buttonReset.x = 127; buttonReset.y = 1481;
@@ -808,9 +848,8 @@ class Game {
         const movesContainer = this.movesContainer;
         const self = this;
 
-        self._useRandomAi = false;
-        self._aiCheckboxNormal.checked = true;
-        self._aiCheckboxRandom.checked = false;
+        self._aiCheckboxNormal.checked = !self._useRandomAi;
+        self._aiCheckboxRandom.checked = self._useRandomAi;
 
         const selectCardTexture = this._atlas2.textures["select_card.png"];
         this._aiCards[0].texture = selectCardTexture;
@@ -1193,6 +1232,7 @@ class Game {
             // Handle moves
             const texture = card.texture;
             if (texture === moveUp || texture === moveDown || texture === moveLeft || texture === moveRight) {
+            
                 const playerTile = self.FindClosestTile(player1.x, player1.y);
                 let targetTile = null;
                 if (texture === moveUp) {
@@ -1241,6 +1281,7 @@ class Game {
                         }, 250);
                     })
                     .start();
+                self._soundWalk.play();
 
                 const enemyTile = self.FindClosestTile(player2.x, player2.y);
                 if (enemyTile.row === targetTile.row && enemyTile.col === targetTile.col) {
@@ -1264,6 +1305,9 @@ class Game {
                 const indicator = self._indicators[playerTile.index];
                 indicator.visible = true;
                 indicator.tint = 0x0059c1;
+                setTimeout(() => {
+                    self._soundBlock.play();
+                }, 200);
                 setTimeout(() => {
                     card.texture = selectCardTexture;
                     indicator.visible = false;
@@ -1312,6 +1356,10 @@ class Game {
                         Game._FlashSprite(player2, 0xff0000);
                     }
                 }
+
+                setTimeout(() => {
+                    self._soundHit.play();
+                }, 200);
 
                 setTimeout(() => {
                     card.texture = selectCardTexture;

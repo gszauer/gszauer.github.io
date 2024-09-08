@@ -6,6 +6,7 @@
 
         <script src="js/pixi.js"></script>
         <script src="js/pixi-ui.js"></script>
+        <script src="js/pixi-sound.js"></script>
 
         <script src="js/mainmenu.js"></script>
         <script src="js/game.js"></script>
@@ -24,17 +25,6 @@
         </style>
 
         <script type="module">
-            /*async function quickTest() {
-                return new Promise((resolve, reject) => {
-                    console.log("About to resolve");
-                    resolve(7);
-                    return 2;
-                });
-            }
-            const testResult = await quickTest();
-            console.log("Test result: " + testResult);*/
-
-
             PIXI.AbstractRenderer.defaultOptions.resolution = window.devicePixelRatio || 1;
             const app = new PIXI.Application();
 
@@ -90,6 +80,21 @@
                 data: {texture: altas3}
             });
 
+            let globalVolume = 1.0;
+            let musicMod = 0.5;
+            const allSounds = [];
+
+            PIXI.Assets.add({ alias: 'powpow', src: 'sound/powpow.wav' });
+            const powpow = await PIXI.Assets.load('powpow');
+            powpow.volume = musicMod;
+
+            PIXI.Assets.add({ alias: 'energizer', src: 'sound/energizer.wav' });
+            const energizer = await PIXI.Assets.load('energizer');
+            energizer.volume = musicMod;
+
+            energizer.loop = true;
+            energizer.play();
+
             app.stage.removeChildren();
             const container = new PIXI.Container();
             container.width = targetWidth;
@@ -97,27 +102,45 @@
             FitContainerToWindow(container);
             app.stage.addChild(container);
 
-            const menu = await CreateMainMenu(targetWidth, targetHeight);
-            container.addChild(menu);
-
             const game = new Game();
-            await game.Initialize(targetWidth, targetHeight);
+            await game.Initialize(allSounds, targetWidth, targetHeight);
+            const menu = await CreateMainMenu(game, targetWidth, targetHeight);
+            
+            container.addChild(menu);
             container.addChild(game.container);
+
+            game.SetGlobalVolume = (value) => {
+                if (value < 0) { value = 0; }
+                if (value > 1) { value = 1; }
+
+                globalVolume = value;
+                for (let i = 0, size = allSounds.length; i < size; ++i) {
+                    allSounds[i].volume = value;
+                }
+
+                energizer.volume = value * musicMod;
+                powpow.volume = value * musicMod;
+            };
+
+            game.GetGlobalVolume = () => {
+                return globalVolume;
+            };
 
             game.container.visible = false;
 
             game.onBackToMenu = () => {
                 menu.visible = true;
                 game.container.visible = false;
+                energizer.play();
+                powpow.stop();
             }
 
             menu.onPlay = () => {
                 menu.visible = false;
                 game.container.visible = true;
                 game.Reset();
-            };
-            menu.onSettings = () => {
-                console.log("SETTINGS");
+                energizer.stop();
+                powpow.play();
             };
             menu.onTutorial = () => {
                 console.log("TUTORIAL");
