@@ -49,21 +49,55 @@
                 container.y = app.screen.height / 2 - actualHeight / 2;
             };
 
+            const GetScreenScale = () => {
+                const { width, height } = app.screen;
+                const targetAspect = targetWidth / targetHeight;
+                const invTargetAspect = targetHeight / targetWidth;
+
+                const isWidthConstrained = width < height * targetAspect;
+                const isHeightConstrained = width * invTargetAspect > height;
+                
+                const actualWidth = isWidthConstrained ? width : height * targetAspect;
+                const actualHeight =  isHeightConstrained ? height : width * invTargetAspect;
+
+                return {
+                    x: actualWidth / targetWidth,
+                    y: actualHeight / targetHeight
+                }
+            }
+
             await app.init({ 
                 resizeTo: document.body,//window, // Auto fill the screen
                 autoDensity: true, // Handles high DPI screens
-                //backgroundColor: 0x1d1d1d,
-                backgroundColor: 0x000000,
+                backgroundColor: 0x1d1d1d,
             });
 
             document.body.appendChild(app.canvas);
 
+
+            const loadingText = new PIXI.Text({
+                text: "Loading",
+                style: {
+                    fill: "#b2b2b2"
+                }
+            });
+
+             app.stage.addChild(loadingText);
+
+            loadingText.text = "Loading: img/atlas1.png";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
+           
             const altas1 = await PIXI.Assets.load('img/atlas1.png');
             PIXI.Assets.add({
                 alias: 'atlas1',
                 src: 'img/atlas1.json',
                 data: {texture: altas1}
             });
+
+            loadingText.text = "Loading: img/atlas2.png";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
 
             const altas2 = await PIXI.Assets.load('img/atlas2.png');
             PIXI.Assets.add({
@@ -72,6 +106,9 @@
                 data: {texture: altas2}
             });
 
+            loadingText.text = "Loading: img/atlas3.png";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
 
             const altas3 = await PIXI.Assets.load('img/atlas3.png');
             PIXI.Assets.add({
@@ -84,34 +121,56 @@
             let musicMod = 0.5;
             const allSounds = [];
 
-            PIXI.Assets.add({ alias: 'powpow', src: 'sound/powpow.wav' });
+            loadingText.text = "Loading: sound/powpow.mp3";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
+
+            PIXI.Assets.add({ alias: 'powpow', src: 'sound/powpow.mp3' });
             const powpow = await PIXI.Assets.load('powpow');
             powpow.volume = musicMod;
 
-            PIXI.Assets.add({ alias: 'energizer', src: 'sound/energizer.wav' });
+            loadingText.text = "Loading: sound/energizer.mp3";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
+
+            PIXI.Assets.add({ alias: 'energizer', src: 'sound/energizer.mp3' });
             const energizer = await PIXI.Assets.load('energizer');
             energizer.volume = musicMod;
 
-            energizer.loop = true;
-            energizer.play();
-
-            app.stage.removeChildren();
             const container = new PIXI.Container();
             container.width = targetWidth;
             container.height = targetHeight;
             FitContainerToWindow(container);
-            app.stage.addChild(container);
+   
+            loadingText.text = "Creating Game";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
 
             const game = new Game();
             await game.Initialize(allSounds, targetWidth, targetHeight);
+            
+            loadingText.text = "Creating Game";
+            loadingText.x = Math.floor((app.screen.width / 2 - loadingText.width / 2 ));//  * screenScale.x
+            loadingText.y = Math.floor((app.screen.height / 2 - loadingText.height / 2)); // * screenScale.y
+
             const menu = await CreateMainMenu(game, targetWidth, targetHeight);
             
+            app.stage.removeChildren();
+            app.stage.addChild(container);
             container.addChild(menu);
             container.addChild(game.container);
+            game.container.visible = false;
+
+            energizer.loop = true;
+            energizer.play();
 
             game.SetGlobalVolume = (value) => {
                 if (value < 0) { value = 0; }
                 if (value > 1) { value = 1; }
+
+                //value = Math.pow(value, 1.2);
+                value = Math.pow(10.0,(-30.0/20.0 * (1.0-value)));
+                if (value < 0.04) { value = 0; }
 
                 globalVolume = value;
                 for (let i = 0, size = allSounds.length; i < size; ++i) {
@@ -125,8 +184,6 @@
             game.GetGlobalVolume = () => {
                 return globalVolume;
             };
-
-            game.container.visible = false;
 
             game.onBackToMenu = () => {
                 menu.visible = true;
@@ -142,6 +199,7 @@
                 energizer.stop();
                 powpow.play();
             };
+
             menu.onTutorial = () => {
                 console.log("TUTORIAL");
             };
@@ -151,10 +209,10 @@
                 game.container.visible = false;
             }
 
-            const tick = (ticker) => {
+            /*const tick = (ticker) => {
                 tweedle_js.Group.shared.update();
                 FitContainerToWindow(container);
-            };
+            };*/
 
             app.ticker.add((ticker) => {
                 tweedle_js.Group.shared.update();

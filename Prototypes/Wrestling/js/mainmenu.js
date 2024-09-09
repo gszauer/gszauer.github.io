@@ -18,7 +18,7 @@ async function CreateMainMenu(game, targetWidth, targetHeight) {
 
     const playBtnSprite = new PIXI.Sprite(spriteSheet.textures['play_btn.png']);
     const settingsBtnSprite = new PIXI.Sprite(spriteSheet.textures['settings_btn.png']);
-    const tutorialBtnSprite = new PIXI.Sprite(spriteSheet.textures['tutorial_btn.png']);
+    //const tutorialBtnSprite = new PIXI.Sprite(spriteSheet.textures['tutorial_btn.png']);
 
     logoSprite.x = 29;
     logoSprite.y = 24;
@@ -33,11 +33,11 @@ async function CreateMainMenu(game, targetWidth, targetHeight) {
     wrestlerFront.x = 656;
     wrestlerFront.y = 1920;
     playBtnSprite.x = 184;
-    playBtnSprite.y = 869;
     settingsBtnSprite.x = 734;
-    settingsBtnSprite.y = 864;
-    tutorialBtnSprite.x = 184;
-    tutorialBtnSprite.y = 1103;
+    playBtnSprite.y     = 869 + 200;
+    settingsBtnSprite.y = 864 + 200;
+    //tutorialBtnSprite.x = 184;
+    //tutorialBtnSprite.y = 1103;
 
     const background = new PIXI.Graphics()
         .rect(0, 0, targetWidth, targetHeight)
@@ -54,15 +54,15 @@ async function CreateMainMenu(game, targetWidth, targetHeight) {
    
     container.onPlay = null;
     container.onSettings = null;
-    container.onTutorial = null;
+    //container.onTutorial = null;
 
     container.addChild(playBtnSprite);
     container.addChild(settingsBtnSprite);
-    container.addChild(tutorialBtnSprite);
+    //container.addChild(tutorialBtnSprite);
 
     const playBtn = new PIXI.ui.Button(playBtnSprite);
     const settingsBtn = new PIXI.ui.Button(settingsBtnSprite);
-    const tutorialBtn = new PIXI.ui.Button(tutorialBtnSprite);
+    //const tutorialBtn = new PIXI.ui.Button(tutorialBtnSprite);
 
     playBtn.onPress.connect(() => {
         if (!settingsContainer.visible) {
@@ -73,14 +73,14 @@ async function CreateMainMenu(game, targetWidth, targetHeight) {
         playBtnSprite.tint = 0xffffff;
     });
     
-    tutorialBtn.onPress.connect(() => {
+    /*tutorialBtn.onPress.connect(() => {
         if (!settingsContainer.visible) {
             if (container.onTutorial !== null && container.onTutorial !== undefined) {
                 container.onTutorial();
             }
         }
         tutorialBtnSprite.tint = 0xffffff;
-    });
+    });*/
     
     playBtn.onHover.connect(() => {
         if (!settingsContainer.visible) {
@@ -98,14 +98,14 @@ async function CreateMainMenu(game, targetWidth, targetHeight) {
     settingsBtn.onOut.connect(() => {
         settingsBtnSprite.tint = 0xffffff;
     });
-    tutorialBtn.onHover.connect(() => {
+    /*tutorialBtn.onHover.connect(() => {
         if (!settingsContainer.visible) {
             tutorialBtnSprite.tint = 0xb14d01;
         }
     });
     tutorialBtn.onOut.connect(() => {
         tutorialBtnSprite.tint = 0xffffff;
-    });
+    });*/
 
     { // Settings
         const blackout = new PIXI.Graphics()

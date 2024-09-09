@@ -172,15 +172,15 @@ class Game {
         const atlas3 = this._atlas3 = await PIXI.Assets.load("atlas3");
 
         { // sfx
-            PIXI.Assets.add({ alias: 'walk', src: 'sound/walk.wav' });
+            PIXI.Assets.add({ alias: 'walk', src: 'sound/walk.mp3' });
             this._soundWalk = await PIXI.Assets.load('walk');
             allSounds.push(this._soundWalk);
 
-            PIXI.Assets.add({ alias: 'hit', src: 'sound/hit.wav' });
+            PIXI.Assets.add({ alias: 'hit', src: 'sound/hit.mp3' });
             this._soundHit = await PIXI.Assets.load('hit');
             allSounds.push(this._soundHit);
 
-            PIXI.Assets.add({ alias: 'block', src: 'sound/block.wav' });
+            PIXI.Assets.add({ alias: 'block', src: 'sound/block.mp3' });
             this._soundBlock = await PIXI.Assets.load('block');
             allSounds.push(this._soundBlock);
         }
