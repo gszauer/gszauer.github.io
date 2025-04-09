@@ -10090,7 +10090,6 @@ function ImGui_ImplSDL2_EmscriptenOpenURL(url) { url = url ? UTF8ToString(url) :
 
 
 
-
   var listenOnce = (object, event, func) =>
       object.addEventListener(event, func, { 'once': true });
   /** @param {Object=} elements */
@@ -10979,8 +10978,6 @@ var wasmImports = {
   glBlendEquation: _glBlendEquation,
   /** @export */
   glBlendEquationSeparate: _glBlendEquationSeparate,
-  /** @export */
-  glBlendFunc: _glBlendFunc,
   /** @export */
   glBlendFuncSeparate: _glBlendFuncSeparate,
   /** @export */
