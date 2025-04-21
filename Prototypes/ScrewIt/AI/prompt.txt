@@ -1,0 +1,139 @@
+Let's build a 3D puzzle game in Unity 3D. We're targeting Unity 6 LTS. Built in render pipeline, keep everything as simple as possible. This game will be 3D screw sort puzzle, similar to the following games: Screwdom, Screw Sort 3D, Screw Sort Jam, Screw Blast, and 3D blast master. Here is how the game works: The player is presented with a 3D mechanical object assembled from multiple interlocking Puzzle Pieces and secured using Screws. The goal is to unscrew and disassemble the object piece by piece in the correct order. Each level is a handcrafted mechanical sculpture that the player must analyze and manipulate from different angles to solve.
+
+You will be given the description of how the game logic should work, and will be responsible for implementing the following files: 
+Screw.cs, Piece.cs, Box.cs, Peg.cs, ScrewManager.cs, PieceManager.cs, BoxManager.cs, PegManager.cs
+Don't leave any TODO's, implement all classes (including animation logic) in full. If we create any revisions, or otherwise iterate on the generated code, always list the full code listing. Never show only the parts that changed, always show the full file and provide an explanation for what changed.
+Add a lot of comments, so a novice coder can navigate and modify these files.
+For things like animation and delaying events, prefer to use a state machine in the update function over coroutines.
+Avoid confusing conditionals by naming your booleans. For example: 
+```if (object.isUnlocked && !object.isFull)```
+can be confusing, but the following code is clear and concise:
+```bool objectValid = object.isUnlocked && !object.isFull; if (objectValid)```
+The above code is better because having named conditionals is easier to read than having to ligic about it.
+Member variables should begin with an m, for example: mSpeed, mWhatever, these should use cammel case
+Functions should start with a capital letter and do cammel case
+Local variables should start with a lower case letter and do underscores
+Don't rely on exceptions, they will be disabled
+Guard against nulls, and empty arrays. Assume if anything is exposed in the editor, it might not be set.
+Don't use physics, prefer animating in update, or with tweeens and lerps. When implementing tweens and lerps prefer to do so in update with a state machine rather than coroutines.
+Each state machine should have an enum for all it's states, and various events control the current state of the object. You can implement a StateMachine class if it's helpful, but that is optional.
+All animations should be animated smoothly and not instantaneous, and be frame rate independent by using deltaTime.
+Never delete or spawn objects, always re-use existing ones.
+Do not use un-included helpers. All code must either be provided by unity, or written by you.
+
+Screw.cs
+    Every screw has a color (mColor) (int value, not a real color). Screws can be placed in any orientation, so their local up axis is relative. The "backward" direction of a screw (ie if screwing out) is always it's negative local z axis.
+
+    A screw object will initially be parented under a piece object. A screw will contain a list of Piece objects that potentially block the screw. The screw can't be undone, unless all of it's blocking pieces have been unstuck / removed.
+
+    When the user taps or otherwise triggers the screw, the screw should rotate as if being unscrewed, and possibly lift slightly, to indicate it's coming out. This action eventually leads to a puzzle piece falling off (the next step). The screw rotation should be animated smoothly and not instantaneous, and be frame rate independent.
+
+    Detect a user tap or click on the screw object. On desktop, this could be a mouse click on the screw; on mobile, a tap. You can use a raycast from the touch/click position into the scene. When the screw is tapped, initiate the unscrewing animation: for example, over a short duration, rotate the screw multiple full rotations (e.g., 2-3 full turns) using transform.Rotate or slerping its transform.
+
+    When a screw is successfully removed from the puzzle, re-parent it to screwmanager. Since the class is static, getting it's transform should be trivial. This will ensure that animating screws are not rotating with the puzzle.
+    
+    Keep state variables that other scripts can reference.
+
+    If the parent of the screw is not the piece that originally owned it, or if the screw is animating, ignore input. This should prevent screws that are on pegs or in boxes from being clicked on.
+
+    The screw should have a reset function. The screw manager will take care of activating and positioning the screw. This reset function needs to make sure that the internal state of the screw is reset (so it doesn't keep animating for instance).
+
+Piece.cs
+
+    A game piece represents a part of the puzzle. As long as a game piece has screws in it, it stays on screen. As soon as all of it's screws are removed it needs to fall off in an animated manner. Once it has compleatly fallen, it's safe to disable the game object. The Piece class should contain an array of screws (mAttachedScrews). Initially this will be empty, but on awake the Piece object needs to iterate trough all of its children (direct children, non recursive), and add any screws the array of screws. Once every screw in this array is removed, the piece should fall.
+
+    Once the screw is sufficiently unscrewed (e.g. at the end of the screw animation), a puzzle piece that was held in place by the screw should fall off the puzzle. This piece will drop under gravity's effect, but since we are not using physics, we manually animate this. The piece falling provides visual feedback that the puzzle is solved (or partially solved). 
+
+    Begin the falling animation right after the screw finishes rotating. You can animate the piece's transform to move downward (along -Y axis in world space) and slightly outward if needed, simulating a fall. To mimic acceleration, you can start movement slow and increase speed, or simply use a smooth interpolation. 
+
+    To prevent the falling piece from moving with the puzzle if the player rotates the puzzle afterward, detach it from the puzzle's hierarchy when it starts falling and re-parent it under the PieceManager.
+
+    The piece should have a reset function. The piece manager will take care of activating and positioning the piece. This reset function needs to make sure that the internal state of the piece is reset (so it doesn't keep animating for instance).
+
+Box.cs
+
+    There are 4 boxes, at the top of the screen at all time. Each of them will have a Box script attached. The box script has a color, and three transforms for screws, these are the screw targets or animation targets. Each box will only accept screws of the same color. Once a box is full it closes, disables the game objects of the screws it holds, animates off screen, resets, gets assigned a new color, animates on screen and opens. It then has to do some logic to empty any pegs. The box provides transform targets for screws to animate to. Boxes can be locked. A locked box just needs to be clicked once to be unlocked. 
+
+    Each box will have a "box" game object, and a "lid" game object. The lid fits perfectly over the box (they share the same origin). Animate the lid to open or close. A locked box always has it's lid closed. If the box transform isn't provided, use the transform of the game object this script is attached to.
+
+    If no config transforms are provided, for example no screw targets are set, use the transform of the box object (detect this in the awake function)
+
+    Each box has a root object, under that are three transforms where screws should animate to. Next to those is a lid object. The root object is the one that's animated when the box goes on and off screen. The lid is animated when the box opens or closes (it just moves up or down).
+
+    The game starts with an arbitrary amount of boxes already in the scene, usually this will be four. Each box will be pre-configured in the editor. A box is either locked, or not. If a box is locked, it's lid is closed. Clicking on a locked box will unlock it, and open its lid. You can add a "Start Open" boolean to the box that indicates if it was set up as open or not in the editor (default to true)
+
+    Cache the initial position of the box, you will need to use it when it animates back on screen.
+
+    Reset the material on the box lid and box visual when resetting a box. You can get a list of materials from the ScrewManager, the color index of the box should index into that list of materials. Make sure to set the material of the box as the last thing in the Awake function as well. So whatever the editor congfigured color is matches the color on screen.
+
+    add a mDebugNextColor variable to the box. Be default this will be -1, but the user can set this value in editor. If the value is set, use that instead of whatever the random box reset color would have been. After having used the variable, reset it to -1.
+
+    Add some logic to the box respawn / reset to make it so the next box that spawns is the color of at least one of the active screws (or random if no screws are active). Try to avoid having duplicate boxes (locked boxes don't count) when choosing what color to use.
+
+Peg.cs
+
+    Pegs are a secondary storage location for screws. All pegs together act as a holding queue for screw colors that don't currently have appropriate boxes on screen. If the user unscrews a screw, and there is no box that matches the color of the screw,
+    one of two things happens. If there is an open peg, the screw animates to it, and occupies it. If there is no open peg, it's game over. I've already described how to present a reset ui (imgui) in that instance.
+
+    Like with other classes, the animation of a screw from peg to box needs to be smooth, so it's a lerp that respects delta time. As a suggestion, screw states could include: AnimatingFromPuzzleToBox, AnimatingFromPuzzleToPeg, AnimatingFromPegToBox.
+    
+    A peg be locked or unlocked. Its possible to unlock any locked pegs one at a time trough the peg manager until all pegs are unlocked. Clicking on a locked peg will unlock it.
+
+    A peg is just a transform that screws will animate to, very similar to a box. The only difference is a box can hold 3 screws, while a peg can only hold 1. If the target transform is not set in editor, use the transform of the peg object (again, check this in awake)
+
+    A peg has no color. Any screw can go into a peg. Of course, maintain state variables other scripts can use.
+
+When the user clicks on a screw, it should respond as follows:
+
+    Screw click logic: Check the list of blocking pieces that the screw contains. If those pieces have not been cleared, the screw will play an animation where it tries to unscrew, fails, and falls back into place. It's just a little wiggle on the screws local forward axis. Nothing else happens, as this screw is blocked.
+
+    Screw click logic: Check if there are any boxes of the same color as the screw that was clicked on. If there are, and the box is not locked, get the first unoccupied screw slot from the box. Before playing the animations that are about to be described, make sure the screw occupies the slot in the box, since other screws could be clicked during the animation. The screw then plays an unscrew animation. After the unscrew animation is done, the screw is reparented to the screwmanager, this prevents the puzzles rotation from affecting any animations the screw might do next. Animate (interpolate treansform) the screw so it moves to the selected screw slot transformation. While it's moving, also rotate it to match the rotation of the slot. Once the screw animation is finished, the box that the screw animates to will need to check if it is full, that behavior will be described soon.
+
+    When a screw animates to the box, the box needs to mark the screw slot as occupied as soon as the unscrew animation starts. We want to prevent the user clicking on another screw during this animation, and that triggering another screw to animate into the same spot.
+    
+    Screw click logic: Check if there are any boxes of the same color as the screw that was clicked on. If there are not, get the first open peg (not occupied, and not locked). If there is an open peg, the screw then plays an unscrew animation. After the unscrew animation is done, the screw is reparented to the screwmanager, this prevents the puzzles rotation from affecting any animations the screw might do next. Animate (interpolate treansform) the screw so it moves to the selected peg transformation. While it's moving, also rotate it to match the rotation of the peg. 
+
+    Screw click logic: Check if there are any boxes of the same color as the screw that was clicked on. If there are not, get the first open peg (not occupied, and not locked). If there are no open pegs, it's game over. Use unity's imgui system to display a game over message with a reset button that resets all managers.
+
+    Screw click logic: If there are no more screws available, and the final screw has finished it's animation, display a game win screen using unity's imgui. It should contain a reset button that lets the player play again.
+    The final screw might animate into a box or a peg, but when there are no more screws attached to pieces (or animating) display the win screen.
+
+When a screw is added to one of the screw slots of the box (and the screw animation is finished), it should respond as follows:
+
+    Add screw to box logic: If the box is not full, do nothing. 
+
+    Add screw to box logic: If the box is full, animate it's lid closing (open is 1 unit up on the lids local up axis, closing and opening is just moving the transform back to local 0). When the lid is closed, disable the screw game objects that are stored in the box slots. After the screw objects are disabled, animate the box off screen. Once the box is offscreen, reset it, and assign a new color. Animate the box back on screen (still closed). Animate the lid open.
+
+    When a box is reset, and comes back on screen, it needs to do a little bit of book keeping. The box needs to get every peg from the peg manager that is the same color as the box. It needs to take as many of those pegs as it can. For each screw, animate it from the peg transform to the box slot transoform that was chosen for the screw. Once in place, clear the peg so it can be re-used. IF there are enough screws transfered from pegs to fill the box up, it needs to repeat the full box logic. That is, animate the lid closing, disable the screw objects, animate the box off screen, reset the box, assign a new color to the box, animate the box back on screen, animate the top of the box opening again.
+
+As you've seen there are multiple screws, pieces, pegs and boxes in the scene. All of these will also have a Manager type, which is how they can be accessed. For example, a screw can ask the box manager if there is a box of the right color available by using functions in the BoxManager. 
+
+All managers are singletons (only one object with the manager attached exists). If multiple instances exist, log an error, last instance is always valid. On Destroy, set the static instance to null.
+
+ScrewManager.cs
+
+    On awake The Screw manager will find all screw game objects and store them in an array. Along with the screw game object, it needs to store the screws parent object, and a copy of it's local transform data (position, rotation, scale).
+
+    The screw manager needs to have a reset function. This function will loop trough all screws that the manager contains.Each screw will have it's parent re-set, and local transform reset. And it will enable the screw in case it was disabled.
+
+    Add an array of materials to ScrewManager. This array will associate a material with a color (the number that's used to represent a color). This will be used to assign a new material to a box and box lid when those objects are reset. The reset function of screw manager should call reset on all screws.
+
+PieceManager.cs
+
+    On awake The Piece manager will find all piece game objects and store them in an array. Along with the game object, it needs to store the objects parent and local transform (position, rotation scale).
+
+    The piece manager needs to have a reset function. This function will loop trough all pieces that the manager contains. Each piece will have it's parent, and local transform reset. And it will enable the game object in case it was disabled. The reset function of the piece manager should call reset on all pieces.
+
+BoxManager.cs
+
+    The box manager is how other classes can get a box instance. On awake it needs to find all Box objects, and assign them to an array it keeps track of.
+
+    The box manager doesn't need to spawn in any new boxes, it can re-use existing ones.    The box manager needs to have a reset function. This function will loop trough all boxes that the manager contains, and re-set their colors to be what those started as (as well as the state of the box like if it's open or locked).
+
+PegManager.cs
+
+    The peg manager has a vector or array of peg objects. This array starts out as empty, the manager finds all pegs on start. The peg manager needs to have a reset function. This function will loop trough all pegs and clear them. It will re-set any pegs that started locked back to a locked state.
+
+    The pegs are like an overflow area to hold screws, and a new box coming in that box needs to clear as many pegs out of the overflow area as possible.
+
+    Like other managers, the peg manager should maintain a list of pegs, that is populated on awake. This is the list that the next available peg can be retrieved from.
