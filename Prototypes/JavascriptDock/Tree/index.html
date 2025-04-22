@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Layout</title>
+    <style>
+        /*@import 'https://fonts.googleapis.com/css?family=Open+Sans';*/
+
+        * {
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.75em;
+            font-size: 16px;
+            background-color: #222;
+            color: #aaa;
+        }
+
+        p {
+            font-size: 16px;
+        }
+
+        h1 {
+            font-size: 30px;
+            line-height: 34px;
+        }
+
+        h2 {
+            font-size: 20px;
+            line-height: 25px;
+        }
+
+        h3 {
+            font-size: 16px;
+            line-height: 27px;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #D8D8D8;
+            border-top: 1px solid #D8D8D8;
+        }
+
+        hr {
+            height: 1px;
+            background-color: #d8d8d8;
+            border: none;
+            width: 100%;
+            margin: 0px;
+        }
+
+        a[href] {
+            color: #1e8ad6;
+        }
+
+        a[href]:hover {
+            color: #3ba0e6;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        li {
+            line-height: 1.5em;
+        }
+
+        aside,
+        [class *= "sidebar"],
+        [id *= "sidebar"] {
+            max-width: 90%;
+            margin: 0 auto;
+            border: 1px solid lightgrey;
+            padding: 5px 15px;
+        }
+
+        @media (min-width: 1921px) {
+            body {
+                font-size: 18px;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="window">
+        <div class="window-content" id="FileTree">
+
+        </div>
+        <div class="window-controls">
+            <div class="window-control">
+                <input type="text" id="DirectoryName"></input>
+                <button onclick="AddDirectory();return false;">Add Directory</button>
+            </div>
+            <div class="window-control"></div>
+                <input type="text" id="FileName"></input>
+                <button onclick="AddFile();return false;">Add File</button>
+            </div>
+        </div>
+    </div>    
+
+    <script type="text/javascript" src="UITree.js"></script>
+    <script type="text/javascript" src="ProxyTree.js"></script>
+    <script type="text/javascript" src="lightning-fs.min.js"></script>
+    <script>
+        let extension = "_" + window.location.port;
+        const fs = new LightningFS("FileSystemTest" + extension)
+        const tree = new UITree("FileTree");
+
+        async function AddFile() {
+            const name = "" + document.getElementById("FileName").value;
+            if (name.length <= 0) { return; }
+
+            if (tree.selected !== null) {
+                const selectedNodeType = tree.selected.userData.proxy.type;
+                if (selectedNodeType === "dir") {
+                    const path = tree.selected.userData.proxy.path + "/";
+                    await fs.promises.writeFile(path + name, "Hello, World");
+                }
+            }
+            else {
+                await fs.promises.writeFile("/" + name, "Hello, World");
+            }
+            document.getElementById("FileName").value = "";
+
+            //FSSynchTreeDisplay(fs, tree, 0);
+        }
+
+        async function AddDirectory() {
+            const name = "" + document.getElementById("DirectoryName").value;
+            if (name.length <= 0) { return; }
+
+            if (tree.selected !== null) {
+                const selectedNodeType = tree.selected.userData.proxy.type;
+                if (selectedNodeType === "dir") {
+                    const path = tree.selected.userData.proxy.path + "/";
+                    await fs.promises.mkdir(path + name);
+                }
+            }
+            else {
+                await fs.promises.mkdir("/" + name);
+            }
+
+            document.getElementById("DirectoryName").value = "";
+            
+            //FSSynchTreeDisplay(fs, tree, 0);
+        }
+
+        FSSynchTreeLoop();
+    </script>
+</body>
+</html>

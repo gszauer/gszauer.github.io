@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_sound.html">Sound Programming</a><a class="sidebar-item sidebar-active " href="blog_sound_timing.html">Timing</a><a class="sidebar-item" href="blog_sound_mixing.html">Mixing</a><a class="sidebar-item" href="blog_sound_spatialization.html">Spatialization</a><a class="sidebar-item" href="blog_sound_dsound.html">Direct Sound</a></div>    
+            <div id="content">
+                <h1>Sound Timing</h1>
+
+                <p>Some audio API's like FMOD give you a callback that fires at a fixed interval. Other API's like direct sound let you query where the read and write cursors are. Whatever the API, you will probably have to do sound processing on a seperate, high priority thread. Sound is played back at 48,000 Hz or 44,100 Hz, that's about 0.02 ms / frame, which is a crazy small amount of time. For games, we don't have to process audio in real time, most API's will let you submit a large chunk that gets played back, while you process some other large chunk.</p>
+
+                <p>In <a href="https://gist.github.com/gszauer/537290cf60843658053bfa2adb699422">SimpleSound</a>, i took a double buffered approach. The API let's you specify how many milliseconds the back buffer for audio should be. Two chunks are created in linear memory, the front buffer and the back buffer. These are really one big circular buffer, i just use it with binary segmentation. The circular buffer is forever played on loop.</p>
+
+                <img class="img-fluid" src="images/blog_audio_buffer1.png" alt="Circular buffer layout" />
+
+                <p>Other than the buffer that's being played, there is also a mixer. The mixer is half the size of the "back buffer". The mixer is one chunk. When a sound is played, it gets mixed into the mixer, not the front or back buffer directly. If a sound is longer than one chunk, a chunk's worth of sound is mixed, and the sound is stored in a list for processing into the next chunk.</p>
+
+                <img class="img-fluid" src="images/blog_audio_buffer2.png" alt="Mixer setup" />
+
+                <p>As the audio is playing, the playhead will pass eihter the start, or middle of the buffer. The half of the buffer that the playhead just entered is the active chunk, we don't touch that. As soon as the active chunk changes, the contents of the mixer is copied into the inactive chunk. Once the copy is done, the mixer is cleared, and any pending sounds are mixed.</p>
+
+                <img class="img-fluid" src="images/blog_audio_buffer3.png" alt="Mixer setup" />
+
+                <p>When a sound is played, it mixes into the start of the mixer, as i don't keep a running time to offset sound starts. This means all sounds start on a set interval, which may sound strange when a lot of sounds are playing. In practice, i have not had any issues with this. If it becomes a problem, ading a timer to offset sound mixing is  trivial.</p>
+                    
+                <p>The latency is fairly high (2x the chunk size) with this approach, think of it like a tripple buffer scheme. Lets explore that latency assuming that the audio is processed in 50 ms chunks. All audio is first mixed into the mixer. It takes 50 ms to be copied from the mixer to the inactive chunk. It then takes another 50ms before the chunks flip and the sound is that was just copied is played.</p>
+
+                <h2>Implementation</h2>
+
+<pre class="prettyprint linenums">TODO: Provide some boiler plate</pre>
+            </div>
+        </div>
+    </body>
+</html>

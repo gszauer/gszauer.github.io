@@ -1,0 +1,426 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_win32.html">Win32 Programming</a><a class="sidebar-item" href="blog_win32_time.html">High resolution timer</a><a class="sidebar-item" href="blog_win32_gdi.html">GDI Drawing</a><a class="sidebar-item" href="blog_win32_common.html">Common Dialogs</a><a class="sidebar-item" href="blog_win32_filesystem.html">File System</a><a class="sidebar-item sidebar-active " href="blog_win32_opengl.html">OpenGL</a></div>    
+            <div id="content">
+                <h1>An OpenGL Window</h1>
+
+                <p>
+                    Getting OpenGL running on Windows can feel a bit strange at first. When you create an OpenGL context, you 
+                    initially get a legacy 1.0 context, which in older systems (Windows XP era) might have used a software renderer. 
+                    So how do you get a modern 3.3 or 4.x OpenGL context? The short answer: use OpenGL&apos;s extension mechanism. 
+                    You first create a temporary window with a legacy context, load the required &quot;ARB&quot; extension functions, 
+                    destroy that legacy context, and finally create a window with a modern OpenGL context.
+                </p>
+
+                <p>
+                    Once you have a modern context, you still need to load the actual OpenGL function pointers. In this blog, 
+                    we&apos;ll use <a href="https://glad.dav1d.de/">GLAD</a> as our OpenGL loader to avoid manually calling 
+                    <code>wglGetProcAddress</code> for every function.
+                </p>
+
+                <p>
+                    Let&apos;s walk through the process of creating a modern OpenGL window on Windows, step by step. We also take 
+                    advantage of &quot;high DPI&quot; support, which means including &lt;code&gt;ShellScalingAPI.h&lt;/code&gt; and making 
+                    our process DPI aware.
+                </p>
+
+                <p>First, we include our headers and define some simple window parameters:</p>
+
+<pre class="prettyprint linenums">#define WIN32_LEAN_AND_MEAN
+#include &lt;windows.h&gt;
+#include &lt;ShellScalingAPI.h&gt; // Shcore.lib
+#include "glad.h" // Must link OpenGL32.lib
+
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+#define WINDOW_CLASS "OGL_Sample"
+#define WINDOW_TITLE "OpenGL Sample"
+</pre>
+                <p>
+                    We use <code>WINDOW_WIDTH</code> and <code>WINDOW_HEIGHT</code> as the initial client area of our window. 
+                    <code>WINDOW_CLASS</code> and <code>WINDOW_TITLE</code> are used to specify the window class name and 
+                    the window&apos;s title bar text. We also define <code>WIN32_LEAN_AND_MEAN</code> to trim some of the less-used 
+                    parts of Windows headers, making compilation faster.
+                </p>
+
+                <p>
+                    Next, we set up constants and function pointer types for creating a modern OpenGL context. These come 
+                    from the ARB (Architecture Review Board) extensions that let us pick more advanced pixel formats and 
+                    context attributes.
+                </p>
+
+<pre class="prettyprint linenums">// Used for setting up a modern OpenGL context
+typedef HGLRC (WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (
+    HDC hDC, HGLRC hShareContext, const int* attribList
+);
+typedef BOOL (WINAPI* PFNWGLCHOOSEPIXELFORMATARBPROC)(
+    HDC hdc,
+    const int* piAttribIList,
+    const FLOAT* pfAttribFList,
+    UINT nMaxFormats,
+    int* piFormats,
+    UINT* nNumFormats
+);
+
+// ARB context creation constants
+#define WGL_CONTEXT_MAJOR_VERSION_ARB            0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB            0x2092
+#define WGL_CONTEXT_LAYER_PLANE_ARB              0x2093
+#define WGL_CONTEXT_FLAGS_ARB                    0x2094
+#define WGL_CONTEXT_PROFILE_MASK_ARB             0x9126
+#define WGL_CONTEXT_DEBUG_BIT_ARB                0x0001
+#define WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB   0x0002
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB         0x00000001
+#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
+#define WGL_DRAW_TO_WINDOW_ARB                   0x2001
+#define WGL_SUPPORT_OPENGL_ARB                   0x2010
+#define WGL_DOUBLE_BUFFER_ARB                    0x2011
+#define WGL_PIXEL_TYPE_ARB                       0x2013
+#define WGL_COLOR_BITS_ARB                       0x2014
+#define WGL_DEPTH_BITS_ARB                       0x2022
+#define WGL_STENCIL_BITS_ARB                     0x2023
+#define WGL_TYPE_RGBA_ARB                        0x202B
+#define WGL_SAMPLE_BUFFERS_ARB                   0x2041
+#define WGL_SAMPLES_ARB                          0x2042
+</pre>
+                <p>
+                    Then, let&apos;s define a small <code>WindowData</code> struct to hold our Win32 handles (window, device context, 
+                    OpenGL rendering context, etc.), and forward-declare some lifecycle functions we&apos;ll implement later:
+                </p>
+
+<pre class="prettyprint linenums">struct WindowData {
+    HWND hwnd;
+    HDC hdc;
+    HGLRC hglrc;
+    HINSTANCE hInstance;
+    bool closeWindow;
+};
+
+void* Initialize(const WindowData& windowData);
+void Update(void* userData, float deltatTime);
+void Render(void* userData, RECT clientRect);
+void Shutdown(void* userData);
+</pre>
+                <p>
+                    Now we set up our entry points. We&apos;ll define a <code>WinMain</code> function (the typical Windows 
+                    application entry) and also a <code>main</code> that simply forwards to <code>WinMain</code> for convenience. 
+                    We also define <code>WndProc</code>, the callback for processing Windows messages.
+                </p>
+
+<pre class="prettyprint linenums">HDC gHdc;  // We'll keep a global HDC for simplicity
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow);
+
+int main(int argc, char** argv) {
+    return WinMain(GetModuleHandleA(NULL), NULL, GetCommandLineA(), SW_SHOWDEFAULT);
+}
+</pre>
+                <p>
+                    Inside <code>WinMain</code>, we first make our process DPI aware to handle high DPI displays correctly. Then 
+                    we create <strong>two windows</strong>: a temporary one for getting a legacy OpenGL context (so we can load 
+                    the ARB extensions), and then a &quot;real&quot; one with a modern OpenGL context. The code below is split 
+                    into chunks for clarity.
+                </p>
+
+<pre class="prettyprint linenums">int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
+    // Make process DPI aware so our window isn't scaled incorrectly on high DPI displays
+    SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+    float dpi = (float)GetDpiForSystem() / 96.0f;
+
+    // We'll define two window classes:
+    // 1) A 'dummy' class for the temp window (to get the legacy GL context).
+    // 2) Our real class that we'll use for the final OpenGL window.
+    WNDCLASSA wndclass, tmpclass;
+    ZeroMemory(&wndclass, sizeof(WNDCLASSA));
+    ZeroMemory(&tmpclass, sizeof(WNDCLASSA));
+
+    // Setup both classes similarly
+    tmpclass.style = wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = WndProc;
+    tmpclass.lpfnWndProc = DefWindowProcA;
+    tmpclass.hInstance = wndclass.hInstance = hInstance;
+    tmpclass.hIcon = wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    tmpclass.hCursor = wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    tmpclass.hbrBackground = wndclass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+
+    // Our real window class name, and a separate dummy class name
+    wndclass.lpszClassName = WINDOW_CLASS;
+    tmpclass.lpszClassName = "tmp_gl_context_window";
+
+    RegisterClassA(&wndclass);
+    RegisterClassA(&tmpclass);
+
+    // Determine the window size
+    int windowWidth = (int)((float)WINDOW_WIDTH * dpi);
+    int windowHeight = (int)((float)WINDOW_HEIGHT * dpi);
+
+    RECT rClient;
+    SetRect(&rClient, 0, 0, windowWidth, windowHeight);
+    AdjustWindowRect(&rClient, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    windowWidth = rClient.right - rClient.left;
+    // Fix bug: the next line should calculate height from 'bottom - top'
+    windowHeight = rClient.bottom - rClient.top;
+
+    // --- Create a DUMMY window to get a legacy GL context ---
+    HWND hwnd = CreateWindowA(
+        tmpclass.lpszClassName,
+        (char*)(WINDOW_TITLE),
+        WS_OVERLAPPEDWINDOW,
+        (screenWidth / 2) - (windowWidth / 2),
+        (screenHeight / 2) - (windowHeight / 2),
+        windowWidth,
+        windowHeight,
+        NULL, NULL, hInstance, 0
+    );
+
+    // Temporary window's device context
+    HDC hdc = GetDC(hwnd);
+
+    // Create a PIXELFORMATDESCRIPTOR for a legacy context
+    PIXELFORMATDESCRIPTOR pfd;
+    ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
+    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pfd.nVersion = 1;
+    pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+    pfd.iPixelType = PFD_TYPE_RGBA;
+    pfd.cColorBits = 24;
+    pfd.cDepthBits = 32;
+    pfd.cStencilBits = 8;
+    pfd.iLayerType = PFD_MAIN_PLANE;
+
+    int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+    SetPixelFormat(hdc, pixelFormat, &pfd);
+
+    // Create the legacy context
+    HGLRC hglrc = wglCreateContext(hdc);
+    wglMakeCurrent(hdc, hglrc);
+
+    // Fetch function pointers for modern context creation
+    PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB =
+        (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+    PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB =
+        (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
+
+    // Done with the dummy (legacy) context
+    wglMakeCurrent(hdc, NULL);
+    wglDeleteContext(hglrc);
+    ReleaseDC(hwnd, hdc);
+    DestroyWindow(hwnd);
+</pre>
+                <p>
+                    In the code above, we register two window classes. One is a &quot;dummy&quot; class with a 
+                    <code>DefWindowProcA</code> so we can create a hidden window with minimal overhead, get a legacy context, 
+                    then use that context to retrieve the ARB function pointers. After that, we clean up the dummy window 
+                    entirely.
+                </p>
+
+                <p>
+                    Now we create the &quot;real&quot; window, using the ARB calls to set up a modern context with multi-sampling 
+                    support (MSAA) as an example.
+                </p>
+
+<pre class="prettyprint linenums">    // --- Create the REAL window with a modern GL context ---
+    hwnd = CreateWindowA(
+        wndclass.lpszClassName,
+        (char*)(WINDOW_TITLE),
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        (screenWidth / 2) - (windowWidth / 2),
+        (screenHeight / 2) - (windowHeight / 2),
+        windowWidth,
+        windowHeight,
+        NULL,
+        NULL,
+        hInstance,
+        0
+    );
+
+    hdc = GetDC(hwnd);
+    gHdc = hdc;  // store globally if desired
+
+    // We specify our desired pixel format via the attribute list
+    const int iPixelFormatAttribList[] = {
+        WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+        WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+        WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+        WGL_COLOR_BITS_ARB, 32,
+        WGL_DEPTH_BITS_ARB, 24,
+        WGL_STENCIL_BITS_ARB, 8,
+        WGL_SAMPLE_BUFFERS_ARB, 1,   // Enable MSAA
+        WGL_SAMPLES_ARB, 8,         // 8x MSAA
+        0, 0 // End of attributes list
+    };
+
+    int nPixelFormat = 0;
+    UINT iNumFormats = 0;
+    wglChoosePixelFormatARB(hdc, iPixelFormatAttribList, NULL, 1, &nPixelFormat, &iNumFormats);
+
+    // Describe and set the chosen pixel format
+    ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
+    DescribePixelFormat(hdc, nPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+    SetPixelFormat(hdc, nPixelFormat, &pfd);
+
+    // Now create the real OpenGL context
+    const int attributes[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+        WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+        0 // Terminate attribute list
+    };
+
+    hglrc = wglCreateContextAttribsARB(hdc, NULL, attributes);
+    wglMakeCurrent(hdc, hglrc);
+
+    // Load all required extensions via GLAD
+    if (!gladLoadGL()) {
+        exit(-1); // handle init failure
+    }
+    // OpenGL is now initialized!
+</pre>
+                <p>
+                    With our modern OpenGL context created and set, we can now proceed with the usual loop: initialize 
+                    user data, run an update-render loop, and finally clean up on exit. Below is the rest of <code>WinMain</code>, 
+                    split up to explain each part:
+                </p>
+
+<pre class="prettyprint linenums">    // Store our window/context data in a struct
+    WindowData windowData = { 0 };
+    windowData.hwnd = hwnd;
+    windowData.hglrc = hglrc;
+    windowData.hdc = hdc;
+    windowData.hInstance = hInstance;
+    windowData.closeWindow = false;
+
+    // Attach it to the window for easy retrieval inside WndProc
+    LONG_PTR lptr = (LONG_PTR)(&windowData);
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, lptr);
+
+    // Show the window and force an initial paint
+    ShowWindow(hwnd, SW_NORMAL);
+    UpdateWindow(hwnd);
+
+    // Call user-defined Initialize
+    void* userData = Initialize(windowData);
+
+    // Set up a timer for measuring frame times
+    MSG msg;
+    bool running = true;
+    bool quit = false;
+
+    LARGE_INTEGER timerFrequency;
+    LARGE_INTEGER thisTick;
+    LARGE_INTEGER lastTick;
+    LONGLONG timeDelta;
+
+    if (!QueryPerformanceFrequency(&timerFrequency)) {
+        OutputDebugStringA("WinMain: QueryPerformanceFrequency failed\n");
+    }
+
+    QueryPerformanceCounter(&thisTick);
+    lastTick = thisTick;
+</pre>
+                <p>
+                    We keep a message loop for Windows events (close, resize, etc.). If the user closes the window, 
+                    we handle that in <code>WndProc</code> by setting <code>closeWindow</code> to true. The main loop 
+                    also calls <code>Update</code> and <code>Render</code> each frame, then finally <code>SwapBuffers</code> 
+                    to push the rendered image to the display. A small <code>Sleep</code> helps keep CPU usage down in this sample.
+                </p>
+
+<pre class="prettyprint linenums">    while (!quit) {
+        // Process all pending messages
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                quit = true;
+                break;
+            }
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
+
+        // If the user has requested the window to close, shut down
+        if (windowData.closeWindow && running) {
+            Shutdown(userData);
+            running = false;
+        }
+        else if (running) {
+            // Calculate delta time for animation and logic
+            RECT clientRect = {};
+            GetClientRect(hwnd, &clientRect);
+
+            QueryPerformanceCounter(&thisTick);
+            timeDelta = thisTick.QuadPart - lastTick.QuadPart;
+            double deltaTime = (double)timeDelta * 1000.0 / (double)timerFrequency.QuadPart;
+
+            Update(userData, (float)deltaTime);
+            Render(userData, clientRect);
+
+            lastTick = thisTick;
+
+            // Present the back buffer
+            SwapBuffers(hdc);
+
+            // Sleep a bit; we might later rely on vsync instead
+            Sleep(1);
+        }
+    }
+
+    return (int)msg.wParam;
+}
+</pre>
+                <p>
+                    The <code>WndProc</code> is mostly straightforward. When the user attempts to close the window, we set 
+                    <code>closeWindow</code> to true and destroy the window, which leads to a <code>WM_DESTROY</code> message 
+                    and eventually posts a quit signal.
+                </p>
+
+<pre class="prettyprint linenums">LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+    switch (iMsg) {
+    case WM_CLOSE:
+    {
+        LONG_PTR lptr = GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        WindowData* windowData = (WindowData*)lptr;
+        windowData->closeWindow = true;
+    }
+    DestroyWindow(hwnd);
+    return 0;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProcA(hwnd, iMsg, wParam, lParam);
+}
+</pre>
+                <p>
+                    That&apos;s it! We now have a modern OpenGL window running on Windows. If you needed to release your 
+                    <code>HGLRC</code> and <code>HDC</code> on shutdown, you could do so in <code>Shutdown</code>. 
+                    From here, you can add any typical OpenGL drawing you like, handle user input, etc.
+                </p>
+                
+                <p>
+                    Once again, the key steps are: <strong>create a dummy window and legacy context</strong>, 
+                    <strong>load the ARB extension pointers</strong>, <strong>destroy the dummy context</strong>, 
+                    <strong>create your real window with a modern context</strong>. After that, load function pointers 
+                    with <code>gladLoadGL</code> or your preferred loader, and you&apos;re ready to go.
+                </p>
+
+                <p><a href="https://gist.github.com/gszauer/03fa4d1fbd72bfc169f70e78eabe3c4c">Full code listing: https://gist.github.com/gszauer/03fa4d1fbd72bfc169f70e78eabe3c4c</a>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_sound.html">Sound Programming</a><a class="sidebar-item" href="blog_sound_timing.html">Timing</a><a class="sidebar-item sidebar-active " href="blog_sound_mixing.html">Mixing</a><a class="sidebar-item" href="blog_sound_spatialization.html">Spatialization</a><a class="sidebar-item" href="blog_sound_dsound.html">Direct Sound</a></div>    
+            <div id="content">
+                <h1>Sound Mixing</h1>
+
+                <p>Since sounds are just waives, we can combine two sounds the same way we combine two waives, by adding them togehter.</p>
+
+                <h1>TODO: Image of waves combining</h1>
+
+                <p>In short, to add two sounds together, add their PCM components. This is where things can get a bit tricky. Most PCM data is represented as shorts (-32768 to 32767), or floats (0.0 to 1.0). When we add two sounds, they can exceed this range, but adding a third sound might bring the value back in range (if that third value is negative).</p>
+
+                <h1>TODO: Image of waves clipping and unclipping</h1>
+               
+                <p>The easiest way to handle sounds exceeding the allowed range is to clamp it to the min and max values. As we've seen, this clamping needs to happen last, after all other mixing is done to avoid loosing audio data. <a href="https://gist.github.com/gszauer/537290cf60843658053bfa2adb699422">Simple Sound</a> has a <a href="https://github.com/gszauer/SimpleSound/blob/b74551ff4525efc94f967be9ddd57104da13b2b2/SimpleSound_dsound.cpp#L293">Mix function</a> that mixes sounds into a bus, and a <a href="https://github.com/gszauer/SimpleSound/blob/b74551ff4525efc94f967be9ddd57104da13b2b2/SimpleSound_dsound.cpp#L562">Blit function</a> that blits all mixed busses into the sound device.</p>
+
+                <p>One more thing to keep in mind about mixing, you might not be able to mix an entire sound in one go. The sound might be longer than the size of the mixing buffer. When this happens, you need to store the sound, as well as how many samples have been processed (or how many samples are left to process).</p>
+
+                <h2>Implementation</h2>
+
+<pre class="prettyprint linenums">TODO: Provide some boiler plate</pre>
+            </div>
+        </div>
+    </body>
+</html>

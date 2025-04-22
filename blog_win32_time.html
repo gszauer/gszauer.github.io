@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_win32.html">Win32 Programming</a><a class="sidebar-item sidebar-active " href="blog_win32_time.html">High resolution timer</a><a class="sidebar-item" href="blog_win32_gdi.html">GDI Drawing</a><a class="sidebar-item" href="blog_win32_common.html">Common Dialogs</a><a class="sidebar-item" href="blog_win32_filesystem.html">File System</a><a class="sidebar-item" href="blog_win32_opengl.html">OpenGL</a></div>    
+            <div id="content">
+                <h1>High Resolution Timer</h1>
+
+                <p>Windows provides a high resoltuion timer API which we can use to profile code and calculate the time between game frames, delta time. Before we can use this API, we need to call <code>QueryPerformanceFrequency</code> to check the frequency of the timer. This frequency is set once, at computer boot time, and will not change later. If we don't call <code>QueryPerformanceFrequency</code> first on the thread, <code>QueryPerformanceCounter</code> might fail.</p>
+
+                <p>With all that out of the way, let's create a variable to hold the timer frequency, a start and a stop counter. These variables are all 64 bit integers, windows defines these API's to use  <codE>LARGE_INTEGER</code>. Let's also create a variable for storing the delta time between start and stop, i'm going to make this a long long.</p>
+
+                
+<pre class="prettyprint linenums">LARGE_INTEGER timerFrequency;
+LARGE_INTEGER timerStart;
+LARGE_INTEGER timerStop;
+LONGLONG timerDelta;</pre>
+            <p>Initializing the timer is straight forward, just call <code>QueryPerformanceFrequency</code>.</p>
+
+<pre class="prettyprint linenums">if (!QueryPerformanceFrequency(&timerFrequency)) {
+    std::cout << "WinMain: QueryPerformanceFrequency failed\n";
+}</pre>
+        <p>Now to actually time some code. We can get the current system timer by calling <code>QueryPerformanceCounter</code>. We can get the delta between the two snapshots by subtracting the <code>QuatPart</code> of each <code>LARGE_INTEGER</code></p>
+
+<pre class="prettyprint linenums">QueryPerformanceCounter(&timerStart);
+//SomeCodeToProfile();
+QueryPerformanceCounter(&timerStop);
+timerDelta = timerStop.QuadPart - timerStart.QuadPart;
+</pre>
+        <p>The unit of the high resolution timer, is ticks. You need to know the timer frequency (ticks per second) to convert it to a number. We know the number of ticks per second from which we do from <code>QueryPerformanceFrequency</code>. Sometimes you might want to convert the number from seconds to milliseconds to display.</p>
+
+<pre class="prettyprint linenums">double seconds = (double)timerDelta / (double)timerFrequency.QuadPart;
+double milliseconds = (double)timerDelta * 1000.0 / (double)timerFrequency.QuadPart;</pre>
+    <p>We can put all this together to find the delta time between frames, or to time some function.</p>
+
+    <pre class="prettyprint linenums">LARGE_INTEGER timerFrequency;
+LARGE_INTEGER timerStart;
+LARGE_INTEGER timerStop;
+
+void Update() {
+    // End the timer from last frame
+    QueryPerformanceCounter(&timerStop); 
+    LONGLONG timerDelta = timerStop.QuadPart - timerStart.QuadPart;
+    
+    // Find delta time
+    double deltaTime = (double)timerDelta / (double)timerFrequency.QuadPart;
+
+    // Do some work
+
+    // Start timing between frames
+    QueryPerformanceCounter(&timerStart); 
+}</pre>
+    <h2>GetTickCount</h2>
+
+    <p>A high resolution timer is always the way to go, but windows offers an alternate timer trough <code>GetTickCount</code>. <code>GetTickCount</code> works in milliseconds, it returns the number of milliseconds since the computer has booted. This number rolls over every 49.7 days. A lot of what we do in games is on the millisecond level of accuracy, which makes this method of timing viable. But again, the high resolution timer is better.</p>
+
+<pre class="prettyprint linenums">DWORD lastTick = 0;
+void Update() {
+    DWORD thisTick = GetTickCount();
+    float deltaTime = float(thisTick - lastTick) * 0.001f;
+    lastTick = thisTick;
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

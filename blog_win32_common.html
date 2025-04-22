@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_win32.html">Win32 Programming</a><a class="sidebar-item" href="blog_win32_time.html">High resolution timer</a><a class="sidebar-item" href="blog_win32_gdi.html">GDI Drawing</a><a class="sidebar-item sidebar-active " href="blog_win32_common.html">Common Dialogs</a><a class="sidebar-item" href="blog_win32_filesystem.html">File System</a><a class="sidebar-item" href="blog_win32_opengl.html">OpenGL</a></div>    
+            <div id="content">
+                <h1>Common Dialogs</h1>
+
+                <p>
+                    Windows provides a set of built-in dialog boxes (often referred to as &quot;<a href="https://learn.microsoft.com/en-us/windows/win32/uxguide/win-common-dlg">Common Dialogs</a>&quot;) that handle frequently used functionality such as opening and saving files, selecting folders, picking colors, etc. These dialogs typically require you to fill out and pass a corresponding structure, which they then use to display a standardized UI and return relevant data. This page will cover some of the dialogs used commonly in gamedev. 
+                </p>
+
+                <p>Each dialog has its own function, structure, and flags, but they all follow a similar pattern: create and populate the structure, call the function, and handle the user's input (or canceled operation). Let's take a look at these in action.
+                </p>
+
+                <h2>Open File</h2>
+
+                <p>
+                    The Open File Dialog allows users to select a file to open. Internally, this is implemented using the 
+                    <code>GetOpenFileNameA</code> function from the Windows Common Dialog Box Library. You fill out an 
+                    <code>OPENFILENAMEA</code> structure, specifying filters, default paths, flags (like requiring the file to exist), 
+                    and a buffer to store the result.
+                </p>
+
+                <p>
+                    In the following example, the <code>OPENFILENAMEA</code> structure stores the user's file choice in the 
+                    <code>fileName</code> buffer. If the user cancels the operation, 
+                    <code>GetOpenFileNameA</code> returns <code>FALSE</code>.
+                </p>
+
+<pre class="prettyprint linenums">#include &lt;windows.h&gt;
+#include &lt;commdlg.h&gt;
+#include &lt;stdio.h&gt;
+
+void main() {
+    char fileName[MAX_PATH] = "";
+    OPENFILENAMEA ofn = { 0 };
+
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = "Text Files\0*.txt\0All Files\0*.*\0";
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn)) {
+        printf("Selected file: %s\n", fileName);
+    }
+    else {
+        printf("No file selected.\n");
+    }
+}
+</pre>
+                <h2>Save File</h2>
+
+                <p>
+                    The Save File Dialog is similar, but uses <code>GetSaveFileNameA</code>. This dialog is typically 
+                    used to prompt the user for a location and file name where you can save data. You can provide different 
+                    flags such as <code>OFN_OVERWRITEPROMPT</code> to warn users if they're about to overwrite an existing file.
+                </p>
+
+<pre class="prettyprint linenums">#include &lt;windows.h&gt;
+#include &lt;commdlg.h&gt;
+#include &lt;stdio.h&gt;
+
+void main() {
+    char fileName[MAX_PATH] = "";
+    OPENFILENAMEA ofn = { 0 };
+
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFilter = "Text Files\0*.txt\0All Files\0*.*\0";
+    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileNameA(&ofn)) {
+        printf("File to save: %s\n", fileName);
+    }
+    else {
+        printf("Save operation canceled.\n");
+    }
+}
+</pre>
+                <h2>Open Folder</h2>
+
+                <p>
+                    The Open Folder Dialog helps users pick a directory rather than a file. Older code often uses 
+                    <code>SHBrowseForFolderA</code> for this. You fill out the <code>BROWSEINFOA</code> structure, which describes 
+                    the dialog's title and flags. 
+                    When the user hits OK, <code>SHBrowseForFolderA</code> returns an item id list <code>LPITEMIDLIST</code> that references the chosen folder. That needs to be converted it into a normal file path using <code>SHGetPathFromIDListA</code>.
+                </p>
+
+<pre class="prettyprint linenums">#include <windows.h>
+#include <stdio.h>
+#include <shlobj.h>
+
+void main() {
+    char folderPath[MAX_PATH] = "";
+    BROWSEINFOA bi = { 0 };
+    bi.lpszTitle = "Select a folder:";
+    bi.ulFlags = BIF_RETURNONLYFSDIRS;
+
+    LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
+    if (pidl) {
+        SHGetPathFromIDListA(pidl, folderPath);
+        printf("Selected folder: %s\n", folderPath);
+        CoTaskMemFree(pidl);
+    }
+    else {
+        printf("No folder selected.\n");
+    }
+}
+</pre>
+                <p>
+                    <code>SHBrowseForFolderA</code> can feel a bit dated. In newer applications, you might 
+                    consider modern shell APIs, but this approach still works in many Win32 tools and games.
+                </p>
+
+                <h2>Color Picker</h2>
+
+                <p>
+                    For selecting a color, Win32 provides the <code>ChooseColorA</code> dialog. You prepare a 
+                    <code>CHOOSECOLORA</code> structure, supply an optional array for custom colors, then call 
+                    <code>ChooseColorA</code>. The user can pick a color, or cancel. 
+                </p>
+
+<pre class="prettyprint linenums">#include &lt;windows.h&gt;
+#include &lt;commdlg.h&gt;
+#include &lt;stdio.h&gt;
+
+void main() {
+    CHOOSECOLORA cc = { 0 };
+    COLORREF acrCustClr[16] = { 0 };
+    cc.lStructSize = sizeof(CHOOSECOLORA);
+    cc.hwndOwner = NULL;
+    cc.lpCustColors = acrCustClr;
+    cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+
+    if (ChooseColorA(&cc)) {
+        printf("Selected color: 0x%06X\n", cc.rgbResult);
+    }
+    else {
+        printf("Color selection canceled.\n");
+    }
+}
+</pre>
+                <p>
+                    Here, <code>cc.rgbResult</code> will hold the RGB color chosen by the user, and 
+                    <code>acrCustClr</code> stores 16 custom colors that the user can adjust in the UI.
+                </p>
+
+
+            </div>
+        </div>
+    </body>
+</html>

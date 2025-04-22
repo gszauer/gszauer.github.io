@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="blog_win32.html">Win32 Programming</a><a class="sidebar-item" href="blog_win32_time.html">High resolution timer</a><a class="sidebar-item sidebar-active " href="blog_win32_gdi.html">GDI Drawing</a><a class="sidebar-item" href="blog_win32_common.html">Common Dialogs</a><a class="sidebar-item" href="blog_win32_filesystem.html">File System</a><a class="sidebar-item" href="blog_win32_opengl.html">OpenGL</a></div>    
+            <div id="content">
+                <h1>Double buffered GDI Drawing</h1>
+
+                <p>The way to paint to a window is to handle the <code>WM_PAINT</code> event. Usually this involves calling <code>BeginPaint</code>, any number of drawing functions, followed by <code>EndPaint</code>. See <a href="https://learn.microsoft.com/en-us/windows/win32/gdi/wm-paint">MSDN</a> for an example. However, this approach often falls short for games, tools, or even prototype code. With games we typically want to re-draw the whole window, not just a portion of it. And unless your drawing code is blazing fast, this method of re-pain is going to lead to a lot of flicker. Instead, we want to set up a double buffered display. This involves making an offscreen bitmap that you can draw to, then when the window is invalidated, blit the contents of that bitmap to screen.</p>
+
+                <p>I'm going to start this sample off by setting up a simple application loop. The codes user will be expected to provide the following functions: <code>Initialize</code>, <code>Update</code>, <code>Render</code> and <code>Shutdown</code>. Update and render could be consolidated into one function, but i like the seperation. The Initialize function will return some user data, that user date is then passed to the other functions. If the returned piointer is allocated in Initialize, it should be released in Shutdown.</p>
+
+                <p>In addition to the new functions, i'm also implementing a new struct here, <code>WindowData</code>. This struct holds everything we need to render to the window. It's passed as an argument to initialize, in case the user of the code finds it handy to have access to a window handle, window instance, or a device context.</p>
+
+<pre class="prettyprint linenums">#define WIN32_LEAN_AND_MEAN
+#include &lt; windows.h &gt;
+
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+#define WINDOW_CLASS "GDI_Sample"
+#define WINDOW_TITLE "Double Buffered GDI Sample"
+
+struct WindowData {
+    HWND hwnd;
+    HDC hdcDisplay; // Front Buffer DC
+    HDC hdcMemory;  // Back Buffer DC
+    HINSTANCE hInstance; // Window instance
+    bool closeWindow;
+};
+
+void* Initialize(const WindowData& windowData); 
+void Update(void* userData, float deltatTime);
+void Render(void* userData, HDC backBuffer, RECT clientRect);
+void Shutdown(void* userData);</pre>
+            <p>Next is just a standard forward declaration for <code>WndProc</code> and <code>WinMain</code>, along with a <code>main</code> function that opens our new window.</p>
+
+            <pre class="prettyprint linenums">LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow);
+
+int main(int argc, char** argv) {
+    return WinMain(GetModuleHandleA(NULL), NULL, GetCommandLineA(), SW_SHOWDEFAULT);
+}</pre>
+        <p>Opening a new centered window is done the same way as the <a href="blog_win32.html">previous page</a> in this blog described it.</p>
+            
+<pre class="prettyprint linenums">int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
+    WNDCLASSA wndclass;
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = hInstance;
+    wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndclass.lpszMenuName = 0;
+    wndclass.lpszClassName = WINDOW_CLASS;
+    RegisterClassA(&wndclass);
+
+    RECT rClient;
+    SetRect(&rClient, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    AdjustWindowRect(&rClient, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+    
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    int windowWidth = rClient.right - rClient.left;
+    int windowHeight = rClient.right - rClient.left;
+
+    HWND hwnd = CreateWindowA(wndclass.lpszClassName, (char*)(WINDOW_TITLE), WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        (screenWidth / 2) - (windowWidth / 2), (screenHeight / 2) - (windowHeight / 2),
+        windowWidth, windowHeight, NULL, NULL, hInstance, 0);</pre>
+        <p>Now for something new, let's allocate a back buffer. Whenever you select a resource in windows, the old resource is returned. This is true for bitmaps you draw to. It's up to you to select the original resouce as a part of cleaning up. This is why we keep the old back buffer bitmap in memory. To ceate a back buffer, first we get the device context of the window. Then we create a compatible device context. After we have the context, we need to create a bitmap. And finally, we need to select the bitmap into memory.</p>
+
+<pre class="prettyprint linenums">    WindowData windowData = { 0 };
+    windowData.hwnd = hwnd;
+    windowData.hInstance = hInstance;
+    windowData.closeWindow = false;
+    HBITMAP hbmBackBuffer; // Back Buffer Bitmap
+    HBITMAP hbmOld; // For restoring previous state
+    { // Create back buffer
+        windowData.hdcDisplay = GetDC(hwnd);
+        windowData.hdcMemory = CreateCompatibleDC(windowData.hdcDisplay);
+        hbmBackBuffer = CreateCompatibleBitmap(windowData.hdcDisplay, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        hbmOld = (HBITMAP)SelectObject(windowData.hdcMemory, hbmBackBuffer);
+    }</pre>
+    <p>I'm going to stash our windowData pointer in the window's long pointer. This is also a good place to show your window, and call the Initialize user function. You may want to call Initialize before showing the window, as there is no loading screen implemented currently.</p>
+
+<pre class="prettyprint linenums">    LONG_PTR lptr = (LONG_PTR)(&windowData);
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, lptr);
+
+    ShowWindow(hwnd, SW_NORMAL);
+    UpdateWindow(hwnd);
+
+    void* userData = Initialize(windowData);</pre>
+    <p>Start a timer before entering the windows main message loop. This will be important for finding the delta time that has passed between frames.</p>
+
+<pre class="prettyprint linenums">    MSG msg;
+    bool running = true;
+    bool quit = false;
+    
+    LARGE_INTEGER timerFrequency;
+    LARGE_INTEGER thisTick;
+    LARGE_INTEGER lastTick;
+    LONGLONG timeDelta;
+
+    if (!QueryPerformanceFrequency(&timerFrequency)) {
+        OutputDebugStringA("WinMain: QueryPerformanceFrequency failed\n");
+    }
+
+    QueryPerformanceCounter(&thisTick);
+    lastTick = thisTick;</pre>
+    <p>Next we run the main application loop. Check and process messages each frame, and destroy the back buffer when the window closes.</p>
+
+    <pre class="prettyprint linenums">    while (!quit) {
+        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                quit = true;
+                break;
+            }
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
+        if (windowData.closeWindow && running) {
+            Shutdown(userData);
+            { // Destroy back buffer
+                SelectObject(windowData.hdcMemory, hbmOld);
+                DeleteObject(hbmBackBuffer);
+                DeleteDC(windowData.hdcMemory);
+                ReleaseDC(hwnd, windowData.hdcDisplay);
+            }
+            running = false;
+        }</pre>
+        <p>If the fame is running, we find the delta time elapsed since last frame. Remember, all motion will need to be multiplied by this delta time to be frame rate independant. Here i call <code>Sleep</code> at the end of the loop to keep my laptops CPU from going max with its fans. Be aware that the resolution of <code>Sleep</code> is <code>10ms</code>. So the sleep below sleeps for 10 millisends, even if only one is requested.</p>
+
+<pre class="prettyprint linenums">        if (running) {
+            RECT clientRect = {};
+            GetClientRect(hwnd, &clientRect);
+
+            QueryPerformanceCounter(&thisTick);
+            timeDelta = thisTick.QuadPart - lastTick.QuadPart;
+            double deltaTime = (double)timeDelta * 1000.0 / (double)timerFrequency.QuadPart;
+            Update(userData, (float)deltaTime);
+            Render(userData, windowData.hdcMemory, clientRect);
+            lastTick = thisTick;
+            
+            InvalidateRect(hwnd, NULL, false);
+            Sleep(1);
+        }
+    }
+
+    return (int)msg.wParam;
+}</pre>
+    <p>The message loop is straight forward, all we do is blit the back buffer to the display any time a WM_PAINT message comes in. We also validate the entire window to indicate that no refresh is needed (yet).</p>
+
+<pre class="prettyprint linenums">LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+    switch (iMsg) {
+    case WM_CLOSE:
+        { // Signal that our window should shut down
+            LONG_PTR lptr = GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+            WindowData* windowData = (WindowData*)lptr;
+            windowData->closeWindow = true;
+        }
+        DestroyWindow(hwnd);
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    case WM_ERASEBKGND: 
+        return TRUE;
+    case WM_PAINT:
+        {
+            LONG_PTR lptr = GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+            WindowData* windowData = (WindowData*)lptr;
+
+            RECT rClient = {};
+            GetClientRect(hwnd, &rClient);
+            BitBlt(windowData->hdcDisplay, 0, 0, rClient.right - rClient.left, rClient.bottom - rClient.top, windowData->hdcMemory, 0, 0, SRCCOPY);
+            ValidateRect(hwnd, NULL);
+        }
+        return TRUE;
+    }
+    return DefWindowProcA(hwnd, iMsg, wParam, lParam);
+}</pre>
+    <h2>Sample usage</h2>
+
+    <p>Let's look at how this code can be used to draw a fast animated image on screen. First, i'm going to declare a user data structure to be created by the <code>Initialize</code> function. We need a bitmap, info about the bitmap, and a device context that points to the bitmap. Additionally, we want to store the context's previously selected bitmap, and an offset used for animation.</p>
+
+<pre class="prettyprint linenums">struct UserData {
+    HDC hdcBitmap;
+    HBITMAP hbmBitmap;
+    HBITMAP hbmBitmapOld;
+    BITMAP bmBitmapInfo;
+    float offset;
+};</pre>
+    <p>The initialize function allocates a new user data structure. It then creates a new device context for the image. The update function just increments the offset value by whatever time has ellapsed.</p>
+
+<pre class="prettyprint linenums">void* Initialize(const WindowData& window) {
+    UserData* user = new UserData();
+    user->offset = 0.0f;
+    user->hbmBitmap = (HBITMAP)LoadImageA(window.hInstance, "test_image.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR | LR_LOADFROMFILE);
+    user->hdcBitmap = CreateCompatibleDC(window.hdcDisplay);
+    user->hbmBitmapOld = (HBITMAP)SelectObject(user->hdcBitmap, user->hbmBitmap);
+    GetObjectA(user->hbmBitmap, sizeof(BITMAP), &user->bmBitmapInfo);
+
+    return user;
+}
+
+void Update(void* userData, float deltatTime) {
+    UserData* user = (UserData*)userData;
+    user->offset += deltatTime * 0.5f;
+    while (user->offset > 400.0f) {
+        user->offset -= 400.0f;
+    }
+}</pre>
+    <p>You can treat the render function similar to <code>WM_PAINT</code>. All of the same functions like <a href="https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-lineto">LineTo</a> work on the back buffer device context. Here, we simply blit the existing image to the screen.</p>
+
+<pre class="prettyprint linenums">void Render(void* userData, HDC backBuffer, RECT client) {
+    UserData* user = (UserData*)userData;
+    COLORREF bgColor = RGB(30, 30, 30);
+    HBRUSH bgBrush = CreateSolidBrush(bgColor);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(backBuffer, bgBrush);
+    FillRect(backBuffer, &client, bgBrush);
+    SelectObject(backBuffer, oldBrush);
+    DeleteObject(bgBrush);
+
+    BitBlt(backBuffer, user->offset, 10, user->bmBitmapInfo.bmWidth, user->bmBitmapInfo.bmHeight, user->hdcBitmap, 0, 0, SRCCOPY);
+}</pre>
+
+    <p>The shutdown function should just reset everything. Don't forget to delete the user data if it exists.</p>
+    
+<pre class="prettyprint linenums">void Shutdown(void* userData) {
+    UserData* user = (UserData*)userData;
+    SelectObject(user->hdcBitmap, user->hbmBitmapOld);
+    DeleteObject(user->hbmBitmap);
+    DeleteDC(user->hdcBitmap);
+
+    delete user;
+}</pre>
+<a href="https://gist.github.com/gszauer/75767d1339fb0da3f5f818bb75457e12">Full code listing: https://gist.github.com/gszauer/75767d1339fb0da3f5f818bb75457e12</a>
+
+<h2>Draw Pixels</h2>
+
+<p>What if you just want to set some pixels manually and draw them? Windows makes this pretty easy. All you need to do is create the memory, draw to it, then call <code>StretchDIBits</code> with a properly configured <code>BITMAPINFO</code>. The code below does exactly this. By deault windows draws from bottom left up, which might flip your image upside down. To fix this, simply provide a negative height to the <code>BITMAPINFO</code></p>
+
+<pre class="prettyprint linenums">void* Initialize(const WindowData& window) {
+    int width = 4096;
+    int height = 4096;
+
+    unsigned char* imageData = new unsigned char[width * height * 4];
+    memset(imageData, 0, sizeof(unsigned char) * width * height * 4);
+
+    // Darw debug boxes
+    unsigned int* rgbData = (unsigned int*)imageData;
+    unsigned int red = 0xff0000;
+    for (int x = 0; x < 4096; ++x) {
+        for (int y = 0; y < 4096; ++y) {
+            if ((x / 10) % 2 == 0 && (y / 10) % 2 == 0) {
+                rgbData[(y * 4096 + x)] = red;
+            }
+        }
+    }
+
+    return imageData;
+}
+
+void Update(void* userData, float deltatTime) {
+}
+
+void Render(void* userData, HDC backBuffer, RECT client) {
+    int width = 4096;
+    int height = 4096;
+    if (client.right - client.left < width) {
+        width = client.right - client.left;
+    }
+    if (client.bottom - client.top < height) {
+        height = client.bottom - client.top;
+    }
+
+    BITMAPINFO imageInfo;
+    imageInfo.bmiHeader.biSize = sizeof(imageInfo.bmiHeader);
+    imageInfo.bmiHeader.biWidth = 4096;
+    imageInfo.bmiHeader.biHeight = 4096; // Set to negative to flip!
+    imageInfo.bmiHeader.biPlanes = 1;
+    imageInfo.bmiHeader.biBitCount = 32;
+    imageInfo.bmiHeader.biCompression = BI_RGB;
+
+    StretchDIBits(backBuffer, 0, 0, width, height,
+        0, 0, width, height,
+        userData, &imageInfo,
+        DIB_RGB_COLORS, SRCCOPY);
+}
+
+void Shutdown(void* userData) {
+    unsigned char* user = (unsigned char*)userData;
+    delete user;
+}</pre>
+
+            </div>
+        </div>
+    </body>
+</html>

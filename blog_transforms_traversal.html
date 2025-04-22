@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first" href="transforms.html">Transform Hierarchies</a><a class="sidebar-item" href="blog_transforms_matrices.html">Combining Matrices</a><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_getters.html">World Space Getters</a><a class="sidebar-item sidebar-tab" href="blog_transforms_matrix_setters.html">World Space Setters</a><a class="sidebar-item" href="blog_transforms_transforms.html">Combining Transforms</a><a class="sidebar-item sidebar-tab" href="blog_transforms_transform_world.html">World Space</a><a class="sidebar-item sidebar-active " href="blog_transforms_traversal.html">Tree Traversal</a><a class="sidebar-item" href="blog_transforms_summary.html">Summary</a></div>    
+            <div id="content">
+                <!-- This is a mirror of a cohost article i wrote: https://cohost.org/gszauer/post/1103448-hierarchy-representa -->
+                <h1>Tree Traversal</h1>
+                
+                <p>A common way i've seen of storing transforms is giving each node a pointer to it's parent, and a list of children. For example: </p>
+
+<pre class="prettyprint linenums">struct Transform {
+    Transform parent;
+    Transform children[];
+
+    Vector position;
+    Quaternion rotation;
+    Vector scale;
+}</pre>
+                <p>It's easy to do bredth first traversal with this layout, you can either do it recursivley or by utilizing a stack. Both require some allocation for traversal, and the children array requires an allocation as well. We could use a different data structure, a "First Child, Next Sibling" tree which allows for efficient depth first traversal without any additional memory or allocation. Let's explore how.</p>
+
+                <p>Instead of storing a parent reference and a list of children, we will store a parent, first child, and next sibling reference.</p>
+
+<pre class="prettyprint linenums">struct Transform {
+    Transform parent;
+    Transform firstChild;
+    Transform nextSibling;
+
+    Vector position;
+    Quaternion rotation;
+    Vector scale;
+}</pre>
+                <p>With this representation, traversal becomes:</p>
+
+
+<pre class="prettyprint linenums">void DepthFirstTraversal(Node root, NodeVisitorFnPtr callback) {
+    Node itr = root;
+    bool traversing = true;
+    while (traversing) {
+        callback(itr);
+
+        if (itr->children) {
+            itr = itr->firstChild;
+        }
+        else {
+            while (itr->nextSibling == null) {
+                if (itr == root) {
+                    traversing = false;
+                    break;
+                }
+                itr = itr->parent;
+            }
+            if (itr == root) { // Prevent stepping to the roots sibling
+                traversing = false;
+                break;
+            }
+            itr = itr->nextSibling;
+        }
+    }
+}</pre>
+                <p>Or, you can structure the code to be an interative function:</p>
+
+<pre class="prettyprint linenums">class Scene {
+    Node root
+
+    // Pass NULL to start from root. 
+    // Or pass the result of the last call to DepthFirst
+    // Returns the next node, or NULL on exit
+    Node DepthFirst(Node iter = null) {
+        if (iter == null) {
+            return root;
+        }
+
+        if (iter->firstChild) {
+            iter = iter->firstChild;
+        }
+        else {
+            while (iter->nextSibling == null) {
+                if (iter == root) {
+                    return null;
+                }
+                iter = iter->parent;
+            }
+            if (iter == root) {
+                return null;
+            }
+            iter = iter->nextSibling;
+        }
+
+        return iter;
+    }
+}</pre>
+                <p>Now traversal becomes:</p>
+
+<pre class="prettyprint linenums">for (Node* iter = scene.DepthFirst(); iter != null; iter = scene.DepthFirst(iter)) {
+    // Do something
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first sidebar-active " href="blog_sound.html">Sound Programming</a><a class="sidebar-item" href="blog_sound_timing.html">Timing</a><a class="sidebar-item" href="blog_sound_mixing.html">Mixing</a><a class="sidebar-item" href="blog_sound_spatialization.html">Spatialization</a><a class="sidebar-item" href="blog_sound_dsound.html">Direct Sound</a></div>    
+            <div id="content">
+                <h1>Sound</h1>
+
+                <p>Sound is processed in fixed chunks. The size of these chunks determines the latency of the audio. Say you're processing sound in 50 ms chunks. 30 ms has passed since the last buffer swap, and you start playing a sound. It can mix 20 mx into the "back buffer", but that won't be submitted for another 30ms. The size of these chunks or buffers is up to you. If the buffers are too small, the audio crackles. If the buffers are too large, there is noticable latency. So what is the right size? I'm not sure. Anecdotally, i've read that the latency becomes noticable at around 50 ms.</p>
+
+                <p>Sound API's fall into what i call "push" and "pull" api's. A "Push" API expects you to submit data in fixed intervals, it's up to you to call the function that pushes data. A "Pull" API will usually take a function pointer, and call it at fixed intervals. Direct Sound has a "Push" API, FMOD has a "Pull" API. For this blog, we're going to assume you're working with a "Push" type of API, and are writing to one big circular buffer.</p>
+
+<pre class="prettyprint linenums">void SetRange(Allocator* allocator, u32 startBit, u32 bitCount) {
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

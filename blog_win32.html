@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Gabor Makes Games</title>
+        <meta name="author" content="Gabor Szauer">
+
+        <link rel="stylesheet" type="text/css" href="css/shared.css"><link rel="stylesheet" type="text/css" href="css/navigation.css"><link rel="stylesheet" type="text/css" href="css/font-raleway.css"><link rel="stylesheet" type="text/css" href="css/font-oxygen.css"><link rel="stylesheet" type="text/css" href="css/font-worksans.css"><link rel="stylesheet" type="text/css" href="css/codepretty/skins/desert.css"><script type="text/javascript" src="js/codepretty/prettify.js"></script><script type="text/javascript" src="js/navigation.js"></script><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-96941899-3"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96941899-3');</script>        <link rel="stylesheet" type="text/css" href="css/blog.css">
+    </head>
+
+    <body onload="MainNavOnLoad();PR.prettyPrint();">        <div class="nav">	<ul class="menu">		<li class="logo"><a href="https://gabormakesgames.com">Gabor Makes Games</a>		<li class="item"><a id="main-nav-active"  href="blog.html">Blog</a>		<li class="item"><a  href="books.html">Books</a>		<li class="item"><a  href="https://github.com/gszauer/">Github</a>		<li class="item"><a  href="https://bsky.app/profile/gszauer.bsky.social">@gszauer</a>		<li class="toggle"><a href="#">Open Menu</a>	</ul></div>
+        <div id="blog">
+            <div id="sidebar"><a class="sidebar-item sidebar-first sidebar-gap" href="blog.html">Back to blog</a><a class="sidebar-item sidebar-first sidebar-active " href="blog_win32.html">Win32 Programming</a><a class="sidebar-item" href="blog_win32_time.html">High resolution timer</a><a class="sidebar-item" href="blog_win32_gdi.html">GDI Drawing</a><a class="sidebar-item" href="blog_win32_common.html">Common Dialogs</a><a class="sidebar-item" href="blog_win32_filesystem.html">File System</a><a class="sidebar-item" href="blog_win32_opengl.html">OpenGL</a></div>    
+            <div id="content">
+                <h1>Win32 Programming</h1>
+
+                <p>In this blog we're going to explore some common things you might want to do when programming for window. This includes things like opening a window, watching the file system, drawing things to the window, and even playing sounds. The <a href="https://learn.microsoft.com/en-us/windows/win32/api/">Microsoft Developer Network (MSDN)</a> is the canonical source for more information on the win32 API and how to use it. Window often has two versions of any given function, for example <code>CreateWindowW</code> and <code>CreateWindowA</code>. The W version of a function take a unicode wide string, while the A version takes an ascii string. These functions are also #defined as CreateWindow, which is defined depending on your project configuration.</p>
+
+                <p>Let's start with opening a new Window. Opening a window takes two functions, <code>WinMain</code> and <code>WndProc</code>. <code>WinMain</code> is the entry point of a win32 program. It gets called automatically, like <code>main</code> in a non win32 program. This function is responsible for creating a window, and pumping messages to the window. <code>WndProc</code> in turn is responsible for handling messages that are sent to the window.</p>
+
+                <p>These functions can be called whatever, <code>WinMain</code> and <code>WndProc</code> are just the convention i use. In fact, you can open a Win32 window from a console application, which is useful if you want to keep watching the console for logs (Torque3D does this). You can call <code>WinMain</code> manually, like so:</p>
+
+<pre class="prettyprint linenums">int main(int argc, char** argv) {
+    return WinMain(GetModuleHandleA(NULL), NULL, GetCommandLineA(), SW_SHOWDEFAULT);
+}</pre>
+<p>Let's start by including windows.h, and forward declaring the functions we're about to implement.</p>
+
+<pre class="prettyprint linenums">#include < windows.h >
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow);</pre>
+                <p>To open a window, we need to creat a "class" for it. A class is a string identifier that windows uses as a "prototype" for the window. It contains the title of the window, some display information, and most importantly a pointer to the windows message processing function. You can use the same window "class" to create multiple windows. Let's register a  new class called "Win32_Sample", pointing to a message function "WndProc".</p> 
+
+<pre class="prettyprint linenums">int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow) {
+    WNDCLASSA wndclass;
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = hInstance;
+    wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndclass.lpszMenuName = 0;
+    wndclass.lpszClassName = "Win32_Sample";
+    RegisterClassA(&wndclass);</pre>
+                <p>Next, let's set the size of the window. A window is the size of the client area (what you draw to) plus the size of any decorations (the title bar, thick frames to resize, etc...). We want to define the size of the client area, but we will need to know the full size of the window (including any decorations). Luckily, we can find the window area given the client area using the <code>AdjustWindowRect</code> function, like so:</p>
+
+<pre class="prettyprint linenums">    int clientWidth = 800;
+    int clientHeight = 600;
+
+    RECT rClient;
+    SetRect(&rClient, 0, 0, clientWidth, clientHeight);
+    AdjustWindowRect(&rClient, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+    
+    int windowWidth = rClient.right - rClient.left;
+    int windowHeight = rClient.right - rClient.left;</pre>
+                <p>Now it's time to open the window! We want to open the window in the middle of the screen, so we will first need to find the width and height of the screen. Then all we need to do is call <code>CreateWindowW</code> or <code>CreateWindowA</code>. This function will return a handle to the newly created window, this handle is important because it is used to work with the window. The first argument is the class name we registered with <code>RegisterClassA</code>, the next two arguments are the title and style of the window. These are followed by the x and y position and the width and height of the window. The last few arguments can be null.</p>
+
+                <p>After calling <code>CreateWindow</code> we need to call <code>ShowWindow</code> and <code>UpdateWindow</code> for the window to display and start pumping messages.</p>
+
+<pre class="prettyprint linenums">    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    HWND hwnd = CreateWindowA(wndclass.lpszClassName, "Window Title", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        (screenWidth / 2) - (windowWidth / 2), (screenHeight / 2) - (windowHeight / 2),
+        windowWidth, windowHeight, NULL, NULL, hInstance, 0);
+
+    ShowWindow(hwnd, SW_NORMAL);
+    UpdateWindow(hwnd);</pre>
+                <p>Finally, the last thing we need to do is run the windows message loop. We're actually going to have two loops, an application loop and a window message loo;. The message loop is simple, we need to call <code>PeekMessage</code> to get the current message, if we have a message we need to call <code>TranslateMessage</code> which lets windows do some magiv to the message, and finally <code>DispatchMessage</code> to invoke the message handling function of the window. The second argument to <code>PeekMessage</code> below is <code>NULL</code>, which handles messages for any window that is running in the current thread. Alternateley, you could pass in a window handle to specify which window to handle. After the message i call <code>Sleep</code> to keep my laptops fans from going crazy, this is where you would handle your per frame application logic.</p>
+
+<pre class="prettyprint linenums">    MSG msg;
+    bool quit = false;
+
+    while (!quit) {
+        // WM_QUIT does not belong to any window, hence the second argument NULL
+        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                quit = true;
+                break;
+            }
+            // Optionally, check if (msg.hwnd == hwnd) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+            // } // End of optional hwnd check
+        }
+        
+        Sleep(1);
+    }</pre>
+    <p>After the application loop quits, call any cleanup code and return the w param of the last message (or 0).</p>
+
+<pre class="prettyprint linenums">    return (int)msg.wParam;
+}</pre>
+    <p>Let's implement a minimal window message processing function. At a minimum, we need to handle the <code>WM_CLOSE</code> and <code>WM_DESTROY</code> messages. On close, we need to call <code>DestroyWindow</code>, which will post a destroy message. On destroy we need to post a quit message to the window with <code>PostQuitMessqage</code>, which will post the <code>WM_QUIT</code> message that <code>WinMain</code> uses to break out of the application loop. Call <code>DefWindowProcA</code> for any message that you do not handle specifically.</p>
+
+<pre class="prettyprint linenums">LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
+    switch (iMsg) {
+    case WM_CLOSE:
+        DestroyWindow(hwnd);
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProcA(hwnd, iMsg, wParam, lParam);
+}</pre>
+            <p><a href="https://gist.github.com/gszauer/8560bc64cf008ade2c80c480b6495b9a">Full code listing: https://gist.github.com/gszauer/8560bc64cf008ade2c80c480b6495b9a</a>
+            </div>
+        </div>
+    </body>
+</html>
