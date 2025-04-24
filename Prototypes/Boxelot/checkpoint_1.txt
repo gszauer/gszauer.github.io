@@ -1,0 +1,103 @@
+Objective: Create a complete, playable, single-player dungeon crawler game named "Boxelot" using Phaser 3. The game is heavily inspired by the core tile-revealing and combat mechanics of "Dungelot". The final output must be a single, self-contained HTML file with embedded JavaScript, requiring no external assets and ready to run in a modern browser.
+
+Core Requirements:
+
+    Technology & Constraints:
+        Engine: Use Phaser 3 (latest stable version, e.g., 3.80.1).
+        Language: JavaScript (ES6+ features acceptable).
+        Output: A single HTML file containing all necessary HTML, CSS, and JavaScript (including Phaser library via CDN).
+        Graphics: Strict Constraint: Do NOT use any external image or audio assets. All visuals must be generated using Phaser's built-in Graphics primitives (this.add.rectangle, this.add.text).
+        Icons: Use specific Unicode Emojis directly within Phaser.GameObjects.Text objects where specified for monsters, items, doors, and UI indicators.
+        Code Quality: Ensure code uses curly braces {} for all control flow blocks (if, else, for, while). No TODO comments or unfinished sections are allowed. The game must be fully functional as described.
+
+    Game Structure:
+        Use Phaser Scenes: BootScene, PreloaderScene, GameScene, UIScene, GameOverScene.
+        UIScene must run in parallel with GameScene to provide a persistent overlay.
+
+    Visual Style & Layout:
+        Graphics Primitives: Represent all game elements using Phaser.GameObjects.Rectangle for backgrounds/tiles and Phaser.GameObjects.Text for labels/icons/stats.
+        Tile Colors:
+            Hidden Tiles: Grey background (0x888888). Text ('?', 'X', or blank) should be dark (COLORS.TEXT_DARK).
+            Revealed Empty Tile: Dark grey background (COLORS.REVEALED_BG).
+            Revealed Monster Tile: Muted red background (0xA02C2C). Monster icon/stats text visible.
+            Revealed Item Tile: Muted green background (0x2E8B57). Item icon visible.
+            Revealed Key Item Tile: Yellow background (COLORS.KEY). Key icon visible.
+            Revealed Door Tile: Brown background (COLORS.DOOR). Lock/unlock icon visible.
+            Revealed Gold Tile: Gold background (COLORS.GOLD). Text label visible until collected.
+            Revealed Trap Tile: Dark grey background (COLORS.TRAP). Text label visible until effect applied.
+        Layout:
+            Implement dynamic resizing using Phaser.Scale.RESIZE mode to fill the parent container.
+            Define a header area (e.g., top 10% of height, UI_HEADER_RATIO = 0.10) and a footer area (e.g., bottom 12% of height, UI_FOOTER_RATIO = 0.12). Both should have a distinct dark background (COLORS.UI_BAR_BG = 0x111111).
+            The game grid and all UI elements must resize and reposition appropriately within these areas when the window size changes.
+
+    Game Grid & Tiles:
+        Size: 6 rows x 5 columns.
+        Tile Data: Each tile needs to store its type, revealed status (boolean), current display state (see below), and type-specific data (HP, item ID, gold value, etc.). Add attackedOnce (boolean, default false) to monster tile data.
+        Tile States & Visuals:
+            TILE_STATE.HIDDEN_UNACCESSIBLE: Default state. Grey background, no text/icon. Not clickable.
+            TILE_STATE.HIDDEN_NORMAL: Hidden but adjacent to a clear, revealed tile. Grey background, dark '?' text. Clickable.
+            TILE_STATE.HIDDEN_BLOCKED: Hidden but adjacent to a revealed, living monster. Grey background, dark 'X' text. Not clickable.
+            TILE_STATE.REVEALED: Content is visible. Uses specific background colors and icons/text as defined above. Clickable for monsters, items, doors.
+
+    Tile Accessibility & Reveal Logic (4-Directional Focus):
+        Adjacency: By default, check adjacency using only 4 cardinal directions (Up, Down, Left, Right). Use a helper function getNeighbors(r, c) for this.
+        Start: Generate the grid. Place the DOOR tile. Reveal the DOOR tile (state = REVEALED). Update its 4 cardinal neighbors: if they are hidden, set their state to HIDDEN_NORMAL ('?'). All other tiles remain HIDDEN_UNACCESSIBLE (blank).
+        Clicking: Only tiles in HIDDEN_NORMAL state can be clicked to be revealed. Clicks on other hidden states do nothing. Clicks on revealed tiles trigger specific actions (attack, pickup, enter door).
+        Revealing (Non-Monster): When a HIDDEN_NORMAL tile is clicked and reveals EMPTY, GOLD, TRAP, ITEM (becomes EMPTY after effect/pickup), or DOOR:
+            Set its state to REVEALED.
+            Call updateNeighborStates(r, c). This function should iterate through its neighbors (using getNeighbors):
+                If a neighbor is HIDDEN_UNACCESSIBLE, check if it's currently blocked by any other adjacent living monster. If not blocked, change its state to HIDDEN_NORMAL ('?'). If it is blocked by another monster, change its state to HIDDEN_BLOCKED ('X').
+                If a neighbor is HIDDEN_BLOCKED, do nothing (it remains blocked).
+        Revealing (Monster): When a HIDDEN_NORMAL tile reveals a living MONSTER:
+            Set its state to REVEALED.
+            Call updateNeighborStates(r, c, true /* isMonsterBlock */). This function should iterate through its neighbors:
+                Change any hidden neighbor (whether HIDDEN_NORMAL or HIDDEN_UNACCESSIBLE) to HIDDEN_BLOCKED ('X').
+        Defeating Monster: When a monster at (r, c) is defeated:
+            Its tile becomes EMPTY or ITEM (if key dropped). Set state to REVEALED.
+            Call updateNeighborStates(r, c, false, true /* isMonsterUnblock */). This function should iterate through neighbors:
+                If a neighbor is HIDDEN_BLOCKED, check if it is now adjacent to any revealed clear tile (using getNeighbors). If yes, change its state to HIDDEN_NORMAL ('?').
+                If a neighbor is HIDDEN_UNACCESSIBLE, check if it is now adjacent to any revealed clear tile. If yes, change its state to HIDDEN_NORMAL ('?').
+
+    Tile Types & Specific Behaviors:
+        EMPTY: No effect upon reveal, enables adjacent tiles.
+        MONSTER: (Spider 🕷️, Skeleton 💀, Zombie 🧟). Reveal shows icon only. Click revealed monster to attack. Stats (❤️ HP/Max, 🗡️ ATK) appear below icon in dark text. Key indicator (🗝️) appears next to icon only after the first attack (attackedOnce = true). One monster per floor hasKey. Defeating key monster changes tile to KEY_ITEM. Defeating non-key monster changes tile to EMPTY. Red BG (COLORS.MONSTER_BG).
+        DOOR: Brown BG (COLORS.DOOR). Starts revealed. Shows 🔒 when locked, 🔓 when player hasKey. Clicking 🔓 consumes key (player.hasKey = false), updates UI (hides key icon), and triggers next floor generation.
+        GOLD: Gold BG (COLORS.GOLD). Reveal shows text "GOLD +Value". Click revealed tile -> add gold, tile becomes EMPTY, call updateNeighborStates.
+        TRAP: Dark Grey BG (COLORS.TRAP). Reveal shows text "TRAP! -Value HP". Immediately deal damage, tile becomes EMPTY, call updateNeighborStates. Check for game over.
+        ITEM: Green BG (COLORS.ITEM_BG). Reveal shows item icon (e.g., 🍷, 🗡️). Click revealed item -> attempt pickup via tryPickupItem.
+        KEY_ITEM: Yellow BG (COLORS.KEY). Icon 🗝️. Appears when key monster dies. Click revealed key -> set player.hasKey = true, update UI, tile becomes EMPTY, call updateNeighborStates. Does NOT go into inventory.
+
+    Player & Inventory:
+        Stats: hp, maxHp, atk, gold. Track hasKey (boolean).
+        Inventory: player.inventory array, max size 6 (MAX_INVENTORY_SLOTS). Stores item IDs (e.g., 'POTION', 'BLADE_SCROLL').
+        Pickup: tryPickupItem adds item ID to inventory if not full. Shows "Inventory Full!" message if full.
+
+    Combat:
+        Click revealed, living monster tile.
+        Set attackedOnce = true on first attack, update visual if key holder.
+        Player attack: monster.hp -= player.atk.
+        If monster survives: Monster attacks: player.hp -= monster.atk.
+        Check for monster death / player death after the exchange. Update visuals.
+
+    Items:
+        POTION (🍷): Use via confirmation popup. Heals 5 HP (up to max). Consumable.
+        BLADE_SCROLL (🗡️): Use via confirmation popup. Deals 3 damage to all revealed, living monsters. Consumable.
+
+    UI (UIScene):
+        Run parallel to GameScene. Use event handshake (uiReady) for initial sync after restart.
+        Displays: Show HP (HP: current / max), ATK (ATK: value), Gold (GOLD: value - use COLORS.GOLD_TEXT), Floor (Floor: #), Key Status (Show 🗝️ icon, likely near Gold, only when player.hasKey is true).
+        Inventory: Display in footer bar. Create 6 slots. Use updateInventoryUI to show item icons. For consumable items with an effect.amount, display IconAmount (e.g., 🍷5, 🗡️3). Make occupied slots clickable -> triggers Item Use Popup. Update hit areas on resize.
+        Item Use Popup: Phaser Container, modal (blocks clicks). Create dynamically or toggle visibility. Show Item Icon, Name, Description. Buttons: "Use" (emits useItem to GameScene, hides panel), "Cancel" (hides panel).
+        Help Button ([?]): Position in header. Click toggles visibility of external HTML div #instructions-dom. Blue text, lighter on hover.
+        HTML Instructions Panel (#instructions-dom): Must be scrollable (overflow-y: auto) with a sticky header containing the title and a close button. Style appropriately. Use the provided instruction text.
+        Debug Button ([D]): Position in header next to Help. Toggles Phaser debugPanel. Blue text, lighter on hover.
+        Debug Panel: Phaser Container, modal, toggleable. Include: "Mark Hidden" button (emits debugMarkHidden), "+HP", "-HP", "+ATK", "-ATK" buttons (emit debugChangeStat), "Kill All Vis" button (emits debugKillAll), "4/8 Dir" button (emits debugToggleDiagonals), "Fill Inv" button (emits debugFillInventory). Arrange buttons in ~3 columns.
+        Messages: Display temporary messages centrally (e.g., "Inventory Full!", item use feedback) using showMessage.
+        Cursor: No hand cursor (useHandCursor: false) on Phaser interactive elements (buttons, inventory slots).
+
+    Game Flow & States:
+        Start -> GameScene + UIScene.
+        Player clicks tiles, fights, collects items/key.
+        Click unlocked door with key -> consume key, update UI, generate next floor (GameScene.generateFloor).
+        Player HP <= 0 -> GameScene.gameOver triggers immediate transition to GameOverScene (stop UIScene, start GameOverScene).
+        GameOverScene: Display floor reached. "RESTART" button starts GameScene anew (ensure init resets state correctly, including isGameOver). Restart must work without errors.
