@@ -1,0 +1,791 @@
+**Objective:** You are an expert game developer specializing in JavaScript and the Phaser 3 game engine. Your task is to fully code a playable, single-player dungeon exploration game heavily inspired by the core mechanics of "Dungelot". The game must be written entirely in Phaser 3 and should be complete, with no 'TODO' comments or unfinished sections left in the code.
+
+**Game Title:** (You can call it) "Boxelot" or "Grid Explore"
+
+**Technology:** Phaser 3 (Latest stable version)
+
+**Core Requirements:**
+
+1.  **Game Structure:**
+    * Use Phaser Scenes (e.g., `Boot`, `Preloader`, `Game`, `UI`, `GameOver`).
+    * Structure the code logically within the `Game` scene primarily, potentially using helper classes if beneficial.
+
+2.  **Graphics:**
+    * **No Sprite Sheets:** Do *not* use external image assets or sprite sheets.
+    * **Placeholder Graphics:** Represent all game elements (player, monsters, items, tiles) using Phaser's built-in Graphics primitives.
+        * Use colored rectangles (`Phaser.GameObjects.Rectangle`).
+        * Each rectangle should have a descriptive text label (`Phaser.GameObjects.Text`) centered within it.
+        * **Example:** A monster tile might be a red rectangle with the text "MONSTER" or "Goblin" inside. A key might be a yellow rectangle labeled "KEY". The player character doesn't need a tile but stats should be visible in the UI.
+
+3.  **Gameplay Grid:**
+    * Implement a grid of clickable tiles (e.g., 5 columns x 4 rows).
+    * Each level should randomly generate the contents of the tiles on this grid.
+    * The grid should reset with new contents when the player proceeds to the next floor.
+
+4.  **Tile Interaction:**
+    * Clicking a face-down tile reveals its content.
+    * Initially, all tiles are face-down (e.g., grey boxes labeled "?").
+
+5.  **Tile Types (Minimum):**
+    * **Monster:** Red box. Clicking reveals a monster. Requires combat to clear. Label: "MONSTER" (or specific type like "Goblin", "Skeleton").
+    * **Key:** Yellow box. Clicking reveals the dungeon key. Collectible. Label: "KEY".
+    * **Door/Stairs:** Brown box. Requires the Key to be collected before it can be clicked/used. Clicking it advances the player to the next floor. Label: "DOOR" or "STAIRS". Must be generated on each floor.
+    * **Loot (Gold):** Gold/Orange box. Clicking adds gold to the player's total. Label: "GOLD".
+    * **Loot (Potion):** Pink/Purple box. Clicking adds a health potion or instantly restores some health. Label: "POTION".
+    * **Trap:** Dark Grey box. Clicking inflicts damage on the player. Label: "TRAP".
+    * **Empty:** Light Grey box. Clicking reveals nothing, just clears the tile. Label: "EMPTY" (or just show the background color).
+
+6.  **Player Character:**
+    * The player has stats: Health (HP) and Attack Power (ATK).
+    * Start with reasonable default values (e.g., HP: 10, ATK: 1).
+    * These stats should be displayed clearly in a simple UI overlay (part of the `UI` scene).
+
+7.  **Combat System:**
+    * When a Monster tile is clicked, combat begins.
+    * Monsters also have HP and ATK stats (randomize slightly per monster or type).
+    * Implement a *simple* combat resolution:
+        * The player attacks the monster first. Monster HP decreases by Player ATK.
+        * If the monster survives, it attacks the player. Player HP decreases by Monster ATK.
+        * Repeat clicks/turns until one is defeated.
+        * **Alternative (Simpler):** Clicking the revealed monster instantly resolves combat: Player takes damage (Monster ATK), Monster takes damage (Player ATK). If the monster dies, the tile clears. If the player dies, it's Game Over. If both survive, the monster stays on the tile with reduced HP, requiring more clicks (and taking more damage) to defeat. *Choose one clear combat model.*
+    * Once a monster is defeated, the tile it was on becomes "Empty".
+
+8.  **Level Progression:**
+    * The goal on each floor is to find the **Key** and then click the **Door/Stairs** tile.
+    * Advancing to the next floor increments a "Floor Number" tracker (displayed in UI).
+    * The new floor generates a new random grid layout. Difficulty can optionally increase slightly (e.g., more monsters, stronger monsters) on higher floors.
+
+9.  **UI Elements:**
+    * Display Player HP.
+    * Display Player ATK.
+    * Display Gold collected.
+    * Display Current Floor number.
+    * Display whether the Key for the current floor has been found.
+
+10. **Game State:**
+    * Track game state: `Playing`, `GameOver`.
+    * Game Over occurs when Player HP drops to 0 or below.
+    * Display a "Game Over" message and the final floor reached (use the `GameOver` scene).
+
+11. **Code Quality:**
+    * **Completeness:** The game must be fully runnable and playable. **Absolutely no TODOs or placeholder functions.** All described mechanics must be implemented.
+    * **Clarity:** Use clear variable and function names. Add comments only where necessary to explain complex logic.
+    * **Error Handling:** Basic checks (e.g., cannot click door without key) should be implemented.
+
+**Deliverable:** Provide the complete code, preferably structured into separate JS files (e.g., `main.js`, `BootScene.js`, `GameScene.js`, etc.) along with a basic `index.html` file required to run the Phaser game in a browser. If providing a single file, ensure it's well-structured and includes the necessary HTML boilerplate.
+
+**Constraint Reminder:** Do NOT use external assets. Rely solely on Phaser's Graphics objects (rectangles, text) for all visuals. Focus on implementing the core gameplay loop robustly.
+
+
+You are a highly capable coding assistant. Your task is to write a complete, fully functional Dungelot-style game in Phaser.js. Follow these requirements:
+
+    Game Name and Genre
+
+        The game is called “Dungelot (Phaser Edition)”.
+
+        It’s a turn-based, tile-based roguelike in which the player explores a grid of hidden tiles, uncovering enemies, loot, and special items.
+
+    Implementation Details
+
+        Use Phaser 3 (or the latest stable version).
+
+        Create a playable game with no TODOs or placeholders. The code should run as-is.
+
+        For any animations or sprite sheets you’d normally load, use simple boxes or shapes with descriptive labels (e.g., “Enemy”, “Treasure”, “Player”).
+
+        The entire code must be well-structured and well-commented.
+
+    Core Mechanics to Implement
+    a. Tile Grid
+
+        Display a grid of tiles that start off hidden.
+
+        When a tile is clicked, reveal what’s underneath (enemy, treasure, healing potion, empty floor, trap, etc.).
+        b. Random Generation
+
+        Each “level” should be randomly generated. (Exact algorithm is up to you—keep it straightforward but functional.)
+        c. Enemies and Combat
+
+        Revealing an enemy should trigger a simple combat interaction:
+
+            The player can attack, and the enemy strikes back until one side’s health is zero.
+
+            The player can have an Attack stat and a Health stat; the enemy can as well.
+
+        If the player wins, the enemy tile becomes cleared, and the player can continue.
+
+        If the player loses (health <= 0), the game should end.
+        d. Items
+
+        Simple items: a healing potion tile (to restore some of the player’s health), gold or treasure tiles (increasing a “score” or currency).
+        e. Progression
+
+        Upon clearing all enemies on a level, allow the player to descend to a new level.
+
+        Each subsequent level can be more difficult (e.g., stronger enemies).
+        f. Player Stats Display
+
+        Show the player’s current health, attack, gold, and level on the screen.
+
+    User Interface and Art
+
+        Instead of using actual art assets or sprite sheets, simply use colored boxes or shapes with text labels to denote player, enemies, treasure, etc.
+
+        Make sure each type of tile is clearly labeled to avoid confusion (e.g., “Enemy HP: X,” “Treasure,” “Potion”).
+
+        Use minimal but clear UI to track Health, Attack, and Gold.
+
+    Deliverable Format
+
+        Provide one self-contained code snippet (or a single file) that can be copied and run locally or in an online editor.
+
+        Include any necessary HTML and JavaScript in the same snippet, or outline how to load Phaser from a CDN.
+
+        The code must be ready to run with no missing references or assets.
+
+    Code Quality
+
+        No “TODO” comments: the project must be fully complete.
+
+        Use meaningful variable names and plenty of comments to explain the game logic.
+
+        Make sure the code is readable and well-structured so others can follow how the game works.
+
+    Testing and Verification
+
+        The solution should run as-is in any modern browser with Phaser 3.
+
+        Provide brief instructions for how to play the game (e.g., controls, how combat works, how to progress to the next dungeon level).
+
+Final Output Checklist
+
+    A complete HTML/JavaScript code block that implements all features above.
+
+    No placeholders or partial logic.
+
+    Clearly labeled placeholder graphics.
+
+    All essential Dungelot-style features working: hidden tiles, revealing, combat, loot, health, next floor progression, and defeat conditions.
+
+
+
+Dungelot is a casual dungeon-crawling roguelike with a simple turn-based gameplay loop​
+  The player explores a dungeon floor composed of hidden tiles, seeking the key that unlocks the exit to the next level​
+  Under each tile could be monsters, treasure, traps, or special items – often nothing at all​
+  The core loop is exploration, combat, and progression: reveal tiles, fight monsters (if any), collect loot, find the key, and decide whether to clear the floor or descend to the next​
+  Combat is straightforward: the hero and enemies exchange attacks until one dies, with enemies always striking first each round​
+  The player can find items and spells to help survive; spells can either be cast for powerful effects or “cannibalized” to heal the hero instead​
+  If the hero’s health drops to zero, the run ends (permadeath), and the player must restart from the first floor​
+
+
+  This prompt will guide the implementation of Dungelot as a web-based game using Phaser 3 (latest version). The game will replicate the original’s mechanics and systems with placeholder graphics and a responsive layout. All features – dungeon generation, tile flipping, turn-based combat, items/inventory, leveling, and dungeon progression with bosses – must be included and fully functional.
+
+  Technical Requirements
+
+    Phaser 3 (Latest) – Use the latest Phaser 3 framework to build the game. Configure the game for web browsers.
+
+    Responsive Canvas – Support various screen sizes (desktop & mobile) with a dynamic layout. Use Phaser’s scaling (e.g. Phaser.Scale.FIT or RESIZE mode with auto-centering) to ensure the game fits different aspect ratios and orientations. UI elements should be anchored or positioned in relative terms so they remain visible and appropriately sized on all devices.
+
+    Placeholder Graphics – Use simple shapes and text labels in place of sprites. (For example, colored rectangles or icons with text like “E” for enemy, “C” for chest, etc.) Leverage Phaser’s drawing APIs (this.add.rectangle, this.add.text, etc.) for visual placeholders. No external spritesheets are required.
+
+    Single-File or Modular Structure – The output should be a fully self-contained implementation. It can be either a single HTML/JS file (e.g. an index.html with embedded script) or a small set of modules, but it must run out-of-the-box. Include all code (HTML, JS, CSS if needed) so that simply opening the file in a browser will start the game.
+
+    Completeness – Do not leave any TODO or unfinished sections. The code should implement all described mechanics fully. The final game must be playable: the hero can progress through floors, combat works, inventory items can be used, and game over/restart flows function correctly.
+
+    Gameplay Features to Implement
+
+The implementation should cover all core gameplay mechanics of the original Dungelot:
+
+    Dungeon Floor Grid – Each floor is a grid of hidden tiles (original game used ~30 tiles per floor​
+    , e.g. a 6x5 grid). One tile is the exit door to the next floor, and the rest are randomly generated as empty or containing something (monster, loot, trap, etc.). The exit door is locked until the player finds the key.
+
+    Tile Revealing (Exploration) – The player “moves” by clicking tiles to flip them over (like Advent calendar or Minesweeper gameplay​
+    ). At start, the hero’s starting position (the entrance/exit door tile) is visible; all other tiles are hidden. The player can only reveal tiles that are adjacent (horizontally, vertically, or diagonally) to an already revealed, cleared tile. Monsters block exploration – if a revealed tile contains a live monster, you cannot flip the tiles behind it until that monster is defeated​
+    . This creates a strategic reveal path.
+
+    Turn-Based Combat – If a tile contains a monster, the monster is revealed when the tile is flipped (but not immediately killed). The player can then engage it in combat. Combat is turn-by-turn: each attack exchange consists of the monster hitting first and then the player retaliating​
+    . On each attack action (for example, when the player clicks an enemy to attack):
+
+        The monster deals its damage to the player (reducing player HP). If this kills the player, combat ends immediately (the player dies).
+
+        If the player is still alive, the player deals damage to the monster (reducing monster HP).
+
+        If the monster dies, it is removed from the grid (the tile becomes cleared). If the monster was carrying the key, the key is dropped for the player.
+
+        If both are still alive, the player can choose to attack again on their next turn (another click). The turn-based exchange continues until one side dies.
+
+    Player Stats and Leveling – The hero has Health (HP) and Attack power (and possibly other stats like defense or mana if needed, but at minimum HP and Attack). These determine combat outcomes. Implement a system for the hero to gain strength during the run:
+
+        The hero can gain experience (XP) from defeating enemies. Track XP and implement a basic level-up system: upon reaching certain XP thresholds, increase the hero’s level. Leveling up can increase max HP, restore some health, and/or increase attack power. This provides a sense of progression aside from items. (Alternatively or additionally, picking up stat-boosting items can serve a similar role – see Items below.)
+
+        The hero’s stats (current HP, max HP, attack, level, XP, etc.) should be visible in the UI.
+
+    Enemies and Monster Types – Include a variety of enemy types with different stats (health, attack damage). For example:
+
+        Weak enemy (e.g. “Rat”) – low HP, low attack.
+
+        Stronger enemy (e.g. “Skeleton”) – higher HP/attack.
+
+        Some enemies can have special abilities as in the original game​
+        . (Example: an enemy that has a chance for a double attack, or one that regenerates some health each turn​
+        .) Implement at least one special enemy trait to demonstrate this system (e.g. a small chance to deal an extra hit when it attacks, or regain 1 HP at the start of its turn).
+
+        Each enemy type should be distinguishable by the placeholder graphic (different color or label) and have its stats defined.
+
+        Enemy Key Bearer: On each floor, designate one enemy to hold the floor key. The player must defeat that specific enemy to obtain the key (the game can mark this enemy or simply decide that whichever enemy was assigned will drop the key upon death).
+
+    Procedural Level Generation – Each floor is randomly generated. When the player enters a new floor:
+
+        Set up the grid of the given size (e.g. 5 columns x 6 rows = 30 tiles).
+
+        Place the exit door tile in a fixed or random position. (In the original, the locked exit door is visible from the start​
+        . You can spawn the door at the hero’s starting position or a corner to simulate the entry point.)
+
+        Randomly populate other tiles with:
+
+            A number of monsters (based on floor depth for difficulty scaling – deeper floors spawn more or tougher monsters).
+
+            Treasure chests or loot tiles (which when revealed give the player items like gold or spells).
+
+            Traps (tiles that harm or debuff the player when revealed).
+
+            Empty tiles (no effect; just clear floor).
+
+        Ensure that one enemy carries the key needed for the exit. (Optionally, you could place the key as a standalone tile, but the original design ties it to an enemy kill​
+        .)
+
+        Optionally, include rare special tiles (e.g. an NPC merchant or a special event) to add variety – e.g. a shop tile that lets the player spend gold for stat boosts​
+        – but this is optional. Core implementation can focus on enemies, loot, and traps.
+
+    Items, Loot, and Inventory – The game features an inventory system for managing items the player finds. Implement the following item types:
+
+        Gold Coins – Currency that can be collected. (In original Dungelot, gold is used to upgrade heroes or buy upgrades in shops​
+        . In our game, we can accumulate gold as a score or for potential shop usage if implemented.)
+
+        Hearts / Health Potions – Items that restore HP to the player or increase max health. For example, a small heart could instantly heal the hero by a certain amount (or increase max HP by 1). If the player’s HP is full, perhaps it increases max HP instead (simulating the “red gems” that permanently increased starting HP in original​
+        ). At minimum, include a consumable to restore health.
+
+        Swords / Attack Boosts – Items that increase the player’s attack stat. For instance, finding a “sword” icon could permanently raise the hero’s attack by +1 for the remainder of the run​
+        .
+
+        Spells (Scrolls) – One-time use magic spells that the player can cast for a special effect. In Dungelot, spells are found frequently and can either be cast or converted to health​
+        . Implement a few example spells, such as:
+
+            Attack Spell – e.g. a Fireball scroll that deals a significant amount of damage to a chosen enemy when used.
+
+            Crowd-Control Spell – e.g. a Freeze scroll that stuns an enemy for one turn (preventing it from attacking on its next turn).
+
+            Each spell should have a secondary option to “sacrifice” it for healing: if the player chooses, they can consume the scroll to restore some of their HP instead of casting it​
+            . This introduces a strategic choice for the player.
+
+        Other Items – You can include other item types as needed (shield for defense, etc.), but the above are sufficient for core gameplay.
+
+        Inventory UI: When the player picks up items, they should appear in an on-screen inventory (for example, as small boxes or icons). The player can click an item in the inventory to use it.
+
+            Using a consumable (like a potion or spell) triggers its effect (heal player, cast spell on target, etc.) and then removes it from inventory.
+
+            For spells, if using the spell requires selecting a target (like which enemy to hit), implement a mechanism: e.g. when the spell is activated, the next click on an enemy applies the effect. Alternatively, simplify by having spells auto-apply to the currently selected enemy or a random enemy if one is present.
+
+            Provide a way to view item details (tooltips). For desktop, this can be a hover tooltip text showing the item’s name/effect. For mobile (no hover), you can show the description when the item is tapped (perhaps on first tap show info, second tap confirm use, or have an “Info” button).
+
+    Health and Death – Keep track of the player’s health. If HP drops to 0, trigger Game Over:
+
+        Display a “Game Over” message or screen.
+
+        Provide an option to Restart the game (start a new run on floor 1, reset all stats and inventory).
+
+        Optionally, provide an Exit to Menu button to go back to a main menu (if implemented) or to completely reset the state.
+
+        Note: As this is a roguelike, there is no respawn on the same run – dying always resets progress for that run (permadeath)​
+        .
+
+    Dungeon Progression & Boss Fights – The game should support advancing through multiple floors:
+
+        When the player finds the key and has revealed the exit door, they can proceed to the next floor (e.g. clicking the door tile with key in inventory triggers moving down).
+
+        Increase the floor counter and generate a new floor with increased difficulty.
+
+        Difficulty Scaling: As floors progress, make the game harder:
+
+            Increase the number of enemies and/or introduce stronger enemy types on deeper floors.
+
+            Possibly increase enemy damage/HP by a small percentage or add more traps.
+
+        Boss Floors: Include special boss encounters at certain intervals (for example, every 5th floor or on a specific floor like 10). A boss can be implemented as a special enemy with much higher HP and damage, possibly unique abilities. The boss fight would function with the same turn-based mechanics. Upon defeating a boss, perhaps allow a bonus reward (extra loot) and then continue the dungeon (or end the game if it was a final boss).
+
+            If treating floor 10 as a final boss floor, you can end the game with a victory message when that boss is defeated. Otherwise, continue indefinitely (or to some maximum floor) until the player eventually dies.
+
+    User Interface (UI) Elements:
+
+        Player Status Display: Always show the player’s current health (HP). For example, a heart icon with “HP: X/Y” or a health bar. Also display the player’s attack power and current level/XP if leveling is implemented.
+
+        Current Floor: Show the current dungeon floor number so the player knows their progression.
+
+        Inventory Panel: A section of the UI showing icons for each item carried (with tooltips or labels as described above).
+
+        Gold: Display the collected gold amount (e.g. a coin icon with the number of coins).
+
+        Enemy Info: When an enemy is revealed (and/or selected), display its name (or type) and stats (HP, attack, and any special attribute) to the player. This can be done by:
+
+            Showing text above the enemy’s tile (e.g. “Goblin 5❤️ 2⚔️” to indicate 5 HP, 2 attack).
+
+            And/or a dedicated enemy info area in the UI that updates when you click or hover an enemy.
+
+        Buttons:
+
+            Restart – on the game over screen (and possibly in a pause menu or corner of screen during gameplay) to restart the run.
+
+            Exit – if a main menu exists, an exit button can bring the player back to it. If no separate menu, this could simply also restart but the prompt suggests implementing a distinct exit. Ideally, create a simple main menu state.
+
+        Main Menu (Optional but recommended for completeness): A starting screen with the game title and a “Start Game” button (and possibly instructions or character selection if multiple classes were included). From here, the player starts a new game. The exit button in-game would return here.
+
+        Tooltip/Message UI: It’s helpful to have a way to convey information or combat log messages. For example, a small text area that shows messages like “You picked up a Potion! +5 HP” or “Fireball scroll used! 10 damage to Skeleton.” Implementing this as a scrolling text log or temporary floating text is a nice touch but not strictly required. At minimum, use console logs or simple text on screen for key events for debugging/feedback.
+
+Implementation Details
+
+Follow these steps and guidelines to implement the game:
+1. Project Setup (Phaser Initialization)
+
+    HTML Setup: Create an HTML file that includes the Phaser 3 library (via CDN script include) and your game code. Set the <canvas> or game container to take the full browser window. For example, use a <div id="game"> for the game and style it to width/height:100% in CSS, or let Phaser handle the full screen.
+
+    Phaser Game Config: Initialize a Phaser Game instance with appropriate configuration:
+
+        Set the canvas parent (if using a div container with id).
+
+        Define width and height as a base resolution (e.g. 800x600 or similar). The actual rendering will scale – see scale mode next.
+
+        Use scale.mode = Phaser.Scale.FIT and scale.autoCenter = Phaser.Scale.CENTER_BOTH for responsive scaling. This will maintain aspect ratio but fit within the screen. Alternatively, Phaser.Scale.RESIZE can make the canvas exactly the size of the window (you’ll need to handle responsive positioning in that case). Either approach is acceptable as long as the UI scales or repositions correctly.
+
+        Set physics if needed (this game logic can largely be done without physics, by manually handling input and state, so physics system is optional – we may not need Arcade physics since movement is tile-based).
+
+        Set backgroundColor if desired (maybe a dark gray or black to represent the dungeon background).
+
+    Scenes: Use at least one Phaser Scene for the gameplay. Optionally, use multiple scenes:
+
+        A MainMenuScene (for title screen) and a DungeonScene (for the main game) could be used. This helps handle restart/exit more cleanly by switching scenes. If implementing multiple scenes, include them in the Phaser config and start with the menu.
+
+        If you prefer simplicity, you can implement everything in one scene (start the game immediately). However, including a menu with a “Start” button and maybe a short explanation of controls would improve the polish.
+
+    Ensure to load any assets if needed. Since we use generated shapes/text for placeholders, you might not have external assets to load. If you plan to use an image for a coin or an icon, preload it in preload(); otherwise, you can skip a preload function.
+
+2. Data Structures for Game State
+
+    Inside the main game scene (DungeonScene):
+
+        Maintain a 2D array or similar structure for the dungeon grid. Each cell can be an object or ID representing its content and state (hidden/revealed).
+
+            Example: grid[row][col] = { type: "empty"/"enemy"/"treasure"/"trap"/"door", revealed: false, ...additional info... }.
+
+            Store references to the Phaser GameObjects for each tile (so you can update their appearance when revealed, etc.). Alternatively, maintain separate structures: e.g. a grid of data and a group or container of tile sprites.
+
+        Keep track of the player state: an object with properties like hp, maxHp, attack, level, xp, inventory (array of item objects), gold, and a flag for if they have the key for the current floor.
+
+        Have a structure for inventory items. For instance, each item could be an object { name: "Health Potion", type: "heal", effect: 20 } for healing 20 HP, or { name: "Fireball", type: "spell", damage: 10 }. You can also include a property for healValue if the item can be consumed for health (like spells).
+
+        Enemy definitions: Prepare a list or map of enemy types, each with stats and possibly special behavior flags:
+
+```
+const enemyTypes = {
+  rat: { name: "Rat", maxHp: 3, attack: 1, special: null },
+  skeleton: { name: "Skeleton", maxHp: 6, attack: 2, special: "doubleAttackChance" },
+  vampire: { name: "Vampire Bat", maxHp: 5, attack: 2, special: "regen" },
+  // ... boss, etc.
+};
+```
+
+Where special might be a keyword you handle in code (e.g., if special == "regen", enemy heals each turn; if "doubleAttackChance", maybe each attack has a X% chance to strike twice).
+
+Current enemy in combat: When the player is fighting an enemy, store a reference to that enemy’s data (or tile position) as the active target.
+
+3. Dungeon Generation Function
+
+Implement a function (e.g. generateFloor(floorNumber)) to set up a new floor:
+
+    Determine the grid size (you can keep it constant, like 6x5, or increase size slightly with depth if desired).
+
+    Create the grid array and fill all positions initially as unknown.
+
+    Decide where to place the exit door:
+
+        Option 1: Place it at the starting tile (e.g. always [0,0] or a corner) and mark that tile as revealed from the start (so the player “enters” the level at the door). This matches the idea that the entry/exit door is visible and is the starting point​
+        .
+
+        Option 2: Place door randomly, but then you might need to reveal at least that tile initially to start the reveal chain. It might be simpler to place it at a known location for a starting reveal.
+
+    Place monsters: Decide how many monsters based on floorNumber. For example: numMonsters = 3 + floorNumber (increasing linearly), or some random range that grows. Ensure numMonsters does not exceed total tiles minus one (reserve space for at least the door and some loot).
+
+        For each monster, pick a random empty tile. Assign it an enemy type. Possibly weight enemy types by floor (on early floors, mostly weak enemies; on higher floors, include stronger ones).
+
+        Mark the tile as type: "enemy" and store the enemy’s stats (copy from the enemyTypes definitions). Also mark revealed: false.
+
+    Place loot items: e.g. a couple of treasure chests or direct item drops on some tiles:
+
+        “Treasure chest” could be a tile that when revealed, grants a random item (gold or a random spell or potion). We can treat chest as just an unknown container; on reveal, determine its content.
+
+        Alternatively, directly place specific item tiles: e.g. one tile might be a potion (type: "item", itemType: "potion"), another might be a sword (+attack), etc.
+
+        Make sure not to overlap these with monsters or door positions.
+
+    Place traps: These could be a few tiles marked as traps (type: "trap"). When revealed, a trap immediately triggers (e.g. a dart trap that deals some damage to the player or applies a status effect). Represent it with a distinct color/label (like a skull icon or "Trap").
+
+    All remaining tiles that are not assigned become empty (type: "empty"), meaning nothing happens when revealed.
+
+    Assign the key: Choose one of the placed enemies to carry the floor’s key. You could:
+
+        Randomly pick one enemy tile and mark enemy.hasKey = true.
+
+        Alternatively, guarantee one of the stronger enemies or the last placed enemy has it – up to you. The player must kill this enemy to get the key.
+
+    After generation, render the initial state:
+
+        Create a visual for each tile, but cover them since they start hidden (except perhaps the starting tile).
+
+        You might create a Phaser container or group for all tiles for easy management.
+
+        For each tile, add a rectangle (of uniform size) to represent the tile background. Hidden tiles could be drawn in one color (e.g. dark gray).
+
+        If the tile is revealed (like the starting door tile), draw it in its revealed form (see next section for revealing logic).
+
+        Enable input (pointer events) on each tile’s GameObject for clicking/tapping.
+
+        You can store the tile’s coordinates or data on the GameObject (like tileSprite.row and tileSprite.col or use setData). This will help the input handler know which tile was clicked.
+
+        Note: The tile size should be computed based on canvas size and grid dimensions. E.g. tileWidth = gameWidth / numCols, tileHeight = gameHeight / numRows. If using FIT scale mode with a base size, design with that base size (e.g. 800x600, in which a 6x5 grid might have tiles ~133x120 pixels each).
+
+        The exit door tile: if it’s revealed from start, draw it distinctly (e.g. a door icon or a colored outline) and mark it as locked (since key not obtained yet).
+
+4. Tile Revealing Logic
+
+    The player can click on a hidden tile to reveal it, but only if it’s adjacent to an already revealed, clear tile (including diagonals). Enforce this rule in the input handler:
+
+        When a tile is clicked:
+
+            If it’s already revealed, ignore (or if it’s an enemy that is alive, maybe treat the click as an attack command – we’ll handle combat separately).
+
+            If it’s hidden, check adjacency:
+
+                You can precompute an adjacency check: any tile with coordinates (r,c) has neighbors (r+1,c), (r-1,c), (r,c+1), (r,c-1) and diagonals (r±1,c±1).
+
+                If at least one neighbor is revealed and that neighbor is not blocked by an alive monster, then allow the flip.
+
+                We might define “not blocked” as: the neighbor tile is either empty/loot/door (basically no monster), or if the neighbor has a monster but that monster is dead (i.e. already defeated, perhaps the tile remains but marked cleared).
+
+                Another simpler approach: maintain a set of tiles that are currently “clickable” (initially the ones adjacent to the starting tile). When a monster is revealed, do not add its neighbors to the clickable set until it’s dead.
+
+                Implement whichever logic is easier: e.g., when revealing a tile:
+
+                    If it’s an empty or loot tile, then after revealing it, mark it as cleared and add its neighbors to the list of revealable tiles (unless those neighbors are themselves monsters – actually, you can allow revealing a monster tile as well, just revealing doesn’t kill it).
+
+                    If it’s a monster, reveal it (now visible), but do not automatically reveal its neighbors yet; wait until it’s killed to then consider its neighbors.
+
+            If the tile is not adjacent to a revealed clear tile (i.e. not reachable yet), ignore the click (or provide a sound feedback indicating it’s not allowed).
+
+    When revealing a tile, update its state and appearance:
+
+        Flip the tile’s color or sprite to indicate it’s now visible.
+
+        If empty: maybe change the tile color to a lighter shade or put a small dot or floor texture to show it’s cleared ground.
+
+        If enemy:
+
+            Show a colored square (e.g. red) or an icon to represent the monster. Include a text label of its HP and attack (for example “5/5 HP, 2 ATK” or small heart and sword symbols).
+
+            You can update this text dynamically during combat as HP changes.
+
+            The monster remains on the tile until defeated, acting as an obstacle.
+
+        If loot (treasure or item):
+
+            Reveal an icon or text for the item. For a chest, you might display a chest icon and optionally immediately “open” it to give random loot.
+
+            If it’s a direct item (like a potion lying on the ground), you could automatically give it to the player on reveal or require the player to click it to pick it up. (Original Dungelot auto-collected most items on reveal.)
+
+            Simpler: auto-collect on reveal. E.g., “You found a health potion!” – add to inventory, remove the tile (tile becomes an empty floor after collection).
+
+            Or for a chest: when revealed, you could either immediately roll its content and give it, or require a second click to open. Given the simplicity goal, immediate reward is fine.
+
+            After collecting, that tile becomes cleared (no longer contains an item).
+
+        If trap:
+
+            Trigger its effect on the player immediately upon reveal. E.g., reduce player HP by X, show a message “It’s a trap! You lost X HP.”
+
+            Possibly mark the tile as cleared (the trap is expended).
+
+            If a trap could have ongoing effect (like poison status), implement a status on the player that causes damage over a few turns, but this might be beyond core scope. A simple instant damage trap is enough.
+
+        If door:
+
+            The door at start is locked. If the player clicks it without the key, nothing happens (maybe a “locked” message).
+
+            If the player has obtained the key, clicking the door will transition to the next floor (generate new floor).
+
+            You can also visually indicate the door unlocking when the key is acquired (e.g. change its color or icon).
+
+    After revealing a tile and handling its outcome (loot collection, trap damage, etc.), if that reveal leads to new accessible tiles, make them clickable:
+
+        If an empty or loot tile was revealed and cleared, all its neighbors that are still hidden become eligible to reveal (unless blocked by another adjacent monster).
+
+        If it was a monster, since it’s not dead yet, do not expand the frontier from that tile.
+
+        Once a monster is defeated, then treat that tile as cleared; at that moment, you should reveal (or mark as now allowed to reveal) any still-hidden neighbors of that tile (since the obstacle is removed).
+
+        This can be implemented by queueing reveals or simply by checking adjacency each click as earlier described.
+
+5. Combat Mechanics
+
+Implement the combat turn logic such that clicking an enemy performs an attack round:
+
+    Distinguish between clicking a hidden tile vs a revealed enemy tile. You might use different input handlers or a condition in one handler based on tile state:
+
+        If the tile clicked is a revealed enemy and that enemy is alive (HP > 0), then treat the click as the player's decision to attack that enemy.
+
+    Attack Round Sequence:
+
+        Enemy strikes first: Subtract the enemy’s attack value from the player’s HP​
+        .
+
+            If you have enemy special abilities, handle those here. For example, if enemy has “doubleAttackChance” and the chance triggers, subtract twice its attack (or do two separate hits). If enemy has poison attack, apply a status, etc.
+
+            Update the UI for player HP. Possibly flash the player’s HP or play a damage sound for feedback.
+
+            If player HP <= 0 after this hit, the player dies – trigger Game Over (see step 7 for Game Over handling) and end combat immediately (the enemy might survive since player died).
+
+        Player strikes back: If the player is still alive, subtract the player’s attack value from the enemy’s HP.
+
+            If the player has any special effects (not much mentioned in original beyond maybe class perks), apply those if any (for example, if the hero had a lifesteal ability, you’d heal the player for some amount of damage dealt – only if you implemented such a perk).
+
+            Update the enemy’s displayed HP on its tile.
+
+            If enemy HP <= 0, the enemy is defeated:
+
+                Remove or hide the enemy’s sprite on that tile. You might replace it with a corpse icon or simply mark the tile as cleared floor now.
+
+                Give the player any rewards from that enemy:
+
+                    If this enemy had the key, mark the player as having obtained the key (and possibly show a key icon in the UI).
+
+                    The enemy might drop loot like a small amount of gold or even an item (e.g. a small chance to drop a potion or spell). If you want, implement drops: for instance, if enemy dies, roll random chance for a drop, and if so, add that item to the inventory or auto-use it. (This is an optional enhancement; the game already has plenty of loot on tiles, but a little gold drop or occasional item can make combat more rewarding.)
+
+                Award the player XP for the kill. E.g., each enemy could give a certain XP (maybe equal to its base attack or a fixed amount based on difficulty). Increase player XP and check for level-up:
+
+                    If player’s XP >= threshold for next level, increment player level and improve stats (e.g. +10 max HP and fully heal, +1 attack, etc.). Display a “Level Up!” message and update stat UI.
+
+                Since the enemy is gone, the tile is now clear. This means previously blocked adjacent tiles are now free to be revealed. So, reveal any neighbors of this tile that should become accessible. (You can either automatically flip any that are safe to flip or simply allow the player to click them now. Original game typically required manual flipping; it didn’t auto-reveal empty tiles in a flood fill – except the initial click may have revealed an area until a monster stops it. If you want, you can implement a Minesweeper-like flood reveal for contiguous empty tiles for convenience, but manual reveal is okay.)
+
+                If defeating this enemy means the player now has the key and the door was already revealed (visible), the player can now click the door to proceed. If the door wasn’t revealed yet (because maybe you placed it hidden somewhere), the player would have to still find it by revealing tiles.
+
+        If the enemy is still alive and the player is still alive, combat is not over. The player can choose to attack again (another click). You could also allow the player to use an item or decide to reveal other tiles (if available) before finishing off the enemy, but typically once engaged it’s kill or be killed. However, the game doesn’t force lock-in combat; if there are other reachable tiles not blocked by this enemy, the player could theoretically go flip those first (especially if the enemy isn’t physically blocking the path to them).
+
+            In Dungelot, since monsters physically block the path, you usually have to kill them to move on. But if two monsters are side by side, one might block certain tiles and the other blocks others; you could attack one or the other in any order.
+
+            We will not implement a concept of moving the hero or running away from a fight; however, leaving a monster alive is possible if you don’t need to clear beyond it (e.g., you got the key and can reach the door without killing every monster)​
+            .
+
+    Multiple Enemies: The player can only attack one enemy at a time (the one whose tile they click). Other revealed enemies do not automatically attack the player unless engaged. The original game’s monsters don’t move; they only deal damage when you attack them (except perhaps some special cases). So you do not need a global timer for enemies attacking – only on the player’s initiation do they trade blows.
+
+    Provide feedback during combat:
+
+        Update HP numbers on UI immediately.
+
+        Show perhaps a quick animation or flash on the enemy or player sprite when they take damage.
+
+        You can also show floating damage text (e.g. “-2” above the character) for polish.
+
+        If implementing special moves, make sure to message them (like “Goblin strikes twice!”).
+
+    Combat ends when either the enemy is dead or the player is dead. If the player wins, they continue exploring (or move to next floor if they choose). If the player dies, game over (handled in section 7).
+
+6. Inventory and Item Use
+
+Implement the inventory system so the player can effectively use items they collect:
+
+    Inventory Representation: You could have a fixed slot UI (say 5 or 6 slots visible on screen) and when an item is picked up, put an icon in the first empty slot. Alternatively, simply list them or show small images with a quantity if stackable. Simplicity: use a horizontal or vertical list of small rectangle icons at a side of the screen.
+
+    Item Objects: Define how each item works when used:
+
+        Example item implementations:
+
+            Health Potion: Using it restores a certain amount of HP to the player (not above max HP). If the player is at max or near max, you might allow overheal to increase max HP slightly or just cap at max.
+
+            Attack Boost (Sword): Could be automatically applied on pickup (immediately increase attack stat and perhaps not even appear in inventory because it’s not a usable item, more a permanent stat increase). Or if kept in inventory, using it could consume the item and grant +1 attack permanently. The original game auto-applied swords and hearts when found​
+            , so you can simply do auto stat increase on reveal for these types.
+
+            Spell Scroll: Using it should prompt for target if needed. You can implement usage in a few ways:
+
+                Easiest: when player clicks the scroll in inventory, check if an enemy is currently revealed. If exactly one enemy is present (or one particularly is targeted/selected), apply the spell effect to that enemy directly. If multiple enemies are available, you might need the player to pick which one. A possible approach: after clicking the spell, set a state like pendingSpell = {type: 'Fireball', damage:10} and highlight enemies, allowing the next enemy click to apply the spell instead of a normal attack. If no enemy is clicked and the player changes mind, they could click the spell again to cancel perhaps.
+
+                If implementing a stun or area effect spell, handle accordingly (e.g. freeze could set an enemy’s stunned status which you check in combat to skip its attack for one turn).
+
+            Spell Sacrifice for Health: Provide a way to use the spell on oneself to heal instead of casting on an enemy. This could be a separate button or option. For instance, right-click the spell (on desktop) to consume it for healing, or have a small “Heal” button next to it. Alternatively, when clicking the spell, you could pop up a small confirmation UI: “Use Fireball: [Cast on enemy] or [Sacrifice for +5 HP]”. The player then chooses.
+
+                Implement this choice simply: if the player chooses to sacrifice, increase player HP (not exceeding max, or maybe exceeding temporarily as an overheal if you want to allow it). Remove the spell from inventory.
+
+                If cast on enemy, apply damage to enemy: subtract from enemy HP (possibly kill it outright if damage >= HP). We should still simulate the combat turn properly (for fairness, you might have the spell effect happen on the player’s turn without triggering an immediate enemy counter-attack, since using an item is usually instead of normal attack). In Dungelot, casting a spell is an action that typically would eliminate or weaken an enemy without the enemy hitting first (this can be a tactical advantage).
+
+    Inventory UI Interaction:
+
+        Set all inventory item icons to be interactive (setInteractive()) so they can be clicked/tapped.
+
+        On hover (desktop), show a tooltip with item name/effect. You can implement this by having a text object that you position near the cursor or in a fixed tooltip area. On pointerover of item icon, set the text to the item’s description; on pointerout, clear the text.
+
+        On click, implement logic:
+
+            If item is a direct use (potion, scroll), perform its action as described above.
+
+            Update player stats or enemy stats based on the item effect.
+
+            Remove the item from inventory if consumed. You might then shift the remaining items in the UI or leave an empty slot.
+
+            If item cannot be used (for example, trying to cast a spell when no enemies are present), you might show a message “No target for this spell right now” and not consume it.
+
+        Ensure using items can be done at any appropriate time:
+
+            The player should be able to use a potion in between fights or even during a fight (which would presumably take a turn – in original Dungelot, using an item like a spell is effectively your action instead of attacking, and enemies don’t hit you first when you drink a potion or cast a spell, IIRC, but you can decide the turn handling).
+
+            Simplicity: allow item use freely when not actively in the middle of an attack click. For example, if an enemy is revealed but you haven’t clicked to attack this turn yet, you could drink a potion to heal before clicking the enemy to attack. You may need to consider if an enemy is revealed and blocking progress, can you reveal other tiles or use items? Yes, you should be able to use items anytime out of combat rounds.
+
+            If you want more strict turn structure, you could consider using an item as the player’s turn (enemy might get to attack if you’re “in combat range”). But since movement is not spatial here, it’s okay to allow item use at will.
+
+    Keep the inventory UI updated: after using or picking up items, refresh the display (remove used items, add new ones).
+
+7. Progression to Next Floor
+
+    When the player has the key (after killing the key-bearing enemy) and the exit door tile is revealed, allow them to go to the next floor:
+
+        On clicking the door tile (which was locked before), detect if player.hasKey == true.
+
+        If yes, possibly show a brief summary (“Floor X cleared! Moving to floor X+1…”) or just immediately transition.
+
+        Transition could simply be:
+
+            Increase currentFloor counter.
+
+            Call the generateFloor(newFloor) function to create the next level.
+
+            You may choose to keep the same scene and just wipe the old grid and create a new one. Make sure to reset the necessary state: the player keeps their stats (HP (carry over current HP), maxHP, attack, inventory, level, etc. should persist to the next floor), but you should reset things like player.hasKey to false for the new floor, and initialize the new grid.
+
+            Alternatively, you could destroy the old tile sprites and create new ones for the new floor. Phaser’s Scene can be kept, just remove or reuse objects.
+
+        Increase difficulty for the new floor:
+
+            You can ramp up enemy stats a bit (some games scale enemy HP/attack by floor count or introduce new enemy types on certain floors).
+
+            E.g., for floor 5+, allow mid-tier enemies; floor 10 = boss; beyond 10, increase all enemies’ HP by a factor, etc.
+
+            You might maintain a list of possible enemy types per floor range, or simply make a formula to buff their stats.
+
+        If a boss floor is reached, generate one big boss enemy (and maybe a couple smaller adds or traps). The key could be held by the boss as well, or if it’s final floor, the key is not needed.
+
+        Continue this until either the player dies (game over) or a final victory condition if you decide one (like after boss, if you want to end the game).
+
+        Tip: When moving to a new floor, it might be wise to fully heal the player or heal a bit (some roguelikes give a small heal on level up or floor clear). Dungelot often leaves you with your remaining HP, making each floor riskier. To keep it from being too punishing, maybe let the player carry over current HP as is, but the items and level-ups they got hopefully sustain them.
+
+8. Game Over and Restart
+
+    Game Over Trigger: As stated, if player HP <= 0, initiate game over:
+
+        Stop any further input that could affect the game state. (E.g., disable tile clicks, etc., or simply check in handlers that game is not over before proceeding.)
+
+        Display a Game Over overlay: perhaps a semi-transparent dark overlay with a large text “Game Over” and the floor reached or score.
+
+        Show two buttons: Restart and Exit.
+
+            Restart: This should reset the entire game progress and start a new game from floor 1.
+
+                If you have a main menu scene, you could return to menu and then start, or directly call generateFloor(1) and reset player stats.
+
+                Reset player stats to initial values (starting HP, attack, level 1, XP 0, empty inventory, 0 gold).
+
+                Could also reset any global counters like score or floor number display.
+
+                Essentially reinitialize the DungeonScene to its start state. It might be simplest to just reload the scene: this.scene.restart() in Phaser will restart the scene fresh. Alternatively, call a function that does the resets and generates floor 1.
+
+            Exit: If a main menu is implemented, go back to the menu scene: this.scene.start('MainMenuScene'). If no menu, this could do the same as restart or simply hang on game over. But since the requirement explicitly says restart/exit, assume we have a menu or an exit functionality.
+
+        You might want to record best score or deepest floor and show it on game over, but optional.
+
+    Ensure that after restarting or exiting, all remnants of the previous run are cleared or reinitialized so the new game starts cleanly.
+
+9. Visual and UI Implementation
+
+    Using Phaser Graphics and Text:
+
+        Tiles: Use this.add.rectangle(x, y, tileWidth, tileHeight, color) for the base of each tile. Keep track of these rectangles (you may store them in the grid or a separate tilesGroup).
+
+        You can also use images (like an actual door image or icons) if you have them, but since only placeholders: maybe use text or simple shapes:
+
+            For example, for a door tile, you might overlay a small white rectangle or a door-like emoji 🚪 as a text character.
+
+            For enemies, maybe draw the rectangle in enemy’s color and use this.add.text on top of it to show "Orc\nHP:10\nATK:3" or similar. Adjust text style (font size, color) for readability. Center the text on the tile.
+
+            For items, you can write text like “Potion” or an abbreviation, or use an emoji like ❤️ for heart potion, 🔥 for fireball, 🗡️ for sword, etc., given we only use simple text/geometry.
+
+        UI elements:
+
+            Health display: could be a text at top-left like "❤️ HP: 25/30".
+
+            Attack display: maybe "⚔️ ATK: 5".
+
+            Gold: "💰: 50".
+
+            Level/XP: "Lvl 3 (XP 5/8)".
+
+            Place these at the corners or along a top bar. Ensure they scale or reposition on resize (e.g., use this.cameras.main.width to position relative to right side for gold, etc., or use fixed percentage).
+
+            Inventory: draw small squares at bottom or side. Possibly this.add.rectangle for each slot, and when an item is in that slot, add a text or mini icon inside.
+
+            Buttons (Restart/Exit): In Phaser, you can create interactive text or images as buttons. For simplicity, create text like "[Restart]" and "[Exit]" and set them interactive with pointerdown events to call the appropriate functions.
+
+            Tooltip text: you can create a text object that is initially invisible. On hover of an item or enemy, set its text and position it near the pointer or in a fixed UI location and set visible. On out, hide it. For mobile, maybe skip hover – perhaps show item info in a fixed panel when item is selected.
+
+        Layout Considerations: because of dynamic scaling, if you used Phaser.Scale.FIT, the positions of UI in the base resolution will scale automatically. Just ensure if you use RESIZE that you recalc positions on resize events (this.scale.on('resize', ...)).
+
+        Use distinct colors for different tile types:
+
+            Hidden tile: dark gray.
+
+            Revealed empty: light gray.
+
+            Enemy: red (maybe different shades for different enemy types).
+
+            Door: blue or gold.
+
+            Trap: maybe black or dark red with a warning symbol.
+
+            Item/Chest: green or yellow.
+
+            These colors help the player identify things at a glance.
+
+        If you want, add a background image or pattern behind the grid (not necessary, a plain background is fine).
+
+    Audio (Optional): If time, you could add small sound effects (click, attack, item use) by using Phaser's audio, but not required.
+
+10. Testing and Final Touches
+
+    After implementing, test the game thoroughly:
+
+        Start a new game, reveal tiles in various orders. Ensure you cannot reveal unreachable tiles.
+
+        Fight a monster, verify the combat sequence (enemy hits first). Check that HP deductions are correct and if the player or enemy dies at the correct time.
+
+        Pick up items and use them, ensuring their effects apply and they disappear from inventory.
+
+        Progress through floors: kill key-holder, open door, generate next floor. Verify player stats carry over and difficulty increases.
+
+        Let the player die to see the Game Over screen. Test the Restart and Exit buttons to ensure they properly reset the game.
+
+        Test on different screen sizes if possible (resize the browser or simulate mobile) to ensure UI scales or anchors correctly.
+
+    Code Quality: Ensure the code is well-organized:
+
+        Use appropriate Phaser scene methods (preload, create, update).
+
+        Possibly segment code into smaller helper functions (e.g., revealTile(r,c), attackEnemy(enemy), useItem(item) for clarity).
+
+        Comment the code for any complex logic (especially the reveal adjacency and combat).
+
+        Avoid using any deprecated Phaser 2 style code; stick to Phaser 3 conventions (arcade physics not needed for turn-based logic, so focus on scene graph and input events).
+
+    There should be no unfinished sections – all the above features should be implemented as described so the game is playable from start to finish.
+

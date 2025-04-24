@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Boxelot - Phaser 3 (Muted Colors)</title>
+    <style>
+        /* ... (CSS remains the same) ... */
+        html, body { height: 100%; margin: 0; padding: 0; background-color: #111; overflow: hidden; }
+        body { display: flex; justify-content: center; align-items: center; }
+        #game-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; /* Needed for absolute positioning of panel */}
+        canvas { display: block; }
+
+        /* Style for HTML Instructions Panel */
+        #instructions-dom { display: none; position: absolute; z-index: 100; background-color: rgba(34, 34, 34, 0.95); color: white; border: 2px solid #dddddd; border-radius: 8px; padding: 20px; box-sizing: border-box; overflow-y: auto; width: 85%; max-width: 450px; height: 70%; max-height: 400px; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; }
+        #instructions-dom h3 { margin-top: 0; text-align: center; color: #FFB800; }
+        #instructions-dom p { line-height: 1.5; font-size: clamp(12px, 2.5vmin, 16px); }
+        #instructions-close-dom { position: absolute; top: 5px; right: 8px; background: none; border: none; font-size: 24px; font-weight: bold; color: #FF4444; cursor: pointer; }
+        #instructions-close-dom:hover { color: #FF8888; }
+        /* End Instructions Panel Style */
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+         </div>
+
+    <div id="instructions-dom">
+        <button id="instructions-close-dom">&times;</button>
+        <h3>How to Play Boxelot</h3>
+        <p>
+            - Click grey tiles ('?') to reveal them.<br>
+            - MONSTER (Icon on Red Bg): Click again to attack. Combat is turn-based (you hit, monster hits). Defeat monsters for potential loot.<br>
+            - KEY HOLDER: One monster has a key icon (🗝️). Defeat it to make the Key Item drop.<br>
+            - KEY ITEM (🗝️ on Yellow Bg): Click the dropped key to pick it up. You need it to open the door.<br>
+            - DOOR (Brown Bg): Shows locked (🔒) or unlocked (🔓). Click the unlocked door with the key to advance.<br>
+            - GOLD (Yellow Bg): Click revealed gold to collect.<br>
+            - TRAP (Dark Grey Bg): Damages you instantly upon reveal.<br>
+            - ITEM (Icon on Green Bg): Click the revealed item icon (e.g., 🍷, 🗡️) to pick it up.<br>
+            - INVENTORY (Footer): Click items in your inventory (max 6) to use them.<br>
+            - EMPTY (Grey Bg): Safe tile.<br>
+            - Goal: Reach the deepest floor possible!
+        </p>
+    </div>
+    <script>
+// --- Constants and Configuration ---
+const GRID_COLS = 5; const GRID_ROWS = 6; const TILE_WIDTH_BASE = 100; const TILE_HEIGHT_BASE = 100; const TILE_SPACING_BASE = 10; const UI_HEADER_RATIO = 0.10; const UI_FOOTER_RATIO = 0.12; const MAX_INVENTORY_SLOTS = 6;
+
+const TILE_TYPE = { EMPTY: 'EMPTY', MONSTER: 'MONSTER', KEY: 'KEY', DOOR: 'DOOR', GOLD: 'GOLD', POTION: 'POTION', TRAP: 'TRAP', ITEM: 'ITEM' };
+// --- Updated Background Colors ---
+const COLORS = { HIDDEN: 0x888888, REVEALED_BG: 0x444444,
+    MONSTER_BG: 0xA02C2C, /* Muted Red */
+    ITEM_BG: 0x2E8B57,    /* Muted Green (SeaGreen) */
+    KEY: 0xffff66, DOOR: 0x964B00, GOLD: 0xffd700, POTION: 0xff99cc, TRAP: 0x606060,
+    TEXT: '#ffffff', TEXT_DARK: '#000000', GOLD_TEXT: '#FFB800', UI_BAR_BG: 0x111111,
+    UI_BUTTON_IDLE_TEXT: '#66aaff', UI_BUTTON_HOVER_TEXT: '#aaddff', PANEL_BG: 0x222222,
+    CLOSE_BUTTON_IDLE_TEXT: '#FF4444', CLOSE_BUTTON_HOVER_TEXT: '#FF8888',
+    ITEM_SWORD: 0xAAAAFF, ITEM_DEFAULT: 0x99FFFF, INV_SLOT_BG: 0x333333, INV_SLOT_BORDER: 0x555555,
+    DEBUG_BUTTON_BG: 0x444444, DEBUG_MARKER_COLOR: '#000000' };
+// --- End Updated Background Colors ---
+const PLAYER_DEFAULTS = { maxHp: 20, hp: 20, atk: 2, gold: 0 };
+const MONSTER_STATS = { SPIDER: { name: "Spider", icon: '🕷️', hp: 5, atk: 1, goldDrop: 2 }, SKELETON: { name: "Skelly", icon: '💀', hp: 8, atk: 2, goldDrop: 5 }, ZOMBIE: { name: "Zombie", icon: '🧟', hp: 12, atk: 3, goldDrop: 10 }, };
+const ITEM_TYPES = { POTION: { id: 'POTION', name: 'Potion', icon: '🍷', description: 'Heals 5 HP', color: COLORS.POTION, consumable: true, effect: { type: 'HEAL', amount: 5 } }, BLADE_SCROLL: { id: 'BLADE_SCROLL', name: 'Blade Scroll', icon: '🗡️', description: 'Deals 3 DMG to all monsters', color: COLORS.ITEM_SWORD, consumable: true, effect: { type: 'DAMAGE_ALL', amount: 3 } }, KEY_ITEM: { id: 'KEY_ITEM', name: 'Dungeon Key', icon: '🗝️', description: 'Unlocks the door', color: COLORS.KEY, consumable: true, effect: null } };
+
+// --- Helper Functions ---
+function getRandomInt(min, max) { min = Math.ceil(min); max = Math.floor(max); return Math.floor(Math.random() * (max - min + 1)) + min; }
+function getRandomElement(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// --- Phaser Scenes ---
+
+class BootScene extends Phaser.Scene { constructor() { super({ key: 'BootScene' }); } preload() { } create() { this.scene.start('PreloaderScene'); } }
+class PreloaderScene extends Phaser.Scene { constructor() { super({ key: 'PreloaderScene' }); } preload() { let w=this.cameras.main.width; let h=this.cameras.main.height; this.add.text(w/2,h/2,'Loading...',{font:'20px Arial',fill:'#fff'}).setOrigin(0.5); } create() { this.scene.start('GameScene'); this.scene.launch('UIScene'); } }
+
+// ##############################################
+// #                 GameScene                  #
+// ##############################################
+class GameScene extends Phaser.Scene {
+     constructor() { super({ key: 'GameScene' }); this.gridData = []; this.tileObjects = []; this.player = { ...PLAYER_DEFAULTS, inventory: [] }; this.currentFloor = 0; this.keyHolderCoords = null; this.monsterCount = 0; this.tileContainer = null; this.tileWidth = TILE_WIDTH_BASE; this.tileHeight = TILE_HEIGHT_BASE; this.tileSpacing = TILE_SPACING_BASE; this.gridOffsetX = 0; this.gridOffsetY = 0; this.gridContentWidth = 0; this.gridContentHeight = 0; this.uiHeaderHeight = 0; this.uiFooterHeight = 0; this.isGameOver = false; this.justDroppedKeyCoords = null; }
+     init() { this.player = { ...PLAYER_DEFAULTS, hasKey: false, inventory: [] }; this.currentFloor = 0; this.monsterCount = 0; this.keyHolderCoords = null; this.isGameOver = false; this.justDroppedKeyCoords = null; }
+     create() { console.log("GameScene create"); this.cameras.main.setBackgroundColor('#1a1a1a'); this.tileContainer = this.add.container(0, 0); this.scale.on('resize', this.handleResize, this); this.calculateGridSize(); this.positionGrid(); this.generateFloor(); this.events.emit('updateStats', this.getPlayerStats()); this.events.emit('updateInventory', this.player.inventory); this.input.on('pointerdown', this.handlePointerDown, this); this.events.on('useItem', this.useItem, this); this.events.on('debugMarkHidden', this.debugMarkHiddenTiles, this); }
+     handleResize(gameSize, baseSize, displaySize, resolution) { console.log("GameScene resize event"); this.calculateGridSize(); this.positionGrid(); this.redrawTiles(); this.events.emit('resizeUI'); }
+     calculateGridSize() { const w = this.cameras.main.width; const h = this.cameras.main.height; this.uiHeaderHeight = h * UI_HEADER_RATIO; this.uiFooterHeight = h * UI_FOOTER_RATIO; const availableHeight = h - this.uiHeaderHeight - this.uiFooterHeight; const availableWidth = w; let maxTileWidth = TILE_WIDTH_BASE; if (availableWidth > (GRID_COLS + 1) * TILE_SPACING_BASE && GRID_COLS > 0) { maxTileWidth = (availableWidth - (GRID_COLS + 1) * TILE_SPACING_BASE) / GRID_COLS; } let maxTileHeight = TILE_HEIGHT_BASE; if (availableHeight > (GRID_ROWS + 1) * TILE_SPACING_BASE && GRID_ROWS > 0) { maxTileHeight = (availableHeight - (GRID_ROWS + 1) * TILE_SPACING_BASE) / GRID_ROWS; } this.tileWidth = Math.max(30, Math.min(maxTileWidth, maxTileHeight, TILE_WIDTH_BASE)); this.tileHeight = this.tileWidth; this.tileSpacing = Math.max(2, this.tileWidth * (TILE_SPACING_BASE / TILE_WIDTH_BASE)); this.gridContentWidth = GRID_COLS * (this.tileWidth + this.tileSpacing) - this.tileSpacing; this.gridContentHeight = GRID_ROWS * (this.tileHeight + this.tileSpacing) - this.tileSpacing; this.gridOffsetX = (availableWidth - this.gridContentWidth) / 2; this.gridOffsetY = this.uiHeaderHeight + Math.max(5, (availableHeight - this.gridContentHeight) / 2); }
+     positionGrid() { if (this.tileContainer) { this.tileContainer.setPosition(this.gridOffsetX, this.gridOffsetY); } }
+     redrawTiles() { if (!this.tileContainer || this.tileObjects.length === 0) return; for (let r = 0; r < GRID_ROWS; r++) { for (let c = 0; c < GRID_COLS; c++) { let tileContainer = this.tileObjects[r]?.[c]; if (!tileContainer) continue; let tileX = c * (this.tileWidth + this.tileSpacing); let tileY = r * (this.tileHeight + this.tileSpacing); tileContainer.setPosition(tileX, tileY); let tileRect = tileContainer.list[0]; let mainText = tileContainer.list[1]; tileRect.setSize(this.tileWidth, this.tileHeight).setOrigin(0); mainText.setWordWrapWidth(this.tileWidth - 10).setOrigin(0.5).setPosition(this.tileWidth / 2, this.tileHeight * 0.35); let iconFontSize = Math.max(16, Math.min(36, Math.floor(this.tileHeight * 0.45))); mainText.setFontSize(iconFontSize); let statsText = tileContainer.list[2]; if(statsText) { let detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45))); statsText.setFontSize(detailFontSize).setPosition(this.tileWidth / 2, this.tileHeight * 0.75); } const tileData = this.gridData[r]?.[c]; if(tileData) this.revealTileVisuals(tileContainer, tileData); } } }
+     getPlayerStats() { return { hp: this.player.hp, maxHp: this.player.maxHp, atk: this.player.atk, gold: this.player.gold, hasKey: this.player.hasKey, floor: this.currentFloor }; }
+     generateFloor() { this.currentFloor++; this.player.hasKey = false; this.monsterCount = 0; this.keyHolderCoords = null; this.isGameOver = false; this.justDroppedKeyCoords = null; this.tileContainer.removeAll(true); this.tileObjects = []; this.gridData = []; let possibleCoords = []; for (let r = 0; r < GRID_ROWS; r++) { this.gridData[r] = []; for (let c = 0; c < GRID_COLS; c++) { possibleCoords.push({ r, c }); } } Phaser.Utils.Array.Shuffle(possibleCoords); let doorCoord = possibleCoords.pop(); if(doorCoord) this.gridData[doorCoord.r][doorCoord.c] = { type: TILE_TYPE.DOOR, revealed: false }; let numMonsters = Math.min(Math.floor((GRID_COLS * GRID_ROWS) / 5) + this.currentFloor, possibleCoords.length - 1); let placedMonsterCoords = this.placeTiles(possibleCoords, numMonsters, TILE_TYPE.MONSTER); this.assignKey(placedMonsterCoords); this.placeTiles(possibleCoords, Math.min(getRandomInt(1, 3), possibleCoords.length), TILE_TYPE.GOLD); this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2 + Math.floor(this.currentFloor / 2)), possibleCoords.length), TILE_TYPE.TRAP); let numItems = Math.min(getRandomInt(1, 2 + Math.floor(this.currentFloor / 3)), possibleCoords.length); this.placeTiles(possibleCoords, numItems, TILE_TYPE.ITEM); this.placeTiles(possibleCoords, possibleCoords.length, TILE_TYPE.EMPTY); for (let r = 0; r < GRID_ROWS; r++) { this.tileObjects[r] = []; for (let c = 0; c < GRID_COLS; c++) { if(this.gridData[r] && this.gridData[r][c]){ this.tileObjects[r][c] = this.createTileObject(r, c); this.tileContainer.add(this.tileObjects[r][c]); } else { console.warn(`Missing grid data for ${r}, ${c}`); } } } console.log(`Generated Floor ${this.currentFloor} with ${this.monsterCount} monsters.`); this.events.emit('updateStats', this.getPlayerStats()); }
+     placeTiles(coordsArray, count, type) { let placedCoords = []; for (let i = 0; i < count && coordsArray.length > 0; i++) { let coord = coordsArray.pop(); let tileData = { type: type, revealed: false }; switch(type) { case TILE_TYPE.MONSTER: let monsterTypeKey = getRandomElement(Object.keys(MONSTER_STATS)); let monsterBase = MONSTER_STATS[monsterTypeKey]; let monsterHp = monsterBase.hp + getRandomInt(0, this.currentFloor); let monsterAtk = monsterBase.atk + Math.floor(this.currentFloor / 3); Object.assign(tileData, { monsterType: monsterTypeKey, hp: monsterHp, maxHp: monsterHp, atk: monsterAtk, goldDrop: monsterBase.goldDrop, hasKey: false }); this.monsterCount++; break; case TILE_TYPE.GOLD: tileData.value = getRandomInt(5, 10 + this.currentFloor * 2); break; case TILE_TYPE.TRAP: tileData.damage = getRandomInt(1, 2 + Math.floor(this.currentFloor / 2)); break; case TILE_TYPE.ITEM: let possibleItems = Object.keys(ITEM_TYPES).filter(id => id !== 'KEY_ITEM'); let randomItemId = getRandomElement(possibleItems); tileData.itemId = randomItemId; break; } this.gridData[coord.r][coord.c] = tileData; if (type === TILE_TYPE.MONSTER) placedCoords.push(coord); } return placedCoords; }
+     assignKey(monsterCoords) { if (monsterCoords.length > 0) { let keyMonsterIndex = getRandomInt(0, monsterCoords.length - 1); let keyCoord = monsterCoords[keyMonsterIndex]; this.gridData[keyCoord.r][keyCoord.c].hasKey = true; this.keyHolderCoords = keyCoord; console.log(`Key assigned to monster at [${keyCoord.r}, ${keyCoord.c}]`); } else { console.warn("No monsters placed, cannot assign key to monster."); let placed = false; for (let r = 0; r < GRID_ROWS && !placed; r++) { for (let c = 0; c < GRID_COLS && !placed; c++) { if (!this.gridData[r][c]) { this.gridData[r][c] = { type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM', revealed: false }; console.log("Fallback: Placed key ITEM directly at", {r, c}); placed = true; } } } } }
+     createTileObject(r, c) { let tileX = c * (this.tileWidth + this.tileSpacing); let tileY = r * (this.tileHeight + this.tileSpacing); let tileContainer = this.add.container(tileX, tileY); let tileRect = this.add.rectangle(0, 0, this.tileWidth, this.tileHeight, COLORS.HIDDEN).setOrigin(0); let iconFontSize = Math.max(16, Math.min(36, Math.floor(this.tileHeight * 0.45))); let mainText = this.add.text(this.tileWidth / 2, this.tileHeight * 0.35, '?', { font: `bold ${Math.floor(iconFontSize * 0.8)}px Arial`, fill: COLORS.TEXT_DARK, align: 'center', wordWrap: { width: this.tileWidth - 10 } }).setOrigin(0.5).setPosition(this.tileWidth / 2, this.tileHeight / 2); let detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45))); let statsText = this.add.text(this.tileWidth / 2, this.tileHeight * 0.75, '', { font: `bold ${detailFontSize}px Arial`, fill: COLORS.TEXT_DARK, align: 'center' }).setOrigin(0.5); tileContainer.add([tileRect, mainText, statsText]); tileContainer.setSize(this.tileWidth, this.tileHeight); tileContainer.setData({ r: r, c: c }); return tileContainer; }
+
+     // --- Corrected handlePointerDown with Flag Logic ---
+     handlePointerDown(pointer) {
+        if (this.isGameOver) return;
+
+        let blockPickupCoords = this.justDroppedKeyCoords; // Store flag value before clearing
+        this.justDroppedKeyCoords = null; // Always clear flag on any click
+
+        const worldX = pointer.x; const worldY = pointer.y;
+        const relativeX = worldX - this.gridOffsetX; const relativeY = worldY - this.gridOffsetY;
+        if (relativeX < 0 || relativeX > this.gridContentWidth || relativeY < 0 || relativeY > this.gridContentHeight) { return; }
+        const col = Math.floor(relativeX / (this.tileWidth + this.tileSpacing)); const row = Math.floor(relativeY / (this.tileHeight + this.tileSpacing));
+        if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) { return; }
+
+        const tileData = this.gridData[row]?.[col];
+        const tileContainer = this.tileObjects[row]?.[col]; // Corrected typo
+
+        if (!tileData || !tileContainer) { return; }
+
+        if (tileData.revealed) {
+            if (tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0) {
+                this.attackMonster(row, col);
+            } else if (tileData.type === TILE_TYPE.DOOR) {
+                this.tryEnterDoor(row, col);
+            } else if (tileData.type === TILE_TYPE.ITEM && tileData.itemId) {
+                 // Check if pickup is blocked by the flag from previous action
+                 if (blockPickupCoords && blockPickupCoords.r === row && blockPickupCoords.c === col) {
+                     console.log("Blocked pickup on same click as drop/action");
+                     return; // Prevent pickup on this click
+                 } else {
+                     this.tryPickupItem(row, col);
+                 }
+            }
+        } else { // Tile is hidden
+            tileData.revealed = true;
+            this.revealTileVisuals(tileContainer, tileData);
+            switch (tileData.type) {
+                case TILE_TYPE.MONSTER: break;
+                case TILE_TYPE.DOOR: break;
+                case TILE_TYPE.GOLD: this.player.gold += tileData.value; this.gridData[row][col] = { type: TILE_TYPE.EMPTY, revealed: true }; this.revealTileVisuals(tileContainer, this.gridData[row][col]); this.events.emit('updateStats', this.getPlayerStats()); break;
+                case TILE_TYPE.TRAP: this.player.hp -= tileData.damage; this.gridData[row][col] = { type: TILE_TYPE.EMPTY, revealed: true }; this.revealTileVisuals(tileContainer, this.gridData[row][col]); this.events.emit('updateStats', this.getPlayerStats()); this.checkGameOver(); break;
+                case TILE_TYPE.EMPTY: break;
+                case TILE_TYPE.ITEM: console.log(`Revealed item: ${tileData.itemId}`); break;
+            }
+        }
+     }
+     // --- End Corrected handlePointerDown ---
+
+     // --- Corrected revealTileVisuals with Background Colors ---
+     revealTileVisuals(tileContainer, tileData) {
+        if (!tileContainer || !tileContainer.list || tileContainer.list.length < 3 || !tileData) return;
+        const tileRect = tileContainer.list[0]; const mainText = tileContainer.list[1]; const statsText = tileContainer.list[2];
+        const iconFontSize = Math.max(16, Math.min(36, Math.floor(this.tileHeight * 0.45))); const detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45)));
+        statsText.setText('').setFontSize(detailFontSize).setColor(COLORS.TEXT_DARK); // Reset stats text
+
+        if (!tileData.revealed) { tileRect.setFillStyle(COLORS.HIDDEN); mainText.setText('?').setColor(COLORS.TEXT_DARK).setFontSize(Math.floor(iconFontSize * 0.8)).setLineSpacing(0).setPosition(this.tileWidth / 2, this.tileHeight / 2); statsText.setText(''); return; }
+
+        mainText.setColor(COLORS.TEXT).setLineSpacing(0).setPosition(this.tileWidth / 2, this.tileHeight * 0.35); statsText.setPosition(this.tileWidth / 2, this.tileHeight * 0.75);
+
+        switch (tileData.type) {
+            case TILE_TYPE.MONSTER:
+                 if (tileData.hp > 0) {
+                    tileRect.setFillStyle(COLORS.MONSTER_BG); // USE RED BG
+                    let monsterInfo = MONSTER_STATS[tileData.monsterType]; let keyIndicator = tileData.hasKey ? '🗝️' : '';
+                    mainText.setText(`${monsterInfo.icon}${keyIndicator}`).setFontSize(iconFontSize);
+                    statsText.setText(`❤️ ${tileData.hp}/${tileData.maxHp}\n🗡️ ${tileData.atk}`);
+                } else { tileRect.setFillStyle(COLORS.REVEALED_BG); mainText.setText(''); statsText.setText(''); }
+                break;
+            case TILE_TYPE.DOOR:
+                tileRect.setFillStyle(COLORS.DOOR); // USE BROWN BG
+                let doorIcon = this.player.hasKey ? '🔓' : '🔒'; mainText.setText(doorIcon).setFontSize(iconFontSize * 1.2).setPosition(this.tileWidth / 2, this.tileHeight / 2); statsText.setText('');
+                break;
+            case TILE_TYPE.GOLD:
+                 tileRect.setFillStyle(COLORS.GOLD); // USE GOLD BG
+                 mainText.setText(`GOLD\n+${tileData.value}`).setColor(COLORS.TEXT_DARK).setFontSize(detailFontSize * 1.5).setPosition(this.tileWidth / 2, this.tileHeight / 2); statsText.setText('');
+                 break;
+            case TILE_TYPE.TRAP:
+                 tileRect.setFillStyle(COLORS.TRAP); // USE TRAP BG
+                 mainText.setText(`TRAP!\n-${tileData.damage} HP`).setFontSize(detailFontSize * 1.5).setPosition(this.tileWidth / 2, this.tileHeight / 2); statsText.setText('');
+                 break;
+            case TILE_TYPE.EMPTY:
+                tileRect.setFillStyle(COLORS.REVEALED_BG); mainText.setText(''); statsText.setText('');
+                break;
+            case TILE_TYPE.ITEM:
+                 if (tileData.itemId && ITEM_TYPES[tileData.itemId]) {
+                     const itemInfo = ITEM_TYPES[tileData.itemId];
+                     tileRect.setFillStyle(tileData.itemId === 'KEY_ITEM' ? COLORS.KEY : COLORS.ITEM_BG); // Yellow BG for Key, Green BG for others
+                     mainText.setText(itemInfo.icon).setFontSize(iconFontSize).setPosition(this.tileWidth / 2, this.tileHeight / 2);
+                 } else { tileRect.setFillStyle(COLORS.REVEALED_BG); mainText.setText("??").setFontSize(iconFontSize).setPosition(this.tileWidth / 2, this.tileHeight / 2); }
+                 statsText.setText('');
+                 break;
+        }
+    }
+    // --- End Corrected revealTileVisuals ---
+
+    tryPickupItem(r, c) { if (this.isGameOver) return; const tileData = this.gridData[r]?.[c]; if (!tileData || tileData.type !== TILE_TYPE.ITEM || !tileData.itemId) return; const itemId = tileData.itemId; const itemInfo = ITEM_TYPES[itemId]; if(itemId === 'KEY_ITEM') { console.log("Picking up the Key!"); this.player.hasKey = true; this.gridData[r][c] = { type: TILE_TYPE.EMPTY, revealed: true }; this.revealTileVisuals(this.tileObjects[r][c], this.gridData[r][c]); this.events.emit('updateStats', this.getPlayerStats()); this.events.emit('showMessage', 'Dungeon Key Acquired!'); } else if (this.player.inventory.length < MAX_INVENTORY_SLOTS) { console.log(`Picking up ${itemInfo.name}`); this.player.inventory.push(itemId); this.gridData[r][c] = { type: TILE_TYPE.EMPTY, revealed: true }; this.revealTileVisuals(this.tileObjects[r][c], this.gridData[r][c]); this.events.emit('updateInventory', this.player.inventory); this.events.emit('showMessage', `${itemInfo.name} added`); } else { console.log("Inventory Full!"); this.events.emit('showMessage', 'Inventory Full!'); const tileContainer = this.tileObjects[r]?.[c]; if (tileContainer) { let itemRect = tileContainer.list[0]; let originalColor = itemRect.fillColor; itemRect.setFillStyle(0xff0000); this.time.delayedCall(200, () => { if (this.gridData[r]?.[c]?.type === TILE_TYPE.ITEM) { itemRect.setFillStyle(originalColor); } }); } } }
+    useItem({ itemId, index }) { if (this.isGameOver || !itemId || index === undefined || index < 0 || index >= this.player.inventory.length) { return; } if (this.player.inventory[index] !== itemId) { this.events.emit('showMessage', 'Inventory Error!'); return; } const itemInfo = ITEM_TYPES[itemId]; if (!itemInfo) { return; } console.log(`Using item: ${itemInfo.name}`); let consumed = false; const effect = itemInfo.effect; switch (effect.type) { case 'HEAL': let healAmount = Math.min(effect.amount, this.player.maxHp - this.player.hp); if (healAmount > 0) { this.player.hp += healAmount; this.events.emit('updateStats', this.getPlayerStats()); this.events.emit('showMessage', `Healed ${healAmount} HP`); } else { this.events.emit('showMessage', `HP already full!`); } consumed = itemInfo.consumable; break; case 'DAMAGE_ALL': let monstersKilled = 0; let killedKeyHolder = false; let keyHolderCoords = null; for (let r = 0; r < GRID_ROWS; r++) { for (let c = 0; c < GRID_COLS; c++) { let targetData = this.gridData[r]?.[c]; if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0) { targetData.hp -= effect.amount; } } } for (let r = 0; r < GRID_ROWS; r++) { for (let c = 0; c < GRID_COLS; c++) { let targetData = this.gridData[r]?.[c]; let targetContainer = this.tileObjects[r]?.[c]; if (targetData && targetData.type === TILE_TYPE.MONSTER && targetContainer) { if (targetData.hp <= 0 && targetData.maxHp > 0) { targetData.maxHp = 0; monstersKilled++; this.player.gold += targetData.goldDrop; if (targetData.hasKey) { killedKeyHolder = true; keyHolderCoords = {r, c}; } this.gridData[r][c] = { type: TILE_TYPE.EMPTY, revealed: true }; } this.revealTileVisuals(targetContainer, this.gridData[r][c]); } } } if (killedKeyHolder && keyHolderCoords) { console.log("Key holder killed by AOE, dropping key..."); this.gridData[keyHolderCoords.r][keyHolderCoords.c] = { type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM', revealed: true }; this.revealTileVisuals(this.tileObjects[keyHolderCoords.r][keyHolderCoords.c], this.gridData[keyHolderCoords.r][keyHolderCoords.c]); this.events.emit('showMessage', `Key Dropped!`); this.justDroppedKeyCoords = keyHolderCoords; /* Set flag for dropped key */ } this.monsterCount -= monstersKilled; this.events.emit('updateStats', this.getPlayerStats()); this.events.emit('showMessage', `Blade Scroll hit for ${effect.amount}!`); consumed = itemInfo.consumable; break; } if (consumed) { this.player.inventory.splice(index, 1); this.events.emit('updateInventory', this.player.inventory); } }
+
+    // --- Updated attackMonster for Key Drop Flag ---
+    attackMonster(r, c) {
+        if (this.isGameOver) return;
+        const monsterData = this.gridData[r]?.[c];
+        const tileContainer = this.tileObjects[r]?.[c];
+        if (!monsterData || monsterData.type !== TILE_TYPE.MONSTER || monsterData.hp <= 0 || !tileContainer) return;
+        monsterData.hp -= this.player.atk;
+        if (monsterData.hp <= 0) { // Monster Died
+            monsterData.maxHp = 0; this.player.gold += monsterData.goldDrop; this.monsterCount--; console.log(`${monsterData.monsterType} died.`);
+            if (monsterData.hasKey) {
+                 console.log("Monster dropped the key!");
+                 this.gridData[r][c] = { type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM', revealed: true };
+                 this.revealTileVisuals(tileContainer, this.gridData[r][c]);
+                 this.events.emit('showMessage', `Key Dropped!`);
+                 this.justDroppedKeyCoords = { r: r, c: c }; // Set flag
+            } else { this.gridData[r][c] = { type: TILE_TYPE.EMPTY, revealed: true }; this.revealTileVisuals(tileContainer, this.gridData[r][c]); }
+            this.events.emit('updateStats', this.getPlayerStats());
+        } else { // Monster Survived
+            this.player.hp -= monsterData.atk; this.revealTileVisuals(tileContainer, monsterData); this.events.emit('updateStats', this.getPlayerStats()); this.checkGameOver();
+        }
+    }
+    // --- End Updated attackMonster ---
+
+    tryEnterDoor(r, c) { if (this.isGameOver) return; if (this.player.hasKey) { this.generateFloor(); } else { console.log("The door is locked. Find the key!"); const tileContainer = this.tileObjects[r]?.[c]; if (tileContainer) { let doorRect = tileContainer.list[0]; let originalColor = doorRect.fillColor; doorRect.setFillStyle(0xff0000); this.time.delayedCall(200, () => { const currentTileData = this.gridData[r]?.[c]; if (currentTileData?.type === TILE_TYPE.DOOR) { doorRect.setFillStyle(originalColor); } }); } } }
+    checkGameOver() { if (this.player.hp <= 0) { this.player.hp = 0; this.events.emit('updateStats', this.getPlayerStats()); this.gameOver(); } }
+    gameOver() { console.log("GAME OVER"); this.isGameOver = true; this.scale.off('resize', this.handleResize, this); this.input.off('pointerdown', this.handlePointerDown, this); this.events.off('useItem', this.useItem, this); this.events.off('debugMarkHidden', this.debugMarkHiddenTiles, this); this.time.delayedCall(1000, () => { this.scene.stop('UIScene'); this.scene.start('GameOverScene', { floor: this.currentFloor }); }); }
+    debugMarkHiddenTiles() { if (this.isGameOver) return; console.log("Debug: Marking hidden tiles"); let markedCount = 0; for (let r = 0; r < GRID_ROWS; r++) { for (let c = 0; c < GRID_COLS; c++) { let tileData = this.gridData[r]?.[c]; let tileContainer = this.tileObjects[r]?.[c]; if (tileData && tileContainer && !tileData.revealed) { let markerText = ''; let color = COLORS.DEBUG_MARKER_COLOR; if (tileData.type === TILE_TYPE.EMPTY) { markerText = '*'; markedCount++; } else if (tileData.type === TILE_TYPE.MONSTER && tileData.hasKey) { markerText = 'K'; markedCount++; } else if (tileData.type === TILE_TYPE.DOOR) { markerText = 'D'; markedCount++; } if (markerText) { let tileText = tileContainer.list[1]; if (tileText && tileText.setText) { tileText.setText(markerText).setColor(color); } } } } } console.log(`Debug: Marked ${markedCount} specific hidden tiles.`); if (markedCount > 0) { this.events.emit('showMessage', `Marked ${markedCount} hidden tiles`); } }
+    shutdown() { this.scale.off('resize', this.handleResize, this); this.input.off('pointerdown', this.handlePointerDown, this); this.events.off('useItem', this.useItem, this); this.events.off('debugMarkHidden', this.debugMarkHiddenTiles, this); }
+    destroy() { if (this.tileContainer) this.tileContainer.destroy(true); this.tileObjects = []; this.gridData = []; }
+}
+
+// #######################################
+// #                 UIScene             #
+// #######################################
+class UIScene extends Phaser.Scene {
+     constructor() { super({ key: 'UIScene' }); this.headerBg = null; this.footerBg = null; this.hpText = null; this.atkText = null; this.goldText = null; this.floorText = null; this.keyIconText = null; this.helpButton = null; this.debugButton = null; /* Removed instructionsPanel */ this.debugPanel = null; this.inventorySlots = []; this.messageText = null; this.messageTween = null; this.instructionsDOM = null; this.instructionsCloseBtnDOM = null; this.closeDomInstructionsHandler = null; }
+    create() { console.log("UIScene create"); const gameScene = this.scene.get('GameScene'); this.instructionsDOM = document.getElementById('instructions-dom'); this.instructionsCloseBtnDOM = document.getElementById('instructions-close-dom'); if (!this.instructionsDOM || !this.instructionsCloseBtnDOM) { console.error("Instructions DOM elements not found!"); } else { this.closeDomInstructionsHandler = () => this.hideDomInstructions(); this.instructionsCloseBtnDOM.addEventListener('click', this.closeDomInstructionsHandler); } this.headerBg = this.add.rectangle(0, 0, 1, 1, COLORS.UI_BAR_BG).setOrigin(0, 0); this.footerBg = this.add.rectangle(0, 0, 1, 1, COLORS.UI_BAR_BG).setOrigin(0, 0); this.hpText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT }); this.atkText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT }); this.goldText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.GOLD_TEXT }).setOrigin(0.5, 0); this.floorText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT }).setOrigin(1, 0); this.keyIconText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.KEY }).setOrigin(0.5, 0); this.helpButton = this.add.text(0, 0, '[?]', { font: 'bold 20px Arial', fill: COLORS.UI_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } }).setOrigin(1, 0).setInteractive({ useHandCursor: false }); this.helpButton.on('pointerdown', this.showDomInstructions, this); this.helpButton.on('pointerover', () => this.helpButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT)); this.helpButton.on('pointerout', () => this.helpButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT)); this.debugButton = this.add.text(0, 0, '[D]', { font: 'bold 20px Arial', fill: COLORS.UI_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } }).setOrigin(1, 0).setInteractive({ useHandCursor: false }); this.debugButton.on('pointerdown', this.toggleDebugPanel, this); this.debugButton.on('pointerover', () => this.debugButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT)); this.debugButton.on('pointerout', () => this.debugButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT)); this.debugPanel = this.add.container(0, 0).setDepth(101).setVisible(false); const debugPanelBg = this.add.rectangle(0, 0, 100, 100, COLORS.PANEL_BG, 0.9).setOrigin(0.5).setStrokeStyle(2, COLORS.UI_BUTTON_IDLE_TEXT); debugPanelBg.setInteractive({ useHandCursor: false }).on('pointerdown', (p, x, y, event) => { event.stopPropagation(); }); const closeButtonDebug = this.add.text(0, 0, '[X]', { font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } }).setOrigin(0.5).setInteractive({ useHandCursor: false }); closeButtonDebug.on('pointerdown', () => this.toggleDebugPanel()); closeButtonDebug.on('pointerover', () => closeButtonDebug.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT)); closeButtonDebug.on('pointerout', () => closeButtonDebug.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT)); const revealButton = this.add.text(0, 0, 'Mark Hidden', { font: '14px Arial', fill: '#FFF', backgroundColor: COLORS.DEBUG_BUTTON_BG, padding: {x: 8, y: 4} }).setOrigin(0.5).setInteractive({ useHandCursor: false }); revealButton.on('pointerdown', () => { console.log("Debug Mark Hidden button clicked"); this.scene.get('GameScene').events.emit('debugMarkHidden'); }); this.debugPanel.add([debugPanelBg, closeButtonDebug, revealButton]); this.inventorySlots = []; for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) { let slotContainer = this.add.container(0, 0); let slotBg = this.add.rectangle(0, 0, 50, 50, COLORS.INV_SLOT_BG).setOrigin(0.5); slotBg.setStrokeStyle(1, COLORS.INV_SLOT_BORDER); let itemLabel = this.add.text(0, 0, '', { font: 'bold 12px Arial', fill: COLORS.TEXT_DARK, align: 'center' }).setOrigin(0.5); slotContainer.add([slotBg, itemLabel]); slotContainer.setSize(50, 50); slotContainer.setInteractive({ useHandCursor: false }); slotContainer.on('pointerdown', (pointer) => { if(slotContainer.getData('itemId')) { this.handleInventoryClick(slotContainer); } }); this.inventorySlots.push(slotContainer); } this.messageText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, '', { font: 'bold 20px Arial', fill: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)', padding: { x: 15, y: 8 } }).setOrigin(0.5).setDepth(200).setAlpha(0); gameScene.events.on('updateStats', this.updateUI, this); gameScene.events.on('resizeUI', this.positionUIElements, this); gameScene.events.on('updateInventory', this.updateInventoryUI, this); gameScene.events.on('showMessage', this.showMessage, this); this.positionUIElements(); this.updateUI(gameScene.getPlayerStats()); this.updateInventoryUI(gameScene.player.inventory); }
+     positionUIElements() { const width = this.cameras.main.width; const height = this.cameras.main.height; const headerHeight = height * UI_HEADER_RATIO; const footerHeight = height * UI_FOOTER_RATIO; const padding = width * 0.02; const topMargin = headerHeight * 0.15; const fontSize = Math.max(12, Math.min(24, Math.floor(headerHeight * 0.3))); const textStyle = { font: `${fontSize}px Arial` }; this.headerBg.setPosition(0, 0).setSize(width, headerHeight); this.footerBg.setPosition(0, height - footerHeight).setSize(width, footerHeight); this.hpText.setPosition(padding, topMargin).setStyle(textStyle); this.atkText.setPosition(padding, topMargin + fontSize * 1.3).setStyle(textStyle); this.goldText.setPosition(width / 2, topMargin).setStyle({...textStyle, fill: COLORS.GOLD_TEXT }); this.keyIconText.setPosition(width / 2, topMargin + fontSize * 1.3).setFontSize(fontSize); this.floorText.setPosition(width - padding, topMargin).setStyle(textStyle); const buttonSize = Math.max(16, fontSize); const buttonY = Math.min(topMargin + fontSize * 1.3, headerHeight - buttonSize - (topMargin * 0.5)); this.helpButton.setPosition(width - padding, buttonY).setFontSize(buttonSize); const debugButtonX = width - padding - this.helpButton.width - (padding * 0.5); this.debugButton.setPosition(debugButtonX, buttonY).setFontSize(buttonSize); if (this.debugPanel) { const panelWidth = Math.min(width * 0.7, 350); const panelHeight = Math.min(height * 0.6, 250); this.debugPanel.setPosition(width / 2, headerHeight + (height - headerHeight - footerHeight) / 2); const panelBg = this.debugPanel.list[0]; const closeButton = this.debugPanel.list[1]; const revealButton = this.debugPanel.list[2]; panelBg.setSize(panelWidth, panelHeight); closeButton.setPosition((panelWidth / 2) - (closeButton.width / 2) - (padding * 0.3), (-panelHeight / 2) + (closeButton.height / 2) + (padding * 0.3)); revealButton.setPosition(0, (-panelHeight / 2) + closeButton.height + padding * 1.5); } const slotSize = Math.min(width / (MAX_INVENTORY_SLOTS + 2), footerHeight * 0.8); const totalInvWidth = MAX_INVENTORY_SLOTS * slotSize + (MAX_INVENTORY_SLOTS - 1) * (slotSize * 0.1); const startX = (width - totalInvWidth) / 2 + (slotSize / 2); const slotY = height - (footerHeight / 2); for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) { let slotContainer = this.inventorySlots[i]; if(slotContainer){ let slotX = startX + i * (slotSize + slotSize * 0.1); slotContainer.setPosition(slotX, slotY); let slotBg = slotContainer.list[0]; let itemLabel = slotContainer.list[1]; slotBg.setSize(slotSize, slotSize); itemLabel.setFontSize(Math.max(12, Math.floor(slotSize * 0.5))); slotContainer.setSize(slotSize, slotSize); } } if (this.messageText) { this.messageText.setPosition(width / 2, height / 2); } }
+     showDomInstructions() { if (this.instructionsDOM) { if(this.debugPanel && this.debugPanel.visible) { this.toggleDebugPanel(); } this.instructionsDOM.style.display = 'block'; } }
+     hideDomInstructions() { if (this.instructionsDOM) { this.instructionsDOM.style.display = 'none'; } }
+     toggleDebugPanel() { if (this.debugPanel) { const isVisible = this.debugPanel.visible; if (!isVisible && this.instructionsDOM && this.instructionsDOM.style.display !== 'none') { this.hideDomInstructions(); } this.debugPanel.setVisible(!isVisible); if (!isVisible) { this.positionUIElements(); } } }
+     updateUI(stats) { this.hpText.setText(`HP: ${stats.hp} / ${stats.maxHp}`); this.atkText.setText(`ATK: ${stats.atk}`); this.goldText.setText(`GOLD: ${stats.gold}`); this.floorText.setText(`Floor: ${stats.floor}`); this.keyIconText.setText(stats.hasKey ? '🗝️' : ''); const gameScene = this.scene.get('GameScene'); if (gameScene && gameScene.gridData && gameScene.tileObjects) { for (let r = 0; r < GRID_ROWS; r++) { for (let c = 0; c < GRID_COLS; c++) { const tileData = gameScene.gridData[r]?.[c]; const tileContainer = gameScene.tileObjects[r]?.[c]; if (tileData?.type === TILE_TYPE.DOOR && tileData.revealed && tileContainer) { gameScene.revealTileVisuals(tileContainer, tileData); break; } } } } }
+     updateInventoryUI(inventoryData) { console.log("Updating inventory UI:", inventoryData); for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) { let slotContainer = this.inventorySlots[i]; if (!slotContainer) continue; let slotBg = slotContainer.list[0]; let itemLabel = slotContainer.list[1]; if (i < inventoryData.length) { let itemId = inventoryData[i]; let itemInfo = ITEM_TYPES[itemId]; if (itemInfo) { slotBg.setFillStyle(itemInfo.color || COLORS.ITEM_DEFAULT); itemLabel.setText(itemInfo.icon || '??').setColor(COLORS.TEXT); slotContainer.setData({ itemId: itemId, inventoryIndex: i }); slotContainer.setInteractive({ useHandCursor: false }); } else { slotBg.setFillStyle(COLORS.INV_SLOT_BG); itemLabel.setText('ERR').setColor('#FF0000'); slotContainer.setData({ itemId: null, inventoryIndex: i }); slotContainer.disableInteractive(); } } else { slotBg.setFillStyle(COLORS.INV_SLOT_BG); itemLabel.setText(''); slotContainer.setData({ itemId: null, inventoryIndex: i }); slotContainer.disableInteractive(); } } }
+     handleInventoryClick(slotContainer) { if (!slotContainer) return; const itemId = slotContainer.getData('itemId'); const index = slotContainer.getData('inventoryIndex'); if (itemId !== null && index !== null) { console.log(`Clicked inventory slot ${index}, item: ${itemId}`); this.scene.get('GameScene').events.emit('useItem', { itemId: itemId, index: index }); } }
+     showMessage(message) { if (!this.messageText) return; console.log("Showing message:", message); this.messageText.setText(message); this.messageText.setAlpha(1); if (this.messageTween) { this.messageTween.stop(); this.messageTween = null; } this.messageTween = this.tweens.add({ targets: this.messageText, alpha: 0, delay: 1500, duration: 500, onComplete: () => { this.messageTween = null; } }); }
+     shutdown() { if (this.instructionsCloseBtnDOM && this.closeDomInstructionsHandler) { this.instructionsCloseBtnDOM.removeEventListener('click', this.closeDomInstructionsHandler); } this.closeDomInstructionsHandler = null; const gameScene = this.scene.get('GameScene'); if (gameScene) { gameScene.events.off('updateStats', this.updateUI, this); gameScene.events.off('resizeUI', this.positionUIElements, this); gameScene.events.off('updateInventory', this.updateInventoryUI, this); gameScene.events.off('showMessage', this.showMessage, this); } if (this.debugPanel) { this.debugPanel.destroy(true); this.debugPanel = null; } if(this.headerBg) this.headerBg.destroy(); if(this.footerBg) this.footerBg.destroy(); this.inventorySlots.forEach(slot => { if(slot) slot.destroy(true); }); this.inventorySlots = []; if(this.messageText) this.messageText.destroy(); if(this.keyIconText) this.keyIconText.destroy(); }
+}
+
+// #######################################
+// #              GameOverScene          #
+// #######################################
+class GameOverScene extends Phaser.Scene {
+    constructor() { super({ key: 'GameOverScene' }); } init(data) { this.finalFloor = data.floor || 0; } create() { this.scale.on('resize', this.positionElements, this); this.positionElements(); } positionElements() { if (this.bg) this.bg.destroy(); if (this.titleText) this.titleText.destroy(); if (this.floorText) this.floorText.destroy(); if (this.restartButton) this.restartButton.destroy(); let width = this.cameras.main.width; let height = this.cameras.main.height; this.bg = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0); let titleFontSize = Math.max(24, Math.floor(height * 0.08)); let infoFontSize = Math.max(16, Math.floor(height * 0.04)); let buttonFontSize = Math.max(20, Math.floor(height * 0.05)); this.titleText = this.add.text(width / 2, height * 0.4, 'GAME OVER', { font: `${titleFontSize}px Arial`, fill: '#ff0000', align: 'center' }).setOrigin(0.5); this.floorText = this.add.text(width / 2, height * 0.5, `You reached Floor ${this.finalFloor}`, { font: `${infoFontSize}px Arial`, fill: '#ffffff', align: 'center' }).setOrigin(0.5); this.restartButton = this.add.text(width / 2, height * 0.65, 'RESTART', { font: `${buttonFontSize}px Arial`, fill: '#66ff66', backgroundColor: '#333333', padding: { x: width * 0.03, y: height * 0.015 } }).setOrigin(0.5).setInteractive({ useHandCursor: false }); this.restartButton.on('pointerdown', () => { console.log("Restart button clicked - starting GameScene"); this.scale.off('resize', this.positionElements, this); this.scene.start('GameScene'); }); this.restartButton.on('pointerover', () => this.restartButton.setStyle({ fill: '#ffffff' })); this.restartButton.on('pointerout', () => this.restartButton.setStyle({ fill: '#66ff66' })); } shutdown() { this.scale.off('resize', this.positionElements, this); }
+}
+
+// --- Phaser Game Configuration ---
+const config = { type: Phaser.AUTO, scale: { mode: Phaser.Scale.RESIZE, parent: 'game-container', width: '100%', height: '100%' }, backgroundColor: '#000000', scene: [BootScene, PreloaderScene, GameScene, UIScene, GameOverScene] };
+
+// --- Start the Game ---
+const game = new Phaser.Game(config);
+
+</script>
+
+</body>
+</html>
