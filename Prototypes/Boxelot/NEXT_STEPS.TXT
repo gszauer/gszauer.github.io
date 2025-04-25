@@ -1,5 +1,14 @@
 
 
+
+
+Next, let's build a shop. The Shop allows players to buy more hp or attack for gold. The shop appears only every 4 floors, starting on floor 4.
+Clicking on the shop causes a modal popup to appear. In the popup the player can buy +5 health is 100 coins, +1 attack is 200 coins. 
+The shop doesn't dissapear after using it. PLayer can click the shop as many times as they want while on a floor with a shop on it.
+
+Add a "enable Debug shop" button to the debug menu. When enabled, every floor will have a shop show up.
+
+
 ---- Companions
 TODO: Companions:
 Knight: Does 3 damage to all visible enemies
@@ -48,7 +57,7 @@ Vampire: 🧛‍♂️
 Zombie: 🧟‍♂️
 Ghost 👻
 
-TODO: Slime type enemy (spawns a smaller one)
+TODO: Slime type enemy 🐌 / 🐚 (spawns a smaller one)
 TODO: Bosses:
 Appear every 5 floors, starting on floor 5. Optional.
     Reward: Compas, can have in inventory but can't use. Reveals location of the key.
