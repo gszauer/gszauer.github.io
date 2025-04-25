@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boxelot</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a; /* Darker background for the page */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scrollbars */
+        }
+        #phaser-game {
+            width: 100%;
+            height: 100%;
+        }
+        #instructions-dom {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            max-width: 600px; /* Max width for readability */
+            max-height: 80vh; /* Limit height */
+            background-color: rgba(40, 40, 50, 0.95);
+            color: #eee;
+            border: 2px solid #666;
+            border-radius: 10px;
+            z-index: 1000;
+            font-family: sans-serif;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #instructions-header {
+            background-color: #333;
+            padding: 10px 15px;
+            border-bottom: 1px solid #555;
+            border-radius: 8px 8px 0 0;
+            position: sticky;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #instructions-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        #instructions-close-btn {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+         #instructions-close-btn:hover {
+            background: #c9302c;
+         }
+        #instructions-content {
+            padding: 15px;
+            overflow-y: auto;
+            height: calc(100% - 50px); /* Adjust based on header height */
+            box-sizing: border-box;
+        }
+        #instructions-content h3 {
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #aaa;
+            border-bottom: 1px solid #555;
+            padding-bottom: 3px;
+        }
+        #instructions-content p, #instructions-content ul {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+         #instructions-content li {
+            margin-left: 20px;
+            margin-bottom: 5px;
+         }
+        #instructions-content code {
+            background-color: #555;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        #instructions-content strong {
+            color: #ffcc66;
+        }
+    </style>
+</head>
+<body>
+    <div id="phaser-game"></div>
+    <div id="instructions-dom">
+        <div id="instructions-header">
+            <h2>Boxelot - How to Play</h2>
+            <button id="instructions-close-btn">X</button>
+        </div>
+        <div id="instructions-content">
+            <h3>Objective</h3>
+            <p>Descend as deep as possible through the dungeon floors by finding the key 🗝️ and unlocking the door 🚪 on each level.</p>
+
+            <h3>Basics</h3>
+            <ul>
+                <li>The dungeon is a grid of hidden tiles.</li>
+                <li>You start next to the revealed <strong>Door</strong> 🚪.</li>
+                <li>Click adjacent hidden tiles marked with a '<strong>?</strong>' to reveal them.</li>
+                <li>Tiles marked with an '<strong>X</strong>' are blocked by adjacent monsters and cannot be revealed yet.</li>
+                <li>Tiles with no marker are currently inaccessible.</li>
+            </ul>
+
+            <h3>Tile Types</h3>
+            <ul>
+                <li><strong>Empty:</strong> (Dark Grey) Safe to reveal. Opens up adjacent tiles.</li>
+                <li><strong>Monster (🕷️💀🧟):</strong> (Red) Click to attack. Monsters attack back!
+                    <ul>
+                        <li>Stats (❤️HP / 🗡️ATK) appear below the icon when revealed.</li>
+                        <li>One monster per floor holds the <strong>Key</strong> 🗝️. The key icon appears next to the monster *after* you attack it once.</li>
+                        <li>Defeating the key monster reveals the Key tile. Other monsters leave behind an Empty tile.</li>
+                    </ul>
+                </li>
+                 <li><strong>Key 🗝️:</strong> (Yellow) Click to pick up the key. You need this to open the Door.</li>
+                <li><strong>Door 🚪:</strong> (Brown) Starts revealed. Shows 🔒 (locked) or 🔓 (unlocked when you have the key). Click when unlocked 🔓 to proceed to the next floor (consumes the key).</li>
+                <li><strong>Gold 💰:</strong> (Gold) Reveals "GOLD +Value". Click to collect.</li>
+                <li><strong>Trap 💥:</strong> (Dark Grey) Reveals "TRAP! -Value HP". Damages you immediately!</li>
+                <li><strong>Item (🍷🗡️):</strong> (Green) Reveals an item icon. Click to pick it up if you have inventory space.</li>
+            </ul>
+
+            <h3>Combat</h3>
+            <ul>
+                <li>Click a revealed monster to attack it.</li>
+                <li>You deal damage equal to your <strong>ATK 🗡️</strong>.</li>
+                <li>If the monster survives, it deals damage equal to its <strong>ATK 🗡️</strong> back to you.</li>
+                <li>Your current <strong>HP ❤️</strong> and <strong>ATK 🗡️</strong> are shown in the top bar.</li>
+            </ul>
+
+             <h3>Inventory & Items</h3>
+            <ul>
+                <li>Your inventory (max 6 slots) is shown in the bottom bar.</li>
+                <li>Click an item icon in the inventory to see its details and potentially use it.</li>
+                <li><strong>Potion 🍷:</strong> Heals a fixed amount of HP.</li>
+                <li><strong>Blade Scroll 🗡️:</strong> Damages all revealed, living monsters.</li>
+                <li>Items are consumed on use.</li>
+            </ul>
+
+             <h3>UI</h3>
+             <ul>
+                <li><strong>Top Bar:</strong> Shows HP, ATK, Gold, current Floor, and a 🗝️ icon when you hold the key.</li>
+                <li><strong>[?] Button:</strong> Toggles this help panel.</li>
+                <li><strong>[D] Button:</strong> Toggles the debug panel (for developers/testing).</li>
+                <li><strong>Bottom Bar:</strong> Shows your inventory.</li>
+             </ul>
+
+            <h3>Tips</h3>
+            <ul>
+                <li>Be careful revealing tiles next to monsters ('X'). Defeat the monster first to unblock them.</li>
+                <li>Manage your HP and use potions wisely.</li>
+                <li>Prioritize finding the key monster.</li>
+                <li>Use Blade Scrolls when multiple enemies are revealed.</li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+// Constants
+const GRID_ROWS = 6;
+const GRID_COLS = 5;
+const MAX_INVENTORY_SLOTS = 6;
+const UI_HEADER_RATIO = 0.10; // 10% for header
+const UI_FOOTER_RATIO = 0.12; // 12% for footer
+
+const COLORS = {
+    BACKGROUND: 0x2d2d2d,
+    TILE_HIDDEN: 0x888888,
+    REVEALED_BG: 0x444444,
+    MONSTER_BG: 0xA02C2C, // Muted Red
+    ITEM_BG: 0x2E8B57, // Sea Green
+    KEY: 0xFFD700, // Gold (for key background)
+    DOOR: 0x8B4513, // Saddle Brown
+    GOLD: 0xFFD700, // Gold
+    TRAP: 0x555555, // Dark Grey for trap tile BG
+    TEXT_LIGHT: '#ffffff',
+    TEXT_DARK: '#222222',
+    TEXT_MONSTER_STATS: '#111111',
+    TEXT_GOLD_VALUE: '#A0522D', // Peru, dark gold text
+    TEXT_TRAP: '#FF6347', // Tomato Red
+    UI_BAR_BG: 0x111111,
+    UI_TEXT: '#ffffff',
+    UI_ACCENT: '#4682B4', // Steel Blue for buttons
+    UI_ACCENT_HOVER: '#ADD8E6', // Light Blue
+    GOLD_TEXT: '#FFD700', // For UI Gold display
+    POPUP_BG: 'rgba(0, 0, 0, 0.8)',
+    POPUP_BORDER: 0xcccccc,
+    MODAL_BG: 'rgba(0, 0, 0, 0.6)',
+};
+
+const TILE_TYPES = {
+    EMPTY: 'EMPTY',
+    MONSTER: 'MONSTER',
+    DOOR: 'DOOR',
+    GOLD: 'GOLD',
+    TRAP: 'TRAP',
+    ITEM: 'ITEM',
+    KEY_ITEM: 'KEY_ITEM', // Special type for the key after monster defeat
+};
+
+const TILE_STATE = {
+    HIDDEN_UNACCESSIBLE: 'HIDDEN_UNACCESSIBLE', // Dark grey, no text, not clickable
+    HIDDEN_NORMAL: 'HIDDEN_NORMAL',         // Dark grey, '?', clickable
+    HIDDEN_BLOCKED: 'HIDDEN_BLOCKED',        // Dark grey, 'X', not clickable
+    REVEALED: 'REVEALED'              // Content visible and potentially interactive
+};
+
+const MONSTERS = {
+    SPIDER: { id: 'SPIDER', icon: '🕷️', baseHp: 5, baseAtk: 1 },
+    SKELETON: { id: 'SKELETON', icon: '💀', baseHp: 8, baseAtk: 2 },
+    ZOMBIE: { id: 'ZOMBIE', icon: '🧟', baseHp: 12, baseAtk: 1 },
+};
+
+const ITEMS = {
+    POTION: { id: 'POTION', name: 'Health Potion', icon: '🍷', description: 'Restores 5 HP.', amount: 5, consumable: true, effect: 'heal' },
+    BLADE_SCROLL: { id: 'BLADE_SCROLL', name: 'Blade Scroll', icon: '🗡️', description: 'Deals 3 damage to all visible monsters.', amount: 3, consumable: true, effect: 'aoe_damage' },
+    // Add more items here if needed
+};
+
+// --- Global Game State ---
+// Encapsulated to be passed around or reset easily
+let gameState = {
+    player: {
+        hp: 0,
+        maxHp: 0,
+        atk: 0,
+        gold: 0,
+        hasKey: false,
+        inventory: [], // Array of item IDs
+    },
+    currentFloor: 0,
+    isGameOver: false,
+    useDiagonals: false, // For adjacency checks (debug toggle)
+};
+
+// --- Helper Functions ---
+function getNeighbors(r, c, rows = GRID_ROWS, cols = GRID_COLS, useDiagonals = gameState.useDiagonals) {
+    const neighbors = [];
+    const directions = [
+        [-1, 0], [1, 0], [0, -1], [0, 1], // Cardinal
+    ];
+    if (useDiagonals) {
+        directions.push([-1, -1], [-1, 1], [1, -1], [1, 1]); // Diagonal
+    }
+
+    for (const [dr, dc] of directions) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            neighbors.push({ r: nr, c: nc });
+        }
+    }
+    return neighbors;
+}
+
+function isMonsterTile(tileData) {
+    return tileData && tileData.type === TILE_TYPES.MONSTER && tileData.hp > 0;
+}
+
+function isClearTile(tileData) {
+    // A tile is clear if it's revealed and not a living monster
+    return tileData && tileData.revealed && !isMonsterTile(tileData);
+}
+
+// --- Phaser Scenes ---
+
+class BootScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'BootScene' });
+    }
+
+    preload() {
+        // No assets to load in this version
+        console.log("BootScene preload");
+    }
+
+    create() {
+        console.log("BootScene create");
+        this.scene.start('PreloaderScene');
+    }
+}
+
+class PreloaderScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PreloaderScene' });
+    }
+
+    preload() {
+        // No assets needed, but structure kept for potential future use
+        console.log("PreloaderScene preload");
+        // Could add a loading bar here if needed
+    }
+
+    create() {
+        console.log("PreloaderScene create");
+        // Start the main game scenes
+        this.scene.start('GameScene');
+        this.scene.launch('UIScene'); // Launch UI in parallel
+    }
+}
+
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+        this.gridData = []; // 2D array for tile data
+        this.gridSprites = []; // 2D array for tile sprites (Containers)
+        this.tileSize = { width: 0, height: 0 };
+        this.gridOffset = { x: 0, y: 0 };
+    }
+
+    init() {
+        console.log("GameScene init");
+        // Reset game state for a new game
+        gameState.isGameOver = false;
+        gameState.currentFloor = 1;
+        gameState.player.maxHp = 20;
+        gameState.player.hp = gameState.player.maxHp;
+        gameState.player.atk = 2;
+        gameState.player.gold = 0;
+        gameState.player.hasKey = false;
+        gameState.player.inventory = [];
+        gameState.useDiagonals = false; // Reset debug setting
+
+        // Ensure grid data is cleared for floor generation
+        this.gridData = [];
+        this.gridSprites = [];
+        for (let r = 0; r < GRID_ROWS; r++) {
+            this.gridData[r] = [];
+            this.gridSprites[r] = [];
+        }
+    }
+
+    create() {
+        console.log("GameScene create");
+        this.cameras.main.setBackgroundColor(COLORS.BACKGROUND);
+
+        // Initialize grid data structure
+        for (let r = 0; r < GRID_ROWS; r++) {
+            if (!this.gridData[r]) { this.gridData[r] = []; }
+            if (!this.gridSprites[r]) { this.gridSprites[r] = []; }
+             for (let c = 0; c < GRID_COLS; c++) {
+                 this.gridData[r][c] = null; // Will be populated by generateFloor
+                 this.gridSprites[r][c] = null; // Will be populated by createGridSprites
+             }
+        }
+
+
+        this.generateFloor();
+        this.createGridSprites(); // Create sprites after data is generated
+        this.initialReveal(); // Reveal door and adjacent tiles
+
+        // Listen for events from UIScene
+        this.events.on('useItem', this.handleUseItem, this);
+        this.events.on('debugMarkHidden', this.debugMarkHidden, this);
+        this.events.on('debugChangeStat', this.debugChangeStat, this);
+        this.events.on('debugKillAll', this.debugKillAllVisible, this);
+        this.events.on('debugToggleDiagonals', this.debugToggleDiagonals, this);
+        this.events.on('debugFillInventory', this.debugFillInventory, this);
+
+
+        // Handle resize events
+        this.scale.on('resize', this.handleResize, this);
+        // Initial layout calculation
+        this.handleResize(this.scale.gameSize);
+
+        // Inform UI that the game is ready for initial data sync
+         this.scene.get('UIScene').events.emit('uiReady'); // Signal UI it can request initial state
+
+        // Send initial state to UI
+        this.updateUI();
+
+        console.log("GameScene creation complete. Floor:", gameState.currentFloor);
+    }
+
+    generateFloor() {
+        console.log(`Generating floor ${gameState.currentFloor}`);
+        const totalCells = GRID_ROWS * GRID_COLS;
+        let availableCells = [];
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                availableCells.push({ r, c });
+                // Ensure gridData structure exists
+                 if (!this.gridData[r]) { this.gridData[r] = []; }
+                 this.gridData[r][c] = { // Initialize with default hidden state
+                     type: TILE_TYPES.EMPTY, // Default to empty
+                     revealed: false,
+                     state: TILE_STATE.HIDDEN_UNACCESSIBLE,
+                     // Add default properties for all types to avoid errors later
+                     hp: 0, maxHp: 0, atk: 0, hasKey: false, attackedOnce: false, value: 0, id: null
+                 };
+            }
+        }
+
+        // Helper to pick a random cell and remove it from available list
+        const placeTile = (type, data = {}) => {
+            if (availableCells.length === 0) {
+                console.warn("No available cells left to place tile:", type);
+                return null; // Indicate failure if needed
+            }
+            const randomIndex = Phaser.Math.Between(0, availableCells.length - 1);
+            const cell = availableCells.splice(randomIndex, 1)[0];
+            this.gridData[cell.r][cell.c] = {
+                ...this.gridData[cell.r][cell.c], // Keep default state/revealed etc.
+                type: type,
+                ...data // Overwrite with specific data
+            };
+            console.log(`Placed ${type} at (${cell.r}, ${cell.c})`);
+             return cell; // Return the placed cell coordinates
+        };
+
+        // 1. Place Door (must be placed first for initial reveal)
+        const doorCell = placeTile(TILE_TYPES.DOOR, { state: TILE_STATE.REVEALED, revealed: true });
+        if (!doorCell) {
+            console.error("Failed to place Door! Aborting floor generation.");
+            // Handle this error state - maybe retry or show an error?
+            // For now, just log and continue, might result in weird state.
+        }
+
+        // 2. Place Monsters
+        const numMonsters = Math.min(Math.floor(totalCells * 0.2) + Math.floor(gameState.currentFloor / 3), availableCells.length); // Scale slightly, ensure space
+        const monsterTypes = Object.values(MONSTERS);
+        let keyMonsterPlaced = false;
+        for (let i = 0; i < numMonsters; i++) {
+            const monsterTemplate = Phaser.Utils.Array.GetRandom(monsterTypes);
+            const scaleFactor = 1 + (gameState.currentFloor - 1) * 0.2; // Increase stats by 20% per floor past 1
+            const hp = Math.max(1, Math.round(monsterTemplate.baseHp * scaleFactor));
+            const atk = Math.max(1, Math.round(monsterTemplate.baseAtk * scaleFactor));
+            let hasKey = false;
+            if (!keyMonsterPlaced && i === numMonsters - 1) { // Assign key to the last monster placed
+                 hasKey = true;
+                 keyMonsterPlaced = true;
+                 console.log("Key assigned to this monster");
+            }
+            placeTile(TILE_TYPES.MONSTER, {
+                id: monsterTemplate.id,
+                icon: monsterTemplate.icon,
+                hp: hp,
+                maxHp: hp,
+                atk: atk,
+                hasKey: hasKey,
+                attackedOnce: false,
+                state: TILE_STATE.HIDDEN_UNACCESSIBLE // Start hidden
+            });
+        }
+         // Ensure a key monster is always placed if possible
+         if (!keyMonsterPlaced && numMonsters > 0 && availableCells.length < totalCells -1 ) {
+             // This situation might occur if the last monster placement failed or logic changed
+             // Find the first placed monster and give it the key.
+             console.warn("Key monster was not assigned during initial loop. Assigning retrospectively.");
+             let foundMonster = false;
+              for (let r = 0; r < GRID_ROWS; r++) {
+                  for (let c = 0; c < GRID_COLS; c++) {
+                       if(this.gridData[r][c]?.type === TILE_TYPES.MONSTER) {
+                           this.gridData[r][c].hasKey = true;
+                           foundMonster = true;
+                           break;
+                       }
+                  }
+                  if(foundMonster) break;
+              }
+              if (!foundMonster) console.error("Failed to place any monster to assign key to!");
+
+         } else if (numMonsters === 0) {
+             console.error("Cannot place key, no monsters generated!");
+             // Game is potentially unwinnable. Add a failsafe? Maybe add a key item directly?
+             // For now, log the error. A failsafe might be to place a KEY_ITEM directly.
+             if (availableCells.length > 0) {
+                  console.log("Failsafe: Placing KEY_ITEM directly.");
+                  placeTile(TILE_TYPES.KEY_ITEM, { id: 'FAILSAFE_KEY', icon: '🗝️', state: TILE_STATE.HIDDEN_UNACCESSIBLE });
+             }
+         }
+
+
+        // 3. Place Gold
+        const numGold = Math.min(Math.floor(totalCells * 0.15), availableCells.length);
+        for (let i = 0; i < numGold; i++) {
+            const value = Phaser.Math.Between(5, 15) + gameState.currentFloor * 2;
+            placeTile(TILE_TYPES.GOLD, { value: value, state: TILE_STATE.HIDDEN_UNACCESSIBLE });
+        }
+
+        // 4. Place Traps
+        const numTraps = Math.min(Math.floor(totalCells * 0.1), availableCells.length);
+        for (let i = 0; i < numTraps; i++) {
+            const value = Phaser.Math.Between(1, 4) + Math.floor(gameState.currentFloor / 2);
+            placeTile(TILE_TYPES.TRAP, { value: value, state: TILE_STATE.HIDDEN_UNACCESSIBLE });
+        }
+
+        // 5. Place Items (Potions/Scrolls)
+        const numItems = Math.min(Math.floor(totalCells * 0.1), availableCells.length);
+        const itemTypes = [ITEMS.POTION.id, ITEMS.BLADE_SCROLL.id];
+        for (let i = 0; i < numItems; i++) {
+            const randomItemId = Phaser.Utils.Array.GetRandom(itemTypes);
+            const itemTemplate = Object.values(ITEMS).find(item => item.id === randomItemId);
+            placeTile(TILE_TYPES.ITEM, { id: itemTemplate.id, icon: itemTemplate.icon, state: TILE_STATE.HIDDEN_UNACCESSIBLE });
+        }
+
+        // 6. Fill remaining with Empty
+        // This is implicitly handled as availableCells are removed, and defaults are EMPTY.
+        // We just need to ensure the state is correct. They remain HIDDEN_UNACCESSIBLE initially.
+         availableCells.forEach(cell => {
+             this.gridData[cell.r][cell.c].type = TILE_TYPES.EMPTY;
+             this.gridData[cell.r][cell.c].state = TILE_STATE.HIDDEN_UNACCESSIBLE;
+         });
+
+        console.log("Floor generation finished.");
+    }
+
+    createGridSprites() {
+        console.log("Creating grid sprites...");
+        // Clear existing sprites before creating new ones (for next floor)
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                if (this.gridSprites[r][c]) {
+                    this.gridSprites[r][c].destroy();
+                    this.gridSprites[r][c] = null;
+                }
+            }
+        }
+
+        const tileWidth = this.tileSize.width - 4; // Add padding
+        const tileHeight = this.tileSize.height - 4;
+
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                const tileX = this.gridOffset.x + c * this.tileSize.width + this.tileSize.width / 2;
+                const tileY = this.gridOffset.y + r * this.tileSize.height + this.tileSize.height / 2;
+
+                const tileContainer = this.add.container(tileX, tileY);
+
+                // Background Rect
+                const bgRect = this.add.rectangle(0, 0, tileWidth, tileHeight, COLORS.TILE_HIDDEN);
+                bgRect.setName('background');
+                tileContainer.add(bgRect);
+
+                // Text/Icon (adjust font size dynamically later in handleResize)
+                const text = this.add.text(0, 0, '', {
+                    fontSize: `${Math.min(tileWidth, tileHeight) * 0.5}px`, // Initial guess
+                    color: COLORS.TEXT_DARK,
+                    align: 'center',
+                    fixedWidth: tileWidth,
+                    fixedHeight: tileHeight,
+                    padding: { y: Math.min(tileWidth, tileHeight) * 0.1 } // Vertical padding
+                }).setOrigin(0.5);
+                text.setName('text');
+                tileContainer.add(text);
+
+                // Monster Stats Text (hidden initially)
+                const statsText = this.add.text(0, tileHeight * 0.35, '', { // Position below main icon
+                    fontSize: `${Math.min(tileWidth, tileHeight) * 0.18}px`, // Smaller font
+                    color: COLORS.TEXT_MONSTER_STATS,
+                    align: 'center',
+                    fixedWidth: tileWidth,
+                }).setOrigin(0.5, 0.5); // Center horizontally, align top edge below center
+                statsText.setName('statsText');
+                statsText.setVisible(false); // Hide initially
+                tileContainer.add(statsText);
+
+
+                tileContainer.setSize(tileWidth, tileHeight);
+                tileContainer.setInteractive({ useHandCursor: false }) // Disable hand cursor
+                    .on('pointerdown', () => {
+                        if (!gameState.isGameOver) {
+                             this.handleTileClick(r, c);
+                        }
+                    });
+
+                this.gridSprites[r][c] = tileContainer;
+                this.updateTileVisual(r, c); // Set initial visual state
+            }
+        }
+        console.log("Grid sprites created.");
+    }
+
+     initialReveal() {
+         console.log("Initial reveal...");
+         let doorCoords = null;
+         // Find the door first
+         for (let r = 0; r < GRID_ROWS; r++) {
+             for (let c = 0; c < GRID_COLS; c++) {
+                 if (this.gridData[r][c]?.type === TILE_TYPES.DOOR) {
+                      // Ensure it's marked as revealed (should be from generateFloor)
+                      this.gridData[r][c].revealed = true;
+                      this.gridData[r][c].state = TILE_STATE.REVEALED;
+                      doorCoords = { r, c };
+                      this.updateTileVisual(r, c); // Update door visual
+                      console.log(`Door found and confirmed revealed at (${r}, ${c})`);
+                      break;
+                 }
+             }
+              if (doorCoords) break;
+         }
+
+         if (doorCoords) {
+            // Update neighbors of the door
+             console.log("Updating door neighbors...");
+             this.updateNeighborStates(doorCoords.r, doorCoords.c, false); // Not a monster block
+         } else {
+             console.error("CRITICAL: Door tile not found during initial reveal!");
+              // Handle this catastrophic state - maybe try revealing center?
+         }
+     }
+
+
+    handleTileClick(r, c) {
+        if (gameState.isGameOver) { return; }
+
+        const tileData = this.gridData[r][c];
+        if (!tileData) { return; } // Should not happen
+
+        console.log(`Tile clicked: (${r}, ${c}), State: ${tileData.state}, Type: ${tileData.type}`);
+
+        switch (tileData.state) {
+            case TILE_STATE.HIDDEN_NORMAL:
+                this.revealTile(r, c);
+                break;
+            case TILE_STATE.REVEALED:
+                this.handleRevealedTileClick(r, c, tileData);
+                break;
+            case TILE_STATE.HIDDEN_UNACCESSIBLE:
+            case TILE_STATE.HIDDEN_BLOCKED:
+                // Do nothing for these states
+                console.log("Clicked on inaccessible/blocked tile.");
+                break;
+        }
+    }
+
+    handleRevealedTileClick(r, c, tileData) {
+        switch (tileData.type) {
+            case TILE_TYPES.MONSTER:
+                if (tileData.hp > 0) {
+                    this.attackMonster(r, c);
+                }
+                break;
+            case TILE_TYPES.ITEM:
+                 this.tryPickupItem(r, c, tileData.id);
+                break;
+            case TILE_TYPES.KEY_ITEM:
+                 this.pickupKey(r, c);
+                break;
+            case TILE_TYPES.GOLD:
+                this.collectGold(r, c);
+                break;
+            case TILE_TYPES.DOOR:
+                if (gameState.player.hasKey) {
+                    this.enterDoor();
+                } else {
+                    this.showMessage("Door is locked! Find the 🗝️.", 2000);
+                    console.log("Attempted to open locked door.");
+                }
+                break;
+            case TILE_TYPES.EMPTY:
+            case TILE_TYPES.TRAP: // Trap effect already happened on reveal
+                // No action on clicking revealed empty or already triggered trap
+                break;
+        }
+    }
+
+
+    revealTile(r, c) {
+        const tileData = this.gridData[r][c];
+
+        if (tileData.revealed || tileData.state !== TILE_STATE.HIDDEN_NORMAL) {
+            console.log(`Reveal denied for (${r}, ${c}): Revealed=${tileData.revealed}, State=${tileData.state}`);
+            return; // Should only reveal HIDDEN_NORMAL tiles
+        }
+
+        console.log(`Revealing tile (${r}, ${c}) - Type: ${tileData.type}`);
+        tileData.revealed = true;
+        tileData.state = TILE_STATE.REVEALED;
+
+        let becameEmpty = false;
+        let isMonsterBlock = false;
+
+        // Handle immediate effects of revealing
+        switch (tileData.type) {
+            case TILE_TYPES.TRAP:
+                console.log(`Trap triggered! Damage: ${tileData.value}`);
+                this.showMessage(`TRAP! -${tileData.value} HP`, 2000);
+                this.dealDamage(tileData.value, false); // Don't trigger game over check yet if player survives
+                if (gameState.isGameOver) { return; } // Stop processing if trap killed player
+                tileData.type = TILE_TYPES.EMPTY; // Becomes empty after effect
+                tileData.id = null;
+                tileData.value = 0;
+                becameEmpty = true;
+                break;
+            case TILE_TYPES.MONSTER:
+                 console.log(`Monster revealed: ${tileData.id} HP:${tileData.hp} ATK:${tileData.atk}`);
+                 isMonsterBlock = true; // This reveal blocks neighbors
+                break;
+            case TILE_TYPES.GOLD:
+                console.log(`Gold revealed: ${tileData.value}`);
+                // Click required to collect
+                break;
+            case TILE_TYPES.ITEM:
+                 console.log(`Item revealed: ${tileData.id}`);
+                 // Click required to collect
+                break;
+            case TILE_TYPES.KEY_ITEM:
+                console.log(`Key revealed`);
+                 // Click required to collect
+                break;
+            case TILE_TYPES.DOOR: // Should already be revealed, but handle defensively
+            case TILE_TYPES.EMPTY:
+                 console.log("Empty tile revealed.");
+                becameEmpty = true; // Or already was empty/door
+                break;
+        }
+
+        // Update the visual of the revealed tile *first*
+        this.updateTileVisual(r, c);
+
+        // Then, update the state of its neighbors based on what was revealed
+        console.log(`Updating neighbors of (${r}, ${c}). MonsterBlock: ${isMonsterBlock}, BecameEmpty: ${becameEmpty}`);
+        this.updateNeighborStates(r, c, isMonsterBlock);
+
+         // Final game over check if player survived trap but maybe died later? Unlikely here.
+         if (gameState.player.hp <= 0 && !gameState.isGameOver) {
+             this.gameOver();
+         }
+    }
+
+    attackMonster(r, c) {
+        if (gameState.isGameOver) { return; }
+
+        const monsterData = this.gridData[r][c];
+        if (!monsterData || monsterData.type !== TILE_TYPES.MONSTER || monsterData.hp <= 0) {
+            console.log("Attack target invalid or already dead.");
+            return;
+        }
+
+        console.log(`Attacking monster (${r}, ${c}): ${monsterData.id} HP:${monsterData.hp}`);
+
+        // First attack reveals key status
+        if (!monsterData.attackedOnce) {
+            monsterData.attackedOnce = true;
+            // Only redraw if it has the key, otherwise no visual change needed yet
+            if (monsterData.hasKey) {
+                this.updateTileVisual(r, c);
+            }
+        }
+
+        // Player attacks monster
+        const playerDamage = gameState.player.atk;
+        monsterData.hp -= playerDamage;
+        console.log(`Player dealt ${playerDamage} damage. Monster HP remaining: ${monsterData.hp}`);
+        this.showMessage(`You hit ${monsterData.icon} for ${playerDamage}!`, 1000);
+
+
+        // Check if monster died
+        if (monsterData.hp <= 0) {
+            console.log(`Monster ${monsterData.id} defeated!`);
+            this.showMessage(`${monsterData.icon} defeated!`, 1500);
+
+             // Change tile type based on whether it held the key
+             if (monsterData.hasKey) {
+                 console.log("Monster dropped the key!");
+                 monsterData.type = TILE_TYPES.KEY_ITEM;
+                 monsterData.id = 'KEY'; // Specific ID for key item
+                 monsterData.icon = '🗝️';
+             } else {
+                 monsterData.type = TILE_TYPES.EMPTY;
+                 monsterData.id = null;
+                 monsterData.icon = ''; // Clear icon
+             }
+             monsterData.hp = 0; // Ensure HP is 0
+             monsterData.atk = 0;
+
+             // Update the visual of the now empty/key tile
+             this.updateTileVisual(r, c);
+
+             // Update neighbors, indicating a monster was *removed* (unblock potential)
+             console.log(`Updating neighbors of defeated monster (${r}, ${c}) - Unblocking.`);
+             this.updateNeighborStates(r, c, false, true /* isMonsterUnblock */);
+
+             // Update UI (in case of future XP/Gold drops)
+             this.updateUI();
+
+        } else {
+            // Monster survives and attacks back
+            const monsterDamage = monsterData.atk;
+            console.log(`Monster attacks back for ${monsterDamage} damage.`);
+             this.time.delayedCall(500, () => { // Small delay for feedback
+                 this.showMessage(`${monsterData.icon} hits you for ${monsterDamage}!`, 1000, true); // Force show
+                 this.dealDamage(monsterDamage); // Deal damage and check game over
+                  // Update monster visual (HP changed) even if it survives
+                  if (!gameState.isGameOver) { // Avoid update if game ended
+                     this.updateTileVisual(r, c);
+                  }
+             });
+        }
+         // Update UI stats (player HP might have changed)
+         this.updateUI(); // Update UI regardless of monster death
+    }
+
+    dealDamage(amount, checkGameOver = true) {
+        if (gameState.isGameOver) { return; } // Don't apply damage if already over
+
+        gameState.player.hp -= amount;
+        console.log(`Player took ${amount} damage. HP: ${gameState.player.hp}/${gameState.player.maxHp}`);
+        if (gameState.player.hp <= 0) {
+            gameState.player.hp = 0; // Clamp HP at 0
+            if (checkGameOver) {
+                 this.gameOver();
+            }
+        }
+        this.updateUIStats(); // Update UI immediately
+    }
+
+     collectGold(r, c) {
+         if (gameState.isGameOver) { return; }
+         const tileData = this.gridData[r][c];
+         if (tileData.type !== TILE_TYPES.GOLD) { return; }
+
+         const value = tileData.value;
+         console.log(`Collecting ${value} gold from (${r}, ${c})`);
+         gameState.player.gold += value;
+         this.showMessage(`+${value} GOLD!`, 1500);
+
+         // Tile becomes empty
+         tileData.type = TILE_TYPES.EMPTY;
+         tileData.value = 0;
+         tileData.id = null; // Clear any potential residual ID
+
+         this.updateTileVisual(r, c);
+         this.updateNeighborStates(r, c); // Update neighbors as it became empty
+         this.updateUIGold(); // Update UI specifically for gold
+     }
+
+     tryPickupItem(r, c, itemId) {
+         if (gameState.isGameOver) { return; }
+         const tileData = this.gridData[r][c];
+          if (tileData.type !== TILE_TYPES.ITEM) { return; } // Only pick up items
+
+         console.log(`Attempting to pick up item ${itemId} at (${r}, ${c})`);
+
+         if (gameState.player.inventory.length < MAX_INVENTORY_SLOTS) {
+             gameState.player.inventory.push(itemId);
+             const itemTemplate = ITEMS[itemId];
+             this.showMessage(`Picked up ${itemTemplate?.name || itemId}!`, 1500);
+             console.log(`Item ${itemId} added to inventory. Current:`, gameState.player.inventory);
+
+             // Tile becomes empty
+             tileData.type = TILE_TYPES.EMPTY;
+             tileData.id = null;
+             tileData.icon = '';
+
+             this.updateTileVisual(r, c);
+             this.updateNeighborStates(r, c); // Update neighbors
+             this.updateUIInventory(); // Update UI
+         } else {
+             console.log("Inventory full.");
+             this.showMessage("Inventory Full!", 2000);
+             // Item remains on the ground
+         }
+     }
+
+     pickupKey(r, c) {
+         if (gameState.isGameOver) { return; }
+         const tileData = this.gridData[r][c];
+          if (tileData.type !== TILE_TYPES.KEY_ITEM) { return; } // Only pick up the key item
+
+         console.log(`Picking up the key from (${r}, ${c})`);
+         gameState.player.hasKey = true;
+         this.showMessage("Picked up the Key 🗝️!", 2000);
+
+         // Tile becomes empty
+         tileData.type = TILE_TYPES.EMPTY;
+         tileData.id = null;
+         tileData.icon = '';
+
+         this.updateTileVisual(r, c);
+         this.updateNeighborStates(r, c); // Update neighbors
+         this.updateUIKeyStatus(); // Update UI
+         this.updateDoorVisual(); // Update door visual to show unlocked
+     }
+
+      enterDoor() {
+          if (gameState.isGameOver) { return; }
+          if (!gameState.player.hasKey) {
+              console.error("Attempted to enter door without key - should be blocked by UI/logic");
+              return;
+          }
+
+          console.log("Entering door to next floor...");
+          this.showMessage("Entering next floor...", 1000);
+
+          // Consume key
+          gameState.player.hasKey = false;
+
+          // Increment floor
+          gameState.currentFloor++;
+
+           // Reset key monster attack status for the new floor visually
+          // This happens implicitly when grid is regenerated
+
+          // Regenerate the floor
+          // Clear old sprites and generate new data/sprites
+          this.generateFloor(); // Generates new data
+          this.createGridSprites(); // Creates new sprites based on new data
+          this.initialReveal(); // Reveals the new door and neighbors
+          this.handleResize(this.scale.gameSize); // Apply current layout to new sprites
+
+
+          // Update UI for the new floor
+          this.updateUI(); // Full UI update
+          this.updateDoorVisual(); // Ensure new door shows locked initially
+
+          console.log("Entered floor", gameState.currentFloor);
+      }
+
+      handleUseItem(itemIndex) {
+          if (gameState.isGameOver || itemIndex < 0 || itemIndex >= gameState.player.inventory.length) {
+               console.log("Invalid item use request.");
+               return;
+          }
+
+          const itemId = gameState.player.inventory[itemIndex];
+          const item = ITEMS[itemId];
+
+          if (!item) {
+              console.error(`Item with ID ${itemId} not found in ITEMS definition.`);
+              return;
+          }
+
+          console.log(`Using item: ${item.name}`);
+          let itemUsed = false;
+
+          switch (item.effect) {
+              case 'heal':
+                  if (gameState.player.hp < gameState.player.maxHp) {
+                      const healAmount = item.amount || 5; // Default heal if amount missing
+                      gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + healAmount);
+                      this.showMessage(`Used ${item.name}. +${healAmount} HP!`, 1500);
+                      itemUsed = true;
+                      this.updateUIStats();
+                  } else {
+                       this.showMessage("HP already full!", 1500);
+                  }
+                  break;
+              case 'aoe_damage':
+                  const damageAmount = item.amount || 3; // Default damage
+                  let monstersHit = 0;
+                  for (let r = 0; r < GRID_ROWS; r++) {
+                      for (let c = 0; c < GRID_COLS; c++) {
+                          const tileData = this.gridData[r][c];
+                           if (tileData.revealed && isMonsterTile(tileData)) {
+                               console.log(`Item hitting monster (${r},${c}) for ${damageAmount}`);
+                               tileData.hp -= damageAmount;
+                               monstersHit++;
+                               if (tileData.hp <= 0) {
+                                   console.log(`Monster ${tileData.id} defeated by item!`);
+                                   // Similar logic to attackMonster death, but no counter-attack
+                                   if (tileData.hasKey) {
+                                       tileData.type = TILE_TYPES.KEY_ITEM;
+                                       tileData.id = 'KEY';
+                                       tileData.icon = '🗝️';
+                                   } else {
+                                       tileData.type = TILE_TYPES.EMPTY;
+                                       tileData.id = null;
+                                       tileData.icon = '';
+                                   }
+                                   tileData.hp = 0;
+                                   tileData.atk = 0;
+                                   this.updateNeighborStates(r, c, false, true); // Unblock neighbors
+                               }
+                                this.updateTileVisual(r, c); // Update visual regardless of death
+                           }
+                      }
+                  }
+                   if (monstersHit > 0) {
+                      this.showMessage(`Used ${item.name}! Hit ${monstersHit} monster(s).`, 1500);
+                      itemUsed = true;
+                      this.updateUI(); // Update stats potentially affected
+                   } else {
+                      this.showMessage(`Used ${item.name}, but no visible monsters.`, 1500);
+                      // Note: Some games might still consume the item here. We will.
+                      itemUsed = true; // Consume even if no targets hit
+                   }
+                  break;
+               default:
+                  console.warn(`Unknown item effect: ${item.effect}`);
+                  this.showMessage(`Cannot use ${item.name}. Effect unknown.`, 2000);
+                  break;
+          }
+
+          // Consume item if it was successfully used (or intended to be consumed)
+          if (item.consumable && itemUsed) {
+              gameState.player.inventory.splice(itemIndex, 1);
+              this.updateUIInventory(); // Update inventory display
+              console.log("Item consumed. Inventory:", gameState.player.inventory);
+          }
+      }
+
+
+    updateTileVisual(r, c) {
+        const tileData = this.gridData[r][c];
+        const tileSprite = this.gridSprites[r][c];
+
+        if (!tileData || !tileSprite) {
+             console.warn(`Missing data or sprite for tile (${r}, ${c}) during visual update.`);
+             return; // Avoid errors if something went wrong
+        }
+
+        const bgRect = tileSprite.getByName('background');
+        const text = tileSprite.getByName('text');
+        const statsText = tileSprite.getByName('statsText');
+
+        let bgColor = COLORS.TILE_HIDDEN;
+        let content = '';
+        let textColor = COLORS.TEXT_DARK;
+        let showStats = false;
+        let statsContent = '';
+
+        if (tileData.revealed) {
+             statsText.setVisible(false); // Hide stats by default for revealed tiles
+             switch (tileData.type) {
+                case TILE_TYPES.EMPTY:
+                    bgColor = COLORS.REVEALED_BG;
+                    content = ''; // No icon for empty
+                    break;
+                case TILE_TYPES.MONSTER:
+                     if (tileData.hp > 0) {
+                        bgColor = COLORS.MONSTER_BG;
+                         content = tileData.icon || '?'; // Show icon
+                         // Show key icon next to monster icon only AFTER first attack
+                         if (tileData.hasKey && tileData.attackedOnce) {
+                             content += '🗝️';
+                         }
+                         textColor = COLORS.TEXT_LIGHT; // Icon color? Maybe keep dark? Let's try light
+                         // Show stats text below icon
+                         statsContent = `❤️${tileData.hp}/${tileData.maxHp} 🗡️${tileData.atk}`;
+                         statsText.setText(statsContent);
+                         statsText.setVisible(true); // Show the stats text field
+                         showStats = true;
+                     } else {
+                         // Should have become EMPTY or KEY_ITEM, handled by calling function
+                         // Defensive coding: If somehow still MONSTER type but 0 HP, show as empty
+                         bgColor = COLORS.REVEALED_BG;
+                         content = '';
+                     }
+                    break;
+                 case TILE_TYPES.KEY_ITEM:
+                     bgColor = COLORS.KEY;
+                     content = tileData.icon || '🗝️';
+                     textColor = COLORS.TEXT_DARK;
+                     break;
+                case TILE_TYPES.DOOR:
+                    bgColor = COLORS.DOOR;
+                    content = gameState.player.hasKey ? '🔓' : '🔒'; // Lock/Unlock icon
+                     textColor = COLORS.TEXT_LIGHT;
+                    break;
+                case TILE_TYPES.GOLD:
+                    bgColor = COLORS.GOLD;
+                    content = `GOLD\n+${tileData.value}`; // Multi-line text
+                    textColor = COLORS.TEXT_GOLD_VALUE;
+                    break;
+                case TILE_TYPES.TRAP:
+                    // Trap becomes empty on reveal, so this case shouldn't normally be visible long.
+                    // If we wanted to show it briefly before it turns empty:
+                    bgColor = COLORS.TRAP;
+                    content = `TRAP!\n-${tileData.value} HP`; // Display damage value
+                    textColor = COLORS.TEXT_TRAP;
+                    break;
+                case TILE_TYPES.ITEM:
+                    bgColor = COLORS.ITEM_BG;
+                    content = tileData.icon || '?'; // Item icon
+                    textColor = COLORS.TEXT_LIGHT;
+                    break;
+                 default:
+                     bgColor = COLORS.REVEALED_BG; // Fallback for unknown revealed type
+                      content = 'ERR';
+                     textColor = '#FF0000';
+                     break;
+            }
+        } else {
+            // Handle hidden states
+            statsText.setVisible(false); // Never show stats for hidden tiles
+             switch (tileData.state) {
+                case TILE_STATE.HIDDEN_NORMAL:
+                    bgColor = COLORS.TILE_HIDDEN;
+                    content = '?';
+                    textColor = COLORS.TEXT_DARK;
+                    break;
+                case TILE_STATE.HIDDEN_BLOCKED:
+                    bgColor = COLORS.TILE_HIDDEN;
+                    content = 'X';
+                    textColor = COLORS.TEXT_DARK;
+                    break;
+                case TILE_STATE.HIDDEN_UNACCESSIBLE:
+                default:
+                    bgColor = COLORS.TILE_HIDDEN;
+                    content = ''; // Blank
+                    textColor = COLORS.TEXT_DARK;
+                    break;
+            }
+        }
+
+        bgRect.setFillStyle(bgColor);
+        text.setText(content);
+        text.setColor(textColor);
+        statsText.setVisible(showStats); // Explicitly set visibility based on logic above
+
+
+         // Adjust text size slightly based on content length (basic heuristic)
+         const baseFontSize = Math.min(this.tileSize.width, this.tileSize.height) * 0.45;
+         let adjustedFontSize = baseFontSize;
+         if (content.length > 3) { adjustedFontSize *= 0.7; } // Smaller font for longer text like GOLD+10
+         if (content.includes('\n')) { adjustedFontSize *= 0.7;} // Smaller font for multiline
+         text.setFontSize(adjustedFontSize);
+
+         // Adjust stats font size too
+         const statsBaseFontSize = Math.min(this.tileSize.width, this.tileSize.height) * 0.18;
+         statsText.setFontSize(statsBaseFontSize);
+
+
+        // Debug: Log visual update
+        // console.log(`Updated visual (${r},${c}): State=${tileData.state}, Type=${tileData.type}, BG=${bgColor.toString(16)}, Text='${content}', Stats='${statsContent}'`);
+    }
+
+
+    updateNeighborStates(r, c, isMonsterBlock = false, isMonsterUnblock = false) {
+        const neighbors = getNeighbors(r, c, GRID_ROWS, GRID_COLS); // Use global setting for diagonals
+
+        console.log(`Updating neighbors for (${r}, ${c}). MonsterBlock: ${isMonsterBlock}, MonsterUnblock: ${isMonsterUnblock}`);
+
+        neighbors.forEach(nPos => {
+            const nr = nPos.r;
+            const nc = nPos.c;
+            const neighborData = this.gridData[nr][nc];
+
+            // Skip if neighbor is already revealed
+            if (!neighborData || neighborData.revealed) {
+                 // console.log(`Neighbor (${nr}, ${nc}) skipped (revealed or null).`);
+                return;
+            }
+
+            let originalState = neighborData.state; // Keep track for logging changes
+
+            if (isMonsterBlock) {
+                // A monster was revealed at (r, c), block all adjacent hidden tiles
+                neighborData.state = TILE_STATE.HIDDEN_BLOCKED;
+                // console.log(`Neighbor (${nr}, ${nc}) set to BLOCKED due to monster at (${r}, ${c}).`);
+            } else if (isMonsterUnblock) {
+                // A monster was defeated at (r, c). Check if this neighbor should become unblocked/accessible.
+                if (neighborData.state === TILE_STATE.HIDDEN_BLOCKED || neighborData.state === TILE_STATE.HIDDEN_UNACCESSIBLE) {
+                     // Check if it's *still* blocked by *another* monster
+                    const isStillBlocked = this.isBlocked(nr, nc);
+                    if (!isStillBlocked) {
+                        // If not blocked by another monster, check if it's adjacent to *any* clear tile
+                        const isAdjacentToClear = this.isAdjacentToClearTile(nr, nc);
+                        if (isAdjacentToClear) {
+                            neighborData.state = TILE_STATE.HIDDEN_NORMAL;
+                            // console.log(`Neighbor (${nr}, ${nc}) set to NORMAL (unblocked and adjacent to clear).`);
+                        } else {
+                             neighborData.state = TILE_STATE.HIDDEN_UNACCESSIBLE; // Not blocked, but not near clear yet
+                             // console.log(`Neighbor (${nr}, ${nc}) set to UNACCESSIBLE (unblocked but not adjacent to clear).`);
+                        }
+                    } else {
+                        // console.log(`Neighbor (${nr}, ${nc}) remains BLOCKED by another monster.`);
+                         neighborData.state = TILE_STATE.HIDDEN_BLOCKED; // Ensure it stays blocked if needed
+                    }
+                }
+            } else {
+                // A non-monster tile was revealed or became empty at (r, c).
+                // Update neighbors that were previously inaccessible or potentially blocked.
+                if (neighborData.state === TILE_STATE.HIDDEN_UNACCESSIBLE) {
+                     // Check if it's blocked by any adjacent monster
+                     const isBlockedByMonster = this.isBlocked(nr, nc);
+                     if (isBlockedByMonster) {
+                         neighborData.state = TILE_STATE.HIDDEN_BLOCKED;
+                          // console.log(`Neighbor (${nr}, ${nc}) from UNACCESSIBLE set to BLOCKED (now adjacent but blocked).`);
+                     } else {
+                         // It's not blocked, and now adjacent to a clear tile (the one at r, c), so make it normal
+                         neighborData.state = TILE_STATE.HIDDEN_NORMAL;
+                          // console.log(`Neighbor (${nr}, ${nc}) from UNACCESSIBLE set to NORMAL (now adjacent and not blocked).`);
+                     }
+                } else if (neighborData.state === TILE_STATE.HIDDEN_BLOCKED) {
+                    // It was blocked. Check if it's *still* blocked by any *other* monster.
+                    // The tile at (r,c) is now clear, so it doesn't contribute to blocking.
+                    const isStillBlocked = this.isBlocked(nr, nc);
+                     if (!isStillBlocked) {
+                         // It's no longer blocked by any monster AND adjacent to a clear tile (r,c)
+                         neighborData.state = TILE_STATE.HIDDEN_NORMAL;
+                         // console.log(`Neighbor (${nr}, ${nc}) from BLOCKED set to NORMAL (no longer blocked).`);
+                     } else {
+                         // console.log(`Neighbor (${nr}, ${nc}) remains BLOCKED by another monster.`);
+                         // State remains HIDDEN_BLOCKED
+                     }
+                }
+                // If state was HIDDEN_NORMAL, it remains so.
+            }
+
+            // Only update visual if state actually changed
+            if (neighborData.state !== originalState) {
+                this.updateTileVisual(nr, nc);
+                console.log(`Neighbor (${nr}, ${nc}) state changed from ${originalState} to ${neighborData.state}`);
+            }
+        });
+    }
+
+    // Helper function: Checks if tile (r, c) is adjacent to any revealed, *living* monster
+    isBlocked(r, c) {
+        const neighbors = getNeighbors(r, c, GRID_ROWS, GRID_COLS); // Use current diagonal setting
+        for (const nPos of neighbors) {
+            const neighborData = this.gridData[nPos.r][nPos.c];
+            if (neighborData && neighborData.revealed && isMonsterTile(neighborData)) {
+                // console.log(`Tile (${r}, ${c}) IS blocked by monster at (${nPos.r}, ${nPos.c})`);
+                return true; // Blocked by at least one monster
+            }
+        }
+        // console.log(`Tile (${r}, ${c}) is NOT blocked by any adjacent monster.`);
+        return false; // Not blocked by any adjacent revealed monster
+    }
+
+    // Helper function: Checks if tile (r, c) is adjacent to any revealed, *clear* tile (not a living monster)
+    isAdjacentToClearTile(r, c) {
+         const neighbors = getNeighbors(r, c, GRID_ROWS, GRID_COLS); // Use current diagonal setting
+         for (const nPos of neighbors) {
+             const neighborData = this.gridData[nPos.r][nPos.c];
+             if (neighborData && isClearTile(neighborData)) { // isClearTile checks revealed and not living monster
+                 // console.log(`Tile (${r}, ${c}) IS adjacent to clear tile at (${nPos.r}, ${nPos.c})`);
+                 return true;
+             }
+         }
+         // console.log(`Tile (${r}, ${c}) is NOT adjacent to any clear tile.`);
+         return false;
+    }
+
+    updateDoorVisual() {
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                if (this.gridData[r][c]?.type === TILE_TYPES.DOOR) {
+                    this.updateTileVisual(r, c);
+                    return; // Assume only one door
+                }
+            }
+        }
+    }
+
+
+    handleResize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+
+        const headerHeight = height * UI_HEADER_RATIO;
+        const footerHeight = height * UI_FOOTER_RATIO;
+        const gameHeight = height - headerHeight - footerHeight;
+        const gameWidth = width;
+
+        // Calculate tile size based on available game area
+        const tileWidth = gameWidth / GRID_COLS;
+        const tileHeight = gameHeight / GRID_ROWS;
+        this.tileSize = { width: tileWidth, height: tileHeight };
+
+        // Calculate grid starting offset (center grid horizontally)
+        this.gridOffset = { x: 0, y: headerHeight };
+
+        // Reposition and resize existing grid sprites
+        for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+                const tileSprite = this.gridSprites[r][c];
+                if (tileSprite) {
+                    const tileX = this.gridOffset.x + c * this.tileSize.width + this.tileSize.width / 2;
+                    const tileY = this.gridOffset.y + r * this.tileSize.height + this.tileSize.height / 2;
+                    tileSprite.setPosition(tileX, tileY);
+
+                    const innerWidth = this.tileSize.width - 4; // Padding
+                    const innerHeight = this.tileSize.height - 4;
+
+                    const bgRect = tileSprite.getByName('background');
+                    const text = tileSprite.getByName('text');
+                     const statsText = tileSprite.getByName('statsText');
+
+
+                    bgRect.setSize(innerWidth, innerHeight);
+                    text.setFixedSize(innerWidth, innerHeight);
+                     statsText.setFixedSize(innerWidth, innerHeight * 0.4); // Adjust stats text width/height if needed
+                     statsText.setY(innerHeight * 0.35); // Reposition below center
+
+
+                    // Re-apply font size calculation based on new tile size
+                     const baseFontSize = Math.min(innerWidth, innerHeight) * 0.45;
+                     let adjustedFontSize = baseFontSize;
+                     const content = text.text; // Get current text to check length
+                     if (content.length > 3) { adjustedFontSize *= 0.7; }
+                     if (content.includes('\n')) { adjustedFontSize *= 0.7;}
+                     text.setFontSize(adjustedFontSize);
+                     text.setPadding({ y: Math.min(innerWidth, innerHeight) * 0.1 }); // Update padding
+
+
+                     const statsBaseFontSize = Math.min(innerWidth, innerHeight) * 0.18;
+                     statsText.setFontSize(statsBaseFontSize);
+
+                    // Ensure hit area covers the new size
+                    tileSprite.setSize(innerWidth, innerHeight);
+                    // No need to recreate input, setSize should update it if using default rectangle
+                }
+            }
+        }
+        // console.log("GameScene resized. New tile size:", this.tileSize);
+    }
+
+    gameOver() {
+        if (gameState.isGameOver) { return; } // Prevent multiple calls
+
+        console.log("GAME OVER on floor", gameState.currentFloor);
+        gameState.isGameOver = true;
+        this.showMessage("GAME OVER", 3000, true); // Show message forcefully
+
+        // Add a slight delay before changing scene to let message show
+        this.time.delayedCall(1500, () => {
+            this.scene.stop('UIScene'); // Stop the UI scene
+            this.scene.start('GameOverScene', { floorReached: gameState.currentFloor });
+        });
+    }
+
+    // --- UI Update Emitters ---
+    // These functions emit events that UIScene listens for.
+    updateUI() {
+         if (this.scene.isActive('UIScene')) {
+             this.updateUIStats();
+             this.updateUIGold();
+             this.updateUIKeyStatus();
+             this.updateUIFloor();
+             this.updateUIInventory();
+         } else {
+             console.warn("UIScene not active, cannot update UI.");
+         }
+    }
+     updateUIStats() {
+         this.events.emit('updateStats', { hp: gameState.player.hp, maxHp: gameState.player.maxHp, atk: gameState.player.atk });
+     }
+      updateUIGold() {
+          this.events.emit('updateGold', gameState.player.gold);
+      }
+     updateUIKeyStatus() {
+         this.events.emit('updateKeyStatus', gameState.player.hasKey);
+         // Also update door visual when key status changes
+         this.updateDoorVisual();
+     }
+     updateUIFloor() {
+         this.events.emit('updateFloor', gameState.currentFloor);
+     }
+     updateUIInventory() {
+         this.events.emit('updateInventory', gameState.player.inventory);
+     }
+     showMessage(text, duration = 2000, force = false) {
+         // Pass message to UI Scene for display
+         if (this.scene.isActive('UIScene')) {
+             this.scene.get('UIScene').events.emit('showMessage', text, duration, force);
+         } else if (force) {
+              console.log("MESSAGE (UIScene inactive):", text); // Log if UI not ready but message forced
+         }
+     }
+
+     // --- Debug Handlers ---
+     debugMarkHidden() {
+         console.log("DEBUG: Marking hidden tiles with their type");
+         for (let r = 0; r < GRID_ROWS; r++) {
+             for (let c = 0; c < GRID_COLS; c++) {
+                 const tileData = this.gridData[r][c];
+                 if (!tileData.revealed) {
+                      const tileSprite = this.gridSprites[r][c];
+                      const text = tileSprite.getByName('text');
+                      let debugText = tileData.type.substring(0,1); // First letter of type
+                      if (tileData.type === TILE_TYPES.MONSTER) debugText = tileData.icon;
+                      if (tileData.type === TILE_TYPES.ITEM) debugText = tileData.icon;
+                      if (tileData.type === TILE_TYPES.KEY_ITEM) debugText = '🗝️';
+                      if (tileData.type === TILE_TYPES.DOOR) debugText = '🚪';
+                      if (tileData.type === TILE_TYPES.GOLD) debugText = '$';
+                       if (tileData.type === TILE_TYPES.TRAP) debugText = '!';
+                      text.setText(debugText);
+                      text.setColor('#FF00FF'); // Magenta to indicate debug view
+                 }
+             }
+         }
+     }
+
+     debugChangeStat(stat, amount) {
+         console.log(`DEBUG: Changing ${stat} by ${amount}`);
+         switch(stat) {
+             case 'hp':
+                 gameState.player.hp += amount;
+                 if (gameState.player.hp > gameState.player.maxHp) gameState.player.hp = gameState.player.maxHp;
+                 if (gameState.player.hp < 0) gameState.player.hp = 0;
+                 break;
+             case 'maxHp': // Allow changing max HP too? Let's just do current HP for now.
+                 // gameState.player.maxHp += amount;
+                 // if (gameState.player.maxHp < 1) gameState.player.maxHp = 1;
+                 // if (gameState.player.hp > gameState.player.maxHp) gameState.player.hp = gameState.player.maxHp;
+                 console.warn("Debug changing maxHp not implemented, use +/- HP for current HP.");
+                 break;
+             case 'atk':
+                 gameState.player.atk += amount;
+                 if (gameState.player.atk < 0) gameState.player.atk = 0;
+                 break;
+              case 'gold':
+                  gameState.player.gold += amount;
+                  if (gameState.player.gold < 0) gameState.player.gold = 0;
+                  this.updateUIGold(); // Gold needs specific update
+                  return; // Skip full UI update if only gold changed
+         }
+         this.updateUIStats(); // Update HP/ATK display
+          if (gameState.player.hp <= 0 && !gameState.isGameOver) {
+              this.gameOver(); // Check if debug change killed player
+          }
+     }
+
+     debugKillAllVisible() {
+         console.log("DEBUG: Killing all visible monsters");
+         let killedCount = 0;
+          for (let r = 0; r < GRID_ROWS; r++) {
+              for (let c = 0; c < GRID_COLS; c++) {
+                  const tileData = this.gridData[r][c];
+                   if (tileData.revealed && isMonsterTile(tileData)) {
+                       tileData.hp = 0; // Kill instantly
+                       console.log(`DEBUG: Killed monster at (${r}, ${c})`);
+                       // Handle death logic (change tile type, update neighbors)
+                       if (tileData.hasKey) {
+                           tileData.type = TILE_TYPES.KEY_ITEM;
+                           tileData.id = 'KEY';
+                           tileData.icon = '🗝️';
+                       } else {
+                           tileData.type = TILE_TYPES.EMPTY;
+                           tileData.id = null;
+                           tileData.icon = '';
+                       }
+                       tileData.atk = 0;
+                       this.updateTileVisual(r, c);
+                       this.updateNeighborStates(r, c, false, true); // Unblock neighbors
+                       killedCount++;
+                   }
+              }
+          }
+         if (killedCount > 0) {
+             this.showMessage(`DEBUG: Killed ${killedCount} monster(s).`, 1500);
+             this.updateUI(); // Update potentially affected UI elements
+         } else {
+              this.showMessage(`DEBUG: No visible monsters to kill.`, 1500);
+         }
+     }
+
+      debugToggleDiagonals() {
+          gameState.useDiagonals = !gameState.useDiagonals;
+          console.log(`DEBUG: Toggled diagonal adjacency. Now: ${gameState.useDiagonals ? '8-way' : '4-way'}`);
+          this.showMessage(`Adjacency: ${gameState.useDiagonals ? '8-way (Diagonal)' : '4-way (Cardinal)'}`, 2000);
+          // Force recalculation of accessible tiles based on new rule?
+          // This is complex. For now, it only affects *future* neighbor updates.
+          // To apply immediately, we might need to iterate all revealed clear tiles and call updateNeighborStates.
+          // Let's do a simple immediate update around revealed clear tiles:
+          console.log("DEBUG: Recalculating neighbor states based on new diagonal rule...");
+           for (let r = 0; r < GRID_ROWS; r++) {
+               for (let c = 0; c < GRID_COLS; c++) {
+                   const tileData = this.gridData[r][c];
+                   if (isClearTile(tileData)) { // If it's a revealed non-monster tile
+                        // Update its neighbors based on the *new* adjacency rule
+                        this.updateNeighborStates(r, c, false, false);
+                   } else if (tileData.revealed && isMonsterTile(tileData)) {
+                       // Also update neighbours of revealed monsters
+                       this.updateNeighborStates(r, c, true, false); // It's a monster block
+                   }
+               }
+           }
+           console.log("DEBUG: Neighbor state recalculation complete.");
+      }
+
+      debugFillInventory() {
+          console.log("DEBUG: Filling inventory");
+          const itemsToAdd = [ITEMS.POTION.id, ITEMS.BLADE_SCROLL.id];
+          let addedCount = 0;
+           while (gameState.player.inventory.length < MAX_INVENTORY_SLOTS && itemsToAdd.length > 0) {
+               gameState.player.inventory.push(itemsToAdd[addedCount % itemsToAdd.length]);
+               addedCount++;
+           }
+          this.updateUIInventory();
+          this.showMessage(`DEBUG: Filled inventory (${gameState.player.inventory.length}/${MAX_INVENTORY_SLOTS}).`, 1500);
+      }
+
+
+} // End GameScene
+
+class UIScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'UIScene', active: false }); // Start inactive, launched by Preloader
+
+        // Header UI elements
+        this.hpText = null;
+        this.atkText = null;
+        this.goldText = null;
+        this.floorText = null;
+        this.keyIcon = null;
+        this.helpButton = null;
+        this.debugButton = null;
+
+        // Footer UI elements
+        this.inventorySlots = []; // Array of { container, iconText, bgRect }
+
+        // Message display
+        this.messageText = null;
+        this.messageTween = null;
+        this.messageTimer = null;
+
+        // Popups
+        this.itemPopup = null; // Container for item use popup
+        this.debugPanel = null; // Container for debug controls
+        this.modalBg = null; // Semi-transparent background for modals
+
+        this.headerBg = null;
+        this.footerBg = null;
+
+         this.isReady = false; // Flag to wait for GameScene signal
+    }
+
+     preload() {
+          // Access the external HTML element for instructions
+          this.instructionsPanel = document.getElementById('instructions-dom');
+          this.instructionsCloseBtn = document.getElementById('instructions-close-btn');
+
+          if (!this.instructionsPanel || !this.instructionsCloseBtn) {
+              console.error("Instructions DOM elements not found!");
+          } else {
+               // Add event listener for the close button
+               this.instructionsCloseBtn.addEventListener('click', () => {
+                   this.instructionsPanel.style.display = 'none';
+               });
+          }
+     }
+
+
+    create() {
+        console.log("UIScene create");
+
+         // Listen for the ready signal from GameScene
+         this.events.on('uiReady', () => {
+             console.log("UIScene received uiReady signal.");
+             this.isReady = true;
+             // Request initial data now that GameScene is ready
+             this.game.scene.getScene('GameScene').updateUI();
+         });
+
+        // Create background bars first
+        this.headerBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height * UI_HEADER_RATIO, COLORS.UI_BAR_BG).setOrigin(0);
+        this.footerBg = this.add.rectangle(0, this.scale.height * (1 - UI_FOOTER_RATIO), this.scale.width, this.scale.height * UI_FOOTER_RATIO, COLORS.UI_BAR_BG).setOrigin(0);
+
+
+        // --- Header Elements ---
+        const headerY = (this.scale.height * UI_HEADER_RATIO) / 2; // Vertical center of header
+        const headerPadding = 15;
+
+        // HP Text (Left Aligned)
+        this.hpText = this.add.text(headerPadding, headerY, 'HP: --/--', { fontSize: '20px', color: COLORS.UI_TEXT }).setOrigin(0, 0.5);
+
+        // ATK Text (Next to HP)
+        this.atkText = this.add.text(this.hpText.x + this.hpText.width + 30, headerY, 'ATK: --', { fontSize: '20px', color: COLORS.UI_TEXT }).setOrigin(0, 0.5);
+
+        // Gold Text (Further Right)
+        this.goldText = this.add.text(this.atkText.x + this.atkText.width + 30, headerY, 'GOLD: --', { fontSize: '20px', color: COLORS.GOLD_TEXT }).setOrigin(0, 0.5); // Use gold color
+
+        // Key Icon (Near Gold)
+        this.keyIcon = this.add.text(this.goldText.x + this.goldText.width + 20, headerY, '🗝️', { fontSize: '24px', color: COLORS.KEY }).setOrigin(0, 0.5);
+        this.keyIcon.setVisible(false); // Hidden initially
+
+         // Floor Text (Centerish/Right - adjust placement based on others)
+         // Place Floor text relative to the right edge for better anchoring on resize
+         this.floorText = this.add.text(this.scale.width - headerPadding - 150, headerY, 'Floor: --', { fontSize: '20px', color: COLORS.UI_TEXT }).setOrigin(1, 0.5); // Align right
+
+        // Help Button (?) (Far Right)
+        this.helpButton = this.add.text(this.scale.width - headerPadding - 60, headerY, '[?]', { fontSize: '22px', color: COLORS.UI_ACCENT })
+            .setOrigin(1, 0.5).setInteractive({ useHandCursor: false })
+            .on('pointerover', () => this.helpButton.setColor(COLORS.UI_ACCENT_HOVER))
+            .on('pointerout', () => this.helpButton.setColor(COLORS.UI_ACCENT))
+            .on('pointerdown', this.toggleInstructions, this);
+
+
+        // Debug Button (D) (Next to Help)
+        this.debugButton = this.add.text(this.helpButton.x - this.helpButton.width - 15, headerY, '[D]', { fontSize: '22px', color: COLORS.UI_ACCENT })
+            .setOrigin(1, 0.5).setInteractive({ useHandCursor: false })
+            .on('pointerover', () => this.debugButton.setColor(COLORS.UI_ACCENT_HOVER))
+            .on('pointerout', () => this.debugButton.setColor(COLORS.UI_ACCENT))
+            .on('pointerdown', this.toggleDebugPanel, this);
+
+
+        // --- Footer Elements (Inventory) ---
+        this.inventorySlots = [];
+        const footerY = this.scale.height * (1 - UI_FOOTER_RATIO) + (this.scale.height * UI_FOOTER_RATIO) / 2; // Vertical center of footer
+        const slotSize = Math.min((this.scale.width * 0.8) / MAX_INVENTORY_SLOTS, this.scale.height * UI_FOOTER_RATIO * 0.7); // Size based on footer space
+        const totalInvWidth = MAX_INVENTORY_SLOTS * (slotSize + 10) - 10; // Total width including padding
+        const startX = (this.scale.width - totalInvWidth) / 2; // Center the inventory block
+
+        for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) {
+            const slotX = startX + i * (slotSize + 10) + slotSize / 2; // Center of the slot
+
+             const slotContainer = this.add.container(slotX, footerY);
+
+            const bgRect = this.add.rectangle(0, 0, slotSize, slotSize, COLORS.UI_BAR_BG).setStrokeStyle(1, COLORS.TILE_HIDDEN);
+             bgRect.setName('background');
+             slotContainer.add(bgRect);
+
+
+             const iconText = this.add.text(0, 0, '', {
+                 fontSize: `${slotSize * 0.6}px`, // Adjust icon size
+                 color: COLORS.TEXT_LIGHT,
+                 align: 'center',
+                 fixedWidth: slotSize,
+                 fixedHeight: slotSize,
+                 padding: { y: slotSize * 0.1 }
+             }).setOrigin(0.5);
+              iconText.setName('iconText');
+             slotContainer.add(iconText);
+
+             slotContainer.setSize(slotSize, slotSize);
+             slotContainer.setInteractive({ useHandCursor: false }) // Disable hand cursor
+                 .on('pointerdown', () => {
+                     // Check if the slot actually contains an item before showing popup
+                     if (i < gameState.player.inventory.length) {
+                          this.displayItemUsePopup(i);
+                     }
+                 });
+              // Initially disable interaction if empty - will be enabled in updateInventoryUI
+              slotContainer.disableInteractive();
+
+
+            this.inventorySlots.push({ container: slotContainer, iconText: iconText, bgRect: bgRect });
+        }
+
+        // --- Message Text ---
+        this.messageText = this.add.text(this.scale.width / 2, this.scale.height / 2, '', {
+            fontSize: '24px',
+            color: COLORS.TEXT_LIGHT,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            padding: { x: 15, y: 10 },
+            align: 'center'
+        }).setOrigin(0.5).setDepth(100).setVisible(false); // High depth, initially hidden
+
+         // --- Modal Background ---
+         this.modalBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height, COLORS.MODAL_BG)
+             .setOrigin(0)
+             .setInteractive() // Block clicks behind popups
+             .setVisible(false)
+             .setDepth(199); // Below popups but above game/main UI
+          // Stop clicks from propagating through the modal background
+          this.modalBg.on('pointerdown', (pointer) => {
+              pointer.event.stopPropagation();
+              console.log("Modal background clicked, propagation stopped.");
+               // Optionally close popups when clicking outside?
+               // this.hideItemUsePopup();
+               // this.hideDebugPanel();
+          });
+
+
+        // --- Item Use Popup ---
+        this.createItemUsePopup();
+
+        // --- Debug Panel ---
+        this.createDebugPanel();
+
+
+        // --- Event Listeners from GameScene ---
+        const gameSceneEvents = this.game.scene.getScene('GameScene').events;
+        gameSceneEvents.on('updateStats', this.updateStatsDisplay, this);
+         gameSceneEvents.on('updateGold', this.updateGoldDisplay, this);
+        gameSceneEvents.on('updateKeyStatus', this.updateKeyStatusDisplay, this);
+        gameSceneEvents.on('updateFloor', this.updateFloorDisplay, this);
+        gameSceneEvents.on('updateInventory', this.updateInventoryUI, this);
+        this.events.on('showMessage', this.displayMessage, this); // Listen for local event triggered by GameScene
+
+
+        // Handle resize for UI elements
+        this.scale.on('resize', this.handleResize, this);
+        this.handleResize(this.scale.gameSize); // Initial layout
+
+        console.log("UIScene creation complete.");
+    }
+
+    // --- UI Update Handlers ---
+
+    updateStatsDisplay(data) {
+        if (!this.hpText || !this.atkText) return; // Guard against calls before creation
+        this.hpText.setText(`HP: ${data.hp}/${data.maxHp}`);
+        this.atkText.setText(`ATK: ${data.atk}`);
+         // Reposition subsequent elements if needed due to text width changes
+        this.repositionHeaderElements();
+    }
+
+    updateGoldDisplay(gold) {
+        if (!this.goldText) return;
+        this.goldText.setText(`GOLD: ${gold}`);
+        this.repositionHeaderElements();
+    }
+
+     updateKeyStatusDisplay(hasKey) {
+         if (!this.keyIcon) return;
+         this.keyIcon.setVisible(hasKey);
+         this.repositionHeaderElements(); // Key visibility changes layout
+     }
+
+
+    updateFloorDisplay(floor) {
+        if (!this.floorText) return;
+        this.floorText.setText(`Floor: ${floor}`);
+        this.repositionHeaderElements(); // Recalculate positions based on right edge
+    }
+
+    updateInventoryUI(inventory) {
+         if (!this.inventorySlots || this.inventorySlots.length === 0) return; // Guard
+
+        console.log("Updating inventory UI. Items:", inventory);
+        for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) {
+            const slot = this.inventorySlots[i];
+            if (i < inventory.length) {
+                const itemId = inventory[i];
+                const item = ITEMS[itemId];
+                if (item) {
+                     let displayText = item.icon;
+                     // Add amount for relevant items
+                     if (item.effect === 'heal' || item.effect === 'aoe_damage') {
+                          displayText += (item.amount !== undefined ? item.amount : ''); // Show amount like 🍷5 or 🗡️3
+                     }
+                     slot.iconText.setText(displayText);
+                     slot.bgRect.setFillStyle(COLORS.ITEM_BG, 0.7); // Indicate occupied
+                     slot.container.setInteractive({ useHandCursor: false }); // Make clickable
+                     // Dynamically adjust font size if needed, e.g., if icon+amount is too wide
+                     const baseSize = slot.bgRect.width * 0.6;
+                     slot.iconText.setFontSize(displayText.length > 2 ? baseSize * 0.8 : baseSize);
+
+                } else {
+                    slot.iconText.setText('?'); // Unknown item
+                    slot.bgRect.setFillStyle(COLORS.MONSTER_BG, 0.5); // Error indication
+                     slot.container.disableInteractive();
+                }
+            } else {
+                slot.iconText.setText(''); // Empty slot
+                slot.bgRect.setFillStyle(COLORS.UI_BAR_BG); // Default background
+                slot.container.disableInteractive(); // Make unclickable
+            }
+        }
+    }
+
+    displayMessage(text, duration = 2000, force = false) {
+         if (!this.messageText) return;
+
+        // If a message is already showing, decide whether to interrupt or queue
+        // Simple approach: Interrupt and replace, clear existing timers/tweens
+        if (this.messageTween) {
+            this.messageTween.stop();
+            this.messageTween = null;
+        }
+        if (this.messageTimer) {
+            this.messageTimer.remove();
+            this.messageTimer = null;
+        }
+
+        this.messageText.setText(text);
+        this.messageText.setAlpha(1); // Make sure fully visible
+        this.messageText.setVisible(true);
+        this.messageText.setPosition(this.scale.width / 2, this.scale.height / 2); // Recenter
+
+        // Set a timer to hide the message
+        this.messageTimer = this.time.delayedCall(duration, () => {
+             // Optional fade out animation
+             this.messageTween = this.tweens.add({
+                 targets: this.messageText,
+                 alpha: 0,
+                 duration: 300,
+                 onComplete: () => {
+                     this.messageText.setVisible(false);
+                     this.messageTween = null;
+                 }
+             });
+             this.messageTimer = null; // Clear timer reference
+        });
+    }
+
+    // --- Popup Creation and Management ---
+
+    createItemUsePopup() {
+        const popupWidth = this.scale.width * 0.6;
+        const popupHeight = this.scale.height * 0.4;
+
+        this.itemPopup = this.add.container(this.scale.width / 2, this.scale.height / 2);
+        this.itemPopup.setDepth(200); // Above modal background
+        this.itemPopup.setVisible(false);
+
+        const bg = this.add.rectangle(0, 0, popupWidth, popupHeight, COLORS.UI_BAR_BG, 0.95)
+            .setStrokeStyle(2, COLORS.POPUP_BORDER);
+        this.itemPopup.add(bg);
+
+        const iconText = this.add.text(0, -popupHeight * 0.3, '', { fontSize: '48px', align: 'center', fixedWidth: popupWidth }).setOrigin(0.5);
+        iconText.setName('icon');
+        this.itemPopup.add(iconText);
+
+        const nameText = this.add.text(0, -popupHeight * 0.1, '', { fontSize: '24px', color: COLORS.UI_TEXT, align: 'center', fixedWidth: popupWidth * 0.9, wordWrap: { width: popupWidth * 0.9 } }).setOrigin(0.5);
+        nameText.setName('name');
+        this.itemPopup.add(nameText);
+
+        const descText = this.add.text(0, popupHeight * 0.1, '', { fontSize: '18px', color: COLORS.TEXT_LIGHT, align: 'center', fixedWidth: popupWidth * 0.9, wordWrap: { width: popupWidth * 0.9 } }).setOrigin(0.5);
+        descText.setName('description');
+        this.itemPopup.add(descText);
+
+        // Use Button
+        const useButton = this.add.text(-popupWidth * 0.25, popupHeight * 0.35, 'Use', { fontSize: '20px', backgroundColor: '#2E8B57', padding: { x: 15, y: 8 }, color: COLORS.TEXT_LIGHT })
+            .setOrigin(0.5).setInteractive({ useHandCursor: false })
+            .on('pointerdown', () => {
+                const itemIndex = this.itemPopup.getData('itemIndex'); // Retrieve index stored on the popup
+                 if (itemIndex !== undefined && itemIndex !== null) {
+                     // Emit event to GameScene to use the item
+                     this.game.scene.getScene('GameScene').events.emit('useItem', itemIndex);
+                 } else {
+                     console.error("Item index not found on popup data.");
+                 }
+                this.hideItemUsePopup();
+            });
+         useButton.setName('useButton');
+         this.itemPopup.add(useButton);
+
+
+        // Cancel Button
+        const cancelButton = this.add.text(popupWidth * 0.25, popupHeight * 0.35, 'Cancel', { fontSize: '20px', backgroundColor: '#A02C2C', padding: { x: 10, y: 8 }, color: COLORS.TEXT_LIGHT })
+             .setOrigin(0.5).setInteractive({ useHandCursor: false })
+             .on('pointerdown', this.hideItemUsePopup, this);
+         cancelButton.setName('cancelButton');
+         this.itemPopup.add(cancelButton);
+
+         // Store references if needed, though accessing via name is fine
+    }
+
+
+    displayItemUsePopup(itemIndex) {
+         if (itemIndex < 0 || itemIndex >= gameState.player.inventory.length) return;
+
+         const itemId = gameState.player.inventory[itemIndex];
+         const item = ITEMS[itemId];
+
+         if (!item || !this.itemPopup) return;
+
+         // Store the index for the 'Use' button action
+         this.itemPopup.setData('itemIndex', itemIndex);
+
+          // Update popup content
+          this.itemPopup.getByName('icon').setText(item.icon);
+          this.itemPopup.getByName('name').setText(item.name);
+          this.itemPopup.getByName('description').setText(item.description);
+
+          // Show 'Use' button only if item has a known effect
+          const useButton = this.itemPopup.getByName('useButton');
+          useButton.setVisible(!!item.effect); // Show if effect is defined
+
+          // Recenter and show popup & modal background
+         this.itemPopup.setPosition(this.scale.width / 2, this.scale.height / 2);
+         this.modalBg.setVisible(true);
+         this.itemPopup.setVisible(true);
+         console.log(`Displaying popup for item index ${itemIndex}: ${item.name}`);
+    }
+
+
+     hideItemUsePopup() {
+          if (this.itemPopup) {
+             this.itemPopup.setVisible(false);
+          }
+          // Hide modal BG only if debug panel is also hidden
+          if (!this.debugPanel || !this.debugPanel.visible) {
+             this.modalBg.setVisible(false);
+          }
+         console.log("Item use popup hidden.");
+     }
+
+    createDebugPanel() {
+         const panelWidth = this.scale.width * 0.7;
+         const panelHeight = this.scale.height * 0.5;
+
+         this.debugPanel = this.add.container(this.scale.width / 2, this.scale.height / 2);
+         this.debugPanel.setDepth(200);
+         this.debugPanel.setVisible(false);
+
+         const bg = this.add.rectangle(0, 0, panelWidth, panelHeight, COLORS.UI_BAR_BG, 0.95)
+             .setStrokeStyle(2, COLORS.POPUP_BORDER);
+         this.debugPanel.add(bg);
+
+         const title = this.add.text(0, -panelHeight * 0.4, 'Debug Panel', { fontSize: '24px', color: COLORS.UI_ACCENT, align: 'center', fixedWidth: panelWidth }).setOrigin(0.5);
+         this.debugPanel.add(title);
+
+         // Button Styling
+         const btnStyle = { fontSize: '16px', backgroundColor: COLORS.UI_ACCENT, padding: { x: 8, y: 5 }, color: COLORS.TEXT_LIGHT, align: 'center' };
+         const btnHoverStyle = { color: COLORS.UI_ACCENT_HOVER };
+
+         // Button Layout (approx 3 columns)
+         const col1X = -panelWidth * 0.3;
+         const col2X = 0;
+         const col3X = panelWidth * 0.3;
+         const row1Y = -panelHeight * 0.2;
+         const row2Y = -panelHeight * 0.05;
+         const row3Y = panelHeight * 0.1;
+         const row4Y = panelHeight * 0.25;
+
+
+         const addButton = (x, y, text, eventName, eventData = null) => {
+             const btn = this.add.text(x, y, text, btnStyle).setOrigin(0.5)
+                 .setInteractive({ useHandCursor: false })
+                 .on('pointerover', () => btn.setColor(COLORS.UI_ACCENT_HOVER))
+                 .on('pointerout', () => btn.setColor(COLORS.TEXT_LIGHT)) // Reset to original text color
+                 .on('pointerdown', () => {
+                     console.log(`Debug button clicked: ${text}`);
+                      if (eventData !== null) {
+                         this.game.scene.getScene('GameScene').events.emit(eventName, eventData.stat, eventData.amount);
+                      } else {
+                          this.game.scene.getScene('GameScene').events.emit(eventName);
+                      }
+                      // Optionally close panel after action? No, keep it open.
+                 });
+             this.debugPanel.add(btn);
+             return btn; // Return button in case needed
+         };
+
+         // Column 1
+         addButton(col1X, row1Y, 'Mark Hidden', 'debugMarkHidden');
+         addButton(col1X, row2Y, '+10 HP', 'debugChangeStat', { stat: 'hp', amount: 10 });
+         addButton(col1X, row3Y, '-10 HP', 'debugChangeStat', { stat: 'hp', amount: -10 });
+         addButton(col1X, row4Y, '+100 Gold', 'debugChangeStat', { stat: 'gold', amount: 100 });
+
+         // Column 2
+         addButton(col2X, row1Y, 'Kill All Vis', 'debugKillAll');
+         addButton(col2X, row2Y, '+1 ATK', 'debugChangeStat', { stat: 'atk', amount: 1 });
+         addButton(col2X, row3Y, '-1 ATK', 'debugChangeStat', { stat: 'atk', amount: -1 });
+         addButton(col2X, row4Y, 'Fill Inv', 'debugFillInventory');
+
+         // Column 3
+          const diagButton = addButton(col3X, row1Y, gameState.useDiagonals ? 'Use 4-Dir' : 'Use 8-Dir', 'debugToggleDiagonals');
+          // Need to update the diagonal button text when toggled
+          this.game.scene.getScene('GameScene').events.on('debugToggleDiagonals', () => {
+              diagButton.setText(gameState.useDiagonals ? 'Use 4-Dir' : 'Use 8-Dir');
+          });
+         // Add more buttons as needed in col3X, row2Y etc.
+
+
+         // Close Button (optional, can use the main [D] button to toggle)
+         const closeButton = this.add.text(panelWidth * 0.45, -panelHeight * 0.45, 'X', { fontSize: '18px', backgroundColor: '#A02C2C', padding: { x: 6, y: 3 }, color: COLORS.TEXT_LIGHT })
+             .setOrigin(0.5).setInteractive({ useHandCursor: false })
+             .on('pointerdown', this.hideDebugPanel, this);
+          this.debugPanel.add(closeButton);
+    }
+
+    toggleDebugPanel() {
+        if (!this.debugPanel) return;
+
+        const isVisible = this.debugPanel.visible;
+        if (isVisible) {
+            this.hideDebugPanel();
+        } else {
+            this.debugPanel.setPosition(this.scale.width / 2, this.scale.height / 2); // Recenter
+             this.modalBg.setVisible(true); // Show modal background
+            this.debugPanel.setVisible(true);
+            console.log("Debug panel shown.");
+        }
+    }
+
+     hideDebugPanel() {
+         if (this.debugPanel) {
+            this.debugPanel.setVisible(false);
+         }
+         // Hide modal BG only if item popup is also hidden
+          if (!this.itemPopup || !this.itemPopup.visible) {
+             this.modalBg.setVisible(false);
+          }
+         console.log("Debug panel hidden.");
+     }
+
+
+    toggleInstructions() {
+         if (!this.instructionsPanel) return;
+
+         const currentDisplay = this.instructionsPanel.style.display;
+         if (currentDisplay === 'none' || currentDisplay === '') {
+             this.instructionsPanel.style.display = 'block';
+             console.log("Instructions panel shown.");
+              // Ensure popups are hidden when instructions are shown? Optional.
+              this.hideItemUsePopup();
+              this.hideDebugPanel();
+
+         } else {
+             this.instructionsPanel.style.display = 'none';
+             console.log("Instructions panel hidden.");
+         }
+     }
+
+    // --- Layout and Resize ---
+
+    handleResize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+
+         // Update modal background size
+         if (this.modalBg) {
+             this.modalBg.setSize(width, height);
+         }
+
+        // Reposition Bars
+        const headerHeight = height * UI_HEADER_RATIO;
+        const footerHeight = height * UI_FOOTER_RATIO;
+        this.headerBg.setSize(width, headerHeight);
+        this.footerBg.setPosition(0, height - footerHeight);
+        this.footerBg.setSize(width, footerHeight);
+
+        // Reposition Header Elements
+         this.repositionHeaderElements();
+
+
+        // Reposition Footer Elements (Inventory)
+        const footerY = height - footerHeight + footerHeight / 2;
+        const availableFooterWidth = width * 0.9; // Use 90% of width for inventory display
+        const maxSlotWidth = availableFooterWidth / MAX_INVENTORY_SLOTS - 10; // Width per slot minus padding
+        const maxSlotHeight = footerHeight * 0.7; // Max height based on footer
+        const slotSize = Math.max(20, Math.min(maxSlotWidth, maxSlotHeight)); // Ensure minimum size
+        const totalInvWidth = MAX_INVENTORY_SLOTS * (slotSize + 10) - 10;
+        const startX = (width - totalInvWidth) / 2;
+
+        for (let i = 0; i < MAX_INVENTORY_SLOTS; i++) {
+            const slot = this.inventorySlots[i];
+            if (slot) {
+                const slotX = startX + i * (slotSize + 10) + slotSize / 2;
+                slot.container.setPosition(slotX, footerY);
+                slot.bgRect.setSize(slotSize, slotSize);
+                slot.iconText.setFixedSize(slotSize, slotSize);
+                slot.iconText.setPadding({ y: slotSize * 0.1 });
+                // Re-apply font size based on new slot size
+                const baseSize = slotSize * 0.6;
+                 const currentText = slot.iconText.text;
+                slot.iconText.setFontSize(currentText.length > 2 ? baseSize * 0.8 : baseSize);
+
+                // Update hit area size
+                 slot.container.setSize(slotSize, slotSize);
+                // Re-enable/disable interaction based on current game state
+                // This is handled by updateInventoryUI, which should be called after resize if needed
+            }
+        }
+
+        // Reposition Message Text (if visible)
+        if (this.messageText && this.messageText.visible) {
+            this.messageText.setPosition(width / 2, height / 2);
+        }
+
+        // Reposition Popups (if visible) - Adjust size dynamically too? More complex.
+         // For now, just recenter based on new screen size. Could also scale them.
+         if (this.itemPopup && this.itemPopup.visible) {
+             this.itemPopup.setPosition(width / 2, height / 2);
+             // Could potentially resize the item popup elements here too
+         }
+          if (this.debugPanel && this.debugPanel.visible) {
+              this.debugPanel.setPosition(width / 2, height / 2);
+              // Could potentially resize the debug panel elements here too
+          }
+    }
+
+    repositionHeaderElements() {
+        if (!this.hpText) return; // Check if elements exist
+
+         const width = this.scale.width;
+         const height = this.scale.height;
+         const headerHeight = height * UI_HEADER_RATIO;
+         const headerY = headerHeight / 2;
+         const headerPadding = 15;
+         const elementSpacing = 25; // Spacing between elements
+
+         // Left-aligned elements
+         this.hpText.setPosition(headerPadding, headerY);
+         this.atkText.setPosition(this.hpText.x + this.hpText.width + elementSpacing, headerY);
+         this.goldText.setPosition(this.atkText.x + this.atkText.width + elementSpacing, headerY);
+         this.keyIcon.setPosition(this.goldText.x + this.goldText.width + (this.keyIcon.visible ? elementSpacing / 2 : 0), headerY); // Only add spacing if visible
+
+
+         // Right-aligned elements (calculate from right edge)
+          const helpWidth = this.helpButton.width;
+          const debugWidth = this.debugButton.width;
+          const floorWidth = this.floorText.width; // Approximate, text width can change
+
+          this.helpButton.setPosition(width - headerPadding, headerY);
+          this.debugButton.setPosition(this.helpButton.x - helpWidth - elementSpacing, headerY);
+          this.floorText.setPosition(this.debugButton.x - debugWidth - elementSpacing, headerY); // Position floor left of debug
+
+
+         // Adjust font sizes based on header height?
+         const baseFontSize = Math.max(12, Math.min(24, headerHeight * 0.35)); // Dynamic font size based on header height
+         this.hpText.setFontSize(baseFontSize);
+         this.atkText.setFontSize(baseFontSize);
+         this.goldText.setFontSize(baseFontSize);
+         this.keyIcon.setFontSize(baseFontSize * 1.2); // Slightly larger key
+         this.floorText.setFontSize(baseFontSize);
+         this.helpButton.setFontSize(baseFontSize * 1.1);
+         this.debugButton.setFontSize(baseFontSize * 1.1);
+    }
+
+
+} // End UIScene
+
+class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverScene' });
+    }
+
+    init(data) {
+        // Receive data from the scene that started this one (GameScene)
+        this.floorReached = data.floorReached || 0;
+        console.log("GameOverScene init. Floor reached:", this.floorReached);
+    }
+
+    create() {
+        console.log("GameOverScene create");
+        this.cameras.main.setBackgroundColor('#000000'); // Black background
+
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+
+        // Game Over Text
+        this.add.text(centerX, centerY - 100, 'GAME OVER', {
+            fontSize: '48px',
+            color: '#ff0000', // Red
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Floor Reached Text
+        this.add.text(centerX, centerY, `You reached Floor: ${this.floorReached}`, {
+            fontSize: '28px',
+            color: '#ffffff', // White
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Restart Button
+        const restartButton = this.add.text(centerX, centerY + 100, 'RESTART', {
+            fontSize: '32px',
+            color: '#4682B4', // Steel Blue
+            backgroundColor: '#333333',
+            padding: { x: 20, y: 10 },
+            align: 'center'
+        }).setOrigin(0.5);
+
+        restartButton.setInteractive({ useHandCursor: false }) // No hand cursor
+            .on('pointerover', () => restartButton.setColor('#ADD8E6')) // Lighter blue on hover
+            .on('pointerout', () => restartButton.setColor('#4682B4'))
+            .on('pointerdown', () => {
+                console.log("Restart button clicked.");
+                // Ensure game over state is reset internally *before* starting GameScene
+                 gameState.isGameOver = false; // Reset flag crucial for GameScene init
+                // Restart the game flow by going back to the Preloader or directly to Game+UI
+                 // Starting Preloader ensures both Game and UI are started correctly in parallel
+                 // this.scene.start('PreloaderScene');
+                 // Simpler: Directly start GameScene and launch UI
+                 this.scene.start('GameScene');
+                 this.scene.launch('UIScene'); // Relaunch UI scene
+            });
+
+         // Handle resize for centering elements
+         this.scale.on('resize', this.handleResize, this);
+         this.handleResize(this.scale.gameSize); // Initial positioning
+    }
+
+     handleResize(gameSize) {
+         const width = gameSize.width;
+         const height = gameSize.height;
+         const centerX = width / 2;
+         const centerY = height / 2;
+
+         // Recenter all elements - assuming they are direct children of the scene
+         this.children.list.forEach(child => {
+              if (child instanceof Phaser.GameObjects.Text) { // Check if it's text to avoid errors on other objects
+                 // Rough centering logic - assumes origin is 0.5
+                 if(child.text === 'GAME OVER') child.setPosition(centerX, centerY - 100);
+                 else if(child.text.includes('You reached Floor')) child.setPosition(centerX, centerY);
+                  else if(child.text === 'RESTART') child.setPosition(centerX, centerY + 100);
+             }
+         });
+     }
+
+
+} // End GameOverScene
+
+
+// --- Phaser Game Configuration ---
+const config = {
+    type: Phaser.AUTO, // Choose WebGL if available, otherwise Canvas
+    scale: {
+        mode: Phaser.Scale.RESIZE, // Resize to fit the parent container
+        parent: 'phaser-game',   // ID of the DOM element to contain the canvas
+        width: '100%',           // Use full width of the parent
+        height: '100%'           // Use full height of the parent
+    },
+    scene: [BootScene, PreloaderScene, GameScene, UIScene, GameOverScene], // Scene lifecycle
+    backgroundColor: COLORS.BACKGROUND, // Background color for Phaser canvas area
+    pixelArt: false, // Disable pixel art mode for smoother text/shapes
+    // Disable right-click context menu on the game canvas
+    disableContextMenu: true,
+     // Ensure input settings are reasonable
+     input: {
+         mouse: {
+             preventDefaultWheel: true, // Prevent page scroll on mouse wheel over canvas
+              preventDefaultContextMenu: true // Double ensure context menu is off
+         }
+     },
+     // Performance hints - maybe not needed for simple graphics
+     // render: {
+     //     antialias: true,
+     //     powerPreference: 'high-performance' // Request high performance GPU if available
+     // }
+
+};
+
+// --- Initialize Phaser Game ---
+window.onload = () => {
+    const game = new Phaser.Game(config);
+    console.log("Phaser Game instance created.");
+};
+
+</script>
+</body>
+</html>
