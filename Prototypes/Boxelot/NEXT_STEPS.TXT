@@ -1,0 +1,54 @@
+
+
+---- Companions
+TODO: Companions:
+Knight: Does 3 damage to all visible enemies
+Wizard: Heals by 3
+
+
+---- Premium items
+
+Greedy and cursed door can contain items that can not be used but have effects
+spike trap: damage enemies on reveal
+shield: x% change to block enemy attack
+
+Invisibility cloak: Monsters won't block nearby tiles
+
+RUNE, +1 to attack, stacks
+RUNE +1 to health, stacks
+
+---- Challenge doors
+
+Greedy Door
+    CONTAINS?
+
+Cursed Door:   
+    CONTAINS?
+
+Challenge door (must have x hearts or y attack power)
+    CONTAINS?
+
+CHALLENGE door: KILL AN ENEMY
+
+CHALLENGE DOOR: USE SOME MAGIC
+
+
+
+---- Monster Rework
+
+Monsters
+Dragon 🐉
+Devil 👹
+Devil 👿
+Squid 🦑
+Orc 🧌
+Zombie 🧟
+Ogre 👺
+Vampire: 🧛‍♂️
+Zombie: 🧟‍♂️
+Ghost 👻
+
+TODO: Slime type enemy (spawns a smaller one)
+TODO: Bosses:
+Appear every 5 floors, starting on floor 5. Optional.
+    Reward: Compas, can have in inventory but can't use. Reveals location of the key.
