@@ -2,12 +2,19 @@
 
 
 
-Next, let's build a shop. The Shop allows players to buy more hp or attack for gold. The shop appears only every 4 floors, starting on floor 4.
-Clicking on the shop causes a modal popup to appear. In the popup the player can buy +5 health is 100 coins, +1 attack is 200 coins. 
+
+
+//
+In the popup the player can buy +5 health is 100 coins, +1 attack is 200 coins. 
 The shop doesn't dissapear after using it. PLayer can click the shop as many times as they want while on a floor with a shop on it.
-
+//
 Add a "enable Debug shop" button to the debug menu. When enabled, every floor will have a shop show up.
+//
 
+---- Poison needs to be better
+Poision should apply on player turns, not enemy turns. And to all enemies who are poisoned. So if an enemy is poisoned, and the player reveals a tile, have the poison reduce the enemys hp after the player interaction (as opposed to after monster attack how it works now). Also, flash the monsters square background green when it takes poison damage.
+
+Does freeze work the same way? No, just When the monster would attack, flash it's square blue.
 
 ---- Companions
 TODO: Companions:
@@ -61,3 +68,9 @@ TODO: Slime type enemy 🐌 / 🐚 (spawns a smaller one)
 TODO: Bosses:
 Appear every 5 floors, starting on floor 5. Optional.
     Reward: Compas, can have in inventory but can't use. Reveals location of the key.
+
+Four bosses: 
+    high attack, low health, 
+    high health, low attack,
+    high health, high attack
+    Slime like respawn on death
