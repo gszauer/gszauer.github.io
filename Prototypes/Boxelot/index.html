@@ -37,7 +37,7 @@
         /* Style for HTML Instructions Panel */
         #instructions-dom {
             /* Initially hidden */
-            display: none;
+            display: none; /* This will now correctly hide it by default */
             /* Positioning */
             position: absolute;
             z-index: 100; /* Above game canvas */
@@ -55,8 +55,7 @@
             border: 2px solid #dddddd;
             border-radius: 8px;
             box-sizing: border-box; /* Include padding/border in size */
-            /* Layout */
-            display: flex;
+            /* Layout - display: flex is now only applied via JS when shown */
             flex-direction: column;
             overflow: hidden; /* Hide anything spilling out */
         }
@@ -185,9 +184,9 @@ const TILE_TYPE = {
 // Tile States Enum
 const TILE_STATE = {
     HIDDEN_UNACCESSIBLE: 'HIDDEN_UNACCESSIBLE', // Cannot be clicked, no '?'
-    HIDDEN_NORMAL: 'HIDDEN_NORMAL',         // Can be clicked, shows '?'
-    HIDDEN_BLOCKED: 'HIDDEN_BLOCKED',       // Blocked by adjacent monster, shows 'X'
-    REVEALED: 'REVEALED'                    // Tile content is visible
+    HIDDEN_NORMAL: 'HIDDEN_NORMAL',        // Can be clicked, shows '?'
+    HIDDEN_BLOCKED: 'HIDDEN_BLOCKED',        // Blocked by adjacent monster, shows 'X'
+    REVEALED: 'REVEALED'                  // Tile content is visible
 };
 
 // Color Palette
@@ -223,7 +222,7 @@ const COLORS = {
     EXPLOSIVE: 0xFF6347, // Tomato red for explosives
     HEART: 0xFF69B4, // Hot pink for heart items
     ITEM_POISON: 0x90EE90, // Light green for poison vial
-    ITEM_FREEZE: 0xADD8E6 // Light blue for freeze scroll
+    ITEM_FREEZE: 0xADD8E6 // Light blue for freeze scroll (and frozen monster background)
 };
 
 // Monster Definitions
@@ -284,37 +283,36 @@ class Tile extends Phaser.GameObjects.Container {
         this.r = r; // Store grid row
         this.c = c; // Store grid column
 
-        const iconFontSize = Math.max(16, Math.min(36, Math.floor(this.tileHeight * 0.45)));
+        // --- Calculate Font Sizes (dynamically based on tile height) ---
+        // Initial calculation, also done in updateVisuals for resizing
+        const iconFontSize = Math.max(16, Math.min(36, Math.floor(height * 0.45)));
         const detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45)));
 
         // --- Create Visual Elements ---
         // Background rectangle
         this.bgRect = scene.add.rectangle(0, 0, width, height, COLORS.HIDDEN).setOrigin(0);
         // Main text/icon element (centered by default)
-        this.mainText = scene.add.text(width / 2, height / 2, '', { 
+        this.mainText = scene.add.text(width / 2, height / 2, '', {
             font: `bold ${Math.floor(iconFontSize * 0.8)}px Arial`, // Slightly smaller font for hidden '?'/'X'
             fill: COLORS.TEXT_DARK, // Dark text for hidden
             align: 'center',
-            wordWrap: { width: this.tileWidth - 10 } // Wrap text if needed
-
-            //fill: COLORS.TEXT_DARK, align: 'center' 
-        
+            wordWrap: { width: width - 10 } // Wrap text if needed
         }).setOrigin(0.5);
         // Stats text element (HP/ATK, positioned near bottom)
-        this.statsText = scene.add.text(width / 2, height * 0.75, '', { 
+        this.statsText = scene.add.text(width / 2, height * 0.75, '', {
             font: `bold ${detailFontSize}px Arial`,
             fill: COLORS.TEXT_DARK, // Default color, updated in reveal
             align: 'center'
         }).setOrigin(0.5);
         // Status icon elements (positioned top-left for stacking)
-        this.statusIcon1 = scene.add.text(0, 0, '', { 
+        this.statusIcon1 = scene.add.text(0, 0, '', {
             font: `${detailFontSize * 0.9}px Arial`,
             fill: COLORS.TEXT
         }).setOrigin(0, 0);
-        this.statusIcon2 = scene.add.text(0, 0, '', { 
+        this.statusIcon2 = scene.add.text(0, 0, '', {
             font: `${detailFontSize * 0.9}px Arial`,
             fill: COLORS.TEXT
-         }).setOrigin(0, 0);
+            }).setOrigin(0, 0);
 
         // Add visual elements to this container
         this.add([this.bgRect, this.mainText, this.statsText, this.statusIcon1, this.statusIcon2]);
@@ -418,7 +416,15 @@ class Tile extends Phaser.GameObjects.Container {
             switch (this.tileData.type) {
                 case TILE_TYPE.MONSTER:
                     if (this.tileData.hp > 0) { // Living Monster
-                        this.bgRect.setFillStyle(COLORS.MONSTER_BG);
+                        // *** MODIFICATION START ***
+                        // Set background color based on freeze status
+                        if (this.tileData.frozenTurns > 0) {
+                            this.bgRect.setFillStyle(COLORS.ITEM_FREEZE); // Blue background if frozen
+                        } else {
+                            this.bgRect.setFillStyle(COLORS.MONSTER_BG); // Standard red background otherwise
+                        }
+                        // *** MODIFICATION END ***
+
                         let monsterInfo = MONSTER_STATS[this.tileData.monsterType];
                         let icon = this.tileData.isSheep ? '🐑' : (monsterInfo?.icon || '??'); // Handle potential missing monster info
                         let keyIndicator = (this.tileData.hasKey && this.tileData.attackedOnce && !this.tileData.isSheep) ? '🗝️' : '';
@@ -430,7 +436,7 @@ class Tile extends Phaser.GameObjects.Container {
                         // Apply status effects icons (poison, freeze) top-left, stacking vertically
                         if (this.tileData.isPoisoned && this.tileData.poisonTurns > 0) { setStatusIcon(this.statusIcon1, '🥦'); }
                         if (this.tileData.frozenTurns > 0) {
-                             // Use the next available slot (statusIcon1 or statusIcon2)
+                            // Use the next available slot (statusIcon1 or statusIcon2)
                             setStatusIcon(currentStatusIndex === 0 ? this.statusIcon1 : this.statusIcon2, '❄️');
                         }
 
@@ -495,8 +501,8 @@ class Tile extends Phaser.GameObjects.Container {
                 case TILE_TYPE.RANDOM_ITEM:
                     this.bgRect.setFillStyle(COLORS.RANDOM_ITEM);
                     if (this.tileData.isCycling) {
-                         // Icon is set dynamically by the GameScene's update loop calling this method via setData
-                         // Get the current item icon to display based on cycleIndex
+                        // Icon is set dynamically by the GameScene's update loop calling this method via setData
+                        // Get the current item icon to display based on cycleIndex
                         const currentOutcomeId = RANDOM_TILE_OUTCOMES[this.tileData.cycleIndex || 0];
                         const itemInfo = ITEM_TYPES[currentOutcomeId];
                         this.mainText.setText(itemInfo?.icon || '??').setFontSize(iconFontSize);
@@ -521,15 +527,15 @@ class Tile extends Phaser.GameObjects.Container {
 
             // Set text based on hidden state ('?', 'X', or '')
             switch (this.tileData.state) {
-                case TILE_STATE.HIDDEN_NORMAL:         this.mainText.setText('?'); break; // Accessible
-                case TILE_STATE.HIDDEN_BLOCKED:        this.mainText.setText('X'); break; // Blocked by monster
-                case TILE_STATE.HIDDEN_UNACCESSIBLE:   this.mainText.setText('');  break; // Not adjacent to revealed
-                default:                               this.mainText.setText('');  // Default to blank
+                case TILE_STATE.HIDDEN_NORMAL:        this.mainText.setText('?'); break; // Accessible
+                case TILE_STATE.HIDDEN_BLOCKED:       this.mainText.setText('X'); break; // Blocked by monster
+                case TILE_STATE.HIDDEN_UNACCESSIBLE:  this.mainText.setText('');  break; // Not adjacent to revealed
+                default:                              this.mainText.setText('');  // Default to blank
             }
              // Apply Debug Marker if present (overwrites '?', 'X', '')
-            if (this.tileData.debugMarker) {
-                this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR);
-            }
+             if (this.tileData.debugMarker) {
+                 this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR);
+             }
         }
     }
 }
@@ -593,6 +599,165 @@ class GameScene extends Phaser.Scene {
         this.gridContentHeight = 0;
         this.uiHeaderHeight = 0;
         this.uiFooterHeight = 0;
+    }
+
+    processEndOfPlayerTurnEffects() {
+        if (this.isGameOver) return; // Don't process if game is already over
+
+        console.log("Processing end-of-player-turn effects...");
+        let statsChanged = false; // Flag to update UI only if needed
+        let monstersKilledData = []; // Store data of monsters killed by poison this turn
+
+        // Iterate through all tiles to find monsters with status effects
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                let tileData = tile?.tileData;
+
+                // Check if it's a revealed, living monster
+                if (tile && tileData && tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0 && tileData.state === TILE_STATE.REVEALED) {
+                    let needsVisualUpdate = false;
+                    const monsterName = tileData.isSheep ? "Sheep" : (MONSTER_STATS[tileData.monsterType]?.name || "Monster");
+
+                    // --- Process Poison ---
+                    if (tileData.isPoisoned && tileData.poisonTurns > 0) {
+                        const poisonDamage = GAME.POISON_DAMAGE;
+                        tileData.hp -= poisonDamage;
+                        tileData.poisonTurns--;
+                        statsChanged = true;
+                        needsVisualUpdate = true;
+                        console.log(`Poison ticks on ${monsterName} at [${r},${c}] for ${poisonDamage}. ${tileData.poisonTurns} turns left. HP: ${tileData.hp}`);
+
+                        // Trigger flash animation (can reuse/adapt the previous flash logic)
+                        this.flashTileBackground(tile, COLORS.ITEM_POISON, 100, 2); // Flash Green
+
+                        if (tileData.poisonTurns <= 0) {
+                            tileData.isPoisoned = false;
+                            console.log(`${monsterName} at [${r},${c}] is no longer poisoned.`);
+                            // Visual update for icon removal happens below or if monster dies
+                        }
+
+                        // Check for death *immediately* after poison damage
+                        if (tileData.hp <= 0) {
+                            console.log(`${monsterName} at [${r},${c}] died from poison!`);
+                            monstersKilledData.push({ tile: tile, data: tileData, r: r, c: c });
+                            // Don't process freeze if dead
+                            continue; // Move to next tile
+                        }
+                    }
+
+                    // Freeze is handled elsewhere
+                   
+
+                    // Update visuals if HP/Status changed and monster didn't die from poison this tick
+                    if (needsVisualUpdate) {
+                         // Use setData to ensure Tile's internal state and visuals are sync'd
+                         // Pass only the changed data to avoid overwriting unrelated things
+                         tile.setData({
+                             hp: tileData.hp, // Update HP display
+                             isPoisoned: tileData.isPoisoned,
+                             poisonTurns: tileData.poisonTurns,
+                             frozenTurns: tileData.frozenTurns
+                             // `setData` will call `updateVisuals` which handles icon display and background color
+                         });
+                    }
+                }
+            }
+        }
+
+        // --- Process Monsters Killed by Poison This Turn ---
+        // Do this after the main loop to avoid issues modifying grid state while iterating
+        let keyDroppedThisTurn = false;
+        for (const killed of monstersKilledData) {
+             // Check maxHp > 0 ensures we only process death once if multiple effects could kill
+             if (killed.data.maxHp > 0) {
+                killed.data.maxHp = 0; // Mark officially dead
+                this.monsterCount--;
+                statsChanged = true;
+                let droppedItemId = killed.data.hasKey ? 'KEY_ITEM' : 'COIN';
+                 if (killed.data.hasKey) {
+                     keyDroppedThisTurn = true;
+                     this.keyDroppedOnFloor = true; // Mark key as dropped
+                 }
+                // Change tile data to the dropped item
+                 killed.tile.setData({
+                     type: TILE_TYPE.ITEM, itemId: droppedItemId, revealed: true, state: TILE_STATE.REVEALED,
+                     // Clear monster fields
+                     hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
+                     attackedOnce: false, isPoisoned: false, poisonTurns: 0,
+                     isSheep: false, frozenTurns: 0
+                 });
+                // Unblock neighbors
+                 this.updateNeighborStates(killed.r, killed.c, false, true); // isMonsterUnblock = true
+             }
+        }
+        if(keyDroppedThisTurn) this.events.emit('showMessage', `Key Dropped!`);
+
+        // Update UI if any stats/durations changed or monsters died
+        if (statsChanged) {
+            this.events.emit('updateStats', this.getPlayerStats());
+        }
+
+        // Final check for game over AFTER poison/effects resolve
+        this.checkGameOver();
+    }
+
+    /**
+     * Helper function to flash a tile's background color.
+     * @param {Tile} tile - The Tile object to flash.
+     * @param {number} flashColor - The hex color code for the flash.
+     * @param {number} duration - Duration of each half-flash (ms).
+     * @param {number} repeats - Number of full flashes (color -> original -> color...). 2 repeats = 3 flashes total.
+     */
+    flashTileBackground(tile, flashColor, duration = 100, repeats = 2) {
+        if (!tile || !tile.bgRect || !tile.tileData) return;
+
+        // Determine the correct resting background color based on current state
+        const isFrozen = tile.tileData.frozenTurns > 0;
+        const isLivingMonster = tile.tileData.type === TILE_TYPE.MONSTER && tile.tileData.hp > 0;
+        let originalColor = tile.bgRect.fillColor; // Default to current color
+
+        if (isLivingMonster) {
+            originalColor = isFrozen ? COLORS.ITEM_FREEZE : COLORS.MONSTER_BG;
+        } else if (tile.tileData.type === TILE_TYPE.EMPTY) {
+            originalColor = COLORS.REVEALED_BG;
+        } // Add other types if needed
+
+        // Prevent overlapping flashes on the same tile
+        if (tile.getData('isFlashing')) {
+             // console.log("Tile already flashing, skipping new flash.");
+             return;
+        }
+        tile.setData('isFlashing', true);
+
+        // Temporarily set to flash color
+        tile.bgRect.setFillStyle(flashColor);
+
+        // Use counter tween for flashing effect
+        this.tweens.addCounter({
+            from: 0,
+            to: repeats * 2, // Count determines flash state (flash on even, original on odd)
+            duration: duration * (repeats * 2 + 1), // Total duration covers all phases
+            onUpdate: (tween) => {
+                if (!tile.active) { tween.stop(); return; } // Stop if tile is destroyed
+                const value = Math.floor(tween.getValue());
+                tile.bgRect.setFillStyle(value % 2 === 0 ? flashColor : originalColor);
+            },
+            onComplete: () => {
+                if (tile.active) { // Check if tile still exists
+                    tile.bgRect.setFillStyle(originalColor); // Ensure final color is correct
+                    tile.setData('isFlashing', false); // Allow new flashes
+                     // Optional: Force one last visual update if needed, though setData usually covers it
+                     // tile.updateVisuals();
+                }
+            },
+             onStop: () => { // Also reset on stop, e.g., if scene changes
+                 if (tile.active) {
+                     tile.bgRect.setFillStyle(originalColor);
+                     tile.setData('isFlashing', false);
+                 }
+             }
+        });
     }
 
     /**
@@ -846,29 +1011,29 @@ class GameScene extends Phaser.Scene {
         for (let r = 0; r < GRID.ROWS; r++) {
             for (let c = 0; c < GRID.COLS; c++) {
                 if (gridRawData[r] && gridRawData[r][c]) {
-                     // Calculate position for the new Tile instance
-                     let tileX = c * (this.tileWidth + this.tileSpacing);
-                     let tileY = r * (this.tileHeight + this.tileSpacing);
-                     // Create Tile instance using the generated raw data
-                     this.tileObjects[r][c] = new Tile(this, tileX, tileY, this.tileWidth, this.tileHeight, gridRawData[r][c], r, c);
-                     // Add the Tile's container to the main grid container
-                     this.tileContainer.add(this.tileObjects[r][c]);
+                    // Calculate position for the new Tile instance
+                    let tileX = c * (this.tileWidth + this.tileSpacing);
+                    let tileY = r * (this.tileHeight + this.tileSpacing);
+                    // Create Tile instance using the generated raw data
+                    this.tileObjects[r][c] = new Tile(this, tileX, tileY, this.tileWidth, this.tileHeight, gridRawData[r][c], r, c);
+                    // Add the Tile's container to the main grid container
+                    this.tileContainer.add(this.tileObjects[r][c]);
                 } else {
-                     console.warn(`Missing grid data during tile object creation for [${r}, ${c}]`);
+                    console.warn(`Missing grid data during tile object creation for [${r}, ${c}]`);
                 }
             }
         }
 
         // --- Reveal Starting Tile ---
         if (doorCoord) {
-             const doorTile = this.tileObjects[doorCoord.r]?.[doorCoord.c]; // Get the Tile instance
-             if (doorTile) {
-                 // Use the Tile's setData method to update its state and visuals
-                 doorTile.setData({ revealed: true, state: TILE_STATE.REVEALED });
-                 // Update the state of neighbors adjacent to the revealed door
-                 this.updateNeighborStates(doorCoord.r, doorCoord.c);
-                 console.log(`Revealed starting door at [${doorCoord.r}, ${doorCoord.c}]`);
-             }
+            const doorTile = this.tileObjects[doorCoord.r]?.[doorCoord.c]; // Get the Tile instance
+            if (doorTile) {
+                // Use the Tile's setData method to update its state and visuals
+                doorTile.setData({ revealed: true, state: TILE_STATE.REVEALED });
+                // Update the state of neighbors adjacent to the revealed door
+                this.updateNeighborStates(doorCoord.r, doorCoord.c);
+                console.log(`Revealed starting door at [${doorCoord.r}, ${doorCoord.c}]`);
+            }
         }
 
         console.log(`Generated Floor ${this.currentFloor} with ${this.monsterCount} monsters.`);
@@ -1124,6 +1289,8 @@ class GameScene extends Phaser.Scene {
              // Update neighbors now that the tile is revealed (and potentially empty)
              this.updateNeighborStates(r, c, false, false);
         }
+
+        this.processEndOfPlayerTurnEffects(); 
     }
 
     /**
@@ -1202,6 +1369,7 @@ class GameScene extends Phaser.Scene {
              tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, itemId: null });
              this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
              this.events.emit('updateStats', this.getPlayerStats()); // Update UI (gold, HP, key icon)
+            this.processEndOfPlayerTurnEffects(); 
         } else if (showInvFullMsg) {
              // Show inventory full message if applicable
              this.events.emit('showMessage', 'Inventory Full!');
@@ -1246,9 +1414,9 @@ class GameScene extends Phaser.Scene {
             console.log(`${monsterName} is frozen! Skips attack.`);
             monsterData.frozenTurns--; // Decrement freeze duration
              if (monsterData.frozenTurns <= 0) { // Check if thawed
-                this.events.emit('showMessage', `${monsterName} thawed!`);
-                needsVisualUpdate = true; // Needs redraw to remove snowflake icon
-            }
+                 this.events.emit('showMessage', `${monsterName} thawed!`);
+                 needsVisualUpdate = true; // Needs redraw to remove snowflake icon and change bg color
+             }
             monsterAttackedThisTurn = true; // Counts as monster's action for this click
         }
 
@@ -1256,16 +1424,9 @@ class GameScene extends Phaser.Scene {
         console.log(`Player attacks ${monsterName} for ${this.player.atk} damage.`);
         monsterData.hp -= this.player.atk;
 
-        // 3. Poison Damage (if applicable and monster still alive after player attack)
-        if (monsterData.isPoisoned && monsterData.poisonTurns > 0 && monsterData.hp > 0) {
-            monsterData.hp -= GAME.POISON_DAMAGE; // Apply poison damage
-            monsterData.poisonTurns--; // Decrement poison duration
-            console.log(`${monsterName} takes ${GAME.POISON_DAMAGE} poison damage! ${monsterData.poisonTurns} turns left.`);
-            if (monsterData.poisonTurns <= 0) { // Check if poison wore off
-                monsterData.isPoisoned = false; // Remove poison status
-                console.log(`${monsterName} is no longer poisoned.`);
-                needsVisualUpdate = true; // Needs redraw to remove poison icon
-            }
+         // 3. Poison Damage (if applicable and monster still alive after player attack)
+         if (monsterData.isPoisoned && monsterData.poisonTurns > 0 && monsterData.hp > 0) {
+            // This is now handled in it's own functions
         }
 
         // 4. Check Monster Death (after player attack and poison)
@@ -1307,9 +1468,12 @@ class GameScene extends Phaser.Scene {
         }
 
         // Update the monster tile visuals if its HP/status changed or if it died (to show the drop)
+        // Always update if needsVisualUpdate is true, which covers status changes (freeze/thaw, poison off) and HP changes
         if (needsVisualUpdate || monsterData.hp <= 0) {
             monsterTile.updateVisuals();
         }
+
+        this.processEndOfPlayerTurnEffects(); 
     }
 
     /**
@@ -1438,6 +1602,8 @@ class GameScene extends Phaser.Scene {
             this.updateNeighborStates(barrelTile.r, barrelTile.c, false, false); // Unblock/no change
         }
         this.events.emit('showMessage', showMessage); // Display outcome message via UI
+
+        this.processEndOfPlayerTurnEffects(); 
     }
 
     /**
@@ -1498,13 +1664,13 @@ class GameScene extends Phaser.Scene {
             // Heal player (if not full health)
             let healAmount = 0;
              if (this.player.hp < this.player.maxHp) {
-                healAmount = getRandomInt(itemInfo.healRange[0], itemInfo.healRange[1]);
-                healAmount = Math.min(healAmount, this.player.maxHp - this.player.hp); // Clamp heal
-                this.player.hp += healAmount;
-                this.events.emit('showMessage', `Healed ${healAmount} HP!`);
-            } else {
-                this.events.emit('showMessage', 'Found a Heart! (HP Full)');
-            }
+                 healAmount = getRandomInt(itemInfo.healRange[0], itemInfo.healRange[1]);
+                 healAmount = Math.min(healAmount, this.player.maxHp - this.player.hp); // Clamp heal
+                 this.player.hp += healAmount;
+                 this.events.emit('showMessage', `Healed ${healAmount} HP!`);
+             } else {
+                 this.events.emit('showMessage', 'Found a Heart! (HP Full)');
+             }
             this.events.emit('updateStats', this.getPlayerStats()); // Update UI
             becameEmpty = true;
         } else {
@@ -1532,6 +1698,8 @@ class GameScene extends Phaser.Scene {
             this.updateNeighborStates(tile.r, tile.c);
         }
         // Visuals are updated via the setData calls.
+
+        this.processEndOfPlayerTurnEffects(); 
     }
 
     /**
@@ -1564,6 +1732,7 @@ class GameScene extends Phaser.Scene {
         const effect = itemInfo.effect;
 
         // --- Apply Item Effect ---
+        let appliedStatusEffect = false;
         switch (effect.type) {
             case 'HEAL': {
                 let healAmount = Math.min(effect.amount, this.player.maxHp - this.player.hp); // Heal up to max HP
@@ -1581,6 +1750,7 @@ class GameScene extends Phaser.Scene {
                 let monstersHit = 0;
                 let monstersKilledCoords = []; // Store {r, c} of killed monsters to process after loop
                 let keyDropped = false;
+                let thawedCount = 0; // Track how many thawed
 
                 // Iterate through all tiles to find revealed, living monsters
                 for (let r = 0; r < GRID.ROWS; r++) {
@@ -1591,10 +1761,27 @@ class GameScene extends Phaser.Scene {
                         if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
                             targetData.hp -= effect.amount; // Apply damage
                             monstersHit++;
+                            let monsterThawedThisHit = false; // Track thaw per monster
+
+                            // Freeze Tick on Damage 
+                            if (targetData.frozenTurns > 0) {
+                                    targetData.frozenTurns--;
+                                    console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] freeze ticks down from item damage. ${targetData.frozenTurns} turns left.`);
+                                    if (targetData.frozenTurns <= 0) {
+                                        console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] thawed from item damage!`);
+                                        monsterThawedThisHit = true;
+                                        thawedCount++; // Increment total thawed count
+                                    }
+                                }
+
                             if (targetData.hp <= 0) {
                                 monstersKilledCoords.push({ r, c }); // Mark for processing after loop
                             } else {
-                                targetTile.updateVisuals(); // Update HP display immediately on survivors
+                                //targetTile.updateVisuals(); // Update HP display immediately on survivors
+                                targetTile.setData({
+                                    hp: targetData.hp,
+                                    frozenTurns: targetData.frozenTurns
+                                });
                             }
                         }
                     }
@@ -1653,8 +1840,13 @@ class GameScene extends Phaser.Scene {
                          }
                      }
                  }
-                 this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
-                 consumed = itemInfo.consumable;
+                 if (poisonedCount > 0) {
+                         this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
+                         appliedStatusEffect = true;
+                    } else {
+                         this.events.emit('showMessage', `No monsters to poison!`);
+                    }
+                    consumed = itemInfo.consumable;
                  break;
             }
             case 'FREEZE_ALL': {
@@ -1675,8 +1867,13 @@ class GameScene extends Phaser.Scene {
                          }
                      }
                  }
-                 this.events.emit('showMessage', `Froze ${frozenCount} monsters!`);
-                 consumed = itemInfo.consumable;
+                 if (frozenCount > 0) {
+                         this.events.emit('showMessage', `Froze ${frozenCount} monsters!`);
+                         appliedStatusEffect = true; 
+                    } else {
+                         this.events.emit('showMessage', `No monsters to freeze!`);
+                    }
+                    consumed = itemInfo.consumable;
                  break;
             }
             case 'SHEEP_ALL': {
@@ -1703,8 +1900,13 @@ class GameScene extends Phaser.Scene {
                          }
                      }
                  }
-                 this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`);
-                 consumed = itemInfo.consumable;
+                 if (sheepCount > 0) {
+                         this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`);
+                         appliedStatusEffect = true; // <-- Set flag
+                    } else {
+                         this.events.emit('showMessage', `No monsters to turn into sheep!`);
+                    }
+                     consumed = itemInfo.consumable;
                  break;
              }
             // Note: DAMAGE_SELF effect is handled by stopRandomTile
@@ -1715,6 +1917,18 @@ class GameScene extends Phaser.Scene {
             this.player.inventory.splice(index, 1); // Remove item at the specified index
             this.events.emit('updateInventory', this.player.inventory); // Update UI
         }
+
+        if (!appliedStatusEffect) {
+             this.processEndOfPlayerTurnEffects(); // <-- MOVED HERE and made conditional
+        } else {
+             console.log("Status applied, skipping immediate end-of-turn processing for this action.");
+             // We still need to update stats in case the *player's* stats changed (e.g. potion)
+             // or inventory changed. Let's just update stats regardless.
+             this.events.emit('updateStats', this.getPlayerStats());
+             // Check game over in case the item *itself* somehow caused it (unlikely now, but good practice)
+             this.checkGameOver();
+        }
+
     }
 
     // --- State Updates ---
@@ -1877,21 +2091,21 @@ class GameScene extends Phaser.Scene {
         this.events.removeAllListeners();
 
          // Destroy tile objects explicitly to be safe
-        for (let r = 0; r < this.tileObjects.length; r++) {
-            for (let c = 0; c < (this.tileObjects[r]?.length || 0); c++) {
-                // Check if object exists and belongs to this scene before destroying
-                if (this.tileObjects[r][c] && this.tileObjects[r][c].scene === this) {
-                    this.tileObjects[r][c].destroy();
-                }
-            }
-        }
-        this.tileObjects = []; // Clear the array
+         for (let r = 0; r < this.tileObjects.length; r++) {
+             for (let c = 0; c < (this.tileObjects[r]?.length || 0); c++) {
+                 // Check if object exists and belongs to this scene before destroying
+                 if (this.tileObjects[r][c] && this.tileObjects[r][c].scene === this) {
+                     this.tileObjects[r][c].destroy();
+                 }
+             }
+         }
+         this.tileObjects = []; // Clear the array
 
-        // Destroy the main tile container
-        if (this.tileContainer && this.tileContainer.scene === this) {
-             this.tileContainer.destroy(true); // true destroys children if any linger unexpectedly
-        }
-        this.tileContainer = null;
+         // Destroy the main tile container
+         if (this.tileContainer && this.tileContainer.scene === this) {
+              this.tileContainer.destroy(true); // true destroys children if any linger unexpectedly
+         }
+         this.tileContainer = null;
     }
 
      // --- Update Loop ---
@@ -2204,7 +2418,7 @@ class UIScene extends Phaser.Scene {
         // Panel Background (centered within the container)
         const itemPanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95) // Position at (0,0) relative to container center
             .setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
-        itemPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation()); // Block clicks through background
+            itemPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); }); // Block clicks through background
         // Panel Content (positioned relative to container center)
         const itemIconText = this.add.text(0, 0, '', {fontSize: '48px'}).setOrigin(0.5); // Positioned later
         const itemNameText = this.add.text(0, 0, '', {fontSize: '20px', fill: '#FFF'}).setOrigin(0.5); // Positioned later
@@ -2335,10 +2549,8 @@ class UIScene extends Phaser.Scene {
              // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
              this.debugPanel.setPosition(panelCenterX, panelCenterY);
 
-             
-
              const list = this.debugPanel.list;
-             const panelBg = list[0]; 
+             const panelBg = list[0];
              panelBg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG relative to container center
              const closeButton = list[1];
              const actionButtons = list.slice(2);
@@ -2370,9 +2582,10 @@ class UIScene extends Phaser.Scene {
              const panelWidth = Math.min(width * 0.8, 320);
              const panelHeight = Math.min(height * 0.6, 220);
              // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
+             this.itemUsePanel.setPosition(panelCenterX , panelCenterY );
 
              const list = this.itemUsePanel.list;
-             const panelBg = list[0]; 
+             const panelBg = list[0];
              panelBg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG relative to container center
              const itemIconText = list[1]; const itemNameText = list[2]; const itemDescText = list[3];
              const useButton = list[4]; const cancelButton = list[5];
@@ -2384,27 +2597,23 @@ class UIScene extends Phaser.Scene {
              itemDescText.setPosition(panelWidth * 0.1, -panelHeight * 0.05).setWordWrapWidth(panelWidth * 0.5); // Wrap description
              useButton.setPosition(-panelWidth * 0.2, panelHeight * 0.3);
              cancelButton.setPosition(panelWidth * 0.2, panelHeight * 0.3);
-
-
-
-             this.itemUsePanel.setPosition(panelCenterX , panelCenterY );
          }
 
         // Floor Clear Panel Positioning
         if (this.floorClearPanel && this.floorClearPanel.visible) {
-            const panelWidth = Math.min(width * 0.7, 300);
-            const panelHeight = Math.min(height * 0.5, 180);
-            // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
-            this.floorClearPanel.setPosition(panelCenterX, panelCenterY );
+             const panelWidth = Math.min(width * 0.7, 300);
+             const panelHeight = Math.min(height * 0.5, 180);
+             // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
+             this.floorClearPanel.setPosition(panelCenterX, panelCenterY );
 
-            const list = this.floorClearPanel.list;
-            const panelBg = list[0]; panelBg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG relative to container center
-            const fcText = list[1]; const fcOkButton = list[2];
+             const list = this.floorClearPanel.list;
+             const panelBg = list[0]; panelBg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG relative to container center
+             const fcText = list[1]; const fcOkButton = list[2];
 
-            // Position internal elements relative to container center (0,0)
-            fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8); // Wrap text
-            fcOkButton.setPosition(0, panelHeight * 0.3);
-        }
+             // Position internal elements relative to container center (0,0)
+             fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8); // Wrap text
+             fcOkButton.setPosition(0, panelHeight * 0.3);
+         }
 
 
         // --- Position Inventory Slots (Footer) ---
@@ -2591,8 +2800,8 @@ class UIScene extends Phaser.Scene {
                      let labelFontSize = Math.max(12, Math.floor(slotBg.displayHeight * 0.5)); // Scale font size
                      // Example: Append amount for potions (optional display choice)
                      // if (itemInfo.effect?.type === 'HEAL' && itemInfo.effect.amount) {
-                     //      labelText += itemInfo.effect.amount; // e.g., 🍷5
-                     //      labelFontSize = Math.max(10, Math.floor(slotBg.displayHeight * 0.4)); // Slightly smaller font
+                     //     labelText += itemInfo.effect.amount; // e.g., 🍷5
+                     //     labelFontSize = Math.max(10, Math.floor(slotBg.displayHeight * 0.4)); // Slightly smaller font
                      // }
                      itemLabel.setFontSize(labelFontSize).setText(labelText).setColor(COLORS.TEXT);
 
@@ -2650,8 +2859,8 @@ class UIScene extends Phaser.Scene {
         // Create a new tween to fade out the message after a delay
         this.messageTween = this.tweens.add({
             targets: this.messageText,
-            alpha: 0,                      // Fade to transparent
-            delay: UI.MESSAGE_FADE_DELAY,      // Wait before starting fade
+            alpha: 0,                       // Fade to transparent
+            delay: UI.MESSAGE_FADE_DELAY,     // Wait before starting fade
             duration: UI.MESSAGE_FADE_DURATION, // Duration of the fade
             onComplete: () => { this.messageTween = null; } // Clear tween reference on complete
         });
@@ -2703,7 +2912,7 @@ class UIScene extends Phaser.Scene {
 
 
 // #######################################
-// #         GameOverScene             #
+// #        GameOverScene                #
 // #######################################
 /**
  * GameOverScene: Displays the game over message and restart button.

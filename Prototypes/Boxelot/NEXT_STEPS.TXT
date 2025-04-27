@@ -1,15 +1,14 @@
+Next, let's build a shop. For now it's going to just be a placeholder, but later this is where the player will spend gold. The shop appears only every 4 floors, starting on floor 4. It has an icon of 🏪, if the player clicks it, nothing happens for now.
 
+Add a "enable Debug shop" button to the debug menu. When enabled, every floor will have a shop show up.
 
-
-
+Now, when the user clicks the shop, a modal dialog opens. For now it has a close button with no content, we will add content later. If it helps, you can think of this as an item or something that's never picked up. Kind of like the door.
 
 
 //
 In the popup the player can buy +5 health is 100 coins, +1 attack is 200 coins. 
 The shop doesn't dissapear after using it. PLayer can click the shop as many times as they want while on a floor with a shop on it.
-//
-Add a "enable Debug shop" button to the debug menu. When enabled, every floor will have a shop show up.
-//
+
 
 ---- Poison needs to be better
 Poision should apply on player turns, not enemy turns. And to all enemies who are poisoned. So if an enemy is poisoned, and the player reveals a tile, have the poison reduce the enemys hp after the player interaction (as opposed to after monster attack how it works now). Also, flash the monsters square background green when it takes poison damage.
@@ -74,3 +73,4 @@ Four bosses:
     high health, low attack,
     high health, high attack
     Slime like respawn on death
+
