@@ -179,7 +179,8 @@ const TILE_TYPE = {
     TRAP: 'TRAP',
     ITEM: 'ITEM',
     BARREL: 'BARREL',
-    RANDOM_ITEM: 'RANDOM_ITEM'
+    RANDOM_ITEM: 'RANDOM_ITEM',
+    SHOP: 'SHOP'
 };
 // Tile States Enum
 const TILE_STATE = {
@@ -222,7 +223,19 @@ const COLORS = {
     EXPLOSIVE: 0xFF6347, // Tomato red for explosives
     HEART: 0xFF69B4, // Hot pink for heart items
     ITEM_POISON: 0x90EE90, // Light green for poison vial
-    ITEM_FREEZE: 0xADD8E6 // Light blue for freeze scroll (and frozen monster background)
+    ITEM_FREEZE: 0xADD8E6, // Light blue for freeze scroll (and frozen monster background)
+    SHOP_BG: 0xB19CD9,
+};
+
+// Shop Configuration
+const SHOP_CONFIG = {
+    FREQUENCY: 4, // Appears every 4 floors
+    ICON: '🏪',
+    COSTS: {
+        MAX_HP: 40,
+        ATK: 40,
+        HEAL: 5
+    }
 };
 
 // Monster Definitions
@@ -512,6 +525,12 @@ class Tile extends Phaser.GameObjects.Container {
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
                     break;
 
+                case TILE_TYPE.SHOP: 
+                    this.bgRect.setFillStyle(COLORS.SHOP_BG);
+                    this.mainText.setText(SHOP_CONFIG.ICON).setFontSize(iconFontSize);
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
+
                 default: // Should not happen, but clear everything as a fallback
                     console.warn("Revealed tile with unknown type:", this.tileData.type);
                     this.bgRect.setFillStyle(COLORS.REVEALED_BG);
@@ -587,6 +606,7 @@ class GameScene extends Phaser.Scene {
         this.isGameOver = false;
         this.allowDiagonal = false; // Debug flag for adjacency checks
         this.monsterStrikeFirst = false; // Debug flag for combat order
+        this.debugShopEnabled = false;
 
         // --- Grid Layout Variables ---
         this.tileContainer = null; // Phaser container for all Tile objects
@@ -600,6 +620,66 @@ class GameScene extends Phaser.Scene {
         this.uiHeaderHeight = 0;
         this.uiFooterHeight = 0;
     }
+
+    /**
+ * Handles the logic for purchasing an item from the shop.
+ * @param {string} itemKey - The key of the item ('MAX_HP', 'ATK', 'HEAL').
+ */
+purchaseShopItem(itemKey) {
+    if (this.isGameOver) return;
+
+    const cost = SHOP_CONFIG.COSTS[itemKey];
+    if (cost === undefined) {
+        console.error("Unknown shop item key:", itemKey);
+        return;
+    }
+
+    console.log(`Attempting to purchase ${itemKey} for ${cost} gold.`);
+
+    if (this.player.gold >= cost) {
+        // Affordable
+        this.player.gold -= cost;
+        let successMessage = "Purchase successful!";
+
+        switch (itemKey) {
+            case 'MAX_HP':
+                this.player.maxHp += 1;
+                this.player.hp += 1; // Also increase current HP
+                successMessage = "+1 Max Health purchased!";
+                break;
+            case 'ATK':
+                this.player.atk += 1;
+                successMessage = "+1 Attack purchased!";
+                break;
+            case 'HEAL':
+                if (this.player.hp < this.player.maxHp) {
+                    this.player.hp = this.player.maxHp;
+                    successMessage = "Fully Healed!";
+                } else {
+                    // Don't charge if already full health? Or allow purchase anyway?
+                    // Let's not charge if already full.
+                    this.player.gold += cost; // Refund cost
+                    successMessage = "Health already full!";
+                    console.log("Full heal attempted at max HP, purchase cancelled.");
+                }
+                break;
+        }
+
+        this.events.emit('updateStats', this.getPlayerStats());
+        this.events.emit('showMessage', successMessage);
+        // Optionally, update the shop UI if costs change or items become unavailable
+         // this.events.emit('updateShopUI'); // (Need to implement in UIScene if needed)
+
+    } else {
+        // Not enough gold
+        console.log("Purchase failed - not enough gold.");
+        this.events.emit('showMessage', "Not enough gold!");
+        // Optional: Flash gold red?
+    }
+
+    // Process end-of-turn effects after attempting a purchase (counts as an action)
+    this.processEndOfPlayerTurnEffects();
+}
 
     processEndOfPlayerTurnEffects() {
         if (this.isGameOver) return; // Don't process if game is already over
@@ -806,6 +886,7 @@ class GameScene extends Phaser.Scene {
         this.events.on('debugFillInventory', this.debugFillInventory, this);
         this.events.on('debugToggleStrikeFirst', this.debugToggleStrikeFirst, this);
         this.events.on('grantClearBonus', this.grantClearBonus, this); // Triggered by UI after confirmation
+        this.events.on('debugToggleShop', this.debugToggleShop, this);
 
         // Launch the UI scene in parallel
         this.scene.launch('UIScene');
@@ -995,6 +1076,15 @@ class GameScene extends Phaser.Scene {
         // Assign Key to one of the placed monsters (or place directly if no monsters)
         this.assignKey(placedMonsterCoords, gridRawData); // Pass gridRawData
 
+        // --- SHOP PLACEMENT ---
+        let shopPlaced = false;
+        if (possibleCoords.length > 0 && (this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0))) {
+            let shopCoord = possibleCoords.pop(); // Take one available spot
+            gridRawData[shopCoord.r][shopCoord.c].type = TILE_TYPE.SHOP;
+            console.log(`Shop placed at [${shopCoord.r}, ${shopCoord.c}] for floor ${this.currentFloor}`);
+            shopPlaced = true;
+        }
+
         // Place other items/traps randomly
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
@@ -1106,6 +1196,10 @@ class GameScene extends Phaser.Scene {
                      tileData.lastCycleTime = 0;
                      break;
                  }
+                 case TILE_TYPE.SHOP: 
+                case TILE_TYPE.BARREL: // BARREL, EMPTY need no extra data added here
+                case TILE_TYPE.EMPTY:
+                    break;
                 // BARREL, EMPTY need no extra data added here
             }
         }
@@ -1186,6 +1280,10 @@ class GameScene extends Phaser.Scene {
                 this.breakBarrel(clickedTile); // Pass the Tile instance
             } else if (tileData.type === TILE_TYPE.RANDOM_ITEM && tileData.isCycling) {
                 this.stopRandomTile(clickedTile); // Pass the Tile instance
+            }
+            else if (tileData.type === TILE_TYPE.SHOP) { 
+                 console.log(`Clicked shop at [${clickedTile.r}, ${clickedTile.c}]`);
+                 this.events.emit('showShop'); // Tell UIScene to show the shop panel
             }
             // Ignore clicks on empty tiles or dead monsters
 
@@ -1355,7 +1453,7 @@ class GameScene extends Phaser.Scene {
                 this.time.delayedCall(200, () => {
                     // Check if the tile is still the same item before reverting color
                     // (it might have changed if something else happened quickly)
-                    if (tile && tile.tileData.type === TILE_TYPE.ITEM && tile.tileData.itemId === itemId) {
+                    if (tile && tile.tileData.type === TILE_TYPE.ITEM) {
                         tile.updateVisuals(); // Re-apply correct visuals based on its data
                     }
                 });
@@ -2157,6 +2255,18 @@ class GameScene extends Phaser.Scene {
 
 
     // --- Debug Functions (operate on Tile instances or player state) ---
+    
+    /** Debug: Toggles the shop appearing on every floor. */
+ debugToggleShop() {
+     if (this.isGameOver) return;
+     this.debugShopEnabled = !this.debugShopEnabled;
+     const message = `Debug Shop Every Floor: ${this.debugShopEnabled ? 'ON' : 'OFF'}`;
+     console.log(`Debug: ${message}`);
+     this.events.emit('showMessage', message);
+     // Also update the button text in the UI scene
+     this.events.emit('updateDebugButton', { button: 'shop', text: `Shop: ${this.debugShopEnabled ? 'ON' : 'OFF'}` });
+ }
+    
     /** Debug: Marks certain hidden tiles with symbols for easier testing. */
     debugMarkHiddenTiles() {
          if (this.isGameOver) return;
@@ -2306,17 +2416,28 @@ class UIScene extends Phaser.Scene {
     constructor() {
         super({ key: 'UIScene' });
         // --- UI Element References ---
-        this.headerBg = null; this.footerBg = null; this.hpText = null;
-        this.atkText = null; this.goldText = null; this.floorText = null;
-        this.keyIconText = null; this.helpButton = null; this.debugButton = null;
+        this.headerBg = null; 
+        this.footerBg = null;
+         this.hpText = null;
+        this.atkText = null;
+         this.goldText = null;
+          this.floorText = null;
+        this.keyIconText = null; 
+        this.helpButton = null;
+         this.debugButton = null;
         // Panels
-        this.debugPanel = null; this.itemUsePanel = null; this.floorClearPanel = null;
+        this.debugPanel = null;
+         this.itemUsePanel = null;
+          this.floorClearPanel = null;
+          this.shopPanel = null;
         // Inventory
         this.inventorySlots = [];
         // Messages & State
-        this.messageText = null; this.messageTween = null;
+        this.messageText = null; 
+        this.messageTween = null;
         // DOM References
-        this.instructionsDOM = null; this.instructionsCloseBtnDOM = null;
+        this.instructionsDOM = null; 
+        this.instructionsCloseBtnDOM = null;
         this.closeDomInstructionsHandler = null; // Bound function for removing listener
         // State
         this.pendingItemUse = null; // Stores {itemId, index} when item use panel is shown
@@ -2397,12 +2518,17 @@ class UIScene extends Phaser.Scene {
             { label: 'Fill Inv', event: 'debugFillInventory' },
             { label: 'Strike First', event: 'debugToggleStrikeFirst' },
             { label: '+MxHP', event: 'debugChangeStat', data: { stat: 'maxHp', amount: 5 } },
-            { label: '+50%HP', event: 'debugChangeStat', data: { stat: 'hpPercent', amount: 0.5 } }
+            { label: '+50%HP', event: 'debugChangeStat', data: { stat: 'hpPercent', amount: 0.5 } },
+            { label: 'Shop: OFF', event: 'debugToggleShop', id: 'shop' }
         ];
         // Create buttons and add listeners to emit events to GameScene
+        this.debugButtonsMap = {};
         const debugButtons = actions.map(action => {
             const btn = this.add.text(0, 0, action.label, btnStyle).setOrigin(0.5).setInteractive();
             btn.on('pointerdown', () => gameScene.events.emit(action.event, action.data)); // Emit event with data
+            if (action.id) {
+                this.debugButtonsMap[action.id] = btn; // Store button reference by id
+            }
             return btn;
         });
         // Add all elements to the debug panel container
@@ -2460,6 +2586,70 @@ class UIScene extends Phaser.Scene {
         // Add elements to panel container
         this.floorClearPanel.add([fcPanelBg, fcText, fcOkButton]);
 
+        {
+            // --- Create Shop Panel (Initially Hidden) ---
+            this.shopPanel = this.add.container(0, 0).setDepth(104).setVisible(false); // Highest depth
+
+            // Panel Background
+            const shopPanelBg = this.add.rectangle(0, 0, 320, 250, COLORS.PANEL_BG, 0.95)
+                .setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
+            
+                
+                shopPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
+    // Log ALL arguments received by this listener
+    console.log("Shop BG PointerDown Event Received:", { pointer, localX, localY, event });
+
+    // Check if the 'event' object is valid before calling stopPropagation
+    if (event && typeof event.stopPropagation === 'function') {
+        console.log("Shop BG: Event object looks valid. Stopping propagation.");
+        event.stopPropagation();
+    } else {
+        // Log an error if the event object is NOT what we expect
+        console.error("Shop BG PointerDown: Invalid or missing event object received!", event);
+    }
+});
+
+            // Panel Title
+            const shopTitle = this.add.text(0, -100, 'Adventurer\'s Shop', { fontSize: '20px', fill: COLORS.GOLD_TEXT }).setOrigin(0.5);
+
+            // Close Button
+            const closeButtonShop = this.add.text(140, -110, '[X]', { font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT })
+                .setOrigin(0.5).setInteractive();
+            closeButtonShop.on('pointerdown', () => this.hideAllPanels());
+            closeButtonShop.on('pointerover', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
+            closeButtonShop.on('pointerout', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
+
+            // Shop Item Display Function (Helper)
+            const createShopItem = (yPos, itemKey, text, cost) => {
+                const itemText = this.add.text(-130, yPos, text, { fontSize: '16px', fill: '#FFF' }).setOrigin(0, 0.5);
+                const costText = this.add.text(10, yPos, `${cost}G`, { fontSize: '16px', fill: COLORS.GOLD_TEXT }).setOrigin(0, 0.5);
+                const buyButton = this.add.text(100, yPos, 'Buy', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x: 10, y: 3} })
+                    .setOrigin(0.5).setInteractive();
+                buyButton.setData('itemKey', itemKey); // Store item key for the event
+                buyButton.on('pointerdown', (pointer, localX, localY, event) => { // Add event parameters
+                    event.stopPropagation(); 
+
+                    const key = buyButton.getData('itemKey');
+                    console.log("Shop Buy button clicked:", key);
+                    // Use scene.get to be safe if gameScene isn't guaranteed in this scope
+                    const gameScene = this.scene.get('GameScene');
+                    if (gameScene) {
+                        gameScene.purchaseShopItem(key);
+                    } else {
+                        console.error("Could not get GameScene reference from UIScene shop button.");
+                    }
+                });
+                return [itemText, costText, buyButton]; // Return elements to add to container
+            };
+
+            // Create Items
+            const hpItem = createShopItem(-50, 'MAX_HP', '+1 Max Health:', SHOP_CONFIG.COSTS.MAX_HP);
+            const atkItem = createShopItem(0, 'ATK', '+1 Attack:', SHOP_CONFIG.COSTS.ATK);
+            const healItem = createShopItem(50, 'HEAL', 'Full Heal:', SHOP_CONFIG.COSTS.HEAL);
+
+            // Add elements to Shop Panel container
+            this.shopPanel.add([shopPanelBg, shopTitle, closeButtonShop, ...hpItem, ...atkItem, ...healItem]);
+        }
 
         // --- Create Inventory Slots (Footer) ---
         this.inventorySlots = [];
@@ -2481,7 +2671,7 @@ class UIScene extends Phaser.Scene {
 
 
         // --- Create Message Text (for short notifications) ---
-        this.messageText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, '', {
+        this.messageText = this.add.text(this.cameras.main.center, this.cameras.main.centerY, '', {
             font: 'bold 20px Arial',
             fill: '#ffffff',
             backgroundColor: 'rgba(0,0,0,0.7)', // Semi-transparent black background
@@ -2496,11 +2686,29 @@ class UIScene extends Phaser.Scene {
         gameScene.events.on('updateInventory', this.updateInventoryUI, this); // Update inventory display
         gameScene.events.on('showMessage', this.showMessage, this); // Show temporary messages
         gameScene.events.on('showFloorClearPopup', this.showFloorClearPanel, this); // Show floor clear panel
+        gameScene.events.on('showShop', this.showShopPanel, this); 
+        gameScene.events.on('updateDebugButton', this.updateDebugButtonText, this);
+
 
         // --- Final Setup ---
         this.events.emit('uiReady'); // Notify GameScene that UI is ready to receive updates
         console.log("UIScene emitted uiReady");
         this.positionUIElements(); // Perform initial positioning of all UI elements
+    }
+
+    /** Shows the Shop panel */
+    showShopPanel() {
+        if (!this.shopPanel) { return; }
+        this.hideAllPanels(false); // Hide other panels first
+
+        // Update costs display in case they change (optional, but good practice)
+        // Assuming layout: list[4]=hpCost, list[7]=atkCost, list[10]=healCost
+        // This is fragile; accessing by index is bad. Let's skip dynamic cost update for now.
+        // You would ideally give the text elements names or store references.
+
+        this.shopPanel.setVisible(true);
+        this.isModalActive = true; // Block game input
+        this.positionUIElements(); // Position it correctly
     }
 
     /**
@@ -2614,6 +2822,28 @@ class UIScene extends Phaser.Scene {
              fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8); // Wrap text
              fcOkButton.setPosition(0, panelHeight * 0.3);
          }
+
+         // Shop Panel Positioning
+     if (this.shopPanel && this.shopPanel.visible) {
+         const panelWidth = 320; // Fixed size for simplicity
+         const panelHeight = 250;
+         // Set the container's position (center screen)
+         this.shopPanel.setPosition(panelCenterX, panelCenterY ); // Uses panelCenterX/Y calculated earlier
+
+         // Position internal elements relative to container center (0,0)
+         // These offsets match the creation positions (can be adjusted)
+         const list = this.shopPanel.list; // [bg, title, close, hpTxt, hpCost, hpBtn, atkTxt, atkCost, atkBtn, healTxt, healCost, healBtn]
+         const title = list[1]; title.setPosition(0, -100);
+         const closeBtn = list[2]; closeBtn.setPosition(panelWidth/2 - 20, -panelHeight/2 + 20); // Approx top-right
+
+         // Adjust Y positions if needed (relative to center 0,0)
+         list[3].setPosition(-130, -50); list[4].setPosition(40, -50); list[5].setPosition(100, -50); // HP Row
+         list[6].setPosition(-130, 0); list[7].setPosition(40, 0); list[8].setPosition(100, 0);       // ATK Row
+         list[9].setPosition(-130, 50); list[10].setPosition(40, 50); list[11].setPosition(100, 50); // HEAL Row
+
+         // Background size (ensure it's set)
+         list[0].setSize(panelWidth, panelHeight).setPosition(0,0);
+     }
 
 
         // --- Position Inventory Slots (Footer) ---
@@ -2736,15 +2966,24 @@ class UIScene extends Phaser.Scene {
         if (this.debugPanel) this.debugPanel.setVisible(false);
         if (this.itemUsePanel) this.itemUsePanel.setVisible(false);
         if (this.floorClearPanel) this.floorClearPanel.setVisible(false);
+        if (this.shopPanel) this.shopPanel.setVisible(false);
 
         // Clear pending item use data when any panel is hidden
         if (this.pendingItemUse) this.pendingItemUse = null;
 
         // Only deactivate modal flag if *all* panels (DOM and Phaser) are now hidden
         const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
-        if (!this.debugPanel?.visible && !this.itemUsePanel?.visible && !this.floorClearPanel?.visible && !domVisible) {
-            this.isModalActive = false; // Unblock game input
+        if (!this.debugPanel?.visible && !this.itemUsePanel?.visible && !this.floorClearPanel?.visible && !this.shopPanel?.visible && !domVisible) {
+            this.isModalActive = false;
         }
+    }
+
+    /** Updates the text of a specific debug button */
+    updateDebugButtonText({ button, text }) {
+        if (button === 'shop' && this.debugButtonsMap?.shop) {
+            this.debugButtonsMap.shop.setText(text);
+        }
+        // Add other buttons here if needed
     }
 
 
