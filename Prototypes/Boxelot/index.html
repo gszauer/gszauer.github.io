@@ -194,6 +194,7 @@ const TILE_STATE = {
 const COLORS = {
     HIDDEN: 0x888888, // Grey for hidden tiles
     REVEALED_BG: 0x444444, // Dark grey for empty revealed tiles
+    MONSTER_HIT_FLASH: 0xFF4444, // Bright red for monster hit flash 
     MONSTER_BG: 0xA02C2C, // Dark red for monsters
     ITEM_BG: 0x2E8B57, // Sea green for generic items
     KEY: 0xffff66, // Yellow for key item/icon
@@ -246,6 +247,58 @@ const MONSTER_STATS = {
 };
 // Item Definitions
 const ITEM_TYPES = {
+    ATTACK_RUNE: {
+        id: 'ATTACK_RUNE',
+        name: 'Attack Rune',
+        icon: '👊',
+        description: 'While in inventory, grants +10 Attack.',
+        color: 0xFF7F7F, // Example: Light Red/Coral background
+        consumable: false,
+        category: 'DURABLE', // Mark as Durable
+        effect: null,       // Passive effect, logic handled on pickup/sale
+        atkBonus: 10,       // The amount of Attack granted
+        sellValue: 15       // Value when sold (adjust as desired)
+    },
+
+    DEFENSE_RUNE: {
+        id: 'DEFENSE_RUNE',
+        name: 'Defense Rune',
+        icon: '✋',
+        description: 'While in inventory, grants +10 maximum HP.',
+        color: 0xADD8E6, // Example: Light Blue background
+        consumable: false,
+        category: 'DURABLE', // Mark as Durable
+        effect: null,       // Passive effect, logic handled on pickup/sale
+        maxHpBonus: 10,     // The amount of Max HP granted
+        sellValue: 12       // Value when sold
+    },
+
+    SHIELD: {
+        id: 'SHIELD',
+        name: 'Shield',
+        icon: '🛡️',
+        description: 'While in inventory, grants a 10% chance to dodge incoming monster attacks.',
+        color: 0xC0C0C0, // Example: Silver background
+        consumable: false,
+        category: 'DURABLE', // Mark as Durable
+        effect: null,       // Passive effect, logic handled in combat
+        dodgeChance: 0.10,  // 10% chance to dodge
+        sellValue: 10       // Value when sold
+    },
+
+    SPIKE_TRAP: {
+        id: 'SPIKE_TRAP',
+        name: 'Spike Trap',
+        icon: '🪤',
+        description: 'While in inventory, monsters take 2 damage on reveal.',
+        color: 0xAAAAAA, // Example: Grey background
+        consumable: false,
+        category: 'DURABLE', // Mark as Durable
+        effect: null,       // Passive effect, logic handled elsewhere
+        revealDamage: 2,    // Damage dealt on reveal
+        sellValue: 6        // Value when sold
+    },
+
     LANTERN: {
         id: 'LANTERN',
         name: 'Lantern',
@@ -668,6 +721,135 @@ class GameScene extends Phaser.Scene {
         this.uiFooterHeight = 0;
     }
 
+    /**
+     * Determines the correct base background color for a tile based on its data.
+     * Mirrors the logic used in Tile.updateVisuals for setting fillStyle.
+     * @param {Tile} tile - The Tile object.
+     * @returns {number} The hex color code for the tile's base background.
+     */
+     getBaseTileColor(tile) {
+        if (!tile || !tile.tileData) {
+            return COLORS.HIDDEN; // Default fallback
+        }
+
+        const tileData = tile.tileData;
+
+        if (tileData.state === TILE_STATE.REVEALED) {
+            switch (tileData.type) {
+                case TILE_TYPE.MONSTER:
+                    if (tileData.hp > 0) { // Living Monster
+                        return (tileData.frozenTurns > 0) ? COLORS.ITEM_FREEZE : COLORS.MONSTER_BG;
+                    } else { // Dead Monster
+                        return COLORS.REVEALED_BG;
+                    }
+                case TILE_TYPE.DOOR:
+                    return COLORS.DOOR;
+                case TILE_TYPE.TRAP:
+                     // Traps instantly become empty on reveal, but flash might occur briefly
+                     // If we call this *during* the flash before setData changes type, use TRAP color
+                     // Otherwise, default to revealed empty. Let's assume it reflects current data:
+                     return COLORS.TRAP; // Or potentially COLORS.REVEALED_BG if type changes instantly
+                case TILE_TYPE.ITEM:
+                    if (tileData.itemId && ITEM_TYPES[tileData.itemId]) {
+                        const itemInfo = ITEM_TYPES[tileData.itemId];
+                        // Use specific colors first, then item's defined color, then default
+                        if (tileData.itemId === 'KEY_ITEM') return COLORS.KEY;
+                        if (tileData.itemId === 'COIN') return COLORS.GOLD;
+                        if (tileData.itemId === 'HEART') return COLORS.HEART;
+                        return itemInfo.color || COLORS.ITEM_BG;
+                    }
+                    return COLORS.REVEALED_BG; // Fallback for unknown item
+                case TILE_TYPE.BARREL:
+                    return COLORS.BARREL;
+                case TILE_TYPE.RANDOM_ITEM:
+                    return COLORS.RANDOM_ITEM;
+                case TILE_TYPE.SHOP:
+                    return COLORS.SHOP_BG;
+                case TILE_TYPE.EMPTY:
+                default:
+                    return COLORS.REVEALED_BG;
+            }
+        } else {
+            // Any hidden state
+            return COLORS.HIDDEN;
+        }
+    }
+
+    /**
+     * Handles all logic when a monster's HP drops to 0 or below.
+     * - Marks monster as dead (sets maxHp=0 to prevent double processing).
+     * - Decrements monster count.
+     * - Determines drop (Key, 70% Coin, or Nothing).
+     * - Updates the tile data to ITEM or EMPTY.
+     * - Unblocks neighbors.
+     * - Updates UI stats.
+     * - Shows appropriate drop message.
+     * @param {Tile} tile - The Tile object of the monster that died.
+     * @private Internal helper method.
+     */
+     _handleMonsterDeath(tile) {
+        if (!tile || !tile.tileData || tile.tileData.type !== TILE_TYPE.MONSTER || tile.tileData.maxHp === 0) {
+            // Invalid tile, not a monster, or already processed as dead
+            return;
+        }
+
+        const tileData = tile.tileData;
+        const monsterName = tileData.isSheep ? "Sheep" : (MONSTER_STATS[tileData.monsterType]?.name || "Monster");
+        console.log(`Handling death for ${monsterName} at [${tile.r}, ${tile.c}]`);
+
+        // Mark as officially dead to prevent multi-kill processing issues
+        tileData.maxHp = 0;
+        this.monsterCount--; // Decrement floor monster count
+
+        let droppedItemId = null; // Default: drops nothing
+        let dropMessage = null;   // Message to show
+
+        // 1. Check for Key Drop
+        if (tileData.hasKey) {
+            droppedItemId = 'KEY_ITEM';
+            this.keyDroppedOnFloor = true; // Mark key as dropped on this floor
+            dropMessage = 'Key Dropped!';   // Specific message for the key
+            console.log(`--> ${monsterName} dropped the KEY!`);
+        } else {
+            // 2. Check for Coin Drop (70% chance) if no key
+            if (Math.random() < 0.70) { // 70% chance
+                droppedItemId = 'COIN';
+                // Use generic item name for message consistency
+                dropMessage = `${ITEM_TYPES[droppedItemId]?.name || 'Item'} Dropped!`;
+                console.log(`--> ${monsterName} dropped a Coin (70% chance success).`);
+            } else {
+                // Dropped nothing (30% chance)
+                droppedItemId = null;
+                 console.log(`--> ${monsterName} dropped nothing (70% chance fail).`);
+                 // No dropMessage needed if nothing drops
+            }
+        }
+
+        // 3. Update Tile Data
+        const newTileType = droppedItemId ? TILE_TYPE.ITEM : TILE_TYPE.EMPTY;
+        tile.setData({
+            type: newTileType,
+            itemId: droppedItemId, // Will be null if nothing dropped
+            revealed: true, state: TILE_STATE.REVEALED,
+            // Clear all monster-specific fields
+            hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
+            attackedOnce: false, isPoisoned: false, poisonTurns: 0,
+            isSheep: false, frozenTurns: 0
+            // Keep r, c, debugMarker if needed
+        }); // setData automatically calls updateVisuals
+
+        // 4. Unblock Neighbors
+        this.updateNeighborStates(tile.r, tile.c, false, true); // isMonsterBlock=false, isMonsterUnblock=true
+
+        // 5. Update UI Stats (monster count changed)
+        this.events.emit('updateStats', this.getPlayerStats());
+
+        // 6. Show Drop Message (if something dropped)
+        if (dropMessage) {
+            this.events.emit('showMessage', dropMessage);
+        }
+    }
+
      /**
      * Checks if the player currently has the Lantern in their inventory.
      * @returns {boolean} True if the Lantern is found, false otherwise.
@@ -684,6 +866,24 @@ class GameScene extends Phaser.Scene {
     playerHasCloak() {
         // Check if the specific cloak ID exists in the player's inventory array
         return this.player.inventory.includes('INVISIBILITY_CLOAK');
+    }
+
+    /**
+     * Checks if the player currently has the Shield in their inventory.
+     * @returns {boolean} True if the Shield is found, false otherwise.
+     */
+     playerHasShield() {
+        // Check if the specific Shield ID exists in the player's inventory array
+        return this.player.inventory.includes('SHIELD');
+    }
+
+    /**
+     * Checks if the player currently has the Spike Trap in their inventory.
+     * @returns {boolean} True if the Spike Trap is found, false otherwise.
+     */
+     playerHasSpikeTrap() {
+        // Check if the specific Spike Trap ID exists in the player's inventory array
+        return this.player.inventory.includes('SPIKE_TRAP');
     }
 
 
@@ -747,12 +947,12 @@ purchaseShopItem(itemKey) {
     this.processEndOfPlayerTurnEffects();
 }
 
-    processEndOfPlayerTurnEffects() {
-        if (this.isGameOver) return; // Don't process if game is already over
+processEndOfPlayerTurnEffects() {
+        if (this.isGameOver) return;
 
         console.log("Processing end-of-player-turn effects...");
-        let statsChanged = false; // Flag to update UI only if needed
-        let monstersKilledData = []; // Store data of monsters killed by poison this turn
+        let statsChanged = false; // Still useful for non-death updates
+        let monstersToHandleDeath = []; // Store tiles that died from poison
 
         // Iterate through all tiles to find monsters with status effects
         for (let r = 0; r < GRID.ROWS; r++) {
@@ -770,156 +970,135 @@ purchaseShopItem(itemKey) {
                         const poisonDamage = GAME.POISON_DAMAGE;
                         tileData.hp -= poisonDamage;
                         tileData.poisonTurns--;
-                        statsChanged = true;
+                        statsChanged = true; // HP or turns changed
                         needsVisualUpdate = true;
                         console.log(`Poison ticks on ${monsterName} at [${r},${c}] for ${poisonDamage}. ${tileData.poisonTurns} turns left. HP: ${tileData.hp}`);
-
-                        // Trigger flash animation (can reuse/adapt the previous flash logic)
-                        this.flashTileBackground(tile, COLORS.ITEM_POISON, 100, 0); // Flash Green
+                        this.flashTileBackground(tile, COLORS.ITEM_POISON, 100, 0);
 
                         if (tileData.poisonTurns <= 0) {
                             tileData.isPoisoned = false;
                             console.log(`${monsterName} at [${r},${c}] is no longer poisoned.`);
-                            // Visual update for icon removal happens below or if monster dies
                         }
 
                         // Check for death *immediately* after poison damage
                         if (tileData.hp <= 0) {
                             console.log(`${monsterName} at [${r},${c}] died from poison!`);
-                            monstersKilledData.push({ tile: tile, data: tileData, r: r, c: c });
-                            // Don't process freeze if dead
-                            continue; // Move to next tile
+                            // Store the TILE object, not just data
+                            monstersToHandleDeath.push(tile);
+                            continue; // Move to next tile, don't update visuals yet
                         }
                     }
 
-                    // Freeze is handled elsewhere
-                   
-
-                    // Update visuals if HP/Status changed and monster didn't die from poison this tick
+                    // Update visuals if HP/Status changed and monster didn't die from poison
                     if (needsVisualUpdate) {
-                         // Use setData to ensure Tile's internal state and visuals are sync'd
-                         // Pass only the changed data to avoid overwriting unrelated things
-                         tile.setData({
-                             hp: tileData.hp, // Update HP display
-                             isPoisoned: tileData.isPoisoned,
-                             poisonTurns: tileData.poisonTurns,
-                             frozenTurns: tileData.frozenTurns
-                             // `setData` will call `updateVisuals` which handles icon display and background color
-                         });
+                        tile.setData({
+                            hp: tileData.hp,
+                            isPoisoned: tileData.isPoisoned,
+                            poisonTurns: tileData.poisonTurns,
+                            frozenTurns: tileData.frozenTurns // Keep other statuses updated
+                        });
                     }
-                }
-            }
-        }
+                } // end if monster
+            } // end for c
+        } // end for r
 
         // --- Process Monsters Killed by Poison This Turn ---
-        // Do this after the main loop to avoid issues modifying grid state while iterating
-        let keyDroppedThisTurn = false;
-        for (const killed of monstersKilledData) {
-             // Check maxHp > 0 ensures we only process death once if multiple effects could kill
-             if (killed.data.maxHp > 0) {
-                killed.data.maxHp = 0; // Mark officially dead
-                this.monsterCount--;
-                statsChanged = true;
-                let droppedItemId = killed.data.hasKey ? 'KEY_ITEM' : 'COIN';
-                 if (killed.data.hasKey) {
-                     keyDroppedThisTurn = true;
-                     this.keyDroppedOnFloor = true; // Mark key as dropped
-                 }
-                // Change tile data to the dropped item
-                 killed.tile.setData({
-                     type: TILE_TYPE.ITEM, itemId: droppedItemId, revealed: true, state: TILE_STATE.REVEALED,
-                     // Clear monster fields
-                     hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
-                     attackedOnce: false, isPoisoned: false, poisonTurns: 0,
-                     isSheep: false, frozenTurns: 0
-                 });
-                // Unblock neighbors
-                 this.updateNeighborStates(killed.r, killed.c, false, true); // isMonsterUnblock = true
-             }
+        let anyDeaths = monstersToHandleDeath.length > 0;
+        for (const killedTile of monstersToHandleDeath) {
+             this._handleMonsterDeath(killedTile);
+             // Stats update is handled within _handleMonsterDeath
+             statsChanged = true; // Mark that stats definitely changed
         }
-        if(keyDroppedThisTurn) this.events.emit('showMessage', `Key Dropped!`);
 
-        // Update UI if any stats/durations changed or monsters died
-        if (statsChanged) {
-            this.events.emit('updateStats', this.getPlayerStats());
-        }
+        // Update UI only if non-death changes occurred (death handler updates stats itself)
+        // Re-evaluate: Death handler *does* emit updateStats, so this check might be redundant
+        // Let's remove the conditional update here, rely on handler/other changes.
+        // if (statsChanged && !anyDeaths) { // Only update if stats changed but no deaths handled it
+        //    this.events.emit('updateStats', this.getPlayerStats());
+        // }
+        // Simpler: If anything changed (poison tick, death), update stats. Death handler emits it too, but shouldn't hurt.
+        // if (statsChanged) {
+        //      this.events.emit('updateStats', this.getPlayerStats());
+        // }
+        // Safest: Just rely on the death handler to emit its own updateStats. If poison only ticks, the tile.setData above handles visuals.
 
         // Final check for game over AFTER poison/effects resolve
         this.checkGameOver();
-    }
+    } // End processEndOfPlayerTurnEffects
 
     /**
      * Helper function to flash a tile's background color.
+     * Now determines originalColor based on tile data state via getBaseTileColor.
      * @param {Tile} tile - The Tile object to flash.
      * @param {number} flashColor - The hex color code for the flash.
      * @param {number} duration - Duration of each half-flash (ms).
-     * @param {number} repeats - Number of full flashes (color -> original -> color...). 2 repeats = 3 flashes total.
+     * @param {number} repeats - Number of full flashes (color -> original -> color...). 0 repeats = 1 flash.
      */
-    flashTileBackground(tile, flashColor, duration = 100, repeats = 2) {
-        if (!tile || !tile.bgRect || !tile.tileData) return;
+     flashTileBackground(tile, flashColor, duration = 100, repeats = 0) { // Default repeats to 0 for a single flash common use case
+        // Basic validation
+        if (!tile || !tile.bgRect || !tile.tileData || !tile.active) {
+            console.warn("flashTileBackground called on invalid or inactive tile.");
+            return;
+        }
 
-        // Determine the correct resting background color based on current state
-        const isFrozen = tile.tileData.frozenTurns > 0;
-        const isLivingMonster = tile.tileData.type === TILE_TYPE.MONSTER && tile.tileData.hp > 0;
-        let originalColor = tile.bgRect.fillColor; // Default to current color
+        // --- Determine the ORIGINAL color based purely on tile data ---
+        const originalColor = this.getBaseTileColor(tile);
+        // --- End determining original color ---
 
-        if (isLivingMonster) {
-            originalColor = isFrozen ? COLORS.ITEM_FREEZE : COLORS.MONSTER_BG;
-        } else if (tile.tileData.type === TILE_TYPE.EMPTY) {
-            originalColor = COLORS.REVEALED_BG;
-        } // Add other types if needed
-
-        // Prevent overlapping flashes on the same tile
+        // Prevent overlapping flashes on the same tile using the data flag
         if (tile.getData('isFlashing')) {
-             // console.log("Tile already flashing, skipping new flash.");
-             return;
+            // console.log("Tile already flashing, skipping new flash.");
+            return;
         }
         tile.setData('isFlashing', true);
 
-        // Temporarily set to flash color
+        // Ensure the tile starts at the flash color immediately
         tile.bgRect.setFillStyle(flashColor);
 
         // Use counter tween for flashing effect
+        // repeats = 0 means one flash (flash -> original) -> to = 1
+        // repeats = 1 means two flashes (flash -> original -> flash -> original) -> to = 3
+        const tweenTargetValue = repeats * 2 + 1; // +1 because we start at flash
         this.tweens.addCounter({
             from: 0,
-            to: repeats * 2, // Count determines flash state (flash on even, original on odd)
-            duration: duration * (repeats * 2 + 1), // Total duration covers all phases
+            to: tweenTargetValue, // Determine end point based on repeats
+            duration: duration * (tweenTargetValue + 1), // Total duration covers all phases
             onUpdate: (tween) => {
-                if (!tile.active) {  
-                     tile.bgRect.setFillStyle(originalColor);
-                     tile.setData('isFlashing', false);
-                     tile.updateVisuals();
-                     tween.stop(); 
-                    console.warn("Stopping tween (this is good and expected, delete this line if you see it in logs)");
+                // Check tile activity within the update loop
+                if (!tile.active) {
+                    tween.stop(); // Stop the tween if the tile becomes inactive
+                    tile.bgRect.setFillStyle(originalColor);
                     return;
-                } // Stop if tile is destroyed
+                }
                 const value = Math.floor(tween.getValue());
+                // Use modulo to alternate between flash and original color
+                // Even counts (0, 2, 4...) = flashColor
+                // Odd counts (1, 3, 5...) = originalColor
                 tile.bgRect.setFillStyle(value % 2 === 0 ? flashColor : originalColor);
             },
             onComplete: () => {
-                if (tile.active) { // Check if tile still exists
-                    tile.bgRect.setFillStyle(originalColor); // Ensure final color is correct
+                // Ensure cleanup runs only if the tile is still active
+                tile.bgRect.setFillStyle(originalColor); // Ensure final color is the original base color
+                if (tile.active) {
                     tile.setData('isFlashing', false); // Allow new flashes
+                    // Optionally call updateVisuals if other elements depend on color state, but usually not needed here
                     tile.updateVisuals();
                 }
-                else {
-                    console.warn("Flash tween completed but scene/tile inactive.");
-                }
             },
-            onStop: () => { // Also reset on stop, e.g., if scene changes
-                 if (tile.active) {
-                     tile.bgRect.setFillStyle(originalColor);
-                     tile.setData('isFlashing', false);
-                     tile.updateVisuals();
+            onStop: () => { // Also reset on stop, e.g., if scene changes or tween is manually stopped
+                tile.bgRect.setFillStyle(originalColor);
+                if (tile.active) {
+                    tile.setData('isFlashing', false);
+                    // tile.updateVisuals(); // Optional
+                } else {
+                    // Don't try to modify potentially destroyed objects
+                    console.warn("Flash tween stopped but tile inactive.");
                 }
-                else {
-                    console.warn("Flash tween stopped but scene/tile inactive.");
-                }
-             }
+            }
         });
-    }
+    } // End of flashTileBackground method
 
-    /**
+     /**
      * Initializes or resets the game state for a new game or floor.
      */
     init() {
@@ -933,12 +1112,36 @@ purchaseShopItem(itemKey) {
         this.isGameOver = false;
         this.allowDiagonal = false;
         this.monsterStrikeFirst = false;
+        this.debugShopEnabled = false;
+        this.godModeEnabled = false; // Add this line
+    }
+
+    /** Debug: Toggles God Mode (player cannot die). */
+    debugToggleGodMode() {
+        if (this.isGameOver) return; // Don't allow changes if game is over
+        this.godModeEnabled = !this.godModeEnabled;
+        const message = `God Mode: ${this.godModeEnabled ? 'ON' : 'OFF'}`;
+        console.log(`Debug: ${message}`);
+        this.events.emit('showMessage', message);
+
+        // Ensure HP is at least 1 if activating god mode when dead (edge case)
+        if (this.godModeEnabled && this.player.hp <= 0) {
+            this.player.hp = 1;
+            this.events.emit('updateStats', this.getPlayerStats());
+        }
+
+        // Update the button text in the UI scene
+        this.events.emit('updateDebugButton', {
+             button: 'godMode', // Unique key for this button
+             text: `God Mode: ${this.godModeEnabled ? 'ON' : 'OFF'}`
+        });
     }
 
     /**
      * Creates game objects, sets up initial layout, and registers event listeners.
+     * Added listener for 'debugToggleGodMode'.
      */
-    create() {
+     create() {
         console.log("GameScene create start");
         this.cameras.main.setBackgroundColor('#1a1a1a'); // Slightly lighter dark background
         // Main container to hold all Tile objects, allowing easy positioning of the grid
@@ -956,7 +1159,8 @@ purchaseShopItem(itemKey) {
         // Set up input listener for tile clicks (delegated to handlePointerDown)
         this.input.on('pointerdown', this.handlePointerDown, this);
 
-        // Set up event listeners for UI interactions and debug commands emitted from UIScene
+        // --- Set up event listeners FOR EVENTS EMITTED BY UIScene ---
+        // (Ensure GameScene listens for events triggered by UI actions)
         this.events.on('useItem', this.useItem, this);
         this.events.on('debugMarkHidden', this.debugMarkHiddenTiles, this);
         this.events.on('debugChangeStat', this.debugChangeStat, this);
@@ -967,11 +1171,12 @@ purchaseShopItem(itemKey) {
         this.events.on('grantClearBonus', this.grantClearBonus, this); // Triggered by UI after confirmation
         this.events.on('debugToggleShop', this.debugToggleShop, this);
         this.events.on('sellDurableItem', this.sellDurableItem, this);
+        this.events.on('debugToggleGodMode', this.debugToggleGodMode, this); // <-- *** ADD THIS LINE ***
 
         // Launch the UI scene in parallel
         this.scene.launch('UIScene');
         const uiScene = this.scene.get('UIScene');
-        // Wait for the UI scene to signal it's ready before sending initial data
+        // Wait for the UI scene to signal it's ready before sending initial data TO the UI
         if (uiScene) {
             uiScene.events.once('uiReady', this.emitInitialUpdates, this);
         } else {
@@ -980,7 +1185,7 @@ purchaseShopItem(itemKey) {
             this.time.delayedCall(100, this.emitInitialUpdates, [], this); // Try again shortly
         }
         console.log("GameScene create end");
-    }
+    } // End of create method
 
        /**
      * Handles selling a durable item from the inventory.
@@ -1486,68 +1691,151 @@ purchaseShopItem(itemKey) {
     // --- Tile Interaction Logic ---
 
     /**
-     * Reveals a hidden tile, updates its state and visuals, and handles immediate effects (like traps).
+     * Reveals a hidden tile, updates its state and visuals, and handles immediate effects
+     * (like traps, Spike Trap item activation). Includes God Mode check for trap damage.
+     * Calls _handleMonsterDeath if spike trap kills monster.
      * Also updates the state of neighboring tiles.
      * @param {Tile} tile - The Tile instance to reveal.
      */
-    revealTile(tile) {
+     revealTile(tile) {
         // Ensure the tile exists and is in the correct state to be revealed
         if (!tile || tile.tileData.state !== TILE_STATE.HIDDEN_NORMAL) return;
 
-        // Update the tile's data (revealed=true, state=REVEALED) and trigger visual update
-        tile.setData({ revealed: true, state: TILE_STATE.REVEALED });
-
-        const tileData = tile.tileData; // Convenience reference to the tile's data
         const r = tile.r; // Row index
         const c = tile.c; // Column index
+        let tileData = tile.tileData; // Get reference BEFORE potential data change below
+
+        // --- Reveal the Tile ---
+        // Update the tile's data (revealed=true, state=REVEALED) and trigger visual update
+        // We do this first so the tile *looks* revealed before effects happen
+        tile.setData({ revealed: true, state: TILE_STATE.REVEALED });
+        // Re-assign tileData AFTER setData in case the object reference changed (unlikely but safe)
+        tileData = tile.tileData;
+
+        let monsterDiedToSpikeTrap = false; // Flag if monster died instantly
 
         // --- Handle Logic Based on Revealed Tile Type ---
-        const isLivingMonster = (tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0);
-        const isBarrel = (tileData.type === TILE_TYPE.BARREL);
-        const isRandom = (tileData.type === TILE_TYPE.RANDOM_ITEM);
 
-        if (isLivingMonster) {
-            // If a monster is revealed, block its neighbors
-            this.updateNeighborStates(r, c, true, false); // isMonsterBlock = true
-        } else if (isBarrel) {
-            // Barrels do nothing on reveal; neighbors updated when broken
-        } else if (isRandom) {
-            // Start the item cycling animation/logic for random tiles
-            this.startRandomTileCycle(tile);
-            // Neighbors updated only when the cycle is stopped by clicking again
-        } else {
-             // Handle instant effects for other tile types (Traps)
-             let becameEmpty = false; // Flag if a trap was triggered and turned the tile empty
-             switch (tileData.type) {
-                 case TILE_TYPE.TRAP: {
-                     console.log(`Triggered trap at [${r}, ${c}] for ${tileData.damage} damage.`);
-                     this.player.hp -= tileData.damage; // Apply damage to player
-                     // Change the tile instance's data to EMPTY after triggering
-                     tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, damage: 0 }); // Clear trap damage
-                     becameEmpty = true; // Mark that the tile type changed
-                     this.events.emit('updateStats', this.getPlayerStats()); // Update UI (HP)
-                     this.checkGameOver(); // Check if player died from the trap
-                     break;
-                 }
-                 case TILE_TYPE.ITEM:
-                     // Items are just revealed; pickup happens on subsequent click
-                     console.log(`Revealed item: ${tileData.itemId} at [${r}, ${c}]`);
-                     break;
-                 // EMPTY tiles do nothing extra on reveal
-             }
-             // Update neighbors now that the tile is revealed (and potentially empty)
-             this.updateNeighborStates(r, c, false, false);
+        // 1. Check for Spike Trap Damage (if it's a monster)
+        if (tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0 && this.playerHasSpikeTrap()) {
+            const trapDamage = ITEM_TYPES.SPIKE_TRAP.revealDamage || 2; // Get damage amount
+            const monsterName = tileData.isSheep ? "Sheep" : (MONSTER_STATS[tileData.monsterType]?.name || "Monster");
+            console.log(`Spike Trap activates! Damaging ${monsterName} at [${r}, ${c}] for ${trapDamage}.`);
+
+            tileData.hp -= trapDamage; // Apply damage directly to the data
+
+            this.events.emit('showMessage', `Spike Trap: ${monsterName} -${trapDamage} HP!`);
+            this.flashTileBackground(tile, 0xFF8C00, 100, 0); // Flash orange/brown for trap damage
+
+            // Check for immediate death from Spike Trap
+            if (tileData.hp <= 0) {
+                 monsterDiedToSpikeTrap = true; // Set flag
+                 console.log(`${monsterName} died instantly from Spike Trap reveal!`);
+                 // --- Call Centralized Death Handler ---
+                 this._handleMonsterDeath(tile); // Handles count, drop, tile update, neighbors, stats msg
+                 // --- Death logic ends here for this check ---
+            } else {
+                 // Monster survived the trap, update its HP visually via setData
+                 // This also calls updateVisuals
+                 tile.setData({ hp: tileData.hp });
+            }
+            // Stats are updated by _handleMonsterDeath if kill occurred
+        } // End Spike Trap Check
+
+
+        // 2. Handle other Tile Types and Post-Reveal Actions (if monster didn't die to trap)
+        if (!monsterDiedToSpikeTrap) {
+             const isLivingMonster = (tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0);
+             const isBarrel = (tileData.type === TILE_TYPE.BARREL);
+             const isRandom = (tileData.type === TILE_TYPE.RANDOM_ITEM);
+
+             if (isLivingMonster) {
+                 // If a monster survived the trap (or wasn't hit by it), block its neighbors now
+                 this.updateNeighborStates(r, c, true, false); // isMonsterBlock = true
+             } else if (isBarrel) {
+                 // Barrels do nothing on reveal; neighbors updated when broken
+                 // Neighbors should become accessible if they weren't blocked otherwise
+                 this.updateNeighborStates(r, c, false, false);
+             } else if (isRandom) {
+                 // Start the item cycling animation/logic for random tiles
+                 this.startRandomTileCycle(tile);
+                 // Neighbors updated only when the cycle is stopped by clicking again
+                 // But make neighbors accessible initially
+                 this.updateNeighborStates(r, c, false, false);
+             } else {
+                 // Handle instant effects for other tile types (Traps, Items, Empty, Shop, Door)
+                 let becameEmpty = false; // Flag if a trap was triggered and turned the tile empty
+                 switch (tileData.type) {
+                     case TILE_TYPE.TRAP: {
+                         console.log(`Triggered trap at [${r}, ${c}] for ${tileData.damage} damage.`);
+                         const potentialHp = this.player.hp - tileData.damage;
+
+                         // --- God Mode Check for Trap ---
+                         if (this.godModeEnabled && potentialHp <= 0) {
+                             this.player.hp = 1; // Prevent death
+                             this.events.emit('showMessage', 'Trap Hit! (God Mode!)');
+                             console.log("God Mode prevented death from trap.");
+                         } else {
+                             this.player.hp = potentialHp; // Apply damage
+                             // Only show default trap message if god mode didn't save them
+                         }
+                         // --- End God Mode Check ---
+
+                         // Change the tile instance's data to EMPTY after triggering
+                         tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, damage: 0 }); // Clear trap damage
+                         becameEmpty = true; // Mark that the tile type changed
+                         this.events.emit('updateStats', this.getPlayerStats()); // Update UI (HP)
+                         this.checkGameOver(); // Still check in case god mode was off / other effects kill
+                         break;
+                     }
+                     case TILE_TYPE.ITEM:
+                         // Items are just revealed; pickup happens on subsequent click
+                         // Need to check itemID exists before logging potentially undefined property
+                         if (tileData.itemId) {
+                            console.log(`Revealed item: ${tileData.itemId} at [${r}, ${c}]`);
+                         } else {
+                            console.warn(`Revealed ITEM tile with no itemId at [${r}, ${c}]`);
+                            // Consider changing type to EMPTY if this state is invalid
+                            // tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED });
+                         }
+                         break;
+                    case TILE_TYPE.DOOR:
+                        console.log(`Revealed door at [${r}, ${c}]`);
+                        // Door just reveals, interaction happens on click
+                        break;
+                    case TILE_TYPE.SHOP:
+                        console.log(`Revealed shop at [${r}, ${c}]`);
+                        // Shop just reveals, interaction happens on click
+                        break;
+                     case TILE_TYPE.EMPTY:
+                        // Empty tiles do nothing extra on reveal
+                         console.log(`Revealed empty tile at [${r}, ${c}]`);
+                         break;
+                    default:
+                        console.warn(`Revealed tile with unhandled type in switch: ${tileData.type}`);
+                        break;
+                 } // End switch(tileData.type)
+
+                 // Update neighbors now that the tile is revealed (and potentially empty)
+                 // If a trap turned it empty, isMonsterBlock is false.
+                 // If it was Item/Empty/Shop/Door, isMonsterBlock is also false.
+                 this.updateNeighborStates(r, c, false, false);
+             } // End else (not monster, barrel, random)
+        } // End if(!monsterDiedToSpikeTrap)
+
+        // Check Game Over again in case Spike Trap killed a monster that caused some chain reaction (unlikely now)
+        // Or if revealing a regular trap killed the player (and god mode was off)
+        if (!this.isGameOver) {
+            this.processEndOfPlayerTurnEffects(); // Process poison ticks etc. AFTER reveal effects
         }
+    } // End of revealTile method
 
-        this.processEndOfPlayerTurnEffects(); 
-    }
-
-      /**
+ /**
     * Handles the logic for picking up an item from a revealed tile.
     * Updates player inventory/stats and changes the tile to EMPTY.
     * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
     * and DURABLE (unique inventory items).
-    * Includes logic to immediately update key visibility if Lantern is picked up.
+    * Includes logic to immediately update visuals/stats for passive items like Lantern, Defense Rune, Attack Rune on pickup.
     * @param {Tile} tile - The Tile instance containing the item.
     */
     tryPickupItem(tile) {
@@ -1619,9 +1907,7 @@ purchaseShopItem(itemKey) {
                 this.events.emit('updateInventory', this.player.inventory);
                 this.events.emit('showMessage', `${itemInfo.name} acquired!`);
                 pickedUp = true;
-                // Specific post-pickup logic for durables can go here (like cloak/lantern refresh)
-                // Note: Cloak refresh is handled separately inside this 'pickedUp' block below
-                // Note: Lantern refresh is ALSO handled separately inside the 'pickedUp' block below
+                // Passive bonus application happens *after* this block, inside if(pickedUp)
             } else {
                 // Inventory full
                 showInvFullMsg = true;
@@ -1638,23 +1924,40 @@ purchaseShopItem(itemKey) {
             // Change the tile instance's data to EMPTY and update visuals
             tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, itemId: null });
             this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
-            this.events.emit('updateStats', this.getPlayerStats()); // Update UI (gold, HP, key icon)
 
-            // --- IMMEDIATE EFFECT REFRESH ---
-            // Check specifically if the cloak was picked up to update neighbors *immediately*
-            if (itemId === 'INVISIBILITY_CLOAK') {
-                // Force update of all hidden neighbor states around revealed areas
+            // --- IMMEDIATE EFFECT APPLICATION / REFRESH ---
+            // Check specifically if the Defense Rune was picked up to apply HP bonus *immediately*
+            if (itemId === 'DEFENSE_RUNE') {
+                const runeInfo = ITEM_TYPES.DEFENSE_RUNE;
+                const bonus = runeInfo.maxHpBonus || 0;
+                if (bonus > 0) {
+                    console.log(`Defense Rune picked up. Applying +${bonus} Max HP.`);
+                    this.player.maxHp += bonus;
+                    this.player.hp += bonus; // Also increase current HP
+                    this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+                }
+            }
+            // Check specifically if the Attack Rune was picked up to apply ATK bonus *immediately*
+            else if (itemId === 'ATTACK_RUNE') {
+                const runeInfo = ITEM_TYPES.ATTACK_RUNE;
+                const bonus = runeInfo.atkBonus || 0;
+                if (bonus > 0) {
+                    console.log(`Attack Rune picked up. Applying +${bonus} ATK.`);
+                    this.player.atk += bonus;
+                }
+            }
+             // Check specifically if the cloak was picked up to update neighbors *immediately*
+            else if (itemId === 'INVISIBILITY_CLOAK') {
                 console.log("Cloak picked up, refreshing hidden tile blocking states.");
                 this.refreshAllHiddenTileStates();
             }
             // Check specifically if the Lantern was picked up to update key visibility *immediately*
-            if (itemId === 'LANTERN') {
+            else if (itemId === 'LANTERN') {
                 console.log("Lantern picked up, attempting to refresh hidden key marker.");
-                if (this.keyHolderCoords) { // Check if we know where the key is
+                if (this.keyHolderCoords) {
                     const keyTile = this.tileObjects[this.keyHolderCoords.r]?.[this.keyHolderCoords.c];
-                    // Check if the key tile actually exists and is still hidden
                     if (keyTile && keyTile.tileData.state !== TILE_STATE.REVEALED) {
-                        keyTile.updateVisuals(); // Force the hidden key tile to redraw itself NOW
+                        keyTile.updateVisuals();
                         console.log(`Forced visual update on hidden key tile at [${this.keyHolderCoords.r}, ${this.keyHolderCoords.c}]`);
                     } else if (keyTile) {
                          console.log("Key tile already revealed, no visual update needed for Lantern pickup.");
@@ -1663,12 +1966,12 @@ purchaseShopItem(itemKey) {
                     }
                 } else {
                      console.log("Key holder coordinates unknown, cannot force visual update for Lantern pickup.");
-                     // This might happen if the key was placed as an item directly (fallback in generation)
-                     // In this case, the effect will naturally apply if the tile is revealed later or on next floor.
                 }
             }
-            // --- END IMMEDIATE EFFECT REFRESH ---
+            // --- END IMMEDIATE EFFECT APPLICATION / REFRESH ---
 
+            // Update UI stats AFTER applying any potential bonus from pickup
+            this.events.emit('updateStats', this.getPlayerStats());
 
             if (endTurn) {
                 this.processEndOfPlayerTurnEffects();
@@ -1676,11 +1979,11 @@ purchaseShopItem(itemKey) {
         } else if (showInvFullMsg) {
             // Show inventory full message if applicable
             this.events.emit('showMessage', 'Inventory Full!');
-            // Optional: Flash the item tile red briefly to indicate failure
             this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
         }
         // If endTurn is false and nothing was picked up, nothing else happens.
     } // End of tryPickupItem method
+
 
     /**
      * Helper method to re-evaluate the state of all hidden tiles.
@@ -1717,104 +2020,186 @@ purchaseShopItem(itemKey) {
          }
     }
 
-    /**
-     * Handles the player attacking a monster tile. Manages combat turns,
-     * status effects (poison/freeze), monster death, and item drops.
+     /**
+     * Handles the player attacking a monster tile. [Refactored]
+     * Manages combat turn order and delegates actions to helper methods.
      * @param {Tile} monsterTile - The Tile instance representing the monster.
      */
-    attackMonster(monsterTile) {
-        if (this.isGameOver || !monsterTile) return; // Ignore if game over or tile invalid
-        const monsterData = monsterTile.tileData; // Get monster data from the Tile instance
-        // Ensure it's a living monster
+     attackMonster(monsterTile) {
+        // --- Initial Validation ---
+        if (this.isGameOver || !monsterTile) return;
+        const monsterData = monsterTile.tileData;
         if (monsterData.type !== TILE_TYPE.MONSTER || monsterData.hp <= 0) return;
 
-        let needsVisualUpdate = false; // Flag to redraw tile visuals at the end if needed
+        let monsterAttackedThisTurn = false;
+        let needsVisualUpdateOnSurvival = false; // Flag to update visuals if monster lives
 
-        // --- First Attack Logic ---
-        // Reveal key icon after first hit if the monster holds it (and isn't sheep)
+        // --- First Attack Logic (Key Reveal) ---
         if (!monsterData.attackedOnce) {
             monsterData.attackedOnce = true;
-            if (monsterData.hasKey && !monsterData.isSheep) needsVisualUpdate = true;
+            if (monsterData.hasKey && !monsterData.isSheep) {
+                needsVisualUpdateOnSurvival = true; // Need to show key icon
+            }
         }
 
-        // --- Combat Turn ---
-        let monsterAttackedThisTurn = false; // Track if monster already acted this click
-        let monsterIsFrozen = monsterData.frozenTurns > 0;
+        let monsterIsInitiallyFrozen = monsterData.frozenTurns > 0;
         const monsterName = monsterData.isSheep ? "Sheep" : (MONSTER_STATS[monsterData.monsterType]?.name || "Monster");
 
-        // 1. Monster Attacks First (if debug flag is on and not frozen)
-        if (this.monsterStrikeFirst && !monsterIsFrozen) {
-            console.log(`${monsterName} attacks Player FIRST for ${monsterData.atk} damage.`);
-            this.player.hp -= monsterData.atk;
+
+        // --- Monster's Turn (if they strike first) ---
+        if (this.monsterStrikeFirst) {
+            if (!monsterIsInitiallyFrozen) {
+                // Monster attacks player, check if game ends
+                if (this._applyMonsterAttackDamage(monsterTile)) {
+                    return; // Game Over
+                }
+            } else {
+                // Monster is frozen, handle tick
+                console.log(`${monsterName} is frozen! Skips attack.`);
+                if (this._handleFreezeTick(monsterTile, 'monster_turn')) {
+                    needsVisualUpdateOnSurvival = true; // Thawed, need visual update if it survives
+                }
+            }
             monsterAttackedThisTurn = true;
-            this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-            if (this.checkGameOver()) { return; } // Stop if player died
-        }
-        // 1a. Monster Skips Turn (if frozen and hasn't acted yet)
-        else if (monsterIsFrozen && !monsterAttackedThisTurn) {
-            console.log(`${monsterName} is frozen! Skips attack.`);
-            monsterData.frozenTurns--; // Decrement freeze duration
-             if (monsterData.frozenTurns <= 0) { // Check if thawed
-                 this.events.emit('showMessage', `${monsterName} thawed!`);
-                 needsVisualUpdate = true; // Needs redraw to remove snowflake icon and change bg color
-             }
-            monsterAttackedThisTurn = true; // Counts as monster's action for this click
         }
 
-        // 2. Player Attacks
+        // --- Player's Attack ---
+        this._applyPlayerAttackDamage(monsterTile);
+        needsVisualUpdateOnSurvival = true; // HP changed
+
+        // Handle freeze tick caused by player attack damage
+        if (this._handleFreezeTick(monsterTile, 'player_attack')) {
+             needsVisualUpdateOnSurvival = true; // Thawed
+        }
+
+
+        // --- Check Monster Death ---
+        if (monsterData.hp <= 0) {
+            console.log(`${monsterName} defeated by player attack!`);
+            this._handleMonsterDeath(monsterTile); // Handles everything needed on death
+        } else {
+            // --- Monster Survived: Handle Counter-Attack (if didn't attack first) ---
+            if (!monsterAttackedThisTurn) {
+                // Re-check freeze status, as player attack might have thawed it
+                let monsterIsStillFrozen = monsterData.frozenTurns > 0;
+
+                if (!monsterIsStillFrozen) {
+                    // Monster attacks back, check if game ends
+                    if (this._applyMonsterAttackDamage(monsterTile)) {
+                        return; // Game Over
+                    }
+                } else {
+                    console.log(`${monsterName} is frozen! Skips counter-attack.`);
+                    // Note: Freeze tick was already handled by player attack part
+                }
+            }
+
+            // --- Update Visuals if Monster Survived ---
+            if (needsVisualUpdateOnSurvival) {
+                monsterTile.setData({
+                    hp: monsterData.hp,
+                    frozenTurns: monsterData.frozenTurns,
+                    attackedOnce: monsterData.attackedOnce
+                });
+            }
+        }
+
+        // --- Process End of Turn Effects ---
+        // Run regardless of monster death, but check if game didn't end during combat
+        if (!this.isGameOver) {
+            this.processEndOfPlayerTurnEffects();
+        }
+    } // End of refactored attackMonster method
+
+
+     /**
+     * Applies damage from the monster to the player. [Helper for attackMonster]
+     * Handles dodge, god mode, HP update, stats emission, and game over check.
+     * @param {Tile} monsterTile - The Tile instance of the attacking monster.
+     * @returns {boolean} True if the game ended as a result of this attack, false otherwise.
+     * @private
+     */
+     _applyMonsterAttackDamage(monsterTile) {
+        const monsterData = monsterTile.tileData;
+        const monsterName = monsterData.isSheep ? "Sheep" : (MONSTER_STATS[monsterData.monsterType]?.name || "Monster");
+        let dodged = false;
+
+        // Dodge Check
+        if (this.playerHasShield()) {
+            const dodgeRoll = Math.random();
+            if (dodgeRoll < (ITEM_TYPES.SHIELD.dodgeChance || 0.10)) {
+                dodged = true;
+                console.log("Player dodged monster attack!");
+                this.events.emit('showMessage', 'Dodged!');
+            }
+        }
+
+        // Apply Damage if not dodged
+        if (!dodged) {
+            const potentialHp = this.player.hp - monsterData.atk;
+
+            // God Mode Check
+            if (this.godModeEnabled && potentialHp <= 0) {
+                this.player.hp = 1;
+                this.events.emit('showMessage', `${monsterName} Attack! (God Mode!)`);
+                console.log(`God Mode prevented death from ${monsterName}.`);
+            } else {
+                console.log(`${monsterName} attacks Player for ${monsterData.atk} damage.`);
+                this.player.hp = potentialHp;
+                // Show message only if damage was actually dealt
+                if (!(this.godModeEnabled && potentialHp <=0)) {
+                    this.events.emit('showMessage', `${monsterName} hits you! -${monsterData.atk} HP`);
+                }
+            }
+
+            // Update Stats & Check Game Over
+            this.events.emit('updateStats', this.getPlayerStats());
+            if (this.checkGameOver()) {
+                return true; // Game ended
+            }
+        }
+        return false; // Game continues
+    }
+
+    /**
+     * Applies damage from the player to the monster. [Helper for attackMonster]
+     * Also triggers the hit flash effect.
+     * @param {Tile} monsterTile - The Tile instance of the monster being attacked.
+     * @private
+     */
+     _applyPlayerAttackDamage(monsterTile) {
+        const monsterData = monsterTile.tileData;
+        const monsterName = monsterData.isSheep ? "Sheep" : (MONSTER_STATS[monsterData.monsterType]?.name || "Monster");
+
         console.log(`Player attacks ${monsterName} for ${this.player.atk} damage.`);
         monsterData.hp -= this.player.atk;
 
-         // 3. Poison Damage (if applicable and monster still alive after player attack)
-         if (monsterData.isPoisoned && monsterData.poisonTurns > 0 && monsterData.hp > 0) {
-            // This is now handled in it's own functions
-        }
+        // Trigger flash effect
+        this.flashTileBackground(monsterTile, COLORS.MONSTER_HIT_FLASH, 50, 0);
+    }
 
-        // 4. Check Monster Death (after player attack and poison)
-        if (monsterData.hp <= 0) {
-            monsterData.maxHp = 0; // Mark as officially dead to prevent multi-kill issues
-            this.monsterCount--; // Decrement floor monster count
-            console.log(`${monsterName} died.`);
-            let droppedItemId = monsterData.hasKey ? 'KEY_ITEM' : 'COIN'; // Determine drop
-            this.events.emit('showMessage', `${ITEM_TYPES[droppedItemId]?.name || 'Item'} Dropped!`);
-            if (monsterData.hasKey) this.keyDroppedOnFloor = true; // Mark key as dropped
+      /**
+     * Decrements the monster's frozen turns and handles thawing. [Helper for attackMonster]
+     * @param {Tile} monsterTile - The Tile instance of the potentially frozen monster.
+     * @param {string} source - Identifier for where the tick is triggered (e.g., 'player_attack', 'monster_turn').
+     * @returns {boolean} True if the monster thawed on this tick, false otherwise.
+     * @private
+     */
+     _handleFreezeTick(monsterTile, source = 'unknown') {
+        const monsterData = monsterTile.tileData;
+        const monsterName = monsterData.isSheep ? "Sheep" : (MONSTER_STATS[monsterData.monsterType]?.name || "Monster");
+        let didThaw = false;
 
-            // Change the tile instance's data to the dropped item
-            monsterTile.setData({
-                type: TILE_TYPE.ITEM,
-                itemId: droppedItemId,
-                revealed: true, state: TILE_STATE.REVEALED,
-                // Clear monster-specific fields to prevent lingering data issues
-                hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
-                attackedOnce: false, isPoisoned: false, poisonTurns: 0,
-                isSheep: false, frozenTurns: 0
-            });
-            // Update neighbors now that the monster is gone and replaced by an item
-            this.updateNeighborStates(monsterTile.r, monsterTile.c, false, true); // isMonsterUnblock = true
-            this.events.emit('updateStats', this.getPlayerStats()); // Update UI (monster count implicitly checked by door logic)
-
-        } else { // Monster survived
-            monsterIsFrozen = monsterData.frozenTurns > 0; // Re-check freeze status after potential thawing this turn
-
-            // 5. Monster Attacks Back (if didn't attack first and isn't frozen)
-            if (!monsterAttackedThisTurn && !monsterIsFrozen) {
-                console.log(`${monsterName} attacks Player back for ${monsterData.atk} damage.`);
-                this.player.hp -= monsterData.atk;
-                this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-                if (this.checkGameOver()) { return; } // Stop if player died
+        if (monsterData.frozenTurns > 0) {
+            monsterData.frozenTurns--;
+            console.log(`${monsterName} at [${monsterTile.r},${monsterTile.c}] freeze ticks down via ${source}. ${monsterData.frozenTurns} turns left.`);
+            if (monsterData.frozenTurns <= 0) {
+                console.log(`${monsterName} at [${monsterTile.r},${monsterTile.c}] thawed!`);
+                this.events.emit('showMessage', `${monsterName} thawed!`);
+                didThaw = true;
             }
-            // 5a. Monster Skips Turn (if frozen and didn't attack first) - handled in step 1a
-
-            needsVisualUpdate = true; // HP or status changed, mark for visual update
         }
-
-        // Update the monster tile visuals if its HP/status changed or if it died (to show the drop)
-        // Always update if needsVisualUpdate is true, which covers status changes (freeze/thaw, poison off) and HP changes
-        if (needsVisualUpdate || monsterData.hp <= 0) {
-            monsterTile.updateVisuals();
-        }
-
-        this.processEndOfPlayerTurnEffects(); 
+        return didThaw;
     }
 
    // ##############################################
@@ -1994,9 +2379,10 @@ tryEnterDoor(doorTile) {
     /**
      * Stops the item cycling on a Random Item tile when clicked.
      * Applies the effect of the currently displayed item and changes the tile to EMPTY.
+     * Includes God Mode check for explosive damage.
      * @param {Tile} tile - The Tile instance representing the random item tile.
      */
-    stopRandomTile(tile) {
+     stopRandomTile(tile) {
         // Ensure tile is valid and currently cycling
         if (!tile || tile.tileData.type !== TILE_TYPE.RANDOM_ITEM || !tile.tileData.isCycling) {
             return;
@@ -2016,15 +2402,27 @@ tryEnterDoor(doorTile) {
             becameEmpty = true; // Treat as empty if item is invalid
         } else if (finalOutcomeId === 'EXPLOSIVE') {
             // Apply self-damage effect
-            this.player.hp -= itemInfo.effect.amount;
-            this.events.emit('showMessage', `KABOOM! -${itemInfo.effect.amount} HP`);
+            const damage = itemInfo.effect.amount;
+            const potentialHp = this.player.hp - damage;
+
+            // --- God Mode Check for Explosive ---
+            if (this.godModeEnabled && potentialHp <= 0) {
+                this.player.hp = 1; // Prevent death
+                this.events.emit('showMessage', `KABOOM! (God Mode!)`);
+                console.log("God Mode prevented death from explosive.");
+            } else {
+                this.player.hp = potentialHp; // Apply damage
+                this.events.emit('showMessage', `KABOOM! -${damage} HP`);
+            }
+            // --- End God Mode Check ---
+
             this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-            this.checkGameOver(); // Check if player died
+            this.checkGameOver(); // Still check
             becameEmpty = true;
         } else if (finalOutcomeId === 'COIN') {
             // Grant gold
-            this.player.gold += itemInfo.goldValue;
-            this.events.emit('showMessage', `+${itemInfo.goldValue} Gold!`);
+            this.player.gold += itemInfo.goldValue || 10; // Use defined or default
+            this.events.emit('showMessage', `+${itemInfo.goldValue || 10} Gold!`);
             this.events.emit('updateStats', this.getPlayerStats()); // Update UI
             becameEmpty = true;
         } else if (finalOutcomeId === 'HEART') {
@@ -2066,237 +2464,336 @@ tryEnterDoor(doorTile) {
         }
         // Visuals are updated via the setData calls.
 
-        this.processEndOfPlayerTurnEffects(); 
-    }
+        this.processEndOfPlayerTurnEffects();
+    } // End stopRandomTile
 
     /**
-     * Handles using an item from the inventory (triggered by UI event).
-     * Applies the item's effect and removes it if consumable.
+     * Handles using an item from the inventory (triggered by UI event). [Refactored]
+     * Applies the item's effect via helper functions and removes it if consumable.
      * @param {object} data - Data object containing { itemId, index }.
      */
-    useItem({ itemId, index }) {
-        // Validate input and game state
-        if (this.isGameOver || !itemId || index === undefined || index < 0 || index >= this.player.inventory.length) {
-            console.warn("Invalid useItem call:", {itemId, index}); return;
+     useItem({ itemId, index }) {
+        // --- Initial Validation ---
+        if (this.isGameOver || !itemId || index === undefined || index < 0) {
+            console.warn("Invalid useItem call (Game Over or bad data):", {itemId, index});
+            return;
         }
-        // Double-check the item exists at the specified index in the player's inventory
-        if (this.player.inventory[index] !== itemId) {
+        if (index >= this.player.inventory.length) {
+            console.error(`Invalid useItem call: Index ${index} is out of bounds for inventory length ${this.player.inventory.length}.`);
             this.events.emit('showMessage', 'Inventory Error!');
-            console.error(`Inventory mismatch: Expected ${itemId} at index ${index}, found ${this.player.inventory[index]}`);
+            this.events.emit('updateInventory', this.player.inventory);
             return;
         }
 
         const itemInfo = ITEM_TYPES[itemId];
-        // Check if item has a defined effect and is usable from inventory
         if (!itemInfo || !itemInfo.effect) {
-            console.warn(`Item ${itemId} has no usable effect from inventory.`);
-            // Cannot use items without effects (like Key, Coin, Heart - these are handled by pickup)
-            return;
+            console.warn(`Item ${itemId} has no usable effect from inventory or doesn't exist.`);
+            return; // Silently return if item isn't usable from inventory
         }
 
-        console.log(`Using item: ${itemInfo.name}`);
-        let consumed = false; // Flag to remove item from inventory after use
+        console.log(`Using item: ${itemInfo.name} from index ${index}`);
+
+        let effectResult = { consumed: false, appliedStatusEffect: false }; // Default result
+
+        // --- Delegate to Effect Helper Functions ---
         const effect = itemInfo.effect;
-
-        // --- Apply Item Effect ---
-        let appliedStatusEffect = false;
         switch (effect.type) {
-            case 'HEAL': {
-                let healAmount = Math.min(effect.amount, this.player.maxHp - this.player.hp); // Heal up to max HP
-                if (healAmount > 0) {
-                    this.player.hp += healAmount;
-                    this.events.emit('showMessage', `Healed ${healAmount} HP`);
-                } else {
-                    this.events.emit('showMessage', `HP already full!`);
-                }
-                this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-                consumed = itemInfo.consumable; // Mark for removal if consumable
+            case 'HEAL':
+                effectResult = this._applyHealEffect(itemInfo, effect);
                 break;
+            case 'DAMAGE_ALL':
+                effectResult = this._applyDamageAllEffect(itemInfo, effect);
+                break;
+            case 'POISON_ALL':
+                effectResult = this._applyPoisonAllEffect(itemInfo, effect);
+                break;
+            case 'FREEZE_ALL':
+                effectResult = this._applyFreezeAllEffect(itemInfo, effect);
+                break;
+            case 'SHEEP_ALL':
+                effectResult = this._applySheepAllEffect(itemInfo, effect);
+                break;
+            default:
+                console.warn(`Unhandled item effect type: ${effect.type}`);
+                return; // Stop processing if effect type is unknown
+        }
+
+        // --- Handle Consumption ---
+        let actuallyConsumed = false;
+        if (effectResult.consumed) {
+            actuallyConsumed = this._handleItemConsumption(itemId, index);
+        }
+
+        // --- Handle End of Turn ---
+        // Process end-of-turn effects only if the item was successfully consumed
+        // AND if it didn't apply a status effect that should delay the next tick (like poison/freeze application).
+        if (actuallyConsumed) {
+            if (!effectResult.appliedStatusEffect) {
+                this.processEndOfPlayerTurnEffects();
+            } else {
+                console.log("Status applied, skipping immediate end-of-turn processing for this item use action.");
+                // Check game over in case the effect itself was fatal (unlikely for statuses, but possible)
+                // Or if stats changed (e.g. future heal-over-time item)
+                this.events.emit('updateStats', this.getPlayerStats()); // Ensure stats are up-to-date visually
+                this.checkGameOver();
             }
-            case 'DAMAGE_ALL': {
-                let monstersHit = 0;
-                let monstersKilledCoords = []; // Store {r, c} of killed monsters to process after loop
-                let keyDropped = false;
-                let thawedCount = 0; // Track how many thawed
+        }
+    } // End of refactored useItem method
 
-                // Iterate through all tiles to find revealed, living monsters
-                for (let r = 0; r < GRID.ROWS; r++) {
-                    for (let c = 0; c < GRID.COLS; c++) {
-                        let targetTile = this.tileObjects[r]?.[c];
-                        let targetData = targetTile?.tileData;
-                        // Check if it's a revealed, living monster
-                        if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
-                            targetData.hp -= effect.amount; // Apply damage
-                            monstersHit++;
-                            let monsterThawedThisHit = false; // Track thaw per monster
 
-                            // Freeze Tick on Damage 
-                            if (targetData.frozenTurns > 0) {
-                                    targetData.frozenTurns--;
-                                    console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] freeze ticks down from item damage. ${targetData.frozenTurns} turns left.`);
-                                    if (targetData.frozenTurns <= 0) {
-                                        console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] thawed from item damage!`);
-                                        monsterThawedThisHit = true;
-                                        thawedCount++; // Increment total thawed count
-                                    }
-                                }
+    /**
+     * Applies the HEAL item effect. [Helper for useItem]
+     * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+     * @param {object} effect - The specific effect object { type: 'HEAL', amount: number }.
+     * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+     * @private Internal helper method.
+     */
+     _applyHealEffect(itemInfo, effect) {
+        let consumed = false;
+        let healAmount = Math.min(effect.amount, this.player.maxHp - this.player.hp); // Heal up to max HP
 
-                            if (targetData.hp <= 0) {
-                                monstersKilledCoords.push({ r, c }); // Mark for processing after loop
-                            } else {
-                                //targetTile.updateVisuals(); // Update HP display immediately on survivors
-                                targetTile.setData({
-                                    hp: targetData.hp,
-                                    frozenTurns: targetData.frozenTurns
-                                });
-                            }
+        if (healAmount > 0) {
+            this.player.hp += healAmount;
+            this.events.emit('showMessage', `Healed ${healAmount} HP`);
+            consumed = itemInfo.consumable; // Consume only if healing occurred
+        } else {
+            this.events.emit('showMessage', `HP already full!`);
+            consumed = false; // Don't consume if no effect
+        }
+        this.events.emit('updateStats', this.getPlayerStats()); // Update UI
+        this.checkGameOver(); // Check just in case (though healing shouldn't cause game over)
+
+        return { consumed: consumed, appliedStatusEffect: false }; // Heal isn't a turn-delaying status
+    }
+
+     /**
+     * Applies the DAMAGE_ALL item effect (e.g., Blade Scroll). [Helper for useItem]
+     * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+     * @param {object} effect - The specific effect object { type: 'DAMAGE_ALL', amount: number }.
+     * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+     * @private Internal helper method.
+     */
+     _applyDamageAllEffect(itemInfo, effect) {
+        let monstersHit = 0;
+        let potentialKills = []; // Store tiles, not just coords
+        let thawedCount = 0;
+
+        // Iterate through all tiles to find revealed, living monsters
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let targetTile = this.tileObjects[r]?.[c];
+                let targetData = targetTile?.tileData;
+                // Check if it's a revealed, living monster
+                if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
+                    targetData.hp -= effect.amount; // Apply damage
+                    monstersHit++;
+                    let monsterThawedThisHit = false;
+
+                    // Freeze Tick on Damage
+                    if (targetData.frozenTurns > 0) {
+                        targetData.frozenTurns--;
+                        // console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] freeze ticks down from item damage. ${targetData.frozenTurns} turns left.`);
+                        if (targetData.frozenTurns <= 0) {
+                            // console.log(`${targetData.monsterType || 'Monster'} at [${r},${c}] thawed from item damage!`);
+                            monsterThawedThisHit = true;
+                            thawedCount++;
                         }
                     }
-                }
 
-                // Process killed monsters after the damage loop to avoid modifying array during iteration issues
-                for (const coords of monstersKilledCoords) {
-                     let killedTile = this.tileObjects[coords.r]?.[coords.c];
-                     let killedData = killedTile?.tileData;
-                     // Check maxHp > 0 to ensure we only process the death once
-                     if(killedTile && killedData && killedData.maxHp > 0) {
-                         killedData.maxHp = 0; // Mark officially dead
-                         this.monsterCount--;
-                         let droppedItemId = killedData.hasKey ? 'KEY_ITEM' : 'COIN';
-                         if (killedData.hasKey) {
-                             keyDropped = true;
-                             this.keyDroppedOnFloor = true; // Mark key as dropped
-                         }
-                         // Change tile data to the dropped item
-                         killedTile.setData({
-                             type: TILE_TYPE.ITEM, itemId: droppedItemId, revealed: true, state: TILE_STATE.REVEALED,
-                             // Clear monster fields
-                             hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
-                             attackedOnce: false, isPoisoned: false, poisonTurns: 0,
-                             isSheep: false, frozenTurns: 0
-                         });
-                         // Unblock neighbors
-                         this.updateNeighborStates(coords.r, coords.c, false, true); // isMonsterUnblock = true
-                     }
-                }
+                    if (targetData.hp <= 0) {
+                        potentialKills.push(targetTile); // Store the TILE object
+                    } else {
+                        // Update HP/Freeze state via setData ONLY for survivors
+                        targetTile.setData({ hp: targetData.hp, frozenTurns: targetData.frozenTurns });
+                    }
+                } // end if valid monster target
+            } // end for c
+        } // end for r
 
-                if (keyDropped) this.events.emit('showMessage', `Key Dropped!`);
-                this.events.emit('showMessage', `Blade Scroll hit ${monstersHit} monsters!`);
-                this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-                consumed = itemInfo.consumable;
-                break;
-            }
-            case 'POISON_ALL': {
-                 let poisonedCount = 0;
-                 for (let r = 0; r < GRID.ROWS; r++) {
-                     for (let c = 0; c < GRID.COLS; c++) {
-                         let targetTile = this.tileObjects[r]?.[c];
-                         let targetData = targetTile?.tileData;
-                         // Target revealed, living monsters that aren't already poisoned
-                         if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
-                             if (!targetData.isPoisoned) {
-                                 // Apply poison status using setData on the Tile instance
-                                 targetTile.setData({
-                                     isPoisoned: true,
-                                     poisonTurns: getRandomInt(effect.durationRange[0], effect.durationRange[1])
-                                 });
-                                 console.log(`Poisoned ${targetData.monsterType} for ${targetData.poisonTurns} turns`);
-                                 poisonedCount++;
-                                 // Visual update happens automatically via setData
-                             }
-                         }
-                     }
-                 }
-                 if (poisonedCount > 0) {
-                         this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
-                         appliedStatusEffect = true;
-                    } else {
-                         this.events.emit('showMessage', `No monsters to poison!`);
-                    }
-                    consumed = itemInfo.consumable;
-                 break;
-            }
-            case 'FREEZE_ALL': {
-                 let frozenCount = 0;
-                 for (let r = 0; r < GRID.ROWS; r++) {
-                     for (let c = 0; c < GRID.COLS; c++) {
-                         let targetTile = this.tileObjects[r]?.[c];
-                         let targetData = targetTile?.tileData;
-                         // Target revealed, living monsters
-                         if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
-                             // Apply freeze duration (or extend existing freeze) using setData
-                             targetTile.setData({
-                                 frozenTurns: Math.max(targetData.frozenTurns || 0, effect.duration)
-                             });
-                             frozenCount++;
-                             console.log(`Froze ${targetData.monsterType} for ${targetData.frozenTurns} turns`);
-                             // Visual update happens automatically via setData
-                         }
-                     }
-                 }
-                 if (frozenCount > 0) {
-                         this.events.emit('showMessage', `Froze ${frozenCount} monsters!`);
-                         appliedStatusEffect = true; 
-                    } else {
-                         this.events.emit('showMessage', `No monsters to freeze!`);
-                    }
-                    consumed = itemInfo.consumable;
-                 break;
-            }
-            case 'SHEEP_ALL': {
-                 let sheepCount = 0;
-                 for (let r = 0; r < GRID.ROWS; r++) {
-                     for (let c = 0; c < GRID.COLS; c++) {
-                         let targetTile = this.tileObjects[r]?.[c];
-                         let targetData = targetTile?.tileData;
-                         // Target revealed, living monsters that aren't already sheep
-                         if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED && !targetData.isSheep) {
-                             // Apply sheep status and stat changes using setData
-                             targetTile.setData({
-                                 isSheep: true,
-                                 maxHp: Math.max(1, Math.floor(targetData.maxHp / 2)), // Halve max HP (min 1)
-                                 hp: Math.min(targetData.hp, Math.max(1, Math.floor(targetData.maxHp / 2))), // Cap current HP
-                                 atk: effect.newAtk, // Set attack low
-                                 // Remove other statuses
-                                 isPoisoned: false, poisonTurns: 0,
-                                 frozenTurns: 0
-                             });
-                             sheepCount++;
-                             console.log(`Turned ${targetData.monsterType} into a sheep!`);
-                             // Visual update happens automatically via setData
-                         }
-                     }
-                 }
-                 if (sheepCount > 0) {
-                         this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`);
-                         appliedStatusEffect = true; // <-- Set flag
-                    } else {
-                         this.events.emit('showMessage', `No monsters to turn into sheep!`);
-                    }
-                     consumed = itemInfo.consumable;
-                 break;
-             }
-            // Note: DAMAGE_SELF effect is handled by stopRandomTile
+        // Process potential deaths AFTER iterating
+        let actualKills = 0;
+        for (const killedTile of potentialKills) {
+            this._handleMonsterDeath(killedTile); // Pass the Tile object
+            actualKills++;
         }
 
-        // Remove item from inventory if it was consumed
-        if (consumed) {
-            this.player.inventory.splice(index, 1); // Remove item at the specified index
-            this.events.emit('updateInventory', this.player.inventory); // Update UI
-        }
-
-        if (!appliedStatusEffect) {
-             this.processEndOfPlayerTurnEffects(); // <-- MOVED HERE and made conditional
+        // Emit messages based on results
+        if (monstersHit > 0) {
+            this.events.emit('showMessage', `${itemInfo.name} hit ${monstersHit} monsters!`);
         } else {
-             console.log("Status applied, skipping immediate end-of-turn processing for this action.");
-             // We still need to update stats in case the *player's* stats changed (e.g. potion)
-             // or inventory changed. Let's just update stats regardless.
-             this.events.emit('updateStats', this.getPlayerStats());
-             // Check game over in case the item *itself* somehow caused it (unlikely now, but good practice)
-             this.checkGameOver();
+            this.events.emit('showMessage', `${itemInfo.name}: No monsters hit!`);
+        }
+        if (thawedCount > 0) {
+            this.events.emit('showMessage', `${thawedCount} monsters thawed!`);
+        }
+        // _handleMonsterDeath emits its own stats updates if kills occurred.
+
+        return { consumed: itemInfo.consumable, appliedStatusEffect: false }; // Damage isn't a status effect here
+    }
+
+     /**
+     * Applies the POISON_ALL item effect. [Helper for useItem]
+     * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+     * @param {object} effect - The specific effect object { type: 'POISON_ALL', durationRange: [min, max], damage: number }.
+     * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+     * @private Internal helper method.
+     */
+     _applyPoisonAllEffect(itemInfo, effect) {
+        let poisonedCount = 0;
+        let appliedStatus = false;
+
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let targetTile = this.tileObjects[r]?.[c];
+                let targetData = targetTile?.tileData;
+                // Target revealed, living monsters
+                if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
+                    // Apply if not already poisoned or if poison wore off
+                    if (!targetData.isPoisoned || targetData.poisonTurns <= 0) {
+                        const duration = getRandomInt(effect.durationRange[0], effect.durationRange[1]);
+                        targetTile.setData({ isPoisoned: true, poisonTurns: duration });
+                        // console.log(`Poisoned ${targetData.monsterType || 'Monster'} for ${duration} turns`);
+                        poisonedCount++;
+                        appliedStatus = true;
+                    }
+                }
+            }
         }
 
+        if (poisonedCount > 0) {
+            this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
+        } else {
+            this.events.emit('showMessage', `No valid monsters to poison!`);
+        }
+
+        // Consume the item even if no monsters were poisoned, as the attempt was made.
+        return { consumed: itemInfo.consumable, appliedStatusEffect: appliedStatus };
     }
+
+     /**
+     * Applies the FREEZE_ALL item effect. [Helper for useItem]
+     * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+     * @param {object} effect - The specific effect object { type: 'FREEZE_ALL', duration: number }.
+     * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+     * @private Internal helper method.
+     */
+     _applyFreezeAllEffect(itemInfo, effect) {
+        let frozenCount = 0;
+        let appliedStatus = false;
+
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let targetTile = this.tileObjects[r]?.[c];
+                let targetData = targetTile?.tileData;
+                // Target revealed, living monsters
+                if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
+                    // Apply freeze, potentially extending existing duration if greater
+                    const newFreezeTurns = Math.max(targetData.frozenTurns || 0, effect.duration);
+                    if (newFreezeTurns > (targetData.frozenTurns || 0)) { // Only count if duration increased/applied
+                        targetTile.setData({ frozenTurns: newFreezeTurns });
+                        frozenCount++;
+                        appliedStatus = true;
+                        // console.log(`Froze ${targetData.monsterType || 'Monster'} for ${newFreezeTurns} turns`);
+                    }
+                }
+            }
+        }
+
+        if (frozenCount > 0) {
+            this.events.emit('showMessage', `Froze ${frozenCount} monsters!`);
+        } else {
+            this.events.emit('showMessage', `No valid monsters to freeze!`);
+        }
+
+        // Consume the item even if no monsters were frozen.
+        return { consumed: itemInfo.consumable, appliedStatusEffect: appliedStatus };
+    }
+
+    /**
+     * Applies the SHEEP_ALL item effect. [Helper for useItem]
+     * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+     * @param {object} effect - The specific effect object { type: 'SHEEP_ALL', newAtk: number }.
+     * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+     * @private Internal helper method.
+     */
+     _applySheepAllEffect(itemInfo, effect) {
+        let sheepCount = 0;
+        let appliedStatus = false;
+
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let targetTile = this.tileObjects[r]?.[c];
+                let targetData = targetTile?.tileData;
+                // Target revealed, living monsters that aren't already sheep
+                if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED && !targetData.isSheep) {
+                    const originalMonsterType = targetData.monsterType; // Store for logging
+                    const newMaxHp = Math.max(1, Math.floor(targetData.maxHp / 2)); // Example: Halve max HP (min 1)
+                    targetTile.setData({
+                        isSheep: true,
+                        maxHp: newMaxHp,
+                        hp: Math.min(targetData.hp, newMaxHp), // Cap current HP
+                        atk: effect.newAtk, // Set attack low
+                        // Remove other statuses
+                        isPoisoned: false, poisonTurns: 0,
+                        frozenTurns: 0,
+                        hasKey: false // Sheep cannot hold the key
+                    });
+                    sheepCount++;
+                    appliedStatus = true;
+                    // console.log(`Turned ${originalMonsterType || 'Monster'} into a sheep!`);
+                    // If the sheeped monster held the key, we need to handle that.
+                    // The key should probably drop immediately or be lost? Let's make it drop.
+                    if (targetData.hasKey) { // Check original data *before* setData wiped it
+                         console.warn(`Monster holding key turned into sheep at [${r},${c}]! Key should be dropped or handled.`);
+                         // TODO: Decide how to handle key drop on sheep transformation.
+                         // Option 1: Drop key immediately (change tile to KEY_ITEM) - This complicates the setData call above.
+                         // Option 2: Key is lost. (Easiest with current code - hasKey: false above does this).
+                         // Option 3: Sheep keeps key (remove hasKey: false above) - unlikely intended interaction.
+                         // Sticking with Option 2 for now (Key is lost).
+                         this.keyHolderCoords = null; // Key is no longer held
+                         this.keyDroppedOnFloor = false; // Key is essentially lost for this floor
+                         this.events.emit('showMessage', 'Key was lost in transformation!');
+                         // Need to potentially update the door icon if key was acquired then lost?
+                         this.events.emit('updateStats', this.getPlayerStats()); // Reflect key loss
+                    }
+                }
+            }
+        }
+
+        if (sheepCount > 0) {
+            this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`);
+        } else {
+            this.events.emit('showMessage', `No valid monsters to turn into sheep!`);
+        }
+
+        // Consume the item even if no monsters were sheeped.
+        return { consumed: itemInfo.consumable, appliedStatusEffect: appliedStatus };
+    }
+
+      /**
+     * Removes an item from the player's inventory at the specified index. [Helper for useItem]
+     * Performs safety checks before splicing.
+     * @param {string} itemId - The ID of the item expected to be removed.
+     * @param {number} index - The index from which to remove the item.
+     * @returns {boolean} True if the item was successfully removed, false otherwise.
+     * @private Internal helper method.
+     */
+     _handleItemConsumption(itemId, index) {
+        // Defensive check: Ensure index is still valid *before* splicing
+        if (index < this.player.inventory.length && this.player.inventory[index] === itemId) {
+            const removedItem = this.player.inventory.splice(index, 1)[0]; // Remove item
+            console.log(`Consumed item ${removedItem} from index ${index}`);
+            this.events.emit('updateInventory', this.player.inventory); // Update UI
+            return true; // Consumption successful
+        } else {
+            // This case means the inventory state changed unexpectedly, or the initial index was wrong.
+            console.error(`Consumption Error: Item at index ${index} (expected ${itemId}) not found or index invalid at time of removal. Current Inv:`, JSON.stringify(this.player.inventory));
+            // Force UI update to reflect the potentially inconsistent state.
+            this.events.emit('updateInventory', this.player.inventory);
+            return false; // Consumption failed
+        }
+    }
+
 
     // --- State Updates ---
 
@@ -2433,54 +2930,71 @@ tryEnterDoor(doorTile) {
     }
 
     /**
-     * Handles the game over sequence: sets flag, cleans up listeners, stops UI scene,
-     * and starts the GameOverScene.
+     * Handles the game over sequence: sets flag, stops UI scene,
+     * and starts the GameOverScene. Cleanup is handled in shutdown().
      */
-    gameOver() {
+     gameOver() {
         if (this.isGameOver) return; // Prevent multiple triggers
         console.log("GAME OVER - Transitioning");
         this.isGameOver = true;
 
-        // --- Clean up listeners to prevent errors after scene stops ---
-        this.scale.off('resize', this.handleResize, this);
-        this.input.off('pointerdown', this.handlePointerDown, this);
-        // Remove listeners for events from UI scene and self
-        this.events.removeAllListeners(); // Clear all listeners managed by this scene's emitter
-
-        // Stop the UI scene and start the GameOver scene, passing the final floor number
+        // Stop the parallel UI scene (its shutdown method should handle its cleanup)
         this.scene.stop('UIScene');
+
+        // Start the GameOver scene, passing the final floor number.
+        // This *should* trigger this GameScene's shutdown() method automatically.
         this.scene.start('GameOverScene', { floor: this.currentFloor });
     }
 
-    /**
-     * Cleans up listeners and potentially game objects when the scene is shut down.
+     /**
+     * Cleans up listeners, tweens, and game objects when the scene is shut down.
      * Called automatically by Phaser when the scene stops or restarts.
      */
-    shutdown() {
+     shutdown() {
+        // *** This log should now appear when game over happens ***
         console.log("GameScene shutdown: Cleaning up.");
-        // Remove Phaser system event listeners
+
+        // 1. Kill active tweens
+        this.tweens.killAll();
+        console.log("GameScene shutdown: All tweens killed.");
+
+        // 2. Remove Phaser system event listeners
         this.scale.off('resize', this.handleResize, this);
         this.input.off('pointerdown', this.handlePointerDown, this);
-        // Remove all custom event listeners
+
+        // 3. Remove all custom event listeners for this scene's emitter
+        // (Crucial to prevent memory leaks or calls on destroyed objects)
         this.events.removeAllListeners();
+        console.log("GameScene shutdown: All scene event listeners removed.");
 
-         // Destroy tile objects explicitly to be safe
-         for (let r = 0; r < this.tileObjects.length; r++) {
-             for (let c = 0; c < (this.tileObjects[r]?.length || 0); c++) {
-                 // Check if object exists and belongs to this scene before destroying
-                 if (this.tileObjects[r][c] && this.tileObjects[r][c].scene === this) {
-                     this.tileObjects[r][c].destroy();
-                 }
-             }
-         }
-         this.tileObjects = []; // Clear the array
+        // 4. Destroy tile objects explicitly
+        if (Array.isArray(this.tileObjects)) {
+            for (let r = 0; r < this.tileObjects.length; r++) {
+                if (Array.isArray(this.tileObjects[r])) {
+                    for (let c = 0; c < this.tileObjects[r].length; c++) {
+                        const tile = this.tileObjects[r][c];
+                        if (tile && typeof tile.destroy === 'function' && tile.scene === this) {
+                            tile.destroy();
+                        }
+                    }
+                }
+            }
+            console.log("GameScene shutdown: Tile objects destroyed.");
+        }
+        this.tileObjects = []; // Clear the array reference
 
-         // Destroy the main tile container
-         if (this.tileContainer && this.tileContainer.scene === this) {
-              this.tileContainer.destroy(true); // true destroys children if any linger unexpectedly
-         }
-         this.tileContainer = null;
-    }
+        // 5. Destroy the main tile container
+        if (this.tileContainer && this.tileContainer.scene === this) {
+             this.tileContainer.destroy(true); // true destroys children
+             console.log("GameScene shutdown: Tile container destroyed.");
+        }
+        this.tileContainer = null;
+
+        // 6. Optional: Log player state at shutdown for debugging
+        // console.log("Player state at shutdown:", JSON.stringify(this.player));
+
+        console.log("GameScene finished shutdown cleanup.");
+    } // End of shutdown method
 
      /**
      * Checks if the player currently has the Invisibility Cloak in their inventory.
@@ -2587,67 +3101,85 @@ tryEnterDoor(doorTile) {
          console.log(`Debug: Marked/updated ${markedCount} specific hidden tiles.`);
          if (markedCount > 0) this.events.emit('showMessage', `Marked ${markedCount} hidden`);
     }
-    /** Debug: Changes player stats (HP, MaxHP, ATK). */
+    /** Debug: Changes player stats (HP, MaxHP, ATK). Includes God Mode check for HP reduction. */
     debugChangeStat({ stat, amount }) {
-         if (this.isGameOver) { return; }
-         console.log(`Debug: Changing ${stat} by ${amount}`);
-         if (stat === 'hp') this.player.hp = Phaser.Math.Clamp(this.player.hp + amount, 0, this.player.maxHp);
-         else if (stat === 'atk') this.player.atk = Math.max(1, this.player.atk + amount); // Min ATK 1
-         else if (stat === 'maxHp') {
-             this.player.maxHp = Math.max(1, this.player.maxHp + amount); // Min MaxHP 1
-             // Also increase current HP proportionally or by the same amount
-             this.player.hp = Phaser.Math.Clamp(this.player.hp + amount, 0, this.player.maxHp);
-         }
-         else if (stat === 'hpPercent') { // Heal percentage of max HP
-             let healAmount = Math.floor(this.player.maxHp * amount);
-             this.player.hp = Phaser.Math.Clamp(this.player.hp + healAmount, 0, this.player.maxHp);
-         }
-         this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-         // Check for game over if HP was potentially reduced to 0 or below
-         if (stat === 'hp' || stat === 'maxHp') { this.checkGameOver(); }
-    }
-    /** Debug: Kills all currently visible monsters. */
-    debugKillAllVisible() {
-         if (this.isGameOver) { return; }
-         console.log("Debug: Killing all visible monsters");
-         let killedCount = 0;
-         let keyDropped = false;
+        if (this.isGameOver) { return; }
+        console.log(`Debug: Changing ${stat} by ${amount}`);
 
-         for (let r = 0; r < GRID.ROWS; r++) {
-             for (let c = 0; c < GRID.COLS; c++) {
-                 let tile = this.tileObjects[r]?.[c];
-                 let tileData = tile?.tileData;
-                 // Target revealed, living monsters
-                 if (tile && tileData && tileData.state === TILE_STATE.REVEALED && tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0) {
-                     console.log(`Debug Killing ${tileData.monsterType} at [${r},${c}]`);
-                     let droppedItemId = tileData.hasKey ? 'KEY_ITEM' : 'COIN';
-                     if (tileData.hasKey) {
-                         keyDropped = true;
-                         this.keyDroppedOnFloor = true; // Mark key as dropped
-                     }
-                      // Change tile data to the dropped item using setData
-                     tile.setData({
-                         type: TILE_TYPE.ITEM, itemId: droppedItemId, revealed: true, state: TILE_STATE.REVEALED,
-                         // Clear monster fields
-                         hp: 0, maxHp: 0, atk: 0, monsterType: null, hasKey: false,
-                         attackedOnce: false, isPoisoned: false, poisonTurns: 0,
-                         isSheep: false, frozenTurns: 0
-                     });
-                     this.monsterCount--; // Decrement count
-                     killedCount++;
-                     this.updateNeighborStates(r, c, false, true); // Unblock neighbors
-                 }
-             }
-         }
+        if (stat === 'hp') {
+            let potentialHp = this.player.hp + amount;
+            // --- God Mode Check for Debug HP Reduction ---
+            if (amount < 0 && this.godModeEnabled && potentialHp <= 0) {
+                this.player.hp = 1; // Prevent debug kill
+                console.log("God Mode prevented HP reduction below 1 via debug.");
+            } else {
+                // Apply the change, clamping between 0 and maxHp
+                this.player.hp = Phaser.Math.Clamp(potentialHp, 0, this.player.maxHp);
+            }
+            // --- End God Mode Check ---
+        }
+        else if (stat === 'atk') {
+            this.player.atk = Math.max(1, this.player.atk + amount); // Min ATK 1
+        }
+        else if (stat === 'maxHp') {
+            const oldMaxHp = this.player.maxHp;
+            this.player.maxHp = Math.max(1, this.player.maxHp + amount); // Min MaxHP 1
+            // Adjust current HP proportionally, or clamp if maxHP decreased
+            if (this.player.maxHp < oldMaxHp) {
+                 this.player.hp = Math.min(this.player.hp, this.player.maxHp); // Clamp down
+            } else if (amount > 0) {
+                 // Optionally add the same amount to current HP when maxHP increases
+                 this.player.hp = Math.min(this.player.hp + amount, this.player.maxHp);
+            }
+            this.player.hp = Math.max(0, this.player.hp); // Ensure HP isn't negative after adjustment
+        }
+        else if (stat === 'hpPercent') {
+            let healAmount = Math.floor(this.player.maxHp * (amount/100)); // Assume amount is percentage like 50
+            this.player.hp = Phaser.Math.Clamp(this.player.hp + healAmount, 0, this.player.maxHp);
+        }
 
-         if (keyDropped) this.events.emit('showMessage', `Key Dropped! (Debug Kill)`);
-         if (killedCount > 0) {
-             this.events.emit('updateStats', this.getPlayerStats()); // Update UI
-             this.events.emit('showMessage', `Debug: Killed ${killedCount}`);
-         } else {
-             this.events.emit('showMessage', `Debug: No visible monsters`);
-         }
-    }
+        this.events.emit('updateStats', this.getPlayerStats()); // Update UI
+        // Check game over only if HP might have *actually* reached 0 (i.e., God mode wasn't active or didn't apply)
+        if (stat === 'hp' || stat === 'maxHp') {
+            this.checkGameOver(); // Check if the clamped HP resulted in game over
+        }
+    } // End debugChangeStat
+    
+     /** Debug: Kills all currently visible monsters. Calls _handleMonsterDeath. */
+     debugKillAllVisible() {
+        if (this.isGameOver) { return; }
+        console.log("Debug: Killing all visible monsters");
+        let killedCount = 0;
+        let killedTiles = []; // Store tiles to process
+
+        // First pass: Find all living, revealed monsters
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                let tileData = tile?.tileData;
+                if (tile && tileData && tileData.state === TILE_STATE.REVEALED && tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0) {
+                    killedTiles.push(tile);
+                }
+            }
+        }
+
+        // Second pass: Process deaths using the helper
+        for (const tileToKill of killedTiles) {
+             console.log(`Debug Killing ${tileToKill.tileData.monsterType || 'monster'} at [${tileToKill.r},${tileToKill.c}]`);
+             this._handleMonsterDeath(tileToKill); // Use the helper
+             killedCount++;
+        }
+
+
+        if (killedCount > 0) {
+            // _handleMonsterDeath already emits updateStats and drop messages
+            this.events.emit('showMessage', `Debug: Killed ${killedCount}`);
+        } else {
+            this.events.emit('showMessage', `Debug: No visible monsters`);
+        }
+    } // End debugKillAllVisible
+
+
     /** Debug: Toggles between 4-way and 8-way adjacency checks. */
      debugToggleDiagonals() {
          if (this.isGameOver) return;
@@ -2659,48 +3191,167 @@ tryEnterDoor(doorTile) {
          // Currently, it only affects future neighbor updates.
      }
     
-    /** Debug: Fills the player's inventory with random items (including non-consumables). */
+    /**
+     * Debug: Fills the player's inventory with random items (including non-consumables).
+     * Modified to ensure it fills the inventory completely, avoiding issues with
+     * duplicate durable items causing empty slots.
+     */
      debugFillInventory() {
         if (this.isGameOver) return;
-        console.log("Debug: Filling inventory (allowing non-consumables)...");
+        console.log("Debug: Attempting to fill inventory...");
         this.player.inventory = []; // Clear existing inventory
 
-        // --- MODIFIED FILTER (No change needed here if Lantern was added to ITEM_TYPES correctly) ---
-        // Get list of item IDs, excluding only the special instant-use ones.
-        // Now includes both consumable REGULAR items and DURABLE items.
-        const itemIds = Object.keys(ITEM_TYPES).filter(id =>
+        // Get list of potential item IDs (all non-instant-use items)
+        const itemPool = Object.keys(ITEM_TYPES).filter(id =>
             !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id)
+            && ITEM_TYPES[id] // Ensure item exists in definition
         );
 
-        const addedDurables = new Set();
+        // Keep track of durables added *during this specific fill operation*
+        const addedDurablesInThisFill = new Set();
+        let safetyBreak = 0; // Prevent potential infinite loops
+        const maxSafety = PLAYER.MAX_INVENTORY_SLOTS * 50; // Generous limit
 
-        for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
-            if (itemIds.length === 0) break; // Stop if no more valid items to choose from
+        // Keep adding items WHILE inventory isn't full AND there are potential items left
+        while (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS && itemPool.length > 0 && safetyBreak < maxSafety) {
+            safetyBreak++; // Increment safety counter
 
-            let randomItemId = getRandomElement(itemIds);
+            let randomItemId = getRandomElement(itemPool);
+            if (!randomItemId) { // Should only happen if pool is empty, but check anyway
+                 console.warn("Debug Fill: No item ID selected from pool.");
+                 continue;
+            }
+
             let itemInfo = ITEM_TYPES[randomItemId];
+            if (!itemInfo) { // Should not happen if pool filter is correct
+                console.warn(`Debug Fill: Invalid item ID "${randomItemId}" encountered.`);
+                // Optionally remove invalid ID from pool if needed, though filter should prevent this
+                // itemPool.splice(itemPool.indexOf(randomItemId), 1);
+                continue;
+            }
 
-            // If it's durable, check if we already added one like it in this fill action
+            // Check if the selected item is durable AND already added in this fill instance
+            if (itemInfo.category === 'DURABLE' && addedDurablesInThisFill.has(randomItemId)) {
+                console.log(`Debug Fill: Duplicate durable "${randomItemId}" selected. Re-rolling...`);
+
+                // --- Check if ONLY duplicate durables are left in the pool ---
+                // This prevents an infinite loop if we need 1 more item but the only options left
+                // in itemPool are durables we already added in this fill.
+                let onlyDupesLeft = itemPool.every(poolItemId => {
+                    const poolItemInfo = ITEM_TYPES[poolItemId];
+                    return poolItemInfo && poolItemInfo.category === 'DURABLE' && addedDurablesInThisFill.has(poolItemId);
+                });
+
+                if (onlyDupesLeft) {
+                    console.log("Debug Fill: Only duplicate durables remain in pool. Cannot fill further.");
+                    break; // Exit the while loop
+                }
+                // --- End duplicate check ---
+
+                continue; // Skip adding this duplicate and try again for the same slot
+            }
+
+            // If we reach here, the item is valid to add (either regular or a non-duplicate durable)
+            this.player.inventory.push(randomItemId);
+
+            // If it was a durable, track it for this fill session
             if (itemInfo.category === 'DURABLE') {
-                if (addedDurables.has(randomItemId)) {
-                    console.log(`Debug Fill: Skipping duplicate durable ${randomItemId}`);
-                    continue; // Skip to next inventory slot without adding
-                } else {
-                    addedDurables.add(randomItemId); // Mark this durable as added for this fill
+                addedDurablesInThisFill.add(randomItemId);
+            }
+            console.log(`Debug Fill: Added "${randomItemId}" (Slot ${this.player.inventory.length}/${PLAYER.MAX_INVENTORY_SLOTS})`);
+
+        } // End while loop
+
+        // Log warnings if inventory isn't full for any reason
+        if (safetyBreak >= maxSafety) {
+            console.warn("Debug Fill: Reached safety break limit. Inventory might not be full.");
+        }
+        if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
+            console.warn(`Debug Fill: Finished loop but inventory not full (${this.player.inventory.length}/${PLAYER.MAX_INVENTORY_SLOTS}). Likely ran out of unique available items.`);
+        }
+
+        // Update UI regardless of whether it's perfectly full
+        this.events.emit('updateInventory', this.player.inventory);
+        this.events.emit('showMessage', `Debug: Inv Filled (${this.player.inventory.length})`);
+    } // End of debugFillInventory method
+
+    /**
+    * Handles selling a durable item from the inventory.
+    * Includes validation and passive effect removal for items like Cloak, Lantern, Defense Rune, Attack Rune.
+    * @param {object} data - Object containing { itemId, index }.
+    */
+    sellDurableItem({ itemId, index }) {
+        if (this.isGameOver) return;
+
+        // --- Full Validation Logic ---
+        if (index === undefined || index < 0 || index >= this.player.inventory.length || this.player.inventory[index] !== itemId) {
+            console.error(`Sell Error: Item mismatch or invalid index. Index: ${index}, Expected: ${itemId}, Found: ${this.player.inventory[index]}`);
+            this.events.emit('showMessage', 'Sell Error!');
+            return;
+        }
+        const itemInfo = ITEM_TYPES[itemId];
+        if (!itemInfo || itemInfo.category !== 'DURABLE') {
+            console.error(`Sell Error: Item ${itemId} not found or not durable.`);
+            this.events.emit('showMessage', 'Sell Error!');
+            return;
+        }
+        // --- End Full Validation Logic ---
+
+        const sellValue = itemInfo.sellValue || 5;
+
+        console.log(`Selling ${itemInfo.name} at index ${index} for ${sellValue} gold.`);
+
+        // Remove item from inventory FIRST
+        const soldItemId = this.player.inventory.splice(index, 1)[0];
+
+        // Add gold
+        this.player.gold += sellValue;
+
+        // --- EFFECT REMOVAL LOGIC (BEFORE updating UI stats) ---
+        // If the sold item had a passive effect, handle its removal now
+        if (soldItemId === 'INVISIBILITY_CLOAK') {
+            console.log("Cloak sold, refreshing hidden tile states.");
+            this.refreshAllHiddenTileStates();
+        } else if (soldItemId === 'LANTERN') {
+            console.log("Lantern sold, refreshing hidden key marker.");
+            if (this.keyHolderCoords) {
+                const keyTile = this.tileObjects[this.keyHolderCoords.r]?.[this.keyHolderCoords.c];
+                if (keyTile && keyTile.tileData.state !== TILE_STATE.REVEALED) {
+                   keyTile.updateVisuals();
                 }
             }
-
-            if (randomItemId) {
-                this.player.inventory.push(randomItemId);
-            } else {
-                console.warn("Could not get random item ID for debug fill.");
-                break; // Stop if item list is somehow empty
+        } else if (soldItemId === 'DEFENSE_RUNE') {
+            const runeInfo = ITEM_TYPES.DEFENSE_RUNE;
+            const bonus = runeInfo.maxHpBonus || 0;
+            if (bonus > 0) {
+                console.log(`Defense Rune sold. Removing +${bonus} Max HP bonus.`);
+                this.player.maxHp -= bonus;
+                this.player.maxHp = Math.max(1, this.player.maxHp); // Ensure Max HP doesn't drop below 1
+                this.player.hp = Math.min(this.player.hp, this.player.maxHp); // Clamp current HP
+                this.player.hp = Math.max(0, this.player.hp); // Ensure HP is not negative
+            }
+        } else if (soldItemId === 'ATTACK_RUNE') {
+            const runeInfo = ITEM_TYPES.ATTACK_RUNE;
+            const bonus = runeInfo.atkBonus || 0;
+            if (bonus > 0) {
+                console.log(`Attack Rune sold. Removing +${bonus} ATK bonus.`);
+                this.player.atk -= bonus;
+                // Ensure Attack doesn't drop below a minimum (e.g., 1)
+                this.player.atk = Math.max(1, this.player.atk);
             }
         }
-        this.events.emit('updateInventory', this.player.inventory); // Update UI
-        this.events.emit('showMessage', 'Debug: Inventory Filled');
-    }
+        // No specific visual refresh needed when selling SPIKE_TRAP or SHIELD
+        // --- END EFFECT REMOVAL LOGIC ---
 
+        // Update UI AFTER removing passive effects and adding gold
+        this.events.emit('updateInventory', this.player.inventory);
+        this.events.emit('updateStats', this.getPlayerStats()); // Update HP/MaxHP/ATK/Gold display
+        this.events.emit('showMessage', `Sold ${itemInfo.name} for ${sellValue}G`);
+
+        // Check for game over AFTER adjusting HP potentially (relevant for Defense Rune removal)
+        this.checkGameOver();
+
+    } // End of sellDurableItem method
     
     /** Debug: Toggles whether monsters attack first in combat. */
      debugToggleStrikeFirst() {
@@ -2755,295 +3406,323 @@ class UIScene extends Phaser.Scene {
     }
 
     /**
-     * Creates UI elements and sets up listeners for GameScene events.
+     * Creates UI elements by calling helper methods and sets up listeners.
      */
-    create() {
-        console.log("UIScene create");
-        const gameScene = this.scene.get('GameScene'); // Needed to emit events *back* to GameScene
+     create() {
+        console.log("UIScene create: Initializing UI...");
 
-        // --- Get HTML DOM Elements (for instructions panel) ---
+        // Call helper methods to create different UI parts
+        this._getDOMReferences();
+        this._createOverlayBackgrounds();
+        this._createHeaderText();
+        this._createHeaderButtons();
+        this._createDebugPanel();       // Creates the debug panel container and elements
+        this._createItemUsePanel();     // Creates the item use panel container and elements
+        this._createDurableItemPanel(); // Creates the durable item panel container and elements
+        this._createFloorClearPanel();  // Creates the floor clear panel container and elements
+        this._createShopPanel();        // Creates the shop panel container and elements
+        this._createInventorySlots();   // Creates the inventory slot containers and elements
+        this._createMessageText();      // Creates the message text object
+
+        // Set up listeners for events coming FROM GameScene
+        this._setupEventListeners();
+
+        // --- Final Setup ---
+        this.events.emit('uiReady'); // Notify GameScene that UI is ready
+        console.log("UIScene emitted uiReady");
+        this.positionUIElements(); // Perform initial positioning
+        console.log("UIScene create: Initialization complete.");
+    } // End of create method
+
+     /**
+     * Gets references to essential HTML DOM elements.
+     * Called by create().
+     */
+     _getDOMReferences() {
         this.instructionsDOM = document.getElementById('instructions-dom');
         this.instructionsCloseBtnDOM = document.getElementById('instructions-close-dom');
         if (this.instructionsDOM && this.instructionsCloseBtnDOM) {
             // Store bound function to allow proper removal later
             this.closeDomInstructionsHandler = () => this.hideDomInstructions();
             this.instructionsCloseBtnDOM.addEventListener('click', this.closeDomInstructionsHandler);
-        } else { console.error("Instructions DOM elements not found!"); }
+        } else {
+            console.error("Instructions DOM elements not found!");
+        }
+    }
 
-        // --- Create Header & Footer Background Rectangles ---
+    /**
+     * Creates the header and footer background rectangles.
+     * Called by create().
+     */
+    _createOverlayBackgrounds() {
         this.headerBg = this.add.rectangle(0, 0, 1, 1, COLORS.UI_BAR_BG).setOrigin(0, 0);
         this.footerBg = this.add.rectangle(0, 0, 1, 1, COLORS.UI_BAR_BG).setOrigin(0, 0);
+    }
 
-        // --- Create Header Text Elements ---
+    /**
+     * Creates the text elements for the header (HP, ATK, Gold, Floor, Key).
+     * Called by create().
+     */
+    _createHeaderText() {
         this.hpText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT });
         this.atkText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT });
         this.goldText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.GOLD_TEXT }).setOrigin(0.5, 0); // Center align gold
         this.floorText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.TEXT }).setOrigin(1, 0); // Right align floor
         this.keyIconText = this.add.text(0, 0, '', { font: '18px Arial', fill: COLORS.KEY }).setOrigin(0.5, 0); // Center align key icon
+    }
 
-        // --- Create Header Buttons ---
+    /**
+     * Creates the interactive buttons for the header (Help, Debug).
+     * Called by create().
+     */
+    _createHeaderButtons() {
         // Help Button (?)
         this.helpButton = this.add.text(0, 0, '[?]', { font: 'bold 20px Arial', fill: COLORS.UI_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } })
-            .setOrigin(1, 0) // Align to right
-            .setInteractive({ useHandCursor: false }); // Make clickable
-        this.helpButton.on('pointerdown', this.showDomInstructions, this); // Show HTML panel on click
-        this.helpButton.on('pointerover', () => this.helpButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT)); // Hover effect
-        this.helpButton.on('pointerout', () => this.helpButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT)); // Reset color
+            .setOrigin(1, 0).setInteractive({ useHandCursor: false });
+        this.helpButton.on('pointerdown', this.showDomInstructions, this);
+        this.helpButton.on('pointerover', () => this.helpButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT));
+        this.helpButton.on('pointerout', () => this.helpButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT));
 
         // Debug Button (D)
         this.debugButton = this.add.text(0, 0, '[D]', { font: 'bold 20px Arial', fill: COLORS.UI_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } })
-            .setOrigin(1, 0) // Align to right
-            .setInteractive({ useHandCursor: false });
-        this.debugButton.on('pointerdown', this.toggleDebugPanel, this); // Show/hide debug panel
-        this.debugButton.on('pointerover', () => this.debugButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT)); // Hover effect
-        this.debugButton.on('pointerout', () => this.debugButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT)); // Reset color
+            .setOrigin(1, 0).setInteractive({ useHandCursor: false });
+        this.debugButton.on('pointerdown', this.toggleDebugPanel, this);
+        this.debugButton.on('pointerover', () => this.debugButton.setColor(COLORS.UI_BUTTON_HOVER_TEXT));
+        this.debugButton.on('pointerout', () => this.debugButton.setColor(COLORS.UI_BUTTON_IDLE_TEXT));
+    }
 
+    /**
+     * Creates the Debug Panel container and its contents.
+     * Called by create().
+     */
+    _createDebugPanel() {
+        const gameScene = this.scene.get('GameScene'); // Needed for initial button text state
+        if (!gameScene) {
+            console.error("Cannot create debug panel, GameScene not found.");
+            return;
+        }
 
-        // --- Create Debug Panel (Initially Hidden) ---
-        // Set origin to center for easier positioning
-        this.debugPanel = this.add.container(0, 0)
-            .setDepth(101) // Ensure it's above game elements
-            .setVisible(false);
+        this.debugPanel = this.add.container(0, 0).setDepth(101).setVisible(false);
 
-        // Panel Background (centered within the container)
-        const debugPanelBg = this.add.rectangle(0, 0, 100, 100, COLORS.PANEL_BG, 0.9) // Position at (0,0) relative to container center
+        const debugPanelBg = this.add.rectangle(0, 0, 100, 100, COLORS.PANEL_BG, 0.9)
             .setOrigin(0.5).setStrokeStyle(2, COLORS.UI_BUTTON_IDLE_TEXT);
-        debugPanelBg.setInteractive().on('pointerdown', (p, x, y, e) => { e.stopPropagation(); }); // Stop clicks passing through background
-        // Close Button for Debug Panel (positioned relative to container center)
+        debugPanelBg.setInteractive().on('pointerdown', (p, x, y, e) => { e.stopPropagation(); });
+
         const closeButtonDebug = this.add.text(0, 0, '[X]', { font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 } })
-             .setOrigin(0.5).setInteractive(); // Positioned later in positionUIElements
-        closeButtonDebug.on('pointerdown', () => this.toggleDebugPanel()); // Close panel on click
+            .setOrigin(0.5).setInteractive();
+        closeButtonDebug.on('pointerdown', () => this.toggleDebugPanel());
         closeButtonDebug.on('pointerover', () => closeButtonDebug.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
         closeButtonDebug.on('pointerout', () => closeButtonDebug.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
-        // Debug Action Buttons
+
         const btnStyle = { font: '14px Arial', fill: '#FFF', backgroundColor: COLORS.DEBUG_BUTTON_BG, padding: {x: 8, y: 4} };
-        const actions = [ // Define actions for buttons: Label, Event Name, Optional Data
+        const actions = [
             { label: 'Mark Hidden', event: 'debugMarkHidden' },
-            { label: '+HP', event: 'debugChangeStat', data: { stat: 'hp', amount: 1 } },
-            { label: '-HP', event: 'debugChangeStat', data: { stat: 'hp', amount: -1 } },
+            { label: '+5 HP', event: 'debugChangeStat', data: { stat: 'hp', amount: 5 } },
+            { label: '-5 HP', event: 'debugChangeStat', data: { stat: 'hp', amount: -5 } },
             { label: '+ATK', event: 'debugChangeStat', data: { stat: 'atk', amount: 1 } },
             { label: '-ATK', event: 'debugChangeStat', data: { stat: 'atk', amount: -1 } },
             { label: 'Kill All Vis', event: 'debugKillAll' },
-            { label: '4/8 Dir', event: 'debugToggleDiagonals' },
+            { label: '4/8 Dir: OFF', event: 'debugToggleDiagonals', id: 'diagonals' },
             { label: 'Fill Inv', event: 'debugFillInventory' },
-            { label: 'Strike First', event: 'debugToggleStrikeFirst' },
-            { label: '+MxHP', event: 'debugChangeStat', data: { stat: 'maxHp', amount: 5 } },
-            { label: '+50%HP', event: 'debugChangeStat', data: { stat: 'hpPercent', amount: 0.5 } },
-            { label: 'Shop: OFF', event: 'debugToggleShop', id: 'shop' }
+            { label: 'Strike 1st: OFF', event: 'debugToggleStrikeFirst', id: 'strikeFirst' },
+            { label: '+5 MxHP', event: 'debugChangeStat', data: { stat: 'maxHp', amount: 5 } },
+            { label: '+50%HP', event: 'debugChangeStat', data: { stat: 'hpPercent', amount: 50 } },
+            { label: 'Shop: OFF', event: 'debugToggleShop', id: 'shop' },
+            { label: 'God Mode: OFF', event: 'debugToggleGodMode', id: 'godMode' }
         ];
-        // Create buttons and add listeners to emit events to GameScene
+
         this.debugButtonsMap = {};
         const debugButtons = actions.map(action => {
             const btn = this.add.text(0, 0, action.label, btnStyle).setOrigin(0.5).setInteractive();
-            btn.on('pointerdown', () => gameScene.events.emit(action.event, action.data)); // Emit event with data
+            btn.on('pointerdown', () => {
+                 if (gameScene && gameScene.events) {
+                    gameScene.events.emit(action.event, action.data);
+                 }
+            });
             if (action.id) {
-                this.debugButtonsMap[action.id] = btn; // Store button reference by id
+                this.debugButtonsMap[action.id] = btn;
+                 // Set initial text using current GameScene state if available
+                 try {
+                     if(action.id === 'diagonals') btn.setText(`4/8 Dir: ${gameScene.allowDiagonal ? 'ON' : 'OFF'}`);
+                     if(action.id === 'strikeFirst') btn.setText(`Strike 1st: ${gameScene.monsterStrikeFirst ? 'ON' : 'OFF'}`);
+                     if(action.id === 'shop') btn.setText(`Shop: ${gameScene.debugShopEnabled ? 'ON' : 'OFF'}`);
+                     if(action.id === 'godMode') btn.setText(`God Mode: ${gameScene.godModeEnabled ? 'ON' : 'OFF'}`);
+                 } catch(e) { console.error("Error setting initial debug button text:", e)}
             }
             return btn;
         });
-        // Add all elements to the debug panel container
         this.debugPanel.add([debugPanelBg, closeButtonDebug, ...debugButtons]);
+    }
 
+    /**
+     * Creates the Item Use Panel container and its contents.
+     * Called by create().
+     */
+     _createItemUsePanel() {
+        const gameScene = this.scene.get('GameScene'); // Reference GameScene
+        this.itemUsePanel = this.add.container(0, 0).setDepth(102).setVisible(false);
+        const itemPanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
+        itemPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); }); // Prevent clicks going through panel
+        const itemIconText = this.add.text(0, 0, '', {fontSize: '48px'}).setOrigin(0.5);
+        const itemNameText = this.add.text(0, 0, '', {fontSize: '20px', fill: '#FFF'}).setOrigin(0.5);
+        const itemDescText = this.add.text(0, 0, '', {fontSize: '14px', fill: '#DDD', align: 'center', wordWrap: { width: 260 }}).setOrigin(0.5);
+        const useButton = this.add.text(0, 0, 'Use', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x:20, y:10}}).setOrigin(0.5).setInteractive();
+        const cancelButton = this.add.text(0, 0, 'Cancel', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: {x:15, y:10}}).setOrigin(0.5).setInteractive();
 
-        // --- Create Item Use Panel (Initially Hidden) ---
-        // Set origin to center for easier positioning
-        this.itemUsePanel = this.add.container(0, 0)
-            .setDepth(102) // Higher depth than debug panel
-            .setVisible(false);
-
-        // Panel Background (centered within the container)
-        const itemPanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95) // Position at (0,0) relative to container center
-            .setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
-            itemPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); }); // Block clicks through background
-        // Panel Content (positioned relative to container center)
-        const itemIconText = this.add.text(0, 0, '', {fontSize: '48px'}).setOrigin(0.5); // Positioned later
-        const itemNameText = this.add.text(0, 0, '', {fontSize: '20px', fill: '#FFF'}).setOrigin(0.5); // Positioned later
-        const itemDescText = this.add.text(0, 0, '', {fontSize: '14px', fill: '#DDD', align: 'center', wordWrap: { width: 260 }}).setOrigin(0.5); // Positioned later
-        const useButton = this.add.text(0, 0, 'Use', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x:20, y:10}})
-            .setOrigin(0.5).setInteractive(); // Positioned later
-        const cancelButton = this.add.text(0, 0, 'Cancel', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: {x:15, y:10}})
-            .setOrigin(0.5).setInteractive(); // Positioned later
-        // Button Actions
+        // --- Use Button Logic ---
         useButton.on('pointerdown', () => {
-            if (this.pendingItemUse) { // Check if item data is stored
-                gameScene.events.emit('useItem', this.pendingItemUse); // Send use event to GameScene
-                this.hideAllPanels(); // Close the panel
+            // Check if there's actually pending data *before* trying to use it
+            if (this.pendingItemUse) {
+                const itemToUse = this.pendingItemUse; // Copy data
+                // Clear pending data *immediately* to prevent potential double-use issues
+                // If the game scene event processing is slow or interrupted, this helps prevent reuse.
+                this.pendingItemUse = null;
+
+                // Emit the event to the GameScene
+                if (gameScene && gameScene.events) {
+                    gameScene.events.emit('useItem', itemToUse); // Use the copied data
+                } else {
+                    console.error("Cannot emit useItem event, GameScene not found.");
+                }
+                // Hide the panel after emitting the event
+                this.hideAllPanels();
+            } else {
+                // This case should ideally not happen if panel logic is correct, but good to handle.
+                console.warn("Use button clicked but no pending item use data found.");
+                this.hideAllPanels(); // Still hide the panel
             }
         });
-        cancelButton.on('pointerdown', () => {
-            this.hideAllPanels(); // Just close the panel
-        });
-        // Add elements to panel container
+        // --- Cancel Button Logic ---
+        cancelButton.on('pointerdown', () => { this.hideAllPanels(); }); // Simply hide panels
+
+        // Add elements to the container
         this.itemUsePanel.add([itemPanelBg, itemIconText, itemNameText, itemDescText, useButton, cancelButton]);
-
-
-        { // --- Create Durable Item Panel (Initially Hidden) ---
-            this.durableItemPanel = this.add.container(0, 0)
-                .setDepth(102) // Same depth as item use panel, or adjust as needed
-                .setVisible(false);
-
-            // Panel Background
-            const durablePanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95)
-                .setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
-            durablePanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); }); // Block clicks
-
-            // Panel Content
-            const durableIconText = this.add.text(0, -50, '', { fontSize: '48px' }).setOrigin(0.5); // Positioned later
-            const durableNameText = this.add.text(0, -10, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5); // Positioned later
-            const durableDescText = this.add.text(0, 30, '', { fontSize: '14px', fill: '#DDD', align: 'center', wordWrap: { width: 260 } }).setOrigin(0.5); // Positioned later
-            const sellButton = this.add.text(-70, 80, 'Sell (5G)', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.GOLD_TEXT, color: COLORS.TEXT_DARK, padding: { x: 15, y: 8 } })
-                .setOrigin(0.5).setInteractive(); // Positioned later
-            const closeDurableButton = this.add.text(70, 80, 'Close', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: { x: 15, y: 8 } })
-                .setOrigin(0.5).setInteractive(); // Positioned later
-
-            // Add elements to container
-            this.durableItemPanel.add([durablePanelBg, durableIconText, durableNameText, durableDescText, sellButton, closeDurableButton]);
-
-            // --- Button Actions for Durable Panel (Add these handlers) ---
-            sellButton.on('pointerdown', () => {
-                if (this.pendingDurableAction) {
-                    const gameScene = this.scene.get('GameScene');
-                    if (gameScene) {
-                        // Pass the stored context {itemId, index}
-                        gameScene.events.emit('sellDurableItem', this.pendingDurableAction);
-                    }
-                    this.hideAllPanels(); // Close panel after emitting
-                }
-            });
-
-            closeDurableButton.on('pointerdown', () => {
-                this.hideAllPanels(); // Just close the panel
-            });
-        }
-
-        // --- Create Floor Clear Panel (Initially Hidden) ---
-        // Set origin to center for easier positioning
-        this.floorClearPanel = this.add.container(0, 0)
-            .setDepth(103) // Highest depth
-            .setVisible(false);
-
-        // Panel Background (centered within the container)
-        const fcPanelBg = this.add.rectangle(0, 0, 300, 180, COLORS.PANEL_BG, 0.95) // Position at (0,0) relative to container center
-            .setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT); // Gold border
-        fcPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation()); // Block clicks through background
-        // Panel Content (positioned relative to container center)
-        const fcText = this.add.text(0, 0, `Floor cleared!\nBonus: ${GAME.FLOOR_CLEAR_BONUS} Gold`, {fontSize: '18px', fill: '#FFF', align: 'center'}).setOrigin(0.5); // Positioned later
-        const fcOkButton = this.add.text(0, 0, 'OK', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x:25, y:10}})
-            .setOrigin(0.5).setInteractive(); // Positioned later
-        // Button Action
-        fcOkButton.on('pointerdown', this.confirmFloorClear, this); // Call confirm method in this scene
-        // Add elements to panel container
-        this.floorClearPanel.add([fcPanelBg, fcText, fcOkButton]);
-
-        {
-            // --- Create Shop Panel (Initially Hidden) ---
-            this.shopPanel = this.add.container(0, 0).setDepth(104).setVisible(false); // Highest depth
-
-            // Panel Background
-            const shopPanelBg = this.add.rectangle(0, 0, 320, 250, COLORS.PANEL_BG, 0.95)
-                .setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
-            
-                
-                shopPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
-    // Log ALL arguments received by this listener
-    console.log("Shop BG PointerDown Event Received:", { pointer, localX, localY, event });
-
-    // Check if the 'event' object is valid before calling stopPropagation
-    if (event && typeof event.stopPropagation === 'function') {
-        console.log("Shop BG: Event object looks valid. Stopping propagation.");
-        event.stopPropagation();
-    } else {
-        // Log an error if the event object is NOT what we expect
-        console.error("Shop BG PointerDown: Invalid or missing event object received!", event);
     }
-});
 
-            // Panel Title
-            const shopTitle = this.add.text(0, -100, 'Adventurer\'s Shop', { fontSize: '20px', fill: COLORS.GOLD_TEXT }).setOrigin(0.5);
+    /**
+     * Creates the Durable Item Panel container and its contents.
+     * Called by create().
+     */
+    _createDurableItemPanel() {
+         this.durableItemPanel = this.add.container(0, 0).setDepth(102).setVisible(false);
+         const durablePanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
+         durablePanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); });
+         const durableIconText = this.add.text(0, -50, '', { fontSize: '48px' }).setOrigin(0.5);
+         const durableNameText = this.add.text(0, -10, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+         const durableDescText = this.add.text(0, 30, '', { fontSize: '14px', fill: '#DDD', align: 'center', wordWrap: { width: 260 } }).setOrigin(0.5);
+         const sellButton = this.add.text(-70, 80, 'Sell (5G)', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.GOLD_TEXT, color: COLORS.TEXT_DARK, padding: { x: 15, y: 8 } }).setOrigin(0.5).setInteractive();
+         const closeDurableButton = this.add.text(70, 80, 'Close', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: { x: 15, y: 8 } }).setOrigin(0.5).setInteractive();
+         this.durableItemPanel.add([durablePanelBg, durableIconText, durableNameText, durableDescText, sellButton, closeDurableButton]);
 
-            // Close Button
-            const closeButtonShop = this.add.text(140, -110, '[X]', { font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT })
-                .setOrigin(0.5).setInteractive();
-            closeButtonShop.on('pointerdown', () => this.hideAllPanels());
-            closeButtonShop.on('pointerover', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
-            closeButtonShop.on('pointerout', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
+         sellButton.on('pointerdown', () => {
+             if (this.pendingDurableAction) {
+                 const itemToSell = this.pendingDurableAction;
+                 this.pendingDurableAction = null; // Clear immediately
+                 const gs = this.scene.get('GameScene');
+                 if (gs) { gs.events.emit('sellDurableItem', itemToSell); }
+                 this.hideAllPanels();
+             }
+         });
+         closeDurableButton.on('pointerdown', () => { this.hideAllPanels(); });
+    }
 
-            // Shop Item Display Function (Helper)
-            const createShopItem = (yPos, itemKey, text, cost) => {
-                const itemText = this.add.text(-130, yPos, text, { fontSize: '16px', fill: '#FFF' }).setOrigin(0, 0.5);
-                const costText = this.add.text(10, yPos, `${cost}G`, { fontSize: '16px', fill: COLORS.GOLD_TEXT }).setOrigin(0, 0.5);
-                const buyButton = this.add.text(100, yPos, 'Buy', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x: 10, y: 3} })
-                    .setOrigin(0.5).setInteractive();
-                buyButton.setData('itemKey', itemKey); // Store item key for the event
-                buyButton.on('pointerdown', (pointer, localX, localY, event) => { // Add event parameters
-                    event.stopPropagation(); 
+    /**
+     * Creates the Floor Clear Panel container and its contents.
+     * Called by create().
+     */
+    _createFloorClearPanel() {
+        this.floorClearPanel = this.add.container(0, 0).setDepth(103).setVisible(false);
+        const fcPanelBg = this.add.rectangle(0, 0, 300, 180, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
+        fcPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation());
+        const fcText = this.add.text(0, 0, `Floor cleared!\nBonus: ${GAME.FLOOR_CLEAR_BONUS} Gold`, {fontSize: '18px', fill: '#FFF', align: 'center'}).setOrigin(0.5);
+        const fcOkButton = this.add.text(0, 0, 'OK', {fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x:25, y:10}}).setOrigin(0.5).setInteractive();
+        fcOkButton.on('pointerdown', this.confirmFloorClear, this);
+        this.floorClearPanel.add([fcPanelBg, fcText, fcOkButton]);
+    }
 
-                    const key = buyButton.getData('itemKey');
-                    console.log("Shop Buy button clicked:", key);
-                    // Use scene.get to be safe if gameScene isn't guaranteed in this scope
-                    const gameScene = this.scene.get('GameScene');
-                    if (gameScene) {
-                        gameScene.purchaseShopItem(key);
-                    } else {
-                        console.error("Could not get GameScene reference from UIScene shop button.");
-                    }
-                });
-                return [itemText, costText, buyButton]; // Return elements to add to container
-            };
+    /**
+     * Creates the Shop Panel container and its contents.
+     * Called by create().
+     */
+    _createShopPanel() {
+        this.shopPanel = this.add.container(0, 0).setDepth(104).setVisible(false);
+        const shopPanelBg = this.add.rectangle(0, 0, 320, 250, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
+        shopPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { if (event && typeof event.stopPropagation === 'function') { event.stopPropagation();} else { console.error("Shop BG PointerDown: Invalid event"); } });
+        const shopTitle = this.add.text(0, -100, 'Adventurer\'s Shop', { fontSize: '20px', fill: COLORS.GOLD_TEXT }).setOrigin(0.5);
+        const closeButtonShop = this.add.text(140, -110, '[X]', { font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT }).setOrigin(0.5).setInteractive();
+        closeButtonShop.on('pointerdown', () => this.hideAllPanels());
+        closeButtonShop.on('pointerover', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
+        closeButtonShop.on('pointerout', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
 
-            // Create Items
-            const hpItem = createShopItem(-50, 'MAX_HP', '+1 Max Health:', SHOP_CONFIG.COSTS.MAX_HP);
-            const atkItem = createShopItem(0, 'ATK', '+1 Attack:', SHOP_CONFIG.COSTS.ATK);
-            const healItem = createShopItem(50, 'HEAL', 'Full Heal:', SHOP_CONFIG.COSTS.HEAL);
+        const createShopItem = (yPos, itemKey, text, cost) => {
+             const itemText = this.add.text(-130, yPos, text, { fontSize: '16px', fill: '#FFF' }).setOrigin(0, 0.5);
+             const costText = this.add.text(40, yPos, `${cost}G`, { fontSize: '16px', fill: COLORS.GOLD_TEXT }).setOrigin(0, 0.5);
+             const buyButton = this.add.text(100, yPos, 'Buy', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CONFIRM_BTN_BG, padding: {x: 10, y: 3} }).setOrigin(0.5).setInteractive();
+             buyButton.setData('itemKey', itemKey);
+             buyButton.on('pointerdown', (pointer, localX, localY, event) => {
+                 event.stopPropagation();
+                 const key = buyButton.getData('itemKey');
+                 console.log("Shop Buy button clicked:", key);
+                 const gs = this.scene.get('GameScene');
+                 if (gs) { gs.purchaseShopItem(key); } else { console.error("Could not get GameScene ref"); }
+             });
+             return [itemText, costText, buyButton];
+         };
+        const hpItem = createShopItem(-50, 'MAX_HP', '+1 Max Health:', SHOP_CONFIG.COSTS.MAX_HP);
+        const atkItem = createShopItem(0, 'ATK', '+1 Attack:', SHOP_CONFIG.COSTS.ATK);
+        const healItem = createShopItem(50, 'HEAL', 'Full Heal:', SHOP_CONFIG.COSTS.HEAL);
+        this.shopPanel.add([shopPanelBg, shopTitle, closeButtonShop, ...hpItem, ...atkItem, ...healItem]);
+    }
 
-            // Add elements to Shop Panel container
-            this.shopPanel.add([shopPanelBg, shopTitle, closeButtonShop, ...hpItem, ...atkItem, ...healItem]);
-        }
-
-        // --- Create Inventory Slots (Footer) ---
+    /**
+     * Creates the Inventory Slot containers and elements in the footer.
+     * Called by create().
+     */
+    _createInventorySlots() {
         this.inventorySlots = [];
         for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
-            let slotContainer = this.add.container(0, 0); // Container for bg and label
-            let slotBg = this.add.rectangle(0, 0, 50, 50, COLORS.INV_SLOT_BG) // Background rect (centered in container)
-                .setOrigin(0.5);
-            slotBg.setStrokeStyle(1, COLORS.INV_SLOT_BORDER); // Add border
-            let itemLabel = this.add.text(0, 0, '', { font: 'bold 12px Arial', fill: COLORS.TEXT, align: 'center' }) // Item icon/text (centered in container)
-                .setOrigin(0.5);
-            slotContainer.add([slotBg, itemLabel]); // Add bg and label to container
-            slotBg.setInteractive({ useHandCursor: false }); // Make background clickable
-            slotBg.disableInteractive(); // Start disabled until item is added
-            // Store index on the background element for the click handler
-            slotBg.setData('inventoryIndex', i);
-            slotBg.on('pointerdown', () => { this.handleInventoryClick(slotBg); }); // Add click listener
-            this.inventorySlots.push(slotContainer); // Store container reference
+             let slotContainer = this.add.container(0, 0);
+             let slotBg = this.add.rectangle(0, 0, 50, 50, COLORS.INV_SLOT_BG).setOrigin(0.5);
+             slotBg.setStrokeStyle(1, COLORS.INV_SLOT_BORDER);
+             let itemLabel = this.add.text(0, 0, '', { font: 'bold 12px Arial', fill: COLORS.TEXT, align: 'center' }).setOrigin(0.5);
+             slotContainer.add([slotBg, itemLabel]);
+             slotBg.setInteractive({ useHandCursor: false }).disableInteractive();
+             slotBg.setData('inventoryIndex', i);
+             slotBg.on('pointerdown', () => { this.handleInventoryClick(slotBg); });
+             this.inventorySlots.push(slotContainer);
         }
-
-
-        // --- Create Message Text (for short notifications) ---
-        this.messageText = this.add.text(this.cameras.main.center, this.cameras.main.centerY, '', {
-            font: 'bold 20px Arial',
-            fill: '#ffffff',
-            backgroundColor: 'rgba(0,0,0,0.7)', // Semi-transparent black background
-            padding: { x: 15, y: 8 }
-        }).setOrigin(0.5).setDepth(200).setAlpha(0); // High depth, initially invisible
-
-
-        // --- Set up Event Listeners FROM GameScene ---
-        // Listen for events emitted by GameScene to update UI elements
-        gameScene.events.on('updateStats', this.updateUI, this); // Update HP, ATK, Gold, etc.
-        gameScene.events.on('resizeUI', this.positionUIElements, this); // Reposition elements on resize
-        gameScene.events.on('updateInventory', this.updateInventoryUI, this); // Update inventory display
-        gameScene.events.on('showMessage', this.showMessage, this); // Show temporary messages
-        gameScene.events.on('showFloorClearPopup', this.showFloorClearPanel, this); // Show floor clear panel
-        gameScene.events.on('showShop', this.showShopPanel, this); 
-        gameScene.events.on('updateDebugButton', this.updateDebugButtonText, this);
-
-
-        // --- Final Setup ---
-        this.events.emit('uiReady'); // Notify GameScene that UI is ready to receive updates
-        console.log("UIScene emitted uiReady");
-        this.positionUIElements(); // Perform initial positioning of all UI elements
     }
+
+    /**
+     * Creates the message text object used for temporary notifications.
+     * Called by create().
+     */
+     _createMessageText() {
+        this.messageText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, '', {
+            font: 'bold 20px Arial', fill: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)', padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setDepth(200).setAlpha(0); // High depth, initially invisible
+     }
+
+    /**
+     * Sets up the event listeners for events emitted FROM the GameScene.
+     * Called by create().
+     */
+    _setupEventListeners() {
+        const gameScene = this.scene.get('GameScene');
+        if(gameScene && gameScene.events) { // Check if gameScene exists
+            gameScene.events.on('updateStats', this.updateUI, this);
+            gameScene.events.on('resizeUI', this.positionUIElements, this);
+            gameScene.events.on('updateInventory', this.updateInventoryUI, this);
+            gameScene.events.on('showMessage', this.showMessage, this);
+            gameScene.events.on('showFloorClearPopup', this.showFloorClearPanel, this);
+            gameScene.events.on('showShop', this.showShopPanel, this);
+            gameScene.events.on('updateDebugButton', this.updateDebugButtonText, this);
+             console.log("UIScene: Event listeners for GameScene attached.");
+        } else {
+            console.error("UIScene _setupEventListeners: Could not find GameScene to attach listeners.");
+        }
+    }
+
 
      /**
      * Shows the durable item description panel, populating it with item details.
@@ -3315,10 +3994,18 @@ class UIScene extends Phaser.Scene {
      * @param {string} itemId - The ID of the item being used.
      * @param {number} index - The inventory index of the item.
      */
-    showItemUsePanel(itemId, index) {
+     showItemUsePanel(itemId, index) {
         if (!this.itemUsePanel) { return; } // Panel doesn't exist
         const itemInfo = ITEM_TYPES[itemId];
-        if (!itemInfo) { return; } // Don't show for invalid items
+        if (!itemInfo) {
+            console.error(`showItemUsePanel called with invalid itemId: ${itemId}`);
+            return;
+        } // Don't show for invalid items
+        // Also check if the item actually has an effect to be used
+        if (!itemInfo.effect) {
+             console.warn(`showItemUsePanel called for non-usable item: ${itemId}`);
+             return;
+        }
 
         this.hideAllPanels(false); // Hide other panels
         this.pendingItemUse = { itemId, index }; // Store item data for the 'Use' button action
@@ -3356,8 +4043,8 @@ class UIScene extends Phaser.Scene {
         this.hideAllPanels(); // Hide self and reset modal flag
     }
 
-    /** Hides all Phaser panels and optionally the DOM panel. Resets modal flag if appropriate. */
-    hideAllPanels(calledFromDomClose = false) {
+     /** Hides all Phaser panels and optionally the DOM panel. Resets modal flag if appropriate. */
+     hideAllPanels(calledFromDomClose = false) {
         // Hide DOM panel unless this was called *by* the DOM close button itself
         if (!calledFromDomClose && this.instructionsDOM) {
              this.instructionsDOM.style.display = 'none';
@@ -3369,9 +4056,16 @@ class UIScene extends Phaser.Scene {
         if (this.shopPanel) this.shopPanel.setVisible(false);
         if (this.durableItemPanel) this.durableItemPanel.setVisible(false);
 
-        // Clear pending item use data when any panel is hidden
-        if (this.pendingItemUse) this.pendingItemUse = null;
-        if (this.pendingDurableAction) this.pendingDurableAction = null;
+        // Clear pending item use data when *any* panel is hidden
+        // This is crucial to prevent using stale data if panels are closed/opened quickly
+        if (this.pendingItemUse) {
+            console.log("Clearing pendingItemUse in hideAllPanels:", this.pendingItemUse); // Optional debug log
+            this.pendingItemUse = null;
+        }
+        if (this.pendingDurableAction) {
+             console.log("Clearing pendingDurableAction in hideAllPanels:", this.pendingDurableAction); // Optional debug log
+             this.pendingDurableAction = null;
+        }
 
         // Only deactivate modal flag if *all* panels (DOM and Phaser) are now hidden
         const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
@@ -3380,19 +4074,41 @@ class UIScene extends Phaser.Scene {
             !this.itemUsePanel?.visible &&
             !this.floorClearPanel?.visible &&
             !this.shopPanel?.visible &&
-            !this.durableItemPanel?.visible && 
+            !this.durableItemPanel?.visible &&
             !domVisible) {
-            this.isModalActive = false;
+            if (this.isModalActive) {
+                // console.log("Deactivating modal flag."); // Optional debug log
+                this.isModalActive = false;
+            }
+        } else {
+            // If any panel IS still visible, ensure modal remains active
+            if (!this.isModalActive) {
+                 // console.log("Keeping modal flag active as a panel is still visible."); // Optional debug log
+                 this.isModalActive = true;
+            }
         }
     }
 
-    /** Updates the text of a specific debug button */
-    updateDebugButtonText({ button, text }) {
-        if (button === 'shop' && this.debugButtonsMap?.shop) {
-            this.debugButtonsMap.shop.setText(text);
+   /**
+     * Updates the text of a specific debug button using the debugButtonsMap.
+     * Handles 'shop', 'godMode', 'diagonals', 'strikeFirst'.
+     * @param {object} data - Object containing { button: string (ID), text: string }.
+     */
+     updateDebugButtonText({ button, text }) {
+        // Use the map to find the button by its ID ('shop', 'godMode', etc.)
+        const buttonToUpdate = this.debugButtonsMap[button]; // 'button' here is the ID like 'godMode' or 'shop'
+
+        if (buttonToUpdate) {
+            buttonToUpdate.setText(text);
+            console.log(`Updated debug button "${button}" text to: ${text}`);
+        } else {
+            console.warn(`Could not find debug button with ID: "${button}" in map to update text.`);
+            // Attempt to log the map keys for diagnostics if a button isn't found
+            if (this.debugButtonsMap) {
+                 console.log("Available debug button IDs:", Object.keys(this.debugButtonsMap));
+            }
         }
-        // Add other buttons here if needed
-    }
+    } // End of updateDebugButtonText method
 
 
     // --- UI Update Functions (Reacting to GameScene Events) ---
@@ -3414,8 +4130,8 @@ class UIScene extends Phaser.Scene {
         // The Tile class accesses player.hasKey via its scene reference.
     }
 
-    /** Updates the inventory slots based on the player's inventory data from GameScene event. */
-    updateInventoryUI(inventoryData) {
+     /** Updates the inventory slots based on the player's inventory data from GameScene event. */
+     updateInventoryUI(inventoryData) {
         console.log("Updating inventory UI:", inventoryData);
         for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
             let slotContainer = this.inventorySlots[i];
@@ -3455,7 +4171,7 @@ class UIScene extends Phaser.Scene {
                      // Store item data on the slot background for the click handler
                      slotBg.setData('itemId', itemId);
                      // Make the slot clickable only if it has a valid item
-                     slotBg.setInteractive();
+                     slotBg.setInteractive(); // ** Ensure this makes it clickable **
                      // slotBg.on('pointerdown', () => { this.handleInventoryClick(slotBg); }); // Listener added in create, just enable/disable
 
                 } else {
@@ -3463,6 +4179,7 @@ class UIScene extends Phaser.Scene {
                     console.error("Invalid item ID found in inventory data:", itemId);
                     slotBg.setFillStyle(COLORS.INV_SLOT_BG); // Default background
                     itemLabel.setText('ERR').setColor('#FF0000'); // Show error in slot
+                    // Keep it non-interactive (already disabled at start of loop)
                 }
             } else {
                 // Slot is empty
@@ -3476,13 +4193,18 @@ class UIScene extends Phaser.Scene {
     /** Handles clicks on inventory slot backgrounds, showing the item use panel if valid. */
     handleInventoryClick(slotBg) {
         // Ignore clicks if a panel is already open or slot is not interactive
-        if (this.isModalActive || !slotBg || !slotBg.input?.enabled) return;
+        // Check isModalActive FIRST, as disabled slots might still receive events briefly in some Phaser versions/setups.
+        if (this.isModalActive || !slotBg || !slotBg.input?.enabled) {
+            // console.log("Inventory click ignored: Modal active or slot disabled."); // Optional debug log
+            return;
+        }
 
         // Retrieve item data stored on the slot background element
         const itemId = slotBg.getData('itemId');
         const index = slotBg.getData('inventoryIndex'); // Get index stored during creation
 
         // If valid item data exists, check category and show the appropriate panel
+        // Check itemId FIRST - if it's null, the slot should be empty/disabled.
         if (itemId !== null && index !== null) {
             const itemInfo = ITEM_TYPES[itemId];
             if (!itemInfo) {
@@ -3502,7 +4224,13 @@ class UIScene extends Phaser.Scene {
                 // Item is REGULAR but not usable (e.g., if Key/Coin somehow ended up in inventory)
                 // Or category is unknown. Do nothing.
                 console.log(`Item ${itemId} (${itemInfo.category}) in inventory is not directly usable.`);
+                // Optionally flash the item red or show a message?
+                // this.showMessage("Cannot use this item directly.");
             }
+        } else {
+            // This case means the slot was clicked, but it didn't have an associated itemId.
+            // This *shouldn't* happen if disableInteractive() in updateInventoryUI works correctly.
+            console.warn(`Inventory slot ${index} clicked, but no valid itemId found. Input enabled state: ${slotBg.input?.enabled}`);
         }
     }
 

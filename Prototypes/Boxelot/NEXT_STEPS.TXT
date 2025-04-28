@@ -1,25 +1,9 @@
+List entire functions that need to be changed, not just the line. Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
---- DURABLE ITEMS
+--- Challenge
 
-DONE! Let's add another durable item, the lantern, it's icon is 💡. When the player has the lantern, they can see what tile the key is under even when the tile is unrevealed. Just show the key icon on the unrevealed tile.
-Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line. Like other items, debug fill button should populate this potentially.
-
-Let's add another durable item, this one is the spike trap, it's icon is 🪤. When the spike trap is in the players inventory, all monsters take 2 damage on reveal. 
-Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
-
-Let's add another durable item, the shield. It's icon is 😷. When this item is in the players inventoy, it gives a 10% chance that a monsters attack is dodged.
-Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
-
-Let's add one more durable item, the defense rune, it's icon is ✋. When the defense rune is in the players inventory, +10 health.
-You don't need to do anything special for this, increase health on pickup, decrease on sale.
-
-Let's add one more durable item, the attack rune, it's icon is 👊. When the attack rune is in the players inventory, +10 attack.
-You don't need to do anything special for this, increase attack on pickup, decrease on sale.
-
---- CAVES
-
-We're going to add a new type of tile, a cave. All caves have the same icon: 🪟. One cave appears every 3 floors, starting with floor 3. A cave is like a shop that has a specific requirement. If the requirement is not met, a modal popup is shown with what the player needs to do to enter. That modal just has a close button.
-If the player does meet the criteria for what a cave needs, the cave dissapears and drops a durable item. If the player has every possible durable item, the cave drops 50 coins.
+We're going to add a new type of tile, a challenge. All challenges have the same icon: 🪟. One challenge appears every 3 floors, starting with floor 3. A challenge is like a barrel that has a specific requirement to break. If the requirement is not met, a modal popup is shown with what the player needs to do to break it or. That modal just has a close button.
+If the player does meet the criteria for what a challenge needs, the challenge tile dissapears and drops a durable item. If the player has every possible durable item, the challenge drops 50 coins.
 
 There will be the following types of caves:
     Greedy cave, only opens if the player has 50 coins or more
@@ -30,34 +14,33 @@ There will be the following types of caves:
 
 ---- NEW MONSTERS
 
-Monsters
-Dragon 🐉
-Devil 👹
-Devil 👿
-Squid 🦑
-Orc 🧌
-Ogre 👺
-Vampire: 🧛‍♂️
-Zombie: 🧟‍♂️
-Ghost 👻
+Let's add some extra monsters. Please add: Devil 👹, Demon 👿, Ogre 👺, bird 🐦‍🔥, wolf 🐺, bat 🦇
+You can figure out what their attack / defense is. These monsters act like the existing monsters.
+I do want to add some filtering. Zombies should only appear after floor 10. Devils should not appear before floor 5. Ogres should not appear before floor 15. Wolfs should not appear before floor 3. Bat should not appear before floor 7. Spiders should not appear after floor 6. Birds should not appear after floor 15.
+List entire functions that need to be changed, not just the line. Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
 TODO: Slime type enemy 🐌 / 🐚 (spawns a smaller one)
-TODO: Bosses:
-Appear every 5 floors, starting on floor 5. Optional.
-    Reward: Compas, can have in inventory but can't use. Reveals location of the key.
 
 --- BOSSES
 
+Next, we're going to add a new type of enemy, bosses. Bosses are special in that they always drop a durable item, unless the players has all durable items. If the player has all durable items, the boss drops 50 coins. Bosses appear every 5 floors, starting on floor 5.
+
+
+Appear every 5 floors, starting on floor 5. Optional.
+    Reward: Compas, can have in inventory but can't use. Reveals location of the key.
+
 Four bosses: 
+
+Ghost 👻
     high attack, low health, 
+Orc 🧌
     high health, low attack,
+Squid 🦑
     high health, high attack
+Dragon🦎 / 🐉
     Slime like respawn on death
 
 --- TUNING
-
-Do non key monsters always drop gold? Can we change the % chance of that? Sometimes nothing should drop. Also change the amount of gold being dropped to scale with the game.
-
 
 Things that need to scale:
 Enemy HP
