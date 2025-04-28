@@ -1,8 +1,8 @@
 
 --- DURABLE ITEMS
 
-Let's add another durable item, the lantern, it's icon is 💡. When the player has the lantern, they can see what tile the key is under even when the tile is unrevealed. Just show the key icon on the unrevealed tile.
-Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
+DONE! Let's add another durable item, the lantern, it's icon is 💡. When the player has the lantern, they can see what tile the key is under even when the tile is unrevealed. Just show the key icon on the unrevealed tile.
+Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line. Like other items, debug fill button should populate this potentially.
 
 Let's add another durable item, this one is the spike trap, it's icon is 🪤. When the spike trap is in the players inventory, all monsters take 2 damage on reveal. 
 Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.

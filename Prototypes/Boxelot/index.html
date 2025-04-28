@@ -246,6 +246,18 @@ const MONSTER_STATS = {
 };
 // Item Definitions
 const ITEM_TYPES = {
+    LANTERN: {
+        id: 'LANTERN',
+        name: 'Lantern',
+        icon: '💡',
+        description: 'While in inventory, reveals the location of the hidden key (🗝️) on the grid.',
+        color: 0xFFFFE0, // Example: Light Yellow background
+        consumable: false,
+        category: 'DURABLE', // Mark as Durable
+        effect: null,       // Passive effect, logic handled elsewhere
+        sellValue: 8       // Value when sold
+    },
+
     INVISIBILITY_CLOAK: {
         id: 'INVISIBILITY_CLOAK',
         name: 'Invisibility Cloak',
@@ -400,15 +412,15 @@ class Tile extends Phaser.GameObjects.Container {
         return this;
     }
 
-    /**
+     /**
      * Updates the tile's visual appearance (colors, text, icons) based on its current tileData.
      * This is the core rendering logic for the tile.
      */
-    updateVisuals() {
+     updateVisuals() {
         // Safety check: ensure visual elements exist before trying to update them
         if (!this.bgRect || !this.mainText || !this.statsText || !this.statusIcon1 || !this.statusIcon2) {
-             console.warn("Tile visuals called before elements created for", this.r, this.c);
-             return;
+            console.warn("Tile visuals called before elements created for", this.r, this.c);
+            return;
         }
 
         const width = this.width;
@@ -434,7 +446,8 @@ class Tile extends Phaser.GameObjects.Container {
             this.mainText.setColor(COLORS.TEXT); // Use light text color for revealed tiles
             this.statsText.setPosition(width / 2, height * 0.75); // Position stats text near bottom
 
-            // Status Icon Positioning Logic (Top-Left Stack)
+            // ... (rest of the REVEALED logic - MONSTER, DOOR, ITEM, etc. - remains unchanged) ...
+             // Status Icon Positioning Logic (Top-Left Stack)
             const statusPadding = Math.max(2, Math.floor(width * 0.05)); // Padding from edges
             const statusIconYOffset = detailFontSize * 1.1; // Vertical spacing between icons
             let statusIconBaseX = statusPadding;
@@ -453,14 +466,12 @@ class Tile extends Phaser.GameObjects.Container {
             switch (this.tileData.type) {
                 case TILE_TYPE.MONSTER:
                     if (this.tileData.hp > 0) { // Living Monster
-                        // *** MODIFICATION START ***
                         // Set background color based on freeze status
                         if (this.tileData.frozenTurns > 0) {
                             this.bgRect.setFillStyle(COLORS.ITEM_FREEZE); // Blue background if frozen
                         } else {
                             this.bgRect.setFillStyle(COLORS.MONSTER_BG); // Standard red background otherwise
                         }
-                        // *** MODIFICATION END ***
 
                         let monsterInfo = MONSTER_STATS[this.tileData.monsterType];
                         let icon = this.tileData.isSheep ? '🐑' : (monsterInfo?.icon || '??'); // Handle potential missing monster info
@@ -491,8 +502,6 @@ class Tile extends Phaser.GameObjects.Container {
 
                 case TILE_TYPE.DOOR:
                     this.bgRect.setFillStyle(COLORS.DOOR);
-                    // Player's key status is needed - get from GameScene via scene reference
-                    // This is a minor coupling, but necessary for the door's visual state.
                     let doorIcon = this.scene.player.hasKey ? '🔓' : '🔒';
                     this.mainText.setText(doorIcon).setFontSize(iconFontSize * 1.2); // Slightly larger icon
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear other text
@@ -500,7 +509,6 @@ class Tile extends Phaser.GameObjects.Container {
 
                 case TILE_TYPE.TRAP: // Note: Traps usually become EMPTY instantly upon reveal
                     this.bgRect.setFillStyle(COLORS.TRAP);
-                    // Display trap damage info briefly (though it usually changes immediately)
                     this.mainText.setText(`TRAP!\n-${this.tileData.damage} HP`).setFontSize(detailFontSize * 1.5).setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT);
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
                     break;
@@ -539,7 +547,6 @@ class Tile extends Phaser.GameObjects.Container {
                     this.bgRect.setFillStyle(COLORS.RANDOM_ITEM);
                     if (this.tileData.isCycling) {
                         // Icon is set dynamically by the GameScene's update loop calling this method via setData
-                        // Get the current item icon to display based on cycleIndex
                         const currentOutcomeId = RANDOM_TILE_OUTCOMES[this.tileData.cycleIndex || 0];
                         const itemInfo = ITEM_TYPES[currentOutcomeId];
                         this.mainText.setText(itemInfo?.icon || '??').setFontSize(iconFontSize);
@@ -549,7 +556,7 @@ class Tile extends Phaser.GameObjects.Container {
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
                     break;
 
-                case TILE_TYPE.SHOP: 
+                case TILE_TYPE.SHOP:
                     this.bgRect.setFillStyle(COLORS.SHOP_BG);
                     this.mainText.setText(SHOP_CONFIG.ICON).setFontSize(iconFontSize);
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
@@ -568,19 +575,35 @@ class Tile extends Phaser.GameObjects.Container {
             this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear stats/status
             this.mainText.setFontSize(Math.floor(iconFontSize * 0.8)).setColor(COLORS.TEXT_DARK); // Use dark text, slightly smaller
 
-            // Set text based on hidden state ('?', 'X', or '')
+            let baseText = ''; // The text to display ('?', 'X', '') before considering Lantern/Debug
+
+            // Set base text based on hidden state
             switch (this.tileData.state) {
-                case TILE_STATE.HIDDEN_NORMAL:        this.mainText.setText('?'); break; // Accessible
-                case TILE_STATE.HIDDEN_BLOCKED:       this.mainText.setText('X'); break; // Blocked by monster
-                case TILE_STATE.HIDDEN_UNACCESSIBLE:  this.mainText.setText('');  break; // Not adjacent to revealed
-                default:                              this.mainText.setText('');  // Default to blank
+                case TILE_STATE.HIDDEN_NORMAL:       baseText = '?'; break; // Accessible
+                case TILE_STATE.HIDDEN_BLOCKED:      baseText = 'X'; break; // Blocked by monster
+                case TILE_STATE.HIDDEN_UNACCESSIBLE: baseText = '';  break; // Not adjacent to revealed
+                default:                             baseText = '';  // Default to blank
             }
-             // Apply Debug Marker if present (overwrites '?', 'X', '')
-             if (this.tileData.debugMarker) {
-                 this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR);
-             }
+
+            // --- LANTERN LOGIC START ---
+            // Check if this tile holds the key AND the player has the lantern
+            if (this.tileData.hasKey && this.scene.playerHasLantern()) {
+                // Override the text to show the key icon, even if it would normally be '?', 'X', or ''
+                baseText = '🗝️';
+                this.mainText.setColor(COLORS.KEY); // Use the key color for visibility
+                this.mainText.setFontSize(iconFontSize); // Use slightly larger font for the icon
+            }
+            // --- LANTERN LOGIC END ---
+
+            // Set the determined text (either '?', 'X', '', or '🗝️')
+            this.mainText.setText(baseText);
+
+            // Apply Debug Marker if present (overwrites previous text)
+            if (this.tileData.debugMarker) {
+                this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR);
+            }
         }
-    }
+    } // End of updateVisuals method
 }
 
 
@@ -644,6 +667,25 @@ class GameScene extends Phaser.Scene {
         this.uiHeaderHeight = 0;
         this.uiFooterHeight = 0;
     }
+
+     /**
+     * Checks if the player currently has the Lantern in their inventory.
+     * @returns {boolean} True if the Lantern is found, false otherwise.
+     */
+     playerHasLantern() {
+        // Check if the specific Lantern ID exists in the player's inventory array
+        return this.player.inventory.includes('LANTERN');
+    }
+
+    /**
+     * Checks if the player currently has the Invisibility Cloak in their inventory.
+     * @returns {boolean} True if the cloak is found, false otherwise.
+     */
+    playerHasCloak() {
+        // Check if the specific cloak ID exists in the player's inventory array
+        return this.player.inventory.includes('INVISIBILITY_CLOAK');
+    }
+
 
     /**
  * Handles the logic for purchasing an item from the shop.
@@ -940,7 +982,7 @@ purchaseShopItem(itemKey) {
         console.log("GameScene create end");
     }
 
-      /**
+       /**
      * Handles selling a durable item from the inventory.
      * Triggered by an event from UIScene after clicking 'Sell' in the durable item panel.
      * @param {object} data - Object containing { itemId, index }.
@@ -957,9 +999,9 @@ purchaseShopItem(itemKey) {
 
         const itemInfo = ITEM_TYPES[itemId];
         if (!itemInfo || itemInfo.category !== 'DURABLE') {
-             console.error(`Sell Error: Item ${itemId} not found or not durable.`);
-             this.events.emit('showMessage', 'Sell Error!');
-             return;
+            console.error(`Sell Error: Item ${itemId} not found or not durable.`);
+            this.events.emit('showMessage', 'Sell Error!');
+            return;
         }
 
         const sellValue = itemInfo.sellValue || 5; // Use defined value or default 5 gold
@@ -977,11 +1019,26 @@ purchaseShopItem(itemKey) {
         this.events.emit('updateStats', this.getPlayerStats()); // Update gold display
         this.events.emit('showMessage', `Sold ${itemInfo.name} for ${sellValue}G`);
 
-        // If the sold item had a passive effect (like the cloak), refresh hidden tile states
+        // --- EFFECT REMOVAL LOGIC ---
+        // If the sold item had a passive effect, handle its removal
         if (soldItemId === 'INVISIBILITY_CLOAK') {
-             console.log("Cloak sold, refreshing hidden tile states.");
-             this.refreshAllHiddenTileStates(); // Re-run the refresh logic
+            console.log("Cloak sold, refreshing hidden tile states.");
+            this.refreshAllHiddenTileStates(); // Re-run the refresh logic for blocking
+        } else if (soldItemId === 'LANTERN') {
+            console.log("Lantern sold, refreshing hidden key marker.");
+            // Find the tile holding the key and update its visuals
+            // The updateVisuals method will now correctly hide the key icon as playerHasLantern is false
+            if (this.keyHolderCoords) {
+                const keyTile = this.tileObjects[this.keyHolderCoords.r]?.[this.keyHolderCoords.c];
+                if (keyTile && keyTile.tileData.state !== TILE_STATE.REVEALED) {
+                    keyTile.updateVisuals(); // Force redraw of the hidden key tile
+                }
+            }
+            // If the key was placed directly as an ITEM (fallback), we might not have coords easily.
+            // In that rare case, the icon would disappear when the tile is eventually revealed anyway.
+            // Or, we could iterate all hidden tiles checking for hasKey, but that's less efficient.
         }
+        // --- END EFFECT REMOVAL LOGIC ---
 
         // Selling typically shouldn't advance monster turns etc.
         // this.processEndOfPlayerTurnEffects(); // Usually not called here
@@ -1485,14 +1542,15 @@ purchaseShopItem(itemKey) {
         this.processEndOfPlayerTurnEffects(); 
     }
 
-        /**
-     * Handles the logic for picking up an item from a revealed tile.
-     * Updates player inventory/stats and changes the tile to EMPTY.
-     * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
-     * and DURABLE (unique inventory items).
-     * @param {Tile} tile - The Tile instance containing the item.
-     */
-     tryPickupItem(tile) {
+      /**
+    * Handles the logic for picking up an item from a revealed tile.
+    * Updates player inventory/stats and changes the tile to EMPTY.
+    * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
+    * and DURABLE (unique inventory items).
+    * Includes logic to immediately update key visibility if Lantern is picked up.
+    * @param {Tile} tile - The Tile instance containing the item.
+    */
+    tryPickupItem(tile) {
         if (this.isGameOver || !tile) return;
         const tileData = tile.tileData;
         if (tileData.type !== TILE_TYPE.ITEM || !tileData.itemId) return;
@@ -1506,7 +1564,7 @@ purchaseShopItem(itemKey) {
 
         console.log(`Attempting to pick up ${itemInfo.name} ([${itemInfo.category}]) at [${tile.r}, ${tile.c}]`);
 
-        let pickedUp = false;       // Flag: Was the item successfully obtained and tile cleared?
+        let pickedUp = false;      // Flag: Was the item successfully obtained and tile cleared?
         let showInvFullMsg = false; // Flag: Should we show "Inventory Full"?
         let endTurn = true;         // Flag: Does this action consume the player's turn?
 
@@ -1561,12 +1619,9 @@ purchaseShopItem(itemKey) {
                 this.events.emit('updateInventory', this.player.inventory);
                 this.events.emit('showMessage', `${itemInfo.name} acquired!`);
                 pickedUp = true;
-                // Check specifically if the cloak was picked up to update neighbors *immediately*
-                // (as the effect is passive and needs to apply right away)
-                if (itemId === 'INVISIBILITY_CLOAK') {
-                    // Force update of all hidden neighbor states around revealed areas
-                    this.refreshAllHiddenTileStates();
-                }
+                // Specific post-pickup logic for durables can go here (like cloak/lantern refresh)
+                // Note: Cloak refresh is handled separately inside this 'pickedUp' block below
+                // Note: Lantern refresh is ALSO handled separately inside the 'pickedUp' block below
             } else {
                 // Inventory full
                 showInvFullMsg = true;
@@ -1584,17 +1639,48 @@ purchaseShopItem(itemKey) {
             tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, itemId: null });
             this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
             this.events.emit('updateStats', this.getPlayerStats()); // Update UI (gold, HP, key icon)
+
+            // --- IMMEDIATE EFFECT REFRESH ---
+            // Check specifically if the cloak was picked up to update neighbors *immediately*
+            if (itemId === 'INVISIBILITY_CLOAK') {
+                // Force update of all hidden neighbor states around revealed areas
+                console.log("Cloak picked up, refreshing hidden tile blocking states.");
+                this.refreshAllHiddenTileStates();
+            }
+            // Check specifically if the Lantern was picked up to update key visibility *immediately*
+            if (itemId === 'LANTERN') {
+                console.log("Lantern picked up, attempting to refresh hidden key marker.");
+                if (this.keyHolderCoords) { // Check if we know where the key is
+                    const keyTile = this.tileObjects[this.keyHolderCoords.r]?.[this.keyHolderCoords.c];
+                    // Check if the key tile actually exists and is still hidden
+                    if (keyTile && keyTile.tileData.state !== TILE_STATE.REVEALED) {
+                        keyTile.updateVisuals(); // Force the hidden key tile to redraw itself NOW
+                        console.log(`Forced visual update on hidden key tile at [${this.keyHolderCoords.r}, ${this.keyHolderCoords.c}]`);
+                    } else if (keyTile) {
+                         console.log("Key tile already revealed, no visual update needed for Lantern pickup.");
+                    } else {
+                         console.log("Key tile object not found at stored coordinates.");
+                    }
+                } else {
+                     console.log("Key holder coordinates unknown, cannot force visual update for Lantern pickup.");
+                     // This might happen if the key was placed as an item directly (fallback in generation)
+                     // In this case, the effect will naturally apply if the tile is revealed later or on next floor.
+                }
+            }
+            // --- END IMMEDIATE EFFECT REFRESH ---
+
+
             if (endTurn) {
-                 this.processEndOfPlayerTurnEffects();
+                this.processEndOfPlayerTurnEffects();
             }
         } else if (showInvFullMsg) {
-             // Show inventory full message if applicable
-             this.events.emit('showMessage', 'Inventory Full!');
-             // Optional: Flash the item tile red briefly to indicate failure
-             this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
+            // Show inventory full message if applicable
+            this.events.emit('showMessage', 'Inventory Full!');
+            // Optional: Flash the item tile red briefly to indicate failure
+            this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
         }
         // If endTurn is false and nothing was picked up, nothing else happens.
-    }
+    } // End of tryPickupItem method
 
     /**
      * Helper method to re-evaluate the state of all hidden tiles.
@@ -2573,21 +2659,19 @@ tryEnterDoor(doorTile) {
          // Currently, it only affects future neighbor updates.
      }
     
-       /** Debug: Fills the player's inventory with random items (including non-consumables). */
-       debugFillInventory() {
+    /** Debug: Fills the player's inventory with random items (including non-consumables). */
+     debugFillInventory() {
         if (this.isGameOver) return;
         console.log("Debug: Filling inventory (allowing non-consumables)...");
         this.player.inventory = []; // Clear existing inventory
 
-        // --- MODIFIED FILTER ---
+        // --- MODIFIED FILTER (No change needed here if Lantern was added to ITEM_TYPES correctly) ---
         // Get list of item IDs, excluding only the special instant-use ones.
         // Now includes both consumable REGULAR items and DURABLE items.
         const itemIds = Object.keys(ITEM_TYPES).filter(id =>
             !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id)
-            // Removed the '&& ITEM_TYPES[id].consumable' check
         );
 
-        // --- Keep track of added durable items to prevent duplicates in one fill ---
         const addedDurables = new Set();
 
         for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
@@ -2599,9 +2683,6 @@ tryEnterDoor(doorTile) {
             // If it's durable, check if we already added one like it in this fill action
             if (itemInfo.category === 'DURABLE') {
                 if (addedDurables.has(randomItemId)) {
-                    // Don't add duplicate durable in the *same* fill action. Try again for this slot.
-                    // This is tricky - might loop indefinitely if only durables are left and already added.
-                    // A simpler approach for debug might be to just skip adding if duplicate durable is chosen.
                     console.log(`Debug Fill: Skipping duplicate durable ${randomItemId}`);
                     continue; // Skip to next inventory slot without adding
                 } else {
@@ -2619,6 +2700,7 @@ tryEnterDoor(doorTile) {
         this.events.emit('updateInventory', this.player.inventory); // Update UI
         this.events.emit('showMessage', 'Debug: Inventory Filled');
     }
+
     
     /** Debug: Toggles whether monsters attack first in combat. */
      debugToggleStrikeFirst() {
