@@ -1,36 +1,34 @@
 
-spike trap: damage enemies on reveal
-shield: x% change to block enemy attack
+--- DURABLE ITEMS
 
-Invisibility cloak: Monsters won't block nearby tiles
+Let's add another durable item, the lantern, it's icon is 💡. When the player has the lantern, they can see what tile the key is under even when the tile is unrevealed. Just show the key icon on the unrevealed tile.
+Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
 
-RUNE, +1 to attack, stacks
-RUNE +1 to health, stacks
+Let's add another durable item, this one is the spike trap, it's icon is 🪤. When the spike trap is in the players inventory, all monsters take 2 damage on reveal. 
+Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
 
+Let's add another durable item, the shield. It's icon is 😷. When this item is in the players inventoy, it gives a 10% chance that a monsters attack is dodged.
+Show me all the code that needs to be modified / added. If possible list entire functions that need to be changed, not just the line.
 
----- Premium items
+Let's add one more durable item, the defense rune, it's icon is ✋. When the defense rune is in the players inventory, +10 health.
+You don't need to do anything special for this, increase health on pickup, decrease on sale.
 
-Greedy and cursed door can contain items that can not be used but have effects
+Let's add one more durable item, the attack rune, it's icon is 👊. When the attack rune is in the players inventory, +10 attack.
+You don't need to do anything special for this, increase attack on pickup, decrease on sale.
 
+--- CAVES
 
----- Challenge doors
+We're going to add a new type of tile, a cave. All caves have the same icon: 🪟. One cave appears every 3 floors, starting with floor 3. A cave is like a shop that has a specific requirement. If the requirement is not met, a modal popup is shown with what the player needs to do to enter. That modal just has a close button.
+If the player does meet the criteria for what a cave needs, the cave dissapears and drops a durable item. If the player has every possible durable item, the cave drops 50 coins.
 
-Greedy Door
-    CONTAINS?
+There will be the following types of caves:
+    Greedy cave, only opens if the player has 50 coins or more
+    Brave cave, only opens if the player has 20 health or more
+    Strong cave, only opens if the player has 10 strength or more
+    Mortal cave, opens as soon as an enemy dies (assuming the cave is revealed)
+    Material cave, opens only when the user uses an item
 
-Cursed Door:   
-    CONTAINS?
-
-Challenge door (must have x hearts or y attack power)
-    CONTAINS?
-
-CHALLENGE door: KILL AN ENEMY
-
-CHALLENGE DOOR: USE SOME MAGIC
-
-
-
----- Monster Rework
+---- NEW MONSTERS
 
 Monsters
 Dragon 🐉
@@ -38,7 +36,6 @@ Devil 👹
 Devil 👿
 Squid 🦑
 Orc 🧌
-Zombie 🧟
 Ogre 👺
 Vampire: 🧛‍♂️
 Zombie: 🧟‍♂️
@@ -49,9 +46,23 @@ TODO: Bosses:
 Appear every 5 floors, starting on floor 5. Optional.
     Reward: Compas, can have in inventory but can't use. Reveals location of the key.
 
+--- BOSSES
+
 Four bosses: 
     high attack, low health, 
     high health, low attack,
     high health, high attack
     Slime like respawn on death
 
+--- TUNING
+
+Do non key monsters always drop gold? Can we change the % chance of that? Sometimes nothing should drop. Also change the amount of gold being dropped to scale with the game.
+
+
+Things that need to scale:
+Enemy HP
+Boss HP
+Enemy attack
+Boss Attack
+Gold Reward numbers
+Shop prices?

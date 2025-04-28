@@ -246,15 +246,39 @@ const MONSTER_STATS = {
 };
 // Item Definitions
 const ITEM_TYPES = {
-    POTION: { id: 'POTION', name: 'Potion', icon: '🍷', description: 'Heals 5 HP', color: COLORS.POTION, consumable: true, effect: { type: 'HEAL', amount: 5 } },
-    BLADE_SCROLL: { id: 'BLADE_SCROLL', name: 'Blade Scroll', icon: '🗡️', description: 'Deals 3 DMG to revealed monsters', color: COLORS.ITEM_SWORD, consumable: true, effect: { type: 'DAMAGE_ALL', amount: 3 } },
-    POISON_VIAL: { id: 'POISON_VIAL', name: 'Poison Vial', icon: '🥦', description: `Poisons revealed monsters (${GAME.POISON_DAMAGE} DMG/turn)`, color: COLORS.ITEM_POISON, consumable: true, effect: { type: 'POISON_ALL', durationRange: [3, 5], damage: GAME.POISON_DAMAGE } },
-    FREEZE_SCROLL:{ id: 'FREEZE_SCROLL', name: 'Freeze Scroll', icon: '❄️', description: 'Freezes revealed monsters (3 turns)', color: COLORS.ITEM_FREEZE, consumable: true, effect: { type: 'FREEZE_ALL', duration: 3 } },
-    SHEEP_SCROLL: { id: 'SHEEP_SCROLL', name: 'Sheep Scroll', icon: '🐑', description: 'Turns revealed monsters into weak sheep!', color: 0xFFFFFF, consumable: true, effect: { type: 'SHEEP_ALL', newAtk: 1 } },
-    KEY_ITEM: { id: 'KEY_ITEM', name: 'Dungeon Key', icon: '🗝️', description: 'Unlocks the door', color: COLORS.KEY, consumable: true, effect: null }, // Key is an item
-    COIN: { id: 'COIN', name: 'Coin', icon: '🪙', description: 'Adds 10 Gold', color: COLORS.GOLD, consumable: true, effect: null, goldValue: 10 }, // Coin is an item
-    HEART: { id: 'HEART', name: 'Heart', icon: '💖', description: 'Heals 3-5 HP', color: COLORS.HEART, consumable: true, effect: null, healRange: [3, 5] }, // Heart is an item
-    EXPLOSIVE: { id: 'EXPLOSIVE', name: 'Explosive', icon: '🧨', description: 'Deals 2 DMG to you!', color: COLORS.EXPLOSIVE, consumable: true, effect: { type: 'DAMAGE_SELF', amount: 2 } } // Explosive is an item (from random tile)
+    INVISIBILITY_CLOAK: {
+        id: 'INVISIBILITY_CLOAK',
+        name: 'Invisibility Cloak',
+        icon: '🧥',
+        description: 'While in inventory, monsters do not block adjacent hidden tiles.',
+        color: 0xAAAAAA, // Example: Light grey background
+        consumable: false, // Already exists, good to keep for clarity
+        category: 'DURABLE', // The new category flag
+        effect: null,      // Effect is passive, not actively used
+        sellValue: 5       // Value when sold via the durable item panel
+    },
+
+    POTION: { 
+        id: 'POTION', 
+        name: 'Potion', 
+        icon: '🍷', 
+        category: 'REGULAR', 
+        description: 'Heals 5 HP', 
+        color: COLORS.POTION, 
+        consumable: true, 
+        effect: { 
+            type: 'HEAL', 
+            amount: 5 
+        } 
+    },
+    BLADE_SCROLL: { id: 'BLADE_SCROLL', name: 'Blade Scroll', icon: '🗡️', category: 'REGULAR', description: 'Deals 3 DMG to revealed monsters', color: COLORS.ITEM_SWORD, consumable: true, effect: { type: 'DAMAGE_ALL', amount: 3 } },
+    POISON_VIAL: { id: 'POISON_VIAL', name: 'Poison Vial', icon: '🥦', category: 'REGULAR', description: `Poisons revealed monsters (${GAME.POISON_DAMAGE} DMG/turn)`, color: COLORS.ITEM_POISON, consumable: true, effect: { type: 'POISON_ALL', durationRange: [3, 5], damage: GAME.POISON_DAMAGE } },
+    FREEZE_SCROLL:{ id: 'FREEZE_SCROLL', name: 'Freeze Scroll', icon: '❄️', category: 'REGULAR', description: 'Freezes revealed monsters (3 turns)', color: COLORS.ITEM_FREEZE, consumable: true, effect: { type: 'FREEZE_ALL', duration: 3 } },
+    SHEEP_SCROLL: { id: 'SHEEP_SCROLL', name: 'Sheep Scroll', icon: '🐑', category: 'REGULAR', description: 'Turns revealed monsters into weak sheep!', color: 0xFFFFFF, consumable: true, effect: { type: 'SHEEP_ALL', newAtk: 1 } },
+    KEY_ITEM: { id: 'KEY_ITEM', name: 'Dungeon Key', icon: '🗝️', category: 'REGULAR', description: 'Unlocks the door', color: COLORS.KEY, consumable: true, effect: null }, // Key is an item
+    COIN: { id: 'COIN', name: 'Coin', icon: '🪙', category: 'REGULAR', description: 'Adds 10 Gold', color: COLORS.GOLD, consumable: true, effect: null, goldValue: 10 }, // Coin is an item
+    HEART: { id: 'HEART', name: 'Heart', icon: '💖', category: 'REGULAR', description: 'Heals 3-5 HP', color: COLORS.HEART, consumable: true, effect: null, healRange: [3, 5] }, // Heart is an item
+    EXPLOSIVE: { id: 'EXPLOSIVE', name: 'Explosive', icon: '🧨', category: 'REGULAR', description: 'Deals 2 DMG to you!', color: COLORS.EXPLOSIVE, consumable: true, effect: { type: 'DAMAGE_SELF', amount: 2 } } // Explosive is an item (from random tile)
 };
 // Possible outcomes when clicking a cycling random tile
 const RANDOM_TILE_OUTCOMES = ['POTION', 'BLADE_SCROLL', 'POISON_VIAL', 'FREEZE_SCROLL', 'SHEEP_SCROLL', 'EXPLOSIVE', 'COIN', 'HEART'];
@@ -709,7 +733,7 @@ purchaseShopItem(itemKey) {
                         console.log(`Poison ticks on ${monsterName} at [${r},${c}] for ${poisonDamage}. ${tileData.poisonTurns} turns left. HP: ${tileData.hp}`);
 
                         // Trigger flash animation (can reuse/adapt the previous flash logic)
-                        this.flashTileBackground(tile, COLORS.ITEM_POISON, 100, 2); // Flash Green
+                        this.flashTileBackground(tile, COLORS.ITEM_POISON, 100, 0); // Flash Green
 
                         if (tileData.poisonTurns <= 0) {
                             tileData.isPoisoned = false;
@@ -819,7 +843,14 @@ purchaseShopItem(itemKey) {
             to: repeats * 2, // Count determines flash state (flash on even, original on odd)
             duration: duration * (repeats * 2 + 1), // Total duration covers all phases
             onUpdate: (tween) => {
-                if (!tile.active) { tween.stop(); return; } // Stop if tile is destroyed
+                if (!tile.active) {  
+                     tile.bgRect.setFillStyle(originalColor);
+                     tile.setData('isFlashing', false);
+                     tile.updateVisuals();
+                     tween.stop(); 
+                    console.warn("Stopping tween (this is good and expected, delete this line if you see it in logs)");
+                    return;
+                } // Stop if tile is destroyed
                 const value = Math.floor(tween.getValue());
                 tile.bgRect.setFillStyle(value % 2 === 0 ? flashColor : originalColor);
             },
@@ -827,15 +858,21 @@ purchaseShopItem(itemKey) {
                 if (tile.active) { // Check if tile still exists
                     tile.bgRect.setFillStyle(originalColor); // Ensure final color is correct
                     tile.setData('isFlashing', false); // Allow new flashes
-                     // Optional: Force one last visual update if needed, though setData usually covers it
-                     // tile.updateVisuals();
+                    tile.updateVisuals();
+                }
+                else {
+                    console.warn("Flash tween completed but scene/tile inactive.");
                 }
             },
-             onStop: () => { // Also reset on stop, e.g., if scene changes
+            onStop: () => { // Also reset on stop, e.g., if scene changes
                  if (tile.active) {
                      tile.bgRect.setFillStyle(originalColor);
                      tile.setData('isFlashing', false);
-                 }
+                     tile.updateVisuals();
+                }
+                else {
+                    console.warn("Flash tween stopped but scene/tile inactive.");
+                }
              }
         });
     }
@@ -887,6 +924,7 @@ purchaseShopItem(itemKey) {
         this.events.on('debugToggleStrikeFirst', this.debugToggleStrikeFirst, this);
         this.events.on('grantClearBonus', this.grantClearBonus, this); // Triggered by UI after confirmation
         this.events.on('debugToggleShop', this.debugToggleShop, this);
+        this.events.on('sellDurableItem', this.sellDurableItem, this);
 
         // Launch the UI scene in parallel
         this.scene.launch('UIScene');
@@ -900,6 +938,53 @@ purchaseShopItem(itemKey) {
             this.time.delayedCall(100, this.emitInitialUpdates, [], this); // Try again shortly
         }
         console.log("GameScene create end");
+    }
+
+      /**
+     * Handles selling a durable item from the inventory.
+     * Triggered by an event from UIScene after clicking 'Sell' in the durable item panel.
+     * @param {object} data - Object containing { itemId, index }.
+     */
+     sellDurableItem({ itemId, index }) {
+        if (this.isGameOver) return;
+
+        // Validate index and item match
+        if (index === undefined || index < 0 || index >= this.player.inventory.length || this.player.inventory[index] !== itemId) {
+            console.error(`Sell Error: Item mismatch or invalid index. Index: ${index}, Expected: ${itemId}, Found: ${this.player.inventory[index]}`);
+            this.events.emit('showMessage', 'Sell Error!');
+            return;
+        }
+
+        const itemInfo = ITEM_TYPES[itemId];
+        if (!itemInfo || itemInfo.category !== 'DURABLE') {
+             console.error(`Sell Error: Item ${itemId} not found or not durable.`);
+             this.events.emit('showMessage', 'Sell Error!');
+             return;
+        }
+
+        const sellValue = itemInfo.sellValue || 5; // Use defined value or default 5 gold
+
+        console.log(`Selling ${itemInfo.name} at index ${index} for ${sellValue} gold.`);
+
+        // Remove item from inventory
+        const soldItemId = this.player.inventory.splice(index, 1)[0]; // Get the removed item ID
+
+        // Add gold
+        this.player.gold += sellValue;
+
+        // Update UI
+        this.events.emit('updateInventory', this.player.inventory);
+        this.events.emit('updateStats', this.getPlayerStats()); // Update gold display
+        this.events.emit('showMessage', `Sold ${itemInfo.name} for ${sellValue}G`);
+
+        // If the sold item had a passive effect (like the cloak), refresh hidden tile states
+        if (soldItemId === 'INVISIBILITY_CLOAK') {
+             console.log("Cloak sold, refreshing hidden tile states.");
+             this.refreshAllHiddenTileStates(); // Re-run the refresh logic
+        }
+
+        // Selling typically shouldn't advance monster turns etc.
+        // this.processEndOfPlayerTurnEffects(); // Usually not called here
     }
 
     /**
@@ -1032,7 +1117,8 @@ purchaseShopItem(itemKey) {
         this.keyHolderCoords = null;
         this.keyDroppedOnFloor = false;
         this.isGameOver = false; // Ensure game isn't over on new floor start
-
+        this.keyAssignedOnFloor = false;
+        
         // --- Clear Previous Tiles ---
         // Destroy existing Tile instances and clear the arrays
         for (let r = 0; r < this.tileObjects.length; r++) {
@@ -1213,6 +1299,8 @@ purchaseShopItem(itemKey) {
      * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
      */
     assignKey(monsterCoords, gridRawData) {
+        let keySuccessfullyPlaced = false;
+
         if (monsterCoords.length > 0) {
             // Pick a random monster to hold the key
             let keyMonsterIndex = getRandomInt(0, monsterCoords.length - 1);
@@ -1221,6 +1309,7 @@ purchaseShopItem(itemKey) {
             gridRawData[keyCoord.r][keyCoord.c].hasKey = true;
             this.keyHolderCoords = keyCoord; // Store coords for potential barrel logic later
             console.log(`Key assigned to monster at [${keyCoord.r}, ${keyCoord.c}]`);
+            keySuccessfullyPlaced = true; // Mark success
         } else {
             // Fallback: No monsters placed, place the key as a direct item drop
             console.warn("No monsters placed, cannot assign key to monster. Placing Key Item directly.");
@@ -1239,12 +1328,17 @@ purchaseShopItem(itemKey) {
                         };
                         console.log("Fallback: Placed key ITEM directly at", {r, c});
                         placed = true; // Stop searching
+                        keySuccessfullyPlaced = true; // Mark success
                     }
                 }
             }
             if (!placed) {
                 console.error("CRITICAL: Could not place key item as fallback!");
             }
+        }
+
+        if (keySuccessfullyPlaced) {
+            this.keyAssignedOnFloor = true; // Set the flag indicating the floor's key exists
         }
     }
 
@@ -1391,87 +1485,150 @@ purchaseShopItem(itemKey) {
         this.processEndOfPlayerTurnEffects(); 
     }
 
-    /**
+        /**
      * Handles the logic for picking up an item from a revealed tile.
      * Updates player inventory/stats and changes the tile to EMPTY.
+     * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
+     * and DURABLE (unique inventory items).
      * @param {Tile} tile - The Tile instance containing the item.
      */
-    tryPickupItem(tile) {
-        if (this.isGameOver || !tile) return; // Ignore if game over or tile invalid
-        const tileData = tile.tileData; // Get tile data
-        // Ensure it's an ITEM tile with a valid itemId
+     tryPickupItem(tile) {
+        if (this.isGameOver || !tile) return;
+        const tileData = tile.tileData;
         if (tileData.type !== TILE_TYPE.ITEM || !tileData.itemId) return;
 
         const itemId = tileData.itemId;
         const itemInfo = ITEM_TYPES[itemId];
-        if (!itemInfo) { console.error("Attempted to pick up unknown item ID:", itemId); return; }
-
-        console.log(`Attempting to pick up ${itemInfo.name} at [${tile.r}, ${tile.c}]`);
-
-        let pickedUp = false; // Flag: Was the item successfully obtained?
-        let showInvFullMsg = false; // Flag: Should we show "Inventory Full"?
-
-        // --- Handle Specific Item Types (Key, Coin, Heart) ---
-        if (itemId === 'KEY_ITEM') {
-            this.player.hasKey = true;
-            this.keyDroppedOnFloor = true; // Mark key as obtained for barrel logic
-            this.events.emit('showMessage', 'Dungeon Key Acquired!');
-            pickedUp = true;
-        } else if (itemId === 'COIN') {
-            this.player.gold += itemInfo.goldValue;
-            this.events.emit('showMessage', `+${itemInfo.goldValue} Gold!`);
-            pickedUp = true;
-        } else if (itemId === 'HEART') {
-            if (this.player.hp >= this.player.maxHp) {
-                this.events.emit('showMessage', 'Health already full!');
-                // Don't consume the heart if health is full
-            } else {
-                // Heal random amount within range, clamped to max HP
-                let healAmount = getRandomInt(itemInfo.healRange[0], itemInfo.healRange[1]);
-                healAmount = Math.min(healAmount, this.player.maxHp - this.player.hp);
-                if (healAmount > 0) {
-                    this.player.hp += healAmount;
-                    this.events.emit('showMessage', `Healed ${healAmount} HP!`);
-                } else {
-                     this.events.emit('showMessage', 'Found a Heart!'); // Should be unreachable due to check above
-                }
-                pickedUp = true; // Consume the heart
-            }
-        } else {
-            // --- Handle Regular Inventory Items ---
-            if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
-                // Add item to inventory
-                this.player.inventory.push(itemId);
-                this.events.emit('updateInventory', this.player.inventory); // Update UI
-                this.events.emit('showMessage', `${itemInfo.name} added`);
-                pickedUp = true;
-            } else {
-                // Inventory is full
-                showInvFullMsg = true;
-                // Flash the item tile red briefly to indicate failure
-                tile.bgRect.setFillStyle(0xff0000); // Red flash
-                this.time.delayedCall(200, () => {
-                    // Check if the tile is still the same item before reverting color
-                    // (it might have changed if something else happened quickly)
-                    if (tile && tile.tileData.type === TILE_TYPE.ITEM) {
-                        tile.updateVisuals(); // Re-apply correct visuals based on its data
-                    }
-                });
-            }
+        if (!itemInfo) {
+            console.error("Attempted to pick up unknown item ID:", itemId);
+            return;
         }
 
-        // If item was successfully picked up (includes Key, Coin, Heart if used)
+        console.log(`Attempting to pick up ${itemInfo.name} ([${itemInfo.category}]) at [${tile.r}, ${tile.c}]`);
+
+        let pickedUp = false;       // Flag: Was the item successfully obtained and tile cleared?
+        let showInvFullMsg = false; // Flag: Should we show "Inventory Full"?
+        let endTurn = true;         // Flag: Does this action consume the player's turn?
+
+        // --- Handle by Category ---
+        if (itemInfo.category === 'REGULAR') {
+            // --- Handle REGULAR Items (Instant Use or Consumable Inventory) ---
+            if (itemId === 'KEY_ITEM') {
+                this.player.hasKey = true;
+                this.keyDroppedOnFloor = true; // Mark key as obtained
+                this.events.emit('showMessage', 'Dungeon Key Acquired!');
+                pickedUp = true;
+            } else if (itemId === 'COIN') {
+                this.player.gold += itemInfo.goldValue || 10; // Use defined value or default
+                this.events.emit('showMessage', `+${itemInfo.goldValue || 10} Gold!`);
+                pickedUp = true;
+            } else if (itemId === 'HEART') {
+                if (this.player.hp >= this.player.maxHp) {
+                    this.events.emit('showMessage', 'Health already full!');
+                    endTurn = false; // Picking up heart at full HP doesn't consume turn or item
+                } else {
+                    let healAmount = getRandomInt(itemInfo.healRange[0], itemInfo.healRange[1]);
+                    healAmount = Math.min(healAmount, this.player.maxHp - this.player.hp); // Clamp heal
+                    if (healAmount > 0) {
+                        this.player.hp += healAmount;
+                        this.events.emit('showMessage', `Healed ${healAmount} HP!`);
+                    } else {
+                        this.events.emit('showMessage', 'Found a Heart!'); // Should be rare
+                    }
+                    pickedUp = true; // Consume the heart
+                }
+            } else {
+                // --- Handle Regular Consumable Inventory Items ---
+                if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
+                    this.player.inventory.push(itemId);
+                    this.events.emit('updateInventory', this.player.inventory);
+                    this.events.emit('showMessage', `${itemInfo.name} added`);
+                    pickedUp = true;
+                } else {
+                    showInvFullMsg = true;
+                    endTurn = false; // Failed pickup doesn't consume turn
+                }
+            }
+        } else if (itemInfo.category === 'DURABLE') {
+            // --- Handle DURABLE Items (Unique Inventory) ---
+            if (this.player.inventory.includes(itemId)) {
+                // Player already has this unique item
+                this.events.emit('showMessage', `You already have a ${itemInfo.name}!`);
+                endTurn = false; // Cannot pick up duplicate, no turn consumed
+            } else if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
+                // Add unique durable item to inventory
+                this.player.inventory.push(itemId);
+                this.events.emit('updateInventory', this.player.inventory);
+                this.events.emit('showMessage', `${itemInfo.name} acquired!`);
+                pickedUp = true;
+                // Check specifically if the cloak was picked up to update neighbors *immediately*
+                // (as the effect is passive and needs to apply right away)
+                if (itemId === 'INVISIBILITY_CLOAK') {
+                    // Force update of all hidden neighbor states around revealed areas
+                    this.refreshAllHiddenTileStates();
+                }
+            } else {
+                // Inventory full
+                showInvFullMsg = true;
+                endTurn = false; // Failed pickup doesn't consume turn
+            }
+        } else {
+            console.warn(`Unknown item category for ${itemId}: ${itemInfo.category}`);
+            endTurn = false; // Don't consume turn for unknown category
+        }
+
+
+        // --- Post-Pickup Actions ---
         if (pickedUp) {
-             // Change the tile instance's data to EMPTY and update visuals
-             // Clear item-specific data as well
-             tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, itemId: null });
-             this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
-             this.events.emit('updateStats', this.getPlayerStats()); // Update UI (gold, HP, key icon)
-            this.processEndOfPlayerTurnEffects(); 
+            // Change the tile instance's data to EMPTY and update visuals
+            tile.setData({ type: TILE_TYPE.EMPTY, revealed: true, state: TILE_STATE.REVEALED, itemId: null });
+            this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
+            this.events.emit('updateStats', this.getPlayerStats()); // Update UI (gold, HP, key icon)
+            if (endTurn) {
+                 this.processEndOfPlayerTurnEffects();
+            }
         } else if (showInvFullMsg) {
              // Show inventory full message if applicable
              this.events.emit('showMessage', 'Inventory Full!');
+             // Optional: Flash the item tile red briefly to indicate failure
+             this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
         }
+        // If endTurn is false and nothing was picked up, nothing else happens.
+    }
+
+    /**
+     * Helper method to re-evaluate the state of all hidden tiles.
+     * Useful after gaining an item like the Invisibility Cloak that changes blocking rules.
+     */
+    refreshAllHiddenTileStates() {
+        console.log("Refreshing all hidden tile states due to cloak pickup...");
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                if (tile && tile.tileData.state !== TILE_STATE.REVEALED) {
+                    // For simplicity, just trigger updateNeighborStates for all *revealed* neighbors
+                    // This isn't perfectly efficient but should recalculate most relevant hidden states.
+                    const neighbors = this.getNeighbors(r, c);
+                    for (const { r: nr, c: nc } of neighbors) {
+                        const neighborTile = this.tileObjects[nr]?.[nc];
+                        if (neighborTile && neighborTile.tileData.state === TILE_STATE.REVEALED) {
+                           this.updateNeighborStates(nr, nc); // Update neighbors of the revealed tile
+                        }
+                    }
+                }
+            }
+        }
+        // Need to re-evaluate initial accessibility around the start tile too
+        // Find the revealed door (or any revealed tile) and update its neighbours
+         for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                 if (tile && tile.tileData.state === TILE_STATE.REVEALED) {
+                     this.updateNeighborStates(r,c); // Should propagate updates
+                     // break; // Found one, that might be enough if propagation works well
+                 }
+             }
+         }
     }
 
     /**
@@ -1574,12 +1731,10 @@ purchaseShopItem(itemKey) {
         this.processEndOfPlayerTurnEffects(); 
     }
 
-    /**
-     * Handles the logic for trying to enter the door tile.
-     * Checks if the player has the key and if the floor is clear for a bonus.
-     * @param {Tile} doorTile - The Tile instance representing the door.
-     */
-    tryEnterDoor(doorTile) {
+   // ##############################################
+// #        GameScene Method (Modified)         #
+// ##############################################
+tryEnterDoor(doorTile) {
         if (this.isGameOver || !doorTile || doorTile.tileData.type !== TILE_TYPE.DOOR) return;
 
         if (this.player.hasKey) {
@@ -1599,23 +1754,20 @@ purchaseShopItem(itemKey) {
         } else {
             // Player does not have the key
             this.events.emit('showMessage', 'The door is locked!');
-            // Flash the door red briefly
-            doorTile.bgRect.setFillStyle(0xff0000); // Red flash
-            this.time.delayedCall(200, () => {
-                // Check if tile is still a door before reverting color
-                if (doorTile && doorTile.tileData.type === TILE_TYPE.DOOR) {
-                    doorTile.updateVisuals(); // Re-apply correct visuals (locked icon)
-                }
-            });
+
+            // Flash the door red briefly using the existing robust function
+            // Parameters: tile, flashColor (red), duration (e.g., 100ms), repeats (0 for one flash)
+            this.flashTileBackground(doorTile, 0xff0000, 100, 0);
         }
     }
 
-    /**
+       /**
      * Handles breaking open a barrel tile, determining its random content,
-     * and updating the tile's data and visuals accordingly.
+     * and updating the tile's data and visuals accordingly. Includes logic
+     * to prevent duplicate key generation using the keyAssignedOnFloor flag.
      * @param {Tile} barrelTile - The Tile instance representing the barrel.
      */
-    breakBarrel(barrelTile) {
+     breakBarrel(barrelTile) {
         if (this.isGameOver || !barrelTile || barrelTile.tileData.type !== TILE_TYPE.BARREL) return;
         console.log(`Breaking barrel at [${barrelTile.r}, ${barrelTile.c}]`);
 
@@ -1626,64 +1778,93 @@ purchaseShopItem(itemKey) {
         let showMessage = 'Barrel was empty!';
         const roll = Math.random(); // Random roll [0, 1)
 
-        // Chance for Key/Key Monster (only if key hasn't been dropped/found on the floor yet)
-        if (!this.keyDroppedOnFloor) {
+        // --- MODIFIED KEY CHECK ---
+        // Chance for Key/Key Monster (only if key hasn't been assigned during generation AND not already dropped/found)
+        if (!this.keyAssignedOnFloor && !this.keyDroppedOnFloor) { // Check both flags
+            // Check if the barrel contains a key (5% item, 5% monster - adjust probabilities as desired)
             if (roll < 0.05) { // 5% chance for Key Item
-                outcomeType = TILE_TYPE.ITEM; outcomeItemId = 'KEY_ITEM'; isKeyRelated = true;
-                showMessage = 'Found the Key!'; console.log("Barrel contained: Key Item");
-            } else if (roll < 0.10) { // 5% chance for Key Monster (total 10% key-related)
-                outcomeType = TILE_TYPE.MONSTER; isKeyRelated = true; // Monster will have 'hasKey' flag
+                outcomeType = TILE_TYPE.ITEM;
+                outcomeItemId = 'KEY_ITEM';
+                isKeyRelated = true; // Mark that this outcome is key-related
+                showMessage = 'Found the Key!';
+                console.log("Barrel contained: Key Item");
+            } else if (roll < 0.10) { // 5% chance for Key Monster (rolls 0.05 to 0.099...)
+                outcomeType = TILE_TYPE.MONSTER;
+                isKeyRelated = true; // Mark that this outcome is key-related
                 console.log("Barrel contained: Key Monster");
                 // Message set later when monster type is known
             }
-        }
 
-        // If not key-related, determine other content based on remaining roll range
-        if (!isKeyRelated && outcomeType !== TILE_TYPE.ITEM) { // Check only if key wasn't rolled
-            if (roll < 0.30) { // 20% chance for regular Monster (0.10 to 0.30)
-                outcomeType = TILE_TYPE.MONSTER; console.log("Barrel contained: Monster");
-            } else if (roll < 0.55) { // 25% chance for Coin (0.30 to 0.55)
-                outcomeType = TILE_TYPE.ITEM; outcomeItemId = 'COIN';
-                showMessage = 'Found a Coin!'; console.log("Barrel contained: Coin");
-            } else if (roll < 0.70) { // 15% chance for Potion (0.55 to 0.70)
-                outcomeType = TILE_TYPE.ITEM; outcomeItemId = 'POTION';
-                showMessage = 'Found a Potion!'; console.log("Barrel contained: Potion");
-            } else if (roll < 0.80) { // 10% chance for Heart (0.70 to 0.80)
-                outcomeType = TILE_TYPE.ITEM; outcomeItemId = 'HEART';
-                showMessage = 'Found a Heart!'; console.log("Barrel contained: Heart");
+            // If this barrel is determined to contain the key, set the relevant flags
+            if (isKeyRelated) {
+                this.keyAssignedOnFloor = true; // Mark that the key is now assigned (via this barrel)
+                this.keyDroppedOnFloor = true;  // Also mark as dropped/found immediately
+                console.log("Key assigned and dropped via barrel.");
             }
-            // Remaining 20% (0.80 to 1.00) defaults to Empty
+        } // --- END MODIFIED KEY CHECK ---
+
+
+        // If not key-related (or if key was already assigned/dropped), determine other content based on remaining roll range
+        if (!isKeyRelated) { // Check only if key wasn't rolled *in this specific barrel*
+            // Adjust roll range checks based on key check range (0.10+)
+            if (roll < 0.30) { // ~20% chance for regular Monster (0.10 to 0.299...)
+                outcomeType = TILE_TYPE.MONSTER;
+                console.log("Barrel contained: Monster");
+            } else if (roll < 0.55) { // ~25% chance for Coin (0.30 to 0.549...)
+                outcomeType = TILE_TYPE.ITEM;
+                outcomeItemId = 'COIN';
+                showMessage = 'Found a Coin!';
+                console.log("Barrel contained: Coin");
+            } else if (roll < 0.70) { // ~15% chance for Potion (0.55 to 0.699...)
+                outcomeType = TILE_TYPE.ITEM;
+                outcomeItemId = 'POTION';
+                showMessage = 'Found a Potion!';
+                console.log("Barrel contained: Potion");
+            } else if (roll < 0.80) { // ~10% chance for Heart (0.70 to 0.799...)
+                outcomeType = TILE_TYPE.ITEM;
+                outcomeItemId = 'HEART';
+                showMessage = 'Found a Heart!';
+                console.log("Barrel contained: Heart");
+            }
+            // Remaining ~20% (0.80 to 1.00) defaults to Empty (already set)
         }
 
         // --- Prepare New Tile Data based on outcome ---
         let newTileData = {
-            type: outcomeType, revealed: true, state: TILE_STATE.REVEALED,
+            type: outcomeType,
+            revealed: true,
+            state: TILE_STATE.REVEALED,
             // Clear potential old barrel data & set defaults for other types
-            itemId: null, monsterType: null, hp: 0, maxHp: 0, atk: 0, hasKey: false,
+            itemId: null, // Will be set below if ITEM type
+            monsterType: null, hp: 0, maxHp: 0, atk: 0, hasKey: false, // Will be set below if MONSTER type
             attackedOnce: false, isPoisoned: false, poisonTurns: 0, frozenTurns: 0, isSheep: false,
-            isCycling: false, cycleIndex: 0, lastCycleTime: 0, damage: 0
+            isCycling: false, cycleIndex: 0, lastCycleTime: 0, damage: 0 // Clear trap/random data
         };
 
         if (outcomeType === TILE_TYPE.ITEM) {
             newTileData.itemId = outcomeItemId;
-            if (isKeyRelated) { this.keyDroppedOnFloor = true; } // Mark key as found/in play
+            // keyDroppedOnFloor was set above if it was a key item
         } else if (outcomeType === TILE_TYPE.MONSTER) {
             // Generate monster stats
             let monsterTypeKey = getRandomElement(Object.keys(MONSTER_STATS));
             let monsterBase = MONSTER_STATS[monsterTypeKey];
             let monsterHp = monsterBase.hp + getRandomInt(0, this.currentFloor);
             let monsterAtk = monsterBase.atk + Math.floor(this.currentFloor / 3);
+
             Object.assign(newTileData, {
-                monsterType: monsterTypeKey, hp: monsterHp, maxHp: monsterHp, atk: monsterAtk,
-                hasKey: isKeyRelated // Assign key if determined earlier
+                monsterType: monsterTypeKey,
+                hp: monsterHp,
+                maxHp: monsterHp,
+                atk: monsterAtk,
+                hasKey: isKeyRelated // *** Assign key flag if barrel rolled key monster ***
             });
+
             this.monsterCount++; // Increment monster count for the floor
-            // Set appropriate message
-            const monsterName = monsterBase.name;
+            const monsterName = monsterBase.name || "Monster";
             if (isKeyRelated) {
                 this.keyHolderCoords = { r: barrelTile.r, c: barrelTile.c }; // Track key monster location
-                this.keyDroppedOnFloor = true; // Mark key as 'in play'
                 showMessage = `A ${monsterName} jumps out! (Holds Key)`;
+                // keyDroppedOnFloor and keyAssignedOnFloor were set above
             } else {
                 showMessage = `A ${monsterName} jumps out!`;
             }
@@ -1693,15 +1874,17 @@ purchaseShopItem(itemKey) {
         // This automatically triggers the Tile's updateVisuals method.
         barrelTile.setData(newTileData);
 
-        // Update neighbor states based on the *new* tile type (monster blocks, others don't)
+        // Update neighbor states based on the *new* tile type (monster blocks unless cloaked, others don't)
         if (outcomeType === TILE_TYPE.MONSTER) {
-            this.updateNeighborStates(barrelTile.r, barrelTile.c, true, false); // Block neighbors
+            // Pass true for isMonsterBlock, updateNeighborStates handles cloak check internally
+            this.updateNeighborStates(barrelTile.r, barrelTile.c, true, false);
         } else {
             this.updateNeighborStates(barrelTile.r, barrelTile.c, false, false); // Unblock/no change
         }
         this.events.emit('showMessage', showMessage); // Display outcome message via UI
+        this.events.emit('updateStats', this.getPlayerStats()); // Update stats if monster count changed
 
-        this.processEndOfPlayerTurnEffects(); 
+        this.processEndOfPlayerTurnEffects(); // Process end of turn effects
     }
 
     /**
@@ -2031,92 +2214,99 @@ purchaseShopItem(itemKey) {
 
     // --- State Updates ---
 
+    
     /**
      * Updates the state (and visuals) of neighboring tiles when a tile is revealed or cleared.
-     * Determines if neighbors become accessible, blocked, or remain inaccessible.
+     * Determines if neighbors become accessible, blocked (unless player has cloak), or remain inaccessible.
      * @param {number} r - Row index of the triggering tile.
      * @param {number} c - Column index of the triggering tile.
-     * @param {boolean} [isMonsterBlock=false] - True if revealing a monster (blocks neighbors).
+     * @param {boolean} [isMonsterBlock=false] - True if revealing a monster (potentially blocks neighbors).
      * @param {boolean} [isMonsterUnblock=false] - True if killing a monster (potentially unblocks neighbors).
      */
-    updateNeighborStates(r, c, isMonsterBlock = false, isMonsterUnblock = false) {
+     updateNeighborStates(r, c, isMonsterBlock = false, isMonsterUnblock = false) {
         const neighbors = this.getNeighbors(r, c); // Get adjacent coordinates
+        const hasCloak = this.playerHasCloak(); // Check if player has the cloak
 
         for (const { r: nr, c: nc } of neighbors) {
             const neighborTile = this.tileObjects[nr]?.[nc]; // Get the Tile instance
-            // Skip if neighbor doesn't exist or is already revealed
             if (!neighborTile || neighborTile.tileData.state === TILE_STATE.REVEALED) {
-                continue;
+                continue; // Skip if neighbor doesn't exist or is already revealed
             }
 
-            const neighborData = neighborTile.tileData; // Get the data object
-            const previousState = neighborData.state; // Store current state for comparison
+            const neighborData = neighborTile.tileData;
+            const previousState = neighborData.state;
             let newState = previousState; // Start assuming state doesn't change
 
-            if (isMonsterBlock) {
-                // A monster was revealed at [r, c], so block this neighbor
+            if (isMonsterBlock && !hasCloak) {
+                // A monster was revealed at [r, c], AND player DOES NOT have cloak -> block this neighbor
                 newState = TILE_STATE.HIDDEN_BLOCKED;
-            } else if (isMonsterUnblock) {
-                // A monster was killed at [r, c], potentially unblock this neighbor
-                // Only consider unblocking if it was previously blocked or inaccessible
-                if (previousState === TILE_STATE.HIDDEN_BLOCKED || previousState === TILE_STATE.HIDDEN_UNACCESSIBLE) {
-                    // Check if *any* other neighbor of *this neighbor* is still blocking it
-                    let isStillBlocked = false;
-                    const neighborsOfNeighbor = this.getNeighbors(nr, nc);
-                    for (const { r: nnr, c: nnc } of neighborsOfNeighbor) {
-                        // Don't check against the tile that just got unblocked ([r,c])
-                        if (nnr === r && nnc === c) continue;
-                        const n2Data = this.tileObjects[nnr]?.[nnc]?.tileData; // Get data of neighbor's neighbor
-                        // Is it a revealed, living monster?
-                        if (n2Data && n2Data.state === TILE_STATE.REVEALED && n2Data.type === TILE_TYPE.MONSTER && n2Data.hp > 0) {
-                            isStillBlocked = true;
-                            break; // Found a blocking monster, no need to check further
-                        }
-                    }
-                    // If not blocked by other monsters, check if it's adjacent to *any* revealed non-monster tile
-                    if (!isStillBlocked) {
-                         let isAdjacentToClear = false;
-                         for (const { r: nnr, c: nnc } of neighborsOfNeighbor) {
-                             const n2Data = this.tileObjects[nnr]?.[nnc]?.tileData;
-                             // Check if adjacent tile is revealed AND (not a monster OR a dead monster)
-                             if (n2Data && n2Data.state === TILE_STATE.REVEALED && !(n2Data.type === TILE_TYPE.MONSTER && n2Data.hp > 0)) {
-                                 isAdjacentToClear = true; break; // Found one clear neighbor, that's enough
-                             }
-                         }
-                         // Become normally accessible ('?') if adjacent to clear, otherwise stay inaccessible
-                         newState = isAdjacentToClear ? TILE_STATE.HIDDEN_NORMAL : TILE_STATE.HIDDEN_UNACCESSIBLE;
-                    } else {
-                        // Still blocked by another adjacent monster
-                        newState = TILE_STATE.HIDDEN_BLOCKED;
+            } else if (isMonsterUnblock || (isMonsterBlock && hasCloak)) {
+                 // A monster was killed at [r, c] (isMonsterUnblock = true), OR
+                 // a monster was revealed but player HAS cloak (isMonsterBlock = true, hasCloak = true)
+                 // -> potentially unblock this neighbor or prevent blocking.
+
+                // Check if this neighbor tile is STILL blocked by ANOTHER adjacent monster (ignoring the cloak for this check)
+                let isStillBlockedByOther = false;
+                const neighborsOfNeighbor = this.getNeighbors(nr, nc);
+                for (const { r: nnr, c: nnc } of neighborsOfNeighbor) {
+                    // Skip checking against the tile that triggered this update [r,c]
+                    if (nnr === r && nnc === c) continue;
+
+                    const n2Data = this.tileObjects[nnr]?.[nnc]?.tileData;
+                    // Check if another neighbor is a revealed, living monster AND player LACKS cloak
+                    if (!hasCloak && n2Data && n2Data.state === TILE_STATE.REVEALED && n2Data.type === TILE_TYPE.MONSTER && n2Data.hp > 0) {
+                        isStillBlockedByOther = true;
+                        break; // Found a blocking monster, no need to check further
                     }
                 }
-            } else { // A non-monster, non-barrel was revealed, or an empty space was created at [r,c]
-                // Make this neighbor accessible if it was previously inaccessible, unless blocked by another monster
-                if (previousState === TILE_STATE.HIDDEN_UNACCESSIBLE) {
-                    // Check if blocked by ANOTHER adjacent revealed monster
+
+                if (isStillBlockedByOther) {
+                     // Blocked by a different monster (and player lacks cloak)
+                     newState = TILE_STATE.HIDDEN_BLOCKED;
+                } else {
+                     // Not blocked by others (or player has cloak). Check if adjacent to *any* revealed tile.
+                     let isAdjacentToClear = false;
+                     for (const { r: nnr, c: nnc } of neighborsOfNeighbor) {
+                         const n2Data = this.tileObjects[nnr]?.[nnc]?.tileData;
+                         // Check if adjacent tile is revealed AND (not a monster OR a dead monster OR player has cloak)
+                         const isBlockingMonster = (n2Data?.type === TILE_TYPE.MONSTER && n2Data?.hp > 0);
+                         if (n2Data && n2Data.state === TILE_STATE.REVEALED && (!isBlockingMonster || hasCloak)) {
+                            isAdjacentToClear = true;
+                            break; // Found one clear/non-blocking revealed neighbor
+                         }
+                     }
+                     // Become normally accessible ('?') if adjacent to clear, otherwise stay inaccessible
+                     newState = isAdjacentToClear ? TILE_STATE.HIDDEN_NORMAL : TILE_STATE.HIDDEN_UNACCESSIBLE;
+                 }
+
+            } else { // A non-monster was revealed, or empty space created, and player doesn't have cloak relevant here
+                 // Make this neighbor accessible if it was previously inaccessible, unless blocked by another monster
+                 if (previousState === TILE_STATE.HIDDEN_UNACCESSIBLE) {
                     let blockedByOtherMonster = false;
                     const neighborsOfNeighbor = this.getNeighbors(nr, nc);
                     for(const {r: nnr, c: nnc} of neighborsOfNeighbor) {
                         if (nnr === r && nnc === c) continue; // Don't check the triggering tile itself
                         const n2Data = this.tileObjects[nnr]?.[nnc]?.tileData;
-                        if (n2Data && n2Data.state === TILE_STATE.REVEALED && n2Data.type === TILE_TYPE.MONSTER && n2Data.hp > 0 ) {
+                         // Check if another neighbor is a revealed, living monster AND player LACKS cloak
+                        if (!hasCloak && n2Data && n2Data.state === TILE_STATE.REVEALED && n2Data.type === TILE_TYPE.MONSTER && n2Data.hp > 0 ) {
                             blockedByOtherMonster = true; break; // Found a blocker
                         }
                     }
-                    // Set state based on whether another monster blocks it
+                    // Set state based on whether another monster blocks it (without cloak)
                     newState = blockedByOtherMonster ? TILE_STATE.HIDDEN_BLOCKED : TILE_STATE.HIDDEN_NORMAL;
-                }
-                // If it was already HIDDEN_NORMAL or HIDDEN_BLOCKED, its state doesn't change here
-                // (unless unblocked by isMonsterUnblock logic above).
-            }
+                 }
+                 // If it was already HIDDEN_NORMAL or HIDDEN_BLOCKED, its state doesn't change unless unblocked above.
+             }
 
-            // Update the tile instance's data if the state actually changed
+
+            // Update the tile instance's data only if the state actually changed
             if (newState !== previousState) {
                 // console.log(`Updating neighbor [${nr}, ${nc}] from ${previousState} to ${newState}`);
                 neighborTile.setData('state', newState); // This triggers the Tile's visual update
             }
         }
     }
+
 
     /**
      * Gets the coordinates of valid neighboring tiles (4-way or 8-way based on allowDiagonal flag).
@@ -2204,6 +2394,15 @@ purchaseShopItem(itemKey) {
               this.tileContainer.destroy(true); // true destroys children if any linger unexpectedly
          }
          this.tileContainer = null;
+    }
+
+     /**
+     * Checks if the player currently has the Invisibility Cloak in their inventory.
+     * @returns {boolean} True if the cloak is found, false otherwise.
+     */
+     playerHasCloak() {
+        // Check if the specific cloak ID exists in the player's inventory array
+        return this.player.inventory.includes('INVISIBILITY_CLOAK');
     }
 
      // --- Update Loop ---
@@ -2373,28 +2572,54 @@ purchaseShopItem(itemKey) {
          // Note: For immediate visual effect, might need to recalculate all neighbor states.
          // Currently, it only affects future neighbor updates.
      }
-    /** Debug: Fills the player's inventory with random consumable items. */
-    debugFillInventory() {
-         if (this.isGameOver) return;
-         console.log("Debug: Filling inventory...");
-         this.player.inventory = []; // Clear existing inventory
-         // Get list of consumable item IDs (excluding special ones like key, coin, heart)
-         const itemIds = Object.keys(ITEM_TYPES).filter(id =>
-             !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id) && ITEM_TYPES[id].consumable
-         );
-         for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
-             let randomItemId = getRandomElement(itemIds);
-             if (randomItemId) {
-                 this.player.inventory.push(randomItemId);
-             } else {
-                 // Fallback if item list is somehow empty
-                 console.warn("Could not get random item ID for debug fill.");
-                 break;
-             }
-         }
-         this.events.emit('updateInventory', this.player.inventory); // Update UI
-         this.events.emit('showMessage', 'Debug: Inventory Filled');
-     }
+    
+       /** Debug: Fills the player's inventory with random items (including non-consumables). */
+       debugFillInventory() {
+        if (this.isGameOver) return;
+        console.log("Debug: Filling inventory (allowing non-consumables)...");
+        this.player.inventory = []; // Clear existing inventory
+
+        // --- MODIFIED FILTER ---
+        // Get list of item IDs, excluding only the special instant-use ones.
+        // Now includes both consumable REGULAR items and DURABLE items.
+        const itemIds = Object.keys(ITEM_TYPES).filter(id =>
+            !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id)
+            // Removed the '&& ITEM_TYPES[id].consumable' check
+        );
+
+        // --- Keep track of added durable items to prevent duplicates in one fill ---
+        const addedDurables = new Set();
+
+        for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
+            if (itemIds.length === 0) break; // Stop if no more valid items to choose from
+
+            let randomItemId = getRandomElement(itemIds);
+            let itemInfo = ITEM_TYPES[randomItemId];
+
+            // If it's durable, check if we already added one like it in this fill action
+            if (itemInfo.category === 'DURABLE') {
+                if (addedDurables.has(randomItemId)) {
+                    // Don't add duplicate durable in the *same* fill action. Try again for this slot.
+                    // This is tricky - might loop indefinitely if only durables are left and already added.
+                    // A simpler approach for debug might be to just skip adding if duplicate durable is chosen.
+                    console.log(`Debug Fill: Skipping duplicate durable ${randomItemId}`);
+                    continue; // Skip to next inventory slot without adding
+                } else {
+                    addedDurables.add(randomItemId); // Mark this durable as added for this fill
+                }
+            }
+
+            if (randomItemId) {
+                this.player.inventory.push(randomItemId);
+            } else {
+                console.warn("Could not get random item ID for debug fill.");
+                break; // Stop if item list is somehow empty
+            }
+        }
+        this.events.emit('updateInventory', this.player.inventory); // Update UI
+        this.events.emit('showMessage', 'Debug: Inventory Filled');
+    }
+    
     /** Debug: Toggles whether monsters attack first in combat. */
      debugToggleStrikeFirst() {
          if (this.isGameOver) return;
@@ -2425,6 +2650,9 @@ class UIScene extends Phaser.Scene {
         this.keyIconText = null; 
         this.helpButton = null;
          this.debugButton = null;
+
+         this.durableItemPanel = null;
+        this.pendingDurableAction = null; // Stores {itemId, index} for sell action
         // Panels
         this.debugPanel = null;
          this.itemUsePanel = null;
@@ -2567,6 +2795,45 @@ class UIScene extends Phaser.Scene {
         this.itemUsePanel.add([itemPanelBg, itemIconText, itemNameText, itemDescText, useButton, cancelButton]);
 
 
+        { // --- Create Durable Item Panel (Initially Hidden) ---
+            this.durableItemPanel = this.add.container(0, 0)
+                .setDepth(102) // Same depth as item use panel, or adjust as needed
+                .setVisible(false);
+
+            // Panel Background
+            const durablePanelBg = this.add.rectangle(0, 0, 300, 200, COLORS.PANEL_BG, 0.95)
+                .setOrigin(0.5).setStrokeStyle(2, COLORS.TEXT);
+            durablePanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => { event.stopPropagation(); }); // Block clicks
+
+            // Panel Content
+            const durableIconText = this.add.text(0, -50, '', { fontSize: '48px' }).setOrigin(0.5); // Positioned later
+            const durableNameText = this.add.text(0, -10, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5); // Positioned later
+            const durableDescText = this.add.text(0, 30, '', { fontSize: '14px', fill: '#DDD', align: 'center', wordWrap: { width: 260 } }).setOrigin(0.5); // Positioned later
+            const sellButton = this.add.text(-70, 80, 'Sell (5G)', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.GOLD_TEXT, color: COLORS.TEXT_DARK, padding: { x: 15, y: 8 } })
+                .setOrigin(0.5).setInteractive(); // Positioned later
+            const closeDurableButton = this.add.text(70, 80, 'Close', { fontSize: '16px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: { x: 15, y: 8 } })
+                .setOrigin(0.5).setInteractive(); // Positioned later
+
+            // Add elements to container
+            this.durableItemPanel.add([durablePanelBg, durableIconText, durableNameText, durableDescText, sellButton, closeDurableButton]);
+
+            // --- Button Actions for Durable Panel (Add these handlers) ---
+            sellButton.on('pointerdown', () => {
+                if (this.pendingDurableAction) {
+                    const gameScene = this.scene.get('GameScene');
+                    if (gameScene) {
+                        // Pass the stored context {itemId, index}
+                        gameScene.events.emit('sellDurableItem', this.pendingDurableAction);
+                    }
+                    this.hideAllPanels(); // Close panel after emitting
+                }
+            });
+
+            closeDurableButton.on('pointerdown', () => {
+                this.hideAllPanels(); // Just close the panel
+            });
+        }
+
         // --- Create Floor Clear Panel (Initially Hidden) ---
         // Set origin to center for easier positioning
         this.floorClearPanel = this.add.container(0, 0)
@@ -2696,6 +2963,42 @@ class UIScene extends Phaser.Scene {
         this.positionUIElements(); // Perform initial positioning of all UI elements
     }
 
+     /**
+     * Shows the durable item description panel, populating it with item details.
+     * @param {string} itemId - The ID of the durable item clicked.
+     * @param {number} index - The inventory index of the item.
+     */
+     showDurableItemPanel(itemId, index) {
+        if (!this.durableItemPanel) return;
+        const itemInfo = ITEM_TYPES[itemId];
+        if (!itemInfo || itemInfo.category !== 'DURABLE') {
+            console.warn(`Attempted to show durable panel for non-durable item: ${itemId}`);
+            return;
+        }
+
+        this.hideAllPanels(false); // Hide other panels first
+        this.pendingDurableAction = { itemId, index }; // Store context for the sell button
+
+        // Populate panel content - indices depend on the order you added elements in create()
+        const list = this.durableItemPanel.list;
+        const bg = list[0];
+        const iconText = list[1];
+        const nameText = list[2];
+        const descText = list[3];
+        const sellBtn = list[4];
+        // const closeBtn = list[5]; // No need to modify close button text
+
+        iconText.setText(itemInfo.icon || '?');
+        nameText.setText(itemInfo.name || 'Durable Item');
+        descText.setText(itemInfo.description || '');
+        sellBtn.setText(`Sell (${itemInfo.sellValue || 5}G)`); // Use defined sellValue or default 5
+
+        // Set panel visible and block game input
+        this.durableItemPanel.setVisible(true);
+        this.isModalActive = true;
+        this.positionUIElements(); // Reposition elements now that content is set & panel is visible
+    }
+
     /** Shows the Shop panel */
     showShopPanel() {
         if (!this.shopPanel) { return; }
@@ -2822,6 +3125,21 @@ class UIScene extends Phaser.Scene {
              fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8); // Wrap text
              fcOkButton.setPosition(0, panelHeight * 0.3);
          }
+
+         // Durable Item Panel Positioning
+        if (this.durableItemPanel && this.durableItemPanel.visible) {
+            const panelWidth = 300; // Match creation size or make responsive
+            const panelHeight = 200;
+            this.durableItemPanel.setPosition(panelCenterX, panelCenterY); // Use centers calculated earlier
+
+            const list = this.durableItemPanel.list;
+            const bg = list[0]; bg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG
+            const iconText = list[1]; iconText.setPosition(0, -panelHeight * 0.30); // Adjust Y as needed
+            const nameText = list[2]; nameText.setPosition(0, -panelHeight * 0.05);
+            const descText = list[3]; descText.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
+            const sellBtn = list[4]; sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
+            const closeBtn = list[5]; closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
+        }
 
          // Shop Panel Positioning
      if (this.shopPanel && this.shopPanel.visible) {
@@ -2967,13 +3285,21 @@ class UIScene extends Phaser.Scene {
         if (this.itemUsePanel) this.itemUsePanel.setVisible(false);
         if (this.floorClearPanel) this.floorClearPanel.setVisible(false);
         if (this.shopPanel) this.shopPanel.setVisible(false);
+        if (this.durableItemPanel) this.durableItemPanel.setVisible(false);
 
         // Clear pending item use data when any panel is hidden
         if (this.pendingItemUse) this.pendingItemUse = null;
+        if (this.pendingDurableAction) this.pendingDurableAction = null;
 
         // Only deactivate modal flag if *all* panels (DOM and Phaser) are now hidden
         const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
-        if (!this.debugPanel?.visible && !this.itemUsePanel?.visible && !this.floorClearPanel?.visible && !this.shopPanel?.visible && !domVisible) {
+        // Add the new panels to this check
+        if (!this.debugPanel?.visible &&
+            !this.itemUsePanel?.visible &&
+            !this.floorClearPanel?.visible &&
+            !this.shopPanel?.visible &&
+            !this.durableItemPanel?.visible && 
+            !domVisible) {
             this.isModalActive = false;
         }
     }
@@ -3074,10 +3400,27 @@ class UIScene extends Phaser.Scene {
         const itemId = slotBg.getData('itemId');
         const index = slotBg.getData('inventoryIndex'); // Get index stored during creation
 
-        // If valid item data exists, show the confirmation panel
+        // If valid item data exists, check category and show the appropriate panel
         if (itemId !== null && index !== null) {
-            console.log(`Clicked inventory slot ${index}, item: ${itemId}. Showing confirmation...`);
-            this.showItemUsePanel(itemId, index);
+            const itemInfo = ITEM_TYPES[itemId];
+            if (!itemInfo) {
+                console.error("Clicked inventory slot with unknown item ID:", itemId);
+                return;
+            }
+
+            console.log(`Clicked inventory slot ${index}, item: ${itemId} (${itemInfo.category}).`);
+
+            if (itemInfo.category === 'DURABLE') {
+                // Show the new panel for durable items
+                this.showDurableItemPanel(itemId, index);
+            } else if (itemInfo.category === 'REGULAR' && itemInfo.effect) {
+                // Show the existing panel for usable regular items
+                this.showItemUsePanel(itemId, index);
+            } else {
+                // Item is REGULAR but not usable (e.g., if Key/Coin somehow ended up in inventory)
+                // Or category is unknown. Do nothing.
+                console.log(`Item ${itemId} (${itemInfo.category}) in inventory is not directly usable.`);
+            }
         }
     }
 
