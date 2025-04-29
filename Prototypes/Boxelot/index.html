@@ -37,7 +37,7 @@
         /* Style for HTML Instructions Panel */
         #instructions-dom {
             /* Initially hidden */
-            display: none; /* This will now correctly hide it by default */
+            display: flex; 
             /* Positioning */
             position: absolute;
             z-index: 100; /* Above game canvas */
@@ -58,6 +58,20 @@
             /* Layout - display: flex is now only applied via JS when shown */
             flex-direction: column;
             overflow: hidden; /* Hide anything spilling out */
+        }
+         /* Style links within instructions paragraphs */
+         #instructions-dom p a,
+        #instructions-dom p a:link, /* Target unvisited links */
+        #instructions-dom p a:visited { /* Target visited links */
+            color: #448AFF; /* A clear blue color - adjust hex code if desired */
+            text-decoration: underline; /* Ensure underline */
+        }
+
+        /* Optional: Style for hover/active states (maintains underline) */
+        #instructions-dom p a:hover,
+        #instructions-dom p a:active {
+            color: #2962FF; /* Slightly darker/different blue on hover/click */
+            text-decoration: underline; /* Keep underlined */
         }
         /* Header within the instructions panel */
         #instructions-dom .sticky-header {
@@ -115,27 +129,80 @@
         </div>
 
     <div id="instructions-dom">
-            <div class="sticky-header">
-                <h3>How to Play Boxelot</h3>
-                <button id="instructions-close-dom">&times;</button>
-            </div>
-            <div class="scrollable-content">
-                <p>
-                    - Start by clicking tiles with a '?' adjacent (Up/Down/Left/Right) to revealed areas.<br>
-                    - Tiles without symbols ('') or with 'X' are blocked or unreachable.<br>
-                    - MONSTER (Icon on Red Bg): Click revealed monster to attack. Combat is turn-based (Player hits first by default). Shows statuses (🥦, ❄️). Defeat monsters to unblock neighbors & drop a Coin 🪙.<br> - KEY HOLDER: Attack the monster! A 🗝️ icon appears after first hit. Defeat it to drop the Key Item.<br>
-                    - KEY ITEM (🗝️ on Yellow Bg): Click the dropped key to pick it up.<br>
-                    - DOOR (🔒/🔓 on Brown Bg): Click unlocked door 🔓 with the key 🗝️ to advance. If floor clear (no monsters left), get a bonus!<br>
-                    - COIN (🪙 on Yellow Bg): Click revealed/dropped coin for +10 Gold.<br>
-                    - HEART (💖 on Pink Bg): Click revealed/dropped heart to heal 3-5 HP (only if not full health).<br>
-                    - TRAP (Dark Grey Bg): Damages you instantly upon reveal.<br>
-                    - BARREL (🏺 on Brown Bg): Click revealed barrel to break (Enemy? Coin? Potion? Heart? Key? Nothing?).<br> - RANDOM TILE (✨ on Grey Bg): Cycles items (🍷, 🗡️, 🥦, ❄️, 🐑, 💖, 🪙, 🧨). Click to get current or take damage from 🧨.<br>
-                    - ITEM (Icon on Green Bg): Click revealed item icon (🍷, 🗡️, 🥦, ❄️, 🐑) to pick it up.<br>
-                    - INVENTORY (Footer): Click items (max 6). A popup appears showing item details (like 🍷5 for a potion healing 5 HP). Click 'Use' to activate or 'Cancel'.<br>
-                    - EMPTY (Grey Bg): Safe tile.<br>
-                    - Goal: Reach the deepest floor possible!
-                </p>
-            </div>
+        <div class="sticky-header">
+            <h3>How to Play Boxelot</h3>
+            <button id="instructions-close-dom">&times;</button>
+        </div>
+        <div class="scrollable-content">
+            <p><strong><u>The Goal</u></strong></p>
+            <p>Descend as deep into the dungeon as possible! Find the key 🗝️ on each floor, unlock the door 🚪, and proceed to the next level.</p>
+
+            <p><strong><u>Basics</u></strong></p>
+            <ul>
+                <li><strong>Reveal Tiles:</strong> Click tiles marked with '?' to reveal tiles. Only tiles adjacent to already revealed tiles can be revealed.</li>
+                <li><strong>Unreachable Tiles:</strong> Tiles without '?' or 'X' cannot be clicked yet.</li>
+                <li><strong>Blocked Tiles:</strong> Tiles marked 'X' are blocked by an adjacent, revealed monster. You must defeat the monster to reveal the tile.</li>
+                <li><strong>Floor Clear Bonus:</strong> Defeat all monsters on a floor before opening the door to receive a Gold bonus!</li>
+            </ul>
+
+                <p><strong><u>Player &amp; Inventory</u></strong></p>
+                <ul>
+                <li><strong>Stats:</strong> Track your Health, Attack, and Gold in the header.</li>
+                <li><strong>Inventory:</strong> The footer shows your inventory. Click an item to see details.</li>
+                <li><strong>Using Items:</strong> For usable items, click 'Use' in the item detail panel to activate its effect.</li>
+                <li><strong>Selling Items:</strong> For 'Durable' items (see below), click 'Sell' in the item detail panel to gain Gold.</li>
+            </ul>
+
+            <p><strong><u>Item Drops</u></strong></p>
+            <p>These items that have an immediate effect when you interact with them. They are not added to your inventory, their effects just happen.</p>
+            <ul>
+                <li><strong>Coin (🪙):</strong> Pick up to gain gold.</li>
+                <li><strong>Heart (💖):</strong> Pick up to heal.</li>
+                <li><strong>Explosive (🧨):</strong> Instantly deals 2 damage to YOU!</li>
+            </ul>
+
+            <p><strong><u>Usable Items</u></strong></p>
+            <p>These items can be picked up and placed in your inventory. Clicking on an item in the inventory will let you read what it does and use it.</p>
+                <ul>
+                <li><strong>Potion (🍷):</strong> Use to heal .</li>
+                <li><strong>Blade Scroll (🗡️):</strong> Use up to damage all revealed monsters.</li>
+                <li><strong>Poison Vial (🥦):</strong> Use to poison all revealed monsters (damage over time).</li>
+                <li><strong>Freeze Scroll (❄️):</strong> Use to freeze all revealed monsters (prevents them from attacking).</li>
+                <li><strong>Sheep Scroll (🐑):</strong> Use to turn all revealed monsters into weak sheep.</li>
+            </ul>
+
+                <p><strong><u>Durable Items</u></strong></p>
+                <p>These items provide passive effects while held in your inventory. Click them in the inventory to view details and optionally Sell for Gold.</p>
+                <ul>
+                <li><strong>Attack Rune (👊):</strong> Grants extra Attack.</li>
+                <li><strong>Defense Rune (✋):</strong> Grants extra Maximum HP.</li>
+                <li><strong>Shield (🛡️):</strong> Grants some chance to dodge monster attacks.</li>
+                <li><strong>Spike Trap (🪤):</strong> Causes monsters to take damage when they are first revealed.</li>
+                <li><strong>Lantern (💡):</strong> Reveals the location of the hidden key 🗝️ on every floor.</li>
+                <li><strong>Invisibility Cloak (🧥):</strong> Prevents revealed monsters from blocking adjacent hidden tiles.</li>
+            </ul>
+
+            <p><strong><u>Monsters</u></strong></p>
+            <p>Various monsters appear with increasing HP/ATK on deeper floors. Click a revealed monster to attack it. Combat is turn-based (you usually attack first, if the enemy survives they attack back). Monsters can be Poisoned (🥦 - take damage each turn) or Frozen (❄️ - cannot attack). One specific, regular monster holds the Key Item 🗝️ needed for the door.</p>
+            <ul>
+                <li><strong>General(🕷️🐺🐦‍🔥👹🦇💀🧟👿👺):</strong>  Defeated monsters have a chance to drop a Coin 🪙, and will unblock adjacent tiles. Different monsters appear/disappear based on floor depth.</li>
+                <li><strong>Shapeshifters (🐌->🐚 / 🦎->🐉):</strong> When these monsters' HP reaches 0 for the first time, they transform into a different form with less HP and attack. You must defeat the second form to clear them.</li>
+                <li><strong>Bosses (🧌👻🦑🦎):</strong> Appear every 5 floors starting on Floor 5. They are much tougher than regular monsters! Defeating a Boss guarantees a durable item reward</li>
+            </ul>
+
+            <p><strong><u>Special Tiles</u></strong></p>
+                <ul>
+                <li><strong>Door (🚪):</strong> Starts revealed. Unlocks 🔓 if you have the key. Click the unlocked door to advance to the next floor.</li>
+                <li><strong>Key (🗝️):</strong> Appears on the tile after defeating the Key Holder monster. Click the key to pick it up.</li>
+                <li><strong>Barrel (🏺):</strong> Click a revealed barrel to break it open. It might contain an item, or not.</li>
+                <li><strong>Random (✨):</strong> When revealed, rapidly cycles through potential items (🍷🗡️🥦❄️🐑💖🪙🧨). Click it again to stop the cycle and receive the currently displayed item. Watch out for the Explosive 🧨!</li>
+                <li><strong>Shop (🏪):</strong> Appears every few floors. Click to spend Gold 🪙 to increase Max HP, Attack, or fully heal.</li>
+                <li><strong>Challenge (🪟):</strong> Appears every few floors. Interacting with it requires meeting certain conditions (like having enough HP ❤️). They may trigger automatically when specific events happen. Completing the challenge rewards a Durable item or Gold.</li>
+            </ul>
+
+            <p><strong><u>Similar Games</u></strong></p>
+            <p>Inspired by the first dungelot, if you like this game check out<a href="https://store.steampowered.com/app/403940/Dungelot_Shattered_Lands/">Dungelot</a>, and <a href="https://store.steampowered.com/app/339400/Runestone_Keeper/">RunestoneKeeper</a></p>
+        </div>
     </div>
 
     <script>
@@ -5139,226 +5206,212 @@
         /**
          * Positions all UI elements based on the current screen size.
          * Called on create and resize. Handles responsive layout.
+         * *** MODIFIED: Aligns header elements (left, right, center) relative to the gameplay grid bounds. ***
          * *** MODIFIED: Added positioning for challengeRequirementPanel. ***
          */
-        positionUIElements() {
+         positionUIElements() {
             const width = this.cameras.main.width;
             const height = this.cameras.main.height;
             const headerHeight = height * UI.HEADER_RATIO;
             const footerHeight = height * UI.FOOTER_RATIO;
-            const padding = width * 0.02; // Padding from screen edges
+            // const padding = width * 0.02; // Padding from screen edges (No longer primary alignment reference for header)
+            const smallPadding = Math.max(5, width * 0.01); // Use a smaller padding for internal spacing
+
+            // --- Get Grid Dimensions from GameScene ---
+            const gameScene = this.scene.get('GameScene');
+            let gridOffsetX = smallPadding; // Default to small padding if GameScene unavailable
+            let gridContentWidth = width - (smallPadding * 2); // Default to screen width minus padding
+            let gridRightEdgeX = width - smallPadding; // Default right edge
+            let gridCenterX = width / 2; // Default center
+
+            if (gameScene) {
+                // Use calculated values from GameScene if available
+                gridOffsetX = gameScene.gridOffsetX || gridOffsetX;
+                gridContentWidth = gameScene.gridContentWidth || gridContentWidth;
+                gridRightEdgeX = gridOffsetX + gridContentWidth; // Calculate the right edge of the grid
+                gridCenterX = gridOffsetX + gridContentWidth / 2; // Calculate the center of the grid
+                console.log(`UI Positioning using Grid X:${gridOffsetX.toFixed(0)}, W:${gridContentWidth.toFixed(0)}`); // Optional log
+            } else {
+                console.warn("UIScene: Could not get GameScene reference for grid dimensions.");
+            }
+            // --- End Get Grid Dimensions ---
+
+
             const topMargin = headerHeight * 0.15; // Margin from top within header
             const fontSize = Math.max(12, Math.min(24, Math.floor(headerHeight * 0.3))); // Scale font size
-            const textStyle = {
-                font: `${fontSize}px Arial`
-            }; // Base text style
+            const textStyle = { font: `${fontSize}px Arial` }; // Base text style
 
             // --- Position Header & Footer Backgrounds ---
             this.headerBg.setPosition(0, 0).setSize(width, headerHeight);
-            this.footerBg.setPosition(0, height - footerHeight).setSize(width, footerHeight); // Position footer bg at bottom
+            this.footerBg.setPosition(0, height - footerHeight).setSize(width, footerHeight);
 
-            // --- Position Header Text Elements ---
-            this.hpText.setPosition(padding, topMargin).setStyle(textStyle);
-            this.atkText.setPosition(padding, topMargin + fontSize * 1.3).setStyle(textStyle); // Below HP
-            this.goldText.setPosition(width / 2, topMargin).setStyle({
-                ...textStyle,
-                fill: COLORS.GOLD_TEXT
-            }); // Centered
-            this.keyIconText.setPosition(width / 2, topMargin + fontSize * 1.3).setFontSize(fontSize); // Below Gold
-            this.floorText.setPosition(width - padding, topMargin).setStyle(textStyle); // Right aligned
+            // --- Position Header Text Elements (Relative to Grid) ---
+            // Left-aligned (HP, ATK) - Use gridOffsetX as the left boundary
+            this.hpText.setPosition(gridOffsetX, topMargin).setStyle(textStyle);
+            this.atkText.setPosition(gridOffsetX, topMargin + fontSize * 1.3).setStyle(textStyle); // Below HP
 
-            // --- Position Header Buttons (right side) ---
+            // Center-aligned (Gold, Key) - Use gridCenterX
+            this.goldText.setPosition(gridCenterX, topMargin).setStyle({ ...textStyle, fill: COLORS.GOLD_TEXT });
+            this.keyIconText.setPosition(gridCenterX, topMargin + fontSize * 1.3).setFontSize(fontSize); // Below Gold
+
+            // Right-aligned (Floor, Buttons) - Use gridRightEdgeX as the right boundary
+            this.floorText.setPosition(gridRightEdgeX, topMargin).setStyle(textStyle); // Right aligned to grid edge
+
+            // --- Position Header Buttons (Right side, relative to Grid) ---
             const buttonSize = Math.max(16, fontSize); // Scale button font size
-            const buttonY = Math.min(topMargin + fontSize * 1.3, headerHeight - buttonSize - (topMargin * 0.5)); // Align vertically within header space
-            this.helpButton.setPosition(width - padding, buttonY).setFontSize(buttonSize); // Rightmost
-            // Position debug button to the left of help button, ensuring width is calculated
-            const debugButtonX = width - padding - (this.helpButton.width || buttonSize * 2) - (padding * 0.5);
+             // Y position remains the same, vertically aligned within header space
+            const buttonY = Math.min(topMargin + fontSize * 1.3, headerHeight - buttonSize - (topMargin * 0.5));
+            this.helpButton.setPosition(gridRightEdgeX, buttonY).setFontSize(buttonSize); // Align ? button to grid right edge
+             // Position debug button to the left of help button
+            const debugButtonX = gridRightEdgeX - (this.helpButton.width || buttonSize * 2) - smallPadding; // Use smallPadding as gap
             this.debugButton.setPosition(debugButtonX, buttonY).setFontSize(buttonSize);
 
 
-            // --- Position Panels (Centered in the main game area) ---
-            // Calculate center coordinates for panels
+            // --- Position Panels (Centered in the main game area - No change needed here) ---
             const panelCenterX = width / 2;
-            const panelCenterY = headerHeight + (height - headerHeight - footerHeight) / 2; // Center between header/footer
+            const panelCenterY = headerHeight + (height - headerHeight - footerHeight) / 2;
 
-            // Debug Panel Positioning
-            if (this.debugPanel && this.debugPanel.visible) {
-                const panelWidth = Math.min(width * 0.8, 400); // Responsive width
-                const panelHeight = Math.min(height * 0.7, 420); // Responsive height
-                // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
+            // Debug Panel Positioning (remains centered on screen)
+             if (this.debugPanel && this.debugPanel.visible) {
+                const panelWidth = Math.min(width * 0.8, 400);
+                const panelHeight = Math.min(height * 0.7, 420);
                 this.debugPanel.setPosition(panelCenterX, panelCenterY);
 
                 const list = this.debugPanel.list;
                 const panelBg = list[0];
-                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0); // Center BG relative to container center
+                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0);
                 const closeButton = list[1];
                 const actionButtons = list.slice(2);
-                // Position close button top-right *relative to container center (0,0)*
-                closeButton.setPosition((panelWidth / 2) - (closeButton.width / 2) - padding * 0.3, (-panelHeight / 2) + (closeButton.height / 2) + padding * 0.3);
+                closeButton.setPosition((panelWidth / 2) - (closeButton.width / 2) - smallPadding * 0.6, (-panelHeight / 2) + (closeButton.height / 2) + smallPadding * 0.6);
 
-                // Arrange action buttons in columns, relative to container center (0,0)
-                const btnPadding = padding * 0.5;
-                const btnStartY = (-panelHeight / 2) + closeButton.height + padding * 1.5; // Start below close button
+                const btnPadding = smallPadding;
+                const btnStartY = (-panelHeight / 2) + closeButton.height + smallPadding * 3;
                 const numCols = 3;
                 const colWidth = panelWidth / numCols;
-                // Adjust colX to be relative to the container's center (0)
-                const colX = [-colWidth, 0, colWidth]; // Example: Evenly spaced columns around center
-                let btnHeight = actionButtons[0]?.height || 20; // Get height for spacing
+                const colX = [-colWidth, 0, colWidth];
+                let btnHeight = actionButtons[0]?.height || 20;
 
                 for (let i = 0; i < actionButtons.length; i++) {
                     const button = actionButtons[i];
                     if (!button) continue;
                     const colIndex = i % numCols;
                     const rowIndex = Math.floor(i / numCols);
-                    let currentY = btnStartY + rowIndex * (btnHeight + btnPadding); // Calculate Y position
-                    button.setPosition(colX[colIndex], currentY); // Set position relative to container center
-                    // Update height for next row calculation (handles variable button heights slightly)
+                    let currentY = btnStartY + rowIndex * (btnHeight + btnPadding);
+                    button.setPosition(colX[colIndex], currentY);
                     if (colIndex === numCols - 1 || i === actionButtons.length - 1) {
                         btnHeight = button.height;
                     }
                 }
             }
 
-            // Item Use Panel Positioning
+
+            // Item Use Panel Positioning (remains centered on screen)
             if (this.itemUsePanel && this.itemUsePanel.visible) {
                 const panelWidth = Math.min(width * 0.8, 320);
                 const panelHeight = Math.min(height * 0.6, 220);
-                // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
                 this.itemUsePanel.setPosition(panelCenterX, panelCenterY);
 
                 const list = this.itemUsePanel.list;
                 const panelBg = list[0];
-                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0); // Center BG relative to container center
+                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0);
                 const itemIconText = list[1];
                 const itemNameText = list[2];
                 const itemDescText = list[3];
                 const useButton = list[4];
                 const cancelButton = list[5];
 
-                // Position internal elements relative to container center (0,0)
-                // These offsets define the layout within the panel
                 itemIconText.setPosition(-panelWidth * 0.3, -panelHeight * 0.1).setFontSize(Math.max(30, Math.floor(panelHeight * 0.2)));
                 itemNameText.setPosition(panelWidth * 0.1, -panelHeight * 0.3);
-                itemDescText.setPosition(panelWidth * 0.1, -panelHeight * 0.05).setWordWrapWidth(panelWidth * 0.5); // Wrap description
+                itemDescText.setPosition(panelWidth * 0.1, -panelHeight * 0.05).setWordWrapWidth(panelWidth * 0.5);
                 useButton.setPosition(-panelWidth * 0.2, panelHeight * 0.3);
                 cancelButton.setPosition(panelWidth * 0.2, panelHeight * 0.3);
             }
 
-            // Floor Clear Panel Positioning
+            // Floor Clear Panel Positioning (remains centered on screen)
             if (this.floorClearPanel && this.floorClearPanel.visible) {
                 const panelWidth = Math.min(width * 0.7, 300);
                 const panelHeight = Math.min(height * 0.5, 180);
-                // Set the container's position (its origin 0.5 is now at panelCenterX, panelCenterY)
                 this.floorClearPanel.setPosition(panelCenterX, panelCenterY);
 
                 const list = this.floorClearPanel.list;
                 const panelBg = list[0];
-                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0); // Center BG relative to container center
+                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0);
                 const fcText = list[1];
                 const fcOkButton = list[2];
 
-                // Position internal elements relative to container center (0,0)
-                fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8); // Wrap text
+                fcText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.8);
                 fcOkButton.setPosition(0, panelHeight * 0.3);
             }
 
-            // Durable Item Panel Positioning
+            // Durable Item Panel Positioning (remains centered on screen)
             if (this.durableItemPanel && this.durableItemPanel.visible) {
-                const panelWidth = 300; // Match creation size or make responsive
+                const panelWidth = 300;
                 const panelHeight = 200;
-                this.durableItemPanel.setPosition(panelCenterX, panelCenterY); // Use centers calculated earlier
+                this.durableItemPanel.setPosition(panelCenterX, panelCenterY);
 
                 const list = this.durableItemPanel.list;
                 const bg = list[0];
-                bg.setSize(panelWidth, panelHeight).setPosition(0, 0); // Center BG
-                const iconText = list[1];
-                iconText.setPosition(0, -panelHeight * 0.30); // Adjust Y as needed
-                const nameText = list[2];
-                nameText.setPosition(0, -panelHeight * 0.05);
-                const descText = list[3];
-                descText.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
-                const sellBtn = list[4];
-                sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
-                const closeBtn = list[5];
-                closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
+                bg.setSize(panelWidth, panelHeight).setPosition(0, 0);
+                const iconText = list[1]; iconText.setPosition(0, -panelHeight * 0.30);
+                const nameText = list[2]; nameText.setPosition(0, -panelHeight * 0.05);
+                const descText = list[3]; descText.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
+                const sellBtn = list[4]; sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
+                const closeBtn = list[5]; closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
             }
 
-            // Shop Panel Positioning
-            if (this.shopPanel && this.shopPanel.visible) {
-                const panelWidth = 320; // Fixed size for simplicity
+             // Shop Panel Positioning (remains centered on screen)
+             if (this.shopPanel && this.shopPanel.visible) {
+                const panelWidth = 320;
                 const panelHeight = 250;
-                // Set the container's position (center screen)
-                this.shopPanel.setPosition(panelCenterX, panelCenterY); // Uses panelCenterX/Y calculated earlier
+                this.shopPanel.setPosition(panelCenterX, panelCenterY);
 
-                // Position internal elements relative to container center (0,0)
-                // These offsets match the creation positions (can be adjusted)
-                const list = this.shopPanel.list; // [bg, title, close, hpTxt, hpCost, hpBtn, atkTxt, atkCost, atkBtn, healTxt, healCost, healBtn]
-                const title = list[1];
-                title.setPosition(0, -100);
-                const closeBtn = list[2];
-                closeBtn.setPosition(panelWidth / 2 - 20, -panelHeight / 2 + 20); // Approx top-right
+                const list = this.shopPanel.list;
+                list[0].setSize(panelWidth, panelHeight).setPosition(0, 0); // bg
+                list[1].setPosition(0, -100); // title
+                list[2].setPosition(panelWidth / 2 - 20, -panelHeight / 2 + 20); // closeBtn
 
-                // Adjust Y positions if needed (relative to center 0,0)
-                list[3].setPosition(-130, -50);
-                list[4].setPosition(40, -50);
-                list[5].setPosition(100, -50); // HP Row
-                list[6].setPosition(-130, 0);
-                list[7].setPosition(40, 0);
-                list[8].setPosition(100, 0); // ATK Row
-                list[9].setPosition(-130, 50);
-                list[10].setPosition(40, 50);
-                list[11].setPosition(100, 50); // HEAL Row
-
-                // Background size (ensure it's set)
-                list[0].setSize(panelWidth, panelHeight).setPosition(0, 0);
+                list[3].setPosition(-130, -50); list[4].setPosition(40, -50); list[5].setPosition(100, -50); // HP Row
+                list[6].setPosition(-130, 0);   list[7].setPosition(40, 0);   list[8].setPosition(100, 0);   // ATK Row
+                list[9].setPosition(-130, 50);  list[10].setPosition(40, 50); list[11].setPosition(100, 50); // HEAL Row
             }
 
-            // --- *** NEW: Challenge Requirement Panel Positioning *** ---
-            if (this.challengeRequirementPanel && this.challengeRequirementPanel.visible) {
-                const panelWidth = Math.min(width * 0.8, 300); // Responsive width
-                const panelHeight = Math.min(height * 0.5, 150); // Responsive height
-                // Set the container's position
+             // Challenge Requirement Panel Positioning (remains centered on screen)
+             if (this.challengeRequirementPanel && this.challengeRequirementPanel.visible) {
+                const panelWidth = Math.min(width * 0.8, 300);
+                const panelHeight = Math.min(height * 0.5, 150);
                 this.challengeRequirementPanel.setPosition(panelCenterX, panelCenterY);
 
                 const list = this.challengeRequirementPanel.list;
-                const panelBg = list[0];
-                panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0); // Center BG
-                const descText = list[1];
-                descText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85); // Position text
-                const closeButton = list[2];
-                closeButton.setPosition(0, panelHeight * 0.3); // Position button
+                const panelBg = list[0]; panelBg.setSize(panelWidth, panelHeight).setPosition(0, 0);
+                const descText = list[1]; descText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
+                const closeButton = list[2]; closeButton.setPosition(0, panelHeight * 0.3);
             }
-            // --- *** END NEW Panel Positioning *** ---
 
 
-            // --- Position Inventory Slots (Footer) ---
-            // Calculate slot size based on available width/height in the footer
-            const slotSize = Math.min(width / (PLAYER.MAX_INVENTORY_SLOTS + 2), footerHeight * 0.8); // Ensure slots fit horizontally and vertically
-            const totalInvWidth = PLAYER.MAX_INVENTORY_SLOTS * slotSize + (PLAYER.MAX_INVENTORY_SLOTS - 1) * (slotSize * 0.1); // Total width including spacing
-            const startX = (width - totalInvWidth) / 2 + (slotSize / 2); // Starting X to center the block of slots
-            const slotY = height - (footerHeight / 2); // Vertical center of footer area
+            // --- Position Inventory Slots (Footer - No change needed here) ---
+            const slotSize = Math.min(width / (PLAYER.MAX_INVENTORY_SLOTS + 2), footerHeight * 0.8);
+            const totalInvWidth = PLAYER.MAX_INVENTORY_SLOTS * slotSize + (PLAYER.MAX_INVENTORY_SLOTS - 1) * (slotSize * 0.1);
+            const startX = (width - totalInvWidth) / 2 + (slotSize / 2);
+            const slotY = height - (footerHeight / 2);
 
-            // Position each inventory slot container
             for (let i = 0; i < PLAYER.MAX_INVENTORY_SLOTS; i++) {
                 let slotContainer = this.inventorySlots[i];
                 if (slotContainer) {
-                    let slotX = startX + i * (slotSize + slotSize * 0.1); // Calculate X position with spacing
-                    slotContainer.setPosition(slotX, slotY); // Position the container
+                    let slotX = startX + i * (slotSize + slotSize * 0.1);
+                    slotContainer.setPosition(slotX, slotY);
                     let slotBg = slotContainer.list[0];
                     let itemLabel = slotContainer.list[1];
-                    slotBg.setSize(slotSize, slotSize); // Resize background rectangle
-                    itemLabel.setFontSize(Math.max(12, Math.floor(slotSize * 0.4))); // Scale icon/text size
-                    // Label position remains (0,0) as its origin is 0.5 within the centered container
-                    slotContainer.setSize(slotSize, slotSize); // Set container size for input detection
+                    slotBg.setSize(slotSize, slotSize);
+                    itemLabel.setFontSize(Math.max(12, Math.floor(slotSize * 0.4)));
+                    slotContainer.setSize(slotSize, slotSize);
                 }
             }
 
-            // --- Position Message Text ---
+            // --- Position Message Text (remains centered on screen) ---
             if (this.messageText) {
-                // Keep message centered on the screen
                 this.messageText.setPosition(width / 2, height / 2);
             }
-        }
+        } // End positionUIElements
 
         /**
          * Shows the challenge requirement failure panel, populating it with requirement text.
