@@ -1,40 +1,32 @@
-List entire functions that need to be changed, not just the line. Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+---
+I have a phaserjs game that was written by gemini. 
+It's all one file, no external dependancies. 
+We're goinbg to add some new features. 
+But first i'll provide all the code, let me know if you understand it.
+---
+List entire functions that need to be changed, not just the line. 
+Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+---
 
--- Annoyances
 
-The trap tile (when you reveal it, you get damage with a message that says "trap hit") is confusing. Let's remove that.
+I cleared a floor after playing for a while and got this exception:
+Uncaught TypeError: e.stopPropagation is not a function
+It's on this line in _createFloorClearPanel
+fcPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation());
+Can you fix it?
+List entire functions that need to be changed, not just the line. 
+Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
-When a monster dies, don't flash on that attack. It causes the item to flash, i just don't like that....
-
-Mark hidden debug menu broke
-
-Second time you clear a full floor, an error is logged
-
-When a challenge requirement isn't met, the door flashes black. Let's flash it red
-
---- Challenge
-
-We're going to add a new type of tile, a challenge. All challenges have the same icon: 🪟. One challenge appears every 3 floors, starting with floor 3. A challenge is like a barrel that has a specific requirement to break. If the requirement is not met, a modal popup is shown with what the player needs to do to break it or. That modal just has a close button.
-If the player does meet the criteria for what a challenge needs, the challenge tile dissapears and drops a durable item. If the player has every possible durable item, the challenge drops 50 coins.
-
-There will be the following types of challenges:
-    Greedy challenge, only opens if the player has 50 coins or more
-    Brave challenge, only opens if the player has 20 health or more
-    Strong challenge, only opens if the player has 10 strength or more
-    Mortal challenge, opens as soon as an enemy dies (assuming the cave is revealed)
-    Material challenge, opens only when the user uses an item
-
-List entire functions that need to be changed, not just the line. Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
 
 ---- NEW MONSTERS
 
-Let's add some extra monsters. Please add: Devil 👹, Demon 👿, Ogre 👺, bird 🐦‍🔥, wolf 🐺, bat 🦇
-You can figure out what their attack / defense is. These monsters act like the existing monsters.
-I do want to add some filtering. Zombies should only appear after floor 10. Devils should not appear before floor 5. Ogres should not appear before floor 15. Wolfs should not appear before floor 3. Bat should not appear before floor 7. Spiders should not appear after floor 6. Birds should not appear after floor 15.
-List entire functions that need to be changed, not just the line. Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
-TODO: Slime type enemy 🐌 / 🐚 (spawns a smaller one)
+This is really cool. Let's add a special type of enemy, a shapeshifter. When a shapeshifter's hp reaches 0, they "respawn" as a different enemy with half the hp and one third of the attack power of the original enemy. 
+For now, we're only going to implement one shapeshifter, let's call it something that's a pun on shell and monster. The icons are 🐌, and 🐚 on respawn. 
+One of these should spawn on floor 3 always. Then randomly like any other monster.
+List entire functions that need to be changed, not just the line. 
+Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 
 --- BOSSES
 
