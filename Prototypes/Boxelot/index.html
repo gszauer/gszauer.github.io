@@ -180,7 +180,8 @@ const TILE_TYPE = {
     ITEM: 'ITEM',
     BARREL: 'BARREL',
     RANDOM_ITEM: 'RANDOM_ITEM',
-    SHOP: 'SHOP'
+    SHOP: 'SHOP',
+    CHALLENGE: 'CHALLENGE'
 };
 // Tile States Enum
 const TILE_STATE = {
@@ -218,7 +219,7 @@ const COLORS = {
     INV_SLOT_BG: 0x333333, // Dark grey for inventory slots
     INV_SLOT_BORDER: 0x555555, // Lighter grey border for inventory slots
     DEBUG_BUTTON_BG: 0x444444, // Grey for debug buttons
-    DEBUG_MARKER_COLOR: '#000000', // Black for debug markers on hidden tiles
+    DEBUG_MARKER_COLOR: 0x000000, // Black for debug markers on hidden tiles
     CONFIRM_BTN_BG: 0x44AA44, // Green for confirm buttons
     CANCEL_BTN_BG: 0xAA4444, // Red for cancel buttons
     EXPLOSIVE: 0xFF6347, // Tomato red for explosives
@@ -226,6 +227,59 @@ const COLORS = {
     ITEM_POISON: 0x90EE90, // Light green for poison vial
     ITEM_FREEZE: 0xADD8E6, // Light blue for freeze scroll (and frozen monster background)
     SHOP_BG: 0xB19CD9,
+    CHALLENGE_BG: 0xDAA520,
+};
+
+// Challenge Configuration (NEW SECTION)
+const CHALLENGE_CONFIG = {
+    FREQUENCY: 3, // Appears every 3 floors
+    START_FLOOR: 3, // Starts appearing on floor 3
+    ICON: '🪟', // Window icon
+    REWARD_COIN_AMOUNT: 50, // Gold reward if all durables are owned
+};
+
+// Challenge Type Definitions (NEW SECTION)
+const CHALLENGE_TYPES = {
+    GREEDY: {
+        id: 'GREEDY',
+        description: 'Requires at least 50 Gold to open.',
+        requirementText: 'Not enough Gold! Needs 50 🪙.',
+        check: (player) => player.gold >= 50,
+        trigger: 'click', // Requires player interaction
+        successReason: 'Had enough Gold!' // <-- ADD THIS
+    },
+    BRAVE: {
+        id: 'BRAVE',
+        description: 'Requires at least 20 current HP to open.',
+        requirementText: 'Not enough Health! Needs 20 ❤️.',
+        check: (player) => player.hp >= 20,
+        trigger: 'click', // Requires player interaction
+        successReason: 'Had enough Health!' // <-- ADD THIS
+    },
+    STRONG: {
+        id: 'STRONG',
+        description: 'Requires at least 10 Attack to open.',
+        requirementText: 'Not enough Attack! Needs 10 🗡️.',
+        check: (player) => player.atk >= 10,
+        trigger: 'click', // Requires player interaction
+        successReason: 'Had enough Attack!' // <-- ADD THIS
+    },
+    MORTAL: {
+        id: 'MORTAL',
+        description: 'Opens automatically when a monster dies while this is revealed.',
+        requirementText: 'Revealed monster must fall.', // Text if somehow clicked? Unlikely needed.
+        check: () => false, // Cannot be opened by click, check happens on event
+        trigger: 'monster_death', // Event-based
+        successReason: 'Monster Defeated!' // <-- ADD THIS
+    },
+    MATERIAL: {
+        id: 'MATERIAL',
+        description: 'Opens automatically when an item is used while this is revealed.',
+        requirementText: 'An item must be used.', // Text if somehow clicked? Unlikely needed.
+        check: () => false, // Cannot be opened by click, check happens on event
+        trigger: 'item_use', // Event-based
+        successReason: 'Item Used!' // <-- ADD THIS
+    }
 };
 
 // Shop Configuration
@@ -466,10 +520,10 @@ class Tile extends Phaser.GameObjects.Container {
     }
 
      /**
-     * Updates the tile's visual appearance (colors, text, icons) based on its current tileData.
-     * This is the core rendering logic for the tile.
-     */
-     updateVisuals() {
+    * Updates the tile's visual appearance (colors, text, icons) based on its current tileData.
+    * This is the core rendering logic for the tile.
+    */
+    updateVisuals() {
         // Safety check: ensure visual elements exist before trying to update them
         if (!this.bgRect || !this.mainText || !this.statsText || !this.statusIcon1 || !this.statusIcon2) {
             console.warn("Tile visuals called before elements created for", this.r, this.c);
@@ -499,8 +553,7 @@ class Tile extends Phaser.GameObjects.Container {
             this.mainText.setColor(COLORS.TEXT); // Use light text color for revealed tiles
             this.statsText.setPosition(width / 2, height * 0.75); // Position stats text near bottom
 
-            // ... (rest of the REVEALED logic - MONSTER, DOOR, ITEM, etc. - remains unchanged) ...
-             // Status Icon Positioning Logic (Top-Left Stack)
+            // Status Icon Positioning Logic (Top-Left Stack)
             const statusPadding = Math.max(2, Math.floor(width * 0.05)); // Padding from edges
             const statusIconYOffset = detailFontSize * 1.1; // Vertical spacing between icons
             let statusIconBaseX = statusPadding;
@@ -614,6 +667,17 @@ class Tile extends Phaser.GameObjects.Container {
                     this.mainText.setText(SHOP_CONFIG.ICON).setFontSize(iconFontSize);
                     this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
                     break;
+
+                // --- ADD CHALLENGE CASE ---
+                case TILE_TYPE.CHALLENGE:
+                    this.bgRect.setFillStyle(COLORS.CHALLENGE_BG); // Use defined challenge color
+                    this.mainText.setText(CHALLENGE_CONFIG.ICON).setFontSize(iconFontSize); // Use defined icon
+                    // Optionally display challenge type in stats text for debug?
+                    // this.statsText.setText(this.tileData.challengeType || '???');
+                    this.statsText.setText(''); // Keep stats clear for now
+                    this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
+                // --- END CHALLENGE CASE ---
 
                 default: // Should not happen, but clear everything as a fallback
                     console.warn("Revealed tile with unknown type:", this.tileData.type);
@@ -776,26 +840,29 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * Handles all logic when a monster's HP drops to 0 or below.
-     * - Marks monster as dead (sets maxHp=0 to prevent double processing).
-     * - Decrements monster count.
-     * - Determines drop (Key, 70% Coin, or Nothing).
-     * - Updates the tile data to ITEM or EMPTY.
-     * - Unblocks neighbors.
-     * - Updates UI stats.
-     * - Shows appropriate drop message.
-     * @param {Tile} tile - The Tile object of the monster that died.
-     * @private Internal helper method.
-     */
-     _handleMonsterDeath(tile) {
+    * Handles all logic when a monster's HP drops to 0 or below.
+    * - Marks monster as dead (sets maxHp=0 to prevent double processing).
+    * - Decrements monster count.
+    * - Determines drop (Key, 70% Coin, or Nothing).
+    * - Updates the tile data to ITEM or EMPTY.
+    * - Unblocks neighbors.
+    * - Updates UI stats.
+    * - Shows appropriate drop message.
+    * - *** NEW: Triggers 'Mortal' challenge check. ***
+    * @param {Tile} tile - The Tile object of the monster that died.
+    * @private Internal helper method.
+    */
+    _handleMonsterDeath(tile) {
         if (!tile || !tile.tileData || tile.tileData.type !== TILE_TYPE.MONSTER || tile.tileData.maxHp === 0) {
             // Invalid tile, not a monster, or already processed as dead
             return;
         }
 
         const tileData = tile.tileData;
+        const r = tile.r; // Store coords before data changes
+        const c = tile.c;
         const monsterName = tileData.isSheep ? "Sheep" : (MONSTER_STATS[tileData.monsterType]?.name || "Monster");
-        console.log(`Handling death for ${monsterName} at [${tile.r}, ${tile.c}]`);
+        console.log(`Handling death for ${monsterName} at [${r}, ${c}]`);
 
         // Mark as officially dead to prevent multi-kill processing issues
         tileData.maxHp = 0;
@@ -808,7 +875,7 @@ class GameScene extends Phaser.Scene {
         if (tileData.hasKey) {
             droppedItemId = 'KEY_ITEM';
             this.keyDroppedOnFloor = true; // Mark key as dropped on this floor
-            dropMessage = 'Key Dropped!';   // Specific message for the key
+            dropMessage = 'Key Dropped!';      // Specific message for the key
             console.log(`--> ${monsterName} dropped the KEY!`);
         } else {
             // 2. Check for Coin Drop (70% chance) if no key
@@ -820,8 +887,8 @@ class GameScene extends Phaser.Scene {
             } else {
                 // Dropped nothing (30% chance)
                 droppedItemId = null;
-                 console.log(`--> ${monsterName} dropped nothing (70% chance fail).`);
-                 // No dropMessage needed if nothing drops
+                console.log(`--> ${monsterName} dropped nothing (70% chance fail).`);
+                // No dropMessage needed if nothing drops
             }
         }
 
@@ -838,8 +905,8 @@ class GameScene extends Phaser.Scene {
             // Keep r, c, debugMarker if needed
         }); // setData automatically calls updateVisuals
 
-        // 4. Unblock Neighbors
-        this.updateNeighborStates(tile.r, tile.c, false, true); // isMonsterBlock=false, isMonsterUnblock=true
+        // 4. Unblock Neighbors (using original coords r, c)
+        this.updateNeighborStates(r, c, false, true); // isMonsterBlock=false, isMonsterUnblock=true
 
         // 5. Update UI Stats (monster count changed)
         this.events.emit('updateStats', this.getPlayerStats());
@@ -848,7 +915,11 @@ class GameScene extends Phaser.Scene {
         if (dropMessage) {
             this.events.emit('showMessage', dropMessage);
         }
+
+        // 7. Check for Mortal Challenge Trigger 
+        this._checkChallengeTrigger('monster_death');
     }
+
 
      /**
      * Checks if the player currently has the Lantern in their inventory.
@@ -1366,9 +1437,10 @@ processEndOfPlayerTurnEffects() {
     }
 
     /**
-     * Generates a new floor layout: resets state, clears old tiles,
-     * generates new tile data, creates new Tile instances, and reveals the starting door.
-     */
+    * Generates a new floor layout: resets state, clears old tiles,
+    * generates new tile data, creates new Tile instances, and reveals the starting door.
+    * *** MODIFIED: Places a Challenge tile on eligible floors. ***
+    */
     generateFloor() {
         this.currentFloor++;
         console.log(`Generating Floor ${this.currentFloor}`);
@@ -1380,7 +1452,7 @@ processEndOfPlayerTurnEffects() {
         this.keyDroppedOnFloor = false;
         this.isGameOver = false; // Ensure game isn't over on new floor start
         this.keyAssignedOnFloor = false;
-        
+
         // --- Clear Previous Tiles ---
         // Destroy existing Tile instances and clear the arrays
         for (let r = 0; r < this.tileObjects.length; r++) {
@@ -1433,7 +1505,21 @@ processEndOfPlayerTurnEffects() {
             shopPlaced = true;
         }
 
-        // Place other items/traps randomly
+        // --- *** NEW: CHALLENGE PLACEMENT *** ---
+        let challengePlaced = false;
+        if (this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR &&
+            this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0 &&
+            possibleCoords.length > 0)
+        {
+            // Place exactly one challenge tile
+            this.placeTiles(possibleCoords, 1, TILE_TYPE.CHALLENGE, null, gridRawData);
+            challengePlaced = true;
+            console.log(`Challenge tile placed for floor ${this.currentFloor}`);
+        }
+        // --- *** END CHALLENGE PLACEMENT *** ---
+
+        // Place other items/traps randomly (reduce counts slightly if shop/challenge placed?)
+        // (Keeping counts the same for now)
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2 + Math.floor(this.currentFloor / 2)), possibleCoords.length), TILE_TYPE.TRAP, null, gridRawData);
@@ -1479,15 +1565,16 @@ processEndOfPlayerTurnEffects() {
     }
 
     /**
-     * Places a specified number of a given tile type into the gridRawData array.
-     * Modifies the gridRawData and removes used coordinates from coordsArray.
-     * @param {Array<{r: number, c: number}>} coordsArray - Array of available coordinates.
-     * @param {number} count - Number of tiles to place.
-     * @param {string} type - The TILE_TYPE to place.
-     * @param {string|null} [forcedItemId=null] - If type is ITEM, forces this specific itemId.
-     * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
-     * @returns {Array<{r: number, c: number}>} Coordinates where monsters were placed (if type was MONSTER).
-     */
+    * Places a specified number of a given tile type into the gridRawData array.
+    * Modifies the gridRawData and removes used coordinates from coordsArray.
+    * *** MODIFIED: Assigns a random challengeType if placing a CHALLENGE. ***
+    * @param {Array<{r: number, c: number}>} coordsArray - Array of available coordinates.
+    * @param {number} count - Number of tiles to place.
+    * @param {string} type - The TILE_TYPE to place.
+    * @param {string|null} [forcedItemId=null] - If type is ITEM, forces this specific itemId.
+    * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
+    * @returns {Array<{r: number, c: number}>} Coordinates where monsters were placed (if type was MONSTER).
+    */
     placeTiles(coordsArray, count, type, forcedItemId = null, gridRawData) {
         let placedMonsterCoords = []; // Track monster placements for key assignment
         for (let i = 0; i < count && coordsArray.length > 0; i++) {
@@ -1522,9 +1609,12 @@ processEndOfPlayerTurnEffects() {
                     let itemIdToPlace = forcedItemId;
                     if (!itemIdToPlace) {
                         // Select a random consumable item (excluding key, coin, heart, explosive)
-                        let possibleItems = Object.keys(ITEM_TYPES).filter(id =>
-                            !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id) && ITEM_TYPES[id].consumable
-                        );
+                        // *** AND excluding DURABLES for random placement ***
+                        let possibleItems = Object.keys(ITEM_TYPES).filter(id => {
+                            const itemInfo = ITEM_TYPES[id];
+                            return itemInfo && itemInfo.category === 'REGULAR' && itemInfo.consumable &&
+                                   !['KEY_ITEM', 'COIN', 'EXPLOSIVE', 'HEART'].includes(id);
+                        });
                         itemIdToPlace = getRandomElement(possibleItems);
                     }
                     if (itemIdToPlace) {
@@ -1537,18 +1627,29 @@ processEndOfPlayerTurnEffects() {
                     }
                     break;
                 }
-                 case TILE_TYPE.RANDOM_ITEM: {
+                case TILE_TYPE.RANDOM_ITEM: {
                      // Initialize cycling state in the raw data object
                      tileData.isCycling = false;
                      tileData.cycleIndex = 0;
                      tileData.lastCycleTime = 0;
                      break;
                  }
-                 case TILE_TYPE.SHOP: 
-                case TILE_TYPE.BARREL: // BARREL, EMPTY need no extra data added here
-                case TILE_TYPE.EMPTY:
+                // --- *** NEW: CHALLENGE Case *** ---
+                case TILE_TYPE.CHALLENGE: {
+                    // Assign a random challenge type from the definitions
+                    const possibleChallengeTypes = Object.keys(CHALLENGE_TYPES);
+                    const randomChallengeId = getRandomElement(possibleChallengeTypes);
+                    tileData.challengeType = randomChallengeId; // Store the ID (e.g., 'GREEDY')
+                    console.log(`Assigned challenge type ${randomChallengeId} to tile at [${coord.r}, ${coord.c}]`);
+                    // Initialize other potential fields? Not strictly necessary here.
                     break;
-                // BARREL, EMPTY need no extra data added here
+                }
+                // --- *** END CHALLENGE Case *** ---
+
+                 case TILE_TYPE.SHOP:
+                 case TILE_TYPE.BARREL: // BARREL, EMPTY, SHOP need no extra data added here
+                 case TILE_TYPE.EMPTY:
+                     break;
             }
         }
         return placedMonsterCoords; // Return monster coords for key assignment
@@ -1607,10 +1708,11 @@ processEndOfPlayerTurnEffects() {
     // --- Input Handling ---
 
     /**
-     * Handles pointer down events on the game area. Determines which tile was clicked
-     * and calls the appropriate action method.
-     * @param {Phaser.Input.Pointer} pointer - The pointer that caused the event.
-     */
+    * Handles pointer down events on the game area. Determines which tile was clicked
+    * and calls the appropriate action method.
+    * *** MODIFIED: Added check for CHALLENGE tile click. ***
+    * @param {Phaser.Input.Pointer} pointer - The pointer that caused the event.
+    */
     handlePointerDown(pointer) {
         const uiScene = this.scene.get('UIScene');
         // Ignore clicks if a UI modal is active or game is over
@@ -1636,11 +1738,16 @@ processEndOfPlayerTurnEffects() {
                 this.breakBarrel(clickedTile); // Pass the Tile instance
             } else if (tileData.type === TILE_TYPE.RANDOM_ITEM && tileData.isCycling) {
                 this.stopRandomTile(clickedTile); // Pass the Tile instance
+            } else if (tileData.type === TILE_TYPE.SHOP) {
+                console.log(`Clicked shop at [${clickedTile.r}, ${clickedTile.c}]`);
+                this.events.emit('showShop'); // Tell UIScene to show the shop panel
             }
-            else if (tileData.type === TILE_TYPE.SHOP) { 
-                 console.log(`Clicked shop at [${clickedTile.r}, ${clickedTile.c}]`);
-                 this.events.emit('showShop'); // Tell UIScene to show the shop panel
+            // --- CHALLENGE Click *** ---
+            else if (tileData.type === TILE_TYPE.CHALLENGE) {
+                console.log(`Clicked challenge tile at [${clickedTile.r}, ${clickedTile.c}] type: ${tileData.challengeType}`);
+                this.tryOpenChallenge(clickedTile); // Handle challenge interaction
             }
+            // --- END CHALLENGE Click *** ---
             // Ignore clicks on empty tiles or dead monsters
 
         } else if (tileData.state === TILE_STATE.HIDDEN_NORMAL) {
@@ -2468,11 +2575,12 @@ tryEnterDoor(doorTile) {
     } // End stopRandomTile
 
     /**
-     * Handles using an item from the inventory (triggered by UI event). [Refactored]
-     * Applies the item's effect via helper functions and removes it if consumable.
-     * @param {object} data - Data object containing { itemId, index }.
-     */
-     useItem({ itemId, index }) {
+    * Handles using an item from the inventory (triggered by UI event). [Refactored]
+    * Applies the item's effect via helper functions and removes it if consumable.
+    * *** MODIFIED: Checks for Material Challenge trigger after consumption. ***
+    * @param {object} data - Data object containing { itemId, index }.
+    */
+    useItem({ itemId, index }) {
         // --- Initial Validation ---
         if (this.isGameOver || !itemId || index === undefined || index < 0) {
             console.warn("Invalid useItem call (Game Over or bad data):", {itemId, index});
@@ -2524,6 +2632,14 @@ tryEnterDoor(doorTile) {
             actuallyConsumed = this._handleItemConsumption(itemId, index);
         }
 
+        // --- *** NEW: Check for Material Challenge Trigger *** ---
+        // Check *after* consumption is confirmed, but *before* end-of-turn effects for the item use itself.
+        if (actuallyConsumed) {
+            this._checkChallengeTrigger('item_use');
+        }
+        // --- *** END Material Challenge Check *** ---
+
+
         // --- Handle End of Turn ---
         // Process end-of-turn effects only if the item was successfully consumed
         // AND if it didn't apply a status effect that should delay the next tick (like poison/freeze application).
@@ -2538,8 +2654,215 @@ tryEnterDoor(doorTile) {
                 this.checkGameOver();
             }
         }
-    } // End of refactored useItem method
+    } // End of  useItem method
 
+
+    /**
+     * Handles clicking on a revealed Challenge tile. Checks requirements for
+     * click-based challenges and either resolves the challenge or shows a
+     * requirement popup via the UIScene.
+     * *** MODIFIED: Shows description popup for event-based challenges on click. ***
+     * @param {Tile} challengeTile The challenge tile instance that was clicked.
+     */
+     tryOpenChallenge(challengeTile) {
+        if (!challengeTile || challengeTile.tileData.type !== TILE_TYPE.CHALLENGE) return;
+
+        const challengeId = challengeTile.tileData.challengeType;
+        const challengeInfo = CHALLENGE_TYPES[challengeId];
+
+        if (!challengeInfo) {
+            console.error(`Clicked challenge tile with unknown type: ${challengeId}`);
+            return;
+        }
+
+        // Handle challenges NOT triggered by clicking
+        if (challengeInfo.trigger !== 'click') {
+            console.log(`Clicked event-based challenge: ${challengeId}. Showing description.`);
+            // Show the general description explaining how it triggers, instead of a failure message.
+            const descriptionText = challengeInfo.description || "Opens under specific conditions.";
+            this.events.emit('showChallengeRequirementPopup', descriptionText); // Use the same popup type for simplicity
+            // Flash the tile slightly to indicate interaction? Optional.
+            // this.flashTileBackground(challengeTile, COLORS.UI_BUTTON_IDLE_TEXT, 80, 0);
+            return; // Do nothing further for event-based challenges on click
+        }
+
+        // Handle click-triggered challenges
+        if (challengeInfo.check(this.player)) {
+            // Requirement met! Resolve the challenge.
+            console.log(`Challenge ${challengeId} requirement met! Resolving.`);
+            this._resolveChallenge(challengeTile);
+            this.processEndOfPlayerTurnEffects(); // Consumes turn on success
+        } else {
+            // Requirement not met! Show popup with failure text.
+            console.log(`Challenge ${challengeId} requirement NOT met.`);
+            const requirementText = challengeInfo.requirementText || "Requirement not met.";
+            this.events.emit('showChallengeRequirementPopup', requirementText);
+            // Flash the challenge tile red briefly
+            this.flashTileBackground(challengeTile, COLORS.CLOSE_BUTTON_IDLE_TEXT, 100, 0);
+            // Do NOT consume turn on failure
+        }
+    }
+
+    /**
+     * Resolves a completed challenge, determines the reward (durable item or gold),
+     * updates the tile (to ITEM or EMPTY), updates player stats/inventory, and shows a message.
+     * *** MODIFIED: Includes reason for completion in the success message. ***
+     * @param {Tile} challengeTile The challenge tile instance to resolve.
+     * @private Internal helper method.
+     */
+     _resolveChallenge(challengeTile) {
+        if (!challengeTile || challengeTile.tileData.type !== TILE_TYPE.CHALLENGE) return;
+        const r = challengeTile.r;
+        const c = challengeTile.c;
+        const challengeId = challengeTile.tileData.challengeType; // Get the challenge ID
+        const challengeInfo = CHALLENGE_TYPES[challengeId]; // Look up the info
+        console.log(`Resolving challenge ${challengeId} at [${r}, ${c}]`);
+
+        let rewardType = TILE_TYPE.EMPTY;
+        let rewardItemId = null;
+        let rewardMessagePart = ""; // Part of the message describing the reward
+        let gainedGold = 0;
+        let gainedItemId = null;
+
+        // 1. Determine Reward: Durable Item or Gold?
+        const allDurableIds = Object.values(ITEM_TYPES)
+            .filter(item => item.category === 'DURABLE')
+            .map(item => item.id);
+
+        const missingDurableIds = allDurableIds.filter(id => !this.player.inventory.includes(id));
+
+        if (missingDurableIds.length > 0) {
+            // Award durable item
+            gainedItemId = getRandomElement(missingDurableIds);
+            rewardType = TILE_TYPE.ITEM;
+            rewardItemId = gainedItemId;
+            const itemInfo = ITEM_TYPES[gainedItemId];
+            rewardMessagePart = `Found ${itemInfo?.name || 'an Item'}!`; // Set reward part
+            console.log(`--> Awarding durable item (to be placed on tile): ${gainedItemId}`);
+        } else {
+            // Award gold
+            gainedGold = CHALLENGE_CONFIG.REWARD_COIN_AMOUNT;
+            this.player.gold += gainedGold;
+            rewardType = TILE_TYPE.EMPTY;
+            rewardItemId = null;
+            rewardMessagePart = `+${gainedGold} Gold!`; // Set reward part
+            console.log(`--> Player has all durables. Awarding ${gainedGold} Gold.`);
+        }
+
+        // 2. Update the Tile Data
+        challengeTile.setData({
+            type: rewardType,
+            itemId: rewardItemId,
+            revealed: true,
+            state: TILE_STATE.REVEALED,
+            challengeType: null
+        });
+
+        // 3. Update Player State & UI (Only for gold reward here)
+        if (gainedGold > 0) {
+            this.events.emit('updateStats', this.getPlayerStats());
+        }
+
+        // 4. *** Construct and Show Final Message ***
+        const reasonText = challengeInfo?.successReason || "Condition Met!"; // Get reason or use fallback
+        const finalMessage = `Challenge Complete!\n${reasonText}\n${rewardMessagePart}`; // Combine reason and reward
+        this.events.emit('showMessage', finalMessage);
+
+        // 5. Update Neighbors
+        this.updateNeighborStates(r, c);
+
+        // 6. No auto-pickup needed here anymore
+
+    } // End _resolveChallenge
+
+    /**
+     * Helper to apply immediate passive effects when a durable item is picked up
+     * (factored out from tryPickupItem and used by _resolveChallenge).
+     * @param {string} itemId The ID of the item picked up.
+     * @private
+     */
+    _applyPassiveItemEffectOnPickup(itemId) {
+        let statsChanged = false;
+        if (itemId === 'DEFENSE_RUNE') {
+            const runeInfo = ITEM_TYPES.DEFENSE_RUNE;
+            const bonus = runeInfo.maxHpBonus || 0;
+            if (bonus > 0) {
+                console.log(`Applying +${bonus} Max HP from Defense Rune.`);
+                this.player.maxHp += bonus;
+                this.player.hp += bonus; // Also increase current HP
+                this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+                statsChanged = true;
+            }
+        } else if (itemId === 'ATTACK_RUNE') {
+            const runeInfo = ITEM_TYPES.ATTACK_RUNE;
+            const bonus = runeInfo.atkBonus || 0;
+            if (bonus > 0) {
+                console.log(`Applying +${bonus} ATK from Attack Rune.`);
+                this.player.atk += bonus;
+                statsChanged = true;
+            }
+        } else if (itemId === 'INVISIBILITY_CLOAK') {
+            console.log("Cloak acquired, refreshing hidden tile blocking states.");
+            this.refreshAllHiddenTileStates();
+        } else if (itemId === 'LANTERN') {
+            console.log("Lantern acquired, attempting to refresh hidden key marker.");
+            if (this.keyHolderCoords) {
+                const keyTile = this.tileObjects[this.keyHolderCoords.r]?.[this.keyHolderCoords.c];
+                if (keyTile && keyTile.tileData.state !== TILE_STATE.REVEALED) {
+                    keyTile.updateVisuals();
+                    console.log(`Forced visual update on hidden key tile at [${this.keyHolderCoords.r}, ${this.keyHolderCoords.c}]`);
+                }
+            }
+        }
+        // SPIKE_TRAP and SHIELD have passive effects checked elsewhere, no immediate stat change.
+
+        // Update stats if runes were picked up
+        if (statsChanged) {
+            this.events.emit('updateStats', this.getPlayerStats());
+        }
+        // Check game over in case HP changed (unlikely for these items)
+        this.checkGameOver();
+    }
+
+
+    /**
+     * Checks if any revealed Challenge tiles should be triggered by a specific event.
+     * Iterates through all revealed challenge tiles and calls _resolveChallenge if the
+     * event type matches the challenge's trigger type.
+     * @param {string} eventType - The type of event that occurred (e.g., 'monster_death', 'item_use').
+     * @private Internal helper method.
+     */
+    _checkChallengeTrigger(eventType) {
+        if (this.isGameOver) return;
+        console.log(`Checking for challenge trigger: ${eventType}`);
+        let challengeResolved = false;
+
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                let tileData = tile?.tileData;
+
+                // Check if it's a revealed challenge tile
+                if (tile && tileData && tileData.type === TILE_TYPE.CHALLENGE && tileData.state === TILE_STATE.REVEALED) {
+                    const challengeId = tileData.challengeType;
+                    const challengeInfo = CHALLENGE_TYPES[challengeId];
+
+                    // Check if this challenge type is triggered by the current event
+                    if (challengeInfo && challengeInfo.trigger === eventType) {
+                        console.log(`Event ${eventType} triggered challenge ${challengeId} at [${r}, ${c}]!`);
+                        this._resolveChallenge(tile);
+                        challengeResolved = true;
+                        // Stop checking after finding one? Assumption is only one challenge per floor.
+                        // If multiple could exist, remove the break.
+                        break;
+                    }
+                }
+            }
+            if (challengeResolved) break; // Exit outer loop if resolved
+        }
+        // Note: _resolveChallenge handles messages and stat updates.
+        // No turn processing here as this is triggered by another action.
+    }
 
     /**
      * Applies the HEAL item effect. [Helper for useItem]
@@ -3383,7 +3706,7 @@ class UIScene extends Phaser.Scene {
         this.keyIconText = null; 
         this.helpButton = null;
          this.debugButton = null;
-
+         this.challengeRequirementPanel = null;
          this.durableItemPanel = null;
         this.pendingDurableAction = null; // Stores {itemId, index} for sell action
         // Panels
@@ -3423,6 +3746,8 @@ class UIScene extends Phaser.Scene {
         this._createShopPanel();        // Creates the shop panel container and elements
         this._createInventorySlots();   // Creates the inventory slot containers and elements
         this._createMessageText();      // Creates the message text object
+        this._createChallengeRequirementPanel(); 
+
 
         // Set up listeners for events coming FROM GameScene
         this._setupEventListeners();
@@ -3433,6 +3758,25 @@ class UIScene extends Phaser.Scene {
         this.positionUIElements(); // Perform initial positioning
         console.log("UIScene create: Initialization complete.");
     } // End of create method
+
+
+     /**
+    * Creates the Challenge Requirement Panel container and its contents.
+    * Called by create().
+    */
+    _createChallengeRequirementPanel() {
+        this.challengeRequirementPanel = this.add.container(0, 0).setDepth(105).setVisible(false); // High depth
+        const panelBg = this.add.rectangle(0, 0, 300, 150, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.CLOSE_BUTTON_IDLE_TEXT); // Red border?
+        panelBg.setInteractive().on('pointerdown', e => e.stopPropagation()); // Prevent clicks passing through
+
+        const descText = this.add.text(0, -20, '', { fontSize: '16px', fill: '#FFF', align: 'center', wordWrap: { width: 260 } }).setOrigin(0.5);
+        const closeButton = this.add.text(0, 40, 'Close', { fontSize: '18px', fill: '#FFF', backgroundColor: COLORS.CANCEL_BTN_BG, padding: { x: 20, y: 8 } }).setOrigin(0.5).setInteractive();
+
+        closeButton.on('pointerdown', () => { this.hideAllPanels(); });
+
+        this.challengeRequirementPanel.add([panelBg, descText, closeButton]);
+    }
+
 
      /**
      * Gets references to essential HTML DOM elements.
@@ -3703,10 +4047,10 @@ class UIScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(200).setAlpha(0); // High depth, initially invisible
      }
 
-    /**
-     * Sets up the event listeners for events emitted FROM the GameScene.
-     * Called by create().
-     */
+   /**
+    * Sets up the event listeners for events emitted FROM the GameScene.
+    * *** MODIFIED: Added listener for showChallengeRequirementPopup. ***
+    */
     _setupEventListeners() {
         const gameScene = this.scene.get('GameScene');
         if(gameScene && gameScene.events) { // Check if gameScene exists
@@ -3716,8 +4060,9 @@ class UIScene extends Phaser.Scene {
             gameScene.events.on('showMessage', this.showMessage, this);
             gameScene.events.on('showFloorClearPopup', this.showFloorClearPanel, this);
             gameScene.events.on('showShop', this.showShopPanel, this);
+            gameScene.events.on('showChallengeRequirementPopup', this.showChallengeRequirementPanel, this); // <-- ADD THIS
             gameScene.events.on('updateDebugButton', this.updateDebugButtonText, this);
-             console.log("UIScene: Event listeners for GameScene attached.");
+            console.log("UIScene: Event listeners for GameScene attached.");
         } else {
             console.error("UIScene _setupEventListeners: Could not find GameScene to attach listeners.");
         }
@@ -3776,9 +4121,10 @@ class UIScene extends Phaser.Scene {
     }
 
     /**
-     * Positions all UI elements based on the current screen size.
-     * Called on create and resize. Handles responsive layout.
-     */
+    * Positions all UI elements based on the current screen size.
+    * Called on create and resize. Handles responsive layout.
+    * *** MODIFIED: Added positioning for challengeRequirementPanel. ***
+    */
     positionUIElements() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -3888,41 +4234,55 @@ class UIScene extends Phaser.Scene {
          }
 
          // Durable Item Panel Positioning
-        if (this.durableItemPanel && this.durableItemPanel.visible) {
-            const panelWidth = 300; // Match creation size or make responsive
-            const panelHeight = 200;
-            this.durableItemPanel.setPosition(panelCenterX, panelCenterY); // Use centers calculated earlier
+         if (this.durableItemPanel && this.durableItemPanel.visible) {
+             const panelWidth = 300; // Match creation size or make responsive
+             const panelHeight = 200;
+             this.durableItemPanel.setPosition(panelCenterX, panelCenterY); // Use centers calculated earlier
 
-            const list = this.durableItemPanel.list;
-            const bg = list[0]; bg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG
-            const iconText = list[1]; iconText.setPosition(0, -panelHeight * 0.30); // Adjust Y as needed
-            const nameText = list[2]; nameText.setPosition(0, -panelHeight * 0.05);
-            const descText = list[3]; descText.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
-            const sellBtn = list[4]; sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
-            const closeBtn = list[5]; closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
+             const list = this.durableItemPanel.list;
+             const bg = list[0]; bg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG
+             const iconText = list[1]; iconText.setPosition(0, -panelHeight * 0.30); // Adjust Y as needed
+             const nameText = list[2]; nameText.setPosition(0, -panelHeight * 0.05);
+             const descText = list[3]; descText.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
+             const sellBtn = list[4]; sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
+             const closeBtn = list[5]; closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
+         }
+
+        // Shop Panel Positioning
+        if (this.shopPanel && this.shopPanel.visible) {
+            const panelWidth = 320; // Fixed size for simplicity
+            const panelHeight = 250;
+            // Set the container's position (center screen)
+            this.shopPanel.setPosition(panelCenterX, panelCenterY ); // Uses panelCenterX/Y calculated earlier
+
+            // Position internal elements relative to container center (0,0)
+            // These offsets match the creation positions (can be adjusted)
+            const list = this.shopPanel.list; // [bg, title, close, hpTxt, hpCost, hpBtn, atkTxt, atkCost, atkBtn, healTxt, healCost, healBtn]
+            const title = list[1]; title.setPosition(0, -100);
+            const closeBtn = list[2]; closeBtn.setPosition(panelWidth/2 - 20, -panelHeight/2 + 20); // Approx top-right
+
+            // Adjust Y positions if needed (relative to center 0,0)
+            list[3].setPosition(-130, -50); list[4].setPosition(40, -50); list[5].setPosition(100, -50); // HP Row
+            list[6].setPosition(-130, 0); list[7].setPosition(40, 0); list[8].setPosition(100, 0);      // ATK Row
+            list[9].setPosition(-130, 50); list[10].setPosition(40, 50); list[11].setPosition(100, 50); // HEAL Row
+
+            // Background size (ensure it's set)
+            list[0].setSize(panelWidth, panelHeight).setPosition(0,0);
         }
 
-         // Shop Panel Positioning
-     if (this.shopPanel && this.shopPanel.visible) {
-         const panelWidth = 320; // Fixed size for simplicity
-         const panelHeight = 250;
-         // Set the container's position (center screen)
-         this.shopPanel.setPosition(panelCenterX, panelCenterY ); // Uses panelCenterX/Y calculated earlier
+        // --- *** NEW: Challenge Requirement Panel Positioning *** ---
+        if (this.challengeRequirementPanel && this.challengeRequirementPanel.visible) {
+            const panelWidth = Math.min(width * 0.8, 300); // Responsive width
+            const panelHeight = Math.min(height * 0.5, 150); // Responsive height
+            // Set the container's position
+            this.challengeRequirementPanel.setPosition(panelCenterX, panelCenterY);
 
-         // Position internal elements relative to container center (0,0)
-         // These offsets match the creation positions (can be adjusted)
-         const list = this.shopPanel.list; // [bg, title, close, hpTxt, hpCost, hpBtn, atkTxt, atkCost, atkBtn, healTxt, healCost, healBtn]
-         const title = list[1]; title.setPosition(0, -100);
-         const closeBtn = list[2]; closeBtn.setPosition(panelWidth/2 - 20, -panelHeight/2 + 20); // Approx top-right
-
-         // Adjust Y positions if needed (relative to center 0,0)
-         list[3].setPosition(-130, -50); list[4].setPosition(40, -50); list[5].setPosition(100, -50); // HP Row
-         list[6].setPosition(-130, 0); list[7].setPosition(40, 0); list[8].setPosition(100, 0);       // ATK Row
-         list[9].setPosition(-130, 50); list[10].setPosition(40, 50); list[11].setPosition(100, 50); // HEAL Row
-
-         // Background size (ensure it's set)
-         list[0].setSize(panelWidth, panelHeight).setPosition(0,0);
-     }
+            const list = this.challengeRequirementPanel.list;
+            const panelBg = list[0]; panelBg.setSize(panelWidth, panelHeight).setPosition(0,0); // Center BG
+            const descText = list[1]; descText.setPosition(0, -panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85); // Position text
+            const closeButton = list[2]; closeButton.setPosition(0, panelHeight * 0.3); // Position button
+        }
+        // --- *** END NEW Panel Positioning *** ---
 
 
         // --- Position Inventory Slots (Footer) ---
@@ -3952,6 +4312,26 @@ class UIScene extends Phaser.Scene {
             // Keep message centered on the screen
             this.messageText.setPosition(width / 2, height / 2);
         }
+    }
+
+    /**
+    * Shows the challenge requirement failure panel, populating it with requirement text.
+    * @param {string} description - The requirement text to display.
+    */
+    showChallengeRequirementPanel(description) {
+        if (!this.challengeRequirementPanel) return;
+
+        this.hideAllPanels(false); // Hide other panels first
+
+        // Populate panel content
+        const list = this.challengeRequirementPanel.list;
+        const descText = list[1]; // Assuming text is the second element
+        descText.setText(description || "Requirement not met."); // Set the text
+
+        // Set panel visible and block game input
+        this.challengeRequirementPanel.setVisible(true);
+        this.isModalActive = true;
+        this.positionUIElements(); // Reposition elements now that content is set & panel is visible
     }
 
     // --- Panel Management ---
@@ -4043,8 +4423,10 @@ class UIScene extends Phaser.Scene {
         this.hideAllPanels(); // Hide self and reset modal flag
     }
 
-     /** Hides all Phaser panels and optionally the DOM panel. Resets modal flag if appropriate. */
-     hideAllPanels(calledFromDomClose = false) {
+     /** Hides all Phaser panels and optionally the DOM panel. Resets modal flag if appropriate.
+    * *** MODIFIED: Added challengeRequirementPanel check. ***
+    */
+    hideAllPanels(calledFromDomClose = false) {
         // Hide DOM panel unless this was called *by* the DOM close button itself
         if (!calledFromDomClose && this.instructionsDOM) {
              this.instructionsDOM.style.display = 'none';
@@ -4055,9 +4437,9 @@ class UIScene extends Phaser.Scene {
         if (this.floorClearPanel) this.floorClearPanel.setVisible(false);
         if (this.shopPanel) this.shopPanel.setVisible(false);
         if (this.durableItemPanel) this.durableItemPanel.setVisible(false);
+        if (this.challengeRequirementPanel) this.challengeRequirementPanel.setVisible(false); // <-- ADD THIS
 
         // Clear pending item use data when *any* panel is hidden
-        // This is crucial to prevent using stale data if panels are closed/opened quickly
         if (this.pendingItemUse) {
             console.log("Clearing pendingItemUse in hideAllPanels:", this.pendingItemUse); // Optional debug log
             this.pendingItemUse = null;
@@ -4065,7 +4447,7 @@ class UIScene extends Phaser.Scene {
         if (this.pendingDurableAction) {
              console.log("Clearing pendingDurableAction in hideAllPanels:", this.pendingDurableAction); // Optional debug log
              this.pendingDurableAction = null;
-        }
+         }
 
         // Only deactivate modal flag if *all* panels (DOM and Phaser) are now hidden
         const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
@@ -4075,6 +4457,7 @@ class UIScene extends Phaser.Scene {
             !this.floorClearPanel?.visible &&
             !this.shopPanel?.visible &&
             !this.durableItemPanel?.visible &&
+            !this.challengeRequirementPanel?.visible && // <-- ADD THIS
             !domVisible) {
             if (this.isModalActive) {
                 // console.log("Deactivating modal flag."); // Optional debug log
@@ -4085,7 +4468,7 @@ class UIScene extends Phaser.Scene {
             if (!this.isModalActive) {
                  // console.log("Keeping modal flag active as a panel is still visible."); // Optional debug log
                  this.isModalActive = true;
-            }
+             }
         }
     }
 
