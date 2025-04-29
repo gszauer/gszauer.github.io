@@ -296,6 +296,29 @@
 
     // Monster Definitions (with floor restrictions)
     const MONSTER_STATS = {
+        ORC_BOSS: {
+            name: "Orc Boss", icon: '🧌', hp: 25, atk: 6, // High ATK, Low HP Base
+            minFloor: 5, maxFloor: Infinity, isBoss: true
+        },
+        GHOST_BOSS: {
+            name: "Ghost Boss", icon: '👻', hp: 50, atk: 3, // Low ATK, High HP Base
+            minFloor: 5, maxFloor: Infinity, isBoss: true
+        },
+        LIZARD_BOSS: {
+            name: "Lizard Boss", icon: '🦎', hp: 40, atk: 4, // Medium Base
+            minFloor: 5, maxFloor: Infinity, isBoss: true,
+            shapeshiftsTo: 'DRAGON_BOSS' // Shapeshifter Boss
+        },
+        SQUID_BOSS: {
+            name: "Squid Boss", icon: '🦑', hp: 60, atk: 5, // High HP, High ATK Base
+            minFloor: 10, maxFloor: Infinity, isBoss: true // Appears later
+        },
+        DRAGON_BOSS: {
+            name: "Dragon Boss", icon: '🐉', hp: 1, atk: 1, // Base stats are overwritten
+            minFloor: Infinity, maxFloor: Infinity, isBoss: true // Prevent random spawn, mark as boss
+             // No shapeshiftsTo
+        },
+
         SPIDER: {
             name: "Spider",
             icon: '🕷️',
@@ -1073,143 +1096,142 @@
 
         /**
          * Handles all logic when a monster's HP drops to 0 or below.
-         * - *** NEW: Checks for shapeshifting and handles transformation. ***
-         * - Marks monster as dead (sets maxHp=0 to prevent double processing).
+         * - Checks for shapeshifting and handles transformation.
+         * - *** NEW: Handles specific boss drop logic (Durable or Gold). ***
+         * - Marks monster as dead (sets maxHp=0).
          * - Decrements monster count.
-         * - Determines drop (Key, 70% Coin, or Nothing).
+         * - Determines drop for regular monsters (Key, Coin, Nothing).
          * - Updates the tile data to ITEM or EMPTY.
-         * - Unblocks neighbors.
-         * - Updates UI stats.
-         * - Shows appropriate drop message.
+         * - Unblocks neighbors. Updates UI stats. Shows messages.
          * - Triggers 'Mortal' challenge check.
          * @param {Tile} tile - The Tile object of the monster that died.
          * @private Internal helper method.
          */
          _handleMonsterDeath(tile) {
+            // --- Initial Checks ---
             if (!tile || !tile.tileData || tile.tileData.type !== TILE_TYPE.MONSTER || tile.tileData.maxHp === 0) {
-                // Invalid tile, not a monster, or already processed as dead
                 return;
             }
 
             const tileData = tile.tileData;
-            const r = tile.r; // Store coords before data changes
+            const r = tile.r;
             const c = tile.c;
             const originalMonsterTypeKey = tileData.monsterType;
             const originalMonsterStats = MONSTER_STATS[originalMonsterTypeKey];
             const monsterName = tileData.isSheep ? "Sheep" : (originalMonsterStats?.name || "Monster");
 
-            // --- Shapeshifting Check ---
-            // Check if the original monster type is defined, has a shapeshift target, and is NOT currently a sheep
+            // --- 1. Shapeshifting Check ---
             if (originalMonsterStats && originalMonsterStats.shapeshiftsTo && !tileData.isSheep) {
                 const nextFormKey = originalMonsterStats.shapeshiftsTo;
                 const nextFormStats = MONSTER_STATS[nextFormKey];
-
                 if (nextFormStats) {
                     console.log(`${monsterName} at [${r}, ${c}] is shapeshifting into ${nextFormKey}!`);
-
-                    // Calculate new stats based on the ORIGINAL form's current tile data
-                    // Use original maxHp before it gets overwritten
                     const originalMaxHp = tileData.maxHp;
                     const originalAtk = tileData.atk;
-                    const newHp = Math.max(1, Math.floor(originalMaxHp / 2)); // Half original max HP, min 1
-                    const newMaxHp = newHp; // Set the new max HP to the calculated respawn HP
-                    const newAtk = Math.max(1, Math.floor(originalAtk / 3)); // One third original current ATK, min 1
+                    const newHp = Math.max(1, Math.floor(originalMaxHp / 2));
+                    const newMaxHp = newHp; // New maxHP is the respawn HP
+                    const newAtk = Math.max(1, Math.floor(originalAtk / 3));
 
-                    // Update the tile's data to the new form
                     tile.setData({
-                        monsterType: nextFormKey, // Change type
-                        hp: newHp,
-                        maxHp: newMaxHp, // Set new max HP
-                        atk: newAtk,
-                        // Reset statuses and flags for the new form
-                        isPoisoned: false,
-                        poisonTurns: 0,
-                        frozenTurns: 0,
-                        isSheep: false, // No longer a sheep if it somehow was shapeshifting while sheeped (unlikely)
-                        hasKey: false, // Shapeshifted forms don't hold keys (key assignment prevents initial form having it)
-                        attackedOnce: tileData.attackedOnce // Keep track if it was attacked before transforming
-                        // Note: state remains REVEALED, type remains MONSTER
+                        monsterType: nextFormKey, hp: newHp, maxHp: newMaxHp, atk: newAtk,
+                        isPoisoned: false, poisonTurns: 0, frozenTurns: 0,
+                        isSheep: false, hasKey: false, attackedOnce: tileData.attackedOnce,
+                        // Ensure boss flag is carried over if applicable
+                        isBoss: nextFormStats.isBoss,
+                        shapeshiftsTo: nextFormStats.shapeshiftsTo // Carry over if the next form also shifts (unlikely here)
                     });
-
-                    // Show transformation message
                     this.events.emit('showMessage', `${monsterName} transformed!`);
-                    // Optional visual flash for transformation
-                    this.flashTileBackground(tile, 0xFFFFFF, 150, 1); // e.g., White flash
-
-                    // IMPORTANT: Return here to prevent standard death processing for this form
-                    return;
+                    this.flashTileBackground(tile, 0xFFFFFF, 150, 1);
+                    return; // Stop further processing for this turn
                 } else {
-                    console.error(`Shapeshift failed: Target form key "${nextFormKey}" not found in MONSTER_STATS.`);
-                    // Proceed with normal death if the target form is invalid
+                    console.error(`Shapeshift failed: Target form key "${nextFormKey}" not found.`);
                 }
             }
             // --- End Shapeshifting Check ---
 
-            // --- Standard Death Process (if not shapeshifted) ---
+            // --- 2. Standard Death Process ---
             console.log(`Handling death for ${monsterName} at [${r}, ${c}]`);
+            tileData.maxHp = 0; // Mark as officially dead
+            this.monsterCount--;
 
-            // Mark as officially dead to prevent multi-kill processing issues
-            tileData.maxHp = 0; // Use maxHp as the "officially dead" flag
-            this.monsterCount--; // Decrement floor monster count
+            let droppedItemId = null;
+            let gainedGold = 0;
+            let dropMessage = null;
+            let newTileType = TILE_TYPE.EMPTY; // Default to empty after death
 
-            let droppedItemId = null; // Default: drops nothing
-            let dropMessage = null; // Message to show
+            // --- 3. Determine Drop (Boss Logic First) ---
+            if (originalMonsterStats?.isBoss) {
+                 console.log(`--> ${monsterName} (Boss) defeated! Determining drop...`);
+                 // Boss Drop Logic: Durable or Gold
+                 const allDurableIds = Object.values(ITEM_TYPES)
+                                             .filter(item => item.category === 'DURABLE')
+                                             .map(item => item.id);
+                 const missingDurableIds = allDurableIds.filter(id => !this.player.inventory.includes(id));
 
-            // 1. Check for Key Drop (Shouldn't happen if key assignment prevents it on shapeshifters/initial form)
-            if (tileData.hasKey) {
-                droppedItemId = 'KEY_ITEM';
-                this.keyDroppedOnFloor = true; // Mark key as dropped on this floor
-                dropMessage = 'Key Dropped!'; // Specific message for the key
-                console.log(`--> ${monsterName} dropped the KEY!`);
+                 if (missingDurableIds.length > 0) {
+                     // Award a missing durable item
+                     droppedItemId = getRandomElement(missingDurableIds);
+                     newTileType = TILE_TYPE.ITEM;
+                     const itemName = ITEM_TYPES[droppedItemId]?.name || 'Durable Item';
+                     dropMessage = `Boss dropped: ${itemName}!`;
+                     console.log(`--> Awarding missing durable: ${droppedItemId}`);
+                 } else {
+                     // Award gold because player has all durables
+                     gainedGold = 50; // Specific boss gold amount
+                     this.player.gold += gainedGold;
+                     newTileType = TILE_TYPE.EMPTY; // Tile becomes empty
+                     dropMessage = `Boss dropped: ${gainedGold} Gold!`;
+                     console.log(`--> Player has all durables. Awarding ${gainedGold} Gold.`);
+                 }
+                 // Bosses skip the regular key/coin check below
             } else {
-                // 2. Check for Coin Drop (70% chance) if no key
-                if (Math.random() < 0.70) { // 70% chance
-                    droppedItemId = 'COIN';
-                    // Use generic item name for message consistency
-                    dropMessage = `${ITEM_TYPES[droppedItemId]?.name || 'Item'} Dropped!`;
-                    console.log(`--> ${monsterName} dropped a Coin (70% chance success).`);
-                } else {
-                    // Dropped nothing (30% chance)
-                    droppedItemId = null;
-                    console.log(`--> ${monsterName} dropped nothing (70% chance fail).`);
-                    // No dropMessage needed if nothing drops
-                }
+                 // Regular Monster Drop Logic
+                 if (tileData.hasKey) { // Should be false for shapeshifters due to assignKey changes
+                     droppedItemId = 'KEY_ITEM';
+                     newTileType = TILE_TYPE.ITEM;
+                     this.keyDroppedOnFloor = true;
+                     dropMessage = 'Key Dropped!';
+                     console.log(`--> ${monsterName} dropped the KEY!`);
+                 } else if (Math.random() < 0.70) { // 70% Coin chance
+                     droppedItemId = 'COIN';
+                     newTileType = TILE_TYPE.ITEM;
+                     dropMessage = `${ITEM_TYPES[droppedItemId]?.name || 'Item'} Dropped!`;
+                     console.log(`--> ${monsterName} dropped a Coin.`);
+                 } else {
+                     // Dropped nothing
+                     droppedItemId = null;
+                     newTileType = TILE_TYPE.EMPTY;
+                     console.log(`--> ${monsterName} dropped nothing.`);
+                 }
             }
+            // --- End Drop Determination ---
 
-            // 3. Update Tile Data to Item or Empty
-            const newTileType = droppedItemId ? TILE_TYPE.ITEM : TILE_TYPE.EMPTY;
+
+            // 4. Update Tile Data
             tile.setData({
                 type: newTileType,
-                itemId: droppedItemId, // Will be null if nothing dropped
+                itemId: droppedItemId,
                 revealed: true,
                 state: TILE_STATE.REVEALED,
-                // Clear all monster-specific fields
-                hp: 0,
-                maxHp: 0, // Confirming it's 0
-                atk: 0,
-                monsterType: null,
-                hasKey: false,
-                attackedOnce: false,
-                isPoisoned: false,
-                poisonTurns: 0,
-                isSheep: false,
-                frozenTurns: 0,
-                // Clear shapeshifting property just in case
-                shapeshiftsTo: undefined
-            }); // setData automatically calls updateVisuals
+                // Clear all potentially remaining monster fields
+                hp: 0, maxHp: 0, atk: 0, monsterType: null,
+                hasKey: false, attackedOnce: false, isPoisoned: false,
+                poisonTurns: 0, isSheep: false, frozenTurns: 0,
+                isBoss: undefined, shapeshiftsTo: undefined // Clear boss/shapeshift flags
+            });
 
-            // 4. Unblock Neighbors (using original coords r, c)
+            // 5. Unblock Neighbors
             this.updateNeighborStates(r, c, false, true); // isMonsterBlock=false, isMonsterUnblock=true
 
-            // 5. Update UI Stats (monster count changed)
+            // 6. Update UI Stats (monster count, gold if boss dropped gold)
             this.events.emit('updateStats', this.getPlayerStats());
 
-            // 6. Show Drop Message (if something dropped)
+            // 7. Show Drop Message (if any)
             if (dropMessage) {
                 this.events.emit('showMessage', dropMessage);
             }
 
-            // 7. Check for Mortal Challenge Trigger
+            // 8. Check for Mortal Challenge Trigger
             this._checkChallengeTrigger('monster_death');
         }
 
@@ -1738,9 +1760,9 @@
         /**
          * Generates a new floor layout: resets state, clears old tiles,
          * generates new tile data, creates new Tile instances, and reveals the starting door.
-         * *** MODIFIED: Resets shellshiftersPlacedThisFloor counter. ***
+         * *** MODIFIED: Handles placing a boss on floors 5, 10, 15... ***
          */
-         generateFloor() {
+        generateFloor() {
             this.currentFloor++;
             console.log(`Generating Floor ${this.currentFloor}`);
 
@@ -1752,42 +1774,34 @@
             this.keyDroppedOnFloor = false;
             this.isGameOver = false;
             this.keyAssignedOnFloor = false;
-            // this.shellshifterPlacedOnFloor3 = false; // REMOVED - Replaced by counter
-            this.shellshiftersPlacedThisFloor = 0; // *** ADD THIS LINE *** Reset counter for the new floor
+            this.shellshiftersPlacedThisFloor = 0;
 
             // --- Clear Previous Tiles ---
-            // Destroy existing Tile instances and clear the arrays
             for (let r = 0; r < this.tileObjects.length; r++) {
                 for (let c = 0; c < (this.tileObjects[r]?.length || 0); c++) {
-                    // Check if the object exists and belongs to this scene before destroying
                     if (this.tileObjects[r][c] && this.tileObjects[r][c].scene === this) {
                         this.tileObjects[r][c].destroy();
                     }
                 }
             }
-            this.tileObjects = []; // Reset visual objects array
-            let gridRawData = []; // Temporary array to hold generated data before creating Tile instances
+            this.tileObjects = [];
+            let gridRawData = [];
 
             // --- Create Initial Grid Data ---
-            let possibleCoords = []; // Array of {r, c} for potential tile placements
+            let possibleCoords = [];
             for (let r = 0; r < GRID.ROWS; r++) {
                 gridRawData[r] = [];
-                this.tileObjects[r] = []; // Initialize row for Tile instances
+                this.tileObjects[r] = [];
                 for (let c = 0; c < GRID.COLS; c++) {
-                    // Initialize all tiles as inaccessible empty shells first
-                    gridRawData[r][c] = {
-                        type: null,
-                        revealed: false,
-                        state: TILE_STATE.HIDDEN_UNACCESSIBLE
-                    };
+                    gridRawData[r][c] = { type: null, revealed: false, state: TILE_STATE.HIDDEN_UNACCESSIBLE };
                     possibleCoords.push({ r, c });
                 }
             }
 
             // --- Place Tiles (updates the gridRawData structure) ---
-            Phaser.Utils.Array.Shuffle(possibleCoords); // Randomize placement order
+            Phaser.Utils.Array.Shuffle(possibleCoords);
 
-            // Place Door (starting point)
+            // Place Door
             let doorCoord = possibleCoords.pop();
             if (doorCoord) {
                 gridRawData[doorCoord.r][doorCoord.c].type = TILE_TYPE.DOOR;
@@ -1795,48 +1809,68 @@
             } else {
                 console.error("Could not place door! Aborting floor generation.");
                 return;
-            } // Critical error
+            }
 
-            // Place Monsters (increasing with floor number)
-            // placeTiles now handles guaranteed Shellshifter on Floor 3 internally AND the limit
-            let numMonsters = Math.min(
-                Math.floor((GRID.COLS * GRID.ROWS) / 5) + this.currentFloor, // Base + floor bonus
-                possibleCoords.length - 1 // Don't use all remaining spots, leave room for other things
+            // --- Boss Placement ---
+            let isBossFloor = (this.currentFloor >= 5 && this.currentFloor % 5 === 0);
+            let bossCoord = null;
+            if (isBossFloor && possibleCoords.length > 0) {
+                 console.log(`Floor ${this.currentFloor} is a Boss Floor!`);
+                 bossCoord = this._placeBossMonster(possibleCoords, gridRawData); // Place one boss
+                 if (!bossCoord) {
+                    console.error("Failed to place boss monster!");
+                    // Decide how to handle failure - proceed without boss? abort?
+                    isBossFloor = false; // Treat as non-boss floor if placement failed
+                 }
+            }
+            // --- End Boss Placement ---
+
+            // Calculate number of regular monsters
+            // Reduce count by 1 if a boss was successfully placed
+            let numRegularMonsters = Math.min(
+                Math.floor((GRID.COLS * GRID.ROWS) / 5) + this.currentFloor,
+                possibleCoords.length - (isBossFloor ? 0 : 1) // Leave room for items etc. Boss already took a spot.
             );
-            let placedMonsterCoords = this.placeTiles(possibleCoords, numMonsters, TILE_TYPE.MONSTER, null, gridRawData); // Pass gridRawData
-
-            // Assign Key to one of the placed, eligible (non-shapeshifter) monsters
-            this.assignKey(placedMonsterCoords, gridRawData); // Pass gridRawData
-
-            // --- SHOP PLACEMENT ---
-            let shopPlaced = false;
-            if (possibleCoords.length > 0 && (this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0))) {
-                let shopCoord = possibleCoords.pop(); // Take one available spot
-                gridRawData[shopCoord.r][shopCoord.c].type = TILE_TYPE.SHOP;
-                console.log(`Shop placed at [${shopCoord.r}, ${shopCoord.c}] for floor ${this.currentFloor}`);
-                shopPlaced = true;
+            if (isBossFloor && bossCoord) { // If boss was placed, we need one less regular monster
+                numRegularMonsters = Math.max(0, numRegularMonsters -1); // Ensure it doesn't go below 0
+                 console.log(`Boss placed, placing ${numRegularMonsters} regular monsters.`);
+            } else {
+                // Ensure we leave at least one spot if placing monsters
+                 numRegularMonsters = Math.min(numRegularMonsters, possibleCoords.length > 0 ? possibleCoords.length -1 : 0);
+                 console.log(`No boss, placing ${numRegularMonsters} regular monsters.`);
             }
 
-            // --- CHALLENGE PLACEMENT ---
-            let challengePlaced = false;
-            if (this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR &&
-                this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0 &&
-                possibleCoords.length > 0) {
-                // Place exactly one challenge tile
-                this.placeTiles(possibleCoords, 1, TILE_TYPE.CHALLENGE, null, gridRawData);
-                challengePlaced = true;
-                console.log(`Challenge tile placed for floor ${this.currentFloor}`);
-            }
-            // --- END CHALLENGE PLACEMENT ---
 
-            // Place other items/traps randomly
-            this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
-            this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
-            // this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2 + Math.floor(this.currentFloor / 2)), possibleCoords.length), TILE_TYPE.TRAP, null, gridRawData); // Traps commented out
-            let numItems = Math.min(getRandomInt(1, 2 + Math.floor(this.currentFloor / 3)), possibleCoords.length);
-            this.placeTiles(possibleCoords, numItems, TILE_TYPE.ITEM, null, gridRawData); // Place random consumable items
-            this.placeTiles(possibleCoords, Math.min(getRandomInt(1, 2), possibleCoords.length), TILE_TYPE.BARREL, null, gridRawData);
-            this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.RANDOM_ITEM, null, gridRawData);
+            // Place Regular Monsters (using placeTiles which handles Shellshifter limits)
+            let placedMonsterCoords = this.placeTiles(possibleCoords, numRegularMonsters, TILE_TYPE.MONSTER, null, gridRawData);
+            // Add boss coord to the list if it exists, so key assignment check considers it (to avoid it)
+            if (bossCoord) {
+                 placedMonsterCoords.push(bossCoord); // Note: assignKey will filter bosses out
+            }
+
+
+            // Assign Key (will avoid bosses and shapeshifters)
+            this.assignKey(placedMonsterCoords, gridRawData);
+
+            // --- Place other tiles (Shop, Challenge, Items, etc.) ---
+            // SHOP
+             if (possibleCoords.length > 0 && (this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0))) {
+                 let shopCoord = possibleCoords.pop();
+                 gridRawData[shopCoord.r][shopCoord.c].type = TILE_TYPE.SHOP;
+             }
+             // CHALLENGE
+             if (this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR &&
+                 this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0 &&
+                 possibleCoords.length > 0) {
+                 this.placeTiles(possibleCoords, 1, TILE_TYPE.CHALLENGE, null, gridRawData);
+             }
+             // OTHER ITEMS
+             this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
+             this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
+             let numItems = Math.min(getRandomInt(1, 2 + Math.floor(this.currentFloor / 3)), possibleCoords.length);
+             this.placeTiles(possibleCoords, numItems, TILE_TYPE.ITEM, null, gridRawData); // Random consumables
+             this.placeTiles(possibleCoords, Math.min(getRandomInt(1, 2), possibleCoords.length), TILE_TYPE.BARREL, null, gridRawData);
+             this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.RANDOM_ITEM, null, gridRawData);
 
             // Fill remaining spots with Empty tiles
             this.placeTiles(possibleCoords, possibleCoords.length, TILE_TYPE.EMPTY, null, gridRawData);
@@ -1845,12 +1879,9 @@
             for (let r = 0; r < GRID.ROWS; r++) {
                 for (let c = 0; c < GRID.COLS; c++) {
                     if (gridRawData[r] && gridRawData[r][c]) {
-                        // Calculate position for the new Tile instance
                         let tileX = c * (this.tileWidth + this.tileSpacing);
                         let tileY = r * (this.tileHeight + this.tileSpacing);
-                        // Create Tile instance using the generated raw data
                         this.tileObjects[r][c] = new Tile(this, tileX, tileY, this.tileWidth, this.tileHeight, gridRawData[r][c], r, c);
-                        // Add the Tile's container to the main grid container
                         this.tileContainer.add(this.tileObjects[r][c]);
                     } else {
                         console.warn(`Missing grid data during tile object creation for [${r}, ${c}]`);
@@ -1860,27 +1891,90 @@
 
             // --- Reveal Starting Tile ---
             if (this.doorCoords) {
-                const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c]; // Get the Tile instance
+                const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c];
                 if (doorTile) {
-                    // Use the Tile's setData method to update its state and visuals
-                    doorTile.setData({
-                        revealed: true,
-                        state: TILE_STATE.REVEALED
-                    });
-                    // Update the state of neighbors adjacent to the revealed door
+                    doorTile.setData({ revealed: true, state: TILE_STATE.REVEALED });
                     this.updateNeighborStates(this.doorCoords.r, this.doorCoords.c);
                     console.log(`Revealed starting door at [${this.doorCoords.r}, ${this.doorCoords.c}]`);
                 }
             }
 
-            console.log(`Generated Floor ${this.currentFloor} with ${this.monsterCount} monsters. Placed ${this.shellshiftersPlacedThisFloor} Shellshifters.`);
-            this.emitInitialUpdates(); // Ensure UI is updated for the new floor
+            console.log(`Generated Floor ${this.currentFloor} with ${this.monsterCount} total monsters. Placed ${this.shellshiftersPlacedThisFloor} Shellshifters.`);
+            this.emitInitialUpdates();
+        }
+
+        /**
+         * Selects and places a single boss monster onto the grid data.
+         * Called by generateFloor on boss floors.
+         * @param {Array<{r: number, c: number}>} coordsArray - Array of available coordinates. Will pop one.
+         * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
+         * @returns {object|null} The coordinate {r, c} where the boss was placed, or null on failure.
+         * @private
+         */
+         _placeBossMonster(coordsArray, gridRawData) {
+            if (coordsArray.length === 0) {
+                console.error("Cannot place boss: No coordinates available.");
+                return null;
+            }
+
+            const currentFloor = this.currentFloor;
+
+            // Filter available boss types (initial forms only, respecting minFloor)
+            const availableBossKeys = Object.keys(MONSTER_STATS).filter(key => {
+                const stats = MONSTER_STATS[key];
+                // Must be a boss, must meet minFloor, must NOT be a second form (like DRAGON_BOSS)
+                return stats.isBoss &&
+                       currentFloor >= (stats.minFloor || 1) &&
+                       !key.includes('_SHELL') && // Avoid placing Shellshifter second form
+                       key !== 'DRAGON_BOSS';    // Avoid placing Dragon form directly
+            });
+
+            if (availableBossKeys.length === 0) {
+                console.error(`Cannot place boss: No suitable boss types found for floor ${currentFloor}.`);
+                return null; // Indicate failure
+            }
+
+            // Select a random boss from the available types
+            const bossTypeKey = getRandomElement(availableBossKeys);
+            const bossBase = MONSTER_STATS[bossTypeKey];
+            const coord = coordsArray.pop(); // Take an available spot
+
+            console.log(`Placing Boss: ${bossTypeKey} at [${coord.r}, ${coord.c}]`);
+
+            // Calculate stats using the same scaling as regular monsters for now
+            let bossHp = bossBase.hp + getRandomInt(0, this.currentFloor * 2); // Slightly stronger scaling?
+            let bossAtk = bossBase.atk + Math.floor(this.currentFloor / 2);   // Slightly stronger scaling?
+
+            // Assign boss data to the grid
+            let tileData = gridRawData[coord.r][coord.c];
+            Object.assign(tileData, {
+                type: TILE_TYPE.MONSTER, // Bosses are still monsters
+                monsterType: bossTypeKey,
+                hp: bossHp,
+                maxHp: bossHp,
+                atk: bossAtk,
+                hasKey: false, // Bosses never hold the key
+                attackedOnce: false,
+                isPoisoned: false,
+                poisonTurns: 0,
+                isSheep: false,
+                frozenTurns: 0,
+                // Ensure isBoss flag is copied if not already present (though it should be)
+                isBoss: bossBase.isBoss,
+                // Copy shapeshift target if applicable (for Lizard Boss)
+                shapeshiftsTo: bossBase.shapeshiftsTo
+            });
+
+            this.monsterCount++; // Increment total monster count
+
+            return coord; // Return the coordinate where placed
         }
 
 
-                /**
+         /**
          * Places a specified number of a given tile type into the gridRawData array.
          * Modifies the gridRawData and removes used coordinates from coordsArray.
+         * *** MODIFIED: Corrected filter to EXCLUDE bosses from regular monster placement. ***
          * *** MODIFIED: Handles guaranteed Shellshifter spawn on Floor 3 & limits total to 2. ***
          * *** MODIFIED: Filters monsters based on currentFloor and MONSTER_STATS min/maxFloor. ***
          * *** MODIFIED: Excludes Shellshifter's second form from random placement. ***
@@ -1892,7 +1986,7 @@
          * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
          * @returns {Array<{r: number, c: number}>} Coordinates where monsters were placed (if type was MONSTER).
          */
-         placeTiles(coordsArray, count, type, forcedItemId = null, gridRawData) {
+        placeTiles(coordsArray, count, type, forcedItemId = null, gridRawData) {
             let placedMonsterCoords = []; // Track monster placements for key assignment
 
             // --- Special Handling: Guarantee ONE Shellshifter on Floor 3 ---
@@ -1922,7 +2016,7 @@
                     // We placed one, so decrement the count for the main loop below
                     count--;
                 } else {
-                    console.warn("Tried to place guaranteed Shellshifter on Floor 3, but no coords left!");
+                     console.warn("Tried to place guaranteed Shellshifter on Floor 3, but no coords left!");
                 }
             }
             // --- End Special Handling ---
@@ -1945,14 +2039,21 @@
                         // 1. Get all monster keys
                         let allMonsterKeys = Object.keys(MONSTER_STATS);
 
-                        // 2. Initial filter based on floor range and exclude second form
+                        // 2. Filter for REGULAR monsters allowed on this floor
                         let availableMonsterKeys = allMonsterKeys.filter(key => {
                             const stats = MONSTER_STATS[key];
-                            if (key === 'SHELLSHIFTER_SHELL') return false; // Exclude second form
-                            return currentFloor >= (stats.minFloor || 1) && currentFloor <= (stats.maxFloor || Infinity);
+                            if (!stats) return false; // Skip if stats somehow missing
+
+                            // --- Conditions for a REGULAR monster ---
+                            const isSecondForm = key === 'SHELLSHIFTER_SHELL' || key === 'DRAGON_BOSS';
+                            const isActuallyBoss = stats.isBoss === true; // Explicit check for boss flag
+                            const floorAllowed = currentFloor >= (stats.minFloor || 1) && currentFloor <= (stats.maxFloor || Infinity);
+
+                            // Must NOT be a second form, must NOT be a boss, AND must be allowed on this floor
+                            return !isSecondForm && !isActuallyBoss && floorAllowed;
                         });
 
-                        // 3. *** Apply Shellshifter Limit ***
+                        // 3. Apply Shellshifter Limit (if applicable for regular spawns)
                         // If the limit is reached, remove the snail form from the possibilities
                         if (this.shellshiftersPlacedThisFloor >= 2) {
                             availableMonsterKeys = availableMonsterKeys.filter(key => key !== 'SHELLSHIFTER_SNAIL');
@@ -1961,12 +2062,15 @@
 
 
                         if (availableMonsterKeys.length === 0) {
-                            console.warn(`Floor ${currentFloor}: No available monsters found after filtering (Limit: ${this.shellshiftersPlacedThisFloor}/2)! Placing fallback Skeleton.`);
+                            console.warn(`Floor ${currentFloor}: No available REGULAR monsters found after filtering (Shellshifter Limit: ${this.shellshiftersPlacedThisFloor}/2)! Placing fallback Skeleton.`);
                             // Fallback: If no monsters are available
-                            if (currentFloor >= MONSTER_STATS.SKELETON.minFloor && currentFloor <= MONSTER_STATS.SKELETON.maxFloor) {
+                             // Check if Skeleton itself is allowed and not a boss (it isn't currently)
+                            const skellyStats = MONSTER_STATS['SKELETON'];
+                            if (skellyStats && !skellyStats.isBoss && currentFloor >= (skellyStats.minFloor || 1) && currentFloor <= (skellyStats.maxFloor || Infinity)) {
                                 availableMonsterKeys.push('SKELETON');
                             } else {
-                                console.error(`CRITICAL: No fallback monster (Skeleton) available for floor ${currentFloor}. Skipping monster placement.`);
+                                // If Skeleton isn't available either, we have a problem with definitions or floor progression
+                                console.error(`CRITICAL: No fallback regular monster (Skeleton) available for floor ${currentFloor}. Skipping monster placement.`);
                                 i--; // Decrement loop counter because we didn't place a monster
                                 continue; // Skip to next iteration
                             }
@@ -1977,11 +2081,15 @@
                         let monsterBase = MONSTER_STATS[monsterTypeKey];
                         if (!monsterBase) { // Safety check
                             console.error(`Failed to get monster base stats for key: ${monsterTypeKey}. Defaulting.`);
-                            monsterTypeKey = 'SKELETON';
+                            monsterTypeKey = 'SKELETON'; // Use the guaranteed fallback
                             monsterBase = MONSTER_STATS[monsterTypeKey];
+                             if (!monsterBase) { // If even Skeleton fails, something is wrong
+                                 console.error("CRITICAL fallback failed. Cannot place monster.");
+                                 i--; continue;
+                             }
                         }
 
-                        // *** Increment counter IF we placed a Shellshifter Snail ***
+                        // Increment counter IF we placed a Shellshifter Snail
                         if (monsterTypeKey === 'SHELLSHIFTER_SNAIL') {
                             this.shellshiftersPlacedThisFloor++;
                              console.log(`Placed random Shellshifter. Count: ${this.shellshiftersPlacedThisFloor}`);
@@ -2000,12 +2108,16 @@
                             isPoisoned: false,
                             poisonTurns: 0,
                             isSheep: false,
-                            frozenTurns: 0
+                            frozenTurns: 0,
+                            // Ensure isBoss and shapeshiftsTo are NOT set for regular monsters
+                            isBoss: false,
+                            shapeshiftsTo: MONSTER_STATS[monsterTypeKey]?.shapeshiftsTo // Copy only if it exists (for snail)
                         });
                         this.monsterCount++;
                         placedMonsterCoords.push(coord); // Add to list for key assignment
                         break;
                     }
+                    // Other cases (TRAP, ITEM, etc.) remain the same...
                     case TILE_TYPE.TRAP: {
                         tileData.damage = getRandomInt(1, 2 + Math.floor(this.currentFloor / 2));
                         break;
@@ -2046,26 +2158,31 @@
                     case TILE_TYPE.EMPTY:
                     case TILE_TYPE.DOOR:
                         break;
-                }
-            }
+                } // End switch(type)
+            } // End for loop
             return placedMonsterCoords; // Return monster coords for key assignment
-        }
+        } // End placeTiles function
 
         /**
          * Assigns the 'hasKey' property to one of the monsters in the gridRawData.
          * If no eligible monsters were placed, attempts to place a Key Item directly in gridRawData.
-         * *** MODIFIED: Prevents assigning key to shapeshifters. ***
-         * @param {Array<{r: number, c: number}>} monsterCoords - Coordinates where monsters were placed.
+         * *** MODIFIED: Prevents assigning key to shapeshifters AND bosses. ***
+         * @param {Array<{r: number, c: number}>} monsterCoords - Coordinates where monsters were placed (including potential boss coord).
          * @param {Array<Array<object>>} gridRawData - The 2D array holding the raw tile data being generated.
          */
          assignKey(monsterCoords, gridRawData) {
             let keySuccessfullyPlaced = false;
 
-            // Filter monsterCoords to only include non-shapeshifters
+            // Filter monsterCoords to only include non-shapeshifters and non-bosses
             const eligibleMonsterCoords = monsterCoords.filter(coord => {
-                const monsterType = gridRawData[coord.r]?.[coord.c]?.monsterType;
-                // Check if monsterType exists and if it does NOT have a shapeshiftsTo property
-                return monsterType && MONSTER_STATS[monsterType] && !MONSTER_STATS[monsterType].shapeshiftsTo;
+                 // Check if coord and gridData exist first
+                 if (!coord || !gridRawData[coord.r] || !gridRawData[coord.r][coord.c]) return false;
+
+                 const monsterType = gridRawData[coord.r][coord.c].monsterType;
+                 const stats = monsterType ? MONSTER_STATS[monsterType] : null;
+
+                 // Must have stats, must NOT have shapeshiftsTo, must NOT be a boss
+                 return stats && !stats.shapeshiftsTo && !stats.isBoss;
             });
 
 
@@ -2076,27 +2193,21 @@
                 // Set the hasKey flag in the raw data for that monster
                 gridRawData[keyCoord.r][keyCoord.c].hasKey = true;
                 this.keyHolderCoords = keyCoord; // Store coords for potential barrel logic later
-                console.log(`Key assigned to non-shapeshifter monster (${gridRawData[keyCoord.r][keyCoord.c].monsterType}) at [${keyCoord.r}, ${keyCoord.c}]`);
+                console.log(`Key assigned to eligible monster (${gridRawData[keyCoord.r][keyCoord.c].monsterType}) at [${keyCoord.r}, ${keyCoord.c}]`);
                 keySuccessfullyPlaced = true; // Mark success
             } else {
-                // Fallback: No eligible (non-shapeshifter) monsters placed, place the key as a direct item drop
-                console.warn("No eligible non-shapeshifter monsters placed, cannot assign key to monster. Placing Key Item directly.");
+                // Fallback: No eligible monsters placed, place the key as a direct item drop
+                console.warn("No eligible non-shapeshifter/non-boss monsters placed. Placing Key Item directly.");
                 let placed = false;
-                // Find the first available empty/null tile in gridRawData
                 for (let r = 0; r < GRID.ROWS && !placed; r++) {
                     for (let c = 0; c < GRID.COLS && !placed; c++) {
-                        // Check if tile is currently empty or wasn't assigned a type yet
-                         if (gridRawData[r] && gridRawData[r][c] && (gridRawData[r][c].type === null || gridRawData[r][c].type === TILE_TYPE.EMPTY)) {
-                            // Overwrite tile data to be a Key Item
+                        if (gridRawData[r] && gridRawData[r][c] && (gridRawData[r][c].type === null || gridRawData[r][c].type === TILE_TYPE.EMPTY)) {
                             gridRawData[r][c] = {
-                                type: TILE_TYPE.ITEM,
-                                itemId: 'KEY_ITEM',
-                                revealed: false, // Start hidden
-                                state: TILE_STATE.HIDDEN_UNACCESSIBLE // Initial state
+                                type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM',
+                                revealed: false, state: TILE_STATE.HIDDEN_UNACCESSIBLE
                             };
                             console.log("Fallback: Placed key ITEM directly at", { r, c });
-                            placed = true; // Stop searching
-                            keySuccessfullyPlaced = true; // Mark success
+                            placed = true; keySuccessfullyPlaced = true;
                         }
                     }
                 }
@@ -4805,12 +4916,25 @@
 
         /**
          * Creates the Floor Clear Panel container and its contents.
+         * *** MODIFIED: Corrected stopPropagation call in pointerdown handler. ***
          * Called by create().
          */
-        _createFloorClearPanel() {
+         _createFloorClearPanel() {
             this.floorClearPanel = this.add.container(0, 0).setDepth(103).setVisible(false);
             const fcPanelBg = this.add.rectangle(0, 0, 300, 180, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
-            fcPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation());
+
+            // Correctly accept all arguments and call stopPropagation on the DOM event (the 4th argument)
+            fcPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
+                // Check if the event object exists and has the stopPropagation method
+                if (event && typeof event.stopPropagation === 'function') {
+                    event.stopPropagation();
+                } else {
+                     // Fallback or alternative if needed, though usually not necessary for pointerdown
+                     // pointer.event?.stopPropagation?.(); // Optional chaining might work too
+                     console.warn("FloorClear Panel: Could not stop propagation on event object.", event);
+                }
+            });
+
             const fcText = this.add.text(0, 0, `Floor cleared!\nBonus: ${GAME.FLOOR_CLEAR_BONUS} Gold`, {
                 fontSize: '18px',
                 fill: '#FFF',
@@ -4820,11 +4944,9 @@
                 fontSize: '18px',
                 fill: '#FFF',
                 backgroundColor: COLORS.CONFIRM_BTN_BG,
-                padding: {
-                    x: 25,
-                    y: 10
-                }
+                padding: { x: 25, y: 10 }
             }).setOrigin(0.5).setInteractive();
+
             fcOkButton.on('pointerdown', this.confirmFloorClear, this);
             this.floorClearPanel.add([fcPanelBg, fcText, fcOkButton]);
         }

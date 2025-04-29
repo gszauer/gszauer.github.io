@@ -8,45 +8,6 @@ List entire functions that need to be changed, not just the line.
 Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
 ---
 
-
-I cleared a floor after playing for a while and got this exception:
-Uncaught TypeError: e.stopPropagation is not a function
-It's on this line in _createFloorClearPanel
-fcPanelBg.setInteractive().on('pointerdown', e => e.stopPropagation());
-Can you fix it?
-List entire functions that need to be changed, not just the line. 
-Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
-
-
-
----- NEW MONSTERS
-
-
-This is really cool. Let's add a special type of enemy, a shapeshifter. When a shapeshifter's hp reaches 0, they "respawn" as a different enemy with half the hp and one third of the attack power of the original enemy. 
-For now, we're only going to implement one shapeshifter, let's call it something that's a pun on shell and monster. The icons are 🐌, and 🐚 on respawn. 
-One of these should spawn on floor 3 always. Then randomly like any other monster.
-List entire functions that need to be changed, not just the line. 
-Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
-
---- BOSSES
-
-Next, we're going to add a new type of enemy, bosses. Bosses are special in that they always drop a durable item, unless the players has all durable items. If the player has all durable items, the boss drops 50 coins. Bosses appear every 5 floors, starting on floor 5.
-
-
-Appear every 5 floors, starting on floor 5. Optional.
-    Reward: Compas, can have in inventory but can't use. Reveals location of the key.
-
-Four bosses: 
-
-Ghost 👻
-    high attack, low health, 
-Orc 🧌
-    high health, low attack,
-Squid 🦑
-    high health, high attack
-Dragon🦎 / 🐉
-    Slime like respawn on death
-
 --- TUNING
 
 Things that need to scale:
