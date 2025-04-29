@@ -219,7 +219,7 @@ const COLORS = {
     INV_SLOT_BG: 0x333333, // Dark grey for inventory slots
     INV_SLOT_BORDER: 0x555555, // Lighter grey border for inventory slots
     DEBUG_BUTTON_BG: 0x444444, // Grey for debug buttons
-    DEBUG_MARKER_COLOR: 0x000000, // Black for debug markers on hidden tiles
+    DEBUG_MARKER_COLOR: 0x111111, // Black for debug markers on hidden tiles
     CONFIRM_BTN_BG: 0x44AA44, // Green for confirm buttons
     CANCEL_BTN_BG: 0xAA4444, // Red for cancel buttons
     EXPLOSIVE: 0xFF6347, // Tomato red for explosives
@@ -519,208 +519,209 @@ class Tile extends Phaser.GameObjects.Container {
         return this;
     }
 
-     /**
-    * Updates the tile's visual appearance (colors, text, icons) based on its current tileData.
-    * This is the core rendering logic for the tile.
-    */
-    updateVisuals() {
-        // Safety check: ensure visual elements exist before trying to update them
-        if (!this.bgRect || !this.mainText || !this.statsText || !this.statusIcon1 || !this.statusIcon2) {
-            console.warn("Tile visuals called before elements created for", this.r, this.c);
-            return;
-        }
+    /**
+    * Updates the tile's visual appearance (colors, text, icons) based on its current tileData.
+    * This is the core rendering logic for the tile.
+    */
+    updateVisuals() {
+        // Safety check: ensure visual elements exist before trying to update them
+        if (!this.bgRect || !this.mainText || !this.statsText || !this.statusIcon1 || !this.statusIcon2) {
+            console.warn("Tile visuals called before elements created for", this.r, this.c);
+            return;
+        }
 
-        const width = this.width;
-        const height = this.height;
+        const width = this.width;
+        const height = this.height;
 
-        // --- Calculate Font Sizes (dynamically based on tile height) ---
-        const iconFontSize = Math.max(16, Math.min(36, Math.floor(height * 0.45)));
-        const detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45)));
+        // --- Calculate Font Sizes (dynamically based on tile height) ---
+        const iconFontSize = Math.max(16, Math.min(36, Math.floor(height * 0.45)));
+        const detailFontSize = Math.max(9, Math.min(16, Math.floor(iconFontSize * 0.45)));
 
-        // --- Reset Common Elements ---
-        // Clear stats text, set default style/position
-        this.statsText.setText('').setFontSize(detailFontSize).setColor(COLORS.TEXT).setOrigin(0.5);
-        // Clear status icons, set default style/position
-        this.statusIcon1.setText('').setFontSize(detailFontSize * 0.9).setOrigin(0, 0);
-        this.statusIcon2.setText('').setFontSize(detailFontSize * 0.9).setOrigin(0, 0);
-        // Reset main text position/style, set word wrap based on current width
-        this.mainText.setPosition(width / 2, height / 2);
-        this.mainText.setWordWrapWidth(width - 10).setOrigin(0.5);
+        // --- Reset Common Elements ---
+        // Clear stats text, set default style/position
+        this.statsText.setText('').setFontSize(detailFontSize).setColor(COLORS.TEXT).setOrigin(0.5);
+        // Clear status icons, set default style/position
+        this.statusIcon1.setText('').setFontSize(detailFontSize * 0.9).setOrigin(0, 0);
+        this.statusIcon2.setText('').setFontSize(detailFontSize * 0.9).setOrigin(0, 0);
+        // Reset main text position/style, set word wrap based on current width
+        this.mainText.setPosition(width / 2, height / 2);
+        this.mainText.setWordWrapWidth(width - 10).setOrigin(0.5);
 
-        // --- Apply Styles Based on Tile State (Revealed vs. Hidden) ---
-        if (this.tileData.state === TILE_STATE.REVEALED) {
-            // --- Revealed Tile Logic ---
-            this.mainText.setColor(COLORS.TEXT); // Use light text color for revealed tiles
-            this.statsText.setPosition(width / 2, height * 0.75); // Position stats text near bottom
+        // --- Apply Styles Based on Tile State (Revealed vs. Hidden) ---
+        if (this.tileData.state === TILE_STATE.REVEALED) {
+            // --- Revealed Tile Logic ---
+            this.mainText.setColor(COLORS.TEXT); // Use light text color for revealed tiles
+            this.statsText.setPosition(width / 2, height * 0.75); // Position stats text near bottom
 
-            // Status Icon Positioning Logic (Top-Left Stack)
-            const statusPadding = Math.max(2, Math.floor(width * 0.05)); // Padding from edges
-            const statusIconYOffset = detailFontSize * 1.1; // Vertical spacing between icons
-            let statusIconBaseX = statusPadding;
-            let statusIconBaseY = statusPadding;
-            let currentStatusIndex = 0; // Track which status icon slot to use (0 or 1)
+            // Status Icon Positioning Logic (Top-Left Stack)
+            const statusPadding = Math.max(2, Math.floor(width * 0.05)); // Padding from edges
+            const statusIconYOffset = detailFontSize * 1.1; // Vertical spacing between icons
+            let statusIconBaseX = statusPadding;
+            let statusIconBaseY = statusPadding;
+            let currentStatusIndex = 0; // Track which status icon slot to use (0 or 1)
 
-            // Helper function to set text and position for a status icon
-            const setStatusIcon = (iconObject, text) => {
-                if (iconObject) {
-                    iconObject.setText(text).setPosition(statusIconBaseX, statusIconBaseY + (currentStatusIndex * statusIconYOffset));
-                    currentStatusIndex++; // Move to the next vertical position
-                }
-            };
+            // Helper function to set text and position for a status icon
+            const setStatusIcon = (iconObject, text) => {
+                if (iconObject) {
+                    iconObject.setText(text).setPosition(statusIconBaseX, statusIconBaseY + (currentStatusIndex * statusIconYOffset));
+                    currentStatusIndex++; // Move to the next vertical position
+                }
+            };
 
-            // Apply styles based on the specific TILE_TYPE
-            switch (this.tileData.type) {
-                case TILE_TYPE.MONSTER:
-                    if (this.tileData.hp > 0) { // Living Monster
-                        // Set background color based on freeze status
-                        if (this.tileData.frozenTurns > 0) {
-                            this.bgRect.setFillStyle(COLORS.ITEM_FREEZE); // Blue background if frozen
-                        } else {
-                            this.bgRect.setFillStyle(COLORS.MONSTER_BG); // Standard red background otherwise
-                        }
+            // Apply styles based on the specific TILE_TYPE
+            switch (this.tileData.type) {
+                case TILE_TYPE.MONSTER:
+                    if (this.tileData.hp > 0) { // Living Monster
+                        // Set background color based on freeze status
+                        if (this.tileData.frozenTurns > 0) {
+                            this.bgRect.setFillStyle(COLORS.ITEM_FREEZE); // Blue background if frozen
+                        } else {
+                            this.bgRect.setFillStyle(COLORS.MONSTER_BG); // Standard red background otherwise
+                        }
 
-                        let monsterInfo = MONSTER_STATS[this.tileData.monsterType];
-                        let icon = this.tileData.isSheep ? '🐑' : (monsterInfo?.icon || '??'); // Handle potential missing monster info
-                        let keyIndicator = (this.tileData.hasKey && this.tileData.attackedOnce && !this.tileData.isSheep) ? '🗝️' : '';
-                        this.mainText.setText(`${icon}${keyIndicator}`)
-                            .setFontSize(iconFontSize)
-                            .setPosition(width / 2, height * 0.35); // Position icon higher for stats text room
-                        this.statsText.setText(`❤️ ${this.tileData.hp}/${this.tileData.maxHp}\n🗡️ ${this.tileData.atk}`);
+                        let monsterInfo = MONSTER_STATS[this.tileData.monsterType];
+                        let icon = this.tileData.isSheep ? '🐑' : (monsterInfo?.icon || '??'); // Handle potential missing monster info
+                        let keyIndicator = (this.tileData.hasKey && this.tileData.attackedOnce && !this.tileData.isSheep) ? '🗝️' : '';
+                        this.mainText.setText(`${icon}${keyIndicator}`)
+                            .setFontSize(iconFontSize)
+                            .setPosition(width / 2, height * 0.35); // Position icon higher for stats text room
+                        this.statsText.setText(`❤️ ${this.tileData.hp}/${this.tileData.maxHp}\n🗡️ ${this.tileData.atk}`);
 
-                        // Apply status effects icons (poison, freeze) top-left, stacking vertically
-                        if (this.tileData.isPoisoned && this.tileData.poisonTurns > 0) { setStatusIcon(this.statusIcon1, '🥦'); }
-                        if (this.tileData.frozenTurns > 0) {
-                            // Use the next available slot (statusIcon1 or statusIcon2)
-                            setStatusIcon(currentStatusIndex === 0 ? this.statusIcon1 : this.statusIcon2, '❄️');
-                        }
+                        // Apply status effects icons (poison, freeze) top-left, stacking vertically
+                        if (this.tileData.isPoisoned && this.tileData.poisonTurns > 0) { setStatusIcon(this.statusIcon1, '🥦'); }
+                        if (this.tileData.frozenTurns > 0) {
+                            // Use the next available slot (statusIcon1 or statusIcon2)
+                            setStatusIcon(currentStatusIndex === 0 ? this.statusIcon1 : this.statusIcon2, '❄️');
+                        }
 
-                        // Explicitly clear unused status icons if only one or zero statuses are active
-                        if (currentStatusIndex < 1) this.statusIcon1?.setText('');
-                        if (currentStatusIndex < 2) this.statusIcon2?.setText('');
+                        // Explicitly clear unused status icons if only one or zero statuses are active
+                        if (currentStatusIndex < 1) this.statusIcon1?.setText('');
+                        if (currentStatusIndex < 2) this.statusIcon2?.setText('');
 
-                    } else { // Dead Monster (visually becomes an empty revealed tile)
-                        this.bgRect.setFillStyle(COLORS.REVEALED_BG);
-                        this.mainText.setText('');
-                        this.statsText.setText('');
-                        this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    }
-                    break;
+                    } else { // Dead Monster (visually becomes an empty revealed tile)
+                        this.bgRect.setFillStyle(COLORS.REVEALED_BG);
+                        this.mainText.setText('');
+                        this.statsText.setText('');
+                        this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    }
+                    break;
 
-                case TILE_TYPE.DOOR:
-                    this.bgRect.setFillStyle(COLORS.DOOR);
-                    let doorIcon = this.scene.player.hasKey ? '🔓' : '🔒';
-                    this.mainText.setText(doorIcon).setFontSize(iconFontSize * 1.2); // Slightly larger icon
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear other text
-                    break;
+                case TILE_TYPE.DOOR:
+                    this.bgRect.setFillStyle(COLORS.DOOR);
+                    let doorIcon = this.scene.player.hasKey ? '🔓' : '🔒'; // Access player via scene reference
+                    this.mainText.setText(doorIcon).setFontSize(iconFontSize * 1.2); // Slightly larger icon
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear other text
+                    break;
 
-                case TILE_TYPE.TRAP: // Note: Traps usually become EMPTY instantly upon reveal
-                    this.bgRect.setFillStyle(COLORS.TRAP);
-                    this.mainText.setText(`TRAP!\n-${this.tileData.damage} HP`).setFontSize(detailFontSize * 1.5).setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT);
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
+                case TILE_TYPE.TRAP: // Note: Traps usually become EMPTY instantly upon reveal
+                    this.bgRect.setFillStyle(COLORS.TRAP);
+                    this.mainText.setText(`TRAP!\n-${this.tileData.damage} HP`).setFontSize(detailFontSize * 1.5).setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT);
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                case TILE_TYPE.EMPTY:
-                    this.bgRect.setFillStyle(COLORS.REVEALED_BG);
-                    this.mainText.setText(''); // No icon for empty tiles
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
+                case TILE_TYPE.EMPTY:
+                    this.bgRect.setFillStyle(COLORS.REVEALED_BG);
+                    this.mainText.setText(''); // No icon for empty tiles
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                case TILE_TYPE.ITEM:
-                    if (this.tileData.itemId && ITEM_TYPES[this.tileData.itemId]) {
-                        const itemInfo = ITEM_TYPES[this.tileData.itemId];
-                        let itemBgColor = itemInfo.color || COLORS.ITEM_BG; // Use item color or default green
-                        // Specific background color overrides for certain items
-                        if (this.tileData.itemId === 'KEY_ITEM') itemBgColor = COLORS.KEY;
-                        else if (this.tileData.itemId === 'COIN') itemBgColor = COLORS.GOLD;
-                        else if (this.tileData.itemId === 'HEART') itemBgColor = COLORS.HEART;
-                        this.bgRect.setFillStyle(itemBgColor);
-                        this.mainText.setText(itemInfo.icon).setFontSize(iconFontSize); // Show item icon
-                    } else { // Fallback for unknown item ID
-                        this.bgRect.setFillStyle(COLORS.REVEALED_BG);
-                        this.mainText.setText("??").setFontSize(iconFontSize);
-                        console.warn("Revealed tile with unknown item ID:", this.tileData.itemId);
-                    }
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear other text
-                    break;
+                case TILE_TYPE.ITEM:
+                    if (this.tileData.itemId && ITEM_TYPES[this.tileData.itemId]) {
+                        const itemInfo = ITEM_TYPES[this.tileData.itemId];
+                        let itemBgColor = itemInfo.color || COLORS.ITEM_BG; // Use item color or default green
+                        // Specific background color overrides for certain items
+                        if (this.tileData.itemId === 'KEY_ITEM') itemBgColor = COLORS.KEY;
+                        else if (this.tileData.itemId === 'COIN') itemBgColor = COLORS.GOLD;
+                        else if (this.tileData.itemId === 'HEART') itemBgColor = COLORS.HEART;
+                        this.bgRect.setFillStyle(itemBgColor);
+                        this.mainText.setText(itemInfo.icon).setFontSize(iconFontSize); // Show item icon
+                    } else { // Fallback for unknown item ID
+                        this.bgRect.setFillStyle(COLORS.REVEALED_BG);
+                        this.mainText.setText("??").setFontSize(iconFontSize);
+                        console.warn("Revealed tile with unknown item ID:", this.tileData.itemId);
+                    }
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear other text
+                    break;
 
-                case TILE_TYPE.BARREL:
-                    this.bgRect.setFillStyle(COLORS.BARREL);
-                    this.mainText.setText('🏺').setFontSize(iconFontSize); // Use amphora icon
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
+                case TILE_TYPE.BARREL:
+                    this.bgRect.setFillStyle(COLORS.BARREL);
+                    this.mainText.setText('🏺').setFontSize(iconFontSize); // Use amphora icon
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                case TILE_TYPE.RANDOM_ITEM:
-                    this.bgRect.setFillStyle(COLORS.RANDOM_ITEM);
-                    if (this.tileData.isCycling) {
-                        // Icon is set dynamically by the GameScene's update loop calling this method via setData
-                        const currentOutcomeId = RANDOM_TILE_OUTCOMES[this.tileData.cycleIndex || 0];
-                        const itemInfo = ITEM_TYPES[currentOutcomeId];
-                        this.mainText.setText(itemInfo?.icon || '??').setFontSize(iconFontSize);
-                    } else {
-                        this.mainText.setText('✨').setFontSize(iconFontSize); // Initial sparkle icon before cycling starts
-                    }
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
+                case TILE_TYPE.RANDOM_ITEM:
+                    this.bgRect.setFillStyle(COLORS.RANDOM_ITEM);
+                    if (this.tileData.isCycling) {
+                        // Icon is set dynamically by the GameScene's update loop calling this method via setData
+                        const currentOutcomeId = RANDOM_TILE_OUTCOMES[this.tileData.cycleIndex || 0];
+                        const itemInfo = ITEM_TYPES[currentOutcomeId];
+                        this.mainText.setText(itemInfo?.icon || '??').setFontSize(iconFontSize);
+                    } else {
+                        this.mainText.setText('✨').setFontSize(iconFontSize); // Initial sparkle icon before cycling starts
+                    }
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                case TILE_TYPE.SHOP:
-                    this.bgRect.setFillStyle(COLORS.SHOP_BG);
-                    this.mainText.setText(SHOP_CONFIG.ICON).setFontSize(iconFontSize);
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
+                case TILE_TYPE.SHOP:
+                    this.bgRect.setFillStyle(COLORS.SHOP_BG);
+                    this.mainText.setText(SHOP_CONFIG.ICON).setFontSize(iconFontSize);
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                // --- ADD CHALLENGE CASE ---
-                case TILE_TYPE.CHALLENGE:
-                    this.bgRect.setFillStyle(COLORS.CHALLENGE_BG); // Use defined challenge color
-                    this.mainText.setText(CHALLENGE_CONFIG.ICON).setFontSize(iconFontSize); // Use defined icon
-                    // Optionally display challenge type in stats text for debug?
-                    // this.statsText.setText(this.tileData.challengeType || '???');
-                    this.statsText.setText(''); // Keep stats clear for now
-                    this.statusIcon1.setText(''); this.statusIcon2.setText('');
-                    break;
-                // --- END CHALLENGE CASE ---
+                case TILE_TYPE.CHALLENGE:
+                    this.bgRect.setFillStyle(COLORS.CHALLENGE_BG); // Use defined challenge color
+                    this.mainText.setText(CHALLENGE_CONFIG.ICON).setFontSize(iconFontSize); // Use defined icon
+                    this.statsText.setText(''); // Keep stats clear for now
+                    this.statusIcon1.setText(''); this.statusIcon2.setText('');
+                    break;
 
-                default: // Should not happen, but clear everything as a fallback
-                    console.warn("Revealed tile with unknown type:", this.tileData.type);
-                    this.bgRect.setFillStyle(COLORS.REVEALED_BG);
-                    this.mainText.setText('');
-                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
-            }
+                default: // Should not happen, but clear everything as a fallback
+                    console.warn("Revealed tile with unknown type:", this.tileData.type);
+                    this.bgRect.setFillStyle(COLORS.REVEALED_BG);
+                    this.mainText.setText('');
+                    this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText('');
+            }
 
-        } else {
-            // --- Hidden Tile Logic ---
-            this.bgRect.setFillStyle(COLORS.HIDDEN); // Set background to hidden color
-            this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear stats/status
-            this.mainText.setFontSize(Math.floor(iconFontSize * 0.8)).setColor(COLORS.TEXT_DARK); // Use dark text, slightly smaller
+        } else {
+            // --- Hidden Tile Logic ---
+            this.bgRect.setFillStyle(COLORS.HIDDEN); // Set background to hidden color
+            this.statsText.setText(''); this.statusIcon1.setText(''); this.statusIcon2.setText(''); // Clear stats/status
+            this.mainText.setFontSize(Math.floor(iconFontSize * 0.8)).setColor(COLORS.TEXT_DARK); // Use dark text, slightly smaller
 
-            let baseText = ''; // The text to display ('?', 'X', '') before considering Lantern/Debug
+            let baseText = ''; // The text to display ('?', 'X', '') before considering Lantern/Debug
 
-            // Set base text based on hidden state
-            switch (this.tileData.state) {
-                case TILE_STATE.HIDDEN_NORMAL:       baseText = '?'; break; // Accessible
-                case TILE_STATE.HIDDEN_BLOCKED:      baseText = 'X'; break; // Blocked by monster
-                case TILE_STATE.HIDDEN_UNACCESSIBLE: baseText = '';  break; // Not adjacent to revealed
-                default:                             baseText = '';  // Default to blank
-            }
+            // Set base text based on hidden state
+            switch (this.tileData.state) {
+                case TILE_STATE.HIDDEN_NORMAL:       baseText = '?'; break; // Accessible
+                case TILE_STATE.HIDDEN_BLOCKED:      baseText = 'X'; break; // Blocked by monster
+                case TILE_STATE.HIDDEN_UNACCESSIBLE: baseText = '';  break; // Not adjacent to revealed
+                default:                             baseText = '';  // Default to blank
+            }
 
-            // --- LANTERN LOGIC START ---
-            // Check if this tile holds the key AND the player has the lantern
-            if (this.tileData.hasKey && this.scene.playerHasLantern()) {
-                // Override the text to show the key icon, even if it would normally be '?', 'X', or ''
-                baseText = '🗝️';
-                this.mainText.setColor(COLORS.KEY); // Use the key color for visibility
-                this.mainText.setFontSize(iconFontSize); // Use slightly larger font for the icon
-            }
-            // --- LANTERN LOGIC END ---
+            // --- LANTERN LOGIC START ---
+            // Check if this tile holds the key AND the player has the lantern
+            let isKeyTile = (this.tileData.hasKey || this.tileData.itemId === 'KEY_ITEM'); // Also check if it's a direct Key Item
+            if (isKeyTile && this.scene.playerHasLantern && this.scene.playerHasLantern()) { // Check method exists before calling
+                // Override the text to show the key icon, even if it would normally be '?', 'X', or ''
+                baseText = '🗝️';
+                this.mainText.setColor(COLORS.KEY); // Use the key color for visibility
+                this.mainText.setFontSize(iconFontSize); // Use slightly larger font for the icon
+            } else {
+               // If not showing lantern key, ensure default color/size is used
+              this.mainText.setColor(COLORS.TEXT_DARK).setFontSize(Math.floor(iconFontSize * 0.8));
+          }
+            // --- LANTERN LOGIC END ---
 
-            // Set the determined text (either '?', 'X', '', or '🗝️')
-            this.mainText.setText(baseText);
+            // Set the determined base text ('?', 'X', '', or '🗝️')
+            this.mainText.setText(baseText);
 
-            // Apply Debug Marker if present (overwrites previous text)
-            if (this.tileData.debugMarker) {
-                this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR);
-            }
-        }
-    } // End of updateVisuals method
+            // Apply Debug Marker if present (overwrites previous text)
+            // *** CHANGE IS HERE ***
+            if (this.tileData.debugMarker) {
+                this.mainText.setText(this.tileData.debugMarker).setColor(COLORS.DEBUG_MARKER_COLOR); // Use WHITE color
+            }
+        }
+    } // End of updateVisuals method
 }
 
 
@@ -771,6 +772,7 @@ class GameScene extends Phaser.Scene {
         this.allowDiagonal = false; // Debug flag for adjacency checks
         this.monsterStrikeFirst = false; // Debug flag for combat order
         this.debugShopEnabled = false;
+        this.doorCoords = null;
 
         // --- Grid Layout Variables ---
         this.tileContainer = null; // Phaser container for all Tile objects
@@ -1436,12 +1438,14 @@ processEndOfPlayerTurnEffects() {
         };
     }
 
-    /**
-    * Generates a new floor layout: resets state, clears old tiles,
-    * generates new tile data, creates new Tile instances, and reveals the starting door.
-    * *** MODIFIED: Places a Challenge tile on eligible floors. ***
-    */
-    generateFloor() {
+     /**
+     * Generates a new floor layout: resets state, clears old tiles,
+     * generates new tile data, creates new Tile instances, and reveals the starting door.
+     * *** MODIFIED: Places a Challenge tile on eligible floors. ***
+     * *** MODIFIED: Commented out Trap placement. ***
+     * *** MODIFIED: Stores door coordinates. ***
+     */
+     generateFloor() {
         this.currentFloor++;
         console.log(`Generating Floor ${this.currentFloor}`);
 
@@ -1449,6 +1453,7 @@ processEndOfPlayerTurnEffects() {
         this.player.hasKey = false;
         this.monsterCount = 0;
         this.keyHolderCoords = null;
+        this.doorCoords = null; // Reset door coords for the new floor
         this.keyDroppedOnFloor = false;
         this.isGameOver = false; // Ensure game isn't over on new floor start
         this.keyAssignedOnFloor = false;
@@ -1483,8 +1488,12 @@ processEndOfPlayerTurnEffects() {
 
         // Place Door (starting point)
         let doorCoord = possibleCoords.pop();
-        if (doorCoord) { gridRawData[doorCoord.r][doorCoord.c].type = TILE_TYPE.DOOR; }
-        else { console.error("Could not place door! Aborting floor generation."); return; } // Critical error
+        if (doorCoord) {
+            gridRawData[doorCoord.r][doorCoord.c].type = TILE_TYPE.DOOR;
+            this.doorCoords = doorCoord; // <<< STORE DOOR COORDINATES >>>
+        } else {
+             console.error("Could not place door! Aborting floor generation."); return;
+        } // Critical error
 
         // Place Monsters (increasing with floor number)
         let numMonsters = Math.min(
@@ -1522,7 +1531,11 @@ processEndOfPlayerTurnEffects() {
         // (Keeping counts the same for now)
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
-        this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2 + Math.floor(this.currentFloor / 2)), possibleCoords.length), TILE_TYPE.TRAP, null, gridRawData);
+
+        // --- CHANGE IS HERE: Comment out the trap placement line ---
+        // this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2 + Math.floor(this.currentFloor / 2)), possibleCoords.length), TILE_TYPE.TRAP, null, gridRawData);
+        // --- END OF CHANGE ---
+
         let numItems = Math.min(getRandomInt(1, 2 + Math.floor(this.currentFloor / 3)), possibleCoords.length);
         this.placeTiles(possibleCoords, numItems, TILE_TYPE.ITEM, null, gridRawData); // Place random consumable items
         this.placeTiles(possibleCoords, Math.min(getRandomInt(1, 2), possibleCoords.length), TILE_TYPE.BARREL, null, gridRawData);
@@ -1549,14 +1562,15 @@ processEndOfPlayerTurnEffects() {
         }
 
         // --- Reveal Starting Tile ---
-        if (doorCoord) {
-            const doorTile = this.tileObjects[doorCoord.r]?.[doorCoord.c]; // Get the Tile instance
+        // Use the stored doorCoords here
+        if (this.doorCoords) {
+            const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c]; // Get the Tile instance
             if (doorTile) {
                 // Use the Tile's setData method to update its state and visuals
                 doorTile.setData({ revealed: true, state: TILE_STATE.REVEALED });
                 // Update the state of neighbors adjacent to the revealed door
-                this.updateNeighborStates(doorCoord.r, doorCoord.c);
-                console.log(`Revealed starting door at [${doorCoord.r}, ${doorCoord.c}]`);
+                this.updateNeighborStates(this.doorCoords.r, this.doorCoords.c);
+                console.log(`Revealed starting door at [${this.doorCoords.r}, ${this.doorCoords.c}]`);
             }
         }
 
@@ -1937,12 +1951,13 @@ processEndOfPlayerTurnEffects() {
         }
     } // End of revealTile method
 
- /**
+     /**
     * Handles the logic for picking up an item from a revealed tile.
     * Updates player inventory/stats and changes the tile to EMPTY.
     * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
     * and DURABLE (unique inventory items).
     * Includes logic to immediately update visuals/stats for passive items like Lantern, Defense Rune, Attack Rune on pickup.
+   * *** MODIFIED: Explicitly updates the door tile visual when key is picked up. ***
     * @param {Tile} tile - The Tile instance containing the item.
     */
     tryPickupItem(tile) {
@@ -1967,10 +1982,22 @@ processEndOfPlayerTurnEffects() {
         if (itemInfo.category === 'REGULAR') {
             // --- Handle REGULAR Items (Instant Use or Consumable Inventory) ---
             if (itemId === 'KEY_ITEM') {
-                this.player.hasKey = true;
+                this.player.hasKey = true; // Set player state
                 this.keyDroppedOnFloor = true; // Mark key as obtained
                 this.events.emit('showMessage', 'Dungeon Key Acquired!');
                 pickedUp = true;
+
+                // --- <<< CHANGE IS HERE: Force Door Tile Update >>> ---
+                if (this.doorCoords) {
+                    const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c];
+                    // Check if the door tile exists and is revealed before updating
+                    if (doorTile && doorTile.tileData.state === TILE_STATE.REVEALED) {
+                        console.log(`Key picked up, forcing visual update on door tile at [${this.doorCoords.r}, ${this.doorCoords.c}]`);
+                        doorTile.updateVisuals(); // Call the tile's update method
+                    }
+                 }
+                // --- <<< END OF CHANGE >>> ---
+
             } else if (itemId === 'COIN') {
                 this.player.gold += itemInfo.goldValue || 10; // Use defined value or default
                 this.events.emit('showMessage', `+${itemInfo.goldValue || 10} Gold!`);
@@ -2077,7 +2104,7 @@ processEndOfPlayerTurnEffects() {
             }
             // --- END IMMEDIATE EFFECT APPLICATION / REFRESH ---
 
-            // Update UI stats AFTER applying any potential bonus from pickup
+            // Update UI stats AFTER applying any potential bonus from pickup AND after updating door visual
             this.events.emit('updateStats', this.getPlayerStats());
 
             if (endTurn) {
@@ -2698,7 +2725,7 @@ tryEnterDoor(doorTile) {
             const requirementText = challengeInfo.requirementText || "Requirement not met.";
             this.events.emit('showChallengeRequirementPopup', requirementText);
             // Flash the challenge tile red briefly
-            this.flashTileBackground(challengeTile, COLORS.CLOSE_BUTTON_IDLE_TEXT, 100, 0);
+            this.flashTileBackground(challengeTile, 0xAA4444, 100, 0);
             // Do NOT consume turn on failure
         }
     }
@@ -3389,41 +3416,91 @@ tryEnterDoor(doorTile) {
      this.events.emit('updateDebugButton', { button: 'shop', text: `Shop: ${this.debugShopEnabled ? 'ON' : 'OFF'}` });
  }
     
-    /** Debug: Marks certain hidden tiles with symbols for easier testing. */
-    debugMarkHiddenTiles() {
-         if (this.isGameOver) return;
-         console.log("Debug: Marking hidden tiles");
-         let markedCount = 0;
-         for (let r = 0; r < GRID.ROWS; r++) {
-             for (let c = 0; c < GRID.COLS; c++) {
-                 let tile = this.tileObjects[r]?.[c];
-                 // Skip if tile doesn't exist or is already revealed
-                 if (!tile || tile.tileData.state === TILE_STATE.REVEALED) continue;
+ debugMarkHiddenTiles() {
+        if (this.isGameOver) return;
+        console.log("Debug: Marking hidden tiles with type info");
+        let markedCount = 0;
+        let clearedCount = 0; // Track cleared markers
 
-                 let markerText = ''; // Symbol to display
-                 const tileData = tile.tileData; // Get data from the Tile instance
+        for (let r = 0; r < GRID.ROWS; r++) {
+            for (let c = 0; c < GRID.COLS; c++) {
+                let tile = this.tileObjects[r]?.[c];
+                // Skip if tile doesn't exist or is already revealed
+                if (!tile || tile.tileData.state === TILE_STATE.REVEALED) {
+                    // If tile exists but is revealed, ensure any old marker is cleared
+                    if (tile && tile.tileData.debugMarker) {
+                        tile.setData('debugMarker', null);
+                        clearedCount++;
+                    }
+                    continue;
+                }
 
-                 // Determine marker based on hidden tile type
-                 if (tileData.type === TILE_TYPE.EMPTY) markerText = '*';
-                 else if (tileData.type === TILE_TYPE.MONSTER && tileData.hasKey) markerText = 'K'; // Key monster
-                 else if (tileData.type === TILE_TYPE.DOOR) markerText = 'D'; // Door (should be revealed anyway)
-                 // Add more markers here if needed (e.g., 'T' for Trap, 'I' for Item)
+                let markerText = null; // Symbol to display - default to null (clear marker)
+                const tileData = tile.tileData; // Get data from the Tile instance
 
-                 if (markerText) {
-                     // Use setData on the Tile instance to store the marker and update visual
-                     tile.setData('debugMarker', markerText);
-                     markedCount++;
-                 } else {
-                     // Clear any previous marker if tile doesn't match criteria now
-                     if(tileData.debugMarker) {
-                         tile.setData('debugMarker', null); // Setting to null removes it
-                     }
-                 }
-             }
-         }
-         console.log(`Debug: Marked/updated ${markedCount} specific hidden tiles.`);
-         if (markedCount > 0) this.events.emit('showMessage', `Marked ${markedCount} hidden`);
-    }
+                // --- Determine marker based on hidden tile type ---
+                switch(tileData.type) {
+                    case TILE_TYPE.EMPTY:
+                        markerText = ' '; // Empty
+                        break;
+                    case TILE_TYPE.MONSTER:
+                        // Check if this monster holds the key
+                        markerText = tileData.hasKey ? 'Key' : 'Mon'; // Key Monster or Monster
+                        break;
+                    case TILE_TYPE.DOOR:
+                        markerText = 'Door'; // Door
+                        break;
+                    case TILE_TYPE.TRAP:
+                        markerText = 'Trap'; // Trap
+                        break;
+                    case TILE_TYPE.BARREL:
+                        markerText = 'Barl'; // Barrel
+                        break;
+                    case TILE_TYPE.RANDOM_ITEM:
+                        markerText = 'Rand'; // Random Item Tile
+                        break;
+                    case TILE_TYPE.ITEM:
+                        // Differentiate specific item types if needed
+                        switch(tileData.itemId) {
+                            case 'COIN': markerText = 'Coin'; break; // Coin
+                            case 'HEART': markerText = 'Heart'; break; // Heart
+                            case 'KEY_ITEM': markerText = 'Key'; break; // Key Item (placed directly, rare)
+                            default: markerText = 'Item'; // Generic Item (Potion, Scroll, Durable etc.)
+                        }
+                        break;
+                    case TILE_TYPE.SHOP:
+                        markerText = 'Shop'; // Shop
+                        break;
+                    case TILE_TYPE.CHALLENGE:
+                        markerText = '!'; // Challenge
+                        break;
+                    default:
+                        markerText = null; // Unknown type, clear marker
+                }
+                // --- End Marker Determination ---
+
+                // Apply the marker (or clear it by setting null)
+                // Only call setData if the marker value has actually changed to avoid unnecessary visual updates
+                if (tileData.debugMarker !== markerText) {
+                    tile.setData('debugMarker', markerText);
+                    if (markerText !== null) {
+                        markedCount++;
+                    } else {
+                        clearedCount++;
+                    }
+                }
+            } // End inner loop (columns)
+        } // End outer loop (rows)
+
+        console.log(`Debug: Marked ${markedCount} hidden tiles. Cleared markers on ${clearedCount} tiles.`);
+        if (markedCount > 0 || clearedCount > 0) {
+            this.events.emit('showMessage', `Debug: Marked ${markedCount} / Cleared ${clearedCount}`);
+        } else {
+            this.events.emit('showMessage', `Debug: No hidden tiles to mark/clear`);
+        }
+    } // End debugMarkHiddenTiles
+    
+
     /** Debug: Changes player stats (HP, MaxHP, ATK). Includes God Mode check for HP reduction. */
     debugChangeStat({ stat, amount }) {
         if (this.isGameOver) { return; }
