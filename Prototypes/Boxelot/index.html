@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Boxelot Refactored - Phaser 3</title>
     <style>
-
         /* Basic reset and full screen setup */
         html, body {
             height: 100%;
-        
             margin: 0;
             padding: 0;
             background-color: #111; /* Dark background */
@@ -226,9 +224,9 @@
     const PLAYER = {
         MAX_INVENTORY_SLOTS: 6, // Maximum number of items player can hold
         DEFAULTS: {
-            maxHp: 30,
-            hp: 30,
-            atk: 8,
+            maxHp: 25,
+            hp: 25,
+            atk: 6,
             gold: 0,
             hasKey: false, // Moved here for clarity
             inventory: [] // Moved here
@@ -644,7 +642,7 @@
             color: COLORS.GOLD,
             consumable: true,
             effect: null,
-            goldValue: 10
+            goldValue: 4
         }, // Coin is an item
         HEART: {
             id: 'HEART',
@@ -6246,6 +6244,7 @@
             height: '100%' // Use full container height
         },
         backgroundColor: '#000000', // Black background if canvas doesn't fill container
+        resolution: window.devicePixelRatio || 1, // Use device pixel ratio, default to 1
         // List of scenes in the game. Order matters for dependencies if any.
         // Ensure Tile class is defined before GameScene uses it (handled by script order).
         scene: [BootScene, PreloaderScene, GameScene, UIScene, GameOverScene]
