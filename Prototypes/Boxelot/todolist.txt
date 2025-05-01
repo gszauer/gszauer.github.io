@@ -1,0 +1,50 @@
+--- POTENTIAL ICON REPLACEMENTS
+For scroll items: 🗺️📖
+Look for places to use emojis
+
+🛡️⚔️🛡️ 🏹 🗡️🎭💰💎🔪💗
+
+💥🔥⚡🩸❤️💪🌀🏆💣🖼️🍗🛒
+
+🎮⏳💧💚🤺
+----
+
+
+Let's add a new durable item, the vampire ring. It allows you to heal HP
+
+Amulet of greed. +1 gold when taking damage
+
+Let's add a new item called a lock pick. This item can open the level door even if the player has no key.
+
+Let's add a new durable item, the cursed rune, 🔮. While in the players inventory it removes 50% of the players attack power, multiplies it by 2, and adds that to the players max health.
+It works similar to a defense rune in that it can increase and decrease the numbers when added and removed from inventory.
+List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+
+Vengful blade: increase attack power by 10% if HP is below 10%
+
+Berserk blade: increase attack power by 2 if an enemies hp is 25% or below.
+
+Consumables need to be sellable too. Before only durable items where sellable, make it so everything can be sold, or converted to hp. 
+A consumable item will have 4 buttons: "Use", "sell", "heal", "cancel".
+A durable item will have 3 buttons. "sell", "heal", "cancel"
+I guess this means items will need to maintain a coin worth value and heart worth value.
+List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+
+Items should not be used if they have no effect!
+
+Items need to be able to specify a % chance of dropping (which might be different on different floors).
+
+After adding all the new items, re-generate the how to play instructions
+
+--- Re-tune enemies
+Re-tune what floor enemies appear on. It's too chaotic right now
+We want one special type of enemy revealed each floor.
+
+--- Pre prompt
+I have a phaserjs game that was written by gemini. 
+It's all one file, no external dependancies. 
+We're goinbg to add some new features. 
+But first i'll provide all the code, let me know if you understand it.
+
+--- Post prompt
+List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
