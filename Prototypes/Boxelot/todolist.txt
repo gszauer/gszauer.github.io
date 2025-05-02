@@ -1,12 +1,22 @@
-I need to control the number of monsters spawned on a specific floor. 
-Let's do a global array for this. Each element in the array responds to a specific floor. 
-Element 0 is the default value for floors that are not in the array. 
-The value of each element is a 2 component array. It's a min / max pair. The minimum and maximum number of monsters (including bosses) to spawn on that level.
-List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+Monster and item descriptions need some love
 
--- Re-tune items
+Item effects (poison, heal) need to scale
 
--- Make enemy HP dynamic
+Shop prices need to scale
+
+ui needs to be fixed
+
+Remove attack challenge door
+
+Make health challenge be 80% of players health
+
+UI Rework (discover new monster / use items dialogs)
+
+IS there any duplicate code we can eliminate?
+
+Is there any way to refactor?
+
+Can you write a tutorial?
 
 
 --- Pre prompt
