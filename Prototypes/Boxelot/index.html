@@ -394,6 +394,21 @@
         }
     };
 
+    const FLOOR_MONSTER_COUNT_OVERRIDES = [
+        [5, 10],  // Default
+        [3, 5],   // Floor 1
+        [3, 5],   
+        [3, 5],   
+        [3, 7],   
+        [3, 7],  // BOSS, 5! 
+        [4, 7],  
+        [5, 7],   
+        [5, 8],   
+        [5, 9],   
+        [3, 7],  // BOSS, 10! 
+        // Add more overrides as needed. Floors beyond the array length will use index 0.
+    ];
+
     const ALLOWED_SPAWN_CONFIG = {
         'floor_1': ['SPIDER', 'SKELETON', 'BAT','DEMON', 'DEVIL'],
         'floor_2': ['SPIDER', 'SKELETON', 'BAT', 'THIEF', 'DEMON', 'DEVIL'],
@@ -2513,85 +2528,118 @@
         return { gridRawData, possibleCoords };
     }
 
-     /**
+    /**
      * Generates the layout for standard floors (3+).
+     * *** MODIFIED: Uses FLOOR_MONSTER_COUNT_OVERRIDES to determine total monster count. ***
      * @param {Array<{r: number, c: number}>} possibleCoords - Shuffled list of available coordinates.
      * @param {Array<Array<object>>} gridRawData - The raw data grid to populate.
      * @private
      */
     _generateStandardFloorLayout(possibleCoords, gridRawData) {
-        // Place Door first
+        // --- 1. Place Door ---
         let doorCoord = possibleCoords.pop();
         if (doorCoord) {
             gridRawData[doorCoord.r][doorCoord.c].type = TILE_TYPE.DOOR;
             this.doorCoords = { r: doorCoord.r, c: doorCoord.c };
         } else {
             console.error("Could not place door! Aborting standard floor generation.");
-            return;
+            return; // Cannot proceed without a door
         }
 
-        // Check for and Place Boss (if applicable)
+        // --- 2. Attempt to Place Boss ---
         let isBossFloor = (this.currentFloor >= 5 && this.currentFloor % 5 === 0);
         let bossCoord = null;
+        let bossCount = 0;
         if (isBossFloor && possibleCoords.length > 0) {
             console.log(`Floor ${this.currentFloor} is a Boss Floor! Attempting placement...`);
-            bossCoord = this._placeBossMonster(possibleCoords, gridRawData);
-            if (!bossCoord) {
+            bossCoord = this._placeBossMonster(possibleCoords, gridRawData); // This function pops a coord if successful
+            if (bossCoord) {
+                bossCount = 1;
+                console.log(`--> Boss placed successfully at [${bossCoord.r}, ${bossCoord.c}].`);
+            } else {
                 console.error("Failed to place boss monster!");
-                isBossFloor = false;
+                isBossFloor = false; // Treat as non-boss floor if placement failed
             }
         }
 
-        // Calculate Regular Monster Count
-        let numRegularMonsters = Math.floor(2 + this.currentFloor / 2);
-        let minOtherTiles = 1 + (isBossFloor && bossCoord ? 1 : 0) +
-                           ((this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0)) ? 1 : 0) +
-                           ((this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR && this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0) ? 1 : 0) +
-                           3;
-        let maxPossibleMonsters = (GRID.COLS * GRID.ROWS) - minOtherTiles;
-        numRegularMonsters = Math.min(numRegularMonsters, possibleCoords.length, maxPossibleMonsters);
-        numRegularMonsters = Math.max(0, numRegularMonsters);
-        console.log(`Floor ${this.currentFloor}: Calculated ${numRegularMonsters} regular monsters.`);
+        // --- 3. Determine Target Monster Counts using Overrides ---
+        const floorOverrideIndex = this.currentFloor < FLOOR_MONSTER_COUNT_OVERRIDES.length ? this.currentFloor : 0;
+        const [minTotalMonsters, maxTotalMonsters] = FLOOR_MONSTER_COUNT_OVERRIDES[floorOverrideIndex] || FLOOR_MONSTER_COUNT_OVERRIDES[0]; // Fallback to default just in case
 
-        // Place Regular Monsters
-        let placedMonsterCoords = [];
-         if(numRegularMonsters > 0) {
-             placedMonsterCoords = this.placeTiles(possibleCoords, numRegularMonsters, TILE_TYPE.MONSTER, null, gridRawData);
-         } else {
-             console.log(`Floor ${this.currentFloor}: Skipping regular monster placement (count is 0).`)
-         }
-        if (bossCoord) {
-            placedMonsterCoords.push(bossCoord);
+        // Ensure min/max are valid numbers
+        const validMinTotal = Math.max(bossCount, minTotalMonsters); // Min cannot be less than placed boss
+        const validMaxTotal = Math.max(validMinTotal, maxTotalMonsters); // Max cannot be less than min
+
+        // Calculate a target total number of monsters for this floor (including boss)
+        const targetTotalMonsters = getRandomInt(validMinTotal, validMaxTotal);
+        console.log(`Floor <span class="math-inline">\{this\.currentFloor\}\: Override\=\[</span>{minTotalMonsters},<span class="math-inline">\{maxTotalMonsters\}\], BossCount\=</span>{bossCount}, TargetTotal=${targetTotalMonsters}`);
+
+        // Calculate how many *regular* monsters we *want* to place
+        const targetRegularMonsters = Math.max(0, targetTotalMonsters - bossCount);
+        console.log(`--> Target Regular Monsters: ${targetRegularMonsters}`);
+
+        // --- 4. Calculate Available Space for Regular Monsters ---
+        // Count essential non-monster tiles that MUST be placed (Shop, Challenge + buffer for items/barrels)
+        const needsShop = (this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0));
+        const needsChallenge = (this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR && this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0);
+        const baseOtherTiles = 1 + // Door
+                            (needsShop ? 1 : 0) +
+                            (needsChallenge ? 1 : 0) +
+                            3; // Buffer for required key + some items/barrels/empty
+
+        // Maximum possible monsters (including boss) based on grid size and essential tiles
+        const maxPossibleTotalMonsters = (GRID.COLS * GRID.ROWS) - baseOtherTiles;
+        // Maximum *regular* monsters we can place, considering the boss and available coordinates
+        const maxPossibleRegularMonsters = Math.max(0, maxPossibleTotalMonsters - bossCount);
+
+        // --- 5. Clamp Regular Monster Count and Place Them ---
+        let numRegularMonsters = Math.min(targetRegularMonsters, possibleCoords.length, maxPossibleRegularMonsters);
+        numRegularMonsters = Math.max(0, numRegularMonsters); // Ensure non-negative
+
+        console.log(`--> Clamped Regular Monsters (Space=<span class="math-inline">\{possibleCoords\.length\}, MaxPossible\=</span>{maxPossibleRegularMonsters}): ${numRegularMonsters}`);
+
+        let placedMonsterCoords = []; // Keep track of actual placements
+        if (numRegularMonsters > 0) {
+            placedMonsterCoords = this.placeTiles(possibleCoords, numRegularMonsters, TILE_TYPE.MONSTER, null, gridRawData);
+        } else {
+            console.log(`Floor ${this.currentFloor}: Skipping regular monster placement (count is 0).`);
         }
 
-        // Assign Key (Pass monsters found AND possibleCoords)
-        // *** Ensure this call includes possibleCoords ***
-        this.assignKey(placedMonsterCoords, gridRawData, possibleCoords); // <<< PASS possibleCoords HERE
+        // Add boss coordinate to the list if a boss was placed
+        const allMonsterCoords = bossCoord ? [...placedMonsterCoords, bossCoord] : [...placedMonsterCoords];
 
-        // Place Special Tiles (Shop, Challenge)
-        if (possibleCoords.length > 0 && (this.debugShopEnabled || (this.currentFloor > 0 && this.currentFloor % SHOP_CONFIG.FREQUENCY === 0))) {
+        // --- 6. Assign Key ---
+        // Pass the coordinates of *all* monsters placed (regular + boss, if any)
+        this.assignKey(allMonsterCoords, gridRawData, possibleCoords);
+
+        // --- 7. Place Special Tiles (Shop, Challenge) ---
+        if (needsShop && possibleCoords.length > 0) {
             let shopCoord = possibleCoords.pop();
-             if(shopCoord) gridRawData[shopCoord.r][shopCoord.c].type = TILE_TYPE.SHOP;
+            if (shopCoord) gridRawData[shopCoord.r][shopCoord.c].type = TILE_TYPE.SHOP;
+            else console.warn("Wanted to place Shop, but no coordinates left!");
         }
-        if (this.currentFloor >= CHALLENGE_CONFIG.START_FLOOR &&
-            this.currentFloor % CHALLENGE_CONFIG.FREQUENCY === 0 &&
-            possibleCoords.length > 0) {
+        if (needsChallenge && possibleCoords.length > 0) {
+            // placeTiles handles popping coordinates internally
             this.placeTiles(possibleCoords, 1, TILE_TYPE.CHALLENGE, null, gridRawData);
         }
 
-        // Place Items/Barrels/Random
+        // --- 8. Place Items/Barrels/Random ---
+        // Place guaranteed items first if needed (e.g., floor 2 key) - currently handled by assignKey fallback
+        // Place random items, ensuring not to exceed available coordinates
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2), possibleCoords.length), TILE_TYPE.ITEM, 'COIN', gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 2), possibleCoords.length), TILE_TYPE.ITEM, 'HEART', gridRawData);
         let numItems = Math.min(getRandomInt(1, 3 + Math.floor(this.currentFloor / 4)), possibleCoords.length);
         this.placeTiles(possibleCoords, numItems, TILE_TYPE.ITEM, null, gridRawData);
         this.placeTiles(possibleCoords, Math.min(getRandomInt(1, 2), possibleCoords.length), TILE_TYPE.BARREL, null, gridRawData);
-        if (this.currentFloor !== 2) {
-           this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.RANDOM_ITEM, null, gridRawData);
-        }
+        // Removed floor 2 special handling for random tile, let it be random now
+        this.placeTiles(possibleCoords, Math.min(getRandomInt(0, 1), possibleCoords.length), TILE_TYPE.RANDOM_ITEM, null, gridRawData);
 
-        // Fill remaining spots with Empty tiles
+        // --- 9. Fill Remaining Spots with Empty ---
         this.placeTiles(possibleCoords, possibleCoords.length, TILE_TYPE.EMPTY, null, gridRawData);
-    }
+
+        // Final actual monster count is updated within placeTiles and _placeBossMonster via this.monsterCount++
+        console.log(`Floor ${this.currentFloor}: Finished layout. Actual Monster Count (tracked by GameScene): ${this.monsterCount}`);
+    } // End _generateStandardFloorLayout function
 
     /**
      * Creates the visual Tile objects based on the populated gridRawData.

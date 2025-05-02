@@ -1,5 +1,5 @@
 I need to control the number of monsters spawned on a specific floor. 
-Let's do an array for this. Each element in the array responds to a specific floor. 
+Let's do a global array for this. Each element in the array responds to a specific floor. 
 Element 0 is the default value for floors that are not in the array. 
 The value of each element is a 2 component array. It's a min / max pair. The minimum and maximum number of monsters (including bosses) to spawn on that level.
 List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
