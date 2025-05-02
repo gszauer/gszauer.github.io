@@ -1,16 +1,6 @@
 Monster and item descriptions need some love
 
-Item effects (poison, heal) need to scale
-
-Shop prices need to scale
-
 ui needs to be fixed
-
-Remove attack challenge door
-
-Make health challenge be 80% of players health
-
-UI Rework (discover new monster / use items dialogs)
 
 IS there any duplicate code we can eliminate?
 

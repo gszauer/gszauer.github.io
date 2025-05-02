@@ -269,7 +269,13 @@
             atk: 2,
             gold: 0,
             hasKey: false, // Moved here for clarity
-            inventory: [] // Moved here
+            inventory: [], // Moved here
+            // NEW: Track purchases per shop item type
+            shopPurchases: {
+                MAX_HP: 0,
+                ATK: 0,
+                HEAL: 0
+            }
         }
     };
     const GAME = {
@@ -364,14 +370,6 @@
             trigger: 'click', // Requires player interaction
             successReason: 'Had enough Health!' // <-- ADD THIS
         },
-        STRONG: {
-            id: 'STRONG',
-            description: 'Requires at least 10 Attack to open.',
-            requirementText: 'Not enough Attack! Needs 10 🗡️.',
-            check: (player) => player.atk >= 10,
-            trigger: 'click', // Requires player interaction
-            successReason: 'Had enough Attack!' // <-- ADD THIS
-        },
         MORTAL: {
             id: 'MORTAL',
             description: 'Opens automatically when a monster dies while this is revealed.',
@@ -395,9 +393,23 @@
         FREQUENCY: 4, // Appears every 4 floors
         ICON: '🏪',
         COSTS: {
-            MAX_HP: 40,
-            ATK: 40,
+            MAX_HP: 10,
+            ATK: 10,
             HEAL: 5
+        },
+         COST_INCREASE_PER_PURCHASE: {
+             // How much the cost increases each time this specific item is bought
+             // Example: First Max HP costs 40, second 45, third 50, etc.
+            MAX_HP: 2,
+            ATK: 2,
+            HEAL: 1 // Heal cost increases slower
+        },
+        EFFECTIVENESS_SCALING: {
+            // For HP/ATK: Base is +1. Bonus = floorBonus + purchaseBonus
+            // floorBonus = floor(currentFloor / FLOOR_DIVISOR)
+            // purchaseBonus = floor(purchaseCount / PURCHASE_DIVISOR)
+            FLOOR_DIVISOR: 5,  // Gain +1 effectiveness point every 5 floors
+            PURCHASE_DIVISOR: 2 // Gain +1 effectiveness point every 2 purchases of that item
         }
     };
 
@@ -675,7 +687,8 @@
          },
          SPIKE_TRAP: {
              id: 'SPIKE_TRAP', name: 'Spike Trap', icon: '🪤',
-             description: 'While in inventory, monsters take 2 damage on reveal.',
+            
+             description: 'On reveal, monsters take damage based on your ATK while this item is in your inventory.',
              color: 0xAAAAAA, consumable: false, category: 'DURABLE',
              effect: null, revealDamage: 2, sellValue: 6,
          },
@@ -695,7 +708,7 @@
          // --- Regular Items (Consumable Inventory) ---
          POTION: {
              id: 'POTION', name: 'Potion', icon: '🍷', category: 'REGULAR',
-             description: 'Heals 5 HP', color: COLORS.POTION, consumable: true,
+             description: 'Heals 25% of Max HP', color: COLORS.POTION, consumable: true,
              effect: { type: 'HEAL', amount: 5 }, sellValue: 2,
          },
          BLADE_SCROLL: {
@@ -705,7 +718,7 @@
          },
          POISON_VIAL: {
              id: 'POISON_VIAL', name: 'Poison Vial', icon: '🧪', category: 'REGULAR',
-             description: `Poisons revealed monsters (${GAME.POISON_DAMAGE} DMG/turn)`, color: COLORS.ITEM_POISON, consumable: true,
+             description: `Poisons revealed monsters.)`, color: COLORS.ITEM_POISON, consumable: true,
              effect: { type: 'POISON_ALL', durationRange: [3, 5], damage: GAME.POISON_DAMAGE }, sellValue: 1,
          },
          FREEZE_SCROLL: {
@@ -737,12 +750,12 @@
          },
          HEART: {
              id: 'HEART', name: 'Heart', icon: '💖', category: 'REGULAR',
-             description: 'Heals 3-5 HP', color: COLORS.HEART, consumable: true,
+             description: 'Heals HP based on floor depth', color: COLORS.HEART, consumable: true,
              effect: null, healRange: [3, 5], sellValue: 0
          },
          EXPLOSIVE: {
              id: 'EXPLOSIVE', name: 'Explosive', icon: '🧨', category: 'REGULAR',
-             description: 'Deals 2 DMG to you!', color: COLORS.EXPLOSIVE, consumable: true,
+             description: 'Deals damage to you!', color: COLORS.EXPLOSIVE, consumable: true,
              effect: { type: 'DAMAGE_SELF', amount: 2 }, sellValue: 0
          }
      };
@@ -1446,63 +1459,100 @@
 
         /**
          * Handles the logic for purchasing an item from the shop.
+         * Calculates cost based on purchase history.
+         * Calculates effectiveness based on floor and purchase history.
+         * Updates player stats and purchase counts.
          * @param {string} itemKey - The key of the item ('MAX_HP', 'ATK', 'HEAL').
          */
-        purchaseShopItem(itemKey) {
+         purchaseShopItem(itemKey) {
             if (this.isGameOver) return;
 
-            const cost = SHOP_CONFIG.COSTS[itemKey];
-            if (cost === undefined) {
-                console.error("Unknown shop item key:", itemKey);
+            // --- 1. Calculate Current Cost ---
+            const purchaseCount = this.player.shopPurchases[itemKey] || 0;
+            const baseCost = SHOP_CONFIG.COSTS[itemKey];
+            const costIncreasePerPurchase = SHOP_CONFIG.COST_INCREASE_PER_PURCHASE[itemKey] || 0;
+            const currentCost = baseCost + (purchaseCount * costIncreasePerPurchase);
+
+            if (currentCost === undefined) { // Should check baseCost as well maybe
+                console.error("Unknown shop item key or missing cost config:", itemKey);
                 return;
             }
 
-            console.log(`Attempting to purchase ${itemKey} for ${cost} gold.`);
+            console.log(`Attempting to purchase ${itemKey} (Purchase #${purchaseCount + 1}) for ${currentCost} gold.`);
 
-            if (this.player.gold >= cost) {
+            // --- 2. Check Affordability ---
+            if (this.player.gold >= currentCost) {
                 // Affordable
-                this.player.gold -= cost;
+                this.player.gold -= currentCost;
                 let successMessage = "Purchase successful!";
+                let benefitApplied = false; // Track if an actual benefit was gained
 
+                // --- 3. Calculate and Apply Benefit ---
                 switch (itemKey) {
-                    case 'MAX_HP':
-                        this.player.maxHp += 1;
-                        this.player.hp += 1; // Also increase current HP
-                        successMessage = "+1 Max Health purchased!";
+                    case 'MAX_HP': {
+                        const floorBonus = Math.floor(this.currentFloor / (SHOP_CONFIG.EFFECTIVENESS_SCALING.FLOOR_DIVISOR || 5));
+                        const purchaseBonus = Math.floor(purchaseCount / (SHOP_CONFIG.EFFECTIVENESS_SCALING.PURCHASE_DIVISOR || 2));
+                        const benefitAmount = 1 + floorBonus + purchaseBonus; // Base + bonuses
+                        this.player.maxHp += benefitAmount;
+                        this.player.hp += benefitAmount; // Also increase current HP
+                        this.player.hp = Math.min(this.player.hp, this.player.maxHp); // Clamp HP just in case
+                        successMessage = `+${benefitAmount} Max Health purchased!`;
+                        benefitApplied = true;
                         break;
-                    case 'ATK':
-                        this.player.atk += 1;
-                        successMessage = "+1 Attack purchased!";
+                    }
+                    case 'ATK': {
+                        const floorBonus = Math.floor(this.currentFloor / (SHOP_CONFIG.EFFECTIVENESS_SCALING.FLOOR_DIVISOR || 5));
+                        const purchaseBonus = Math.floor(purchaseCount / (SHOP_CONFIG.EFFECTIVENESS_SCALING.PURCHASE_DIVISOR || 2));
+                        const benefitAmount = 1 + floorBonus + purchaseBonus; // Base + bonuses
+                        this.player.atk += benefitAmount;
+                        successMessage = `+${benefitAmount} Attack purchased!`;
+                        benefitApplied = true;
                         break;
+                    }
                     case 'HEAL':
                         if (this.player.hp < this.player.maxHp) {
-                            this.player.hp = this.player.maxHp;
+                            this.player.hp = this.player.maxHp; // Heal to full
                             successMessage = "Fully Healed!";
+                            benefitApplied = true;
                         } else {
-                            // Don't charge if already full health? Or allow purchase anyway?
-                            // Let's not charge if already full.
-                            this.player.gold += cost; // Refund cost
+                            // Don't charge if already full health
+                            this.player.gold += currentCost; // Refund cost
                             successMessage = "Health already full!";
-                            console.log("Full heal attempted at max HP, purchase cancelled.");
+                            benefitApplied = false; // No actual benefit gained
+                            console.log("Full heal attempted at max HP, purchase cancelled and refunded.");
                         }
                         break;
                 }
 
-                this.events.emit('updateStats', this.getPlayerStats());
+                // --- 4. Increment Purchase Count if Benefit Applied ---
+                if (benefitApplied) {
+                     this.player.shopPurchases[itemKey]++; // Increment AFTER successful purchase
+                     console.log(`${itemKey} purchase count now: ${this.player.shopPurchases[itemKey]}`);
+                }
+
+                // --- 5. Update UI and Process Turn ---
+                this.events.emit('updateStats', this.getPlayerStats()); // Update HP/ATK/Gold display
                 this.events.emit('showMessage', successMessage);
-                // Optionally, update the shop UI if costs change or items become unavailable
-                // this.events.emit('updateShopUI'); // (Need to implement in UIScene if needed)
+
+                // Update the shop UI immediately if it's still visible
+                const uiScene = this.scene.get('UIScene');
+                if (uiScene && uiScene.shopPanel && uiScene.shopPanel.visible) {
+                     uiScene.showShopPanel(); // Re-call showShopPanel to refresh costs/benefits
+                }
+
+                // Process end-of-turn effects (counts as an action)
+                // Only process turn if a benefit was actually applied (e.g., not for heal at full HP)
+                if (benefitApplied) {
+                    this.processEndOfPlayerTurnEffects();
+                }
 
             } else {
                 // Not enough gold
-                console.log("Purchase failed - not enough gold.");
+                console.log(`Purchase failed - ${currentCost} gold needed.`);
                 this.events.emit('showMessage', "Not enough gold!");
                 // Optional: Flash gold red?
             }
-
-            // Process end-of-turn effects after attempting a purchase (counts as an action)
-            this.processEndOfPlayerTurnEffects();
-        }
+        } // End purchaseShopItem
 
         /**
          * Processes effects that happen after the player takes an action.
@@ -1980,6 +2030,15 @@ _spawnCreatureOnTile(targetTile, monsterTypeKey, isSpawned) {
             this.debugShopEnabled = false;
             this.godModeEnabled = false; // Add this line
             this.seenMonsterTypes = new Set();
+
+            // Reset floor-specific generation state (moved from _clearPreviousFloor for clarity)
+            this.keyAssignedOnFloor = false;
+            this.shellshiftersPlacedThisFloor = 0;
+            this.healersPlacedThisFloor = 0;
+            this.archersPlacedThisFloor = 0;
+            this.limitedMonsterCounts = {};
+            this.doorCoords = null;
+            this.justAttackedMonsterTile = null; // Also reset this
         }
 
         /** Debug: Toggles God Mode (player cannot die). */
@@ -2197,13 +2256,14 @@ _spawnCreatureOnTile(targetTile, monsterTypeKey, isSpawned) {
         } // End debugSkipFloor
 
         /**
-          * Handles selling any item from the inventory.
-          * Triggered by a unified event from UIScene after clicking 'Sell' in any item panel.
-          * Handles validation, inventory removal, gold gain, UI updates, and conditional
-          * reversal of passive effects for DURABLE items.
-          * @param {object} data - Object containing { itemId, index }.
-          */
-          sellItemFromInventory({ itemId, index }) {
+         * Handles selling any item from the inventory.
+         * Triggered by a unified event from UIScene after clicking 'Sell' in any item panel.
+         * Handles validation, inventory removal, gold gain, UI updates, and conditional
+         * reversal of passive effects for DURABLE items.
+         * *** MODIFIED: Calculates sell value dynamically (base + currentFloor). ***
+         * @param {object} data - Object containing { itemId, index }.
+         */
+         sellItemFromInventory({ itemId, index }) {
              if (this.isGameOver) return;
 
              // --- Validation ---
@@ -2220,22 +2280,30 @@ _spawnCreatureOnTile(targetTile, monsterTypeKey, isSpawned) {
                  return;
              }
 
-             // Check if item is actually sellable (e.g., key has sellValue: 0)
-             const sellValue = itemInfo.sellValue || 0; // Use defined value or default to 0
-             if (sellValue <= 0 && itemInfo.category !== 'DURABLE') { // Allow selling durables even if value is 0 (e.g., Cursed Rune might be)
-                console.log(`Attempted to sell non-sellable item: ${itemId}`);
-                this.events.emit('showMessage', `Cannot sell ${itemInfo.name}.`);
-                return;
+             // --- Calculate Dynamic Sell Value ---
+             const baseSellValue = itemInfo.sellValue || 0; // Use defined value or default to 0
+             const currentFloor = this.currentFloor || 0; // Ensure currentFloor is at least 0
+             const actualSellValue = Math.max(0, baseSellValue + currentFloor); // Calculate final sell value (base + floor, min 0)
+             // --- End Sell Value Calculation ---
+
+
+             // Check if item is actually sellable (e.g., key has sellValue: 0, floor bonus doesn't apply if base is 0)
+             // Allow selling durables even if value is 0 (selling might just be to remove it)
+             // Only prevent selling non-durables if the *calculated* value is <= 0
+             if (actualSellValue <= 0 && itemInfo.category !== 'DURABLE') {
+                 console.log(`Attempted to sell non-sellable item (calculated value <= 0): ${itemId}`);
+                 this.events.emit('showMessage', `Cannot sell ${itemInfo.name}.`);
+                 return;
              }
 
-             console.log(`Selling ${itemInfo.name} (Category: ${itemInfo.category}) at index ${index} for ${sellValue} gold.`);
+             console.log(`Selling ${itemInfo.name} (Category: ${itemInfo.category}) at index ${index} for ${actualSellValue} gold (Base: ${baseSellValue}, Floor: ${currentFloor}).`);
 
              // --- Perform Sell ---
              // 1. Remove item from inventory FIRST
              const soldItemId = this.player.inventory.splice(index, 1)[0];
 
-             // 2. Add gold
-             this.player.gold += sellValue;
+             // 2. Add calculated gold
+             this.player.gold += actualSellValue; // <<< MODIFIED LINE
 
              // --- Reverse Passive Effects (Conditional) ---
              let statsChanged = false;
@@ -2248,7 +2316,7 @@ _spawnCreatureOnTile(targetTile, monsterTypeKey, isSpawned) {
              // --- Update UI ---
              this.events.emit('updateInventory', this.player.inventory); // Update inventory display
              this.events.emit('updateStats', this.getPlayerStats()); // Update gold and potentially other stats if effects were reversed
-             this.events.emit('showMessage', `Sold ${itemInfo.name} for ${sellValue}G`);
+             this.events.emit('showMessage', `Sold ${itemInfo.name} for ${actualSellValue}G`); // <<< MODIFIED LINE
 
              // Check for game over if stats potentially changed (e.g., removing Defense Rune)
              if (statsChanged) {
@@ -2256,7 +2324,9 @@ _spawnCreatureOnTile(targetTile, monsterTypeKey, isSpawned) {
              }
 
              // Selling does not consume a game turn or trigger end-of-turn effects.
-         }
+         } // End sellItemFromInventory
+
+
 
         /**
          * Emits initial player stats and inventory to the UI scene once the UI is ready.
@@ -3395,23 +3465,30 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
         /**
          * Applies Spike Trap damage to a revealed monster if the player has the item.
+         * *** MODIFIED: Damage now scales based on player ATK. ***
          * @param {Tile} tile - The Tile instance of the revealed monster.
          * @returns {boolean} True if the monster died from the spike trap, false otherwise.
          * @private
          */
-         _handleRevealSpikeTrapDamage(tile) {
+        _handleRevealSpikeTrapDamage(tile) {
             const tileData = tile.tileData;
             let diedToTrap = false;
 
             if (tileData.type === TILE_TYPE.MONSTER && tileData.hp > 0 && this.playerHasSpikeTrap()) {
-                const trapDamage = ITEM_TYPES.SPIKE_TRAP.revealDamage || 2;
+                // --- SCALING IMPLEMENTED ---
+                const baseDamage = 2;
+                // Scale damage based on a fraction of player attack: Base 1 + 1/3rd ATK
+                const calculatedDamage = 1 + Math.floor(this.player.atk / 3);
+                const trapDamage = Math.max(baseDamage, calculatedDamage); // Use calculated or base, whichever is higher
+                // --- END SCALING ---
+
                 const monsterName = tileData.isSheep ? "Sheep" : (MONSTER_STATS[tileData.monsterType]?.name || "Monster");
                 console.log(`Spike Trap activates! Damaging ${monsterName} at [${tile.r}, ${tile.c}] for ${trapDamage}.`);
 
                 tileData.hp -= trapDamage; // Apply damage directly to the referenced data
 
                 this.events.emit('showMessage', `Spike Trap: ${monsterName} -${trapDamage} HP!`);
-                this.flashTileBackground(tile, 0xFF8C00, 100, 0);
+                this.flashTileBackground(tile, 0xFF8C00, 100, 0); // Orange flash
 
                 if (tileData.hp <= 0) {
                     diedToTrap = true;
@@ -3654,54 +3731,53 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
       }
 
         /**
-         * Handles the logic for picking up an item from a revealed tile.
-         * Updates player inventory/stats and changes the tile to EMPTY.
-         * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
-         * and DURABLE (unique inventory items).
-         * Includes logic to immediately update visuals/stats for passive items like Lantern, Defense Rune, Attack Rune on pickup.
-         * Explicitly updates the door tile visual when key is picked up.
-         * *** NEW: Handles specific coin amounts dropped by Thieves. ***
-         * @param {Tile} tile - The Tile instance containing the item.
-         */
-        tryPickupItem(tile) {
-            if (this.isGameOver || !tile) return;
-            const tileData = tile.tileData;
-            if (tileData.type !== TILE_TYPE.ITEM || !tileData.itemId) return;
+         * Handles the logic for picking up an item from a revealed tile.
+         * Updates player inventory/stats and changes the tile to EMPTY.
+         * Distinguishes between REGULAR (instant use like Coin/Heart, or consumable inventory items)
+         * and DURABLE (unique inventory items).
+         * Includes logic to immediately update visuals/stats for passive items like Lantern, Defense Rune, Attack Rune on pickup.
+         * Explicitly updates the door tile visual when key is picked up.
+         * *** MODIFIED: Heart heal amount now scales based on current floor. ***
+         * @param {Tile} tile - The Tile instance containing the item.
+         */
+        tryPickupItem(tile) {
+            if (this.isGameOver || !tile) return;
+            const tileData = tile.tileData;
+            if (tileData.type !== TILE_TYPE.ITEM || !tileData.itemId) return;
 
-            const itemId = tileData.itemId;
-            const itemInfo = ITEM_TYPES[itemId];
-            if (!itemInfo) {
-                console.error("Attempted to pick up unknown item ID:", itemId);
-                return;
-            }
+            const itemId = tileData.itemId;
+            const itemInfo = ITEM_TYPES[itemId];
+            if (!itemInfo) {
+                console.error("Attempted to pick up unknown item ID:", itemId);
+                return;
+            }
 
-            console.log(`Attempting to pick up ${itemInfo.name} ([${itemInfo.category}]) at [${tile.r}, ${tile.c}]`);
+            console.log(`Attempting to pick up ${itemInfo.name} ([${itemInfo.category}]) at [${tile.r}, ${tile.c}]`);
 
-            let pickedUp = false; // Flag: Was the item successfully obtained and tile cleared?
-            let showInvFullMsg = false; // Flag: Should we show "Inventory Full"?
-            let endTurn = true; // Flag: Does this action consume the player's turn?
+            let pickedUp = false; // Flag: Was the item successfully obtained and tile cleared?
+            let showInvFullMsg = false; // Flag: Should we show "Inventory Full"?
+            let endTurn = true; // Flag: Does this action consume the player's turn?
 
-            // --- Handle by Category ---
-            if (itemInfo.category === 'REGULAR') {
-                // --- Handle REGULAR Items (Instant Use or Consumable Inventory) ---
-                if (itemId === 'KEY_ITEM') {
-                    this.player.hasKey = true; // Set player state
-                    this.keyDroppedOnFloor = true; // Mark key as obtained
-                    this.events.emit('showMessage', 'Dungeon Key Acquired!');
-                    pickedUp = true;
+            // --- Handle by Category ---
+            if (itemInfo.category === 'REGULAR') {
+                // --- Handle REGULAR Items (Instant Use or Consumable Inventory) ---
+                if (itemId === 'KEY_ITEM') {
+                    this.player.hasKey = true; // Set player state
+                    this.keyDroppedOnFloor = true; // Mark key as obtained
+                    this.events.emit('showMessage', 'Dungeon Key Acquired!');
+                    pickedUp = true;
 
-                    // --- Force Door Tile Update ---
-                    if (this.doorCoords) {
-                        const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c];
-                        // Check if the door tile exists and is revealed before updating
-                        if (doorTile && doorTile.tileData.state === TILE_STATE.REVEALED) {
-                            console.log(`Key picked up, forcing visual update on door tile at [${this.doorCoords.r}, ${this.doorCoords.c}]`);
-                            doorTile.updateVisuals(); // Call the tile's update method
-                        }
-                    }
+                    // --- Force Door Tile Update ---
+                    if (this.doorCoords) {
+                        const doorTile = this.tileObjects[this.doorCoords.r]?.[this.doorCoords.c];
+                        // Check if the door tile exists and is revealed before updating
+                        if (doorTile && doorTile.tileData.state === TILE_STATE.REVEALED) {
+                            console.log(`Key picked up, forcing visual update on door tile at [${this.doorCoords.r}, ${this.doorCoords.c}]`);
+                            doorTile.updateVisuals(); // Call the tile's update method
+                        }
+                    }
 
-                } else if (itemId === 'COIN') {
-                    // <<< --- MODIFIED COIN PICKUP START --- >>>
+                } else if (itemId === 'COIN') {
                     let goldGained = 0;
                     // Check if this coin tile has a specific value (e.g., from a Thief)
                     if (tileData.coinValue !== undefined && tileData.coinValue > 0) {
@@ -3716,90 +3792,100 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
                     this.player.gold += goldGained;
                     this.events.emit('showMessage', `+${goldGained} Gold!`);
                     pickedUp = true;
-                    // <<< --- MODIFIED COIN PICKUP END --- >>>
-                } else if (itemId === 'HEART') {
-                    if (this.player.hp >= this.player.maxHp) {
-                        this.events.emit('showMessage', 'Health already full!');
-                        endTurn = false; // Picking up heart at full HP doesn't consume turn or item
-                    } else {
-                        let healAmount = getRandomInt(itemInfo.healRange[0], itemInfo.healRange[1]);
-                        healAmount = Math.min(healAmount, this.player.maxHp - this.player.hp); // Clamp heal
-                        if (healAmount > 0) {
-                            this.player.hp += healAmount;
-                            this.events.emit('showMessage', `Healed ${healAmount} HP!`);
-                        } else {
-                            this.events.emit('showMessage', 'Found a Heart!'); // Should be rare
-                        }
-                        pickedUp = true; // Consume the heart
-                    }
-                } else {
-                    // --- Handle Regular Consumable Inventory Items ---
-                    if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
-                        this.player.inventory.push(itemId);
-                        this.events.emit('updateInventory', this.player.inventory);
-                        this.events.emit('showMessage', `${itemInfo.name} added`);
-                        pickedUp = true;
-                    } else {
-                        showInvFullMsg = true;
-                        endTurn = false; // Failed pickup doesn't consume turn
-                    }
-                }
-            } else if (itemInfo.category === 'DURABLE') {
-                // --- Handle DURABLE Items (Unique Inventory) ---
-                if (this.player.inventory.includes(itemId)) {
-                    // Player already has this unique item
-                    this.events.emit('showMessage', `You already have a ${itemInfo.name}!`);
-                    endTurn = false; // Cannot pick up duplicate, no turn consumed
-                } else if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
-                    // Add unique durable item to inventory
-                    this.player.inventory.push(itemId);
-                    this.events.emit('updateInventory', this.player.inventory);
-                    this.events.emit('showMessage', `${itemInfo.name} acquired!`);
-                    pickedUp = true;
-                    // Passive bonus application happens *after* this block, inside if(pickedUp)
-                } else {
-                    // Inventory full
-                    showInvFullMsg = true;
-                    endTurn = false; // Failed pickup doesn't consume turn
-                }
-            } else {
-                console.warn(`Unknown item category for ${itemId}: ${itemInfo.category}`);
-                endTurn = false; // Don't consume turn for unknown category
-            }
+                } else if (itemId === 'HEART') {
+                    if (this.player.hp >= this.player.maxHp) {
+                        this.events.emit('showMessage', 'Health already full!');
+                        endTurn = false; // Picking up heart at full HP doesn't consume turn or item
+                    } else {
+                        // --- SCALING IMPLEMENTED ---
+                        const baseMinHeal = 3;
+                        const baseMaxHeal = 5;
+                        const floorBonusMin = Math.floor(this.currentFloor / 4); // Scale min heal slower
+                        const floorBonusMax = Math.floor(this.currentFloor / 3); // Scale max heal faster
+                        const finalMinHeal = baseMinHeal + floorBonusMin;
+                        // Ensure max is always at least min, even if floor scaling is low
+                        const finalMaxHeal = Math.max(finalMinHeal, baseMaxHeal + floorBonusMax);
+                        let potentialHealAmount = getRandomInt(finalMinHeal, finalMaxHeal);
+                        // --- END SCALING ---
+
+                        let healAmount = Math.min(potentialHealAmount, this.player.maxHp - this.player.hp); // Clamp heal
+
+                        if (healAmount > 0) {
+                            this.player.hp += healAmount;
+                            this.events.emit('showMessage', `Healed ${healAmount} HP!`);
+                        } else {
+                            this.events.emit('showMessage', 'Found a Heart!'); // Should be rare if not full HP
+                        }
+                        pickedUp = true; // Consume the heart
+                    }
+                } else {
+                    // --- Handle Regular Consumable Inventory Items ---
+                    if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
+                        this.player.inventory.push(itemId);
+                        this.events.emit('updateInventory', this.player.inventory);
+                        this.events.emit('showMessage', `${itemInfo.name} added`);
+                        pickedUp = true;
+                    } else {
+                        showInvFullMsg = true;
+                        endTurn = false; // Failed pickup doesn't consume turn
+                    }
+                }
+            } else if (itemInfo.category === 'DURABLE') {
+                // --- Handle DURABLE Items (Unique Inventory) ---
+                if (this.player.inventory.includes(itemId)) {
+                    // Player already has this unique item
+                    this.events.emit('showMessage', `You already have a ${itemInfo.name}!`);
+                    endTurn = false; // Cannot pick up duplicate, no turn consumed
+                } else if (this.player.inventory.length < PLAYER.MAX_INVENTORY_SLOTS) {
+                    // Add unique durable item to inventory
+                    this.player.inventory.push(itemId);
+                    this.events.emit('updateInventory', this.player.inventory);
+                    this.events.emit('showMessage', `${itemInfo.name} acquired!`);
+                    pickedUp = true;
+                    // Passive bonus application happens *after* this block, inside if(pickedUp)
+                } else {
+                    // Inventory full
+                    showInvFullMsg = true;
+                    endTurn = false; // Failed pickup doesn't consume turn
+                }
+            } else {
+                console.warn(`Unknown item category for ${itemId}: ${itemInfo.category}`);
+                endTurn = false; // Don't consume turn for unknown category
+            }
 
 
-            // --- Post-Pickup Actions ---
-            if (pickedUp) {
-                // Change the tile instance's data to EMPTY and update visuals
-                tile.setData({
-                    type: TILE_TYPE.EMPTY,
-                    revealed: true,
-                    state: TILE_STATE.REVEALED,
-                    itemId: null,
-                    coinValue: undefined // <<< NEW: Clear specific coin value field
-                });
-                this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
+            // --- Post-Pickup Actions ---
+            if (pickedUp) {
+                // Change the tile instance's data to EMPTY and update visuals
+                tile.setData({
+                    type: TILE_TYPE.EMPTY,
+                    revealed: true,
+                    state: TILE_STATE.REVEALED,
+                    itemId: null,
+                    coinValue: undefined // Clear specific coin value field
+                });
+                this.updateNeighborStates(tile.r, tile.c); // Update neighbors now that it's empty
 
-                // --- IMMEDIATE EFFECT APPLICATION / REFRESH ---
-                // Check specifically if a durable item was picked up to apply effects
+                // --- IMMEDIATE EFFECT APPLICATION / REFRESH ---
+                // Check specifically if a durable item was picked up to apply effects
                 if (itemInfo.category === 'DURABLE') {
                     this._applyPassiveItemEffectOnPickup(itemId);
                 }
-                // --- END IMMEDIATE EFFECT APPLICATION / REFRESH ---
+                // --- END IMMEDIATE EFFECT APPLICATION / REFRESH ---
 
-                // Update UI stats AFTER applying any potential bonus from pickup AND after updating door visual
-                this.events.emit('updateStats', this.getPlayerStats());
+                // Update UI stats AFTER applying any potential bonus from pickup AND after updating door visual
+                this.events.emit('updateStats', this.getPlayerStats());
 
-                if (endTurn) {
-                    this.processEndOfPlayerTurnEffects();
-                }
-            } else if (showInvFullMsg) {
-                // Show inventory full message if applicable
-                this.events.emit('showMessage', 'Inventory Full!');
-                this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
-            }
-            // If endTurn is false and nothing was picked up, nothing else happens.
-        } // End of tryPickupItem method
+                if (endTurn) {
+                    this.processEndOfPlayerTurnEffects();
+                }
+            } else if (showInvFullMsg) {
+                // Show inventory full message if applicable
+                this.events.emit('showMessage', 'Inventory Full!');
+                this.flashTileBackground(tile, 0xff0000, 100, 1); // Short red flash
+            }
+            // If endTurn is false and nothing was picked up, nothing else happens.
+        } // End of tryPickupItem method
 
 
         /**
@@ -4743,6 +4829,7 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
         /**
          * Applies the HEAL item effect. [Helper for useItem]
+         * *** MODIFIED: Heal amount scales based on player Max HP. ***
          * @param {object} itemInfo - The full item definition from ITEM_TYPES.
          * @param {object} effect - The specific effect object { type: 'HEAL', amount: number }.
          * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
@@ -4750,7 +4837,16 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
          */
         _applyHealEffect(itemInfo, effect) {
             let consumed = false;
-            let healAmount = Math.min(effect.amount, this.player.maxHp - this.player.hp); // Heal up to max HP
+
+            // --- SCALING IMPLEMENTED ---
+            const baseHeal = 5; // Minimum heal amount
+            const healPercentage = 0.25; // Heal 25% of Max HP
+            const calculatedHeal = Math.floor(this.player.maxHp * healPercentage);
+            const potentialHealAmount = Math.max(baseHeal, calculatedHeal); // Use calculated or base, whichever is higher
+            // --- END SCALING ---
+
+            // Clamp heal to not exceed missing health
+            let healAmount = Math.min(potentialHealAmount, this.player.maxHp - this.player.hp);
 
             if (healAmount > 0) {
                 this.player.hp += healAmount;
@@ -4770,176 +4866,208 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
         }
 
         /**
-         * Applies the DAMAGE_SELF item effect (e.g., Explosive). [Helper for useItem]
-         * Includes God Mode check and Amulet of Greed trigger.
-         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
-         * @param {object} effect - The specific effect object { type: 'DAMAGE_SELF', amount: number }.
-         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
-         * @private Internal helper method.
-         */
-        _applyDamageSelfEffect(itemInfo, effect) {
-            const damage = effect.amount || 0;
-            const hpBeforeDamage = this.player.hp;
-            let actualDamageTaken = 0;
+         * Applies the DAMAGE_SELF item effect (e.g., Explosive). [Helper for useItem]
+         * Includes God Mode check and Amulet of Greed trigger.
+         * *** MODIFIED: Damage scales slightly based on current floor. ***
+         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+         * @param {object} effect - The specific effect object { type: 'DAMAGE_SELF', amount: number }.
+         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+         * @private Internal helper method.
+         */
+        _applyDamageSelfEffect(itemInfo, effect) {
+            // --- SCALING IMPLEMENTED ---
+            const baseDamage = 2; // Minimum damage
+            // Gentle scaling: +1 damage every 5 floors
+            const calculatedDamage = baseDamage + Math.floor(this.currentFloor / 5);
+            const damage = Math.max(baseDamage, calculatedDamage); // Use calculated or base, whichever is higher
+            // --- END SCALING ---
 
-            const potentialHp = hpBeforeDamage - damage;
+            const hpBeforeDamage = this.player.hp;
+            let actualDamageTaken = 0;
 
-            // --- God Mode Check for Explosive ---
-            if (this.godModeEnabled && potentialHp <= 0) {
-                if (hpBeforeDamage > 1) {
-                    actualDamageTaken = hpBeforeDamage - 1;
-                    this.player.hp = 1; // Prevent death
-                } else {
-                    actualDamageTaken = 0;
-                }
-                this.events.emit('showMessage', `${itemInfo.icon || '💥'} KABOOM! (God Mode!)`);
-                console.log(`God Mode prevented death from ${itemInfo.name}. Damage taken: ${actualDamageTaken}`);
-            } else {
-                if (potentialHp < hpBeforeDamage) {
-                    actualDamageTaken = hpBeforeDamage - potentialHp;
-                    this.player.hp = potentialHp; // Apply damage
-                    this.events.emit('showMessage', `${itemInfo.icon || '💥'} KABOOM! -${actualDamageTaken} HP`);
-                } else {
-                    actualDamageTaken = 0;
-                    this.events.emit('showMessage', `${itemInfo.icon || '💥'} Fizzle...`); // If damage was 0
-                }
-            }
-            // --- End God Mode Check ---
+            const potentialHp = hpBeforeDamage - damage;
 
-            // Update UI Stats
-            this.events.emit('updateStats', this.getPlayerStats());
+            // --- God Mode Check for Explosive ---
+            if (this.godModeEnabled && potentialHp <= 0) {
+                if (hpBeforeDamage > 1) {
+                    actualDamageTaken = hpBeforeDamage - 1;
+                    this.player.hp = 1; // Prevent death
+                } else {
+                    actualDamageTaken = 0;
+                }
+                this.events.emit('showMessage', `${itemInfo.icon || '💥'} KABOOM! (God Mode!)`);
+                console.log(`God Mode prevented death from ${itemInfo.name}. Damage taken: ${actualDamageTaken}`);
+            } else {
+                if (potentialHp < hpBeforeDamage) {
+                    actualDamageTaken = hpBeforeDamage - potentialHp;
+                    this.player.hp = potentialHp; // Apply damage
+                    this.events.emit('showMessage', `${itemInfo.icon || '💥'} KABOOM! -${actualDamageTaken} HP`);
+                } else {
+                    actualDamageTaken = 0;
+                    this.events.emit('showMessage', `${itemInfo.icon || '💥'} Fizzle...`); // If damage was 0
+                }
+            }
+            // --- End God Mode Check ---
 
-            // --- Trigger Amulet of Greed ---
-            this._triggerAmuletOfGreed(actualDamageTaken);
+            // Update UI Stats
+            this.events.emit('updateStats', this.getPlayerStats());
 
-            // Check game over AFTER amulet trigger
-            this.checkGameOver();
+            // --- Trigger Amulet of Greed ---
+            this._triggerAmuletOfGreed(actualDamageTaken);
 
-            return {
-                consumed: itemInfo.consumable, // Return standard consumption flag
-                appliedStatusEffect: false // Direct damage isn't a status
-            };
-        }
+            // Check game over AFTER amulet trigger
+            this.checkGameOver();
 
-        /**
-         * Applies the DAMAGE_ALL item effect (e.g., Blade Scroll). [Helper for useItem]
-         * Only consumes the item if monsters were hit or killed.
-         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
-         * @param {object} effect - The specific effect object { type: 'DAMAGE_ALL', amount: number }.
-         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
-         * @private Internal helper method.
-         */
-        _applyDamageAllEffect(itemInfo, effect) {
-            let monstersHit = 0;
-            let potentialKills = []; // Store tiles, not just coords
-            let thawedCount = 0;
-            let consumedItem = false; // Flag to track if item should be consumed
-
-            // Iterate through all tiles to find revealed, living monsters
-            for (let r = 0; r < GRID.ROWS; r++) {
-                for (let c = 0; c < GRID.COLS; c++) {
-                    let targetTile = this.tileObjects[r]?.[c];
-                    let targetData = targetTile?.tileData;
-                    // Check if it's a revealed, living monster
-                    if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
-                        targetData.hp -= effect.amount; // Apply damage
-                        monstersHit++;
-                        let monsterThawedThisHit = false;
-
-                        // Freeze Tick on Damage
-                        if (targetData.frozenTurns > 0) {
-                            targetData.frozenTurns--;
-                            if (targetData.frozenTurns <= 0) {
-                                monsterThawedThisHit = true;
-                                thawedCount++;
-                            }
-                        }
-
-                        if (targetData.hp <= 0) {
-                            potentialKills.push(targetTile); // Store the TILE object
-                        } else {
-                            // Update HP/Freeze state via setData ONLY for survivors
-                            targetTile.setData({
-                                hp: targetData.hp,
-                                frozenTurns: targetData.frozenTurns
-                            });
-                        }
-                    } // end if valid monster target
-                } // end for c
-            } // end for r
-
-            // Process potential deaths AFTER iterating
-            let actualKills = 0;
-            for (const killedTile of potentialKills) {
-                this._handleMonsterDeath(killedTile); // Pass the Tile object
-                actualKills++;
-            }
-
-            // Emit messages based on results
-            if (monstersHit > 0) {
-                this.events.emit('showMessage', `${itemInfo.name} hit ${monstersHit} monsters!`);
-                // *** Consume item if monsters were hit OR killed ***
-                consumedItem = itemInfo.consumable;
-            } else {
-                this.events.emit('showMessage', `${itemInfo.name}: No monsters hit!`);
-                consumedItem = false; // Do not consume if nothing was hit
-            }
-            if (thawedCount > 0) {
-                this.events.emit('showMessage', `${thawedCount} monsters thawed!`);
-            }
-            // _handleMonsterDeath emits its own stats updates if kills occurred.
-
-            return {
-                consumed: consumedItem, // Use the flag determined above
-                appliedStatusEffect: false
-            }; // Damage isn't a status effect here
-        }
+            return {
+                consumed: itemInfo.consumable, // Return standard consumption flag
+                appliedStatusEffect: false // Direct damage isn't a status
+            };
+        }
 
         /**
-         * Applies the POISON_ALL item effect. [Helper for useItem]
-         * Only consumes the item if monsters were successfully poisoned.
-         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
-         * @param {object} effect - The specific effect object { type: 'POISON_ALL', durationRange: [min, max], damage: number }.
-         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
-         * @private Internal helper method.
-         */
-        _applyPoisonAllEffect(itemInfo, effect) {
-            let poisonedCount = 0;
-            let appliedStatus = false;
+         * Applies the DAMAGE_ALL item effect (e.g., Blade Scroll). [Helper for useItem]
+         * Only consumes the item if monsters were hit or killed.
+         * *** MODIFIED: Damage now scales based on player ATK. ***
+         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+         * @param {object} effect - The specific effect object { type: 'DAMAGE_ALL', amount: number }.
+         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+         * @private Internal helper method.
+         */
+        _applyDamageAllEffect(itemInfo, effect) {
+            let monstersHit = 0;
+            let potentialKills = []; // Store tiles, not just coords
+            let thawedCount = 0;
+            let consumedItem = false; // Flag to track if item should be consumed
 
-            for (let r = 0; r < GRID.ROWS; r++) {
-                for (let c = 0; c < GRID.COLS; c++) {
-                    let targetTile = this.tileObjects[r]?.[c];
-                    let targetData = targetTile?.tileData;
-                    // Target revealed, living monsters
-                    if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
-                        // Apply if not already poisoned or if poison wore off
-                        if (!targetData.isPoisoned || targetData.poisonTurns <= 0) {
-                            const duration = getRandomInt(effect.durationRange[0], effect.durationRange[1]);
-                            targetTile.setData({
-                                isPoisoned: true,
-                                poisonTurns: duration
-                            });
-                            // console.log(`Poisoned ${targetData.monsterType || 'Monster'} for ${duration} turns`);
-                            poisonedCount++;
-                            appliedStatus = true;
-                        }
-                    }
-                }
-            }
+            // --- SCALING IMPLEMENTED ---
+            const baseDamage = 3; // Minimum damage
+            const scalingFactor = 1.5; // Adjust this multiplier as needed
+            const calculatedDamage = Math.floor(this.player.atk * scalingFactor);
+            const finalDamage = Math.max(baseDamage, calculatedDamage); // Use calculated or base, whichever is higher
+            console.log(`Using ${itemInfo.name}: Applying ${finalDamage} damage to all revealed monsters.`);
+            // --- END SCALING ---
 
-            if (poisonedCount > 0) {
-                this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
-            } else {
-                this.events.emit('showMessage', `No valid monsters to poison!`);
-            }
+            // Iterate through all tiles to find revealed, living monsters
+            for (let r = 0; r < GRID.ROWS; r++) {
+                for (let c = 0; c < GRID.COLS; c++) {
+                    let targetTile = this.tileObjects[r]?.[c];
+                    let targetData = targetTile?.tileData;
+                    // Check if it's a revealed, living monster
+                    if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
+                        targetData.hp -= finalDamage; // Apply SCALED damage
+                        monstersHit++;
+                        let monsterThawedThisHit = false;
 
-            // *** Consume only if monsters were actually poisoned ***
-            return {
-                consumed: itemInfo.consumable && poisonedCount > 0,
-                appliedStatusEffect: appliedStatus
-            };
-        }
+                        // Freeze Tick on Damage
+                        if (targetData.frozenTurns > 0) {
+                            targetData.frozenTurns--;
+                            if (targetData.frozenTurns <= 0) {
+                                monsterThawedThisHit = true;
+                                thawedCount++;
+                            }
+                        }
+
+                        if (targetData.hp <= 0) {
+                            potentialKills.push(targetTile); // Store the TILE object
+                        } else {
+                            // Update HP/Freeze state via setData ONLY for survivors
+                            targetTile.setData({
+                                hp: targetData.hp,
+                                frozenTurns: targetData.frozenTurns
+                            });
+                        }
+                    } // end if valid monster target
+                } // end for c
+            } // end for r
+
+            // Process potential deaths AFTER iterating
+            let actualKills = 0;
+            for (const killedTile of potentialKills) {
+                this._handleMonsterDeath(killedTile); // Pass the Tile object
+                actualKills++;
+            }
+
+            // Emit messages based on results
+            if (monstersHit > 0) {
+                this.events.emit('showMessage', `${itemInfo.name} hit ${monstersHit} monsters!`);
+                // Consume item if monsters were hit OR killed
+                consumedItem = itemInfo.consumable;
+            } else {
+                this.events.emit('showMessage', `${itemInfo.name}: No monsters hit!`);
+                consumedItem = false; // Do not consume if nothing was hit
+            }
+            if (thawedCount > 0) {
+                this.events.emit('showMessage', `${thawedCount} monsters thawed!`);
+            }
+            // _handleMonsterDeath emits its own stats updates if kills occurred.
+
+            return {
+                consumed: consumedItem, // Use the flag determined above
+                appliedStatusEffect: false
+            }; // Damage isn't a status effect here
+        }
+
+        /**
+         * Applies the POISON_ALL item effect. [Helper for useItem]
+         * Only consumes the item if monsters were successfully poisoned.
+         * *** MODIFIED: Poison damage per turn scales based on current floor. ***
+         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+         * @param {object} effect - The specific effect object { type: 'POISON_ALL', durationRange: [min, max], damage: number }.
+         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+         * @private Internal helper method.
+         */
+        _applyPoisonAllEffect(itemInfo, effect) {
+            let poisonedCount = 0;
+            let appliedStatus = false;
+
+            // --- SCALING IMPLEMENTED ---
+            const baseDamagePerTurn = 1;
+            // Scale damage gently with floor level: +1 damage every 4 floors
+            const calculatedDamagePerTurn = baseDamagePerTurn + Math.floor(this.currentFloor / 4);
+            const finalDamagePerTurn = Math.max(baseDamagePerTurn, calculatedDamagePerTurn);
+            // Note: We store the calculated damage *on the tile* if needed, or use it when processing poison ticks later.
+            // For simplicity here, we'll assume the GAME.POISON_DAMAGE constant itself might be updated or the processing logic accesses this value.
+            // Let's assume for now poison processing uses a standard damage value. The vial just *applies* the status.
+            // To make the vial *itself* apply stronger poison, we'd need to store damage on the tile data.
+            // Let's stick to scaling the damage value used *globally* for poison ticks, OR store it on tile.
+            // --> Easier approach: Store scaled damage on tile data.
+            console.log(`Using ${itemInfo.name}: Applying poison with ${finalDamagePerTurn} DMG/turn.`);
+            // --- END SCALING ---
+
+            for (let r = 0; r < GRID.ROWS; r++) {
+                for (let c = 0; c < GRID.COLS; c++) {
+                    let targetTile = this.tileObjects[r]?.[c];
+                    let targetData = targetTile?.tileData;
+                    // Target revealed, living monsters
+                    if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED) {
+                        // Apply if not already poisoned or if poison wore off (Allow refreshing/overwriting)
+                        //if (!targetData.isPoisoned || targetData.poisonTurns <= 0) {
+                            const duration = getRandomInt(effect.durationRange[0], effect.durationRange[1]);
+                            targetTile.setData({
+                                isPoisoned: true,
+                                poisonTurns: duration,
+                                poisonDamageApplied: finalDamagePerTurn // Store the damage amount
+                            });
+                            // console.log(`Poisoned ${targetData.monsterType || 'Monster'} for ${duration} turns at ${finalDamagePerTurn} DMG/turn`);
+                            poisonedCount++;
+                            appliedStatus = true;
+                        //}
+                    }
+                }
+            }
+
+            if (poisonedCount > 0) {
+                this.events.emit('showMessage', `Poisoned ${poisonedCount} monsters!`);
+            } else {
+                this.events.emit('showMessage', `No valid monsters to poison!`);
+            }
+
+            // Consume only if monsters were actually poisoned
+            return {
+                consumed: itemInfo.consumable && poisonedCount > 0,
+                appliedStatusEffect: appliedStatus
+            };
+        }
 
         /**
          * Applies the FREEZE_ALL item effect. [Helper for useItem]
@@ -5690,6 +5818,7 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             this.keyIconText = null;
             this.helpButton = null;
             this.debugButton = null;
+            this.modalBlocker = null; 
             this.challengeRequirementPanel = null;
             this.durableItemPanel = null;
             this.pendingDurableAction = null; // Stores {itemId, index} for sell action
@@ -5813,26 +5942,73 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             });
         }
 
+/**
+         /**
+         * Centralized function to set the modal flag AND blocker visibility together.
+         * @param {boolean} isActive - Whether the modal state should be active *and* the blocker visible.
+         * @private
+         */
+        _updateModalState(isActive) {
+            // Always update the flag based on the input
+            this.isModalActive = isActive;
+
+            // Also update the blocker visibility accordingly
+            if (this.modalBlocker) {
+                this.modalBlocker.setVisible(isActive);
+                if (isActive) {
+                    // Ensure depth is correct when activating
+                    this.children.bringToTop(this.modalBlocker);
+                    if (this.debugPanel) this.children.bringToTop(this.debugPanel);
+                    if (this.itemUsePanel) this.children.bringToTop(this.itemUsePanel);
+                    if (this.durableItemPanel) this.children.bringToTop(this.durableItemPanel);
+                    if (this.floorClearPanel) this.children.bringToTop(this.floorClearPanel);
+                    if (this.shopPanel) this.children.bringToTop(this.shopPanel);
+                    if (this.challengeRequirementPanel) this.children.bringToTop(this.challengeRequirementPanel);
+                    if (this.monsterInfoPanel) this.children.bringToTop(this.monsterInfoPanel);
+                    if (this.messageText) this.children.bringToTop(this.messageText);
+                }
+            }
+            // Optional console logs for debugging state changes
+            // console.log(`_updateModalState called with ${isActive}. isModalActive is now: ${this.isModalActive}`);
+        }
+
         /**
          * Creates UI elements by calling helper methods and sets up listeners.
+         * *** MODIFIED: Creates the modalBlocker rectangle. ***
          */
-        create() {
+         create() {
             console.log("UIScene create: Initializing UI...");
+
+            // --- NEW: Create Modal Blocker ---
+            // Create it early so it's behind panels created later
+            this.modalBlocker = this.add.rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, 0x000000, 0.5)
+                .setOrigin(0, 0) // Top-left origin
+                .setDepth(100)   // Depth below panels (which start ~101) but above base UI
+                .setVisible(false) // Initially hidden
+                .setInteractive(); // Make it interactive
+
+            // Stop propagation on the blocker to prevent clicks reaching GameScene
+            this.modalBlocker.on('pointerdown', (pointer, localX, localY, event) => {
+                 console.log("Modal blocker clicked."); // Optional: confirm it intercepts clicks
+                 event.stopPropagation();
+            });
+            // --- END NEW ---
+
 
             // Call helper methods to create different UI parts
             this._getDOMReferences();
             this._createOverlayBackgrounds();
             this._createHeaderText();
             this._createHeaderButtons();
-            this._createDebugPanel(); // Creates the debug panel container and elements
-            this._createItemUsePanel(); // Creates the item use panel container and elements
-            this._createDurableItemPanel(); // Creates the durable item panel container and elements
-            this._createFloorClearPanel(); // Creates the floor clear panel container and elements
-            this._createShopPanel(); // Creates the shop panel container and elements
-            this._createInventorySlots(); // Creates the inventory slot containers and elements
-            this._createMessageText(); // Creates the message text object
-            this._createChallengeRequirementPanel();
-            this._createMonsterInfoPanel();
+            this._createDebugPanel(); // Depth 101
+            this._createItemUsePanel(); // Depth 102
+            this._createDurableItemPanel(); // Depth 102
+            this._createFloorClearPanel(); // Depth 103
+            this._createShopPanel(); // Depth 104
+            this._createInventorySlots(); // Depth implicitly low
+            this._createMessageText(); // Depth 200 (above everything)
+            this._createChallengeRequirementPanel(); // Depth 105
+            this._createMonsterInfoPanel(); // Depth 106
 
             // Set up listeners for events coming FROM GameScene
             this._setupEventListeners();
@@ -5840,7 +6016,7 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             // --- Final Setup ---
             this.events.emit('uiReady'); // Notify GameScene that UI is ready
             console.log("UIScene emitted uiReady");
-            this.positionUIElements(); // Perform initial positioning
+            this.positionUIElements(); // Perform initial positioning (will also position blocker)
             console.log("UIScene create: Initialization complete.");
         } // End of create method
 
@@ -6329,9 +6505,10 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
         /**
          * Creates the Shop Panel container and its contents.
+         * Stores references to dynamic text elements directly on the scene instance.
          * Called by create().
          */
-        _createShopPanel() {
+         _createShopPanel() {
             this.shopPanel = this.add.container(0, 0).setDepth(104).setVisible(false);
             const shopPanelBg = this.add.rectangle(0, 0, 320, 250, COLORS.PANEL_BG, 0.95).setOrigin(0.5).setStrokeStyle(2, COLORS.GOLD_TEXT);
             shopPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
@@ -6353,12 +6530,25 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             closeButtonShop.on('pointerover', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
             closeButtonShop.on('pointerout', () => closeButtonShop.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
 
-            const createShopItem = (yPos, itemKey, text, cost) => {
-                const itemText = this.add.text(-130, yPos, text, {
+            // --- Store references directly on 'this' ---
+            // Clear potential old references if scene restarts (though shutdown should handle this)
+            this.labelTextMAX_HP = null;
+            this.costTextMAX_HP = null;
+            this.buyButtonMAX_HP = null;
+            this.labelTextATK = null;
+            this.costTextATK = null;
+            this.buyButtonATK = null;
+            this.labelTextHEAL = null; // Label for heal is static but reference might be useful
+            this.costTextHEAL = null;
+            this.buyButtonHEAL = null;
+
+
+            const createShopItem = (yPos, itemKey, baseText) => { // Removed cost from args, will be set dynamically
+                const label = this.add.text(-130, yPos, baseText, { // Use baseText initially
                     fontSize: '16px',
                     fill: '#FFF'
                 }).setOrigin(0, 0.5);
-                const costText = this.add.text(40, yPos, `${cost}G`, {
+                const costText = this.add.text(40, yPos, `?G`, { // Placeholder cost
                     fontSize: '16px',
                     fill: COLORS.GOLD_TEXT
                 }).setOrigin(0, 0.5);
@@ -6366,12 +6556,9 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
                     fontSize: '16px',
                     fill: '#FFF',
                     backgroundColor: COLORS.CONFIRM_BTN_BG,
-                    padding: {
-                        x: 10,
-                        y: 3
-                    }
+                    padding: { x: 10, y: 3 }
                 }).setOrigin(0.5).setInteractive();
-                buyButton.setData('itemKey', itemKey);
+                buyButton.setData('itemKey', itemKey); // Store item key on button for click handler
                 buyButton.on('pointerdown', (pointer, localX, localY, event) => {
                     event.stopPropagation();
                     const key = buyButton.getData('itemKey');
@@ -6379,16 +6566,31 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
                     const gs = this.scene.get('GameScene');
                     if (gs) {
                         gs.purchaseShopItem(key);
+                        // No need to manually update UI here, purchaseShopItem handles it now
                     } else {
                         console.error("Could not get GameScene ref");
                     }
                 });
-                return [itemText, costText, buyButton];
+
+                // Store references directly onto 'this' (UIScene instance)
+                this[`labelText${itemKey}`] = label;
+                this[`costText${itemKey}`] = costText;
+                this[`buyButton${itemKey}`] = buyButton;
+
+                return [label, costText, buyButton];
             };
-            const hpItem = createShopItem(-50, 'MAX_HP', '+1 Max Health:', SHOP_CONFIG.COSTS.MAX_HP);
-            const atkItem = createShopItem(0, 'ATK', '+1 Attack:', SHOP_CONFIG.COSTS.ATK);
-            const healItem = createShopItem(50, 'HEAL', 'Full Heal:', SHOP_CONFIG.COSTS.HEAL);
+
+            // Create items using base labels
+            const hpItem = createShopItem(-50, 'MAX_HP', '+? Max Health:');
+            const atkItem = createShopItem(0, 'ATK', '+? Attack:');
+            // For HEAL, store the label reference even though its text is static currently
+            const healItem = createShopItem(50, 'HEAL', 'Full Heal:');
+
+            // Add elements to container
             this.shopPanel.add([shopPanelBg, shopTitle, closeButtonShop, ...hpItem, ...atkItem, ...healItem]);
+
+            // NO LONGER NEEDED: this.shopPanel.setData(elementRefs);
+            console.log("Shop panel created and element references stored directly on scene.");
         }
 
         /**
@@ -6435,58 +6637,55 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
         }
 
         /**
-         * Shows the new monster info panel, populating it with specific monster details.
-         * Checks the disableMonsterPopups flag before showing.
-         * *** MODIFIED: Resets checkbox state/visual on show. Accesses elements via setData. ***
-         * @param {string} monsterTypeKey - The key (ID) of the monster from MONSTER_STATS.
-         */
-         showMonsterInfoPanel(monsterTypeKey) {
-            // Check if popups are disabled or panel doesn't exist
-            if (this.disableMonsterPopups || !this.monsterInfoPanel) {
-                console.log(`Monster popup check: Disabled (${this.disableMonsterPopups}) or Panel missing. Type: ${monsterTypeKey}`);
-                return;
-            }
+         * Shows the new monster info panel, populating it with specific monster details.
+         * Checks the disableMonsterPopups flag before showing.
+         * *** MODIFIED: Calls _updateModalState. ***
+         */
+         showMonsterInfoPanel(monsterTypeKey) {
+            // Check if popups are disabled or panel doesn't exist
+            if (this.disableMonsterPopups || !this.monsterInfoPanel) {
+                console.log(`Monster popup check: Disabled (${this.disableMonsterPopups}) or Panel missing. Type: ${monsterTypeKey}`);
+                return;
+            }
 
-            const monsterInfo = MONSTER_STATS[monsterTypeKey];
-            if (!monsterInfo) {
-                console.error(`showMonsterInfoPanel: Could not find monster data for key: ${monsterTypeKey}`);
-                return;
-            }
+            const monsterInfo = MONSTER_STATS[monsterTypeKey];
+            if (!monsterInfo) {
+                console.error(`showMonsterInfoPanel: Could not find monster data for key: ${monsterTypeKey}`);
+                return;
+            }
 
-            console.log(`Showing Monster Info Panel for: ${monsterTypeKey}`);
-            this.hideAllPanels(false); // Hide other panels first
+            console.log(`Showing Monster Info Panel for: ${monsterTypeKey}`);
+            this.hideAllPanels(false); // Hide other panels first
 
-            // --- NEW: Reset Checkbox State ---
-            this.monsterPopupCheckboxChecked = false;
-            const checkboxState = this.monsterInfoPanel.getData('checkbox');
-            if (checkboxState) {
-                checkboxState.setText('[ ]'); // Ensure visual reset
-            }
-            // --- END NEW ---
+            // --- Reset Checkbox State ---
+            this.monsterPopupCheckboxChecked = false;
+            const checkboxState = this.monsterInfoPanel.getData('checkbox');
+            if (checkboxState) {
+                checkboxState.setText('[ ]'); // Ensure visual reset
+            }
+            // --- End Reset Checkbox ---
 
-            // Retrieve elements using stored references
-            const titleText = this.monsterInfoPanel.getData('title');
-            const iconText = this.monsterInfoPanel.getData('icon');
-            const descText = this.monsterInfoPanel.getData('description');
-            // No need to retrieve header/checkbox again as they are static or reset above
+            // Retrieve elements using stored references
+            const titleText = this.monsterInfoPanel.getData('title');
+            const iconText = this.monsterInfoPanel.getData('icon');
+            const descText = this.monsterInfoPanel.getData('description');
 
-            // Check if elements were retrieved successfully
-            if (!titleText || !iconText || !descText || !checkboxState /* Check if checkbox exists */) {
-                console.error("MonsterInfoPanel elements missing during show!");
-                return;
-            }
+            // Check if elements were retrieved successfully
+            if (!titleText || !iconText || !descText || !checkboxState /* Check if checkbox exists */) {
+                console.error("MonsterInfoPanel elements missing during show!");
+                return;
+            }
 
-            // Populate panel content
-            titleText.setText(monsterInfo.name || 'Unknown Monster');
-            iconText.setText(monsterInfo.icon || '?');
-            descText.setText(monsterInfo.description || 'No description available.');
-            // Header text is static, set in create
+            // Populate panel content
+            titleText.setText(monsterInfo.name || 'Unknown Monster');
+            iconText.setText(monsterInfo.icon || '?');
+            descText.setText(monsterInfo.description || 'No description available.');
 
-            // Set panel visible and block game input
-            this.monsterInfoPanel.setVisible(true);
-            this.isModalActive = true;
-            this.positionUIElements(); // Reposition elements now that content is set & panel is visible
-        }
+            // Set panel visible and update modal state
+            this.monsterInfoPanel.setVisible(true);
+            this._updateModalState(true); // <<< Use helper
+            this.positionUIElements();
+        }
 
         /**
          * Sets up the event listeners for events emitted FROM the GameScene.
@@ -6512,21 +6711,25 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
 
         /**
-          * Shows the durable item description panel, populating it with item details.
-          * *** MODIFIED: Retrieves buttons via setData reference. ***
-          * @param {string} itemId - The ID of the durable item clicked.
-          * @param {number} index - The inventory index of the item.
-          */
-          showDurableItemPanel(itemId, index) {
-             if (!this.durableItemPanel) return;
+         * Shows the durable item description panel, populating it with item details.
+         * *** MODIFIED: Calls _updateModalState. ***
+         * @param {string} itemId - The ID of the durable item clicked.
+         * @param {number} index - The inventory index of the item.
+         */
+         showDurableItemPanel(itemId, index) {
+            const gameScene = this.scene.get('GameScene');
+             if (!this.durableItemPanel || !gameScene) {
+                console.error("Cannot show DurableItemPanel: Panel or GameScene missing.");
+                return;
+            }
              const itemInfo = ITEM_TYPES[itemId];
              if (!itemInfo || itemInfo.category !== 'DURABLE') {
                  console.warn(`Attempted to show durable panel for non-durable item: ${itemId}`);
                  return;
              }
 
-             this.hideAllPanels(false); // Hide other panels first
-             this.pendingDurableAction = { itemId, index }; // Store context for the sell button
+             this.hideAllPanels(false);
+             this.pendingDurableAction = { itemId, index };
 
              // Retrieve elements using stored references from setData
              const iconText = this.durableItemPanel.getData('icon');
@@ -6542,71 +6745,109 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
              iconText.setText(itemInfo.icon || '?');
              nameText.setText(itemInfo.name || 'Durable Item');
              descText.setText(itemInfo.description || '');
-             sellBtn.setText(`Sell (${itemInfo.sellValue || 5}G)`); // Use defined sellValue or default 5
+             const baseSellValue = itemInfo.sellValue || 0;
+             const currentFloor = gameScene.currentFloor || 0;
+             const displaySellValue = Math.max(0, baseSellValue + currentFloor);
+             sellBtn.setText(`Sell (${displaySellValue}G)`);
 
-             // Set panel visible and block game input
+             // Set panel visible and update modal state
              this.durableItemPanel.setVisible(true);
-             this.isModalActive = true;
-             this.positionUIElements(); // Reposition elements now that content is set & panel is visible
+             this._updateModalState(true); // <<< Use helper
+             this.positionUIElements();
          }
 
-        /** Shows the Shop panel */
-        showShopPanel() {
-            if (!this.shopPanel) {
+
+
+        /**
+         * Shows the Shop panel.
+         * Calculates and displays dynamic costs and benefits before showing.
+         * *** MODIFIED: Calls _updateModalState. ***
+         */
+         showShopPanel() {
+            // ... (previous calculation code remains the same) ...
+            const gameScene = this.scene.get('GameScene');
+            if (!this.shopPanel || !this.costTextMAX_HP || !this.costTextATK || !this.costTextHEAL || !gameScene) {
+                 console.error("Cannot show shop panel: Panel, text elements, or GameScene missing/not created yet.");
+                 // Attempt to log what's missing
+                 if (!this.shopPanel) console.error("--> this.shopPanel is missing");
+                 if (!this.costTextMAX_HP) console.error("--> this.costTextMAX_HP is missing");
+                 if (!this.costTextATK) console.error("--> this.costTextATK is missing");
+                 if (!this.costTextHEAL) console.error("--> this.costTextHEAL is missing");
+                 if (!gameScene) console.error("--> GameScene is missing");
                 return;
             }
-            this.hideAllPanels(false); // Hide other panels first
 
-            // Update costs display in case they change (optional, but good practice)
-            // Assuming layout: list[4]=hpCost, list[7]=atkCost, list[10]=healCost
-            // This is fragile; accessing by index is bad. Let's skip dynamic cost update for now.
-            // You would ideally give the text elements names or store references.
+            this.hideAllPanels(false);
 
+            const shopPurchases = gameScene.player.shopPurchases || { MAX_HP: 0, ATK: 0, HEAL: 0 };
+            const currentFloor = gameScene.currentFloor || 1;
+
+            const calculateCost = (itemKey) => { /* ... */ const purchaseCount = shopPurchases[itemKey] || 0; const baseCost = SHOP_CONFIG.COSTS[itemKey]; const costIncreasePerPurchase = SHOP_CONFIG.COST_INCREASE_PER_PURCHASE[itemKey] || 0; return baseCost + (purchaseCount * costIncreasePerPurchase); };
+            const calculateBenefit = (itemKey) => { /* ... */ const purchaseCount = shopPurchases[itemKey] || 0; const floorDiv = SHOP_CONFIG.EFFECTIVENESS_SCALING.FLOOR_DIVISOR || 5; const purchaseDiv = SHOP_CONFIG.EFFECTIVENESS_SCALING.PURCHASE_DIVISOR || 2; const floorBonus = Math.floor(currentFloor / Math.max(1, floorDiv)); const purchaseBonus = Math.floor(purchaseCount / Math.max(1, purchaseDiv)); return 1 + floorBonus + purchaseBonus; };
+
+             // Update Max HP Item
+            if (this.labelTextMAX_HP && this.costTextMAX_HP) { const benefit = calculateBenefit('MAX_HP'); this.labelTextMAX_HP.setText(`+${benefit} Max Health:`); this.costTextMAX_HP.setText(`${calculateCost('MAX_HP')}G`); } else { console.warn("Shop panel missing MAX_HP label/cost elements on 'this'."); }
+            // Update ATK Item
+            if (this.labelTextATK && this.costTextATK) { const benefit = calculateBenefit('ATK'); this.labelTextATK.setText(`+${benefit} Attack:`); this.costTextATK.setText(`${calculateCost('ATK')}G`); } else { console.warn("Shop panel missing ATK label/cost elements on 'this'."); }
+            // Update HEAL Item
+            if (this.costTextHEAL) { this.costTextHEAL.setText(`${calculateCost('HEAL')}G`); } else { console.warn("Shop panel missing HEAL cost element on 'this'."); }
+
+
+            // --- Show Panel ---
             this.shopPanel.setVisible(true);
-            this.isModalActive = true; // Block game input
-            this.positionUIElements(); // Position it correctly
+            this._updateModalState(true); // <<< Use helper
+            this.positionUIElements();
+            console.log("Shop panel shown with updated costs/benefits (using direct references).");
         }
 
         /**
-         * Positions all UI elements based on the current screen size by calling helper methods.
-         * Called on create and resize.
-         * *** REFACTORED: Uses helper methods for positioning different sections. ***
-         */
-        positionUIElements() {
-            const width = this.cameras.main.width;
-            const height = this.cameras.main.height;
-            const headerHeight = height * UI.HEADER_RATIO;
-            const footerHeight = height * UI.FOOTER_RATIO;
-            const smallPadding = Math.max(5, width * 0.01); // Use a smaller padding for internal spacing
+         * Positions all UI elements based on the current screen size by calling helper methods.
+         * Called on create and resize.
+         * *** MODIFIED: Added positioning for modalBlocker. ***
+         */
+        positionUIElements() {
+            const width = this.cameras.main.width;
+            const height = this.cameras.main.height;
+            const headerHeight = height * UI.HEADER_RATIO;
+            const footerHeight = height * UI.FOOTER_RATIO;
+            const smallPadding = Math.max(5, width * 0.01); // Use a smaller padding for internal spacing
 
-            // --- Get Grid Dimensions from GameScene ---
-            const gameScene = this.scene.get('GameScene');
-            let gridOffsetX = smallPadding;
-            let gridContentWidth = width - (smallPadding * 2);
-            let gridRightEdgeX = width - smallPadding;
-            let gridCenterX = width / 2;
+            // --- Position Modal Blocker ---
+            if (this.modalBlocker) {
+                this.modalBlocker.setPosition(0, 0).setSize(width, height);
+            }
+            // --- End Blocker Positioning ---
 
-            if (gameScene) {
-                gridOffsetX = gameScene.gridOffsetX || gridOffsetX;
-                gridContentWidth = gameScene.gridContentWidth || gridContentWidth;
-                gridRightEdgeX = gridOffsetX + gridContentWidth;
-                gridCenterX = gridOffsetX + gridContentWidth / 2;
-            } else {
-                console.warn("UIScene: Could not get GameScene reference for grid dimensions.");
-            }
-            // --- End Get Grid Dimensions ---
 
-            // Position main sections using helpers
-            this._positionHeaderElements(width, height, headerHeight, gridOffsetX, gridRightEdgeX, gridCenterX, smallPadding);
-            this._positionFooterElements(width, height, footerHeight);
-            this._positionMessageText(width, height);
+            // --- Get Grid Dimensions from GameScene ---
+            // (Existing code...)
+            const gameScene = this.scene.get('GameScene');
+            let gridOffsetX = smallPadding;
+            let gridContentWidth = width - (smallPadding * 2);
+            let gridRightEdgeX = width - smallPadding;
+            let gridCenterX = width / 2;
 
-            // Position panels (central logic, calls helpers if needed in future)
-            const panelCenterX = width / 2;
-            const panelCenterY = headerHeight + (height - headerHeight - footerHeight) / 2;
-            this._positionPanels(panelCenterX, panelCenterY, width, height, smallPadding);
+            if (gameScene) {
+                gridOffsetX = gameScene.gridOffsetX || gridOffsetX;
+                gridContentWidth = gameScene.gridContentWidth || gridContentWidth;
+                gridRightEdgeX = gridOffsetX + gridContentWidth;
+                gridCenterX = gridOffsetX + gridContentWidth / 2;
+            } else {
+                console.warn("UIScene: Could not get GameScene reference for grid dimensions.");
+            }
+            // --- End Get Grid Dimensions ---
 
-        } // End positionUIElements (refactored)
+            // Position main sections using helpers
+            this._positionHeaderElements(width, height, headerHeight, gridOffsetX, gridRightEdgeX, gridCenterX, smallPadding);
+            this._positionFooterElements(width, height, footerHeight);
+            this._positionMessageText(width, height);
+
+            // Position panels (central logic, calls helpers if needed in future)
+            const panelCenterX = width / 2;
+            const panelCenterY = headerHeight + (height - headerHeight - footerHeight) / 2;
+            this._positionPanels(panelCenterX, panelCenterY, width, height, smallPadding);
+
+        } // End positionUIElements (refactored)
 
 
         /**
@@ -6946,32 +7187,49 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
         /**
          * Shows the challenge requirement failure panel, populating it with requirement text.
-         * @param {string} description - The requirement text to display.
+         * *** MODIFIED: Calls _updateModalState. ***
          */
-        showChallengeRequirementPanel(description) {
+         showChallengeRequirementPanel(description) {
             if (!this.challengeRequirementPanel) return;
 
             this.hideAllPanels(false); // Hide other panels first
 
             // Populate panel content
             const list = this.challengeRequirementPanel.list;
-            const descText = list[1]; // Assuming text is the second element
-            descText.setText(description || "Requirement not met."); // Set the text
+            // Ensure elements exist before accessing
+            if (list && list.length >= 2 && list[1]) {
+                const descText = list[1]; // Assuming text is the second element
+                descText.setText(description || "Requirement not met."); // Set the text
+            } else {
+                console.error("ChallengeRequirementPanel missing expected elements.");
+                return; // Don't show panel if elements are missing
+            }
 
-            // Set panel visible and block game input
+
+            // Set panel visible and update modal state
             this.challengeRequirementPanel.setVisible(true);
-            this.isModalActive = true;
+            this._updateModalState(true); // <<< Use helper
             this.positionUIElements(); // Reposition elements now that content is set & panel is visible
         }
 
         // --- Panel Management ---
 
-        /** Shows the HTML instructions panel and sets the modal flag to block game input. */
-        showDomInstructions() {
+        /**
+         * Shows the HTML instructions panel and sets the modal flag to block game input,
+         * but does NOT show the Phaser modal blocker overlay.
+         */
+         showDomInstructions() {
             if (this.instructionsDOM) {
                 this.hideAllPanels(true); // Hide Phaser panels, keep DOM flag separate
+
+                // --- MODIFICATION START ---
+                // Explicitly set modal active flag to block game input
+                this.isModalActive = true;
+                // DO NOT call _updateModalState(true) here, so the blocker doesn't show
+                console.log("Showing DOM instructions, setting isModalActive=true directly.");
+                // --- MODIFICATION END ---
+
                 this.instructionsDOM.style.display = 'flex'; // Show the panel using CSS
-                this.isModalActive = true; // Block game input
             }
         }
 
@@ -6986,13 +7244,13 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             }
         }
 
-        /** Toggles the visibility of the Phaser debug panel. */
+        /** Toggles the visibility of the Phaser debug panel and updates modal state. */
         toggleDebugPanel() {
             if (this.debugPanel) {
                 const isVisible = this.debugPanel.visible;
                 this.hideAllPanels(false); // Hide other panels first (DOM and Phaser)
                 this.debugPanel.setVisible(!isVisible); // Toggle visibility
-                this.isModalActive = !isVisible; // Set modal flag based on new visibility
+                this._updateModalState(!isVisible); // <<< Use helper to set modal state based on new visibility
                 if (this.debugPanel.visible) {
                     this.positionUIElements(); // Ensure correct positioning if shown
                 }
@@ -7000,48 +7258,58 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
         }
 
         /**
-          * Shows the item use confirmation panel, populating it with item details.
-          * *** MODIFIED: Handles 3-button layout and Sell button text. ***
-          * @param {string} itemId - The ID of the item being used.
-          * @param {number} index - The inventory index of the item.
-          */
-          showItemUsePanel(itemId, index) {
-             if (!this.itemUsePanel) { return; }
+         * Shows the item use confirmation panel, populating it with item details.
+         * *** MODIFIED: Calls _updateModalState. ***
+         * @param {string} itemId - The ID of the item being used.
+         * @param {number} index - The inventory index of the item.
+         */
+         showItemUsePanel(itemId, index) {
+            const gameScene = this.scene.get('GameScene');
+             if (!this.itemUsePanel || !gameScene) {
+                console.error("Cannot show ItemUsePanel: Panel or GameScene missing.");
+                return;
+            }
              const itemInfo = ITEM_TYPES[itemId];
              if (!itemInfo) { console.error(`showItemUsePanel called with invalid itemId: ${itemId}`); return; }
-             // Only show for items with an effect (prevents showing panel for non-usable items like key accidentally)
-             if (!itemInfo.effect) { console.warn(`showItemUsePanel called for non-usable item: ${itemId}`); return; }
+             if (!itemInfo.effect && itemInfo.sellValue <= 0) {
+                 console.warn(`showItemUsePanel called for non-usable/non-sellable item: ${itemId}`);
+                 return;
+             }
 
              this.hideAllPanels(false);
-             this.pendingItemUse = { itemId, index }; // Store item data
+             this.pendingItemUse = { itemId, index };
 
-             // Retrieve elements using stored references from setData in _createItemUsePanel
-             const iconText = this.itemUsePanel.getData('icon');
+             // Retrieve elements using direct scene references
+             const iconText = this.itemUsePanel.getData('icon'); // Keep using getData if structure relies on it
              const nameText = this.itemUsePanel.getData('name');
              const descText = this.itemUsePanel.getData('desc');
              const useButton = this.itemUsePanel.getData('useBtn');
-             const sellButton = this.itemUsePanel.getData('sellBtn'); // <<< GET SELL BUTTON
+             const sellButton = this.itemUsePanel.getData('sellBtn');
              const cancelButton = this.itemUsePanel.getData('cancelBtn');
 
              if (!iconText || !nameText || !descText || !useButton || !sellButton || !cancelButton) {
-                console.error("ItemUsePanel elements missing during show!");
-                return;
+                 console.error("ItemUsePanel elements missing during show!");
+                 return;
              }
 
              // Populate panel content
              iconText.setText(itemInfo.icon);
              nameText.setText(itemInfo.name);
              descText.setText(itemInfo.description);
-             // Update Sell button text with correct value
-             sellButton.setText(`Sell (${itemInfo.sellValue || 0}G)`); // Use sellValue or default 0
+             const baseSellValue = itemInfo.sellValue || 0;
+             const currentFloor = gameScene.currentFloor || 0;
+             const displaySellValue = Math.max(0, baseSellValue + currentFloor);
+             sellButton.setText(`Sell (${displaySellValue}G)`);
+             useButton.setActive(!!itemInfo.effect).setVisible(!!itemInfo.effect);
 
-             // Reposition/resize elements after setting text content
+             // Set panel visible and update modal state
              this.itemUsePanel.setVisible(true);
-             this.isModalActive = true; // Block game input
-             this.positionUIElements(); // Call positioning logic AFTER setting content
+             this._updateModalState(true); // <<< Use helper
+             this.positionUIElements();
          }
 
-        /** Shows the floor clear confirmation panel. */
+
+        /** Shows the floor clear confirmation panel and updates modal state. */
         showFloorClearPanel() {
             if (!this.floorClearPanel) {
                 return;
@@ -7050,7 +7318,7 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             // Update text in case bonus amount changes later
             this.floorClearPanel.list[1].setText(`Floor cleared!\nBonus: ${GAME.FLOOR_CLEAR_BONUS} Gold`);
             this.floorClearPanel.setVisible(true);
-            this.isModalActive = true; // Block game input
+            this._updateModalState(true); // <<< Use helper
             this.positionUIElements(); // Position it correctly
         }
 
@@ -7061,55 +7329,74 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             this.hideAllPanels(); // Hide self and reset modal flag
         }
 
-        /** Hides all Phaser panels and optionally the DOM panel. Resets modal flag if appropriate.
-         * *** MODIFIED: Added challengeRequirementPanel check. ***
+        /**
+         * Hides all Phaser panels and optionally the DOM panel.
+         * Hides the modal blocker if no Phaser panels remain.
+         * Resets the modal flag only if *no* panels (Phaser or DOM) remain.
+         * *** MODIFIED: Decoupled blocker visibility from DOM panel visibility. ***
          */
-        hideAllPanels(calledFromDomClose = false) {
+         hideAllPanels(calledFromDomClose = false) {
+            let wasAPhaserPanelVisible = false; // Track if we are hiding an active Phaser panel
+
             // Hide DOM panel unless this was called *by* the DOM close button itself
             if (!calledFromDomClose && this.instructionsDOM) {
                 this.instructionsDOM.style.display = 'none';
             }
-            // Hide Phaser panels
-            if (this.debugPanel) this.debugPanel.setVisible(false);
-            if (this.itemUsePanel) this.itemUsePanel.setVisible(false);
-            if (this.floorClearPanel) this.floorClearPanel.setVisible(false);
-            if (this.shopPanel) this.shopPanel.setVisible(false);
-            if (this.durableItemPanel) this.durableItemPanel.setVisible(false);
-            if (this.challengeRequirementPanel) this.challengeRequirementPanel.setVisible(false); // <-- ADD THIS
-            if (this.monsterInfoPanel) this.monsterInfoPanel.setVisible(false);
+
+            // Hide Phaser panels and check if any were visible
+            if (this.debugPanel?.visible) { wasAPhaserPanelVisible = true; this.debugPanel.setVisible(false); }
+            if (this.itemUsePanel?.visible) { wasAPhaserPanelVisible = true; this.itemUsePanel.setVisible(false); }
+            if (this.floorClearPanel?.visible) { wasAPhaserPanelVisible = true; this.floorClearPanel.setVisible(false); }
+            if (this.shopPanel?.visible) { wasAPhaserPanelVisible = true; this.shopPanel.setVisible(false); }
+            if (this.durableItemPanel?.visible) { wasAPhaserPanelVisible = true; this.durableItemPanel.setVisible(false); }
+            if (this.challengeRequirementPanel?.visible) { wasAPhaserPanelVisible = true; this.challengeRequirementPanel.setVisible(false); }
+            if (this.monsterInfoPanel?.visible) { wasAPhaserPanelVisible = true; this.monsterInfoPanel.setVisible(false); }
 
             // Clear pending item use data when *any* panel is hidden
             if (this.pendingItemUse) {
-                console.log("Clearing pendingItemUse in hideAllPanels:", this.pendingItemUse); // Optional debug log
+                // console.log("Clearing pendingItemUse in hideAllPanels:", this.pendingItemUse); // Optional debug log
                 this.pendingItemUse = null;
             }
             if (this.pendingDurableAction) {
-                console.log("Clearing pendingDurableAction in hideAllPanels:", this.pendingDurableAction); // Optional debug log
+                // console.log("Clearing pendingDurableAction in hideAllPanels:", this.pendingDurableAction); // Optional debug log
                 this.pendingDurableAction = null;
             }
 
-            // Only deactivate modal flag if *all* panels (DOM and Phaser) are now hidden
-            const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
-            // Add the new panels to this check
-            if (!this.debugPanel?.visible &&
-                !this.itemUsePanel?.visible &&
-                !this.floorClearPanel?.visible &&
-                !this.shopPanel?.visible &&
-                !this.durableItemPanel?.visible &&
-                !this.challengeRequirementPanel?.visible && 
-                !this.monsterInfoPanel?.visible && 
-                !domVisible) {
-                if (this.isModalActive) {
-                    // console.log("Deactivating modal flag."); // Optional debug log
-                    this.isModalActive = false;
-                }
-            } else {
-                // If any panel IS still visible, ensure modal remains active
-                if (!this.isModalActive) {
-                    // console.log("Keeping modal flag active as a panel is still visible."); // Optional debug log
-                    this.isModalActive = true;
-                }
+            // --- MODIFIED LOGIC for Modal State & Blocker ---
+
+            // Check if any *Phaser* panels are still visible (should be false now)
+            const phaserPanelVisible = this.debugPanel?.visible ||
+                                     this.itemUsePanel?.visible ||
+                                     this.floorClearPanel?.visible ||
+                                     this.shopPanel?.visible ||
+                                     this.durableItemPanel?.visible ||
+                                     this.challengeRequirementPanel?.visible ||
+                                     this.monsterInfoPanel?.visible;
+
+            // Hide the blocker if no Phaser panels are visible
+            if (!phaserPanelVisible && this.modalBlocker) {
+                this.modalBlocker.setVisible(false);
+                // console.log("Modal blocker hidden (no Phaser panels visible)."); // Optional Debug
             }
+
+            // Check if the DOM panel is still visible
+            const domVisible = this.instructionsDOM && this.instructionsDOM.style.display !== 'none';
+
+            // Deactivate the modal input block *only if* no Phaser panels AND no DOM panel are visible
+            if (!phaserPanelVisible && !domVisible) {
+                 if (this.isModalActive) { // Only change if it was active
+                    this.isModalActive = false;
+                    // console.log("Modal state DEACTIVATED (no panels visible)."); // Optional Debug
+                 }
+            } else {
+                 // If either a phaser panel OR the dom panel is still visible, ensure the modal flag remains true
+                 if (!this.isModalActive) {
+                     this.isModalActive = true; // Ensure input blocking remains
+                     // console.log("Modal state remains ACTIVE (DOM or another panel visible)."); // Optional Debug
+                 }
+                 // If only the DOM is visible, the blocker should remain hidden (handled above)
+            }
+            // --- END MODIFIED LOGIC ---
         }
 
         /**
@@ -7290,8 +7577,8 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             });
         }
 
-        /** Cleans up listeners and resources when the UI scene is shut down. */
-        shutdown() {
+       /** Cleans up listeners and resources when the UI scene is shut down. */
+       shutdown() {
             console.log("UIScene shutdown: Cleaning up.");
             // Remove DOM listener safely
             if (this.instructionsCloseBtnDOM && this.closeDomInstructionsHandler) {
@@ -7303,18 +7590,17 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
             // Remove listeners for events FROM GameScene
             const gameScene = this.scene.get('GameScene');
-            // Check if GameScene still exists before trying to remove listeners from it
             if (gameScene && gameScene.events) {
-                // Remove all listeners that were added with 'this' as the context (safer than removing all)
+                 // Remove all listeners that were added with 'this' as the context
                 gameScene.events.off('updateStats', this.updateUI, this);
                 gameScene.events.off('resizeUI', this.positionUIElements, this);
                 gameScene.events.off('updateInventory', this.updateInventoryUI, this);
                 gameScene.events.off('showMessage', this.showMessage, this);
                 gameScene.events.off('showFloorClearPopup', this.showFloorClearPanel, this);
-                gameScene.events.off('showShop', this.showShopPanel, this); // Added missing off()
-                gameScene.events.off('showChallengeRequirementPopup', this.showChallengeRequirementPanel, this); // Added missing off()
-                gameScene.events.off('showNewMonsterInfo', this.showMonsterInfoPanel, this); // <<< ADD THIS LINE
-                gameScene.events.off('updateDebugButton', this.updateDebugButtonText, this); // Added missing off()
+                gameScene.events.off('showShop', this.showShopPanel, this);
+                gameScene.events.off('showChallengeRequirementPopup', this.showChallengeRequirementPanel, this);
+                gameScene.events.off('showNewMonsterInfo', this.showMonsterInfoPanel, this);
+                gameScene.events.off('updateDebugButton', this.updateDebugButtonText, this);
             }
             // Remove self-listeners if any (like uiReady)
             this.events.removeAllListeners();
@@ -7326,16 +7612,25 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             }
 
             // Destroy own Phaser Game Objects created by this scene
-            // Using this.children.list is a more robust way to get all top-level objects added by this scene
             this.children.list.forEach(child => {
                 if (child && typeof child.destroy === 'function') {
-                    // Double-check scene ownership before destroying, just in case
-                    if (child.scene === this) {
-                        child.destroy(true); // true destroys children too (important for containers)
+                     if (child.scene === this) {
+                        child.destroy(true);
                     }
                 }
             });
-            this.inventorySlots = []; // Clear the array after destroying the containers within it
+             // Explicitly nullify references after destroying children
+             this.modalBlocker = null; // <<< ADD THIS LINE
+             this.headerBg = null; this.footerBg = null; this.hpText = null; this.atkText = null;
+             this.goldText = null; this.floorText = null; this.keyIconText = null;
+             this.helpButton = null; this.debugButton = null; this.debugPanel = null;
+             this.itemUsePanel = null; this.durableItemPanel = null; this.floorClearPanel = null;
+             this.shopPanel = null; this.challengeRequirementPanel = null; this.monsterInfoPanel = null;
+             this.messageText = null; this.inventorySlots = []; // Clear array after destroying
+             this.labelTextMAX_HP = null; this.costTextMAX_HP = null; this.buyButtonMAX_HP = null;
+             this.labelTextATK = null; this.costTextATK = null; this.buyButtonATK = null;
+             this.labelTextHEAL = null; this.costTextHEAL = null; this.buyButtonHEAL = null;
+             this.debugButtonsMap = {};
 
             console.log("UIScene finished shutdown");
         }
