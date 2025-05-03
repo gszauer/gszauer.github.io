@@ -1,13 +1,11 @@
 @font-face {
   font-family: 'MS Sans Serif';
-  src: url('fonts/ms-sans-serif.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'MS Sans Serif';
-  src: url('fonts/ms-sans-serif-bold.woff2') format('woff2');
   font-weight: bold;
   font-style: normal;
 }

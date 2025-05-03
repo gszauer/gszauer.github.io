@@ -14,6 +14,11 @@ let selectedIcon = null;
 let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 let touchTimeout = null;
 
+// Window constraints
+const MIN_WINDOW_WIDTH = 200;
+const MIN_WINDOW_HEIGHT = 150;
+const TASKBAR_HEIGHT = 28;
+
 // Initialize dark mode
 function updateDarkMode() {
   document.documentElement.classList.toggle('dark-mode', isDarkMode);
@@ -89,13 +94,11 @@ function createDesktopIcons() {
       icon.classList.add('selected');
       selectedIcon = icon;
       
-      // Clear any existing timeout
       if (touchTimeout) clearTimeout(touchTimeout);
       
-      // Set a new timeout
       touchTimeout = setTimeout(() => {
         createWindow(category);
-      }, 100); // Short delay to prevent accidental opens
+      }, 100);
     });
     
     icon.addEventListener('touchend', (e) => {
@@ -106,6 +109,39 @@ function createDesktopIcons() {
   });
 }
 
+function constrainWindow(windowElement, newPosition = null, newSize = null) {
+  const taskbarHeight = TASKBAR_HEIGHT;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight - taskbarHeight;
+  
+  // Get current dimensions
+  const currentRect = windowElement.getBoundingClientRect();
+  let width = newSize ? newSize.width : currentRect.width;
+  let height = newSize ? newSize.height : currentRect.height;
+  let left = newPosition ? newPosition.x : currentRect.left;
+  let top = newPosition ? newPosition.y : currentRect.top;
+  
+  // Ensure minimum size
+  width = Math.max(MIN_WINDOW_WIDTH, width);
+  height = Math.max(MIN_WINDOW_HEIGHT, height);
+  
+  // Constrain size to viewport
+  width = Math.min(width, viewportWidth);
+  height = Math.min(height, viewportHeight);
+  
+  // Adjust position to keep window in bounds
+  left = Math.max(0, Math.min(left, viewportWidth - width));
+  top = Math.max(0, Math.min(top, viewportHeight - height));
+  
+  // Apply constraints
+  windowElement.style.width = `${width}px`;
+  windowElement.style.height = `${height}px`;
+  windowElement.style.left = `${left}px`;
+  windowElement.style.top = `${top}px`;
+  
+  return { width, height, left, top };
+}
+
 // Windows
 function createWindow(category) {
   const windowId = Date.now().toString();
@@ -113,11 +149,17 @@ function createWindow(category) {
   windowElement.className = 'window';
   windowElement.dataset.windowId = windowId;
   
+  // Calculate initial position with offset
   const offset = windows.length * 20;
-  windowElement.style.left = `${100 + offset}px`;
-  windowElement.style.top = `${100 + offset}px`;
-  windowElement.style.width = '600px';
-  windowElement.style.height = '400px';
+  const initialPosition = {
+    x: 100 + offset,
+    y: 100 + offset
+  };
+  
+  const initialSize = {
+    width: 600,
+    height: 400
+  };
   
   let content = '';
   if (category.type === 'file') {
@@ -159,6 +201,9 @@ function createWindow(category) {
   
   desktop.appendChild(windowElement);
   
+  // Constrain initial size and position
+  const constrained = constrainWindow(windowElement, initialPosition, initialSize);
+  
   const windowData = {
     id: windowId,
     element: windowElement,
@@ -195,51 +240,11 @@ function createWindow(category) {
   });
 }
 
-function constrainWindow(windowElement) {
-  const taskbarHeight = 28;
-  const minWidth = 200;
-  const minHeight = 150;
-  
-  const rect = windowElement.getBoundingClientRect();
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight - taskbarHeight;
-  
-  // Ensure minimum size
-  const width = Math.max(minWidth, rect.width);
-  const height = Math.max(minHeight, rect.height);
-  
-  // Calculate new position to keep window in bounds
-  let left = rect.left;
-  let top = rect.top;
-  
-  // Adjust horizontal position
-  if (left + width > viewportWidth) {
-    left = Math.max(0, viewportWidth - width);
-  }
-  if (left < 0) {
-    left = 0;
-  }
-  
-  // Adjust vertical position
-  if (top + height > viewportHeight) {
-    top = Math.max(0, viewportHeight - height);
-  }
-  if (top < 0) {
-    top = 0;
-  }
-  
-  // Apply constraints
-  windowElement.style.width = `${width}px`;
-  windowElement.style.height = `${height}px`;
-  windowElement.style.left = `${left}px`;
-  windowElement.style.top = `${top}px`;
-}
-
 function toggleMaximize(windowId) {
   const window = windows.find(w => w.id === windowId);
   if (!window) return;
 
-  const taskbarHeight = 28;
+  const taskbarHeight = TASKBAR_HEIGHT;
   const availableHeight = document.documentElement.clientHeight - taskbarHeight;
 
   if (!window.isMaximized) {
@@ -266,6 +271,9 @@ function toggleMaximize(windowId) {
     window.element.style.width = window.lastSize.width;
     window.element.style.height = window.lastSize.height;
     window.isMaximized = false;
+    
+    // Ensure window is still in bounds after restore
+    constrainWindow(window.element);
   }
 }
 
@@ -393,15 +401,11 @@ function makeDraggable(element, handle) {
     }
     
     // Calculate new position
-    const newTop = element.offsetTop - pos2;
     const newLeft = element.offsetLeft - pos1;
+    const newTop = element.offsetTop - pos2;
     
-    // Keep window within viewport bounds
-    const maxX = window.innerWidth - element.offsetWidth;
-    const maxY = document.documentElement.clientHeight - 28 - element.offsetHeight; // Subtract taskbar height
-    
-    element.style.top = `${Math.max(0, Math.min(newTop, maxY))}px`;
-    element.style.left = `${Math.max(0, Math.min(newLeft, maxX))}px`;
+    // Apply constraints
+    constrainWindow(element, { x: newLeft, y: newTop });
   };
   
   const dragEnd = () => {
@@ -419,8 +423,6 @@ function makeDraggable(element, handle) {
 
 // Resizable Windows
 function makeResizable(element) {
-  const minWidth = 200;
-  const minHeight = 150;
   const handles = element.querySelectorAll('.resize-handle');
   
   handles.forEach(handle => {
@@ -473,41 +475,28 @@ function makeResizable(element) {
         const deltaX = currentX - startX;
         const deltaY = currentY - startY;
         
-        const taskbarHeight = 28;
-        const maxWidth = window.innerWidth - startLeft;
-        const maxHeight = document.documentElement.clientHeight - taskbarHeight - startTop;
-        
         let newWidth = startWidth;
         let newHeight = startHeight;
         let newLeft = startLeft;
         let newTop = startTop;
         
         if (direction.includes('e')) {
-          newWidth = Math.min(Math.max(minWidth, startWidth + deltaX), maxWidth);
+          newWidth = startWidth + deltaX;
         }
         if (direction.includes('s')) {
-          newHeight = Math.min(Math.max(minHeight, startHeight + deltaY), maxHeight);
+          newHeight = startHeight + deltaY;
         }
         if (direction.includes('w')) {
-          const width = Math.max(minWidth, startWidth - deltaX);
-          if (width <= maxWidth) {
-            newWidth = width;
-            newLeft = startLeft + deltaX;
-          }
+          newWidth = startWidth - deltaX;
+          newLeft = startLeft + deltaX;
         }
         if (direction.includes('n')) {
-          const height = Math.max(minHeight, startHeight - deltaY);
-          if (height <= maxHeight) {
-            newHeight = height;
-            newTop = startTop + deltaY;
-          }
+          newHeight = startHeight - deltaY;
+          newTop = startTop + deltaY;
         }
         
-        // Apply new dimensions and position
-        element.style.width = `${newWidth}px`;
-        element.style.height = `${newHeight}px`;
-        element.style.left = `${Math.max(0, newLeft)}px`;
-        element.style.top = `${Math.max(0, Math.min(newTop, maxHeight))}px`;
+        // Apply constraints
+        constrainWindow(element, { x: newLeft, y: newTop }, { width: newWidth, height: newHeight });
       }
       
       function resizeEnd() {
