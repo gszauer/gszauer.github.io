@@ -1,14 +1,3 @@
-Monster and item descriptions need some love
-
-ui needs to be fixed
-
-IS there any duplicate code we can eliminate?
-
-Is there any way to refactor?
-
-Can you write a tutorial?
-
-
 --- Pre prompt
 I have a phaserjs game that was written by gemini. 
 It's all one file, no external dependancies. 

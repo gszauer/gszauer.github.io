@@ -488,7 +488,7 @@
         scaleMin: 0.8, scaleMaxscaleMax: 1.0,
         isBoss: false,
         maxPerFloor: 1,
-        description: "Low attack, but 50% chance each turn to raise a Skeleton 💀 on an empty revealed tile (max 4 spawned)." // ADDED DESCRIPTION
+        description: "Has a 50% chance each turn to raise a Skeleton 💀." // ADDED DESCRIPTION
     },
     DARK_HEALER: {
         name: "Dark Healer",
@@ -497,7 +497,7 @@
         isBoss: false,
         isHealer: true,
         maxPerFloor: 2,
-        description: "Heals other revealed monsters. If none are damaged, attacks you instead." // ADDED DESCRIPTION
+        description: "Heals other revealed monsters, or attacks you." // ADDED DESCRIPTION
     },
     ARCHER: {
         name: "Evil Archer",
@@ -505,7 +505,7 @@
         scaleMin: 0.8, scaleMaxscaleMax: 1.0,
         isBoss: false,
         maxPerFloor: 3,
-        description: "Attacks you after every action you take while it's revealed!" // ADDED DESCRIPTION
+        description: "Attacks you after every action you take." // ADDED DESCRIPTION
     },
     SHELLSHIFTER_SNAIL: {
         name: "Shellshifter",
@@ -513,14 +513,14 @@
         scaleMin: 0.8, scaleMaxscaleMax: 1.0,
         maxPerFloor: 2,
         shapeshiftsTo: 'SHELLSHIFTER_SHELL',
-        description: "Shapeshifts into a weaker 🐚 form when defeated the first time." // ADDED DESCRIPTION
+        description: "Shapeshifts into a spiked shell 🐚." // ADDED DESCRIPTION
     },
     THIEF: {
         name: "Thief",
         icon: '🥷',
         scaleMin: 0.8, scaleMaxscaleMax: 1.0,
         isBoss: false,
-        description: "Steals some Gold when revealed! Drops it back (plus extra) when defeated." // ADDED DESCRIPTION
+        description: "Steals Gold when revealed! Drops it (plus extra) when defeated." // ADDED DESCRIPTION
     },
     ASSASSIN: {
         name: "Assassin",
@@ -528,42 +528,42 @@
         scaleMin: 0.8, scaleMaxscaleMax: 1.0,
         isBoss: false,
         revealAttackDamageRange: [1, 6],
-        description: "Attacks YOU for 1-6 damage immediately upon being revealed!" // ADDED DESCRIPTION
+        description: "Attacks YOU immediately upon being revealed!" // ADDED DESCRIPTION
     },
     MASTER_THIEF: {
         name: "Master Thief", icon: '🦹', 
-        scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+        scaleMin: 2.0, scaleMaxscaleMax: 4.0,
         isBoss: true,
-        description: "Boss! Only appears if you have valuable Durable items. Steals one when revealed! Defeat it to get the item back." // ADDED DESCRIPTION
+        description: "Boss! Steals durable item when revealed! Defeat it to get the item back." // ADDED DESCRIPTION
     },
      ORC_BOSS: {
          name: "Orc Boss", icon: '🧌', 
-         scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+         scaleMin: 2.0, scaleMaxscaleMax: 4.0,
           isBoss: true,
-         description: "Boss! Hits hard. Defeat it for a guaranteed Durable item reward (or Gold if you have them all)." // ADDED DESCRIPTION
+         description: "Boss! Hits hard. Defeat it for a guaranteed reward." // ADDED DESCRIPTION
      },
      GHOST_BOSS: {
          name: "Ghost Boss", icon: '👻', 
-         scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+         scaleMin: 2.0, scaleMaxscaleMax: 4.0,
           isBoss: true,
-         description: "Boss! High HP, but lower attack. Defeat it for a guaranteed Durable item reward (or Gold)." // ADDED DESCRIPTION
+         description: "Boss! Defeat it for a guaranteed reward." // ADDED DESCRIPTION
      },
      LIZARD_BOSS: {
          name: "Lizard Boss", icon: '🦕', 
-         scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+         scaleMin: 2.0, scaleMaxscaleMax: 4.0,
          isBoss: true,
          shapeshiftsTo: 'DRAGON_BOSS',
-         description: "Boss! Shapeshifts into a fearsome 🐉 form when defeated the first time. Grants reward only after second form falls." // ADDED DESCRIPTION
+         description: "Boss! Shapeshifts into a fearsome dragon 🐉." // ADDED DESCRIPTION
      },
      SQUID_BOSS: {
          name: "Squid Boss", icon: '🦑', 
-         scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+         scaleMin: 3.0, scaleMaxscaleMax: 4.0,
           isBoss: true,
-         description: "Boss! Very high HP. Defeat it for a guaranteed Durable item reward (or Gold)." // ADDED DESCRIPTION
+         description: "Boss! Defeat it for a guaranteed reward." // ADDED DESCRIPTION
      },
      DRAGON_BOSS: { // Second form, less important description?
          name: "Dragon Boss", icon: '🐉', 
-         scaleMin: 1.0, scaleMaxscaleMax: 3.0,
+         scaleMin: 2.0, scaleMaxscaleMax: 4.0,
          isBoss: true,
          description: "The enraged second form of the Lizard Boss!" // ADDED DESCRIPTION
      },
@@ -577,13 +577,13 @@
          name: "Wolf",
          icon: '🐺',
          scaleMin: 0.8, scaleMaxscaleMax: 1.0,
-         description: "Slightly tougher than a spider." // ADDED DESCRIPTION
+         description: "Tougher than a spider, but weaker than an orc." // ADDED DESCRIPTION
      },
      DEVIL: {
          name: "Devil",
          icon: '👹',
          scaleMin: 0.8, scaleMaxscaleMax: 1.0,
-         description: "A standard mid-level threat." // ADDED DESCRIPTION
+         description: "Prowls every floor of the dungeon." // ADDED DESCRIPTION
      },
      BIRD: {
          name: "Firebird",
@@ -598,7 +598,7 @@
          scaleMin: 0.8, scaleMaxscaleMax: 1.0,
          maxPerFloor: 2,
          shapeshiftsTo: 'AVIAN',
-         description: "A fiery avian that transforms into an 🦅 when defeated." // ADDED DESCRIPTION
+         description: "A fiery avian that transforms into a bird 🦅 when defeated." // ADDED DESCRIPTION
      },
      AVIAN: {
          name: "Evil Avian",
@@ -610,7 +610,7 @@
          name: "Bat",
          icon: '🦇',
          scaleMin: 0.8, scaleMaxscaleMax: 1.0,
-         description: "Annoying flyer with decent attack for its HP." // ADDED DESCRIPTION
+         description: "Annoying flyer with decent attack." // ADDED DESCRIPTION
      },
      SKELETON: {
          name: "Skelly",
@@ -629,7 +629,7 @@
          name: "Demon",
          icon: '👿',
          scaleMin: 0.8, scaleMaxscaleMax: 1.0,
-         description: "A powerful demonic foe found in deeper floors." // ADDED DESCRIPTION
+         description: "A powerful demonic foe." // ADDED DESCRIPTION
      },
      OGRE: {
          name: "Ogre",
@@ -651,7 +651,7 @@
          // --- Durable Items (minFloor added for consistency/future use) ---
          VAMPIRE_RING: {
              id: 'VAMPIRE_RING', name: 'Vampire Ring', icon: '💍',
-             description: 'While held: Heal 1-3 HP when damaging a monster.',
+             description: 'While held: Heal when damaging a monster.',
              color: 0xAA0000, consumable: false, category: 'DURABLE',
              effect: null, healOnHitRange: [1, 3], sellValue: 20,
          },
@@ -688,13 +688,13 @@
          SPIKE_TRAP: {
              id: 'SPIKE_TRAP', name: 'Spike Trap', icon: '🪤',
             
-             description: 'On reveal, monsters take damage based on your ATK while this item is in your inventory.',
+             description: 'On reveal, monsters take damage.',
              color: 0xAAAAAA, consumable: false, category: 'DURABLE',
              effect: null, revealDamage: 2, sellValue: 6,
          },
          LANTERN: {
              id: 'LANTERN', name: 'Lantern', icon: '💡',
-             description: 'While in inventory, reveals the location of the hidden key (🗝️) on the grid.',
+             description: 'While in inventory, reveals the location of the hidden key (🗝️).',
              color: 0xFFFFE0, consumable: false, category: 'DURABLE',
              effect: null, sellValue: 8,
          },
@@ -2647,7 +2647,12 @@ _generateStandardFloorLayout(possibleCoords, gridRawData) {
     // --- 11. Place Barrels and Random Tiles ---
     let numBarrels = Math.min(getRandomInt(1, 2), possibleCoords.length);
     this.placeTiles(possibleCoords, numBarrels, TILE_TYPE.BARREL, null, gridRawData);
-    let numRandomItemTiles = Math.min(getRandomInt(0, 1), possibleCoords.length);
+    let numRandomItemTiles = 0;
+    
+    if (currentFloor >= 10) { 
+        numRandomItemTiles = Math.min(getRandomInt(0, 1), possibleCoords.length);
+    }
+    
     this.placeTiles(possibleCoords, numRandomItemTiles, TILE_TYPE.RANDOM_ITEM, null, gridRawData);
 
     // --- 12. Fill Remaining Spots with Empty ---
@@ -5116,82 +5121,92 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
         // Inside the GameScene class
 
-/**
- * Applies the SHEEP_ALL item effect. [Helper for useItem]
- * Handles key drop correctly if the key-holding monster is sheeped.
- * Only consumes the item if monsters were successfully transformed.
- * *** MODIFIED: Sets sheep HP/ATK to fixed low values instead of scaling. ***
- * @param {object} itemInfo - The full item definition from ITEM_TYPES.
- * @param {object} effect - The specific effect object { type: 'SHEEP_ALL', newAtk: number }.
- * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
- * @private Internal helper method.
- */
- _applySheepAllEffect(itemInfo, effect) {
-    let sheepCount = 0;
-    let appliedStatus = false;
-    let keyDroppedThisAction = false; // Flag if the key was dropped
+// Inside the GameScene class
 
-    for (let r = 0; r < GRID.ROWS; r++) {
-        for (let c = 0; c < GRID.COLS; c++) {
-            let targetTile = this.tileObjects[r]?.[c];
-            let targetData = targetTile?.tileData;
+        /**
+         * Applies the SHEEP_ALL item effect. [Helper for useItem]
+         * Handles key drop correctly if the key-holding monster is sheeped.
+         * Only consumes the item if monsters were successfully transformed.
+         * *** MODIFIED: Sets sheep HP/ATK to fixed low values instead of scaling. ***
+         * *** MODIFIED: Calls updateNeighborStates for non-keyholding sheeped monsters. ***
+         * @param {object} itemInfo - The full item definition from ITEM_TYPES.
+         * @param {object} effect - The specific effect object { type: 'SHEEP_ALL', newAtk: number }.
+         * @returns {object} Result object { consumed: boolean, appliedStatusEffect: boolean }.
+         * @private Internal helper method.
+         */
+         _applySheepAllEffect(itemInfo, effect) {
+            let sheepCount = 0;
+            let appliedStatus = false;
+            let keyDroppedThisAction = false; // Flag if the key was dropped
 
-            // Target revealed, living monsters that aren't already sheep
-            if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED && !targetData.isSheep) {
+            for (let r = 0; r < GRID.ROWS; r++) {
+                for (let c = 0; c < GRID.COLS; c++) {
+                    let targetTile = this.tileObjects[r]?.[c];
+                    let targetData = targetTile?.tileData;
 
-                const monsterHadKey = targetData.hasKey; // Check BEFORE transforming
-                const originalMonsterType = targetData.monsterType; // Store for logging
+                    // Target revealed, living monsters that aren't already sheep
+                    if (targetData && targetData.type === TILE_TYPE.MONSTER && targetData.hp > 0 && targetData.state === TILE_STATE.REVEALED && !targetData.isSheep) {
 
-                // *** NEW: Define fixed Sheep stats ***
-                const sheepMaxHp = 5; // Or adjust as desired
-                const sheepHp = Math.min(targetData.hp, sheepMaxHp); // Sheep keeps current HP up to its new max
-                const sheepAtk = 1; // Always weak attack
+                        const monsterHadKey = targetData.hasKey; // Check BEFORE transforming
+                        const originalMonsterType = targetData.monsterType; // Store for logging
 
-                // Transform into sheep (set hasKey: false for sheep state)
-                targetTile.setData({
-                    isSheep: true,
-                    maxHp: sheepMaxHp,      // Set fixed max HP
-                    hp: sheepHp,            // Set current HP (capped)
-                    atk: sheepAtk,          // Set fixed ATK
-                    isPoisoned: false, poisonTurns: 0, // Remove other statuses
-                    frozenTurns: 0,
-                    hasKey: false, // Sheep itself doesn't hold key
-                    isHealer: false,
-                    monsterType: originalMonsterType, // Keep original type maybe? Or set to SHEEP? Keep for now.
-                    isBoss: false, // Clear boss flag
-                    shapeshiftsTo: null // Clear shapeshift data
-                });
-                sheepCount++;
-                appliedStatus = true;
-                console.log(`Transformed <span class="math-inline">\{originalMonsterType \|\| 'Monster'\} at \[</span>{r},${c}] into a sheep (HP: <span class="math-inline">\{sheepHp\}/</span>{sheepMaxHp}, ATK: ${sheepAtk}).`);
+                        // *** NEW: Define fixed Sheep stats ***
+                        const sheepMaxHp = 5; // Or adjust as desired
+                        const sheepHp = Math.min(targetData.hp, sheepMaxHp); // Sheep keeps current HP up to its new max
+                        const sheepAtk = 1; // Always weak attack
 
-                if (monsterHadKey) {
-                    console.warn(`Monster holding key at [<span class="math-inline">\{r\},</span>{c}] turned into sheep! Dropping key.`);
-                    keyDroppedThisAction = true; // Mark that we handled the key drop
-                    this.monsterCount--; // Decrement monster count as it's no longer a monster
+                        // Transform into sheep (set hasKey: false for sheep state)
+                        targetTile.setData({
+                            isSheep: true,
+                            maxHp: sheepMaxHp,      // Set fixed max HP
+                            hp: sheepHp,            // Set current HP (capped)
+                            atk: sheepAtk,          // Set fixed ATK
+                            isPoisoned: false, poisonTurns: 0, // Remove other statuses
+                            frozenTurns: 0,
+                            hasKey: false, // Sheep itself doesn't hold key
+                            isHealer: false,
+                            monsterType: originalMonsterType, // Keep original type maybe? Or set to SHEEP? Keep for now.
+                            isBoss: false, // Clear boss flag
+                            shapeshiftsTo: null // Clear shapeshift data
+                        });
+                        sheepCount++;
+                        appliedStatus = true;
+                        console.log(`Transformed ${originalMonsterType || 'Monster'} at [${r},${c}] into a sheep (HP: ${sheepHp}/${sheepMaxHp}, ATK: ${sheepAtk}).`);
 
-                    // Overwrite the sheep tile data to become the Key Item
-                    targetTile.setData({ type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM', revealed: true, state: TILE_STATE.REVEALED, monsterType: null, hp: 0, maxHp: 0, atk: 0, hasKey: false, attackedOnce: false, isPoisoned: false, poisonTurns: 0, isSheep: false, frozenTurns: 0, isBoss: false, shapeshiftsTo: null, isHealer: false, isCycling: false, cycleIndex: 0, lastCycleTime: 0, damage: 0, challengeType: null, debugMarker: null });
-                    // Update game state flags for the key
-                    this.keyDroppedOnFloor = true;
-                    this.keyHolderCoords = null;
-                    // Update neighbors since the tile is now an Item
-                    this.updateNeighborStates(r, c, false, false);
-                }
-            }
-        } // End col loop
-    } // End row loop
+                        if (monsterHadKey) {
+                            console.warn(`Monster holding key at [${r},${c}] turned into sheep! Dropping key.`);
+                            keyDroppedThisAction = true; // Mark that we handled the key drop
+                            this.monsterCount--; // Decrement monster count as it's no longer a monster
 
-    // --- Final Messaging & State Updates ---
-    if (keyDroppedThisAction) { this.events.emit('showMessage', 'The key dropped from a transformed monster!'); this.events.emit('updateStats', this.getPlayerStats()); }
-    else if (sheepCount > 0) { this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`); }
-    else { this.events.emit('showMessage', `No valid monsters to turn into sheep!`); }
+                            // Overwrite the sheep tile data to become the Key Item
+                            targetTile.setData({ type: TILE_TYPE.ITEM, itemId: 'KEY_ITEM', revealed: true, state: TILE_STATE.REVEALED, monsterType: null, hp: 0, maxHp: 0, atk: 0, hasKey: false, attackedOnce: false, isPoisoned: false, poisonTurns: 0, isSheep: false, frozenTurns: 0, isBoss: false, shapeshiftsTo: null, isHealer: false, isCycling: false, cycleIndex: 0, lastCycleTime: 0, damage: 0, challengeType: null, debugMarker: null });
+                            // Update game state flags for the key
+                            this.keyDroppedOnFloor = true;
+                            this.keyHolderCoords = null;
+                            // Update neighbors since the tile is now an Item
+                            this.updateNeighborStates(r, c, false, false); // isMonsterBlock=false, isMonsterUnblock=false
+                        } else {
+                            // <<< --- ADDED THIS CALL --- >>>
+                            // If the monster didn't have the key, it's now a (non-blocking) sheep.
+                            // Explicitly update neighbors to remove the 'blocked' state.
+                            console.log(`Sheep transformation at [${r},${c}] triggering neighbor update (unblocking).`);
+                            this.updateNeighborStates(r, c, false, true); // isMonsterBlock=false, isMonsterUnblock=true
+                            // <<< --- END ADDED CALL --- >>>
+                        }
+                    }
+                } // End col loop
+            } // End row loop
 
-    return {
-        consumed: itemInfo.consumable && sheepCount > 0, // Consume only if transformed
-        appliedStatusEffect: appliedStatus
-    };
-} // End _applySheepAllEffect
+            // --- Final Messaging & State Updates ---
+            if (keyDroppedThisAction) { this.events.emit('showMessage', 'The key dropped from a transformed monster!'); this.events.emit('updateStats', this.getPlayerStats()); }
+            else if (sheepCount > 0) { this.events.emit('showMessage', `Turned ${sheepCount} monsters into sheep!`); }
+            else { this.events.emit('showMessage', `No valid monsters to turn into sheep!`); }
+
+            return {
+                consumed: itemInfo.consumable && sheepCount > 0, // Consume only if transformed
+                appliedStatusEffect: appliedStatus
+            };
+        } // End _applySheepAllEffect
 
         /**
          * Removes an item from the player's inventory at the specified index. [Helper for useItem]
@@ -6307,67 +6322,90 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
             this.debugPanel.add([debugPanelBg, closeButtonDebug, ...debugButtons]);
         }
 
+        // Inside UIScene class
+
         /**
-          * Creates the Item Use Panel container and its contents.
-          * *** MODIFIED: Added Sell button, uses 3-button layout. ***
-          * Called by create().
-          */
-          _createItemUsePanel() {
-             const gameScene = this.scene.get('GameScene'); // Reference GameScene
-             this.itemUsePanel = this.add.container(0, 0).setDepth(102).setVisible(false);
+         * Creates the Item Use Panel container and its contents.
+         * *** MODIFIED: Added Sell button, uses 3-button layout. ***
+         * *** MODIFIED: Added Header Text and Close X Button. ***
+         * Called by create().
+         */
+         _createItemUsePanel() {
+            const gameScene = this.scene.get('GameScene'); // Reference GameScene
+            this.itemUsePanel = this.add.container(0, 0).setDepth(102).setVisible(false);
 
-             const panelWidth = 300; // Keep consistent width?
-             const panelHeight = 220; // Increased height for 3 buttons
+            const panelWidth = 300;
+            // *** INCREASED HEIGHT ***
+            const panelHeight = 280; // Increased height for header and button layout
 
-             const itemPanelBg = this.add.rectangle(0, 0, panelWidth, panelHeight, COLORS.PANEL_BG, 0.95)
-                 .setOrigin(0.5)
-                 .setStrokeStyle(2, COLORS.TEXT);
-             itemPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
-                 event.stopPropagation();
-             });
+            const itemPanelBg = this.add.rectangle(0, 0, panelWidth, panelHeight, COLORS.PANEL_BG, 0.95)
+                .setOrigin(0.5)
+                .setStrokeStyle(2, COLORS.TEXT);
+            itemPanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
+                event.stopPropagation();
+            });
 
-             const itemIconText = this.add.text(0, 0, '', { fontSize: '48px' }).setOrigin(0.5);
-             const itemNameText = this.add.text(0, 0, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
-             const itemDescText = this.add.text(0, 0, '', {
-                 fontSize: '14px',
-                 fill: '#DDD',
-                 align: 'center',
-                 wordWrap: { width: panelWidth * 0.85 } // Allow more wrap width
-             }).setOrigin(0.5);
+            // --- NEW: Header Elements ---
+            const headerText = this.add.text(0, 0, 'Use Item', {
+                fontSize: '18px', fill: COLORS.GOLD_TEXT, fontStyle: 'bold'
+            }).setOrigin(0.5);
 
-             // Button Styles
-             const buttonBaseStyle = {
-                 fontSize: '16px',
-                 fill: '#FFF',
-                 padding: { x: 15, y: 8 }
-             };
-             const buttonConfirmStyle = { ...buttonBaseStyle, backgroundColor: COLORS.CONFIRM_BTN_BG };
-             const buttonSellStyle = { ...buttonBaseStyle, backgroundColor: COLORS.GOLD_TEXT, color: COLORS.TEXT_DARK };
-             const buttonCancelStyle = { ...buttonBaseStyle, backgroundColor: COLORS.CANCEL_BTN_BG };
+            const closeButtonX = this.add.text(0, 0, '[X]', {
+                font: 'bold 18px Arial', fill: COLORS.CLOSE_BUTTON_IDLE_TEXT, padding: { x: 5, y: 2 }
+            }).setOrigin(0.5).setInteractive();
+            closeButtonX.on('pointerdown', () => this.hideAllPanels());
+            closeButtonX.on('pointerover', () => closeButtonX.setColor(COLORS.CLOSE_BUTTON_HOVER_TEXT));
+            closeButtonX.on('pointerout', () => closeButtonX.setColor(COLORS.CLOSE_BUTTON_IDLE_TEXT));
+            // --- END NEW Header ---
 
-             // Create Buttons
-             const useButton = this.add.text(0, 0, 'Use', buttonConfirmStyle).setOrigin(0.5).setInteractive();
-             const sellButton = this.add.text(0, 0, 'Sell (1G)', buttonSellStyle).setOrigin(0.5).setInteractive(); // Default text
-             const cancelButton = this.add.text(0, 0, 'Cancel', buttonCancelStyle).setOrigin(0.5).setInteractive();
+            // Original Content Elements
+            const itemIconText = this.add.text(0, 0, '', { 
+                fontSize: '64px', // Large icon
+                fill: '#FFF', // Ensure fill is set if needed
+                padding: { x: 10, y: 10 } // Add padding around the icon
+            }).setOrigin(0.5);
+            const itemNameText = this.add.text(0, 0, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+            const itemDescText = this.add.text(0, 0, '', {
+                fontSize: '14px',
+                fill: '#DDD',
+                align: 'center',
+                wordWrap: { width: panelWidth * 0.85 }
+            }).setOrigin(0.5);
 
-             // --- Button Logic ---
-             useButton.on('pointerdown', () => {
-                 if (this.pendingItemUse) {
-                     const itemToUse = this.pendingItemUse;
-                     this.pendingItemUse = null;
-                     if (gameScene && gameScene.events) {
-                         gameScene.events.emit('useItem', itemToUse);
-                     } else {
-                         console.error("Cannot emit useItem event, GameScene not found.");
-                     }
-                     this.hideAllPanels();
-                 } else {
-                     console.warn("Use button clicked but no pending item use data found.");
-                     this.hideAllPanels();
-                 }
-             });
+            // Button Styles (remain the same)
+            const buttonBaseStyle = {
+                fontSize: '16px',
+                fill: '#FFF',
+                padding: { x: 15, y: 8 }
+            };
+            const buttonConfirmStyle = { ...buttonBaseStyle, backgroundColor: COLORS.CONFIRM_BTN_BG };
+            // Adjusted sell style slightly for better contrast maybe? (Optional)
+            const buttonSellStyle = { ...buttonBaseStyle, backgroundColor: COLORS.GOLD_TEXT, fill: COLORS.TEXT_DARK };
+            const buttonCancelStyle = { ...buttonBaseStyle, backgroundColor: COLORS.CANCEL_BTN_BG };
 
-             sellButton.on('pointerdown', () => {
+            // Create Buttons
+            const useButton = this.add.text(0, 0, 'Use', buttonConfirmStyle).setOrigin(0.5).setInteractive();
+            const sellButton = this.add.text(0, 0, 'Sell (1G)', buttonSellStyle).setOrigin(0.5).setInteractive(); // Default text
+            const cancelButton = this.add.text(0, 0, 'Cancel', buttonCancelStyle).setOrigin(0.5).setInteractive();
+
+            // --- Button Logic (remains the same) ---
+            useButton.on('pointerdown', () => {
+                if (this.pendingItemUse) {
+                    const itemToUse = this.pendingItemUse;
+                    this.pendingItemUse = null;
+                    if (gameScene && gameScene.events) {
+                        gameScene.events.emit('useItem', itemToUse);
+                    } else {
+                        console.error("Cannot emit useItem event, GameScene not found.");
+                    }
+                    this.hideAllPanels();
+                } else {
+                    console.warn("Use button clicked but no pending item use data found.");
+                    this.hideAllPanels();
+                }
+            });
+
+            sellButton.on('pointerdown', () => {
                 if (this.pendingItemUse) {
                     const itemToSell = this.pendingItemUse; // Use the same pending data
                     this.pendingItemUse = null; // Clear pending data
@@ -6382,27 +6420,40 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
                     console.warn("Sell button clicked but no pending item use data found.");
                     this.hideAllPanels();
                 }
-             });
+            });
 
-             cancelButton.on('pointerdown', () => {
-                 this.hideAllPanels();
-             });
+            cancelButton.on('pointerdown', () => {
+                this.hideAllPanels();
+            });
 
-             // Add elements to the container
-             // Order matters for positioning later if accessed by index (though storing references is better)
-             this.itemUsePanel.add([itemPanelBg, itemIconText, itemNameText, itemDescText, useButton, sellButton, cancelButton]);
+            // Add elements to the container (including new header elements)
+            this.itemUsePanel.add([
+                itemPanelBg,
+                headerText,       // <-- NEW
+                closeButtonX,     // <-- NEW
+                itemIconText,
+                itemNameText,
+                itemDescText,
+                useButton,
+                sellButton,
+                cancelButton
+            ]);
 
-             // Store button references on the container's data for easy access in showItemUsePanel
-             this.itemUsePanel.setData({
-                 bg: itemPanelBg,
-                 icon: itemIconText,
-                 name: itemNameText,
-                 desc: itemDescText,
-                 useBtn: useButton,
-                 sellBtn: sellButton, // <<< ADDED REFERENCE
-                 cancelBtn: cancelButton
-             });
-         }
+            // Store button references on the container's data for easy access
+            this.itemUsePanel.setData({
+                bg: itemPanelBg,
+                header: headerText,       // <-- NEW
+                closeX: closeButtonX,     // <-- NEW
+                icon: itemIconText,
+                name: itemNameText,
+                desc: itemDescText,
+                useBtn: useButton,
+                sellBtn: sellButton,
+                cancelBtn: cancelButton
+            });
+        } // End _createItemUsePanel
+
+        
 
         /**
           * Creates the Durable Item Panel container and its contents.
@@ -6415,7 +6466,12 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
              durablePanelBg.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
                  event.stopPropagation();
              });
-             const durableIconText = this.add.text(0, -50, '', { fontSize: '48px' }).setOrigin(0.5);
+             const durableIconText = this.add.text(0, -50, '', { 
+                fontSize: '64px', // Large icon
+                fill: '#FFF', // Ensure fill is set if needed
+                padding: { x: 10, y: 10 } // Add padding around the icon
+
+              }).setOrigin(0.5);
              const durableNameText = this.add.text(0, -10, '', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
              const durableDescText = this.add.text(0, 30, '', {
                  fontSize: '14px',
@@ -6977,38 +7033,74 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
         }
 
         /**
-         * Positions the Item Use Panel and its contents.
-         * @private Helper for _positionPanels.
-         */
-        _positionItemUsePanel(panelCenterX, panelCenterY, width, height, smallPadding) {
-            if (this.itemUsePanel && this.itemUsePanel.visible) {
-                const panelWidth = Math.min(width * 0.8, 300);
-                const panelHeight = Math.min(height * 0.6, 220);
-                this.itemUsePanel.setPosition(panelCenterX, panelCenterY);
+         * Positions the Item Use Panel and its contents.
+         * *** MODIFIED: Increased height, added header positioning, repositioned buttons. ***
+         * @private Helper for _positionPanels.
+         */
+        _positionItemUsePanel(panelCenterX, panelCenterY, width, height, smallPadding) {
+            if (this.itemUsePanel && this.itemUsePanel.visible) {
+                // Use updated dimensions matching _createItemUsePanel
+                const panelWidth = Math.min(width * 0.8, 300);
+                const panelHeight = Math.min(height * 0.7, 280); // <-- INCREASED HEIGHT
+                this.itemUsePanel.setPosition(panelCenterX, panelCenterY);
 
-                const bg = this.itemUsePanel.getData('bg');
-                const icon = this.itemUsePanel.getData('icon');
-                const name = this.itemUsePanel.getData('name');
-                const desc = this.itemUsePanel.getData('desc');
-                const useBtn = this.itemUsePanel.getData('useBtn');
-                const sellBtn = this.itemUsePanel.getData('sellBtn');
-                const cancelBtn = this.itemUsePanel.getData('cancelBtn');
+                // Retrieve elements using stored references (including new ones)
+                const bg = this.itemUsePanel.getData('bg');
+                const header = this.itemUsePanel.getData('header'); // <-- NEW
+                const closeX = this.itemUsePanel.getData('closeX'); // <-- NEW
+                const icon = this.itemUsePanel.getData('icon');
+                const name = this.itemUsePanel.getData('name');
+                const desc = this.itemUsePanel.getData('desc');
+                const useBtn = this.itemUsePanel.getData('useBtn');
+                const sellBtn = this.itemUsePanel.getData('sellBtn');
+                const cancelBtn = this.itemUsePanel.getData('cancelBtn');
 
-                if(bg && icon && name && desc && useBtn && sellBtn && cancelBtn) {
-                    bg.setSize(panelWidth, panelHeight).setPosition(0, 0);
-                    icon.setPosition(-panelWidth * 0.25, -panelHeight * 0.25).setFontSize(Math.max(30, Math.floor(panelHeight * 0.2)));
-                    name.setPosition(0, -panelHeight * 0.35);
-                    desc.setPosition(0, -panelHeight*0.05).setWordWrapWidth(panelWidth * 0.85);
+                // Check if all required elements exist
+                if(bg && header && closeX && icon && name && desc && useBtn && sellBtn && cancelBtn) {
+                    // Position Background
+                    bg.setSize(panelWidth, panelHeight).setPosition(0, 0);
 
-                    const buttonY = panelHeight * 0.35;
-                    useBtn.setPosition(-panelWidth * 0.25, buttonY);
-                    sellBtn.setPosition(0, buttonY);
-                    cancelBtn.setPosition(panelWidth * 0.25, buttonY);
-                } else {
-                    console.error("ItemUsePanel: Missing elements for positioning.");
-                }
-            }
-        }
+                    // --- Position Header ---
+                    const headerY = -panelHeight * 0.5 + 25; // Y position for header elements
+                    header.setPosition(0, headerY);
+                    closeX.setPosition(panelWidth * 0.5 - 20, headerY - 5); // Top-right corner relative to headerY
+                    // --- End Header Positioning ---
+
+                    // Adjust starting Y for content below header
+                    let currentContentY = headerY + header.height + 40; // Start below header
+
+                    // Position Icon and Name (closer together vertically)
+                    icon.setPosition(0, currentContentY).setFontSize(Math.max(36, Math.floor(panelHeight * 0.18)));
+                    currentContentY += icon.height * 0.5 + 15; // Move down from icon center
+
+                    name.setPosition(0, currentContentY);
+                    currentContentY += name.height + 10; // Move down from name bottom
+
+                    // Position Description
+                    desc.setPosition(0, currentContentY).setWordWrapWidth(panelWidth * 0.85);
+                    // Calculate space remaining for buttons
+                    const descBottom = currentContentY + desc.height * 0.5;
+                    const panelBottomEdge = panelHeight * 0.5;
+                    const buttonAreaStartY = descBottom + 20; // Start button area below description
+                    const buttonAreaHeight = panelBottomEdge - buttonAreaStartY - 15; // Space available for buttons
+
+                    // --- Position Buttons ---
+                    // Row 1: Sell Button (Centered Horizontally)
+                    const sellButtonY = buttonAreaStartY + buttonAreaHeight * 0.25; // Position in upper part of button area
+                    sellBtn.setPosition(0, sellButtonY);
+
+                    // Row 2: Use and Cancel Buttons (Side-by-side)
+                    const useCancelButtonY = sellButtonY + sellBtn.height + 15; // Position below the sell button
+                    const useCancelButtonXOffset = panelWidth * 0.25; // Offset from center
+                    useBtn.setPosition(-useCancelButtonXOffset, useCancelButtonY);
+                    cancelBtn.setPosition(useCancelButtonXOffset, useCancelButtonY);
+                    // --- End Button Positioning ---
+
+                } else {
+                    console.error("ItemUsePanel: Missing elements for positioning.");
+                }
+            }
+        } // End _positionItemUsePanel
 
         /**
          * Positions the Floor Clear Panel and its contents.
@@ -7036,7 +7128,7 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
         _positionDurableItemPanel(panelCenterX, panelCenterY, width, height, smallPadding) {
             if (this.durableItemPanel && this.durableItemPanel.visible) {
                 const panelWidth = 300;
-                const panelHeight = 200;
+                const panelHeight = 240;
                 this.durableItemPanel.setPosition(panelCenterX, panelCenterY);
 
                 const bg = this.durableItemPanel.getData('bg');
@@ -7048,11 +7140,14 @@ assignKey(monsterCoords, gridRawData, possibleCoords) {
 
                 if(bg && icon && name && desc && sellBtn && closeBtn) {
                     bg.setSize(panelWidth, panelHeight).setPosition(0,0);
-                    icon.setPosition(0, -panelHeight * 0.30);
-                    name.setPosition(0, -panelHeight * 0.05);
+
+                    let cursorY = -panelHeight * 0.30 + 5;
+                    icon.setPosition(0, cursorY);
+                    cursorY += 45;
+                    name.setPosition(0,cursorY);
                     desc.setPosition(0, panelHeight * 0.15).setWordWrapWidth(panelWidth * 0.85);
-                    sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40);
-                    closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40);
+                    sellBtn.setPosition(-panelWidth * 0.25, panelHeight * 0.40 - 5);
+                    closeBtn.setPosition(panelWidth * 0.25, panelHeight * 0.40 - 5);
                 } else {
                     console.error("DurableItemPanel: Missing elements for positioning.");
                 }
