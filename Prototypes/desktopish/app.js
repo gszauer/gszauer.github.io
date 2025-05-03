@@ -66,7 +66,7 @@ function createDesktopIcons() {
     icon.style.top = `${25 + index * 90}px`;
     
     icon.innerHTML = `
-      <span style="font-size: 32px">${category.icon}</span>
+      <span>${category.icon}</span>
       <span>${category.title}</span>
     `;
     
@@ -127,7 +127,7 @@ function createWindow(category) {
       <div class="folder-grid">
         ${category.items.map(item => `
           <a href="${item.link}" class="folder-item" target="_blank">
-            <span style="font-size: 32px">${item.icon}</span>
+            <span>${item.icon}</span>
             <span class="item-name">${item.name}</span>
           </a>
         `).join('')}
@@ -188,6 +188,51 @@ function createWindow(category) {
 
   // Make window resizable
   makeResizable(windowElement);
+
+  // Handle window constraints on resize
+  window.addEventListener('resize', () => {
+    constrainWindow(windowElement);
+  });
+}
+
+function constrainWindow(windowElement) {
+  const taskbarHeight = 28;
+  const minWidth = 200;
+  const minHeight = 150;
+  
+  const rect = windowElement.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight - taskbarHeight;
+  
+  // Ensure minimum size
+  const width = Math.max(minWidth, rect.width);
+  const height = Math.max(minHeight, rect.height);
+  
+  // Calculate new position to keep window in bounds
+  let left = rect.left;
+  let top = rect.top;
+  
+  // Adjust horizontal position
+  if (left + width > viewportWidth) {
+    left = Math.max(0, viewportWidth - width);
+  }
+  if (left < 0) {
+    left = 0;
+  }
+  
+  // Adjust vertical position
+  if (top + height > viewportHeight) {
+    top = Math.max(0, viewportHeight - height);
+  }
+  if (top < 0) {
+    top = 0;
+  }
+  
+  // Apply constraints
+  windowElement.style.width = `${width}px`;
+  windowElement.style.height = `${height}px`;
+  windowElement.style.left = `${left}px`;
+  windowElement.style.top = `${top}px`;
 }
 
 function toggleMaximize(windowId) {
@@ -300,27 +345,54 @@ function minimizeWindow(windowId) {
 // Draggable Windows
 function makeDraggable(element, handle) {
   let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let isDragging = false;
   
-  const dragMouseDown = (e) => {
+  const dragStart = (e) => {
     if (e.target.closest('.window-button') || e.target.closest('.resize-handle')) return;
     
     e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
+    isDragging = true;
     
-    document.addEventListener('mousemove', elementDrag);
-    document.addEventListener('mouseup', closeDragElement);
+    // Get initial position
+    if (e.type === 'mousedown') {
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    } else if (e.type === 'touchstart') {
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    }
     
     setActiveWindow(element.dataset.windowId);
+    
+    // Add move and end event listeners
+    if (e.type === 'mousedown') {
+      document.addEventListener('mousemove', dragMove);
+      document.addEventListener('mouseup', dragEnd);
+    } else if (e.type === 'touchstart') {
+      document.addEventListener('touchmove', dragMove, { passive: false });
+      document.addEventListener('touchend', dragEnd);
+    }
   };
   
-  const elementDrag = (e) => {
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
+  const dragMove = (e) => {
+    if (!isDragging) return;
     
+    e.preventDefault();
+    
+    // Calculate new position
+    if (e.type === 'mousemove') {
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    } else if (e.type === 'touchmove') {
+      pos1 = pos3 - e.touches[0].clientX;
+      pos2 = pos4 - e.touches[0].clientY;
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    }
+    
+    // Calculate new position
     const newTop = element.offsetTop - pos2;
     const newLeft = element.offsetLeft - pos1;
     
@@ -332,12 +404,17 @@ function makeDraggable(element, handle) {
     element.style.left = `${Math.max(0, Math.min(newLeft, maxX))}px`;
   };
   
-  const closeDragElement = () => {
-    document.removeEventListener('mousemove', elementDrag);
-    document.removeEventListener('mouseup', closeDragElement);
+  const dragEnd = () => {
+    isDragging = false;
+    document.removeEventListener('mousemove', dragMove);
+    document.removeEventListener('mouseup', dragEnd);
+    document.removeEventListener('touchmove', dragMove);
+    document.removeEventListener('touchend', dragEnd);
   };
   
-  handle.addEventListener('mousedown', dragMouseDown);
+  // Add mouse and touch event listeners
+  handle.addEventListener('mousedown', dragStart);
+  handle.addEventListener('touchstart', dragStart, { passive: false });
 }
 
 // Resizable Windows
@@ -347,62 +424,105 @@ function makeResizable(element) {
   const handles = element.querySelectorAll('.resize-handle');
   
   handles.forEach(handle => {
-    handle.addEventListener('mousedown', initResize);
+    let startX, startY, startWidth, startHeight, startLeft, startTop;
+    let isResizing = false;
+    
+    const resizeStart = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      
+      const direction = handle.classList[1];
+      
+      // Get initial dimensions
+      if (e.type === 'mousedown') {
+        startX = e.clientX;
+        startY = e.clientY;
+      } else if (e.type === 'touchstart') {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
+      
+      startWidth = parseInt(getComputedStyle(element).width, 10);
+      startHeight = parseInt(getComputedStyle(element).height, 10);
+      startLeft = element.offsetLeft;
+      startTop = element.offsetTop;
+      
+      // Add move and end event listeners
+      if (e.type === 'mousedown') {
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', resizeEnd);
+      } else if (e.type === 'touchstart') {
+        document.addEventListener('touchmove', resize, { passive: false });
+        document.addEventListener('touchend', resizeEnd);
+      }
+      
+      function resize(e) {
+        if (!isResizing) return;
+        e.preventDefault();
+        
+        let currentX, currentY;
+        if (e.type === 'mousemove') {
+          currentX = e.clientX;
+          currentY = e.clientY;
+        } else if (e.type === 'touchmove') {
+          currentX = e.touches[0].clientX;
+          currentY = e.touches[0].clientY;
+        }
+        
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        
+        const taskbarHeight = 28;
+        const maxWidth = window.innerWidth - startLeft;
+        const maxHeight = document.documentElement.clientHeight - taskbarHeight - startTop;
+        
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newLeft = startLeft;
+        let newTop = startTop;
+        
+        if (direction.includes('e')) {
+          newWidth = Math.min(Math.max(minWidth, startWidth + deltaX), maxWidth);
+        }
+        if (direction.includes('s')) {
+          newHeight = Math.min(Math.max(minHeight, startHeight + deltaY), maxHeight);
+        }
+        if (direction.includes('w')) {
+          const width = Math.max(minWidth, startWidth - deltaX);
+          if (width <= maxWidth) {
+            newWidth = width;
+            newLeft = startLeft + deltaX;
+          }
+        }
+        if (direction.includes('n')) {
+          const height = Math.max(minHeight, startHeight - deltaY);
+          if (height <= maxHeight) {
+            newHeight = height;
+            newTop = startTop + deltaY;
+          }
+        }
+        
+        // Apply new dimensions and position
+        element.style.width = `${newWidth}px`;
+        element.style.height = `${newHeight}px`;
+        element.style.left = `${Math.max(0, newLeft)}px`;
+        element.style.top = `${Math.max(0, Math.min(newTop, maxHeight))}px`;
+      }
+      
+      function resizeEnd() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', resizeEnd);
+        document.removeEventListener('touchmove', resize);
+        document.removeEventListener('touchend', resizeEnd);
+      }
+    };
+    
+    // Add mouse and touch event listeners
+    handle.addEventListener('mousedown', resizeStart);
+    handle.addEventListener('touchstart', resizeStart, { passive: false });
   });
-
-  function initResize(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const direction = e.target.classList[1];
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = parseInt(getComputedStyle(element).width, 10);
-    const startHeight = parseInt(getComputedStyle(element).height, 10);
-    const startLeft = element.offsetLeft;
-    const startTop = element.offsetTop;
-
-    const taskbarHeight = 28;
-    const maxWidth = window.innerWidth - startLeft;
-    const maxHeight = document.documentElement.clientHeight - taskbarHeight - startTop;
-
-    function resize(e) {
-      if (direction.includes('e')) {
-        const width = Math.min(startWidth + (e.clientX - startX), maxWidth);
-        if (width >= minWidth) {
-          element.style.width = width + 'px';
-        }
-      }
-      if (direction.includes('s')) {
-        const height = Math.min(startHeight + (e.clientY - startY), maxHeight);
-        if (height >= minHeight) {
-          element.style.height = height + 'px';
-        }
-      }
-      if (direction.includes('w')) {
-        const width = startWidth - (e.clientX - startX);
-        if (width >= minWidth) {
-          element.style.width = width + 'px';
-          element.style.left = startLeft + (e.clientX - startX) + 'px';
-        }
-      }
-      if (direction.includes('n')) {
-        const height = startHeight - (e.clientY - startY);
-        if (height >= minHeight) {
-          element.style.height = height + 'px';
-          element.style.top = startTop + (e.clientY - startY) + 'px';
-        }
-      }
-    }
-
-    function stopResize() {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResize);
-    }
-
-    window.addEventListener('mousemove', resize);
-    window.addEventListener('mouseup', stopResize);
-  }
 }
 
 // Initialize
