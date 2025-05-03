@@ -13,12 +13,17 @@
     <div class="taskbar">
       <button class="start-button">
         <img src="desktopish/icons/gamepad.svg" alt="Start" width="16" height="16">
-        <span>Start</span>
+        <span style="font-family: 'MS Sans Serif', sans-serif;">Start</span>
       </button>
       <div class="separator"></div>
       <div id="taskbar-windows"></div>
-      <div class="separator"></div>
-      <div class="clock" id="clock"></div>
+      <div class="taskbar-right">
+        <div class="separator"></div>
+        <button class="dark-mode-toggle" id="darkModeToggle">
+          <img src="desktopish/icons/sun.svg" alt="Toggle dark mode">
+        </button>
+        <div class="clock" id="clock"></div>
+      </div>
     </div>
   </div>
 
@@ -28,24 +33,24 @@
     </div>
     <div class="start-items">
       <a href="https://github.com/gszauer/" target="_blank" rel="noopener noreferrer" class="menu-item">
-        <img src="desktopish/icons/github.svg" alt="GitHub" width="16" height="16">
+        <span style="font-size: 16px">🐙</span>
         <span>GitHub</span>
       </a>
       <a href="https://bsky.app/profile/gszauer.bsky.social" target="_blank" rel="noopener noreferrer" class="menu-item">
-        <img src="desktopish/icons/message-circle.svg" alt="Bluesky" width="16" height="16">
+        <span style="font-size: 16px">💬</span>
         <span>Bluesky</span>
       </a>
       <div class="menu-item" data-folder="games">
-        <img src="desktopish/icons/gamepad.svg" alt="Games" width="16" height="16">
+        <span style="font-size: 16px">🎮</span>
         <span>Games</span>
       </div>
       <div class="menu-item" data-folder="apps">
-        <img src="desktopish/icons/app-window.svg" alt="Apps" width="16" height="16">
+        <span style="font-size: 16px">📱</span>
         <span>Apps</span>
       </div>
       <div class="separator"></div>
       <a href="https://gabormakesgames.com" target="_blank" rel="noopener noreferrer" class="menu-item">
-        <img src="desktopish/icons/power.svg" alt="Shut Down" width="16" height="16">
+        <span style="font-size: 16px">🚪</span>
         <span>Shut Down...</span>
       </a>
     </div>
