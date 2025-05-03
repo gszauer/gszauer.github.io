@@ -1,0 +1,104 @@
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
+  transition: color var(--transition-normal);
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: var(--space-2);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+}
+
+/* Header */
+header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+  margin-top: var(--space-6);
+}
+
+header .description {
+  color: var(--color-text-offset);
+  font-size: var(--font-size-lg);
+}
+
+/* Footer */
+footer {
+  margin-top: var(--space-16);
+  padding: var(--space-6) 0;
+  text-align: center;
+  color: var(--color-text-offset);
+  font-size: var(--font-size-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-3);
+  }
+  
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+  
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+  
+  header {
+    margin-bottom: var(--space-6);
+    margin-top: var(--space-4);
+  }
+  
+  footer {
+    margin-top: var(--space-12);
+    padding: var(--space-4) 0;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  header .description {
+    font-size: var(--font-size-base);
+  }
+}
