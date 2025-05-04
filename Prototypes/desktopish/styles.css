@@ -1,11 +1,13 @@
 @font-face {
   font-family: 'MS Sans Serif';
+  /*src: url('fonts/ms-sans-serif.woff2') format('woff2');*/
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'MS Sans Serif';
+  /*src: url('fonts/ms-sans-serif-bold.woff2') format('woff2');*/
   font-weight: bold;
   font-style: normal;
 }
@@ -92,6 +94,7 @@ body {
 .start-button {
   display: flex;
   align-items: center;
+  gap: 4px;
   padding: 2px 6px;
   background-color: var(--bg-secondary);
   border: none;
@@ -104,6 +107,7 @@ body {
   cursor: pointer;
   color: var(--text-primary);
   min-width: 54px;
+  width: 66px;
   height: calc(var(--taskbar-height) - 4px);
 }
 
@@ -119,6 +123,7 @@ body {
 
 @media (max-width: 768px) {
   .start-button {
+    width: 70px;
     padding: 4px 8px;
   }
 
@@ -250,6 +255,16 @@ body {
   font-size: var(--icon-size);
   display: block;
   margin-bottom: 4px;
+  position: relative;
+}
+
+.desktop-icon.shortcut span:first-child::after {
+  content: "↗️";
+  position: absolute;
+  bottom: -5px;
+  right: 5px;
+  font-size: calc(var(--icon-size) * 0.4);
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.8));
 }
 
 .desktop-icon span:last-child {

@@ -79,5 +79,12 @@ const categories = [
 <li><a href="https://github.com/gszauer/">GitHub</a></li>
 <li><a href="https://bsky.app/profile/gszauer.bsky.social">Bluesky</a></li>
 </ul>`
+  },
+  {
+    id: 'blog-shortcut',
+    title: 'Blog',
+    icon: '📝',
+    type: 'shortcut',
+    link: 'https://gabormakesgames.com'
   }
 ];

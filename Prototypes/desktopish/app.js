@@ -67,6 +67,9 @@ function createDesktopIcons() {
   categories.forEach((category, index) => {
     const icon = document.createElement('div');
     icon.className = 'desktop-icon';
+    if (category.type === 'shortcut') {
+      icon.classList.add('shortcut');
+    }
     icon.style.left = '25px';
     icon.style.top = `${25 + index * 90}px`;
     
@@ -81,10 +84,22 @@ function createDesktopIcons() {
       if (selectedIcon) selectedIcon.classList.remove('selected');
       icon.classList.add('selected');
       selectedIcon = icon;
-    });
-    
-    icon.addEventListener('dblclick', () => {
-      createWindow(category);
+      
+      if (category.type === 'shortcut') {
+        window.open(category.link, '_blank');
+      } else {
+        // Check if window already exists
+        const existingWindow = windows.find(w => w.category.id === category.id);
+        if (existingWindow) {
+          if (existingWindow.isMinimized) {
+            existingWindow.isMinimized = false;
+            existingWindow.element.style.display = '';
+          }
+          setActiveWindow(existingWindow.id);
+        } else {
+          createWindow(category);
+        }
+      }
     });
     
     // Touch events
@@ -97,7 +112,21 @@ function createDesktopIcons() {
       if (touchTimeout) clearTimeout(touchTimeout);
       
       touchTimeout = setTimeout(() => {
-        createWindow(category);
+        if (category.type === 'shortcut') {
+          window.open(category.link, '_blank');
+        } else {
+          // Check if window already exists
+          const existingWindow = windows.find(w => w.category.id === category.id);
+          if (existingWindow) {
+            if (existingWindow.isMinimized) {
+              existingWindow.isMinimized = false;
+              existingWindow.element.style.display = '';
+            }
+            setActiveWindow(existingWindow.id);
+          } else {
+            createWindow(category);
+          }
+        }
       }, 100);
     });
     
