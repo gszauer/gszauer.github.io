@@ -277,7 +277,14 @@ function initializeReadingPage() {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'reset-button';
       resetBtn.textContent = 'Reset';
-      resetBtn.onclick = resetReading;
+      resetBtn.onclick = (e) => {
+        e.stopPropagation(); // Stop event from reaching deck
+        resetReading();
+      };
+      resetBtn.addEventListener('touchend', (e) => {
+        e.stopPropagation(); // Stop event from reaching deck
+        resetReading();
+      });
       card1.appendChild(resetBtn);
     }
     

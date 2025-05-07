@@ -95,6 +95,7 @@ h1 {
   background: rgba(68, 68, 68, 0.9);
   color: white;
   transition: background-color 0.3s;
+  pointer-events: auto;
 }
 
 .reset-button:hover {
