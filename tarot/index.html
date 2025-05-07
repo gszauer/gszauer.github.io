@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Tarot Reading</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="script.js"></script>
+  </head>
+  <body>
+    <nav>
+      <a href="/" aria-current="page">Reading</a>
+      <a href="/browse.html">Browse Cards</a>
+    </nav>
+    <main>
+      <div class="reading-area">
+        <div class="reading">
+          <div class="card-slot" id="slot1" data-position="Past">
+            <div class="placeholder">Past</div>
+          </div>
+          <div class="card-slot" id="slot2" data-position="Present">
+            <div class="placeholder">Present</div>
+          </div>
+          <div class="card-slot" id="slot3" data-position="Future">
+            <div class="placeholder">Future</div>
+          </div>
+        </div>
+        <div id="deck" class="deck">
+          <div id="card1" class="card card-back"></div>
+          <div id="card2" class="card card-back"></div>
+        </div>
+        <p class="instructions">Press and hold to shuffle, release to deal</p>
+      </div>
+    </main>
+  </body>
+</html>

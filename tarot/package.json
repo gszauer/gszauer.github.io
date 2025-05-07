@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "start": "servor --reload",
+    "dev": "npm run start"
+  },
+  "dependencies": {
+    "servor": "^4.0.2"
+  }
+}
