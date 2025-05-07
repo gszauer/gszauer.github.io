@@ -145,7 +145,7 @@ h1 {
 }
 
 .card-slot {
-  max-width: 150px;
+  /*max-width: 150px;*/
   height: 340px;
   border: 2px dashed #333;
   border-radius: 10px;
