@@ -172,7 +172,7 @@ function createModal(card, isUpsideDown, position = null) {
   
   const cardView = document.createElement('div');
   cardView.className = 'card-view';
-  cardView.style.backgroundImage = `url(${card.image})`;
+  cardView.style.backgroundImage = `url(./${card.image})`;
   cardView.style.display = 'none';
 
   const meaningSection = document.createElement('div');
@@ -247,7 +247,7 @@ function initializeBrowsePage() {
   MAJOR_ARCANA.forEach(card => {
     const cardElement = document.createElement('div');
     cardElement.className = 'card';
-    cardElement.style.backgroundImage = `url(${card.image})`;
+    cardElement.style.backgroundImage = `url(./${card.image})`;
     cardElement.title = card.name;
     cardElement.onclick = () => createModal(card, false);
     gallery.appendChild(cardElement);
@@ -265,18 +265,24 @@ function initializeReadingPage() {
     deckElement.id = 'deck';
     deckElement.className = 'deck';
     
-    const cardBack = document.createElement('div');
-    cardBack.className = 'card card-back';
+    const card1 = document.createElement('div');
+    card1.id = 'card1';
+    card1.className = 'card card-back';
+    
+    const card2 = document.createElement('div');
+    card2.id = 'card2';
+    card2.className = 'card card-back';
     
     if (dealtCards >= 3) {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'reset-button';
       resetBtn.textContent = 'Reset';
       resetBtn.onclick = resetReading;
-      cardBack.appendChild(resetBtn);
+      card1.appendChild(resetBtn);
     }
     
-    deckElement.appendChild(cardBack);
+    deckElement.appendChild(card1);
+    deckElement.appendChild(card2);
     return deckElement;
   }
 
@@ -333,7 +339,7 @@ function initializeReadingPage() {
       cardElement.classList.add('upside-down');
     }
     
-    cardElement.style.backgroundImage = `url(${card.image})`;
+    cardElement.style.backgroundImage = `url(./${card.image})`;
     cardElement.title = `${card.name}${isUpsideDown ? ' (Upside Down)' : ''}`;
     cardElement.onclick = () => createModal(card, isUpsideDown, position);
     
@@ -343,6 +349,7 @@ function initializeReadingPage() {
       const newDeck = createDeck();
       deck.parentNode.replaceChild(newDeck, deck);
       deck = newDeck;
+      attachDeckEventListeners(deck);
     }
   }
 
