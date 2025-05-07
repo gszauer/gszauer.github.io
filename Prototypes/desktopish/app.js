@@ -22,14 +22,18 @@ const TASKBAR_HEIGHT = 28;
 // Initialize dark mode
 function updateDarkMode() {
   document.documentElement.classList.toggle('dark-mode', isDarkMode);
-  darkModeToggle.innerHTML = `<img src="desktopish/icons/${isDarkMode ? 'sun' : 'moon'}.svg" alt="Toggle dark mode">`;
+  darkModeToggle.innerHTML = `<img src="desktopish/icons/${
+    isDarkMode ? 'sun' : 'moon'
+  }.svg" alt="Toggle dark mode">`;
 }
 
 // Listen for system dark mode changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  isDarkMode = e.matches;
-  updateDarkMode();
-});
+window
+  .matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', (e) => {
+    isDarkMode = e.matches;
+    updateDarkMode();
+  });
 
 // Dark mode toggle
 darkModeToggle.addEventListener('click', () => {
@@ -55,16 +59,38 @@ startButton.addEventListener('click', () => {
 });
 
 document.addEventListener('click', (e) => {
-  if (!startMenu.classList.contains('hidden') && 
-      !startButton.contains(e.target) && 
-      !startMenu.contains(e.target)) {
+  if (
+    !startMenu.classList.contains('hidden') &&
+    !startButton.contains(e.target) &&
+    !startMenu.contains(e.target)
+  ) {
     startMenu.classList.add('hidden');
   }
 });
 
+// Initialize Start Menu
+function initializeStartMenu() {
+  const startItems = document.querySelector('.start-items');
+  const menuItems = startItems.querySelectorAll('.menu-item[data-iframe]');
+
+  menuItems.forEach(item => {
+    const categoryId = item.dataset.iframe;
+    const category = categories.find(c => c.id === categoryId);
+    
+    if (category) {
+      item.addEventListener('click', () => {
+        startMenu.classList.add('hidden');
+        createWindow(category);
+      });
+    }
+  });
+}
+
 // Desktop Icons
 function createDesktopIcons() {
   categories.forEach((category, index) => {
+    if (category.id === 'keyframe-studio') return; // Skip keyframe-studio from desktop
+
     const icon = document.createElement('div');
     icon.className = 'desktop-icon';
     if (category.type === 'shortcut') {
@@ -72,24 +98,26 @@ function createDesktopIcons() {
     }
     icon.style.left = '25px';
     icon.style.top = `${25 + index * 90}px`;
-    
+
     icon.innerHTML = `
       <span>${category.icon}</span>
       <span>${category.title}</span>
     `;
-    
+
     // Mouse events
     icon.addEventListener('click', (e) => {
       e.stopPropagation();
       if (selectedIcon) selectedIcon.classList.remove('selected');
       icon.classList.add('selected');
       selectedIcon = icon;
-      
+
       if (category.type === 'shortcut') {
         window.open(category.link, '_blank');
       } else {
         // Check if window already exists
-        const existingWindow = windows.find(w => w.category.id === category.id);
+        const existingWindow = windows.find(
+          (w) => w.category.id === category.id
+        );
         if (existingWindow) {
           if (existingWindow.isMinimized) {
             existingWindow.isMinimized = false;
@@ -101,22 +129,24 @@ function createDesktopIcons() {
         }
       }
     });
-    
+
     // Touch events
     icon.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (selectedIcon) selectedIcon.classList.remove('selected');
       icon.classList.add('selected');
       selectedIcon = icon;
-      
+
       if (touchTimeout) clearTimeout(touchTimeout);
-      
+
       touchTimeout = setTimeout(() => {
         if (category.type === 'shortcut') {
           window.open(category.link, '_blank');
         } else {
           // Check if window already exists
-          const existingWindow = windows.find(w => w.category.id === category.id);
+          const existingWindow = windows.find(
+            (w) => w.category.id === category.id
+          );
           if (existingWindow) {
             if (existingWindow.isMinimized) {
               existingWindow.isMinimized = false;
@@ -129,11 +159,11 @@ function createDesktopIcons() {
         }
       }, 100);
     });
-    
+
     icon.addEventListener('touchend', (e) => {
       e.preventDefault();
     });
-    
+
     desktopIcons.appendChild(icon);
   });
 }
@@ -142,32 +172,32 @@ function constrainWindow(windowElement, newPosition = null, newSize = null) {
   const taskbarHeight = TASKBAR_HEIGHT;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight - taskbarHeight;
-  
+
   // Get current dimensions
   const currentRect = windowElement.getBoundingClientRect();
   let width = newSize ? newSize.width : currentRect.width;
   let height = newSize ? newSize.height : currentRect.height;
   let left = newPosition ? newPosition.x : currentRect.left;
   let top = newPosition ? newPosition.y : currentRect.top;
-  
+
   // Ensure minimum size
   width = Math.max(MIN_WINDOW_WIDTH, width);
   height = Math.max(MIN_WINDOW_HEIGHT, height);
-  
+
   // Constrain size to viewport
   width = Math.min(width, viewportWidth);
   height = Math.min(height, viewportHeight);
-  
+
   // Adjust position to keep window in bounds
   left = Math.max(0, Math.min(left, viewportWidth - width));
   top = Math.max(0, Math.min(top, viewportHeight - height));
-  
+
   // Apply constraints
   windowElement.style.width = `${width}px`;
   windowElement.style.height = `${height}px`;
   windowElement.style.left = `${left}px`;
   windowElement.style.top = `${top}px`;
-  
+
   return { width, height, left, top };
 }
 
@@ -177,35 +207,41 @@ function createWindow(category) {
   const windowElement = document.createElement('div');
   windowElement.className = 'window';
   windowElement.dataset.windowId = windowId;
-  
+
   // Calculate initial position with offset
   const offset = windows.length * 20;
   const initialPosition = {
     x: 100 + offset,
-    y: 100 + offset
+    y: 100 + offset,
   };
-  
+
   const initialSize = {
-    width: 600,
-    height: 400
+    width: category.width || 600,
+    height: category.height || 400,
   };
-  
+
   let content = '';
   if (category.type === 'file') {
     content = `<div class="markdown-content">${category.content}</div>`;
+  } else if (category.type === 'iframe') {
+    content = `<iframe src="${category.link}" style="width: 100%; height: 100%; border: none;"></iframe>`;
   } else {
     content = `
       <div class="folder-grid">
-        ${category.items.map(item => `
+        ${category.items
+          .map(
+            (item) => `
           <a href="${item.link}" class="folder-item" target="_blank">
             <span>${item.icon}</span>
             <span class="item-name">${item.name}</span>
           </a>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     `;
   }
-  
+
   windowElement.innerHTML = `
     <div class="window-titlebar">
       <span>${category.title}</span>
@@ -227,12 +263,16 @@ function createWindow(category) {
     <div class="resize-handle sw"></div>
     <div class="resize-handle se"></div>
   `;
-  
+
   desktop.appendChild(windowElement);
-  
+
   // Constrain initial size and position
-  const constrained = constrainWindow(windowElement, initialPosition, initialSize);
-  
+  const constrained = constrainWindow(
+    windowElement,
+    initialPosition,
+    initialSize
+  );
+
   const windowData = {
     id: windowId,
     element: windowElement,
@@ -240,28 +280,36 @@ function createWindow(category) {
     isMinimized: false,
     isMaximized: false,
     lastPosition: null,
-    lastSize: null
+    lastSize: null,
   };
-  
+
   windows.push(windowData);
   createTaskbarButton(windowData);
   setActiveWindow(windowId);
-  
+
   // Window Controls
   const closeBtn = windowElement.querySelector('.close');
   const minimizeBtn = windowElement.querySelector('.minimize');
   const maximizeBtn = windowElement.querySelector('.maximize');
-  
+
   closeBtn.addEventListener('click', () => closeWindow(windowId));
   minimizeBtn.addEventListener('click', () => minimizeWindow(windowId));
   maximizeBtn.addEventListener('click', () => toggleMaximize(windowId));
-  
+
   // Make window draggable
   const titlebar = windowElement.querySelector('.window-titlebar');
   makeDraggable(windowElement, titlebar);
 
   // Make window resizable
   makeResizable(windowElement);
+
+  // Add click handler for window content
+  const windowContent = windowElement.querySelector('.window-content');
+  windowContent.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('a')) {
+      setActiveWindow(windowId);
+    }
+  });
 
   // Handle window constraints on resize
   window.addEventListener('resize', () => {
@@ -270,7 +318,7 @@ function createWindow(category) {
 }
 
 function toggleMaximize(windowId) {
-  const window = windows.find(w => w.id === windowId);
+  const window = windows.find((w) => w.id === windowId);
   if (!window) return;
 
   const taskbarHeight = TASKBAR_HEIGHT;
@@ -280,11 +328,11 @@ function toggleMaximize(windowId) {
     // Save current position and size
     window.lastPosition = {
       left: window.element.style.left,
-      top: window.element.style.top
+      top: window.element.style.top,
     };
     window.lastSize = {
       width: window.element.style.width,
-      height: window.element.style.height
+      height: window.element.style.height,
     };
 
     // Maximize
@@ -300,7 +348,7 @@ function toggleMaximize(windowId) {
     window.element.style.width = window.lastSize.width;
     window.element.style.height = window.lastSize.height;
     window.isMaximized = false;
-    
+
     // Ensure window is still in bounds after restore
     constrainWindow(window.element);
   }
@@ -310,13 +358,13 @@ function createTaskbarButton(windowData) {
   const button = document.createElement('button');
   button.className = 'taskbar-button';
   button.dataset.windowId = windowData.id;
-  
+
   button.innerHTML = `
     <span style="font-family: 'MS Sans Serif', sans-serif;">${windowData.category.title}</span>
   `;
-  
+
   button.addEventListener('click', () => {
-    const window = windows.find(w => w.id === windowData.id);
+    const window = windows.find((w) => w.id === windowData.id);
     if (window) {
       if (window.isMinimized) {
         // Restore the window
@@ -330,35 +378,39 @@ function createTaskbarButton(windowData) {
       setActiveWindow(window.id);
     }
   });
-  
+
   taskbarWindows.appendChild(button);
 }
 
 function setActiveWindow(windowId) {
-  windows.forEach(w => {
+  windows.forEach((w) => {
     w.element.style.zIndex = '1';
     w.element.querySelector('.window-titlebar').classList.remove('active');
-    taskbarWindows.querySelector(`[data-window-id="${w.id}"]`).classList.remove('active');
+    taskbarWindows
+      .querySelector(`[data-window-id="${w.id}"]`)
+      .classList.remove('active');
   });
-  
-  const window = windows.find(w => w.id === windowId);
+
+  const window = windows.find((w) => w.id === windowId);
   if (window) {
     window.element.style.zIndex = '2';
     window.element.querySelector('.window-titlebar').classList.add('active');
     if (!window.isMinimized) {
-      taskbarWindows.querySelector(`[data-window-id="${windowId}"]`).classList.add('active');
+      taskbarWindows
+        .querySelector(`[data-window-id="${windowId}"]`)
+        .classList.add('active');
     }
     activeWindowId = windowId;
   }
 }
 
 function closeWindow(windowId) {
-  const windowIndex = windows.findIndex(w => w.id === windowId);
+  const windowIndex = windows.findIndex((w) => w.id === windowId);
   if (windowIndex > -1) {
     windows[windowIndex].element.remove();
     taskbarWindows.querySelector(`[data-window-id="${windowId}"]`).remove();
     windows.splice(windowIndex, 1);
-    
+
     if (activeWindowId === windowId) {
       activeWindowId = windows.length ? windows[windows.length - 1].id : null;
       if (activeWindowId) setActiveWindow(activeWindowId);
@@ -367,12 +419,14 @@ function closeWindow(windowId) {
 }
 
 function minimizeWindow(windowId) {
-  const window = windows.find(w => w.id === windowId);
+  const window = windows.find((w) => w.id === windowId);
   if (window) {
     window.isMinimized = true;
     window.element.style.display = 'none';
     if (activeWindowId === windowId) {
-      const nextWindow = windows.find(w => !w.isMinimized && w.id !== windowId);
+      const nextWindow = windows.find(
+        (w) => !w.isMinimized && w.id !== windowId
+      );
       activeWindowId = nextWindow ? nextWindow.id : null;
       if (activeWindowId) setActiveWindow(activeWindowId);
     }
@@ -381,15 +435,22 @@ function minimizeWindow(windowId) {
 
 // Draggable Windows
 function makeDraggable(element, handle) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
   let isDragging = false;
-  
+
   const dragStart = (e) => {
-    if (e.target.closest('.window-button') || e.target.closest('.resize-handle')) return;
-    
+    if (
+      e.target.closest('.window-button') ||
+      e.target.closest('.resize-handle')
+    )
+      return;
+
     e.preventDefault();
     isDragging = true;
-    
+
     // Get initial position
     if (e.type === 'mousedown') {
       pos3 = e.clientX;
@@ -398,9 +459,9 @@ function makeDraggable(element, handle) {
       pos3 = e.touches[0].clientX;
       pos4 = e.touches[0].clientY;
     }
-    
+
     setActiveWindow(element.dataset.windowId);
-    
+
     // Add move and end event listeners
     if (e.type === 'mousedown') {
       document.addEventListener('mousemove', dragMove);
@@ -410,12 +471,12 @@ function makeDraggable(element, handle) {
       document.addEventListener('touchend', dragEnd);
     }
   };
-  
+
   const dragMove = (e) => {
     if (!isDragging) return;
-    
+
     e.preventDefault();
-    
+
     // Calculate new position
     if (e.type === 'mousemove') {
       pos1 = pos3 - e.clientX;
@@ -428,15 +489,15 @@ function makeDraggable(element, handle) {
       pos3 = e.touches[0].clientX;
       pos4 = e.touches[0].clientY;
     }
-    
+
     // Calculate new position
     const newLeft = element.offsetLeft - pos1;
     const newTop = element.offsetTop - pos2;
-    
+
     // Apply constraints
     constrainWindow(element, { x: newLeft, y: newTop });
   };
-  
+
   const dragEnd = () => {
     isDragging = false;
     document.removeEventListener('mousemove', dragMove);
@@ -444,7 +505,7 @@ function makeDraggable(element, handle) {
     document.removeEventListener('touchmove', dragMove);
     document.removeEventListener('touchend', dragEnd);
   };
-  
+
   // Add mouse and touch event listeners
   handle.addEventListener('mousedown', dragStart);
   handle.addEventListener('touchstart', dragStart, { passive: false });
@@ -453,18 +514,18 @@ function makeDraggable(element, handle) {
 // Resizable Windows
 function makeResizable(element) {
   const handles = element.querySelectorAll('.resize-handle');
-  
-  handles.forEach(handle => {
+
+  handles.forEach((handle) => {
     let startX, startY, startWidth, startHeight, startLeft, startTop;
     let isResizing = false;
-    
+
     const resizeStart = (e) => {
       e.preventDefault();
       e.stopPropagation();
       isResizing = true;
-      
+
       const direction = handle.classList[1];
-      
+
       // Get initial dimensions
       if (e.type === 'mousedown') {
         startX = e.clientX;
@@ -473,12 +534,12 @@ function makeResizable(element) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
       }
-      
+
       startWidth = parseInt(getComputedStyle(element).width, 10);
       startHeight = parseInt(getComputedStyle(element).height, 10);
       startLeft = element.offsetLeft;
       startTop = element.offsetTop;
-      
+
       // Add move and end event listeners
       if (e.type === 'mousedown') {
         document.addEventListener('mousemove', resize);
@@ -487,11 +548,11 @@ function makeResizable(element) {
         document.addEventListener('touchmove', resize, { passive: false });
         document.addEventListener('touchend', resizeEnd);
       }
-      
+
       function resize(e) {
         if (!isResizing) return;
         e.preventDefault();
-        
+
         let currentX, currentY;
         if (e.type === 'mousemove') {
           currentX = e.clientX;
@@ -500,15 +561,15 @@ function makeResizable(element) {
           currentX = e.touches[0].clientX;
           currentY = e.touches[0].clientY;
         }
-        
+
         const deltaX = currentX - startX;
         const deltaY = currentY - startY;
-        
+
         let newWidth = startWidth;
         let newHeight = startHeight;
         let newLeft = startLeft;
         let newTop = startTop;
-        
+
         if (direction.includes('e')) {
           newWidth = startWidth + deltaX;
         }
@@ -523,11 +584,15 @@ function makeResizable(element) {
           newHeight = startHeight - deltaY;
           newTop = startTop + deltaY;
         }
-        
+
         // Apply constraints
-        constrainWindow(element, { x: newLeft, y: newTop }, { width: newWidth, height: newHeight });
+        constrainWindow(
+          element,
+          { x: newLeft, y: newTop },
+          { width: newWidth, height: newHeight }
+        );
       }
-      
+
       function resizeEnd() {
         isResizing = false;
         document.removeEventListener('mousemove', resize);
@@ -536,7 +601,7 @@ function makeResizable(element) {
         document.removeEventListener('touchend', resizeEnd);
       }
     };
-    
+
     // Add mouse and touch event listeners
     handle.addEventListener('mousedown', resizeStart);
     handle.addEventListener('touchstart', resizeStart, { passive: false });
@@ -546,12 +611,7 @@ function makeResizable(element) {
 // Initialize
 createDesktopIcons();
 updateDarkMode();
-
-// Open Games folder by default
-const gamesCategory = categories.find(c => c.id === 'games');
-if (gamesCategory) {
-  createWindow(gamesCategory);
-}
+initializeStartMenu();
 
 // Background click deselects icons
 desktop.addEventListener('click', (e) => {

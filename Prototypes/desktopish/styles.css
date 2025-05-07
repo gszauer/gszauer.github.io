@@ -259,7 +259,7 @@ body {
 }
 
 .desktop-icon.shortcut span:first-child::after {
-  content: "↗️";
+  content: '↗️';
   position: absolute;
   bottom: -5px;
   right: 5px;
@@ -280,7 +280,8 @@ body {
   position: absolute;
   background: var(--bg-secondary);
   border: 2px solid;
-  border-color: var(--separator-light) var(--separator-dark) var(--separator-dark) var(--separator-light);
+  border-color: var(--separator-light) var(--separator-dark)
+    var(--separator-dark) var(--separator-light);
   min-width: 200px;
   min-height: 150px;
   touch-action: none;
@@ -314,7 +315,8 @@ body {
   height: 14px;
   background: var(--bg-secondary);
   border: 1px solid;
-  border-color: var(--separator-light) var(--separator-dark) var(--separator-dark) var(--separator-light);
+  border-color: var(--separator-light) var(--separator-dark)
+    var(--separator-dark) var(--separator-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -335,13 +337,18 @@ body {
   padding: 10px;
   background: var(--window-bg);
   border: 1px solid;
-  border-color: var(--separator-dark) var(--separator-light) var(--separator-light) var(--separator-dark);
+  border-color: var(--separator-dark) var(--separator-light)
+    var(--separator-light) var(--separator-dark);
   position: absolute;
   top: var(--titlebar-height);
   left: 3px;
   right: 3px;
   bottom: 3px;
   overflow: auto;
+}
+
+.window-content iframe {
+  padding: 0;
 }
 
 .folder-grid {
@@ -490,7 +497,8 @@ body {
   width: 180px;
   background: var(--bg-secondary);
   border: 2px solid;
-  border-color: var(--separator-light) var(--separator-dark) var(--separator-dark) var(--separator-light);
+  border-color: var(--separator-light) var(--separator-dark)
+    var(--separator-dark) var(--separator-light);
   display: flex;
   z-index: 1001;
 }
@@ -537,6 +545,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   color: inherit;
+  position: relative;
 }
 
 .menu-icon {
@@ -557,10 +566,38 @@ body {
   color: white;
 }
 
+.menu-item:hover > .submenu {
+  display: block;
+}
+
+.submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: var(--bg-secondary);
+  border: 2px solid;
+  border-color: var(--separator-light) var(--separator-dark)
+    var(--separator-dark) var(--separator-light);
+  min-width: 150px;
+  z-index: 1002;
+}
+
 .start-items .separator {
   width: auto;
   height: 1px;
   margin: 4px 0;
   background: var(--separator-dark);
   border-bottom: 1px solid var(--separator-light);
+}
+
+.menu-item.has-submenu::after {
+  content: '▶';
+  position: absolute;
+  right: 8px;
+  font-size: 8px;
+}
+
+.menu-item.has-submenu {
+  padding-right: 20px;
 }
