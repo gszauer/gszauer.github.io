@@ -334,7 +334,7 @@ body {
 }
 
 .window-content {
-  padding: 10px;
+  padding: 1px;
   background: var(--window-bg);
   border: 1px solid;
   border-color: var(--separator-dark) var(--separator-light)
@@ -546,6 +546,7 @@ body {
   text-decoration: none;
   color: inherit;
   position: relative;
+  color: var(--text-primary);
 }
 
 .menu-icon {

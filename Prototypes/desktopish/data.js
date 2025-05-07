@@ -74,11 +74,13 @@ const categories = [
     icon: '📄',
     type: 'file',
     content: `<h1>Gabor Szauer</h1>
+    <p>This is a collection of prototype projects i made. Most of them are usable.</p>
 <ul style="margin-left: 20px">
 <li><a href="https://gabormakesgames.com">Blog</a></li>
 <li><a href="https://github.com/gszauer/">GitHub</a></li>
 <li><a href="https://bsky.app/profile/gszauer.bsky.social">Bluesky</a></li>
-</ul>`,
+</ul>
+<p>Landing page generated with <a href="https://bolt.new/">bolt.new</a></p>`,
   },
   {
     id: 'blog-shortcut',
@@ -98,7 +100,7 @@ const categories = [
   },
   {
     id: 'keyframe-studio',
-    title: 'Key Frame Studio V2',
+    title: 'Key Frame Studio',
     icon: '🎥',
     type: 'iframe',
     link: 'https://keyframestudio.app',
