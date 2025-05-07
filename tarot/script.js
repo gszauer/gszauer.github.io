@@ -1,139 +1,139 @@
 const MAJOR_ARCANA = [
   { 
     name: 'The Fool', 
-    image: './images/0.png',
+    image: 'images/0.png',
     upright: 'New beginnings, innocence, spontaneity, free spirit',
     upsideDown: 'Recklessness, risk-taking, foolish decisions'
   },
   { 
     name: 'The Magician', 
-    image: './images/1.png',
+    image: 'images/1.png',
     upright: 'Manifestation, resourcefulness, power, inspired action',
     upsideDown: 'Manipulation, poor planning, untapped talents'
   },
   { 
     name: 'The High Priestess', 
-    image: './images/2.png',
+    image: 'images/2.png',
     upright: 'Intuition, sacred knowledge, divine feminine, the subconscious mind',
     upsideDown: 'Secrets, disconnected from intuition, withdrawal and silence'
   },
   { 
     name: 'The Empress', 
-    image: './images/3.png',
+    image: 'images/3.png',
     upright: 'Femininity, beauty, nature, nurturing, abundance',
     upsideDown: 'Creative block, dependence on others, empty luxury'
   },
   { 
     name: 'The Emperor', 
-    image: './images/4.png',
+    image: 'images/4.png',
     upright: 'Authority, establishment, structure, a father figure',
     upsideDown: 'Domination, excessive control, lack of discipline'
   },
   { 
     name: 'The Hierophant', 
-    image: './images/5.png',
+    image: 'images/5.png',
     upright: 'Spiritual wisdom, religious beliefs, conformity, tradition',
     upsideDown: 'Personal beliefs, freedom, challenging the status quo'
   },
   { 
     name: 'The Lovers', 
-    image: './images/6.png',
+    image: 'images/6.png',
     upright: 'Love, harmony, relationships, values alignment, choices',
     upsideDown: 'Self-love, disharmony, imbalance, misalignment of values'
   },
   { 
     name: 'The Chariot', 
-    image: './images/7.png',
+    image: 'images/7.png',
     upright: 'Control, willpower, success, ambition, determination',
     upsideDown: 'Self-discipline, opposition, lack of direction'
   },
   { 
     name: 'Strength', 
-    image: './images/8.png',
+    image: 'images/8.png',
     upright: 'Strength, courage, persuasion, influence, compassion',
     upsideDown: 'Inner strength, self-doubt, low energy, raw emotion'
   },
   { 
     name: 'The Hermit', 
-    image: './images/9.png',
+    image: 'images/9.png',
     upright: 'Soul-searching, introspection, being alone, inner guidance',
     upsideDown: 'Isolation, loneliness, withdrawal'
   },
   { 
     name: 'Wheel of Fortune', 
-    image: './images/10.png',
+    image: 'images/10.png',
     upright: 'Good luck, karma, life cycles, destiny, a turning point',
     upsideDown: 'Bad luck, resistance to change, breaking cycles'
   },
   { 
     name: 'Justice', 
-    image: './images/11.png',
+    image: 'images/11.png',
     upright: 'Justice, fairness, truth, cause and effect, law',
     upsideDown: 'Unfairness, lack of accountability, dishonesty'
   },
   { 
     name: 'The Hanged Man', 
-    image: './images/12.png',
+    image: 'images/12.png',
     upright: 'Pause, surrender, letting go, new perspectives',
     upsideDown: 'Delays, resistance, stalling, indecision'
   },
   { 
     name: 'Death', 
-    image: './images/13.png',
+    image: 'images/13.png',
     upright: 'Endings, change, transformation, transition',
     upsideDown: 'Resistance to change, inability to move on'
   },
   { 
     name: 'Temperance', 
-    image: './images/14.png',
+    image: 'images/14.png',
     upright: 'Balance, moderation, patience, purpose',
     upsideDown: 'Imbalance, excess, lack of long-term vision'
   },
   { 
     name: 'The Devil', 
-    image: './images/15.png',
+    image: 'images/15.png',
     upright: 'Shadow self, attachment, addiction, restriction, sexuality',
     upsideDown: 'Releasing limiting beliefs, exploring dark thoughts, detachment'
   },
   { 
     name: 'The Tower', 
-    image: './images/16.png',
+    image: 'images/16.png',
     upright: 'Sudden change, upheaval, chaos, revelation, awakening',
     upsideDown: 'Personal transformation, fear of change, averting disaster'
   },
   { 
     name: 'The Star', 
-    image: './images/17.png',
+    image: 'images/17.png',
     upright: 'Hope, faith, purpose, renewal, spirituality',
     upsideDown: 'Lack of faith, despair, self-trust, disconnection'
   },
   { 
     name: 'The Moon', 
-    image: './images/18.png',
+    image: 'images/18.png',
     upright: 'Illusion, fear, anxiety, subconscious, intuition',
     upsideDown: 'Release of fear, repressed emotion, inner confusion'
   },
   { 
     name: 'The Sun', 
-    image: './images/19.png',
+    image: 'images/19.png',
     upright: 'Positivity, fun, warmth, success, vitality',
     upsideDown: 'Inner child, feeling down, overly optimistic'
   },
   { 
     name: 'Judgement', 
-    image: './images/20.png',
+    image: 'images/20.png',
     upright: 'Judgement, rebirth, inner calling, absolution',
     upsideDown: 'Self-doubt, inner critic, ignoring the call'
   },
   { 
     name: 'The World', 
-    image: './images/21.png',
+    image: 'images/21.png',
     upright: 'Completion, integration, accomplishment, travel',
     upsideDown: 'Seeking personal closure, short-cuts, delays'
   },
 ];
 
-if (window.location.pathname === '/browse.html') {
+if (window.location.pathname.endsWith('browse.html')) {
   initializeBrowsePage();
 } else {
   initializeReadingPage();
@@ -172,7 +172,7 @@ function createModal(card, isUpsideDown, position = null) {
   
   const cardView = document.createElement('div');
   cardView.className = 'card-view';
-  cardView.style.backgroundImage = `url(./${card.image})`;
+  cardView.style.backgroundImage = `url(${card.image})`;
   cardView.style.display = 'none';
 
   const meaningSection = document.createElement('div');
@@ -247,7 +247,7 @@ function initializeBrowsePage() {
   MAJOR_ARCANA.forEach(card => {
     const cardElement = document.createElement('div');
     cardElement.className = 'card';
-    cardElement.style.backgroundImage = `url(./${card.image})`;
+    cardElement.style.backgroundImage = `url(${card.image})`;
     cardElement.title = card.name;
     cardElement.onclick = () => createModal(card, false);
     gallery.appendChild(cardElement);
@@ -339,7 +339,7 @@ function initializeReadingPage() {
       cardElement.classList.add('upside-down');
     }
     
-    cardElement.style.backgroundImage = `url(./${card.image})`;
+    cardElement.style.backgroundImage = `url(${card.image})`;
     cardElement.title = `${card.name}${isUpsideDown ? ' (Upside Down)' : ''}`;
     cardElement.onclick = () => createModal(card, isUpsideDown, position);
     
