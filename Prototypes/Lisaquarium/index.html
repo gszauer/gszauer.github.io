@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Insaniquarium Emoji Deluxe</title>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent scrollbars if modal is too big */
+        }
+        #game-container {
+            border: 2px solid #555;
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75); /* Darker overlay */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+        }
+        .modal-content {
+            background-color: #2c2c2c; /* Dark gray background */
+            color: #f0f0f0; /* Light text color */
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 550px; /* Slightly wider */
+            width: 90%; /* Responsive width */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            text-align: left;
+            font-size: 14px;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: #61dafb; /* A light blue for title */
+            text-align: center;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .modal-content p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .modal-content strong {
+            color: #fff; /* Make strong text stand out more */
+        }
+        .modal-close-button {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        .modal-close-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div id="instructions-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Insaniquarium Emoji Deluxe</h2>
+            <p><strong>Objective:</strong> Buy 3 Egg Pieces (🥚) per level to advance and unlock new pets!</p>
+            <p><strong>Feeding:</strong> Click in the tank to drop food (💧 $5). Guppies (🐠) must eat to grow.</p>
+            <p><strong>Growth & Coins:</strong>
+                <br>🐠 (Small) -> eats -> 🐡 (Medium) -> drops 💰 ($15)
+                <br>🐡 (Medium) -> eats -> 🐳 (Large) -> drops 🪙 ($35)
+            </p>
+            <p><strong>Collection:</strong> Click on falling coins/items to collect them before they disappear.</p>
+            <p><strong>Shop (Top Bar):</strong> Use money to buy more Guppies, Food Upgrades (💊, 💧💧), Carnivores (🍖), Weapon Upgrades (💥), or Egg Pieces (🥚).</p>
+            <p><strong>Aliens:</strong> Invaders (👽, 👾) will attack your fish! Click on them with your mouse (laser cursor 🖱️💥) to shoot and defend your tank.</p>
+            <p><strong>Pets:</strong>
+                <br>🐌 (Stinky): Auto-collects items from the tank bottom.
+                <br>🦪 (Niko): Produces valuable Pearls (⚪ $100) - click to collect.
+                <br>⚔️🐟 (Itchy): Helps attack aliens.
+            </p>
+            <p><strong>Carnivore (🍖 $1000):</strong> Eats Small Guppies (🐠) to produce valuable Diamonds (💎 $200).</p>
+            <p><em>(Reload the page to restart the game)</em></p>
+            <button id="close-instructions-modal" class="modal-close-button">Close & Play</button>
+        </div>
+    </div>
+
+<script>
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+
+        // Game Area & UI
+        this.SCREEN_WIDTH = 800;
+        this.SCREEN_HEIGHT = 600;
+        this.TANK_X = 20;
+        this.TANK_Y = 130;
+        this.TANK_WIDTH = this.SCREEN_WIDTH - 40;
+        this.TANK_HEIGHT = this.SCREEN_HEIGHT - this.TANK_Y - 20;
+        this.UI_TOP_Y = 60;
+        this.UI_TOP_Y2 = 95;
+
+        // Economy & Costs
+        this.MONEY_START = 200;
+        this.GUPPY_COST = 100;
+        this.FOOD_COST = 5;
+        this.CARNIVORE_COST = 1000;
+
+        this.SILVER_COIN_VALUE = 15;
+        this.GOLD_COIN_VALUE = 35;
+        this.DIAMOND_VALUE = 200;
+        this.PEARL_VALUE = 100;
+
+        this.EGG_PIECE_COSTS_PER_LEVEL = [
+            [150, 300, 500],    // Level 1 (unlocks 🐌)
+            [500, 750, 1000],   // Level 2 (unlocks 🦪)
+            [1000, 1500, 2000], // Level 3 (unlocks ⚔️🐟)
+            [2000, 3000, 5000]  // Level 4+
+        ];
+
+        // Upgrades
+        this.UPGRADE_FOOD_QUALITY_COSTS = [200, 400]; // Nutrition value 2x, 3x
+        this.UPGRADE_FOOD_QUANTITY_COSTS = [300, 500]; // Pellets per click 2, 3
+        this.UPGRADE_WEAPON_COST = 1000;
+
+        // Guppy Stats
+        this.GUPPY_NUTRITION_TO_MEDIUM = 3;
+        this.GUPPY_NUTRITION_TO_LARGE = 5; // Additional nutrition points
+        this.GUPPY_DROP_INTERVAL_MEDIUM = 8000; // ms
+        this.GUPPY_DROP_INTERVAL_LARGE = 6000; // ms
+        this.GUPPY_TIME_TO_HUNGRY = 15000; // ms (Green)
+        this.GUPPY_TIME_TO_STARVING = 10000; // ms after hungry (Turns to 💀 icon)
+        this.GUPPY_TIME_TO_DEATH = 8000; // ms after starving
+        this.GUPPY_SEEK_SPEED = 60; // pixels per second when seeking food
+
+        // Carnivore Stats
+        this.CARNIVORE_DIAMOND_INTERVAL = 15000; // ms after eating a small guppy
+
+        // Alien Stats & Spawning
+        this.ALIEN_SYLVESTER_HEALTH = 2;
+        this.ALIEN_BALROG_HEALTH = 5;
+        this.ALIEN_INITIAL_SPAWN_DELAY = 30000; // ms
+        this.ALIEN_SPAWN_INTERVAL_BASE = 45000; // ms
+        this.ALIEN_MAX_ONSCREEN = 2;
+
+        // Player Weapon
+        this.PLAYER_WEAPON_DAMAGE_BASE = 1;
+        this.PLAYER_WEAPON_DAMAGE_UPGRADED = 3; // Powerful enough to matter
+
+        // Pets
+        this.NIKO_PEARL_INTERVAL = 20000; // ms
+        this.ITCHY_ATTACK_INTERVAL = 1500; // ms
+        this.ITCHY_DAMAGE = 1; // Matched to base weapon for simplicity
+        this.STINKY_COLLECTION_SPEED = 100; // pixels/sec
+
+        // Gameplay Mechanics
+        this.MAX_FOOD_PELLETS_BASE = 10;
+        this.FOOD_NUTRITION_BASE = 1;
+        this.FOOD_PELLETS_PER_CLICK_BASE = 1;
+        this.ITEM_FALL_SPEED = 100; // pixels/sec for coins, food
+        this.FOOD_DESPAWN_ON_GROUND_DELAY = 5000; // ms food rests on ground
+        this.COLLECTIBLE_DESPAWN_ON_GROUND_DELAY = 7000; // ms collectibles rest on ground
+
+        this.isPausedForModal = false; // Flag to track if game is paused due to modal
+    }
+
+    init() {
+        // Initialize game variables
+        this.money = this.MONEY_START;
+        this.currentLevel = 0;
+        this.eggPiecesBoughtThisLevel = 0;
+
+        this.upgrades = {
+            foodQualityLevel: 0,    // Nutrition: 1x, 2x, 3x
+            foodQuantityLevel: 0,   // Pellets per click: 1, 2, 3
+            maxFoodPellets: this.MAX_FOOD_PELLETS_BASE,
+            weaponDamage: this.PLAYER_WEAPON_DAMAGE_BASE,
+            weaponPurchased: false,
+        };
+
+        this.pets = {
+            stinky: null, // Will hold the Stinky Phaser Text object
+            niko: null,   // Will hold the Niko Phaser Text object
+            itchy: null   // Will hold the Itchy Phaser Text object
+        };
+        this.petsUnlocked = [false, false, false]; // Corresponds to Stinky, Niko, Itchy
+
+        this.balrogUnlocked = false; // Balrog alien type
+        this.alienSpawnTimer = this.ALIEN_INITIAL_SPAWN_DELAY; // Timer for next alien spawn
+        this.gameTimeTotal = 0; // Total game time elapsed
+    }
+
+    preload() {
+        // No external assets to preload, using emojis and Phaser's built-in text objects
+    }
+
+    create() {
+        // Create the visual tank area
+        this.add.rectangle(this.TANK_X + this.TANK_WIDTH / 2, this.TANK_Y + this.TANK_HEIGHT / 2, this.TANK_WIDTH, this.TANK_HEIGHT)
+            .setStrokeStyle(2, 0x0077BE).setFillStyle(0x001E3A); // Blue tank with dark blue fill
+
+        // Initialize groups for managing game objects
+        this.createGroups();
+        // Create the user interface elements (buttons, text displays)
+        this.createUI(); // This now includes the "Instructions" button
+        // Spawn initial game entities (e.g., starting guppies)
+        this.createInitialEntities();
+        // Set up input handling (mouse clicks)
+        this.setupInput();
+
+        // Update the UI display with initial values
+        this.updateUI();
+
+        // Setup and show instructions modal
+        this.setupInstructionsModal();
+        this.showInstructionsModal(); // Show initially
+    }
+
+    setupInstructionsModal() {
+        const modalOverlay = document.getElementById('instructions-modal-overlay');
+        const closeModalButton = document.getElementById('close-instructions-modal');
+
+        if (closeModalButton && modalOverlay) {
+            closeModalButton.addEventListener('click', () => {
+                this.hideInstructionsModal();
+            });
+        }
+        // Optional: Close modal if clicking on overlay (outside content)
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', (event) => {
+                if (event.target === modalOverlay) { // Check if the click is on the overlay itself
+                    this.hideInstructionsModal();
+                }
+            });
+        }
+    }
+
+    showInstructionsModal() {
+        const modalOverlay = document.getElementById('instructions-modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.style.display = 'flex';
+            if (!this.scene.isPaused(this.key)) { // Check if scene is not already paused
+                 this.scene.pause(this.key);
+                 this.isPausedForModal = true;
+            }
+        }
+    }
+
+    hideInstructionsModal() {
+        const modalOverlay = document.getElementById('instructions-modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.style.display = 'none';
+            if (this.isPausedForModal && this.scene.isPaused(this.key)) { // Only resume if paused by modal
+                this.scene.resume(this.key);
+                this.isPausedForModal = false;
+            }
+        }
+    }
+
+
+    createGroups() {
+        // Phaser groups help manage collections of similar game objects
+        this.guppies = this.add.group();
+        this.foodPellets = this.add.group();
+        this.collectibles = this.add.group(); // For coins, diamonds, pearls
+        this.aliens = this.add.group();
+        this.carnivores = this.add.group();
+    }
+
+    createUI() {
+        // Define text styles for UI elements
+        const style = { fontSize: '18px', fill: '#FFF', fontFamily: 'Arial' };
+        const btnStyleInteract = { fontSize: '15px', fill: '#FFF', backgroundColor: '#333', padding: { x: 6, y: 4 },align:'center' };
+
+        // Create text displays for money, level, pets, and weapon info
+        this.moneyText = this.add.text(20, 15, `Money: $${this.money}`, style);
+        this.levelText = this.add.text(220, 15, `Lvl: 1 Egg: 0/3`, style);
+        this.petDisplayText = this.add.text(420, 15, 'Pets: None', style);
+        this.weaponInfoText = this.add.text(this.SCREEN_WIDTH - 180, 15, `Weapon: ${this.upgrades.weaponDamage} DMG`, style); // Adjusted position
+
+        // Add Instructions Button to Phaser UI
+        this.instructionsButton = this.add.text(this.SCREEN_WIDTH - 100, this.UI_TOP_Y, 'Help ❓', { ...btnStyleInteract, fontSize: '14px', padding: {x: 8, y: 5}})
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.showInstructionsModal();
+            });
+
+
+        // Create purchase buttons (Row 1)
+        this.buyGuppyButton = this.add.text(20, this.UI_TOP_Y, `Guppy 🐠\n$${this.GUPPY_COST}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyGuppy());
+
+        this.buyFoodQualityButton = this.add.text(150, this.UI_TOP_Y, `Food Qual. 💊\n$${this.UPGRADE_FOOD_QUALITY_COSTS[0]}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyFoodQuality());
+
+        this.buyFoodQuantityButton = this.add.text(300, this.UI_TOP_Y, `Food Qty. 💧💧\n$${this.UPGRADE_FOOD_QUANTITY_COSTS[0]}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyFoodQuantity());
+
+        // Create purchase buttons (Row 2)
+        this.buyWeaponButton = this.add.text(20, this.UI_TOP_Y2, `Weapon 💥\n$${this.UPGRADE_WEAPON_COST}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyWeaponUpgrade());
+
+        this.buyCarnivoreButton = this.add.text(150, this.UI_TOP_Y2, `Carnivore 🍖\n$${this.CARNIVORE_COST}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyCarnivore());
+
+        this.buyEggPieceButton = this.add.text(300, this.UI_TOP_Y2, `Egg Piece 🥚\n$${this.EGG_PIECE_COSTS_PER_LEVEL[0][0]}`, btnStyleInteract)
+            .setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryBuyEggPiece());
+    }
+
+    updateUI() {
+        // Refresh the text content of UI elements to reflect current game state
+        this.moneyText.setText(`Money: $${this.money}`);
+        this.levelText.setText(`Lvl: ${this.currentLevel + 1} Egg: ${this.eggPiecesBoughtThisLevel}/3`);
+        this.weaponInfoText.setText(`Weapon: ${this.upgrades.weaponDamage} DMG`);
+
+        // Build the string for displaying currently unlocked pets
+        let petString = 'Pets: ';
+        if (this.pets.stinky) petString += '🐌 ';
+        if (this.pets.niko) petString += '🦪 ';
+        if (this.pets.itchy) petString += '⚔️🐟 ';
+        if (petString === 'Pets: ') petString += 'None';
+        this.petDisplayText.setText(petString);
+
+        // Update button text and interactivity based on affordability and purchase status
+        this.updateButton(this.buyGuppyButton, this.money >= this.GUPPY_COST, `Guppy 🐠\n$${this.GUPPY_COST}`);
+
+        if (this.upgrades.foodQualityLevel < this.UPGRADE_FOOD_QUALITY_COSTS.length) {
+            const cost = this.UPGRADE_FOOD_QUALITY_COSTS[this.upgrades.foodQualityLevel];
+            this.updateButton(this.buyFoodQualityButton, this.money >= cost, `Food Qual. ${this.upgrades.foodQualityLevel+1} 💊\n$${cost}`);
+        } else {
+            this.updateButton(this.buyFoodQualityButton, false, 'Food Qual. MAX\n(💊💊💊)');
+        }
+
+        if (this.upgrades.foodQuantityLevel < this.UPGRADE_FOOD_QUANTITY_COSTS.length) {
+            const cost = this.UPGRADE_FOOD_QUANTITY_COSTS[this.upgrades.foodQuantityLevel];
+            this.updateButton(this.buyFoodQuantityButton, this.money >= cost, `Food Qty. ${this.upgrades.foodQuantityLevel+1} 💧💧\n$${cost}`);
+        } else {
+            this.updateButton(this.buyFoodQuantityButton, false, 'Food Qty. MAX\n(💧💧💧)');
+        }
+
+        if (!this.upgrades.weaponPurchased) {
+            this.updateButton(this.buyWeaponButton, this.money >= this.UPGRADE_WEAPON_COST, `Weapon 💥\n$${this.UPGRADE_WEAPON_COST}`);
+        } else {
+            this.updateButton(this.buyWeaponButton, false, 'Weapon MAX\n(💥💥)');
+        }
+
+        this.updateButton(this.buyCarnivoreButton, this.money >= this.CARNIVORE_COST, `Carnivore 🍖\n$${this.CARNIVORE_COST}`);
+
+        if (this.eggPiecesBoughtThisLevel < 3) {
+            const eggCost = this.EGG_PIECE_COSTS_PER_LEVEL[Math.min(this.currentLevel, this.EGG_PIECE_COSTS_PER_LEVEL.length - 1)][this.eggPiecesBoughtThisLevel];
+            this.updateButton(this.buyEggPieceButton, this.money >= eggCost, `Egg Piece 🥚\n$${eggCost}`);
+        } else {
+            this.updateButton(this.buyEggPieceButton, false, 'Level Up Soon!\n(🥚🥚🥚)');
+        }
+    }
+
+    updateButton(button, enabled, text) {
+        // Helper function to set button text and style (enabled/disabled)
+        button.setText(text);
+        if (enabled) {
+            button.setInteractive({ useHandCursor: true });
+            button.setStyle({ fill: '#FFF', backgroundColor: '#333' }); // Active style
+        } else {
+            button.disableInteractive();
+            button.setStyle({ fill: '#AAA', backgroundColor: '#555' }); // Disabled style
+        }
+    }
+
+    createInitialEntities() {
+        // Spawn the first two guppies at the start of the game
+        this.spawnGuppy(this.TANK_X + 100, this.TANK_Y + 100);
+        this.spawnGuppy(this.TANK_X + 200, this.TANK_Y + 200);
+    }
+
+    setupInput() {
+        // Listen for pointer (mouse click/touch) down events
+        this.input.on('pointerdown', (pointer) => {
+            // If game is paused for modal, don't process game input
+            if (this.isPausedForModal) return;
+
+            // Check if the click is within the tank boundaries
+            if (pointer.x >= this.TANK_X && pointer.x <= this.TANK_X + this.TANK_WIDTH &&
+                pointer.y >= this.TANK_Y && pointer.y <= this.TANK_Y + this.TANK_HEIGHT) {
+
+                // Check if the click was on an existing interactive element (alien or collectible)
+                let clickedOnInteractive = false;
+                this.aliens.getChildren().forEach(alien => {
+                    if (alien.getBounds().contains(pointer.x, pointer.y)) clickedOnInteractive = true;
+                });
+                this.collectibles.getChildren().forEach(collectible => {
+                    if (collectible.getBounds().contains(pointer.x, pointer.y)) clickedOnInteractive = true;
+                });
+
+                // If not clicking an interactive element and food limit not reached, try to drop food
+                if (!clickedOnInteractive && this.foodPellets.countActive(true) < this.upgrades.maxFoodPellets) {
+                   this.tryDropFood(pointer.x, pointer.y);
+                }
+            }
+        });
+    }
+
+    // --- Purchase Methods ---
+    tryBuyGuppy() {
+        if (this.isPausedForModal) return;
+        if (this.money >= this.GUPPY_COST) {
+            this.money -= this.GUPPY_COST;
+            this.spawnGuppy(Phaser.Math.Between(this.TANK_X + 30, this.TANK_X + this.TANK_WIDTH - 30),
+                             Phaser.Math.Between(this.TANK_Y + 30, this.TANK_Y + this.TANK_HEIGHT - 30));
+            this.updateUI();
+        }
+    }
+
+    tryBuyFoodQuality() {
+        if (this.isPausedForModal) return;
+        if (this.upgrades.foodQualityLevel < this.UPGRADE_FOOD_QUALITY_COSTS.length) {
+            const cost = this.UPGRADE_FOOD_QUALITY_COSTS[this.upgrades.foodQualityLevel];
+            if (this.money >= cost) {
+                this.money -= cost;
+                this.upgrades.foodQualityLevel++;
+                this.updateUI();
+            }
+        }
+    }
+
+    tryBuyFoodQuantity() {
+        if (this.isPausedForModal) return;
+         if (this.upgrades.foodQuantityLevel < this.UPGRADE_FOOD_QUANTITY_COSTS.length) {
+            const cost = this.UPGRADE_FOOD_QUANTITY_COSTS[this.upgrades.foodQuantityLevel];
+            if (this.money >= cost) {
+                this.money -= cost;
+                this.upgrades.foodQuantityLevel++;
+                this.upgrades.maxFoodPellets = this.MAX_FOOD_PELLETS_BASE + (this.upgrades.foodQuantityLevel * 5); // e.g. 10, 15, 20
+                this.updateUI();
+            }
+        }
+    }
+
+    tryBuyWeaponUpgrade() {
+        if (this.isPausedForModal) return;
+        if (!this.upgrades.weaponPurchased && this.money >= this.UPGRADE_WEAPON_COST) {
+            this.money -= this.UPGRADE_WEAPON_COST;
+            this.upgrades.weaponDamage = this.PLAYER_WEAPON_DAMAGE_UPGRADED;
+            this.upgrades.weaponPurchased = true;
+            this.updateUI();
+        }
+    }
+
+    tryBuyCarnivore() {
+        if (this.isPausedForModal) return;
+        if (this.money >= this.CARNIVORE_COST) {
+            this.money -= this.CARNIVORE_COST;
+            this.spawnCarnivore(Phaser.Math.Between(this.TANK_X + 30, this.TANK_X + this.TANK_WIDTH - 30),
+                                 Phaser.Math.Between(this.TANK_Y + 30, this.TANK_Y + this.TANK_HEIGHT - 30));
+            this.updateUI();
+        }
+    }
+
+    tryBuyEggPiece() {
+        if (this.isPausedForModal) return;
+        if (this.eggPiecesBoughtThisLevel < 3) {
+            const cost = this.EGG_PIECE_COSTS_PER_LEVEL[Math.min(this.currentLevel, this.EGG_PIECE_COSTS_PER_LEVEL.length - 1)][this.eggPiecesBoughtThisLevel];
+            if (this.money >= cost) {
+                this.money -= cost;
+                this.eggPiecesBoughtThisLevel++;
+                this.updateUI();
+
+                // Unlock Balrog alien type earlier as per game description nuance
+                if (this.eggPiecesBoughtThisLevel === 2 && this.currentLevel === 0) {
+                    this.balrogUnlocked = true;
+                }
+
+                // If all three egg pieces are bought, complete the level
+                if (this.eggPiecesBoughtThisLevel === 3) {
+                    this.completeLevel();
+                }
+            }
+        }
+    }
+
+    completeLevel() {
+        // Award a pet based on the completed level
+        if (this.currentLevel === 0 && !this.petsUnlocked[0]) { // Unlock Stinky the Snail
+            this.petsUnlocked[0] = true;
+            this.spawnStinky();
+        } else if (this.currentLevel === 1 && !this.petsUnlocked[1]) { // Unlock Niko the Oyster
+            this.petsUnlocked[1] = true;
+            this.spawnNiko();
+        } else if (this.currentLevel === 2 && !this.petsUnlocked[2]) { // Unlock Itchy the Swordfish
+            this.petsUnlocked[2] = true;
+            this.spawnItchy();
+        }
+
+        this.currentLevel++;
+        this.eggPiecesBoughtThisLevel = 0;
+        this.balrogUnlocked = true; // Ensure Balrogs are unlocked after the first level
+        this.updateUI();
+    }
+
+    // --- Spawning Methods ---
+    spawnGuppy(x, y, size = 'small', inheritedFood = 0) {
+        let emoji = '🐠'; // Small guppy
+        let fontSize = '24px';
+        if (size === 'medium') { emoji = '🐡'; fontSize = '30px'; } // Medium guppy
+        if (size === 'large') { emoji = '🐳'; fontSize = '36px'; } // Large guppy
+
+        const guppy = this.add.text(x, y, emoji, { fontSize: fontSize, fill: '#FFD700' }); // Default Gold color
+        guppy.setOrigin(0.5, 0.5); // Set origin to center for better rotation and position handling
+        guppy.entityType = 'guppy';
+        guppy.guppySize = size;
+        guppy.nutritionEatenThisStage = inheritedFood; // Carry over nutrition if grown
+
+        guppy.timeSinceLastFed = 0; // Tracks time for hunger states
+        guppy.state = 'normal'; // 'normal', 'hungry', 'starving'
+        guppy.timeInCurrentState = 0;
+
+        guppy.timeSinceCoinDrop = Phaser.Math.Between(0, 5000); // Stagger initial coin drops
+
+        // Movement properties
+        guppy.vx = (Math.random() - 0.5) * Phaser.Math.Between(20, 50); // pixels per second
+        guppy.vy = (Math.random() - 0.5) * Phaser.Math.Between(20, 50);
+        guppy.changeDirectionTimer = Phaser.Math.Between(2000, 5000); //ms
+
+        this.guppies.add(guppy);
+        return guppy;
+    }
+
+    tryDropFood(x, y) {
+        if (this.isPausedForModal) return;
+        if (this.money >= this.FOOD_COST) {
+            this.money -= this.FOOD_COST;
+            const pelletsToDrop = this.upgrades.foodQuantityLevel + this.FOOD_PELLETS_PER_CLICK_BASE; // 1, 2, or 3 based on upgrade
+            for (let i = 0; i < pelletsToDrop; i++) {
+                 if (this.foodPellets.countActive(true) < this.upgrades.maxFoodPellets) {
+                    // Slightly offset multiple pellets for better visual
+                    const pelletX = x + (i * 15) - ((pelletsToDrop-1) * 7.5);
+                    this.spawnFoodPellet(pelletX, y);
+                 } else break; // Stop if max food pellets on screen reached
+            }
+            this.updateUI();
+        }
+    }
+
+    spawnFoodPellet(x, y) {
+        const food = this.add.text(x, y, '💧', { fontSize: '20px' });
+        food.entityType = 'food';
+        food.setOrigin(0.5); // Center the food pellet emoji
+        food.isResting = false; // Track if food is resting on the tank bottom
+        food.restingTime = 0;   // Time spent resting on the bottom
+        this.foodPellets.add(food);
+    }
+
+    spawnCollectible(x, y, type) {
+        let emoji, value, fillColor;
+        switch(type) {
+            case 'silver': emoji = '💰'; value = this.SILVER_COIN_VALUE; fillColor = '#C0C0C0'; break;
+            case 'gold': emoji = '🪙'; value = this.GOLD_COIN_VALUE; fillColor = '#FFD700'; break;
+            case 'diamond': emoji = '💎'; value = this.DIAMOND_VALUE; fillColor = '#B9F2FF'; break;
+            case 'pearl': emoji = '⚪'; value = this.PEARL_VALUE; fillColor = '#F0F0F0'; break;
+        }
+        const collectible = this.add.text(x, y, emoji, { fontSize: '22px', fill: fillColor });
+        collectible.entityType = 'collectible';
+        collectible.collectibleType = type;
+        collectible.value = value;
+        collectible.setOrigin(0.5);
+        collectible.isResting = false; // Track if collectible is resting on the tank bottom
+        collectible.restingTime = 0;   // Time spent resting on the bottom
+        collectible.setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                if (this.isPausedForModal) return;
+                this.money += collectible.value;
+                collectible.destroy();
+                this.updateUI();
+            });
+        this.collectibles.add(collectible);
+        return collectible;
+    }
+
+    spawnCarnivore(x, y) {
+        const carnivore = this.add.text(x, y, '🍖', { fontSize: '38px', fill: '#FF6347' }); // Tomato color
+        carnivore.setOrigin(0.5,0.5);
+        carnivore.entityType = 'carnivore';
+        carnivore.timeSinceDiamondDrop = 0; // Timer after eating to produce a diamond
+        carnivore.isFull = false; // Becomes true after eating, then false after dropping diamond
+
+        // Movement properties
+        carnivore.vx = (Math.random() - 0.5) * 40;
+        carnivore.vy = (Math.random() - 0.5) * 40;
+        carnivore.changeDirectionTimer = Phaser.Math.Between(3000, 6000);
+
+        this.carnivores.add(carnivore);
+        return carnivore;
+    }
+
+    trySpawnAlien(deltaTime) {
+        this.alienSpawnTimer -= deltaTime;
+        if (this.alienSpawnTimer <= 0 && this.aliens.countActive(true) < this.ALIEN_MAX_ONSCREEN) {
+            let alienType = 'sylvester'; // Default alien
+            if (this.balrogUnlocked && Math.random() < 0.4) { // 40% chance for Balrog if unlocked
+                alienType = 'balrog';
+            }
+            this.spawnAlien(alienType);
+            // Reset spawn timer, making it slightly faster on higher levels
+            this.alienSpawnTimer = this.ALIEN_SPAWN_INTERVAL_BASE - (this.currentLevel * 2000);
+            if (this.alienSpawnTimer < 15000) this.alienSpawnTimer = 15000; // Minimum spawn interval
+        }
+    }
+
+    spawnAlien(type) {
+        // Aliens spawn from off-screen (left or right)
+        const startX = Math.random() < 0.5 ? this.TANK_X - 20 : this.TANK_X + this.TANK_WIDTH + 20;
+        const startY = Phaser.Math.Between(this.TANK_Y + 20, this.TANK_Y + this.TANK_HEIGHT - 20);
+
+        let emoji, health;
+        if (type === 'sylvester') {
+            emoji = '👽'; health = this.ALIEN_SYLVESTER_HEALTH;
+        } else { // balrog
+            emoji = '👾'; health = this.ALIEN_BALROG_HEALTH;
+        }
+
+        const alien = this.add.text(startX, startY, emoji, { fontSize: '35px' });
+        alien.entityType = 'alien';
+        alien.alienType = type;
+        alien.health = health;
+        alien.setOrigin(0.5);
+        alien.setInteractive({ useHandCursor: true }) // Click to shoot
+            .on('pointerdown', () => {
+                if (this.isPausedForModal) return;
+                alien.health -= this.upgrades.weaponDamage;
+                // Visual feedback for hit - quick red tint
+                alien.setTintFill(0xff0000);
+                this.time.delayedCall(100, () => alien.clearTint());
+
+                if (alien.health <= 0) {
+                    alien.destroy();
+                }
+            });
+        alien.targetFish = null; // Fish it's currently hunting
+        alien.attackCooldown = 0; // Time between eating fish
+        this.aliens.add(alien);
+    }
+
+    spawnStinky() {
+        if (this.pets.stinky) return; // Don't spawn if already exists
+        this.pets.stinky = this.add.text(this.TANK_X + this.TANK_WIDTH / 2, this.TANK_Y + this.TANK_HEIGHT - 25, '🐌', { fontSize: '28px' });
+        this.pets.stinky.setOrigin(0.5, 0.5);
+        this.pets.stinky.entityType = 'pet';
+        this.pets.stinky.petType = 'stinky';
+        this.pets.stinky.targetCoin = null; // Coin Stinky is moving towards
+        this.updateUI();
+    }
+
+    spawnNiko() {
+        if (this.pets.niko) return; // Don't spawn if already exists
+        // Niko is stationary, placed at the bottom middle of the tank
+        this.pets.niko = this.add.text(this.TANK_X + this.TANK_WIDTH / 2, this.TANK_Y + this.TANK_HEIGHT - 25, '🦪', { fontSize: '32px' });
+        this.pets.niko.setOrigin(0.5, 0.5);
+        this.pets.niko.entityType = 'pet';
+        this.pets.niko.petType = 'niko';
+        this.pets.niko.pearlDropTimer = this.NIKO_PEARL_INTERVAL; // Timer for producing pearls
+        this.updateUI();
+    }
+
+    spawnItchy() {
+        if (this.pets.itchy) return; // Don't spawn if already exists
+        this.pets.itchy = this.add.text(this.TANK_X + 50, this.TANK_Y + 50, '⚔️🐟', { fontSize: '30px', fill: '#ADD8E6' }); // Light blue
+        this.pets.itchy.setOrigin(0.5, 0.5);
+        this.pets.itchy.entityType = 'pet';
+        this.pets.itchy.petType = 'itchy';
+        this.pets.itchy.targetAlien = null; // Alien Itchy is attacking
+        this.pets.itchy.attackTimer = this.ITCHY_ATTACK_INTERVAL; // Timer for attacks
+
+        // Itchy also needs basic movement like other fish
+        this.pets.itchy.vx = (Math.random() - 0.5) * 40;
+        this.pets.itchy.vy = (Math.random() - 0.5) * 40;
+        this.pets.itchy.changeDirectionTimer = Phaser.Math.Between(2000, 4000);
+        this.updateUI();
+    }
+
+    // --- Update Logic (called every frame) ---
+    update(time, delta) {
+        // If the scene is paused by the modal, skip the update loop for game logic
+        if (this.isPausedForModal && this.scene.isPaused(this.key)) {
+            return;
+        }
+
+        this.gameTimeTotal += delta; // Keep track of total game time
+        this.trySpawnAlien(delta); // Handle alien spawning attempts
+
+        // Update all active game entities
+        this.updateGuppies(delta);
+        this.updateFoodPellets(delta);
+        this.updateCollectibles(delta);
+        this.updateCarnivores(delta);
+        this.updateAliens(delta);
+        this.updatePets(delta);
+
+        // Check for collisions between entities
+        this.checkCollisions();
+    }
+
+    // --- Entity Update Methods ---
+    updateGuppies(delta) {
+        this.guppies.getChildren().forEach(guppy => {
+            if (!guppy.active) return;
+
+            // --- Movement Logic ---
+            if (guppy.state === 'hungry') {
+                let closestFood = null;
+                let minDistanceToFood = Infinity; // Guppies will seek the absolute closest food
+
+                // Find the closest active food pellet
+                this.foodPellets.getChildren().forEach(food => {
+                    if (food.active) {
+                        const distance = Phaser.Math.Distance.Between(guppy.x, guppy.y, food.x, food.y);
+                        if (distance < minDistanceToFood) {
+                            minDistanceToFood = distance;
+                            closestFood = food;
+                        }
+                    }
+                });
+
+                if (closestFood) {
+                    // Move towards the closest food
+                    const angleToFood = Phaser.Math.Angle.Between(guppy.x, guppy.y, closestFood.x, closestFood.y);
+                    guppy.vx = Math.cos(angleToFood) * this.GUPPY_SEEK_SPEED;
+                    guppy.vy = Math.sin(angleToFood) * this.GUPPY_SEEK_SPEED;
+                } else {
+                    // No food found, revert to random movement
+                    guppy.changeDirectionTimer -= delta;
+                    if (guppy.changeDirectionTimer <= 0) {
+                        guppy.vx = (Math.random() - 0.5) * Phaser.Math.Between(20, 50);
+                        guppy.vy = (Math.random() - 0.5) * Phaser.Math.Between(20, 50);
+                        guppy.changeDirectionTimer = Phaser.Math.Between(2000, 5000);
+                    }
+                }
+            } else {
+                // Not hungry (normal or starving), perform random movement
+                guppy.changeDirectionTimer -= delta;
+                if (guppy.changeDirectionTimer <= 0) {
+                    guppy.vx = (Math.random() - 0.5) * Phaser.Math.Between(20, 50);
+                    guppy.vy = (Math.random() - 0.5) * Phaser.Math.Between(20, 50);
+                    guppy.changeDirectionTimer = Phaser.Math.Between(2000, 5000);
+                }
+            }
+
+            // Apply calculated velocity
+            guppy.x += guppy.vx * (delta / 1000);
+            guppy.y += guppy.vy * (delta / 1000);
+            this.confineToTank(guppy, 15); // Keep guppy within tank boundaries
+
+            // --- Hunger and State Logic ---
+            guppy.timeSinceLastFed += delta;
+            guppy.timeInCurrentState += delta;
+
+            if (guppy.state === 'starving') {
+                if (guppy.timeInCurrentState >= this.GUPPY_TIME_TO_DEATH) {
+                    guppy.destroy(); // Guppy dies from starvation
+                    return; // Skip further processing for this destroyed guppy
+                }
+            } else if (guppy.state === 'hungry') {
+                if (guppy.timeInCurrentState >= this.GUPPY_TIME_TO_STARVING) {
+                    guppy.state = 'starving';
+                    guppy.timeInCurrentState = 0;
+                    guppy.setText('💀'); // Change to starving emoji
+                    guppy.setFontSize('30px'); // Make skull more prominent
+                    guppy.setTint(0xFFFFFF); // Clear previous hungry tint
+                }
+            } else { // 'normal' state
+                if (guppy.timeSinceLastFed >= this.GUPPY_TIME_TO_HUNGRY) {
+                    guppy.state = 'hungry';
+                    guppy.timeInCurrentState = 0;
+                    guppy.setTint(0x00FF00); // Green tint for hungry
+                }
+            }
+
+            // --- Coin Production Logic ---
+            guppy.timeSinceCoinDrop += delta;
+            if (guppy.guppySize === 'medium' && guppy.timeSinceCoinDrop >= this.GUPPY_DROP_INTERVAL_MEDIUM) {
+                this.spawnCollectible(guppy.x, guppy.y, 'silver');
+                guppy.timeSinceCoinDrop = 0;
+            } else if (guppy.guppySize === 'large' && guppy.timeSinceCoinDrop >= this.GUPPY_DROP_INTERVAL_LARGE) {
+                this.spawnCollectible(guppy.x, guppy.y, 'gold');
+                guppy.timeSinceCoinDrop = 0;
+            }
+        });
+    }
+
+    updateFoodPellets(delta) {
+        this.foodPellets.getChildren().forEach(food => {
+            if (!food.active) return;
+
+            const foodHeight = food.getBounds().height;
+            const groundY = this.TANK_Y + this.TANK_HEIGHT - foodHeight / 2; // Position for food to rest on ground
+
+            if (food.isResting) {
+                // If food is resting on the ground, increment its resting time
+                food.restingTime += delta;
+                if (food.restingTime > this.FOOD_DESPAWN_ON_GROUND_DELAY) {
+                    food.destroy(); // Despawn food after a delay on the ground
+                }
+            } else {
+                // If food is not resting, it's falling
+                food.y += this.ITEM_FALL_SPEED * (delta / 1000);
+                if (food.y >= groundY) {
+                    food.y = groundY; // Stop at the ground
+                    food.isResting = true;
+                    food.restingTime = 0; // Start resting timer
+                }
+            }
+        });
+    }
+
+    updateCollectibles(delta) {
+        this.collectibles.getChildren().forEach(collectible => {
+            if (!collectible.active) return;
+
+            const collectibleHeight = collectible.getBounds().height;
+            const groundY = this.TANK_Y + this.TANK_HEIGHT - collectibleHeight / 2; // Position for collectible to rest on ground
+
+            // Check if Stinky is about to collect this item
+            let stinkyIsAboutToCollect = false;
+            if (this.pets.stinky && this.pets.stinky.active && this.pets.stinky.targetCoin === collectible &&
+                Phaser.Math.Distance.Between(this.pets.stinky.x, this.pets.stinky.y, collectible.x, collectible.y) < 30) {
+                stinkyIsAboutToCollect = true;
+            }
+
+            if (collectible.isResting) {
+                // If collectible is resting on the ground
+                if (stinkyIsAboutToCollect) {
+                    collectible.restingTime = 0; // Reset despawn timer if Stinky is close
+                } else {
+                    collectible.restingTime += delta;
+                    if (collectible.restingTime > this.COLLECTIBLE_DESPAWN_ON_GROUND_DELAY) {
+                        collectible.destroy(); // Despawn after a delay
+                    }
+                }
+            } else { // Not resting, so it's falling
+                if (!stinkyIsAboutToCollect) {
+                    collectible.y += this.ITEM_FALL_SPEED * (delta / 1000);
+                }
+
+                if (collectible.y >= groundY) {
+                    collectible.y = groundY; // Stop at the ground
+                    collectible.isResting = true;
+                    collectible.restingTime = 0; // Start resting timer
+                }
+            }
+        });
+    }
+
+    updateCarnivores(delta) {
+        this.carnivores.getChildren().forEach(carnivore => {
+            if (!carnivore.active) return;
+
+            // Targeting small guppies if not full
+            let targetFound = false;
+            if (!carnivore.isFull) {
+                let closestSmallGuppy = null;
+                let minDistance = 200; // Max hunting range for carnivore
+
+                this.guppies.getChildren().forEach(guppy => {
+                    if (guppy.active && guppy.guppySize === 'small') {
+                        const distance = Phaser.Math.Distance.Between(carnivore.x, carnivore.y, guppy.x, guppy.y);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestSmallGuppy = guppy;
+                        }
+                    }
+                });
+
+                if (closestSmallGuppy) {
+                    targetFound = true;
+                    const angle = Phaser.Math.Angle.Between(carnivore.x, carnivore.y, closestSmallGuppy.x, closestSmallGuppy.y);
+                    carnivore.vx = Math.cos(angle) * 60; // Move towards guppy
+                    carnivore.vy = Math.sin(angle) * 60;
+                }
+            }
+
+            // Random movement if no target or if full (waiting to drop diamond)
+            if (!targetFound) {
+                carnivore.changeDirectionTimer -= delta;
+                if (carnivore.changeDirectionTimer <= 0) {
+                    carnivore.vx = (Math.random() - 0.5) * 40;
+                    carnivore.vy = (Math.random() - 0.5) * 40;
+                    carnivore.changeDirectionTimer = Phaser.Math.Between(3000, 6000);
+                }
+            }
+
+            carnivore.x += carnivore.vx * (delta / 1000);
+            carnivore.y += carnivore.vy * (delta / 1000);
+            this.confineToTank(carnivore, 20); // Keep carnivore in tank
+
+            // Diamond production after eating
+            if (carnivore.isFull) {
+                carnivore.timeSinceDiamondDrop += delta;
+                if (carnivore.timeSinceDiamondDrop >= this.CARNIVORE_DIAMOND_INTERVAL) {
+                    this.spawnCollectible(carnivore.x, carnivore.y, 'diamond');
+                    carnivore.isFull = false;
+                    carnivore.timeSinceDiamondDrop = 0;
+                    carnivore.setText('🍖'); // Back to normal carnivore emoji
+                }
+            }
+        });
+    }
+
+    updateAliens(delta) {
+        this.aliens.getChildren().forEach(alien => {
+            if (!alien.active) return;
+
+            // Targeting and Movement
+            if (!alien.targetFish || !alien.targetFish.active) {
+                // Find the closest fish (guppy or carnivore) to target
+                alien.targetFish = this.findClosestFish(alien.x, alien.y, [this.guppies, this.carnivores]);
+            }
+
+            if (alien.targetFish) {
+                const angle = Phaser.Math.Angle.Between(alien.x, alien.y, alien.targetFish.x, alien.targetFish.y);
+                const speed = alien.alienType === 'balrog' ? 60 : 45; // Balrogs are faster
+                alien.x += Math.cos(angle) * speed * (delta / 1000);
+                alien.y += Math.sin(angle) * speed * (delta / 1000);
+            } else { // No fish left, alien drifts slowly
+                alien.x += (Math.random() - 0.5) * 20 * (delta / 1000);
+            }
+            // Keep aliens roughly in view, they can go slightly off-screen to enter/exit
+            alien.x = Phaser.Math.Clamp(alien.x, this.TANK_X - 50, this.TANK_X + this.TANK_WIDTH + 50);
+            alien.y = Phaser.Math.Clamp(alien.y, this.TANK_Y - 50, this.TANK_Y + this.TANK_HEIGHT + 50);
+
+
+            // Attack logic
+            alien.attackCooldown -= delta;
+            if (alien.targetFish && alien.attackCooldown <= 0) {
+                 if (Phaser.Geom.Intersects.RectangleToRectangle(alien.getBounds(), alien.targetFish.getBounds())) {
+                    alien.targetFish.destroy(); // Alien eats the fish
+                    alien.targetFish = null; // Find a new target
+                    alien.attackCooldown = 2000; // Cooldown before next attack
+                 }
+            }
+        });
+    }
+
+    updatePets(delta) {
+        // Stinky the Snail 🐌 logic
+        if (this.pets.stinky && this.pets.stinky.active) {
+            if (!this.pets.stinky.targetCoin || !this.pets.stinky.targetCoin.active) {
+                // Find the closest coin near the bottom of the tank for Stinky to collect
+                let closestCoin = null;
+                let minDist = 150; // Stinky's detection range
+                this.collectibles.getChildren().forEach(coin => {
+                    if (coin.active && coin.y > this.TANK_Y + this.TANK_HEIGHT - 80) { // Coin near bottom
+                        const dist = Phaser.Math.Distance.Between(this.pets.stinky.x, this.pets.stinky.y, coin.x, coin.y);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestCoin = coin;
+                        }
+                    }
+                });
+                this.pets.stinky.targetCoin = closestCoin;
+            }
+
+            if (this.pets.stinky.targetCoin) {
+                const coin = this.pets.stinky.targetCoin;
+                const angle = Phaser.Math.Angle.Between(this.pets.stinky.x, this.pets.stinky.y, coin.x, coin.y);
+                this.pets.stinky.x += Math.cos(angle) * this.STINKY_COLLECTION_SPEED * (delta / 1000);
+                // Stinky stays mostly on the bottom, with slight vertical movement
+                this.pets.stinky.y = Phaser.Math.Clamp(this.pets.stinky.y + Math.sin(angle) * this.STINKY_COLLECTION_SPEED * (delta / 1000),
+                                                       this.TANK_Y + this.TANK_HEIGHT - 30, this.TANK_Y + this.TANK_HEIGHT - 20);
+
+
+                // If Stinky reaches the coin, collect it
+                if (Phaser.Math.Distance.Between(this.pets.stinky.x, this.pets.stinky.y, coin.x, coin.y) < 20) {
+                    this.money += coin.value;
+                    coin.destroy();
+                    this.pets.stinky.targetCoin = null;
+                    this.updateUI();
+                }
+            } else { // No target coin, Stinky slowly patrols the bottom
+                this.pets.stinky.x += (Math.random() < 0.5 ? -1 : 1) * 20 * (delta / 1000);
+                this.pets.stinky.x = Phaser.Math.Clamp(this.pets.stinky.x, this.TANK_X + 10, this.TANK_X + this.TANK_WIDTH - 10);
+            }
+        }
+
+        // Niko the Oyster 🦪 logic
+        if (this.pets.niko && this.pets.niko.active) {
+            this.pets.niko.pearlDropTimer -= delta;
+            if (this.pets.niko.pearlDropTimer <= 0) {
+                this.spawnCollectible(this.pets.niko.x, this.pets.niko.y - 20, 'pearl'); // Niko drops a pearl
+                this.pets.niko.pearlDropTimer = this.NIKO_PEARL_INTERVAL;
+            }
+        }
+
+        // Itchy the Swordfish ⚔️🐟 logic
+        if (this.pets.itchy && this.pets.itchy.active) {
+             // Movement (like a guppy, but targets aliens)
+            let itchyTargetFound = false;
+            if (!this.pets.itchy.targetAlien || !this.pets.itchy.targetAlien.active) {
+                // Find the closest alien for Itchy to attack
+                this.pets.itchy.targetAlien = this.findClosestFish(this.pets.itchy.x, this.pets.itchy.y, [this.aliens], 250); // 250 detection range
+            }
+
+            if (this.pets.itchy.targetAlien) {
+                itchyTargetFound = true;
+                const angle = Phaser.Math.Angle.Between(this.pets.itchy.x, this.pets.itchy.y, this.pets.itchy.targetAlien.x, this.pets.itchy.targetAlien.y);
+                this.pets.itchy.vx = Math.cos(angle) * 70; // Itchy is fast
+                this.pets.itchy.vy = Math.sin(angle) * 70;
+
+                // Attack logic
+                this.pets.itchy.attackTimer -= delta;
+                if (this.pets.itchy.attackTimer <= 0 && Phaser.Math.Distance.Between(this.pets.itchy.x, this.pets.itchy.y, this.pets.itchy.targetAlien.x, this.pets.itchy.targetAlien.y) < 50) {
+                    this.pets.itchy.targetAlien.health -= this.ITCHY_DAMAGE;
+                    this.pets.itchy.attackTimer = this.ITCHY_ATTACK_INTERVAL;
+                    // Visual feedback for Itchy's attack - cyan flash on alien
+                    this.pets.itchy.targetAlien.setTintFill(0x00FFFF);
+                    this.time.delayedCall(100, () => { if(this.pets.itchy.targetAlien && this.pets.itchy.targetAlien.active) this.pets.itchy.targetAlien.clearTint(); });
+                    if (this.pets.itchy.targetAlien.health <= 0) {
+                        this.pets.itchy.targetAlien.destroy();
+                        this.pets.itchy.targetAlien = null;
+                    }
+                }
+            }
+
+            // Random movement if no alien target
+            if (!itchyTargetFound) {
+                this.pets.itchy.changeDirectionTimer -= delta;
+                if (this.pets.itchy.changeDirectionTimer <= 0) {
+                    this.pets.itchy.vx = (Math.random() - 0.5) * 60;
+                    this.pets.itchy.vy = (Math.random() - 0.5) * 60;
+                    this.pets.itchy.changeDirectionTimer = Phaser.Math.Between(1000, 3000);
+                }
+            }
+            this.pets.itchy.x += this.pets.itchy.vx * (delta / 1000);
+            this.pets.itchy.y += this.pets.itchy.vy * (delta / 1000);
+            this.confineToTank(this.pets.itchy, 15); // Keep Itchy in tank
+        }
+    }
+
+    // --- Collision & Helper Methods ---
+    checkCollisions() {
+        const nutritionPerFood = this.FOOD_NUTRITION_BASE + this.upgrades.foodQualityLevel;
+
+        // Guppies eat Food
+        this.guppies.getChildren().forEach(guppy => {
+            if (!guppy.active || guppy.state === 'starving') return; // Starving guppies don't eat
+
+            this.foodPellets.getChildren().forEach(food => {
+                if (!food.active) return;
+                // Check for overlap between guppy and food
+                if (Phaser.Geom.Intersects.RectangleToRectangle(guppy.getBounds(), food.getBounds())) {
+                    food.destroy(); // Food is eaten
+                    guppy.timeSinceLastFed = 0;
+                    guppy.timeInCurrentState = 0;
+                    guppy.state = 'normal';
+                    guppy.clearTint(); // Remove hungry (green) tint
+
+                    guppy.nutritionEatenThisStage += nutritionPerFood;
+
+                    // Growth logic
+                    if (guppy.guppySize === 'small' && guppy.nutritionEatenThisStage >= this.GUPPY_NUTRITION_TO_MEDIUM) {
+                        const oldX = guppy.x; const oldY = guppy.y;
+                        const inherited = guppy.nutritionEatenThisStage - this.GUPPY_NUTRITION_TO_MEDIUM;
+                        guppy.destroy(); // Remove small guppy
+                        this.spawnGuppy(oldX, oldY, 'medium', inherited); // Spawn medium guppy
+                    } else if (guppy.guppySize === 'medium' && guppy.nutritionEatenThisStage >= this.GUPPY_NUTRITION_TO_LARGE) {
+                         const oldX = guppy.x; const oldY = guppy.y;
+                         const inherited = guppy.nutritionEatenThisStage - this.GUPPY_NUTRITION_TO_LARGE;
+                         guppy.destroy(); // Remove medium guppy
+                         this.spawnGuppy(oldX, oldY, 'large', inherited); // Spawn large guppy
+                    }
+                }
+            });
+        });
+
+        // Carnivores eat Small Guppies
+        this.carnivores.getChildren().forEach(carnivore => {
+            if (!carnivore.active || carnivore.isFull) return; // Carnivores only eat if not full
+            this.guppies.getChildren().forEach(guppy => {
+                if (guppy.active && guppy.guppySize === 'small') {
+                    // Check for overlap between carnivore and small guppy
+                    if (Phaser.Geom.Intersects.RectangleToRectangle(carnivore.getBounds(), guppy.getBounds())) {
+                        guppy.destroy(); // Carnivore eats the small guppy
+                        carnivore.isFull = true;
+                        carnivore.timeSinceDiamondDrop = 0; // Start timer for diamond production
+                        carnivore.setText('🍖💎'); // Indicate carnivore is full and will produce a diamond
+                        return; // Carnivore eats one guppy at a time
+                    }
+                }
+            });
+        });
+    }
+
+    confineToTank(entity, margin = 0) {
+        // Keeps an entity within the tank boundaries, reversing velocity if it hits a wall
+        const bounds = entity.getBounds();
+        const entityWidth = bounds.width;
+        const entityHeight = bounds.height;
+
+        // Adjust for entity's origin point for more accurate boundary checks
+        const originXFactor = entity.originX;
+        const originYFactor = entity.originY;
+
+        if (entity.x - (entityWidth * originXFactor) < this.TANK_X + margin) {
+            entity.x = this.TANK_X + margin + (entityWidth * originXFactor);
+            if(entity.vx) entity.vx *= -0.8; // Reverse horizontal velocity and dampen slightly
+        } else if (entity.x + (entityWidth * (1-originXFactor)) > this.TANK_X + this.TANK_WIDTH - margin) {
+            entity.x = this.TANK_X + this.TANK_WIDTH - margin - (entityWidth * (1-originXFactor));
+            if(entity.vx) entity.vx *= -0.8;
+        }
+
+        if (entity.y - (entityHeight * originYFactor) < this.TANK_Y + margin) {
+            entity.y = this.TANK_Y + margin + (entityHeight * originYFactor);
+            if(entity.vy) entity.vy *= -0.8; // Reverse vertical velocity and dampen slightly
+        } else if (entity.y + (entityHeight * (1-originYFactor)) > this.TANK_Y + this.TANK_HEIGHT - margin) {
+            entity.y = this.TANK_Y + this.TANK_HEIGHT - margin - (entityHeight * (1-originYFactor));
+            if(entity.vy) entity.vy *= -0.8;
+        }
+    }
+
+    findClosestFish(x, y, fishGroups, maxRange = Infinity) {
+        // Helper function for aliens/pets to find the nearest fish target
+        let closestFish = null;
+        let minDistance = maxRange;
+
+        fishGroups.forEach(group => {
+            group.getChildren().forEach(fish => {
+                if (fish.active) {
+                    const distance = Phaser.Math.Distance.Between(x, y, fish.x, fish.y);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestFish = fish;
+                    }
+                }
+            });
+        });
+        return closestFish;
+    }
+}
+
+// Phaser game configuration
+const config = {
+    type: Phaser.AUTO, // Automatically choose WebGL or Canvas renderer
+    width: 800,        // Matches GameScene.SCREEN_WIDTH
+    height: 600,       // Matches GameScene.SCREEN_HEIGHT
+    parent: 'game-container', // ID of the HTML element to contain the game
+    scene: [GameScene],       // The game scene(s) to load
+    backgroundColor: '#111111' // Dark background for the page
+};
+
+// Create a new Phaser game instance
+const game = new Phaser.Game(config);
+
+</script>
+</body>
+</html>
