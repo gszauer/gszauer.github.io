@@ -506,7 +506,7 @@
                     'Desktop': {
                         type: 'folder',
                         children: {
-                            'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>' },
+                            'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>', defaultX: 50, defaultY: 50, defaultWidth: 300, defaultHeight: 150 },
                             'Games': { type: 'shortcut', target: 'games', icon: '🎮', windowType: 'FolderWindow', contentSource: 'C:/Games' },
                             'Apps': { type: 'shortcut', target: 'apps', icon: '📱', windowType: 'FolderWindow', contentSource: 'C:/Apps' },
                             'Books': { type: 'shortcut', target: 'books', icon: '📚', windowType: 'FolderWindow', contentSource: 'C:/Books' },
@@ -517,7 +517,7 @@
                     'Start Menu': {
                         type: 'folder',
                         children: {
-                             'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>' },
+                             'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>', defaultX: 50, defaultY: 50, defaultWidth: 300, defaultHeight: 150 },
                              'Shutdown': { type: 'shortcut', target: 'shutdown', icon: '🔌', windowType: 'Hyperlink', url: 'https://gabormakesgames.com' }
                         }
                     },
@@ -528,7 +528,7 @@
                     'Books': { type: 'folder', children: {
                              'Game Physics Cookbook': { type: 'shortcut', target: 'https://gamephysicscookbook.com/', icon: '📖', windowType: 'BrowserWindow' },
                              'Game Animation Programming': { type: 'shortcut', target: 'https://animationprogramming.com/', icon: '📖', windowType: 'BrowserWindow' },
-                             'Lua Quick Start Guide': { type: 'shortcut', target: 'https://gaborszauer.com/publications_lua.html', icon: '📖', windowType: 'BrowserWindow' }
+                             'Lua Quick Start Guide': { type: 'shortcut', target: 'https://gaborszauer.com/publications_lua.html', icon: '�', windowType: 'BrowserWindow' }
                         }
                     }
                 }
@@ -576,10 +576,13 @@
             constructor(id, title, options = {}) {
                 this.id = id || generateId('window');
                 this.title = title;
-                this.width = options.width || Math.random() * 200 + 400;
-                this.height = options.height || Math.random() * 150 + 300;
-                this.x = options.x || Math.random() * (Math.max(0, desktopElement.offsetWidth - this.width - 20)) + 10;
-                this.y = options.y || Math.random() * (Math.max(0, desktopElement.offsetHeight - this.height - 40)) + 10;
+                const desktopWidth = desktopElement ? desktopElement.offsetWidth : window.innerWidth;
+                const desktopHeight = desktopElement ? desktopElement.offsetHeight : window.innerHeight;
+
+                this.width = options.width || (Math.random() * 200 + 400);
+                this.height = options.height || (Math.random() * 150 + 300);
+                this.x = options.x !== undefined ? options.x : (Math.random() * (Math.max(0, desktopWidth - this.width - 20)) + 10);
+                this.y = options.y !== undefined ? options.y : (Math.random() * (Math.max(0, desktopHeight - this.height - 40)) + 10);
 
                 this.minWidth = options.minWidth || 200;
                 this.minHeight = options.minHeight || 150;
@@ -750,7 +753,9 @@
                 iframeSrc: itemData.target,
                 contentSource: itemData.contentSource,
                 width: itemData.defaultWidth,
-                height: itemData.defaultHeight
+                height: itemData.defaultHeight,
+                x: itemData.defaultX,
+                y: itemData.defaultY
             };
 
             switch (itemData.windowType) {
@@ -803,8 +808,15 @@
             const clientX = dragInfo.isTouchEvent ? event.touches[0].clientX : event.clientX;
             const clientY = dragInfo.isTouchEvent ? event.touches[0].clientY : event.clientY;
             let newX = clientX - dragInfo.offsetX, newY = clientY - dragInfo.offsetY;
-            const taskbarHeight = document.getElementById('taskbar').offsetHeight, desktopWidth = document.documentElement.clientWidth, desktopHeight = document.documentElement.clientHeight - taskbarHeight; const windowWidth = dragInfo.targetWindow.element.offsetWidth;
-            newX = Math.max(-windowWidth + 30, Math.min(newX, desktopWidth - 30)); newY = Math.max(0, Math.min(newY, desktopHeight - 5));
+            const taskbarHeight = document.getElementById('taskbar').offsetHeight;
+            const desktopWidth = document.documentElement.clientWidth;
+            const desktopHeight = document.documentElement.clientHeight - taskbarHeight;
+            const windowWidth = dragInfo.targetWindow.element.offsetWidth;
+            const windowHeight = dragInfo.targetWindow.element.offsetHeight;
+
+            newX = Math.max(0, Math.min(newX, desktopWidth - windowWidth));
+            newY = Math.max(0, Math.min(newY, desktopHeight - windowHeight));
+
             dragInfo.targetWindow.x = newX; dragInfo.targetWindow.y = newY;
             dragInfo.targetWindow.element.style.left = `${newX}px`; dragInfo.targetWindow.element.style.top = `${newY}px`;
             if (!dragInfo.targetWindow.isMaximized) { dragInfo.targetWindow.originalState.x = newX; dragInfo.targetWindow.originalState.y = newY; }
@@ -879,7 +891,6 @@
 
         // --- Initialization ---
         function renderDesktopIcons() {
-            // Remove only existing icons before re-rendering
             const existingIcons = desktopElement.querySelectorAll('.icon');
             existingIcons.forEach(icon => icon.remove());
 
@@ -997,44 +1008,50 @@
                 const winInstance = openWindows[id];
                 if (winInstance.isMaximized || winInstance.isMinimized || !winInstance.element) continue;
 
-                let currentX = winInstance.element.offsetLeft;
-                let currentY = winInstance.element.offsetTop;
-                const currentWidth = winInstance.element.offsetWidth;
-                const currentHeight = winInstance.element.offsetHeight;
+                let currentX = winInstance.x;
+                let currentY = winInstance.y;
+                let currentWidth = winInstance.width;
+                let currentHeight = winInstance.height;
+                let needsStyleUpdate = false;
 
-                let needsUpdate = false;
-
-                if (currentX + currentWidth > desktopWidth) {
-                    currentX = Math.max(0, desktopWidth - currentWidth);
-                    needsUpdate = true;
-                }
-                if (currentX < 0) {
+                if (currentWidth > desktopWidth) {
+                    currentWidth = desktopWidth;
                     currentX = 0;
-                    needsUpdate = true;
+                    needsStyleUpdate = true;
                 }
-                if (currentY + currentHeight > desktopHeight) {
-                    currentY = Math.max(0, desktopHeight - currentHeight);
-                    needsUpdate = true;
-                }
-                if (currentY < 0) {
+                if (currentHeight > desktopHeight) {
+                    currentHeight = desktopHeight;
                     currentY = 0;
-                    needsUpdate = true;
+                    needsStyleUpdate = true;
                 }
 
-                if (needsUpdate) {
-                    winInstance.x = currentX;
-                    winInstance.y = currentY;
-                    winInstance.element.style.left = `${currentX}px`;
-                    winInstance.element.style.top = `${currentY}px`;
-                    winInstance.originalState.x = currentX;
-                    winInstance.originalState.y = currentY;
+                if (currentX < 0) { currentX = 0; needsStyleUpdate = true; }
+                if (currentX + currentWidth > desktopWidth) { currentX = desktopWidth - currentWidth; needsStyleUpdate = true; }
+                if (currentY < 0) { currentY = 0; needsStyleUpdate = true; }
+                if (currentY + currentHeight > desktopHeight) { currentY = desktopHeight - currentHeight; needsStyleUpdate = true; }
+
+                if (currentX < 0) currentX = 0; // Final check after potential resize
+                if (currentY < 0) currentY = 0;
+
+
+                if (needsStyleUpdate) {
+                    winInstance.x = currentX; winInstance.y = currentY;
+                    winInstance.width = currentWidth; winInstance.height = currentHeight;
+                    winInstance.element.style.left = `${currentX}px`; winInstance.element.style.top = `${currentY}px`;
+                    winInstance.element.style.width = `${currentWidth}px`; winInstance.element.style.height = `${currentHeight}px`;
+                    if (!winInstance.isMaximized) {
+                         winInstance.originalState = { x: currentX, y: currentY, width: currentWidth, height: currentHeight };
+                    }
                 }
             }
         }
 
 
         // --- Initial Setup ---
-        const savedTheme = localStorage.getItem('win98theme') || 'light'; applyTheme(savedTheme);
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('win98theme') || (prefersDark ? 'dark' : 'light');
+        applyTheme(savedTheme);
+
         renderDesktopIcons(); startButton.addEventListener('click', toggleStartMenu); themeSwitcherElement.addEventListener('click', toggleTheme);
         updateClock(); setInterval(updateClock, 1000);
         document.addEventListener('dragstart', (e) => e.preventDefault());
