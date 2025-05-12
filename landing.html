@@ -34,13 +34,16 @@
             --start-menu-sidebar-text: #c0c0c0;
             --start-menu-hover-bg: #000080;
             --start-menu-hover-text: white;
-            --content-bg: white;
-            --content-text: black;
+            --content-bg: white; /* Default content area background */
+            --content-text: black; /* Default content area text color */
+            --info-window-content-bg: #c0c0c0; /* Specific for InfoWindow light theme */
+            --info-window-content-text: black; /* Specific for InfoWindow light theme */
             --iframe-container-bg: white;
             --theme-icon-fill: black;
             --user-header-image-border: #808080;
             --user-header-image-shadow: #000000;
             --user-header-image-highlight: #ffffff;
+            --desktop-qrcode-border: #808080; /* For light theme */
         }
 
         body.dark-theme {
@@ -72,11 +75,14 @@
             --start-menu-hover-text: white;
             --content-bg: #4a4a4a;
             --content-text: #dadada;
+            --info-window-content-bg: #3b3b3b; /* InfoWindow dark theme matches window */
+            --info-window-content-text: #dadada; /* InfoWindow dark theme matches window */
             --iframe-container-bg: #333;
             --theme-icon-fill: #ecf0f1;
             --user-header-image-border: #555555;
             --user-header-image-shadow: #222222;
             --user-header-image-highlight: #777777;
+            --desktop-qrcode-border: #555555; /* For dark theme */
         }
 
 
@@ -94,11 +100,27 @@
             flex-wrap: wrap; align-content: flex-start; gap: 5px;
         }
 
+        /* QR Code on Desktop */
+        #desktop-qrcode {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--desktop-qrcode-border);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            z-index: 1;
+            transition: border-color 0.3s;
+        }
+
+
         /* Icons */
         .icon {
             display: flex; flex-direction: column; align-items: center;
             width: 75px; height: 75px; padding: 5px; text-align: center;
             cursor: pointer; border: 1px solid transparent;
+            z-index: 2;
+            position: relative;
         }
         .icon:hover { background-color: rgba(0, 80, 160, 0.2); border: 1px dotted #0050a0; }
         .icon.selected { background-color: rgba(0, 80, 160, 0.4); border: 1px dotted #003080; }
@@ -151,7 +173,9 @@
             background-color: var(--button-bg); color: var(--button-text);
             border: 1px solid var(--button-border-light); border-right-color: var(--button-border-dark); border-bottom-color: var(--button-border-dark);
             box-shadow: inset 1px 1px 0 var(--button-border-light), 1px 1px 0 var(--button-border-shadow);
-            padding: 3px 6px; height: 22px; min-width: 60px; max-width: 150px;
+            padding: 3px 6px; height: 22px;
+            min-width: 60px;
+            max-width: 130px;
             overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer;
             font-size: 11px; text-align: left;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
@@ -193,9 +217,10 @@
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
+
         /* Start Menu */
         #start-menu {
-            position: absolute; bottom: 30px; left: 0; width: 220px;
+            position: absolute; bottom: 30px; left: 0;
             background-color: var(--window-bg);
             border: 1px solid var(--button-border-light); border-right-color: var(--button-border-dark); border-bottom-color: var(--button-border-dark);
             box-shadow: inset 1px 1px 0 var(--button-border-light), 2px 2px 3px rgba(0,0,0,0.4);
@@ -248,18 +273,16 @@
         #start-menu-right-panel {
             display: flex; flex-direction: column; flex-grow: 1;
             background-color: var(--window-bg); transition: background-color 0.3s;
+            min-width: 145px;
         }
 
         #start-menu-items {
             flex-grow: 1;
-            /* overflow-y: auto; /* REMOVED - Let submenus overflow if necessary, or scroll individually */
-            /* position: relative; /* No longer needed for submenu positioning */
         }
         .start-menu-item {
             display: flex; align-items: center; padding: 4px 10px; cursor: pointer;
             white-space: nowrap; justify-content: space-between; color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
-            /* position: relative; REMOVED */
         }
         .start-menu-item:hover { background-color: var(--start-menu-hover-bg); color: var(--start-menu-hover-text); }
         .start-menu-item .item-content { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
@@ -267,25 +290,16 @@
         .start-menu-item .item-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .start-menu-item .submenu-arrow { font-size: 10px; margin-left: 10px; flex-shrink: 0; }
 
-        /* Global Submenu Container - for positioning submenus outside clipping parents */
         #global-submenu-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            z-index: 10002; /* Higher than Start Menu */
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 0; height: 0;
+            z-index: 10002; pointer-events: none;
         }
         #global-submenu-container > .start-menu-submenu {
             pointer-events: auto;
         }
 
-
         .start-menu-submenu {
-            display: none;
-            position: fixed; /* For global positioning */
-            min-width: 150px;
+            display: none; position: fixed; min-width: 150px;
             background-color: var(--window-bg);
             border: 1px solid var(--button-border-light);
             border-right-color: var(--button-border-dark);
@@ -293,9 +307,7 @@
             box-shadow: inset 1px 1px 0 var(--button-border-light), 2px 2px 3px rgba(0,0,0,0.4);
             padding: 2px;
             transition: background-color 0.3s, border-color 0.3s;
-            max-height: 200px;
-            overflow-y: auto;
-            overflow-x: hidden;
+            max-height: 200px; overflow-y: auto; overflow-x: hidden;
         }
 
         .submenu-item {
@@ -305,7 +317,6 @@
         }
         .submenu-item:hover { background-color: var(--start-menu-hover-bg); color: var(--start-menu-hover-text); }
         .submenu-item .icon-image { font-size: 16px; margin-right: 8px; width: 20px; text-align: center; flex-shrink: 0; }
-
 
         .start-menu-separator { height: 1px; background-color: var(--inset-border-light); border-bottom: 1px solid var(--button-border-light); margin: 2px 0; transition: background-color 0.3s, border-color 0.3s; }
 
@@ -345,7 +356,7 @@
         }
 
         /* Browser Window URL Bar */
-        .browser-url-bar { background-color: var(--window-bg); padding: 2px 3px; flex-shrink: 0; display: flex; align-items: center; gap: 3px; transition: background-color 0.3s; }
+        .browser-url-bar { background-color: var(--window-bg); padding: 2px 3px; flex-shrink: 0; display: flex; align-items: center; gap: 3px; transition: background-color 0.3s; margin: 1px; }
         .browser-url-input { background-color: var(--disabled-bg); border: 1px solid var(--inset-border-light); box-shadow: inset 1px 1px 0 var(--inset-border-dark); padding: 2px 4px; flex-grow: 1; box-sizing: border-box; font-family: "Tahoma", "Geneva", sans-serif; font-size: 11px; color: var(--disabled-text); cursor: pointer; min-width: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         .browser-go-button { background-color: var(--button-bg); color: var(--button-text); border: 1px solid var(--button-border-light); border-right-color: var(--button-border-dark); border-bottom-color: var(--button-border-dark); box-shadow: inset 1px 1px 0 var(--button-border-light), 1px 1px 0 var(--button-border-shadow); padding: 1px 6px; font-size: 11px; font-weight: normal; cursor: pointer; flex-shrink: 0; height: 20px; transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
         .browser-go-button:active { border: 1px solid var(--button-border-dark); border-right-color: var(--button-border-light); border-bottom-color: var(--button-border-light); box-shadow: inset 1px 1px 0 var(--button-border-shadow); padding: 2px 5px 0px 7px; }
@@ -357,6 +368,17 @@
             box-shadow: inset 1px 1px 0 var(--inset-border-dark); min-height: 0;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
+        /* Specific styling for InfoWindow content area */
+        .info-window-content {
+            background-color: var(--info-window-content-bg);
+            color: var(--info-window-content-text);
+        }
+        body:not(.dark-theme) .info-window-content h1,
+        body:not(.dark-theme) .info-window-content p {
+            color: black;
+        }
+
+
          .window.maximized .window-content { margin: 0; border: none; box-shadow: none; }
         .iframe-content, .browser-content {
              padding: 0 !important; overflow: hidden !important; border: none !important; box-shadow: none !important;
@@ -388,10 +410,40 @@
         }
         #toast-notification.show { opacity: 1; }
 
+        /* Mobile Font Size Adjustments */
+        @media (max-width: 768px) {
+            body, html {
+                font-size: 13px;
+            }
+            .taskbar-button {
+                min-width: 40px;
+                padding: 3px 4px;
+            }
+            #start-button .start-icon {
+                margin-right: 3px;
+            }
+            .user-header-button {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+            }
+            #user-header-image, #user-header-image-container {
+                 width: 40px;
+                 height: 40px;
+            }
+            .start-menu-item .icon-image, .submenu-item .icon-image {
+                width: 18px;
+                font-size: 14px;
+            }
+        }
+
+
     </style>
 </head>
 <body class="">
-    <div id="desktop"></div>
+    <div id="desktop">
+        <img id="desktop-qrcode" src="https://gaborszauer.com/img/contact.png" alt="Contact QR Code">
+    </div>
 
     <div id="start-menu" style="display:none;">
         <div id="start-menu-sidebar"><span>Gabor Szauer</span></div>
@@ -418,7 +470,7 @@
         <div id="taskbar-items"></div>
         <button id="theme-switcher" title="Toggle Theme"></button>
         <div id="clock">00:00 AM</div>
-    </div>
+        </div>
 
     <div id="window-container"></div>
     <div id="toast-notification">Copied!</div>
@@ -439,10 +491,10 @@
         let highestZIndex = 100;
         let openWindows = {};
         let activeWindowInstance = null;
-        let dragInfo = { isDragging: false, targetWindow: null, offsetX: 0, offsetY: 0 };
-        let resizeInfo = { isResizing: false, targetWindow: null, startX: 0, startY: 0, startWidth: 0, startHeight: 0, direction: '' };
+        let dragInfo = { isDragging: false, targetWindow: null, offsetX: 0, offsetY: 0, isTouchEvent: false };
+        let resizeInfo = { isResizing: false, targetWindow: null, startX: 0, startY: 0, startWidth: 0, startHeight: 0, direction: '', isTouchEvent: false };
         let toastTimeout = null;
-        const RESIZE_BORDER_WIDTH = 8;
+        const RESIZE_BORDER_WIDTH = 10;
         let activeSubmenu = null;
         let submenuHideTimeout = null;
 
@@ -454,21 +506,25 @@
                     'Desktop': {
                         type: 'folder',
                         children: {
+                            'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>' },
                             'Games': { type: 'shortcut', target: 'games', icon: '🎮', windowType: 'FolderWindow', contentSource: 'C:/Games' },
                             'Apps': { type: 'shortcut', target: 'apps', icon: '📱', windowType: 'FolderWindow', contentSource: 'C:/Apps' },
                             'Books': { type: 'shortcut', target: 'books', icon: '📚', windowType: 'FolderWindow', contentSource: 'C:/Books' },
-                            'Resume': { type: 'shortcut', target: 'https://gaborszauer.com/GaborSzauerResume.pdf', icon: '�', windowType: 'BrowserWindow' },
+                            'Resume': { type: 'shortcut', target: 'https://gaborszauer.com/GaborSzauerResume.pdf', icon: '📜', windowType: 'BrowserWindow' },
                             'Blog': { type: 'shortcut', target: 'https://gabormakesgames.com', icon: '📰', windowType: 'BrowserWindow' }
                         }
                     },
                     'Start Menu': {
                         type: 'folder',
                         children: {
+                             'About': { type: 'shortcut', target: 'about_me', icon: '👨‍💻', windowType: 'InfoWindow', htmlContent: '<h1>Gabor Szauer</h1><p>Game Developer</p>' },
                              'Shutdown': { type: 'shortcut', target: 'shutdown', icon: '🔌', windowType: 'Hyperlink', url: 'https://gabormakesgames.com' }
                         }
                     },
                     'Games': { type: 'folder', children: { 'Readme.txt': { type: 'shortcut', target: 'readme_games', icon: '📄', windowType: 'ContentWindow', content: 'This folder is for games.' } } },
-                    'Apps': { type: 'folder', children: { 'Calculator.app': { type: 'shortcut', target: 'calculator_app', icon: '🧮', windowType: 'ContentWindow', content: 'Calculator App Placeholder' } } },
+                    'Apps': { type: 'folder', children: {
+                        'Key Frame Studio': { type: 'shortcut', target: 'https://keyframestudio.app/', icon: '🎞️', windowType: 'BrowserWindow', defaultWidth: 800, defaultHeight: 600 }
+                     } },
                     'Books': { type: 'folder', children: {
                              'Game Physics Cookbook': { type: 'shortcut', target: 'https://gamephysicscookbook.com/', icon: '📖', windowType: 'BrowserWindow' },
                              'Game Animation Programming': { type: 'shortcut', target: 'https://animationprogramming.com/', icon: '📖', windowType: 'BrowserWindow' },
@@ -518,7 +574,25 @@
         // --- Window Class ---
         class Window {
             constructor(id, title, options = {}) {
-                this.id = id || generateId('window'); this.title = title; this.x = options.x || Math.random() * 150 + 20; this.y = options.y || Math.random() * 100 + 20; this.width = options.width || 400; this.height = options.height || 300; this.minWidth = options.minWidth || 200; this.minHeight = options.minHeight || 150; this.zIndex = 0; this.element = null; this.taskbarButton = null; this.isMinimized = false; this.isMaximized = false; this.content = options.content || ''; this.iframeSrc = options.iframeSrc || ''; this.contentSource = options.contentSource || null; this.originalState = { x: this.x, y: this.y, width: this.width, height: this.height };
+                this.id = id || generateId('window');
+                this.title = title;
+                this.width = options.width || Math.random() * 200 + 400;
+                this.height = options.height || Math.random() * 150 + 300;
+                this.x = options.x || Math.random() * (Math.max(0, desktopElement.offsetWidth - this.width - 20)) + 10;
+                this.y = options.y || Math.random() * (Math.max(0, desktopElement.offsetHeight - this.height - 40)) + 10;
+
+                this.minWidth = options.minWidth || 200;
+                this.minHeight = options.minHeight || 150;
+                this.zIndex = 0;
+                this.element = null;
+                this.taskbarButton = null;
+                this.isMinimized = false;
+                this.isMaximized = false;
+                this.content = options.content || '';
+                this.htmlContent = options.htmlContent || '';
+                this.iframeSrc = options.iframeSrc || '';
+                this.contentSource = options.contentSource || null;
+                this.originalState = { x: this.x, y: this.y, width: this.width, height: this.height };
             }
             _createBaseElement() {
                 const win = document.createElement('div'); win.id = this.id; win.className = 'window';
@@ -530,6 +604,8 @@
                 const contentArea = document.createElement('div'); contentArea.className = 'window-content'; win.appendChild(contentArea);
                 win.addEventListener('mousedown', (e) => { this._handleWindowMouseDown(e); });
                 win.addEventListener('mousemove', (e) => { this._handleWindowMouseMoveForCursor(e); });
+                win.addEventListener('touchstart', (e) => { this._handleWindowTouchStart(e); }, { passive: false });
+                win.addEventListener('touchmove', (e) => { this._handleWindowTouchMoveForCursor(e); }, { passive: false });
                 this.element = win;
                 return win;
             }
@@ -537,9 +613,14 @@
                  const titleBar = document.createElement('div'); titleBar.className = 'window-titlebar'; const titleText = document.createElement('span'); titleText.className = 'window-title'; titleText.textContent = this.title; const controls = this._createWindowControls(); titleBar.appendChild(titleText); titleBar.appendChild(controls);
                  titleBar.addEventListener('mousedown', (e) => {
                     if (e.target === titleBar || e.target === titleText) {
-                        if (!this.isMaximized) { this.focus(); startDrag(e, this); }
+                        if (!this.isMaximized) { this.focus(); startDrag(e, this, false); }
                     }
                  });
+                 titleBar.addEventListener('touchstart', (e) => {
+                    if (e.target === titleBar || e.target === titleText) {
+                        if (!this.isMaximized) { this.focus(); startDrag(e, this, true); }
+                    }
+                 }, { passive: false });
                  titleBar.addEventListener('dblclick', (e) => { if (e.target === titleBar || e.target === titleText) this.toggleMaximize(); }); return titleBar;
             }
             _createWindowControls() {
@@ -568,25 +649,63 @@
             _createTaskbarButton() {
                  const btn = document.createElement('button'); btn.className = 'taskbar-button'; btn.textContent = this.title; btn.title = this.title; btn.dataset.windowId = this.id; btn.onclick = () => { const win = openWindows[this.id]; if (win) { if (win.isMinimized) win.restore(); else if (activeWindowInstance === win) win.minimize(); else win.focus(); } }; taskbarItemsContainer.appendChild(btn); this.taskbarButton = btn;
              }
-            _getResizeDirection(e) {
-                if (this.isMaximized) return ''; const rect = this.element.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; let direction = ''; if (y < RESIZE_BORDER_WIDTH) direction += 'n'; else if (y > rect.height - RESIZE_BORDER_WIDTH) direction += 's'; if (x < RESIZE_BORDER_WIDTH) direction += 'w'; else if (x > rect.width - RESIZE_BORDER_WIDTH) direction += 'e'; return direction;
+            _getResizeDirection(e, isTouchEvent = false) {
+                if (this.isMaximized) return '';
+                const rect = this.element.getBoundingClientRect();
+                const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+                const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                let direction = '';
+                if (y < RESIZE_BORDER_WIDTH) direction += 'n';
+                else if (y > rect.height - RESIZE_BORDER_WIDTH) direction += 's';
+                if (x < RESIZE_BORDER_WIDTH) direction += 'w';
+                else if (x > rect.width - RESIZE_BORDER_WIDTH) direction += 'e';
+                return direction;
             }
             _handleWindowMouseDown(e) {
-                if (e.target.closest('.window-controls button')) { this.focus(); return; } const direction = this._getResizeDirection(e); if (direction && !this.isMaximized) { e.preventDefault(); e.stopPropagation(); this.focus(); startResize(e, this, direction); } else if (!e.target.closest('.window-titlebar')) { this.focus(); }
+                if (e.target.closest('.window-controls button')) { this.focus(); return; }
+                const direction = this._getResizeDirection(e, false);
+                if (direction && !this.isMaximized) { e.preventDefault(); e.stopPropagation(); this.focus(); startResize(e, this, direction, false); }
+                else if (!e.target.closest('.window-titlebar')) { this.focus(); }
+            }
+            _handleWindowTouchStart(e) {
+                if (e.target.closest('.window-controls button')) { this.focus(); return; }
+                if (e.target.closest('.window-titlebar')) { return; }
+                const direction = this._getResizeDirection(e, true);
+                if (direction && !this.isMaximized) {
+                    e.preventDefault(); e.stopPropagation(); this.focus(); startResize(e, this, direction, true);
+                } else { this.focus(); }
             }
             _handleWindowMouseMoveForCursor(e) {
-                if (dragInfo.isDragging || resizeInfo.isResizing || this.isMaximized) { this.element.style.cursor = ''; return; } const direction = this._getResizeDirection(e); if (direction) { this.element.style.cursor = `${direction}-resize`; } else { this.element.style.cursor = 'default'; }
+                if (dragInfo.isDragging || resizeInfo.isResizing || this.isMaximized) { this.element.style.cursor = ''; return; }
+                const direction = this._getResizeDirection(e, false);
+                if (direction) { this.element.style.cursor = `${direction}-resize`; }
+                else { this.element.style.cursor = 'default'; }
             }
+            _handleWindowTouchMoveForCursor(e) { /* No cursor for touch */ }
         }
 
         // --- Window Subclasses ---
         class ContentWindow extends Window { /* Inherits renderContent */ }
+
+        class InfoWindow extends Window {
+            renderContent(contentArea) {
+                contentArea.classList.add('info-window-content');
+                contentArea.innerHTML = this.htmlContent || '<p style="color: var(--disabled-text)">(No information available)</p>';
+            }
+        }
+
         class IFrameWindow extends Window {
              constructor(id, title, options = {}) { options.width = options.width || 640; options.height = options.height || 480; super(id, title, options); }
             renderContent(contentArea) { contentArea.classList.add('iframe-content'); const iframe = document.createElement('iframe'); iframe.src = this.iframeSrc; iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-forms"; iframe.onerror = () => { contentArea.innerHTML = `<p style="padding: 10px; color: red;">Error loading ${this.iframeSrc}. Embedding might be blocked.</p>`; }; contentArea.appendChild(iframe); }
         }
         class BrowserWindow extends Window {
-             constructor(id, title, options = {}) { options.width = options.width || 700; options.height = options.height || 500; super(id, title, options); }
+             constructor(id, title, options = {}) {
+                options.width = options.defaultWidth || options.width || 700;
+                options.height = options.defaultHeight || options.height || 500;
+                super(id, title, options);
+            }
             insertBeforeContent(windowElement) { const urlBar = document.createElement('div'); urlBar.className = 'browser-url-bar'; const urlInput = document.createElement('input'); urlInput.type = 'text'; urlInput.className = 'browser-url-input'; urlInput.value = this.iframeSrc || ''; urlInput.readOnly = true; urlInput.title = "Click to copy URL"; const goButton = document.createElement('button'); goButton.className = 'browser-go-button'; goButton.textContent = 'Go'; goButton.title = "Open URL in new tab"; goButton.onclick = (e) => { e.stopPropagation(); if (this.iframeSrc) window.open(this.iframeSrc, '_blank'); }; urlInput.onclick = (e) => { e.stopPropagation(); if (navigator.clipboard && this.iframeSrc) { navigator.clipboard.writeText(this.iframeSrc).then(() => showToast("Copied!")).catch(err => { console.error('Failed to copy URL: ', err); showToast("Copy failed", 2000); }); } else { showToast("Copy not supported", 2000); } }; urlBar.appendChild(urlInput); urlBar.appendChild(goButton); const contentArea = windowElement.querySelector('.window-content'); if (contentArea) windowElement.insertBefore(urlBar, contentArea); else windowElement.appendChild(urlBar); }
             renderContent(contentArea) { contentArea.classList.add('browser-content'); const iframe = document.createElement('iframe'); iframe.src = this.iframeSrc; iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-forms"; iframe.referrerpolicy = "no-referrer"; iframe.onerror = () => { contentArea.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--disabled-text);"><p>⚠️ Unable to load page.</p><p><small>${this.iframeSrc}</small></p><p><small>The website may prevent embedding.</small></p></div>`; }; contentArea.appendChild(iframe); }
         }
@@ -605,95 +724,175 @@
 
         // --- Submenu Management ---
         function hideActiveSubmenu() {
-            if (activeSubmenu) {
-                activeSubmenu.remove();
-                activeSubmenu = null;
-            }
-            if (submenuHideTimeout) {
-                clearTimeout(submenuHideTimeout);
-                submenuHideTimeout = null;
-            }
+            if (activeSubmenu) { activeSubmenu.remove(); activeSubmenu = null; }
+            if (submenuHideTimeout) { clearTimeout(submenuHideTimeout); submenuHideTimeout = null; }
         }
-
         function showSubmenuFor(menuItemElement, submenuElement) {
-            hideActiveSubmenu();
-
-            const rect = menuItemElement.getBoundingClientRect();
-            submenuElement.style.top = `${rect.top -2}px`;
-            submenuElement.style.left = `${rect.right}px`;
-            submenuElement.style.display = 'block';
-
-            globalSubmenuContainer.appendChild(submenuElement);
+            hideActiveSubmenu(); const rect = menuItemElement.getBoundingClientRect();
+            submenuElement.style.top = `${rect.top -2}px`; submenuElement.style.left = `${rect.right}px`;
+            submenuElement.style.display = 'block'; globalSubmenuContainer.appendChild(submenuElement);
             activeSubmenu = submenuElement;
-
-            submenuElement.addEventListener('mouseenter', () => {
-                if (submenuHideTimeout) clearTimeout(submenuHideTimeout);
-            });
-            submenuElement.addEventListener('mouseleave', () => {
-                 submenuHideTimeout = setTimeout(hideActiveSubmenu, 200);
-            });
+            submenuElement.addEventListener('mouseenter', () => { if (submenuHideTimeout) clearTimeout(submenuHideTimeout); });
+            submenuElement.addEventListener('mouseleave', () => { submenuHideTimeout = setTimeout(hideActiveSubmenu, 200); });
         }
 
 
         // --- Event Handlers ---
         function handleItemOpen(name, itemData) {
-            if (itemData.target === 'shutdown' && itemData.url) {
-                 window.open(itemData.url, '_blank');
-                 hideStartMenu();
-                 return;
+            if (itemData.target === 'shutdown' && itemData.url) { window.open(itemData.url, '_blank'); hideStartMenu(); return; }
+            const windowId = `win-${itemData.windowType}-${(itemData.target || name).replace(/[^a-zA-Z0-9-_]/g, '')}`;
+            let windowInstance = openWindows[windowId];
+            if (windowInstance) { if (windowInstance.isMinimized) windowInstance.restore(); else windowInstance.focus(); hideStartMenu(); return; }
+
+            const windowOptions = {
+                content: itemData.content,
+                htmlContent: itemData.htmlContent,
+                iframeSrc: itemData.target,
+                contentSource: itemData.contentSource,
+                width: itemData.defaultWidth,
+                height: itemData.defaultHeight
+            };
+
+            switch (itemData.windowType) {
+                case 'ContentWindow': new ContentWindow(windowId, name, windowOptions).render(); break;
+                case 'InfoWindow': new InfoWindow(windowId, name, windowOptions).render(); break;
+                case 'IFrameWindow': new IFrameWindow(windowId, name, windowOptions).render(); break;
+                case 'BrowserWindow': new BrowserWindow(windowId, name, windowOptions).render(); break;
+                case 'FolderWindow': if (itemData.contentSource) new FolderWindow(windowId, name, windowOptions).render(); else { console.error("FolderWindow needs 'contentSource':", name, itemData); new ContentWindow(generateId('error'), 'Error', { content: `Config error: Missing source for folder '${name}'.` }).render(); } break;
+                case 'Hyperlink': if(itemData.target) window.open(itemData.target, '_blank'); else { console.error("Hyperlink needs 'target':", name, itemData); new ContentWindow(generateId('error'), 'Error', { content: `Config error: Missing target URL for link '${name}'.` }).render(); } break;
+                default: console.warn('Unknown windowType:', itemData.windowType); new ContentWindow(windowId, name, windowOptions).render();
             }
-            const windowId = `win-${itemData.windowType}-${(itemData.target || name).replace(/[^a-zA-Z0-9-_]/g, '')}`; let windowInstance = openWindows[windowId]; if (windowInstance) { if (windowInstance.isMinimized) windowInstance.restore(); else windowInstance.focus(); hideStartMenu(); return; } switch (itemData.windowType) { case 'ContentWindow': new ContentWindow(windowId, name, { content: itemData.content }).render(); break; case 'IFrameWindow': new IFrameWindow(windowId, name, { iframeSrc: itemData.target }).render(); break; case 'BrowserWindow': new BrowserWindow(windowId, name, { iframeSrc: itemData.target }).render(); break; case 'FolderWindow': if (itemData.contentSource) new FolderWindow(windowId, name, { contentSource: itemData.contentSource }).render(); else { console.error("FolderWindow needs 'contentSource':", name, itemData); new ContentWindow(generateId('error'), 'Error', { content: `Config error: Missing source for folder '${name}'.` }).render(); } break; case 'Hyperlink': if(itemData.target) window.open(itemData.target, '_blank'); else { console.error("Hyperlink needs 'target':", name, itemData); new ContentWindow(generateId('error'), 'Error', { content: `Config error: Missing target URL for link '${name}'.` }).render(); } break; default: console.warn('Unknown windowType:', itemData.windowType); new ContentWindow(windowId, name, { content: `Item Type: ${itemData.type}\nTarget: ${itemData.target || 'N/A'}` }).render(); } hideStartMenu();
+            hideStartMenu();
         }
         function toggleStartMenu() {
-            if (startMenuElement.style.display === 'flex') {
-                hideStartMenu();
-            } else {
-                showStartMenu();
-            }
+            if (startMenuElement.style.display === 'flex') { hideStartMenu(); } else { showStartMenu(); }
         }
         function showStartMenu() {
-            populateStartMenu();
-            startMenuElement.style.display = 'flex';
-            startButton.classList.add('active');
+            populateStartMenu(); startMenuElement.style.display = 'flex'; startButton.classList.add('active');
             setTimeout(() => { document.addEventListener('click', handleClickOutsideStartMenu, true); }, 0);
         }
         function hideStartMenu() {
-            startMenuElement.style.display = 'none';
-            startButton.classList.remove('active');
-            hideActiveSubmenu();
+            startMenuElement.style.display = 'none'; startButton.classList.remove('active'); hideActiveSubmenu();
             document.removeEventListener('click', handleClickOutsideStartMenu, true);
         }
         function handleClickOutsideStartMenu(event) {
-            if (!startMenuElement.contains(event.target) && !startButton.contains(event.target) && (!activeSubmenu || !activeSubmenu.contains(event.target)) ) {
-                 hideStartMenu();
-            }
+            if (!startMenuElement.contains(event.target) && !startButton.contains(event.target) && (!activeSubmenu || !activeSubmenu.contains(event.target)) ) { hideStartMenu(); }
         }
 
         // --- Drag and Drop ---
-        function startDrag(event, windowInstance) {
-            if (windowInstance.isMaximized || resizeInfo.isResizing) return; dragInfo.isDragging = true; dragInfo.targetWindow = windowInstance; const rect = windowInstance.element.getBoundingClientRect(); dragInfo.offsetX = event.clientX - rect.left; dragInfo.offsetY = event.clientY - rect.top; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', handleDrag); document.addEventListener('mouseup', stopDrag);
+        function startDrag(event, windowInstance, isTouchEvent = false) {
+            if (windowInstance.isMaximized || resizeInfo.isResizing) return;
+            dragInfo.isDragging = true; dragInfo.targetWindow = windowInstance; dragInfo.isTouchEvent = isTouchEvent;
+            const clientX = isTouchEvent ? event.touches[0].clientX : event.clientX;
+            const clientY = isTouchEvent ? event.touches[0].clientY : event.clientY;
+            const rect = windowInstance.element.getBoundingClientRect();
+            dragInfo.offsetX = clientX - rect.left; dragInfo.offsetY = clientY - rect.top;
+            document.body.style.userSelect = 'none';
+            if (isTouchEvent) {
+                event.preventDefault();
+                document.addEventListener('touchmove', handleDrag, { passive: false });
+                document.addEventListener('touchend', stopDrag);
+            } else {
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+            }
         }
         function handleDrag(event) {
-            if (!dragInfo.isDragging || !dragInfo.targetWindow) return; event.preventDefault(); let newX = event.clientX - dragInfo.offsetX, newY = event.clientY - dragInfo.offsetY; const taskbarHeight = document.getElementById('taskbar').offsetHeight, desktopWidth = document.documentElement.clientWidth, desktopHeight = document.documentElement.clientHeight - taskbarHeight; const windowWidth = dragInfo.targetWindow.element.offsetWidth; newX = Math.max(-windowWidth + 30, Math.min(newX, desktopWidth - 30)); newY = Math.max(0, Math.min(newY, desktopHeight - 5)); dragInfo.targetWindow.x = newX; dragInfo.targetWindow.y = newY; dragInfo.targetWindow.element.style.left = `${newX}px`; dragInfo.targetWindow.element.style.top = `${newY}px`; if (!dragInfo.targetWindow.isMaximized) { dragInfo.targetWindow.originalState.x = newX; dragInfo.targetWindow.originalState.y = newY; }
+            if (!dragInfo.isDragging || !dragInfo.targetWindow) return;
+            if (dragInfo.isTouchEvent) event.preventDefault();
+            const clientX = dragInfo.isTouchEvent ? event.touches[0].clientX : event.clientX;
+            const clientY = dragInfo.isTouchEvent ? event.touches[0].clientY : event.clientY;
+            let newX = clientX - dragInfo.offsetX, newY = clientY - dragInfo.offsetY;
+            const taskbarHeight = document.getElementById('taskbar').offsetHeight, desktopWidth = document.documentElement.clientWidth, desktopHeight = document.documentElement.clientHeight - taskbarHeight; const windowWidth = dragInfo.targetWindow.element.offsetWidth;
+            newX = Math.max(-windowWidth + 30, Math.min(newX, desktopWidth - 30)); newY = Math.max(0, Math.min(newY, desktopHeight - 5));
+            dragInfo.targetWindow.x = newX; dragInfo.targetWindow.y = newY;
+            dragInfo.targetWindow.element.style.left = `${newX}px`; dragInfo.targetWindow.element.style.top = `${newY}px`;
+            if (!dragInfo.targetWindow.isMaximized) { dragInfo.targetWindow.originalState.x = newX; dragInfo.targetWindow.originalState.y = newY; }
         }
         function stopDrag() {
-            if (dragInfo.isDragging) { dragInfo.isDragging = false; document.removeEventListener('mousemove', handleDrag); document.removeEventListener('mouseup', stopDrag); document.body.style.userSelect = ''; dragInfo.targetWindow = null; }
+            if (dragInfo.isDragging) {
+                document.body.style.userSelect = '';
+                if (dragInfo.isTouchEvent) {
+                    document.removeEventListener('touchmove', handleDrag);
+                    document.removeEventListener('touchend', stopDrag);
+                } else {
+                    document.removeEventListener('mousemove', handleDrag);
+                    document.removeEventListener('mouseup', stopDrag);
+                }
+                dragInfo.isDragging = false; dragInfo.targetWindow = null; dragInfo.isTouchEvent = false;
+            }
         }
 
         // --- Window Resizing ---
-        function startResize(event, windowInstance, direction) {
-            event.stopPropagation(); resizeInfo.isResizing = true; resizeInfo.targetWindow = windowInstance; resizeInfo.direction = direction; resizeInfo.startX = event.clientX; resizeInfo.startY = event.clientY; resizeInfo.startWidth = windowInstance.element.offsetWidth; resizeInfo.startHeight = windowInstance.element.offsetHeight; resizeInfo.startLeft = windowInstance.element.offsetLeft; resizeInfo.startTop = windowInstance.element.offsetTop; document.body.style.cursor = `${direction}-resize`; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', handleResize); document.addEventListener('mouseup', stopResize);
+        function startResize(event, windowInstance, direction, isTouchEvent = false) {
+            event.stopPropagation();
+            resizeInfo.isResizing = true; resizeInfo.targetWindow = windowInstance; resizeInfo.direction = direction; resizeInfo.isTouchEvent = isTouchEvent;
+            const clientX = isTouchEvent ? event.touches[0].clientX : event.clientX;
+            const clientY = isTouchEvent ? event.touches[0].clientY : event.clientY;
+            resizeInfo.startX = clientX; resizeInfo.startY = clientY;
+            resizeInfo.startWidth = windowInstance.element.offsetWidth; resizeInfo.startHeight = windowInstance.element.offsetHeight;
+            resizeInfo.startLeft = windowInstance.element.offsetLeft; resizeInfo.startTop = windowInstance.element.offsetTop;
+            document.body.style.cursor = `${direction}-resize`; document.body.style.userSelect = 'none';
+             if (isTouchEvent) {
+                event.preventDefault();
+                document.addEventListener('touchmove', handleResize, { passive: false });
+                document.addEventListener('touchend', stopResize);
+            } else {
+                document.addEventListener('mousemove', handleResize);
+                document.addEventListener('mouseup', stopResize);
+            }
         }
         function handleResize(event) {
-            if (!resizeInfo.isResizing || !resizeInfo.targetWindow) return; event.preventDefault(); const win = resizeInfo.targetWindow; let newX = resizeInfo.startLeft; let newY = resizeInfo.startTop; let newWidth = resizeInfo.startWidth; let newHeight = resizeInfo.startHeight; const dx = event.clientX - resizeInfo.startX; const dy = event.clientY - resizeInfo.startY; if (resizeInfo.direction.includes('e')) newWidth = resizeInfo.startWidth + dx; if (resizeInfo.direction.includes('s')) newHeight = resizeInfo.startHeight + dy; if (resizeInfo.direction.includes('w')) { newWidth = resizeInfo.startWidth - dx; newX = resizeInfo.startLeft + dx; } if (resizeInfo.direction.includes('n')) { newHeight = resizeInfo.startHeight - dy; newY = resizeInfo.startTop + dy; } if (newWidth < win.minWidth) { if (resizeInfo.direction.includes('w')) newX = resizeInfo.startLeft + (resizeInfo.startWidth - win.minWidth); newWidth = win.minWidth; } if (newHeight < win.minHeight) { if (resizeInfo.direction.includes('n')) newY = resizeInfo.startTop + (resizeInfo.startHeight - win.minHeight); newHeight = win.minHeight; } win.element.style.left = `${newX}px`; win.element.style.top = `${newY}px`; win.element.style.width = `${newWidth}px`; win.element.style.height = `${newHeight}px`; win.x = newX; win.y = newY; win.width = newWidth; win.height = newHeight; win.originalState = { x: newX, y: newY, width: newWidth, height: newHeight };
+            if (!resizeInfo.isResizing || !resizeInfo.targetWindow) return;
+            if (resizeInfo.isTouchEvent) event.preventDefault();
+            const win = resizeInfo.targetWindow;
+            const clientX = resizeInfo.isTouchEvent ? event.touches[0].clientX : event.clientX;
+            const clientY = resizeInfo.isTouchEvent ? event.touches[0].clientY : event.clientY;
+            let newX = resizeInfo.startLeft; let newY = resizeInfo.startTop;
+            let newWidth = resizeInfo.startWidth; let newHeight = resizeInfo.startHeight;
+            const dx = clientX - resizeInfo.startX; const dy = clientY - resizeInfo.startY;
+            if (resizeInfo.direction.includes('e')) newWidth = resizeInfo.startWidth + dx;
+            if (resizeInfo.direction.includes('s')) newHeight = resizeInfo.startHeight + dy;
+            if (resizeInfo.direction.includes('w')) { newWidth = resizeInfo.startWidth - dx; newX = resizeInfo.startLeft + dx; }
+            if (resizeInfo.direction.includes('n')) { newHeight = resizeInfo.startHeight - dy; newY = resizeInfo.startTop + dy; }
+            if (newWidth < win.minWidth) { if (resizeInfo.direction.includes('w')) newX = resizeInfo.startLeft + (resizeInfo.startWidth - win.minWidth); newWidth = win.minWidth; }
+            if (newHeight < win.minHeight) { if (resizeInfo.direction.includes('n')) newY = resizeInfo.startTop + (resizeInfo.startHeight - win.minHeight); newHeight = win.minHeight; }
+            win.element.style.left = `${newX}px`; win.element.style.top = `${newY}px`;
+            win.element.style.width = `${newWidth}px`; win.element.style.height = `${newHeight}px`;
+            win.x = newX; win.y = newY; win.width = newWidth; win.height = newHeight;
+            win.originalState = { x: newX, y: newY, width: newWidth, height: newHeight };
         }
         function stopResize() {
-            if (resizeInfo.isResizing) { resizeInfo.isResizing = false; document.removeEventListener('mousemove', handleResize); document.removeEventListener('mouseup', stopResize); document.body.style.cursor = ''; document.body.style.userSelect = ''; if(resizeInfo.targetWindow) resizeInfo.targetWindow.element.style.cursor = 'default'; resizeInfo.targetWindow = null; }
+            if (resizeInfo.isResizing) {
+                document.body.style.cursor = ''; document.body.style.userSelect = '';
+                if (resizeInfo.isTouchEvent) {
+                    document.removeEventListener('touchmove', handleResize);
+                    document.removeEventListener('touchend', stopResize);
+                } else {
+                    document.removeEventListener('mousemove', handleResize);
+                    document.removeEventListener('mouseup', stopResize);
+                }
+                if(resizeInfo.targetWindow) resizeInfo.targetWindow.element.style.cursor = 'default';
+                resizeInfo.isResizing = false; resizeInfo.targetWindow = null; resizeInfo.isTouchEvent = false;
+            }
         }
 
         // --- Initialization ---
         function renderDesktopIcons() {
-            desktopElement.innerHTML = ''; const desktopFolder = getPathObject('C:/Desktop'); if (desktopFolder && desktopFolder.children) { for (const name in desktopFolder.children) { const item = desktopFolder.children[name]; const iconElement = createIconElement(name, item, 'desktop', desktopElement); desktopElement.appendChild(iconElement); } } else { console.error("Could not find C:/Desktop in fileSystem"); desktopElement.textContent = "Error loading desktop icons."; }
+            // Remove only existing icons before re-rendering
+            const existingIcons = desktopElement.querySelectorAll('.icon');
+            existingIcons.forEach(icon => icon.remove());
+
+            const desktopFolder = getPathObject('C:/Desktop');
+            if (desktopFolder && desktopFolder.children) {
+                for (const name in desktopFolder.children) {
+                    const item = desktopFolder.children[name];
+                    const iconElement = createIconElement(name, item, 'desktop', desktopElement);
+                    desktopElement.appendChild(iconElement);
+                }
+            } else {
+                console.error("Could not find C:/Desktop in fileSystem");
+            }
         }
         function populateStartMenu() {
             startMenuItemsContainer.innerHTML = '';
@@ -737,7 +936,7 @@
                     noItems.style.fontStyle = 'italic'; noItems.style.color = 'var(--disabled-text)';
                     submenuElement.appendChild(noItems);
                 }
-                menuItem.submenuElement = submenuElement; // Store ref
+                menuItem.submenuElement = submenuElement;
 
                 menuItem.addEventListener('mouseenter', () => {
                     if (submenuHideTimeout) clearTimeout(submenuHideTimeout);
@@ -754,12 +953,27 @@
                  const separator = document.createElement('div'); separator.className = 'start-menu-separator'; startMenuItemsContainer.appendChild(separator);
             };
 
+            const startMenuRoot = getPathObject('C:/Start Menu');
+            if (startMenuRoot && startMenuRoot.children && startMenuRoot.children['About']) {
+                const aboutData = startMenuRoot.children['About'];
+                const aboutItem = document.createElement('div');
+                aboutItem.className = 'start-menu-item';
+                aboutItem.title = 'About';
+                const contentDiv = document.createElement('div'); contentDiv.className = 'item-content';
+                const img = document.createElement('span'); img.className = 'icon-image'; img.textContent = aboutData.icon || '❓';
+                const label = document.createElement('span'); label.className = 'item-label'; label.textContent = 'About';
+                contentDiv.appendChild(img); contentDiv.appendChild(label); aboutItem.appendChild(contentDiv);
+                aboutItem.onclick = () => handleItemOpen('About', aboutData);
+                startMenuItemsContainer.appendChild(aboutItem);
+            }
+
+
             startMenuItemsContainer.appendChild(createMenuItemWithSubmenu('Games', '🎮', 'C:/Games'));
             startMenuItemsContainer.appendChild(createMenuItemWithSubmenu('Apps', '📱', 'C:/Apps'));
             startMenuItemsContainer.appendChild(createMenuItemWithSubmenu('Books', '📚', 'C:/Books'));
             addSeparator();
 
-            const startMenuRoot = getPathObject('C:/Start Menu');
+
             if (startMenuRoot && startMenuRoot.children && startMenuRoot.children['Shutdown']) {
                 const shutdownData = startMenuRoot.children['Shutdown'];
                 const shutdownItem = document.createElement('div'); shutdownItem.className = 'start-menu-item'; shutdownItem.title = 'Shutdown';
@@ -774,12 +988,58 @@
             }
         }
 
+        function repositionWindowsOnResize() {
+            const taskbarHeight = document.getElementById('taskbar').offsetHeight;
+            const desktopWidth = document.documentElement.clientWidth;
+            const desktopHeight = document.documentElement.clientHeight - taskbarHeight;
+
+            for (const id in openWindows) {
+                const winInstance = openWindows[id];
+                if (winInstance.isMaximized || winInstance.isMinimized || !winInstance.element) continue;
+
+                let currentX = winInstance.element.offsetLeft;
+                let currentY = winInstance.element.offsetTop;
+                const currentWidth = winInstance.element.offsetWidth;
+                const currentHeight = winInstance.element.offsetHeight;
+
+                let needsUpdate = false;
+
+                if (currentX + currentWidth > desktopWidth) {
+                    currentX = Math.max(0, desktopWidth - currentWidth);
+                    needsUpdate = true;
+                }
+                if (currentX < 0) {
+                    currentX = 0;
+                    needsUpdate = true;
+                }
+                if (currentY + currentHeight > desktopHeight) {
+                    currentY = Math.max(0, desktopHeight - currentHeight);
+                    needsUpdate = true;
+                }
+                if (currentY < 0) {
+                    currentY = 0;
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate) {
+                    winInstance.x = currentX;
+                    winInstance.y = currentY;
+                    winInstance.element.style.left = `${currentX}px`;
+                    winInstance.element.style.top = `${currentY}px`;
+                    winInstance.originalState.x = currentX;
+                    winInstance.originalState.y = currentY;
+                }
+            }
+        }
+
+
         // --- Initial Setup ---
         const savedTheme = localStorage.getItem('win98theme') || 'light'; applyTheme(savedTheme);
         renderDesktopIcons(); startButton.addEventListener('click', toggleStartMenu); themeSwitcherElement.addEventListener('click', toggleTheme);
         updateClock(); setInterval(updateClock, 1000);
         document.addEventListener('dragstart', (e) => e.preventDefault());
         desktopElement.addEventListener('click', (e) => { if (e.target === desktopElement) clearSelection(desktopElement); });
+        window.addEventListener('resize', repositionWindowsOnResize);
 
     </script>
 </body>
