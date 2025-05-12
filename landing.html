@@ -528,7 +528,7 @@
                     'Books': { type: 'folder', children: {
                              'Game Physics Cookbook': { type: 'shortcut', target: 'https://gamephysicscookbook.com/', icon: '📖', windowType: 'BrowserWindow' },
                              'Game Animation Programming': { type: 'shortcut', target: 'https://animationprogramming.com/', icon: '📖', windowType: 'BrowserWindow' },
-                             'Lua Quick Start Guide': { type: 'shortcut', target: 'https://gaborszauer.com/publications_lua.html', icon: '�', windowType: 'BrowserWindow' }
+                             'Lua Quick Start Guide': { type: 'shortcut', target: 'https://gaborszauer.com/publications_lua.html', icon: '📖', windowType: 'BrowserWindow' }
                         }
                     }
                 }
@@ -576,13 +576,25 @@
             constructor(id, title, options = {}) {
                 this.id = id || generateId('window');
                 this.title = title;
+
                 const desktopWidth = desktopElement ? desktopElement.offsetWidth : window.innerWidth;
-                const desktopHeight = desktopElement ? desktopElement.offsetHeight : window.innerHeight;
+                const taskbarHeight = document.getElementById('taskbar') ? document.getElementById('taskbar').offsetHeight : 30;
+                const effectiveDesktopHeight = (desktopElement ? desktopElement.offsetHeight : window.innerHeight) - taskbarHeight;
 
                 this.width = options.width || (Math.random() * 200 + 400);
                 this.height = options.height || (Math.random() * 150 + 300);
-                this.x = options.x !== undefined ? options.x : (Math.random() * (Math.max(0, desktopWidth - this.width - 20)) + 10);
-                this.y = options.y !== undefined ? options.y : (Math.random() * (Math.max(0, desktopHeight - this.height - 40)) + 10);
+
+                // Clamp initial dimensions to fit desktop
+                this.width = Math.min(this.width, desktopWidth - 20); // 10px padding on each side
+                this.height = Math.min(this.height, effectiveDesktopHeight - 20); // 10px padding top/bottom
+
+                this.x = options.x !== undefined ? options.x : (Math.random() * Math.max(0, desktopWidth - this.width - 20) + 10);
+                this.y = options.y !== undefined ? options.y : (Math.random() * Math.max(0, effectiveDesktopHeight - this.height - 20) + 10);
+
+                // Final position clamping
+                this.x = Math.max(10, Math.min(this.x, desktopWidth - this.width - 10));
+                this.y = Math.max(10, Math.min(this.y, effectiveDesktopHeight - this.height - 10));
+
 
                 this.minWidth = options.minWidth || 200;
                 this.minHeight = options.minHeight || 150;
@@ -810,12 +822,12 @@
             let newX = clientX - dragInfo.offsetX, newY = clientY - dragInfo.offsetY;
             const taskbarHeight = document.getElementById('taskbar').offsetHeight;
             const desktopWidth = document.documentElement.clientWidth;
-            const desktopHeight = document.documentElement.clientHeight - taskbarHeight;
+            const effectiveDesktopHeight = document.documentElement.clientHeight - taskbarHeight;
             const windowWidth = dragInfo.targetWindow.element.offsetWidth;
             const windowHeight = dragInfo.targetWindow.element.offsetHeight;
 
             newX = Math.max(0, Math.min(newX, desktopWidth - windowWidth));
-            newY = Math.max(0, Math.min(newY, desktopHeight - windowHeight));
+            newY = Math.max(0, Math.min(newY, effectiveDesktopHeight - windowHeight));
 
             dragInfo.targetWindow.x = newX; dragInfo.targetWindow.y = newY;
             dragInfo.targetWindow.element.style.left = `${newX}px`; dragInfo.targetWindow.element.style.top = `${newY}px`;
@@ -1002,7 +1014,7 @@
         function repositionWindowsOnResize() {
             const taskbarHeight = document.getElementById('taskbar').offsetHeight;
             const desktopWidth = document.documentElement.clientWidth;
-            const desktopHeight = document.documentElement.clientHeight - taskbarHeight;
+            const effectiveDesktopHeight = document.documentElement.clientHeight - taskbarHeight;
 
             for (const id in openWindows) {
                 const winInstance = openWindows[id];
@@ -1014,24 +1026,29 @@
                 let currentHeight = winInstance.height;
                 let needsStyleUpdate = false;
 
-                if (currentWidth > desktopWidth) {
-                    currentWidth = desktopWidth;
-                    currentX = 0;
+                // Clamp size first
+                if (currentWidth > desktopWidth - 20) {
+                    currentWidth = desktopWidth - 20;
                     needsStyleUpdate = true;
                 }
-                if (currentHeight > desktopHeight) {
-                    currentHeight = desktopHeight;
-                    currentY = 0;
+                if (currentHeight > effectiveDesktopHeight - 20) {
+                    currentHeight = effectiveDesktopHeight - 20;
                     needsStyleUpdate = true;
                 }
 
-                if (currentX < 0) { currentX = 0; needsStyleUpdate = true; }
-                if (currentX + currentWidth > desktopWidth) { currentX = desktopWidth - currentWidth; needsStyleUpdate = true; }
-                if (currentY < 0) { currentY = 0; needsStyleUpdate = true; }
-                if (currentY + currentHeight > desktopHeight) { currentY = desktopHeight - currentHeight; needsStyleUpdate = true; }
-
-                if (currentX < 0) currentX = 0; // Final check after potential resize
-                if (currentY < 0) currentY = 0;
+                // Then clamp position based on (potentially) new size
+                if (currentX < 10) { currentX = 10; needsStyleUpdate = true; }
+                if (currentX + currentWidth > desktopWidth - 10) {
+                    currentX = desktopWidth - 10 - currentWidth;
+                    if (currentX < 10) currentX = 10; // Ensure it doesn't go negative if window is too wide even after clamping
+                    needsStyleUpdate = true;
+                }
+                if (currentY < 10) { currentY = 10; needsStyleUpdate = true; }
+                if (currentY + currentHeight > effectiveDesktopHeight - 10) {
+                    currentY = effectiveDesktopHeight - 10 - currentHeight;
+                    if (currentY < 10) currentY = 10; // Ensure it doesn't go negative
+                    needsStyleUpdate = true;
+                }
 
 
                 if (needsStyleUpdate) {
