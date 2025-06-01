@@ -47,6 +47,11 @@ const categories = [
     icon: '📱',
     items: [
       {
+        name: 'Carrot.Code',
+        link: 'Carrot/index.html',
+        icon: '🥕',
+      },
+      {
         name: 'Texture Packer',
         link: 'TexturePacker/index.html',
         icon: '🎨',
