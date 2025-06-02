@@ -111,5 +111,14 @@ const categories = [
     link: 'https://keyframestudio.app',
     width: 800,
     height: 600
+  },
+  {
+    id: 'carrot-code',
+    title: 'Carrot.Code',
+    icon: '🥕',
+    type: 'iframe',
+    link: 'https://gabormakesgames.com/Prototypes/Carrot/',
+    width: 800,
+    height: 600
   }
 ];
