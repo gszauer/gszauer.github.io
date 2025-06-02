@@ -90,6 +90,8 @@ function initializeStartMenu() {
 function createDesktopIcons() {
   categories.forEach((category, index) => {
     if (category.id === 'keyframe-studio') return; // Skip keyframe-studio from desktop
+    if (category.id === 'boxelot') return; // Skip keyframe-studio from desktop
+    if (category.id === 'carrot-code') return; // Skip keyframe-studio from desktop
 
     const icon = document.createElement('div');
     icon.className = 'desktop-icon';
