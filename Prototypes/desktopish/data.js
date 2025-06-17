@@ -36,7 +36,7 @@ const categories = [
       },
       {
         name: 'Boxelot (AI gen)',
-        link: 'Boxelot/index.html',
+        link: 'Boxelot2/index.html',
         icon: '📦',
       },
     ],
@@ -99,7 +99,7 @@ const categories = [
     title: 'Boxelot',
     icon: '🎮',
     type: 'iframe',
-    link: 'https://gabormakesgames.com/Prototypes/Boxelot/index.html',
+    link: 'https://gabormakesgames.com/Prototypes/Boxelot2/index.html',
     width: 512,
     height: 768
   },
