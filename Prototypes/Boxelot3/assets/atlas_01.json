@@ -168,192 +168,192 @@
         "y": 0.5
       }
     },
-    "attack_rune.png": {
+    "barrel.png": {
       "frame": {
         "x": 2,
         "y": 370,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "blade.png": {
+    "brave.png": {
       "frame": {
         "x": 2,
-        "y": 498,
-        "w": 124,
-        "h": 124
+        "y": 502,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "cloak.png": {
+    "challenge_door.png": {
       "frame": {
-        "x": 130,
+        "x": 134,
         "y": 370,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "coin.png": {
+    "door_locked.png": {
       "frame": {
-        "x": 130,
-        "y": 498,
-        "w": 124,
-        "h": 124
+        "x": 134,
+        "y": 502,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "cursed.png": {
+    "door_open.png": {
       "frame": {
-        "x": 258,
+        "x": 266,
         "y": 370,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "defense_rune.png": {
+    "greedy.png": {
       "frame": {
-        "x": 258,
-        "y": 498,
-        "w": 124,
-        "h": 124
+        "x": 266,
+        "y": 502,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "explosive.png": {
+    "material.png": {
       "frame": {
-        "x": 386,
-        "y": 498,
-        "w": 124,
-        "h": 124
+        "x": 398,
+        "y": 502,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "freeze.png": {
+    "mortal.png": {
       "frame": {
-        "x": 386,
+        "x": 398,
         "y": 370,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
@@ -362,223 +362,7 @@
     },
     "light_5.png": {
       "frame": {
-        "x": 2,
-        "y": 1058,
-        "w": 272,
-        "h": 348
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 272,
-        "h": 348
-      },
-      "sourceSize": {
-        "w": 272,
-        "h": 348
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "mid_1.png": {
-      "frame": {
-        "x": 2,
-        "y": 1410,
-        "w": 272,
-        "h": 348
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 272,
-        "h": 348
-      },
-      "sourceSize": {
-        "w": 272,
-        "h": 348
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "greed.png": {
-      "frame": {
-        "x": 2,
-        "y": 1762,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "heart.png": {
-      "frame": {
-        "x": 2,
-        "y": 1890,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "key.png": {
-      "frame": {
-        "x": 130,
-        "y": 1762,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "lantern.png": {
-      "frame": {
-        "x": 130,
-        "y": 1890,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "locked_item_slot.png": {
-      "frame": {
-        "x": 258,
-        "y": 1762,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "locked_item_slot2.png": {
-      "frame": {
-        "x": 258,
-        "y": 1890,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "pick.png": {
-      "frame": {
-        "x": 386,
-        "y": 1890,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "mid_2.png": {
-      "frame": {
-        "x": 514,
+        "x": 530,
         "y": 370,
         "w": 272,
         "h": 348
@@ -600,24 +384,24 @@
         "y": 0.5
       }
     },
-    "poison.png": {
+    "shop.png": {
       "frame": {
-        "x": 386,
-        "y": 626,
-        "w": 124,
-        "h": 124
+        "x": 278,
+        "y": 634,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
@@ -626,8 +410,8 @@
     },
     "help_btn.png": {
       "frame": {
-        "x": 278,
-        "y": 626,
+        "x": 410,
+        "y": 634,
         "w": 94,
         "h": 93
       },
@@ -648,24 +432,48 @@
         "y": 0.5
       }
     },
-    "help_btn_hover.png": {
+    "mid_1.png": {
       "frame": {
-        "x": 278,
-        "y": 723,
-        "w": 94,
-        "h": 93
+        "x": 806,
+        "y": 370,
+        "w": 272,
+        "h": 348
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 94,
-        "h": 93
+        "w": 272,
+        "h": 348
       },
       "sourceSize": {
-        "w": 94,
-        "h": 93
+        "w": 272,
+        "h": 348
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "mid_2.png": {
+      "frame": {
+        "x": 1082,
+        "y": 370,
+        "w": 272,
+        "h": 348
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 272,
+        "h": 348
+      },
+      "sourceSize": {
+        "w": 272,
+        "h": 348
       },
       "pivot": {
         "x": 0.5,
@@ -674,8 +482,8 @@
     },
     "mid_3.png": {
       "frame": {
-        "x": 790,
-        "y": 370,
+        "x": 1358,
+        "y": 706,
         "w": 272,
         "h": 348
       },
@@ -698,79 +506,7 @@
     },
     "mid_4.png": {
       "frame": {
-        "x": 1066,
-        "y": 370,
-        "w": 272,
-        "h": 348
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 272,
-        "h": 348
-      },
-      "sourceSize": {
-        "w": 272,
-        "h": 348
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "setings_btn.png": {
-      "frame": {
-        "x": 1342,
-        "y": 370,
-        "w": 94,
-        "h": 93
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 94,
-        "h": 93
-      },
-      "sourceSize": {
-        "w": 94,
-        "h": 93
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "settings_btn_hover.png": {
-      "frame": {
-        "x": 1342,
-        "y": 467,
-        "w": 94,
-        "h": 93
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 94,
-        "h": 93
-      },
-      "sourceSize": {
-        "w": 94,
-        "h": 93
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "mid_5.png": {
-      "frame": {
-        "x": 1342,
+        "x": 1634,
         "y": 706,
         "w": 272,
         "h": 348
@@ -792,10 +528,490 @@
         "y": 0.5
       }
     },
+    "attack_rune.png": {
+      "frame": {
+        "x": 1910,
+        "y": 706,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "blade.png": {
+      "frame": {
+        "x": 1910,
+        "y": 834,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "cloak.png": {
+      "frame": {
+        "x": 1910,
+        "y": 962,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "mid_5.png": {
+      "frame": {
+        "x": 508,
+        "y": 722,
+        "w": 272,
+        "h": 348
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 272,
+        "h": 348
+      },
+      "sourceSize": {
+        "w": 272,
+        "h": 348
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "help_btn_hover.png": {
+      "frame": {
+        "x": 410,
+        "y": 731,
+        "w": 94,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 94,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 94,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "coin.png": {
+      "frame": {
+        "x": 278,
+        "y": 766,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "setings_btn.png": {
+      "frame": {
+        "x": 406,
+        "y": 828,
+        "w": 94,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 94,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 94,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "cursed.png": {
+      "frame": {
+        "x": 278,
+        "y": 894,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "settings_btn_hover.png": {
+      "frame": {
+        "x": 406,
+        "y": 925,
+        "w": 94,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 94,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 94,
+        "h": 93
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "defense_rune.png": {
+      "frame": {
+        "x": 278,
+        "y": 1022,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "explosive.png": {
+      "frame": {
+        "x": 2,
+        "y": 1058,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "freeze.png": {
+      "frame": {
+        "x": 130,
+        "y": 1058,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "greed.png": {
+      "frame": {
+        "x": 784,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "heart.png": {
+      "frame": {
+        "x": 912,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "key.png": {
+      "frame": {
+        "x": 1040,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "lantern.png": {
+      "frame": {
+        "x": 1168,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "locked_item_slot.png": {
+      "frame": {
+        "x": 784,
+        "y": 850,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "locked_item_slot2.png": {
+      "frame": {
+        "x": 912,
+        "y": 850,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pick.png": {
+      "frame": {
+        "x": 1040,
+        "y": 850,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "poison.png": {
+      "frame": {
+        "x": 1168,
+        "y": 850,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "potion.png": {
       "frame": {
-        "x": 1618,
-        "y": 722,
+        "x": 784,
+        "y": 978,
         "w": 124,
         "h": 124
       },
@@ -818,8 +1034,8 @@
     },
     "ring.png": {
       "frame": {
-        "x": 1746,
-        "y": 722,
+        "x": 406,
+        "y": 1074,
         "w": 124,
         "h": 124
       },
@@ -842,8 +1058,8 @@
     },
     "sheep.png": {
       "frame": {
-        "x": 1874,
-        "y": 706,
+        "x": 258,
+        "y": 1150,
         "w": 124,
         "h": 124
       },
@@ -866,8 +1082,8 @@
     },
     "shield.png": {
       "frame": {
-        "x": 1874,
-        "y": 834,
+        "x": 534,
+        "y": 1074,
         "w": 124,
         "h": 124
       },
@@ -890,8 +1106,8 @@
     },
     "spike_trap.png": {
       "frame": {
-        "x": 1618,
-        "y": 850,
+        "x": 2,
+        "y": 1186,
         "w": 124,
         "h": 124
       },
