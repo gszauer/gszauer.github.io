@@ -240,7 +240,7 @@
         "y": 0.5
       }
     },
-    "door_locked.png": {
+    "cross.png": {
       "frame": {
         "x": 134,
         "y": 502,
@@ -264,7 +264,7 @@
         "y": 0.5
       }
     },
-    "door_open.png": {
+    "door_locked.png": {
       "frame": {
         "x": 266,
         "y": 370,
@@ -288,7 +288,7 @@
         "y": 0.5
       }
     },
-    "greedy.png": {
+    "door_open.png": {
       "frame": {
         "x": 266,
         "y": 502,
@@ -312,7 +312,7 @@
         "y": 0.5
       }
     },
-    "material.png": {
+    "greedy.png": {
       "frame": {
         "x": 398,
         "y": 502,
@@ -336,7 +336,7 @@
         "y": 0.5
       }
     },
-    "mortal.png": {
+    "material.png": {
       "frame": {
         "x": 398,
         "y": 370,
@@ -384,7 +384,7 @@
         "y": 0.5
       }
     },
-    "shop.png": {
+    "mortal.png": {
       "frame": {
         "x": 278,
         "y": 634,
@@ -528,58 +528,58 @@
         "y": 0.5
       }
     },
-    "attack_rune.png": {
+    "question_mark.png": {
       "frame": {
         "x": 1910,
         "y": 706,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "blade.png": {
+    "shop.png": {
       "frame": {
         "x": 1910,
-        "y": 834,
-        "w": 124,
-        "h": 124
+        "y": 838,
+        "w": 128,
+        "h": 128
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "sourceSize": {
-        "w": 124,
-        "h": 124
+        "w": 128,
+        "h": 128
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "cloak.png": {
+    "attack_rune.png": {
       "frame": {
         "x": 1910,
-        "y": 962,
+        "y": 970,
         "w": 124,
         "h": 124
       },
@@ -648,7 +648,7 @@
         "y": 0.5
       }
     },
-    "coin.png": {
+    "blade.png": {
       "frame": {
         "x": 278,
         "y": 766,
@@ -696,7 +696,7 @@
         "y": 0.5
       }
     },
-    "cursed.png": {
+    "cloak.png": {
       "frame": {
         "x": 278,
         "y": 894,
@@ -744,7 +744,7 @@
         "y": 0.5
       }
     },
-    "defense_rune.png": {
+    "coin.png": {
       "frame": {
         "x": 278,
         "y": 1022,
@@ -768,7 +768,7 @@
         "y": 0.5
       }
     },
-    "explosive.png": {
+    "cursed.png": {
       "frame": {
         "x": 2,
         "y": 1058,
@@ -792,7 +792,7 @@
         "y": 0.5
       }
     },
-    "freeze.png": {
+    "defense_rune.png": {
       "frame": {
         "x": 130,
         "y": 1058,
@@ -816,9 +816,57 @@
         "y": 0.5
       }
     },
-    "greed.png": {
+    "explosive.png": {
       "frame": {
         "x": 784,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "freeze.png": {
+      "frame": {
+        "x": 912,
+        "y": 722,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "greed.png": {
+      "frame": {
+        "x": 1040,
         "y": 722,
         "w": 124,
         "h": 124
@@ -842,7 +890,7 @@
     },
     "heart.png": {
       "frame": {
-        "x": 912,
+        "x": 1168,
         "y": 722,
         "w": 124,
         "h": 124
@@ -866,54 +914,6 @@
     },
     "key.png": {
       "frame": {
-        "x": 1040,
-        "y": 722,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "lantern.png": {
-      "frame": {
-        "x": 1168,
-        "y": 722,
-        "w": 124,
-        "h": 124
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 124,
-        "h": 124
-      },
-      "sourceSize": {
-        "w": 124,
-        "h": 124
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    "locked_item_slot.png": {
-      "frame": {
         "x": 784,
         "y": 850,
         "w": 124,
@@ -936,7 +936,7 @@
         "y": 0.5
       }
     },
-    "locked_item_slot2.png": {
+    "lantern.png": {
       "frame": {
         "x": 912,
         "y": 850,
@@ -960,7 +960,7 @@
         "y": 0.5
       }
     },
-    "pick.png": {
+    "locked_item_slot.png": {
       "frame": {
         "x": 1040,
         "y": 850,
@@ -984,7 +984,7 @@
         "y": 0.5
       }
     },
-    "poison.png": {
+    "locked_item_slot2.png": {
       "frame": {
         "x": 1168,
         "y": 850,
@@ -1008,7 +1008,7 @@
         "y": 0.5
       }
     },
-    "potion.png": {
+    "pick.png": {
       "frame": {
         "x": 784,
         "y": 978,
@@ -1032,7 +1032,7 @@
         "y": 0.5
       }
     },
-    "ring.png": {
+    "poison.png": {
       "frame": {
         "x": 406,
         "y": 1074,
@@ -1056,7 +1056,7 @@
         "y": 0.5
       }
     },
-    "sheep.png": {
+    "potion.png": {
       "frame": {
         "x": 258,
         "y": 1150,
@@ -1080,7 +1080,7 @@
         "y": 0.5
       }
     },
-    "shield.png": {
+    "ring.png": {
       "frame": {
         "x": 534,
         "y": 1074,
@@ -1104,10 +1104,58 @@
         "y": 0.5
       }
     },
-    "spike_trap.png": {
+    "sheep.png": {
       "frame": {
         "x": 2,
         "y": 1186,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "shield.png": {
+      "frame": {
+        "x": 130,
+        "y": 1186,
+        "w": 124,
+        "h": 124
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 124
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "spike_trap.png": {
+      "frame": {
+        "x": 912,
+        "y": 978,
         "w": 124,
         "h": 124
       },
