@@ -1,0 +1,250 @@
+{
+	"textures": [
+		{
+			"image": "atlas_01",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "dark.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "light_1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 2,
+						"y": 354,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "light_2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 2,
+						"y": 706,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "light_3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 2,
+						"y": 1058,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "light_4.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 2,
+						"y": 1410,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "light_5.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 278,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "mid_1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 554,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "mid_2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 830,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "mid_3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 1106,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "mid_4.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 1382,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				},
+				{
+					"filename": "mid_5.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 272,
+						"h": 348
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 272,
+						"h": 348
+					},
+					"frame": {
+						"x": 1658,
+						"y": 2,
+						"w": 272,
+						"h": 348
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}
