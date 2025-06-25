@@ -17,6 +17,11 @@
     <div id="game-container"></div>
 
     <script>
+        window.addEventListener('error', function(event) {
+            console.error('JavaScript Error:', event.error);
+            alert('JavaScript Error Detected!\n\nError: ' + event.error.message + '\nFile: ' + event.filename + '\nLine: ' + event.lineno + '\n\nCheck the console for details.');
+        });
+
         const config = {
             type: Phaser.AUTO,
             parent: 'game-container',
@@ -30,17 +35,6 @@
         };
 
         const game = new Phaser.Game(config);
-        
-        // Global error handling
-        window.addEventListener('error', function(event) {
-            console.error('JavaScript Error:', event.error);
-            alert('JavaScript Error Detected!\n\nError: ' + event.error.message + '\nFile: ' + event.filename + '\nLine: ' + event.lineno + '\n\nCheck the console for details.');
-        });
-        
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled Promise Rejection:', event.reason);
-            alert('Promise Rejection Error!\n\nReason: ' + event.reason + '\n\nCheck the console for details.');
-        });
     </script>
 </body>
 </html>
