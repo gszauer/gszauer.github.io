@@ -1,0 +1,152 @@
+{
+  "resources": [
+    "soundbank.mp3"
+  ],
+  "spritemap": {
+    "background": {
+      "start": 0,
+      "end": 70.05036281179139,
+      "loop": true
+    },
+    "potion_1": {
+      "start": 72,
+      "end": 73.75020408163266,
+      "loop": false
+    },
+    "coins_1": {
+      "start": 75,
+      "end": 75.65306122448979,
+      "loop": false
+    },
+    "potion_2": {
+      "start": 77,
+      "end": 78.75020408163266,
+      "loop": false
+    },
+    "coins_2": {
+      "start": 80,
+      "end": 80.65306122448979,
+      "loop": false
+    },
+    "sheep_1": {
+      "start": 82,
+      "end": 82.78367346938775,
+      "loop": false
+    },
+    "door_1": {
+      "start": 84,
+      "end": 84.65306122448979,
+      "loop": false
+    },
+    "sheep_2": {
+      "start": 86,
+      "end": 86.78367346938775,
+      "loop": false
+    },
+    "door_2": {
+      "start": 88,
+      "end": 88.65306122448979,
+      "loop": false
+    },
+    "sheep_3": {
+      "start": 90,
+      "end": 90.78367346938775,
+      "loop": false
+    },
+    "door_3": {
+      "start": 92,
+      "end": 92.65306122448979,
+      "loop": false
+    },
+    "sheep_4": {
+      "start": 94,
+      "end": 94.78367346938775,
+      "loop": false
+    },
+    "freeze_1": {
+      "start": 96,
+      "end": 97.25387755102041,
+      "loop": false
+    },
+    "sword_1": {
+      "start": 99,
+      "end": 100.07102040816326,
+      "loop": false
+    },
+    "game_over_1": {
+      "start": 102,
+      "end": 103.48897959183674,
+      "loop": false
+    },
+    "sword_2": {
+      "start": 105,
+      "end": 106.07102040816326,
+      "loop": false
+    },
+    "game_over_2": {
+      "start": 108,
+      "end": 109.48897959183674,
+      "loop": false
+    },
+    "sword_3": {
+      "start": 111,
+      "end": 112.07102040816326,
+      "loop": false
+    },
+    "game_over_3": {
+      "start": 114,
+      "end": 115.48897959183674,
+      "loop": false
+    },
+    "heart_1": {
+      "start": 117,
+      "end": 118.25387755102041,
+      "loop": false
+    },
+    "unlock_1": {
+      "start": 120,
+      "end": 121.48897959183674,
+      "loop": false
+    },
+    "hurt_1": {
+      "start": 123,
+      "end": 124.56734693877551,
+      "loop": false
+    },
+    "unlock_2": {
+      "start": 126,
+      "end": 127.48897959183674,
+      "loop": false
+    },
+    "hurt_2": {
+      "start": 129,
+      "end": 130.5673469387755,
+      "loop": false
+    },
+    "wood_1": {
+      "start": 132,
+      "end": 132.6530612244898,
+      "loop": false
+    },
+    "hurt_3": {
+      "start": 134,
+      "end": 134.6530612244898,
+      "loop": false
+    },
+    "wood_2": {
+      "start": 136,
+      "end": 136.6530612244898,
+      "loop": false
+    },
+    "hurt_4": {
+      "start": 138,
+      "end": 138.6530612244898,
+      "loop": false
+    },
+    "wood_3": {
+      "start": 140,
+      "end": 140.6530612244898,
+      "loop": false
+    }
+  }
+}
