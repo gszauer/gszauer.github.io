@@ -1,6 +1,9 @@
 {
   "resources": [
-    "soundbank.mp3"
+    "../soundbank.ogg",
+    "../soundbank.m4a",
+    "../soundbank.mp3",
+    "../soundbank.ac3"
   ],
   "spritemap": {
     "background": {
@@ -146,6 +149,86 @@
     "wood_3": {
       "start": 140,
       "end": 140.6530612244898,
+      "loop": false
+    },
+    "bomb_1": {
+      "start": 142,
+      "end": 142.78367346938776,
+      "loop": false
+    },
+    "bomb_2": {
+      "start": 144,
+      "end": 144.78367346938776,
+      "loop": false
+    },
+    "creek_1": {
+      "start": 146,
+      "end": 146.54857142857142,
+      "loop": false
+    },
+    "creek_2": {
+      "start": 148,
+      "end": 148.54857142857142,
+      "loop": false
+    },
+    "error_sound": {
+      "start": 150,
+      "end": 150.78367346938776,
+      "loop": false
+    },
+    "foot_1": {
+      "start": 152,
+      "end": 153.07102040816326,
+      "loop": false
+    },
+    "foot_2": {
+      "start": 155,
+      "end": 156.33224489795919,
+      "loop": false
+    },
+    "foot_3": {
+      "start": 158,
+      "end": 159.33224489795919,
+      "loop": false
+    },
+    "trumpet_1": {
+      "start": 161,
+      "end": 162.2538775510204,
+      "loop": false
+    },
+    "trumpet_2": {
+      "start": 164,
+      "end": 165.2538775510204,
+      "loop": false
+    },
+    "trumpet_3": {
+      "start": 167,
+      "end": 168.2538775510204,
+      "loop": false
+    },
+    "death_1": {
+      "start": 170,
+      "end": 170.86204081632653,
+      "loop": false
+    },
+    "death_2": {
+      "start": 172,
+      "end": 172.86204081632653,
+      "loop": false
+    },
+    "death_3": {
+      "start": 174,
+      "end": 174.86204081632653,
+      "loop": false
+    },
+    "swoosh_1": {
+      "start": 176,
+      "end": 176.86204081632653,
+      "loop": false
+    },
+    "swoosh_2": {
+      "start": 178,
+      "end": 178.86204081632653,
       "loop": false
     }
   }
