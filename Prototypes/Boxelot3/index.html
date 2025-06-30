@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boxelot</title>
     <style>
-        body { margin: 0; background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        canvas { display: block; margin: auto; }
+        body { margin: 0; background-color: #111; height: 100vh; overflow: hidden; }
+        canvas { display: block; width: 100vw !important; height: 100vh !important; }
     </style>
 </head>
 <body>
@@ -26,10 +26,9 @@
             type: Phaser.AUTO,
             parent: 'game-container',
             scale: {
-                mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: 600,
-                height: 900
+                mode: Phaser.Scale.RESIZE,
+                width: window.innerWidth,
+                height: window.innerHeight
             },
             scene: [Game]
         };
