@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boxelot</title>
+    <style>
+        body { margin: 0; background-color: #111; height: 100vh; overflow: hidden; }
+        canvas { display: block; width: 100vw !important; height: 100vh !important; }
+    </style>
+</head>
+<body>
+    <script src="phaser.3.80.1.min.js"></script>
+    <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+    <script src="game.min.js"></script>
+
+    <div id="game-container"></div>
+
+    <script>
+        window.addEventListener('keydown', ev => {
+            if (['ArrowDown', 'ArrowUp', ' '].includes(ev.key)) {
+                ev.preventDefault();
+            }
+        });
+        window.addEventListener('wheel', ev => ev.preventDefault(), { passive: false });
+
+
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'game-container',
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            scene: [Game]
+        };
+
+        AdManager.Initialize(() => {
+            const phaserGame = new Phaser.Game(config);
+
+            phaserGame.events.once('ready', () => {
+                AdManager.instance.game = phaserGame.scene.scenes[0];
+            });
+        });
+    </script>
+</body>
+</html>

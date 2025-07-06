@@ -1,0 +1,9 @@
+--- Pre prompt
+I have a phaserjs game that was written by gemini. 
+It's all one file, no external dependancies. 
+We're goinbg to add some new features. 
+But first i'll provide all the code, let me know if you understand it.
+
+--- Post prompt
+List entire functions that need to be changed, not just the line.  Don't omit anything in the function for brevity. This will make it less error prone to copy / paste.
+
