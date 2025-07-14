@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser Grid Card Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #2c3e50;
+        }
+        #game-container {
+            border: 2px solid #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script>
+        window.addEventListener('error', function(event) {
+            console.info('JavaScript Error:', event.error);
+            alert('JavaScript Error Detected!\n\nError: ' + event.error.message + '\nFile: ' + event.filename + '\nLine: ' + event.lineno + '\n\nCheck the console for details.');
+        });
+
+        const GRID_SIZE = 8;
+        const TILE_SIZE = 60;
+        const CARD_SIZE = 50;
+        const ANIMATION_DURATION = 300;
+
+        class GridCardGame extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GridCardGame' });
+                this.score = 0;
+                this.grid = [];
+                this.cards = [];
+                this.heroPosition = { x: 0, y: 0 };
+                this.isAnimating = false;
+                this.dragStartPos = null;
+                this.disabledTiles = new Set();
+                this.dragArrow = null;
+                this.dragLine = null;
+            }
+
+            create() {
+                // Set up disabled tiles pattern (creates interesting barriers)
+                this.setupDisabledTiles();
+                
+                // Create grid background
+                this.createGrid();
+                
+                // Initialize cards
+                this.initializeCards();
+                
+                // Create UI
+                this.createUI();
+                
+                // Set up input
+                this.setupInput();
+            }
+
+            setupDisabledTiles() {
+                // Create a pattern of disabled tiles for interesting gameplay
+                const disabledPattern = [
+                    { x: 2, y: 0 }, { x: 5, y: 0 },
+                    { x: 0, y: 2 }, { x: 7, y: 2 },
+                    { x: 3, y: 3 }, { x: 4, y: 3 },
+                    { x: 3, y: 4 }, { x: 4, y: 4 },
+                    { x: 0, y: 5 }, { x: 7, y: 5 },
+                    { x: 2, y: 7 }, { x: 5, y: 7 }
+                ];
+                
+                disabledPattern.forEach(pos => {
+                    this.disabledTiles.add(`${pos.x},${pos.y}`);
+                });
+            }
+
+            createGrid() {
+                const graphics = this.add.graphics();
+                
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    this.grid[y] = [];
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const tileX = x * TILE_SIZE + TILE_SIZE / 2;
+                        const tileY = y * TILE_SIZE + TILE_SIZE / 2;
+                        
+                        if (this.disabledTiles.has(`${x},${y}`)) {
+                            // Disabled tile - dark gray
+                            graphics.fillStyle(0x1a1a1a, 1);
+                            graphics.fillRect(
+                                tileX - TILE_SIZE / 2,
+                                tileY - TILE_SIZE / 2,
+                                TILE_SIZE,
+                                TILE_SIZE
+                            );
+                        } else {
+                            // Active tile - lighter gray
+                            graphics.fillStyle(0x404040, 1);
+                            graphics.fillRect(
+                                tileX - TILE_SIZE / 2,
+                                tileY - TILE_SIZE / 2,
+                                TILE_SIZE,
+                                TILE_SIZE
+                            );
+                            
+                            // Tile border
+                            graphics.lineStyle(2, 0x606060, 1);
+                            graphics.strokeRect(
+                                tileX - TILE_SIZE / 2,
+                                tileY - TILE_SIZE / 2,
+                                TILE_SIZE,
+                                TILE_SIZE
+                            );
+                        }
+                        
+                        this.grid[y][x] = {
+                            x: tileX,
+                            y: tileY,
+                            disabled: this.disabledTiles.has(`${x},${y}`),
+                            card: null
+                        };
+                    }
+                }
+            }
+
+            initializeCards() {
+                // Find valid starting position for hero
+                let validPositions = [];
+                for (let y = 1; y < GRID_SIZE - 1; y++) {
+                    for (let x = 1; x < GRID_SIZE - 1; x++) {
+                        if (!this.grid[y][x].disabled) {
+                            validPositions.push({ x, y });
+                        }
+                    }
+                }
+                
+                // Place hero at random valid position
+                const heroPos = Phaser.Math.RND.pick(validPositions);
+                this.heroPosition = heroPos;
+                this.createCard(heroPos.x, heroPos.y, 'hero');
+                
+                // Fill remaining tiles with treasures and dirt
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        if (!this.grid[y][x].disabled && !this.grid[y][x].card) {
+                            const cardType = Math.random() < 0.3 ? 'treasure' : 'dirt';
+                            this.createCard(x, y, cardType);
+                        }
+                    }
+                }
+            }
+
+            createCard(gridX, gridY, type) {
+                const tile = this.grid[gridY][gridX];
+                const container = this.add.container(tile.x, tile.y);
+                
+                // Card background
+                const bg = this.add.graphics();
+                
+                if (type === 'hero') {
+                    // Hero - blue card with circle
+                    bg.fillStyle(0x3498db, 1);
+                    bg.fillRoundedRect(-CARD_SIZE/2, -CARD_SIZE/2, CARD_SIZE, CARD_SIZE, 8);
+                    
+                    const heroGraphics = this.add.graphics();
+                    heroGraphics.fillStyle(0xffffff, 1);
+                    heroGraphics.fillCircle(0, 0, 15);
+                    container.add([bg, heroGraphics]);
+                    
+                } else if (type === 'treasure') {
+                    // Treasure - gold card with star
+                    bg.fillStyle(0xf39c12, 1);
+                    bg.fillRoundedRect(-CARD_SIZE/2, -CARD_SIZE/2, CARD_SIZE, CARD_SIZE, 8);
+                    
+                    const treasureGraphics = this.add.graphics();
+                    treasureGraphics.fillStyle(0xffffff, 1);
+                    this.drawStar(treasureGraphics, 0, 0, 5, 15, 7);
+                    container.add([bg, treasureGraphics]);
+                    
+                } else if (type === 'dirt') {
+                    // Dirt - brown card with rectangle pattern
+                    bg.fillStyle(0x8b4513, 1);
+                    bg.fillRoundedRect(-CARD_SIZE/2, -CARD_SIZE/2, CARD_SIZE, CARD_SIZE, 8);
+                    
+                    const dirtGraphics = this.add.graphics();
+                    dirtGraphics.fillStyle(0x654321, 1);
+                    dirtGraphics.fillRect(-10, -10, 20, 20);
+                    container.add([bg, dirtGraphics]);
+                }
+                
+                const card = {
+                    container: container,
+                    type: type,
+                    gridX: gridX,
+                    gridY: gridY
+                };
+                
+                this.cards.push(card);
+                tile.card = card;
+                
+                return card;
+            }
+
+            drawStar(graphics, cx, cy, spikes, outerRadius, innerRadius) {
+                let rot = Math.PI / 2 * 3;
+                let x = cx;
+                let y = cy;
+                const step = Math.PI / spikes;
+
+                graphics.beginPath();
+                graphics.moveTo(cx, cy - outerRadius);
+                
+                for (let i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    graphics.lineTo(x, y);
+                    rot += step;
+
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    graphics.lineTo(x, y);
+                    rot += step;
+                }
+                
+                graphics.lineTo(cx, cy - outerRadius);
+                graphics.closePath();
+                graphics.fill();
+            }
+
+            createUI() {
+                // Score text
+                this.scoreText = this.add.text(10, GRID_SIZE * TILE_SIZE + 10, `Score: ${this.score}`, {
+                    fontSize: '24px',
+                    color: '#ffffff'
+                });
+                
+                // Restart button
+                const buttonX = GRID_SIZE * TILE_SIZE - 80;
+                const buttonY = GRID_SIZE * TILE_SIZE + 10;
+                
+                const button = this.add.rectangle(buttonX, buttonY + 15, 150, 40, 0x27ae60);
+                button.setInteractive({ useHandCursor: true });
+                
+                const buttonText = this.add.text(buttonX, buttonY + 15, 'Restart', {
+                    fontSize: '20px',
+                    color: '#ffffff'
+                }).setOrigin(0.5);
+                
+                button.on('pointerover', () => button.setFillStyle(0x2ecc71));
+                button.on('pointerout', () => button.setFillStyle(0x27ae60));
+                button.on('pointerdown', () => this.scene.restart());
+            }
+
+            setupInput() {
+                // Create drag visualization graphics
+                this.dragLine = this.add.graphics();
+                this.dragArrow = this.add.graphics();
+                this.dragLine.setDepth(1000);
+                this.dragArrow.setDepth(1001);
+                
+                // Create drag text once and hide it
+                this.dragText = this.add.text(0, 0, '', {
+                    fontSize: '16px',
+                    color: '#00ff00',
+                    backgroundColor: '#000000',
+                    padding: { x: 4, y: 2 }
+                });
+                this.dragText.setDepth(1002);
+                this.dragText.setVisible(false);
+                
+                // Mouse/touch input
+                this.input.on('pointerdown', (pointer) => {
+                    if (!this.isAnimating) {
+                        this.dragStartPos = { x: pointer.x, y: pointer.y };
+                        // Clear any previous drag visuals
+                        this.dragLine.clear();
+                        this.dragArrow.clear();
+                        
+                        // Capture the pointer to track it even outside the game canvas
+                        this.input.setDefaultCursor('grabbing');
+                    }
+                });
+                
+                // Handle both pointerup and pointerupoutside events
+                const handlePointerUp = (pointer) => {
+                    if (this.dragStartPos && !this.isAnimating) {
+                        const dx = pointer.x - this.dragStartPos.x;
+                        const dy = pointer.y - this.dragStartPos.y;
+                        const threshold = 20;
+                        
+                        // Calculate the distance dragged
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > threshold) {
+                            let direction = null;
+                            
+                            // Use absolute values to determine dominant direction
+                            if (Math.abs(dx) > Math.abs(dy)) {
+                                // Horizontal movement is dominant
+                                direction = dx > 0 ? 'right' : 'left';
+                            } else {
+                                // Vertical movement is dominant
+                                direction = dy > 0 ? 'down' : 'up';
+                            }
+                            
+                            this.moveHero(direction);
+                        }
+                        
+                        this.dragStartPos = null;
+                        // Clear drag visuals
+                        this.dragLine.clear();
+                        this.dragArrow.clear();
+                        this.dragText.setVisible(false);
+                        this.input.setDefaultCursor('default');
+                    }
+                };
+                
+                this.input.on('pointerup', handlePointerUp);
+                this.input.on('pointerupoutside', handlePointerUp);
+                
+                // Visual feedback for drag
+                this.input.on('pointermove', (pointer) => {
+                    if (this.dragStartPos && !this.isAnimating) {
+                        const dx = pointer.x - this.dragStartPos.x;
+                        const dy = pointer.y - this.dragStartPos.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Clear previous visuals
+                        this.dragLine.clear();
+                        this.dragArrow.clear();
+                        
+                        // Draw line from start to current position
+                        this.dragLine.lineStyle(3, 0xffffff, 0.5);
+                        this.dragLine.beginPath();
+                        this.dragLine.moveTo(this.dragStartPos.x, this.dragStartPos.y);
+                        this.dragLine.lineTo(pointer.x, pointer.y);
+                        this.dragLine.closePath();
+                        this.dragLine.strokePath();
+                        
+                        // Draw arrow and direction indicator if past threshold
+                        if (distance > 20) {
+                            let direction = '';
+                            let arrowX = this.dragStartPos.x;
+                            let arrowY = this.dragStartPos.y;
+                            
+                            if (Math.abs(dx) > Math.abs(dy)) {
+                                // Horizontal
+                                direction = dx > 0 ? 'RIGHT' : 'LEFT';
+                                arrowX += dx > 0 ? 50 : -50;
+                                this.dragArrow.fillStyle(0x00ff00, 0.8);
+                            } else {
+                                // Vertical
+                                direction = dy > 0 ? 'DOWN' : 'UP';
+                                arrowY += dy > 0 ? 50 : -50;
+                                this.dragArrow.fillStyle(0x00ff00, 0.8);
+                            }
+                            
+                            // Draw arrow pointing in movement direction
+                            this.drawArrow(this.dragArrow, this.dragStartPos.x, this.dragStartPos.y, arrowX, arrowY);
+                            
+                            // Show direction text
+                            this.dragText.setText(direction);
+                            this.dragText.setPosition(pointer.x + 10, pointer.y - 20);
+                            this.dragText.setVisible(true);
+                        } else {
+                            this.dragArrow.fillStyle(0xff0000, 0.5);
+                            this.dragArrow.fillCircle(pointer.x, pointer.y, 5);
+                            this.dragText.setVisible(false);
+                        }
+                    }
+                });
+                
+                // Clear visuals on pointer out
+                this.input.on('pointerout', () => {
+                    // Don't clear if we're in the middle of a drag
+                    if (!this.dragStartPos) {
+                        this.dragLine.clear();
+                        this.dragArrow.clear();
+                        this.dragText.setVisible(false);
+                    }
+                });
+                
+                // Keyboard input
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.wasdKeys = this.input.keyboard.addKeys('W,S,A,D');
+                
+                // Arrow keys
+                this.input.keyboard.on('keydown-UP', () => {
+                    if (!this.isAnimating) this.moveHero('up');
+                });
+                this.input.keyboard.on('keydown-DOWN', () => {
+                    if (!this.isAnimating) this.moveHero('down');
+                });
+                this.input.keyboard.on('keydown-LEFT', () => {
+                    if (!this.isAnimating) this.moveHero('left');
+                });
+                this.input.keyboard.on('keydown-RIGHT', () => {
+                    if (!this.isAnimating) this.moveHero('right');
+                });
+                
+                // WASD keys
+                this.input.keyboard.on('keydown-W', () => {
+                    if (!this.isAnimating) this.moveHero('up');
+                });
+                this.input.keyboard.on('keydown-S', () => {
+                    if (!this.isAnimating) this.moveHero('down');
+                });
+                this.input.keyboard.on('keydown-A', () => {
+                    if (!this.isAnimating) this.moveHero('left');
+                });
+                this.input.keyboard.on('keydown-D', () => {
+                    if (!this.isAnimating) this.moveHero('right');
+                });
+            }
+            
+            drawArrow(graphics, fromX, fromY, toX, toY) {
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                const arrowLength = 20;
+                const arrowAngle = Math.PI / 6;
+                
+                // Draw arrowhead
+                graphics.beginPath();
+                graphics.moveTo(toX, toY);
+                graphics.lineTo(
+                    toX - arrowLength * Math.cos(angle - arrowAngle),
+                    toY - arrowLength * Math.sin(angle - arrowAngle)
+                );
+                graphics.moveTo(toX, toY);
+                graphics.lineTo(
+                    toX - arrowLength * Math.cos(angle + arrowAngle),
+                    toY - arrowLength * Math.sin(angle + arrowAngle)
+                );
+                graphics.closePath();
+                graphics.strokePath();
+                
+                // Fill arrow head
+                graphics.beginPath();
+                graphics.moveTo(toX, toY);
+                graphics.lineTo(
+                    toX - arrowLength * Math.cos(angle - arrowAngle),
+                    toY - arrowLength * Math.sin(angle - arrowAngle)
+                );
+                graphics.lineTo(
+                    toX - arrowLength * Math.cos(angle + arrowAngle),
+                    toY - arrowLength * Math.sin(angle + arrowAngle)
+                );
+                graphics.closePath();
+                graphics.fillPath();
+            }
+
+            moveHero(direction) {
+                const moves = {
+                    'up': { dx: 0, dy: -1 },
+                    'down': { dx: 0, dy: 1 },
+                    'left': { dx: -1, dy: 0 },
+                    'right': { dx: 1, dy: 0 }
+                };
+                
+                const move = moves[direction];
+                const newX = this.heroPosition.x + move.dx;
+                const newY = this.heroPosition.y + move.dy;
+                
+                // Check if move is valid
+                if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) {
+                    return; // Out of bounds
+                }
+                
+                if (this.grid[newY][newX].disabled) {
+                    return; // Disabled tile
+                }
+                
+                this.isAnimating = true;
+                
+                // Get all cards that need to move
+                const cardsToMove = this.getCardsInLine(
+                    this.heroPosition.x,
+                    this.heroPosition.y,
+                    move.dx,
+                    move.dy
+                );
+                
+                // Animate cards
+                this.animateCardMovement(cardsToMove, move, () => {
+                    // Update hero position
+                    this.heroPosition.x = newX;
+                    this.heroPosition.y = newY;
+                    
+                    // Check for treasure collection
+                    this.checkTreasureCollection();
+                    
+                    // Fill empty tiles
+                    this.fillEmptyTiles();
+                    
+                    this.isAnimating = false;
+                });
+            }
+
+            getCardsInLine(startX, startY, dx, dy) {
+                const cards = [];
+                let x = startX;
+                let y = startY;
+                
+                // First, collect the hero card
+                if (this.grid[y][x].card && this.grid[y][x].card.type === 'hero') {
+                    cards.push(this.grid[y][x].card);
+                }
+                
+                // Then collect trailing cards until we hit a disabled tile or edge
+                x -= dx;
+                y -= dy;
+                
+                while (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+                    // Stop if we hit a disabled tile
+                    if (this.grid[y][x].disabled) {
+                        break;
+                    }
+                    
+                    if (this.grid[y][x].card) {
+                        cards.push(this.grid[y][x].card);
+                    }
+                    
+                    x -= dx;
+                    y -= dy;
+                }
+                
+                return cards;
+            }
+
+            animateCardMovement(cards, move, onComplete) {
+                let completed = 0;
+                
+                cards.forEach((card, index) => {
+                    const newGridX = card.gridX + move.dx;
+                    const newGridY = card.gridY + move.dy;
+                    const newTile = this.grid[newGridY][newGridX];
+                    
+                    // Update grid references
+                    this.grid[card.gridY][card.gridX].card = null;
+                    this.grid[newGridY][newGridX].card = card;
+                    card.gridX = newGridX;
+                    card.gridY = newGridY;
+                    
+                    // Animate
+                    this.tweens.add({
+                        targets: card.container,
+                        x: newTile.x,
+                        y: newTile.y,
+                        duration: ANIMATION_DURATION,
+                        ease: 'Power2',
+                        onComplete: () => {
+                            completed++;
+                            if (completed === cards.length && onComplete) {
+                                onComplete();
+                            }
+                        }
+                    });
+                });
+            }
+
+            checkTreasureCollection() {
+                const heroTile = this.grid[this.heroPosition.y][this.heroPosition.x];
+                const cardsAtHeroPos = this.cards.filter(card => 
+                    card.gridX === this.heroPosition.x && 
+                    card.gridY === this.heroPosition.y &&
+                    card.type !== 'hero'
+                );
+                
+                cardsAtHeroPos.forEach(card => {
+                    if (card.type === 'treasure' || card.type === 'dirt') {
+                        // Give points only for treasures
+                        if (card.type === 'treasure') {
+                            this.score += 10;
+                            this.scoreText.setText(`Score: ${this.score}`);
+                        }
+                        
+                        // Remove the card (both treasure and dirt)
+                        card.container.destroy();
+                        const index = this.cards.indexOf(card);
+                        this.cards.splice(index, 1);
+                        heroTile.card = this.cards.find(c => 
+                            c.gridX === this.heroPosition.x && 
+                            c.gridY === this.heroPosition.y &&
+                            c.type === 'hero'
+                        );
+                    }
+                });
+            }
+
+            fillEmptyTiles() {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        if (!this.grid[y][x].disabled && !this.grid[y][x].card) {
+                            const cardType = Math.random() < 0.3 ? 'treasure' : 'dirt';
+                            const newCard = this.createCard(x, y, cardType);
+                            
+                            // Fade in animation
+                            newCard.container.setAlpha(0);
+                            this.tweens.add({
+                                targets: newCard.container,
+                                alpha: 1,
+                                duration: 200,
+                                delay: 100
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: GRID_SIZE * TILE_SIZE,
+            height: GRID_SIZE * TILE_SIZE + 60,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            scene: GridCardGame
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>
