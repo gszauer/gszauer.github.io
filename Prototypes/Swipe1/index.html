@@ -23,11 +23,6 @@
 <body>
     <div id="game-container"></div>
     <script>
-        window.addEventListener('error', function(event) {
-            console.info('JavaScript Error:', event.error);
-            alert('JavaScript Error Detected!\n\nError: ' + event.error.message + '\nFile: ' + event.filename + '\nLine: ' + event.lineno + '\n\nCheck the console for details.');
-        });
-
         const GRID_SIZE = 8;
         const TILE_SIZE = 60;
         const CARD_SIZE = 50;
@@ -48,6 +43,16 @@
             }
 
             create() {
+                // Clear any existing cards from previous game
+                if (this.cards) {
+                    this.cards.forEach(card => {
+                        if (card.container) {
+                            card.container.destroy();
+                        }
+                    });
+                }
+                this.cards = [];
+                
                 // Set up disabled tiles pattern (creates interesting barriers)
                 this.setupDisabledTiles();
                 
@@ -158,6 +163,13 @@
             createCard(gridX, gridY, type) {
                 const tile = this.grid[gridY][gridX];
                 const container = this.add.container(tile.x, tile.y);
+                
+                // Set depth based on card type - hero should always be on top
+                if (type === 'hero') {
+                    container.setDepth(100);
+                } else {
+                    container.setDepth(10);
+                }
                 
                 // Card background
                 const bg = this.add.graphics();
@@ -564,6 +576,8 @@
 
             checkTreasureCollection() {
                 const heroTile = this.grid[this.heroPosition.y][this.heroPosition.x];
+                const heroCard = this.cards.find(c => c.type === 'hero');
+                
                 const cardsAtHeroPos = this.cards.filter(card => 
                     card.gridX === this.heroPosition.x && 
                     card.gridY === this.heroPosition.y &&
@@ -582,13 +596,16 @@
                         card.container.destroy();
                         const index = this.cards.indexOf(card);
                         this.cards.splice(index, 1);
-                        heroTile.card = this.cards.find(c => 
-                            c.gridX === this.heroPosition.x && 
-                            c.gridY === this.heroPosition.y &&
-                            c.type === 'hero'
-                        );
                     }
                 });
+                
+                // Ensure hero card is properly set in the tile
+                heroTile.card = heroCard;
+                
+                // Bring hero to front to ensure it's always visible
+                if (heroCard && heroCard.container) {
+                    heroCard.container.setDepth(100);
+                }
             }
 
             fillEmptyTiles() {
