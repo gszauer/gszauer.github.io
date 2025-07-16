@@ -11,7 +11,8 @@ class ProjectileCard extends Card {
         
         this.directionText = scene.add.text(0, 0, this.getDirectionSymbol(), {
             fontSize: '20px',
-            color: '#ffffff'
+            color: '#ffffff',
+            align: 'center'
         });
         this.directionText.setOrigin(0.5, 0.5);
         this.add(this.directionText);
@@ -19,7 +20,7 @@ class ProjectileCard extends Card {
     
     getDirectionSymbol() {
         const symbols = ['^', '>', 'v', '<']; // up, right, down, left
-        return `Dir: ${symbols[this.currentDirection]}`;
+        return `Shooter\n${symbols[this.currentDirection]}`;
     }
     
     getDirectionVector() {

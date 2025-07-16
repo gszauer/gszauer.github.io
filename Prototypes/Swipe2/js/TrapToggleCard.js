@@ -10,15 +10,16 @@ class TrapToggleCard extends Card {
         this.background.fillRoundedRect(-40, -40, 80, 80, 8);
         
         this.stateText = scene.add.text(0, 0, this.getStateSymbol(), {
-            fontSize: '16px',
-            color: '#ffffff'
+            fontSize: '20px',
+            color: '#ffffff',
+            align: 'center' 
         });
         this.stateText.setOrigin(0.5, 0.5);
         this.add(this.stateText);
     }
     
     getStateSymbol() {
-        return `Trap: ${this.state === 'sharp' ? '^' : '_'}`;
+        return `Trap\n${this.state === 'sharp' ? '^' : '_'}`;
     }
     
     postTurn() {

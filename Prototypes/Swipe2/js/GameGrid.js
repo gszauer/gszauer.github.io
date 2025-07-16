@@ -475,9 +475,10 @@ class GameGrid extends Phaser.GameObjects.Container {
             8
         );
         
-        const labelText = this.scene.add.text(tile.x, tile.y, `Portal ${instance}`, {
-            fontSize: '14px',
-            color: '#ffffff'
+        const labelText = this.scene.add.text(tile.x, tile.y, `Portal\n${instance}`, {
+            fontSize: '20px',
+            color: '#ffffff',
+            align: 'center' 
         });
         labelText.setOrigin(0.5, 0.5);
         

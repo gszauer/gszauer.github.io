@@ -2,29 +2,29 @@ class PlayerCard extends Card {
     constructor(scene, x, y) {
         super(scene, x, y, 'player');
         
-        this.power = 100;
-        this.maxPower = 100;
-        this.shield = 100;
+        this.power = 50;
+        this.maxPower = 50;
+        this.shield = 10;
         
         this.background.clear();
         this.background.fillStyle(0x3498db, 1);
         this.background.fillRoundedRect(-40, -40, 80, 80, 8);
         
-        this.powerText = scene.add.text(0, -20, `P: ${this.power}/${this.maxPower}`, {
+        this.powerText = scene.add.text(0, -20, `HP: ${this.power}/${this.maxPower}`, {
             fontSize: '14px',
             color: '#ffffff'
         });
         this.powerText.setOrigin(0.5, 0.5);
         this.add(this.powerText);
         
-        this.labelText = scene.add.text(0, 0, 'hero', {
-            fontSize: '16px',
+        this.labelText = scene.add.text(0, 0, 'Player', {
+            fontSize: '20px',
             color: '#ffffff'
         });
         this.labelText.setOrigin(0.5, 0.5);
         this.add(this.labelText);
         
-        this.shieldText = scene.add.text(0, 20, `S: ${this.shield}`, {
+        this.shieldText = scene.add.text(0, 20, `Shield: ${this.shield}`, {
             fontSize: '14px',
             color: '#ffffff'
         });
@@ -35,8 +35,8 @@ class PlayerCard extends Card {
     }
     
     updateDisplay() {
-        this.powerText.setText(`P: ${this.power}/${this.maxPower}`);
-        this.shieldText.setText(`S: ${this.shield}`);
+        this.powerText.setText(`HP: ${this.power}/${this.maxPower}`);
+        this.shieldText.setText(`Shield: ${this.shield}`);
         this.shieldText.setVisible(this.shield > 0);
     }
     

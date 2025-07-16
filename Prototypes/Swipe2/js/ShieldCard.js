@@ -8,9 +8,10 @@ class ShieldCard extends Card {
         this.background.fillStyle(0x95a5a6, 1);
         this.background.fillRoundedRect(-40, -40, 80, 80, 8);
         
-        this.valueText = scene.add.text(0, 0, `S: ${this.value}`, {
-            fontSize: '16px',
-            color: '#ffffff'
+        this.valueText = scene.add.text(0, 0, `Shield\n${this.value}`, {
+            fontSize: '20px',
+            color: '#ffffff',
+            align: 'center'
         });
         this.valueText.setOrigin(0.5, 0.5);
         this.add(this.valueText);

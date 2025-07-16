@@ -8,9 +8,10 @@ class PotionCard extends Card {
         this.background.fillStyle(0x27ae60, 1);
         this.background.fillRoundedRect(-40, -40, 80, 80, 8);
         
-        this.valueText = scene.add.text(0, 0, `P: ${this.value}`, {
-            fontSize: '16px',
-            color: '#ffffff'
+        this.valueText = scene.add.text(0, 0, `Potion\n${this.value}`, {
+            fontSize: '20px',
+            color: '#ffffff',
+            align: 'center' 
         });
         this.valueText.setOrigin(0.5, 0.5);
         this.add(this.valueText);
