@@ -19,7 +19,7 @@ class TrapToggleCard extends Card {
     }
     
     getStateSymbol() {
-        return `Trap\n${this.state === 'sharp' ? '^' : '_'}`;
+        return `Trap\n${this.value}  ${this.state === 'sharp' ? '^' : '_'}`;
     }
     
     postTurn() {

@@ -20,7 +20,7 @@ class ProjectileCard extends Card {
     
     getDirectionSymbol() {
         const symbols = ['^', '>', 'v', '<']; // up, right, down, left
-        return `Shooter\n${symbols[this.currentDirection]}`;
+        return `Shooter\n${this.value}  ${symbols[this.currentDirection]}`;
     }
     
     getDirectionVector() {

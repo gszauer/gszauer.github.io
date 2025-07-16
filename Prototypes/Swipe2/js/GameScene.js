@@ -167,6 +167,8 @@ class GameScene extends Phaser.Scene {
             this.clearDragVisuals();
             
             if (this.gameGrid.playerCard) {
+                this.gameGrid.playerCard.x = this.playerCardOriginalX;
+                this.gameGrid.playerCard.y = this.playerCardOriginalY;
                 this.gameGrid.playerCard.setScale(1, 1);
             }
         }
@@ -298,8 +300,8 @@ class GameScene extends Phaser.Scene {
         projectile.fillCircle(0, 0, 10);
         
         const startTile = this.gameGrid.tiles[startY][startX];
-        projectile.x = startTile.x + this.gameGrid.x;
-        projectile.y = startTile.y + this.gameGrid.y;
+        projectile.x = startTile.x * this.gameGrid.scaleX + this.gameGrid.x;
+        projectile.y = startTile.y * this.gameGrid.scaleY + this.gameGrid.y;
         
         const checkHit = () => {
             if (currentX < 0 || currentX >= this.gameGrid.gridWidth ||
@@ -330,8 +332,8 @@ class GameScene extends Phaser.Scene {
             const nextTile = this.gameGrid.tiles[currentY][currentX];
             this.tweens.add({
                 targets: projectile,
-                x: nextTile.x + this.gameGrid.x,
-                y: nextTile.y + this.gameGrid.y,
+                x: nextTile.x * this.gameGrid.scaleX + this.gameGrid.x,
+                y: nextTile.y * this.gameGrid.scaleY + this.gameGrid.y,
                 duration: 100,
                 onComplete: () => {
                     currentX += dx;

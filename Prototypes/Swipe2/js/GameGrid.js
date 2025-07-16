@@ -271,6 +271,21 @@ class GameGrid extends Phaser.GameObjects.Container {
     moveCards(cards, dRow, dCol, onComplete) {
         let completed = 0;
         
+        // First, check if any non-player card would end up on a portal
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            if (card === this.playerCard) continue;
+            
+            const newRow = card.gridY + dRow;
+            const newCol = card.gridX + dCol;
+            
+            if (this.tiles[newRow][newCol].type === 'portal') {
+                // Block the entire movement if any non-player card would land on a portal
+                this.isAnimating = false;
+                return;
+            }
+        }
+        
         cards.forEach((card) => {
             const newRow = card.gridY + dRow;
             const newCol = card.gridX + dCol;
@@ -396,7 +411,7 @@ class GameGrid extends Phaser.GameObjects.Container {
         for (let row = 0; row < this.gridHeight; row++) {
             for (let col = 0; col < this.gridWidth; col++) {
                 const tile = this.tiles[row][col];
-                if (!tile.disabled && !tile.card) {
+                if (!tile.disabled && !tile.card && tile.type !== 'portal') {
                     emptyTiles.push({ row, col });
                 }
             }
@@ -416,7 +431,8 @@ class GameGrid extends Phaser.GameObjects.Container {
                     if (!tile.disabled && tile.card && 
                         tile.card.type !== 'player' && 
                         tile.card.type !== 'portal' &&
-                        tile.card.type !== 'door') {
+                        tile.card.type !== 'door' &&
+                        tile.type !== 'portal') {
                         replaceableTiles.push({ row, col, card: tile.card });
                     }
                 }
