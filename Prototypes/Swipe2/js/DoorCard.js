@@ -1,0 +1,20 @@
+class DoorCard extends Card {
+    constructor(scene, x, y) {
+        super(scene, x, y, 'door');
+        
+        this.background.clear();
+        this.background.fillStyle(0xf39c12, 1);
+        this.background.fillRoundedRect(-40, -40, 80, 80, 8);
+        
+        this.labelText = scene.add.text(0, 0, 'door', {
+            fontSize: '16px',
+            color: '#ffffff'
+        });
+        this.labelText.setOrigin(0.5, 0.5);
+        this.add(this.labelText);
+    }
+    
+    onPlayerInteraction(player) {
+        this.scene.events.emit('levelComplete');
+    }
+}
