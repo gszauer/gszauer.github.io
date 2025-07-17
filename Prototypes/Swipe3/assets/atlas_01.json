@@ -1,0 +1,145 @@
+{
+	"textures": [
+		{
+			"image": "atlas_01",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "background_1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "background_2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 2,
+						"y": 1026,
+						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "background_3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 580,
+						"y": 2,
+						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "background_4.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 580,
+						"y": 1026,
+						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "background_5.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 1158,
+						"y": 2,
+						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "background_6.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 574,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 574,
+						"h": 1020
+					},
+					"frame": {
+						"x": 1158,
+						"y": 1026,
+						"w": 574,
+						"h": 1020
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}

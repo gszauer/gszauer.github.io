@@ -15,7 +15,8 @@ class GameGrid extends Phaser.GameObjects.Container {
         this.winCondition = null;
         this.winProgress = 0;
         
-        this.tileSize = 100;
+        this.tileSizeX = 100;
+        this.tileSizeY = 130;
         
         this.initializeGrid();
         this.setupFromConfig();
@@ -32,8 +33,8 @@ class GameGrid extends Phaser.GameObjects.Container {
         const availableWidth = width - padding * 2;
         const availableHeight = height - headerHeight - padding * 2;
         
-        const containerWidth = this.gridWidth * this.tileSize;
-        const containerHeight = this.gridHeight * this.tileSize;
+        const containerWidth = this.gridWidth * this.tileSizeX;
+        const containerHeight = this.gridHeight * this.tileSizeY;
         
         const scaleX = availableWidth / containerWidth;
         const scaleY = availableHeight / containerHeight;
@@ -53,8 +54,8 @@ class GameGrid extends Phaser.GameObjects.Container {
             this.tiles[row] = [];
             for (let col = 0; col < this.gridWidth; col++) {
                 this.tiles[row][col] = {
-                    x: col * this.tileSize + this.tileSize / 2,
-                    y: row * this.tileSize + this.tileSize / 2,
+                    x: col * this.tileSizeX + this.tileSizeX / 2,
+                    y: row * this.tileSizeY + this.tileSizeY / 2,
                     card: null,
                     disabled: false,
                     type: 'normal',
@@ -484,9 +485,9 @@ class GameGrid extends Phaser.GameObjects.Container {
         graphics.fillStyle(0x3498db, 1);
         graphics.fillRoundedRect(
             tile.x - 40, 
-            tile.y - 40, 
+            tile.y - 60, 
             80, 
-            80, 
+            120, 
             8
         );
         

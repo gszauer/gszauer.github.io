@@ -5,8 +5,10 @@ class MonsterCard extends Card {
         this.power = power;
         
         this.background.clear();
-        this.background.fillStyle(0xe74c3c, 1);
-        this.background.fillRoundedRect(-40, -40, 80, 80, 8);
+        
+        this.monsterSprite = scene.add.image(0, 0, 'atlas_02', 'char_monster_1.png');
+        this.monsterSprite.setScale(0.5);
+        this.add(this.monsterSprite);
         
         this.powerText = scene.add.text(0, 0, `Monster\n${this.power}`, {
             fontSize: '20px',

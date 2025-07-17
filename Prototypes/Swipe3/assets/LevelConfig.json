@@ -1,0 +1,61 @@
+[
+    {
+        "gridWidth": 5,
+        "gridHeight": 5,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 3,
+        "disable": [ 0, 4, 20, 24 ]
+    },
+    {
+        "gridWidth": 5,
+        "gridHeight": 5,
+        "playerSpawnRow": 0,
+        "playerSpawnCol": 4,
+        "winCondition": "collect",
+        "winValue": 5,
+        "disable": [ 6, 7, 11, 12 ]
+    },
+    {
+        "gridWidth": 5,
+        "gridHeight": 5,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 5,
+        "portals": [ 0, 24 ]
+    },
+     {
+        "gridWidth": 3,
+        "gridHeight": 3,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 5
+    },
+     {
+        "gridWidth": 15,
+        "gridHeight": 15,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 5
+    },
+    {
+        "gridWidth": 5,
+        "gridHeight": 20,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 5
+    },
+    {
+        "gridWidth": 20,
+        "gridHeight": 5,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2,
+        "winCondition": "kill",
+        "winValue": 5
+    }
+]
