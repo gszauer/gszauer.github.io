@@ -12,9 +12,19 @@ class PlayerCard extends Card {
         this.heroSprite.setScale(0.5);
         this.add(this.heroSprite);
         
-        this.powerText = scene.add.text(0, -20, `HP: ${this.power}/${this.maxPower}`, {
-            fontSize: '14px',
-            color: '#ffffff'
+        this.heartStamp = scene.add.image(-30, -40, 'atlas_02', 'stamp_heart.png');
+        this.heartStamp.setScale(0.4);
+        this.add(this.heartStamp);
+        
+        this.shieldStamp = scene.add.image(30, 40, 'atlas_02', 'stamp_shield.png');
+        this.shieldStamp.setScale(0.4);
+        this.add(this.shieldStamp);
+        
+        this.powerText = scene.add.text(-30, -40, `${this.power}`, {
+            fontSize: '18px',
+            color: '#000000',
+            fontStyle: 'bold',
+            align: 'center'
         });
         this.powerText.setOrigin(0.5, 0.5);
         this.add(this.powerText);
@@ -26,9 +36,11 @@ class PlayerCard extends Card {
         this.labelText.setOrigin(0.5, 0.5);
         this.add(this.labelText);
         
-        this.shieldText = scene.add.text(0, 20, `Shield: ${this.shield}`, {
-            fontSize: '14px',
-            color: '#ffffff'
+        this.shieldText = scene.add.text(30, 40, `Shield: ${this.shield}`, {
+            fontSize: '18px',
+            color: '#000000',
+            fontStyle: 'bold',
+            align: 'center'
         });
         this.shieldText.setOrigin(0.5, 0.5);
         this.add(this.shieldText);
@@ -37,9 +49,12 @@ class PlayerCard extends Card {
     }
     
     updateDisplay() {
-        this.powerText.setText(`HP: ${this.power}/${this.maxPower}`);
-        this.shieldText.setText(`Shield: ${this.shield}`);
+        this.powerText.setText(`${this.power}`);
+        this.shieldText.setText(`${this.shield}`);
         this.shieldText.setVisible(this.shield > 0);
+        this.shieldStamp.setVisible(this.shield > 0);
+        
+        this.labelText.setVisible(false);
     }
     
     takeDamage(damage) {

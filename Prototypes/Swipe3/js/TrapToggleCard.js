@@ -6,25 +6,25 @@ class TrapToggleCard extends Card {
         this.state = state;
         
         this.background.clear();
-        this.background.fillStyle(0x34495e, 1);
-        this.background.fillRoundedRect(-40, -60, 80, 120, 8);
         
-        this.stateText = scene.add.text(0, 0, this.getStateSymbol(), {
-            fontSize: '20px',
-            color: '#ffffff',
-            align: 'center' 
+        this.trapSprite = scene.add.image(0, 0, 'atlas_02', state === 'sharp' ? 'char_trap_b.png' : 'char_trap_a.png');
+        this.trapSprite.setScale(0.5);
+        this.add(this.trapSprite);
+        
+        this.stateText = scene.add.text(0, 0, `${this.value}`, {
+            fontSize: '35px',
+            color: '#000000',
+            fontStyle: 'bold',
+            align: 'center'
         });
         this.stateText.setOrigin(0.5, 0.5);
         this.add(this.stateText);
     }
     
-    getStateSymbol() {
-        return `Trap\n${this.value}  ${this.state === 'sharp' ? '^' : '_'}`;
-    }
-    
     postTurn() {
         this.state = this.state === 'sharp' ? 'dull' : 'sharp';
-        this.stateText.setText(this.getStateSymbol());
+        this.stateText.setText(`${this.value}`);
+        this.trapSprite.setFrame(this.state === 'sharp' ? 'char_trap_b.png' : 'char_trap_a.png');
     }
     
     onPlayerInteraction(player) {

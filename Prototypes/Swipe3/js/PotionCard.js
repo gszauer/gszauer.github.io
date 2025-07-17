@@ -1,3 +1,4 @@
+
 class PotionCard extends Card {
     constructor(scene, x, y, value = 5) {
         super(scene, x, y, 'potion');
@@ -5,13 +6,16 @@ class PotionCard extends Card {
         this.value = value;
         
         this.background.clear();
-        this.background.fillStyle(0x27ae60, 1);
-        this.background.fillRoundedRect(-40, -60, 80, 120, 8);
         
-        this.valueText = scene.add.text(0, 0, `Potion\n${this.value}`, {
-            fontSize: '20px',
-            color: '#ffffff',
-            align: 'center' 
+        this.potionSprite = scene.add.image(0, 0, 'atlas_02', 'char_potion.png');
+        this.potionSprite.setScale(0.5);
+        this.add(this.potionSprite);
+        
+        this.valueText = scene.add.text(0, 15, `${this.value}`, {
+            fontSize: '35px',
+            color: '#000000',
+            fontStyle: 'bold',
+            align: 'center'
         });
         this.valueText.setOrigin(0.5, 0.5);
         this.add(this.valueText);

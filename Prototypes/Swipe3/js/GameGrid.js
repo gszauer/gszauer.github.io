@@ -481,34 +481,19 @@ class GameGrid extends Phaser.GameObjects.Container {
         tile.portalInstance = instance;
         
         // Create visual representation for the portal
-        const graphics = this.scene.add.graphics();
-        graphics.fillStyle(0x3498db, 1);
-        graphics.fillRoundedRect(
-            tile.x - 40, 
-            tile.y - 60, 
-            80, 
-            120, 
-            8
-        );
-        
-        const labelText = this.scene.add.text(tile.x, tile.y, `Portal\n${instance}`, {
-            fontSize: '20px',
-            color: '#ffffff',
-            align: 'center' 
-        });
-        labelText.setOrigin(0.5, 0.5);
+        const spriteName = instance === 'A' ? 'char_portal_a.png' : 'char_portal_b.png';
+        const portalSprite = this.scene.add.image(tile.x, tile.y, 'atlas_02', spriteName);
+        portalSprite.setScale(0.5);
+        portalSprite.setOrigin(0.5, 0.5);
         
         // Store visual elements
         tile.portalVisual = {
-            graphics: graphics,
-            label: labelText
+            sprite: portalSprite
         };
         
         // Add to container at lower depth than cards
-        this.add(graphics);
-        this.add(labelText);
-        graphics.setDepth(1);
-        labelText.setDepth(1);
+        this.add(portalSprite);
+        portalSprite.setDepth(1);
     }
     
     getPortalTiles() {

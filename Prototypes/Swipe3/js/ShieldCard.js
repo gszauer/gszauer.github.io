@@ -5,12 +5,15 @@ class ShieldCard extends Card {
         this.value = value;
         
         this.background.clear();
-        this.background.fillStyle(0x95a5a6, 1);
-        this.background.fillRoundedRect(-40, -60, 80, 120, 8);
         
-        this.valueText = scene.add.text(0, 0, `Shield\n${this.value}`, {
-            fontSize: '20px',
-            color: '#ffffff',
+        this.shieldSprite = scene.add.image(0, 0, 'atlas_02', 'char_chield.png');
+        this.shieldSprite.setScale(0.5);
+        this.add(this.shieldSprite);
+        
+        this.valueText = scene.add.text(-1, 2, `${this.value}`, {
+            fontSize: '35px',
+            color: '#000000',
+            fontStyle: 'bold',
             align: 'center'
         });
         this.valueText.setOrigin(0.5, 0.5);
