@@ -303,58 +303,7 @@ class GameScene extends Phaser.Scene {
     
     
     fireProjectile(data) {
-        let { startX, startY, dx, dy, damage } = data;
-        let currentX = startX + dx;
-        let currentY = startY + dy;
-        
-        const projectile = this.add.graphics();
-        projectile.fillStyle(0xffff00, 1);
-        projectile.fillCircle(0, 0, 10);
-        
-        const startTile = this.gameGrid.tiles[startY][startX];
-        projectile.x = startTile.x * this.gameGrid.scaleX + this.gameGrid.x;
-        projectile.y = startTile.y * this.gameGrid.scaleY + this.gameGrid.y;
-        
-        const checkHit = () => {
-            if (currentX < 0 || currentX >= this.gameGrid.gridWidth ||
-                currentY < 0 || currentY >= this.gameGrid.gridHeight) {
-                projectile.destroy();
-                return;
-            }
-            
-            const tile = this.gameGrid.tiles[currentY][currentX];
-            if (tile.card && tile.card.type === 'monster') {
-                tile.card.takeDamage(damage);
-                projectile.destroy();
-                
-                // Check if monster was killed and update win progress
-                if (tile.card.requestDestroy && this.gameGrid.winCondition && 
-                    this.gameGrid.winCondition.type === 'kill') {
-                    this.gameGrid.winProgress++;
-                    this.updateWinConditionDisplay();
-                    this.gameGrid.checkWinCondition();
-                }
-                
-                // Destroy marked cards and spawn new ones
-                this.gameGrid.destroyMarkedCards();
-                this.gameGrid.spawnCardsOnEmptyTiles();
-                return;
-            }
-            
-            const nextTile = this.gameGrid.tiles[currentY][currentX];
-            this.tweens.add({
-                targets: projectile,
-                x: nextTile.x * this.gameGrid.scaleX + this.gameGrid.x,
-                y: nextTile.y * this.gameGrid.scaleY + this.gameGrid.y,
-                duration: 100,
-                onComplete: () => {
-                    currentX += dx;
-                    currentY += dy;
-                    checkHit();
-                }
-            });
-        };
-        
-        this.time.delayedCall(100, checkHit);
+        // Create a new projectile using the Projectile class
+        new Projectile(this, data);
     }
 }

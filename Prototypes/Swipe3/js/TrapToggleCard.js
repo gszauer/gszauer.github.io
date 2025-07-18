@@ -13,9 +13,11 @@ class TrapToggleCard extends Card {
         
         this.stateText = scene.add.text(0, 0, `${this.value}`, {
             fontSize: '35px',
-            color: '#000000',
+            color: '#ffffff',
             fontStyle: 'bold',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 4,
         });
         this.stateText.setOrigin(0.5, 0.5);
         this.add(this.stateText);

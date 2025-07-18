@@ -20,27 +20,26 @@ class PlayerCard extends Card {
         this.shieldStamp.setScale(0.4);
         this.add(this.shieldStamp);
         
-        this.powerText = scene.add.text(-30, -40, `${this.power}`, {
+        this.powerText = scene.add.text(-30, -42, `${this.power}`, {
             fontSize: '18px',
-            color: '#000000',
+            color: '#ffffff',
             fontStyle: 'bold',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 2,
         });
         this.powerText.setOrigin(0.5, 0.5);
         this.add(this.powerText);
         
-        this.labelText = scene.add.text(0, 0, 'Player', {
-            fontSize: '20px',
-            color: '#ffffff'
-        });
-        this.labelText.setOrigin(0.5, 0.5);
-        this.add(this.labelText);
+      
         
         this.shieldText = scene.add.text(30, 40, `Shield: ${this.shield}`, {
             fontSize: '18px',
-            color: '#000000',
+            color: '#ffffff',
             fontStyle: 'bold',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 2,
         });
         this.shieldText.setOrigin(0.5, 0.5);
         this.add(this.shieldText);
@@ -54,7 +53,6 @@ class PlayerCard extends Card {
         this.shieldText.setVisible(this.shield > 0);
         this.shieldStamp.setVisible(this.shield > 0);
         
-        this.labelText.setVisible(false);
     }
     
     takeDamage(damage) {

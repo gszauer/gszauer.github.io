@@ -96,9 +96,57 @@
         "y": 0.5
       }
     },
+    "projectile_left.png": {
+      "frame": {
+        "x": 1,
+        "y": 969,
+        "w": 125,
+        "h": 34
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 125,
+        "h": 34
+      },
+      "sourceSize": {
+        "w": 125,
+        "h": 34
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "projectile_right.png": {
+      "frame": {
+        "x": 128,
+        "y": 969,
+        "w": 125,
+        "h": 34
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 125,
+        "h": 34
+      },
+      "sourceSize": {
+        "w": 125,
+        "h": 34
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "char_monster_2.png": {
       "frame": {
-        "x": 163,
+        "x": 255,
         "y": 1,
         "w": 160,
         "h": 240
@@ -120,9 +168,81 @@
         "y": 0.5
       }
     },
+    "stamp_shield.png": {
+      "frame": {
+        "x": 163,
+        "y": 1,
+        "w": 88,
+        "h": 101
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 88,
+        "h": 101
+      },
+      "sourceSize": {
+        "w": 88,
+        "h": 101
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "projectile_down.png": {
+      "frame": {
+        "x": 163,
+        "y": 104,
+        "w": 34,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 34,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 34,
+        "h": 126
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "projectile_up.png": {
+      "frame": {
+        "x": 199,
+        "y": 104,
+        "w": 34,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 34,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 34,
+        "h": 126
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "char_monster_3.png": {
       "frame": {
-        "x": 325,
+        "x": 417,
         "y": 1,
         "w": 160,
         "h": 240
@@ -146,7 +266,7 @@
     },
     "char_monster_4.png": {
       "frame": {
-        "x": 487,
+        "x": 579,
         "y": 1,
         "w": 160,
         "h": 240
@@ -170,7 +290,7 @@
     },
     "char_portal_a.png": {
       "frame": {
-        "x": 649,
+        "x": 741,
         "y": 1,
         "w": 160,
         "h": 240
@@ -192,10 +312,34 @@
         "y": 0.5
       }
     },
+    "stamp_heart.png": {
+      "frame": {
+        "x": 903,
+        "y": 1,
+        "w": 100,
+        "h": 89
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 89
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 89
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
     "char_portal_b.png": {
       "frame": {
-        "x": 811,
-        "y": 1,
+        "x": 163,
+        "y": 243,
         "w": 160,
         "h": 240
       },
@@ -219,7 +363,7 @@
     "char_potion.png": {
       "frame": {
         "x": 163,
-        "y": 243,
+        "y": 485,
         "w": 160,
         "h": 240
       },
@@ -243,7 +387,7 @@
     "char_trap_a.png": {
       "frame": {
         "x": 163,
-        "y": 485,
+        "y": 727,
         "w": 160,
         "h": 240
       },
@@ -266,7 +410,55 @@
     },
     "char_trap_b.png": {
       "frame": {
-        "x": 163,
+        "x": 325,
+        "y": 243,
+        "w": 160,
+        "h": 240
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 240
+      },
+      "sourceSize": {
+        "w": 160,
+        "h": 240
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "crossbow_down_loaded.png": {
+      "frame": {
+        "x": 325,
+        "y": 485,
+        "w": 160,
+        "h": 240
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 240
+      },
+      "sourceSize": {
+        "w": 160,
+        "h": 240
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "crossbow_left_loaded.png": {
+      "frame": {
+        "x": 325,
         "y": 727,
         "w": 160,
         "h": 240
@@ -288,48 +480,48 @@
         "y": 0.5
       }
     },
-    "stamp_heart.png": {
+    "crossbow_right_loaded.png": {
       "frame": {
-        "x": 325,
+        "x": 487,
         "y": 243,
-        "w": 100,
-        "h": 89
+        "w": 160,
+        "h": 240
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 100,
-        "h": 89
+        "w": 160,
+        "h": 240
       },
       "sourceSize": {
-        "w": 100,
-        "h": 89
+        "w": 160,
+        "h": 240
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "stamp_shield.png": {
+    "crossbow_up_loaded.png": {
       "frame": {
-        "x": 427,
+        "x": 649,
         "y": 243,
-        "w": 88,
-        "h": 101
+        "w": 160,
+        "h": 240
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 88,
-        "h": 101
+        "w": 160,
+        "h": 240
       },
       "sourceSize": {
-        "w": 88,
-        "h": 101
+        "w": 160,
+        "h": 240
       },
       "pivot": {
         "x": 0.5,

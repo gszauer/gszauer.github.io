@@ -12,9 +12,11 @@ class ShieldCard extends Card {
         
         this.valueText = scene.add.text(-1, 2, `${this.value}`, {
             fontSize: '35px',
-            color: '#000000',
+            color: '#ffffff',
             fontStyle: 'bold',
-            align: 'center'
+            align: 'center',
+            stroke: '#000000',
+            strokeThickness: 4,
         });
         this.valueText.setOrigin(0.5, 0.5);
         this.add(this.valueText);

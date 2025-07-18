@@ -5,22 +5,35 @@ class ProjectileCard extends Card {
         this.value = value;
         this.currentDirection = startDirection; // 0=up, 1=right, 2=down, 3=left
         
-        this.background.clear();
-        this.background.fillStyle(0x9b59b6, 1);
-        this.background.fillRoundedRect(-40, -60, 80, 120, 8);
+        // Remove the colored background
+        this.background.setVisible(false);
         
-        this.directionText = scene.add.text(0, 0, this.getDirectionSymbol(), {
-            fontSize: '20px',
+        // Add crossbow background image based on direction
+        this.crossbowImage = scene.add.image(0, 0, 'atlas_02', this.getCrossbowImageName());
+        this.crossbowImage.setOrigin(0.5, 0.5);
+        this.crossbowImage.setScale(0.5, 0.5);
+        this.add(this.crossbowImage);
+        
+        // Add value text
+        this.valueText = scene.add.text(-20, -30, this.value.toString(), {
+            fontSize: '24px',
             color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3,
             align: 'center'
         });
-        this.directionText.setOrigin(0.5, 0.5);
-        this.add(this.directionText);
+        this.valueText.setOrigin(0.5, 0.5);
+        this.add(this.valueText);
     }
     
-    getDirectionSymbol() {
-        const symbols = ['^', '>', 'v', '<']; // up, right, down, left
-        return `Shooter\n${this.value}  ${symbols[this.currentDirection]}`;
+    getCrossbowImageName() {
+        const imageNames = [
+            'crossbow_up_loaded.png',    // 0 = up
+            'crossbow_right_loaded.png', // 1 = right
+            'crossbow_down_loaded.png',  // 2 = down
+            'crossbow_left_loaded.png'   // 3 = left
+        ];
+        return imageNames[this.currentDirection];
     }
     
     getDirectionVector() {
@@ -36,7 +49,8 @@ class ProjectileCard extends Card {
     postTurn() {
         // Rotate clockwise
         this.currentDirection = (this.currentDirection + 1) % 4;
-        this.directionText.setText(this.getDirectionSymbol());
+        // Update the crossbow image
+        this.crossbowImage.setFrame(this.getCrossbowImageName());
     }
     
     onPlayerInteraction(player) {

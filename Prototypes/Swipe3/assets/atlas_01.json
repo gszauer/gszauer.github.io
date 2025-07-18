@@ -4,7 +4,7 @@
 			"image": "atlas_01",
 			"format": "RGBA8888",
 			"size": {
-				"w": 2048,
+				"w": 4096,
 				"h": 2048
 			},
 			"scale": 1,
@@ -45,8 +45,8 @@
 						"h": 1020
 					},
 					"frame": {
-						"x": 2,
-						"y": 1026,
+						"x": 580,
+						"y": 2,
 						"w": 574,
 						"h": 1020
 					}
@@ -66,8 +66,8 @@
 						"h": 1020
 					},
 					"frame": {
-						"x": 580,
-						"y": 2,
+						"x": 2,
+						"y": 1026,
 						"w": 574,
 						"h": 1020
 					}
@@ -132,6 +132,90 @@
 						"x": 1158,
 						"y": 1026,
 						"w": 574,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "map_1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1020,
+						"h": 930
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1020,
+						"h": 930
+					},
+					"frame": {
+						"x": 1736,
+						"y": 2,
+						"w": 1020,
+						"h": 930
+					}
+				},
+				{
+					"filename": "map_2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1020,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1020,
+						"h": 1020
+					},
+					"frame": {
+						"x": 1736,
+						"y": 936,
+						"w": 1020,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "map_3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1020,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1020,
+						"h": 1020
+					},
+					"frame": {
+						"x": 2760,
+						"y": 2,
+						"w": 1020,
+						"h": 1020
+					}
+				},
+				{
+					"filename": "map_4.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1020,
+						"h": 1020
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1020,
+						"h": 1020
+					},
+					"frame": {
+						"x": 2760,
+						"y": 1026,
+						"w": 1020,
 						"h": 1020
 					}
 				}
