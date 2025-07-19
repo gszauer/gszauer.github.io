@@ -5,10 +5,8 @@ class PotionCard extends Card {
         
         this.value = value;
         
-        this.background.clear();
-        
         this.potionSprite = scene.add.image(0, 0, 'atlas_02', 'char_potion.png');
-        this.potionSprite.setScale(0.5);
+        this.potionSprite.setScale(this.scaleVisual);
         this.add(this.potionSprite);
         
         this.valueText = scene.add.text(0, 15, `${this.value}`, {

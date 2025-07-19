@@ -1,15 +1,15 @@
-class ProjectileCard extends Card {
-    constructor(scene, x, y, value = 3, startDirection = 0) {
-        super(scene, x, y, 'projectile');
+class CannonCard extends Card {
+    constructor(scene, x, y, value = 3, direction = 0) {
+        super(scene, x, y, 'cannon');
         
         this.value = value;
-        this.currentDirection = startDirection; // 0=up, 1=right, 2=down, 3=left
+        this.direction = direction; // 0=up, 1=right, 2=down, 3=left
         
-        // Add crossbow background image based on direction
-        this.crossbowImage = scene.add.image(0, 0, 'atlas_02', this.getCrossbowImageName());
-        this.crossbowImage.setOrigin(0.5, 0.5);
-        this.crossbowImage.setScale(this.scaleVisual);
-        this.add(this.crossbowImage);
+        // Add cannon background image based on direction
+        this.cannonImage = scene.add.image(0, 0, 'atlas_02', this.getCannonImageName());
+        this.cannonImage.setOrigin(0.5, 0.5);
+        this.cannonImage.setScale(this.scaleVisual);
+        this.add(this.cannonImage);
         
         // Add weapon stamp icon
         this.weaponStamp = scene.add.image(-30, -44, 'atlas_02', 'stamp_fight.png');
@@ -29,14 +29,14 @@ class ProjectileCard extends Card {
         this.add(this.valueText);
     }
     
-    getCrossbowImageName() {
+    getCannonImageName() {
         const imageNames = [
-            'crossbow_up_loaded.png',    // 0 = up
-            'crossbow_right_loaded.png', // 1 = right
-            'crossbow_down_loaded.png',  // 2 = down
-            'crossbow_left_loaded.png'   // 3 = left
+            'cannon_up.png',    // 0 = up
+            'cannon_right.png', // 1 = right
+            'cannon_down.png',  // 2 = down
+            'cannon_left.png'   // 3 = left
         ];
-        return imageNames[this.currentDirection];
+        return imageNames[this.direction];
     }
     
     getDirectionVector() {
@@ -46,14 +46,11 @@ class ProjectileCard extends Card {
             { dx: 0, dy: 1 },  // down
             { dx: -1, dy: 0 }  // left
         ];
-        return vectors[this.currentDirection];
+        return vectors[this.direction];
     }
     
     postTurn() {
-        // Rotate clockwise
-        this.currentDirection = (this.currentDirection + 1) % 4;
-        // Update the crossbow image
-        this.crossbowImage.setFrame(this.getCrossbowImageName());
+        // Cannon is static - it doesn't rotate after turns
     }
     
     onPlayerInteraction(player) {
@@ -63,7 +60,8 @@ class ProjectileCard extends Card {
             startY: this.gridY,
             dx: vector.dx,
             dy: vector.dy,
-            damage: this.value
+            damage: this.value,
+            sprite: 'cannonball.png'
         });
         
         this.markForDestruction();

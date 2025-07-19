@@ -1,0 +1,18 @@
+ 
+The LevelConfig.json file contains a root array. This array contians level objects. The index of each object is it's level number.
+
+Level object:
+{
+    "gridWidth": 5,
+    "gridHeight": 5,
+    "playerSpawnRow": 2,
+    "playerSpawnCol": 2,
+    "winCondition": "kill" / "collect"
+    "winValue": 3,
+    "disable": [ 0, 4, 20, 24 ] // Linear indices
+    "portals": [ 0, 24 ] // linear indices, only two ever
+},
+
+TODO:
+
+"pool" : [] // things allowed to spawn

@@ -53,14 +53,30 @@ class GameGrid extends Phaser.GameObjects.Container {
         for (let row = 0; row < this.gridHeight; row++) {
             this.tiles[row] = [];
             for (let col = 0; col < this.gridWidth; col++) {
+                const x = col * this.tileSizeX + this.tileSizeX / 2;
+                const y = row * this.tileSizeY + this.tileSizeY / 2;
+                
+                // Create a semi-transparent black background for each tile
+                const tileBackground = this.scene.add.graphics();
+                tileBackground.fillStyle(0x000000, 0.5);
+                tileBackground.fillRect(
+                    x - this.tileSizeX / 2,
+                    y - this.tileSizeY / 2,
+                    this.tileSizeX,
+                    this.tileSizeY
+                );
+                this.add(tileBackground);
+                tileBackground.setDepth(0);
+                
                 this.tiles[row][col] = {
-                    x: col * this.tileSizeX + this.tileSizeX / 2,
-                    y: row * this.tileSizeY + this.tileSizeY / 2,
+                    x: x,
+                    y: y,
                     card: null,
                     disabled: false,
                     type: 'normal',
                     portalInstance: null,
-                    portalVisual: null
+                    portalVisual: null,
+                    background: tileBackground
                 };
             }
         }
@@ -74,6 +90,11 @@ class GameGrid extends Phaser.GameObjects.Container {
                 const col = index % this.gridWidth;
                 if (row < this.gridHeight && col < this.gridWidth) {
                     this.tiles[row][col].disabled = true;
+                    // Remove background for disabled tiles
+                    if (this.tiles[row][col].background) {
+                        this.tiles[row][col].background.destroy();
+                        this.tiles[row][col].background = null;
+                    }
                 }
             });
         }
@@ -104,6 +125,51 @@ class GameGrid extends Phaser.GameObjects.Container {
         }
         
         this.fillEmptyTiles();
+        this.adjustTileBackgrounds();
+    }
+    
+    adjustTileBackgrounds() {
+        for (let row = 0; row < this.gridHeight; row++) {
+            for (let col = 0; col < this.gridWidth; col++) {
+                const tile = this.tiles[row][col];
+                
+                // Skip if tile is disabled or has no background
+                if (tile.disabled || !tile.background) continue;
+                
+                // Check if tile above exists and is active
+                const hasActiveTileAbove = row > 0 && 
+                    !this.tiles[row - 1][col].disabled;
+                
+                // Check if tile below exists and is active
+                const hasActiveTileBelow = row < this.gridHeight - 1 && 
+                    !this.tiles[row + 1][col].disabled;
+                
+                // Calculate adjustments
+                let yOffset = 0;
+                let heightAdjustment = 0;
+                
+                if (!hasActiveTileAbove) {
+                    yOffset = -8;
+                    heightAdjustment += 8;
+                }
+                
+                if (!hasActiveTileBelow) {
+                    heightAdjustment += 10;
+                }
+                
+                // Redraw the background with adjustments
+                if (yOffset !== 0 || heightAdjustment !== 0) {
+                    tile.background.clear();
+                    tile.background.fillStyle(0x000000, 0.5);
+                    tile.background.fillRect(
+                        tile.x - this.tileSizeX / 2,
+                        tile.y - this.tileSizeY / 2 + yOffset,
+                        this.tileSizeX,
+                        this.tileSizeY + heightAdjustment
+                    );
+                }
+            }
+        }
     }
     
     setWinCondition(type, target) {
@@ -149,6 +215,12 @@ class GameGrid extends Phaser.GameObjects.Container {
             case 'projectile':
                 card = new ProjectileCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
                 break;
+            case 'cannon':
+                card = new CannonCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
+                break;
+            case 'magic':
+                card = new MagicProjectileCard(this.scene, tile.x, tile.y, 3);
+                break;
             case 'trap':
                 card = new TrapToggleCard(this.scene, tile.x, tile.y);
                 break;
@@ -169,7 +241,7 @@ class GameGrid extends Phaser.GameObjects.Container {
             return 'dirt';
         }
         
-        const types = ['monster', 'potion', 'shield', 'dirt', 'dirt', 'projectile', 'trap'];
+        const types = ['monster', 'potion', 'shield', 'projectile', 'trap', 'cannon', 'magic'];
         return types[Math.floor(Math.random() * types.length)];
     }
     

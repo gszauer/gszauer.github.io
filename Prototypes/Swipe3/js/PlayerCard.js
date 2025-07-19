@@ -6,10 +6,8 @@ class PlayerCard extends Card {
         this.maxPower = 50;
         this.shield = 10;
         
-        this.background.clear();
-        
         this.heroSprite = scene.add.image(0, 0, 'atlas_02', 'char_hero.png');
-        this.heroSprite.setScale(0.5);
+        this.heroSprite.setScale(this.scaleVisual);
         this.add(this.heroSprite);
         
         this.heartStamp = scene.add.image(-30, -40, 'atlas_02', 'stamp_heart.png');

@@ -12,7 +12,6 @@ class GameScene extends Phaser.Scene {
         this.currentLevel = data.level || 1;
         this.dragStartPos = null;
         this.backgroundNumber = ((this.currentLevel - 1) % 6) + 1;
-        console.log('Level:', this.currentLevel, 'Background:', this.backgroundNumber);
     }
     
     create() {
@@ -304,6 +303,12 @@ class GameScene extends Phaser.Scene {
     
     fireProjectile(data) {
         // Create a new projectile using the Projectile class
-        new Projectile(this, data);
+        // Add sprite and direction to data
+        const projectileData = {
+            ...data,
+            sprite: data.sprite || 'projectile_up.png',
+            direction: data.direction || null // Will be inferred from dx/dy if not provided
+        };
+        new Projectile(this, projectileData);
     }
 }

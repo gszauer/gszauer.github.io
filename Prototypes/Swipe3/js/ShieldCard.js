@@ -4,10 +4,8 @@ class ShieldCard extends Card {
         
         this.value = value;
         
-        this.background.clear();
-        
         this.shieldSprite = scene.add.image(0, 0, 'atlas_02', 'char_chield.png');
-        this.shieldSprite.setScale(0.5);
+        this.shieldSprite.setScale(this.scaleVisual);
         this.add(this.shieldSprite);
         
         this.valueText = scene.add.text(-1, 2, `${this.value}`, {

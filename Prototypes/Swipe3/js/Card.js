@@ -5,12 +5,7 @@ class Card extends Phaser.GameObjects.Container {
         this.gridX = 0;
         this.gridY = 0;
         this.requestDestroy = false;
-        
-        this.background = scene.add.graphics();
-        this.add(this.background);
-        
-        this.background.fillStyle(0x444444, 1);
-        this.background.fillRoundedRect(-40, -60, 80, 120, 8);
+        this.scaleVisual = 0.58;
         
         scene.add.existing(this);
     }

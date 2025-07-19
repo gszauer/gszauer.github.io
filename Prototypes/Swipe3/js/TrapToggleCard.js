@@ -5,10 +5,8 @@ class TrapToggleCard extends Card {
         this.value = value;
         this.state = state;
         
-        this.background.clear();
-        
         this.trapSprite = scene.add.image(0, 0, 'atlas_02', state === 'sharp' ? 'char_trap_b.png' : 'char_trap_a.png');
-        this.trapSprite.setScale(0.5);
+        this.trapSprite.setScale(this.scaleVisual);
         this.add(this.trapSprite);
         
         this.stateText = scene.add.text(0, 0, `${this.value}`, {

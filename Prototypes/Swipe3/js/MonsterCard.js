@@ -4,11 +4,9 @@ class MonsterCard extends Card {
         
         this.power = power;
         
-        this.background.clear();
-        
         const monsterNumber = Phaser.Math.Between(1, 4);
         this.monsterSprite = scene.add.image(0, 0, 'atlas_02', `char_monster_${monsterNumber}.png`);
-        this.monsterSprite.setScale(0.5);
+        this.monsterSprite.setScale(this.scaleVisual);
         this.add(this.monsterSprite);
         
         this.heartStamp = scene.add.image(-30, -40, 'atlas_02', 'stamp_heart.png');

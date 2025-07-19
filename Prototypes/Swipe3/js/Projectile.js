@@ -1,6 +1,6 @@
 class Projectile extends Phaser.GameObjects.Container {
     constructor(scene, data) {
-        const { startX, startY, dx, dy, damage } = data;
+        const { startX, startY, dx, dy, damage, sprite, direction } = data;
         
         // Get starting position from grid
         const startTile = scene.gameGrid.tiles[startY][startX];
@@ -17,11 +17,49 @@ class Projectile extends Phaser.GameObjects.Container {
         this.damage = damage;
         this.gameGrid = scene.gameGrid;
         
-        // Create projectile visual
-        this.projectileGraphic = scene.add.graphics();
-        this.projectileGraphic.fillStyle(0xffff00, 1);
-        this.projectileGraphic.fillCircle(0, 0, 10);
-        this.add(this.projectileGraphic);
+        // Create projectile sprite
+        this.projectileSprite = scene.add.sprite(0, 0, 'atlas_02', sprite || 'stamp_fight.png');
+        this.projectileSprite.setOrigin(0.5, 0.5);
+        
+        // Scale sprite to match game grid scale
+        const gridScale = this.gameGrid.scaleX;
+        if (sprite == "cannonball.png") {
+            this.projectileSprite.setScale(gridScale * 0.4); 
+        }
+        else if (sprite == "projectile_up.png") {
+            this.projectileSprite.setScale(gridScale * 0.7);
+        }
+        else {
+            this.projectileSprite.setScale(gridScale * 0.5); 
+        }
+
+        // Rotate sprite based on direction
+        let rotation = 0;
+        if (direction) {
+            switch(direction) {
+                case 'up':
+                    rotation = 0;
+                    break;
+                case 'right':
+                    rotation = Math.PI / 2;
+                    break;
+                case 'down':
+                    rotation = Math.PI;
+                    break;
+                case 'left':
+                    rotation = -Math.PI / 2;
+                    break;
+            }
+        } else {
+            // Infer direction from dx/dy
+            if (this.dx > 0) rotation = Math.PI / 2;      // right
+            else if (this.dx < 0) rotation = -Math.PI / 2; // left
+            else if (this.dy > 0) rotation = Math.PI;      // down
+            else if (this.dy < 0) rotation = 0;            // up
+        }
+        this.projectileSprite.rotation = rotation;
+        
+        this.add(this.projectileSprite);
         
         scene.add.existing(this);
         
