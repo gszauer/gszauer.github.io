@@ -1,69 +1,131 @@
 [
     {
+        "levelNumber": 1,
+        "xOffset": 260,
+        "yOffset": -50,
         "gridWidth": 5,
         "gridHeight": 5,
         "playerSpawnRow": 2,
         "playerSpawnCol": 2,
-        "winCondition": "kill",
         "winValue": 3,
-        "disable": [ 0, 4, 20, 24 ]
+        "disable": [ 0, 4, 20, 24 ],
+        "pool": ["monster"]
     },
     {
+        "levelNumber": 2,
+        "xOffset": -280,
         "gridWidth": 5,
         "gridHeight": 5,
         "playerSpawnRow": 0,
         "playerSpawnCol": 4,
-        "winCondition": "collect",
-        "winValue": 5,
         "disable": [ 6, 7, 11, 12 ]
     },
     {
+        "levelNumber": 3,
+        "xOffset": 260,
+        "yOffset": 15,
         "gridWidth": 5,
         "gridHeight": 5,
         "playerSpawnRow": 2,
         "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5,
         "portals": [ 0, 24 ]
     },
      {
+        "levelNumber": 4,
+        "xOffset": -280,
+        "yOffset": 50,
         "gridWidth": 3,
         "gridHeight": 3,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5
+        "playerSpawnCol": 2
     },
      {
+        "levelNumber": 5,
+        "xOffset": 300,
+        "yOffset": 40,
         "gridWidth": 15,
         "gridHeight": 15,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5
+        "playerSpawnCol": 2
     },
     {
+        "levelNumber": 6,
+        "xOffset": -320,
+        "yOffset": -40,
         "gridWidth": 5,
         "gridHeight": 20,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5
+        "playerSpawnCol": 2
     },
     {
+        "levelNumber": 7,
+        "xOffset": 320,
         "gridWidth": 20,
         "gridHeight": 5,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5
+        "playerSpawnCol": 2
     },
-     {
-        "gridWidth": 4,
-        "gridHeight": 4,
+    {
+        "levelNumber": 8,
+        "xOffset": -250,
+        "yOffset": -50,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winCondition": "kill",
-        "winValue": 5
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 9,
+        "xOffset": 250,
+        "yOffset": -50,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 10,
+        "xOffset": -260,
+        "yOffset": -50,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 11,
+        "xOffset": 260,
+        "yOffset": 50,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    } ,
+    {
+        "levelNumber": 12,
+        "xOffset": -160,
+        "yOffset": -150,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 13,
+        "xOffset": 260,
+        "yOffset": -200,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 14,
+        "xOffset": -100,
+        "yOffset": -180,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 15,
+        "xOffset": -160,
+        "yOffset": -250,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
+    },
+    {
+        "levelNumber": 16,
+        "xOffset": 200,
+        "yOffset": -200,
+        "playerSpawnRow": 2,
+        "playerSpawnCol": 2
     }
 ]

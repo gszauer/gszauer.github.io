@@ -11,8 +11,7 @@ Level object:
     "winValue": 3,
     "disable": [ 0, 4, 20, 24 ] // Linear indices
     "portals": [ 0, 24 ] // linear indices, only two ever
+    xOffset: optional-number, used on map
+    yOFfset: optiona-number, used on map,
+    "pool": ["monster", "trap"] optional, used to override monster pool for level
 },
-
-TODO:
-
-"pool" : [] // things allowed to spawn

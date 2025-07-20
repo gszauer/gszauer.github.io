@@ -12,7 +12,10 @@ class GameGrid extends Phaser.GameObjects.Container {
         this.playerRow = -1;
         this.playerCol = -1;
         this.doorSpawned = false;
-        this.winCondition = null;
+        this.winCondition = {
+            "type": "kill",
+            "target": 10
+        };
         this.winProgress = 0;
         
         this.tileSizeX = 100;
@@ -174,6 +177,10 @@ class GameGrid extends Phaser.GameObjects.Container {
     
     setWinCondition(type, target) {
         this.winCondition = { type, target };
+        this.winCondition.type = 'kill'; // Force kill
+        if (!this.winCondition.target) {
+            this.winCondition.target = 10; // Default to 10
+        }
         this.winProgress = 0;
     }
     
@@ -241,7 +248,43 @@ class GameGrid extends Phaser.GameObjects.Container {
             return 'dirt';
         }
         
-        const types = ['monster', 'potion', 'shield', 'projectile', 'trap', 'cannon', 'magic'];
+        // Use level-specific pool if available
+        if (this.config.pool) {
+            return this.config.pool[Math.floor(Math.random() * this.config.pool.length)];
+        }
+        
+        // Default types without special cards
+        const types = ['monster', 'potion', 'potion', 'monster', 'shield', 'shield', 'monster', 'trap', 'monster'];
+        
+        // Add level-specific special card based on level number (1-indexed)
+        const pushProjectileToTypes = () => {
+            const levelIndex = (this.config.levelNumber - 1) % 3;
+            if (levelIndex === 0) {
+                types.push('projectile');
+            } else if (levelIndex === 1) {
+                types.push('cannon');
+            } else if (levelIndex === 2) {
+                types.push('magic');
+            }
+        }
+        pushProjectileToTypes();
+
+        if (this.config.levelNumber > 10) {
+            types.push('monster');
+            pushProjectileToTypes();
+        }
+        if (this.config.levelNumber > 20) {
+            types.push('monster');
+            types.push('trap');
+            pushProjectileToTypes();
+        }
+        
+        // Shuffle the types array using Fisher-Yates algorithm
+        for (let i = types.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [types[i], types[j]] = [types[j], types[i]];
+        }
+        
         return types[Math.floor(Math.random() * types.length)];
     }
     

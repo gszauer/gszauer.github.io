@@ -51,6 +51,7 @@ class PreloaderScene extends Phaser.Scene {
         this.load.json('levelConfig', 'assets/LevelConfig.json');
         this.load.atlas('atlas_01', 'assets/atlas_01.jpg', 'assets/atlas_01.json');
         this.load.atlas('atlas_02', 'assets/atlas_02.png', 'assets/atlas_02.json');
+        this.load.atlas('atlas_03', 'assets/atlas_03.png', 'assets/atlas_03.json');
     }
 
     create() {

@@ -33,6 +33,8 @@ class GameScene extends Phaser.Scene {
         const levelIndex = Math.min(this.currentLevel - 1, levelConfigs.length - 1);
         const config = levelConfigs[Math.max(0, levelIndex)];
         
+        // Pass level number along with config
+        config.levelNumber = this.currentLevel;
         this.gameGrid = new GameGrid(this, 0, 0, config);
         this.add.existing(this.gameGrid);
         
@@ -68,6 +70,7 @@ class GameScene extends Phaser.Scene {
         backButton.on('pointerover', () => backButton.setFillStyle(0x2ecc71));
         backButton.on('pointerout', () => backButton.setFillStyle(0x27ae60));
         backButton.on('pointerdown', () => {
+            this.cleanupEventListeners();
             this.scene.stop();
             this.scene.start('LevelSelectScene');
         });
@@ -133,6 +136,29 @@ class GameScene extends Phaser.Scene {
         this.events.on('updateWinCondition', () => {
             this.updateWinConditionDisplay();
         });
+    }
+    
+    cleanupEventListeners() {
+        // Clean up all event listeners
+        this.events.off('levelComplete');
+        this.events.off('fireProjectile');
+        this.events.off('updateWinCondition');
+        
+        // Clean up keyboard listeners
+        this.input.keyboard.off('keydown-W');
+        this.input.keyboard.off('keydown-S');
+        this.input.keyboard.off('keydown-A');
+        this.input.keyboard.off('keydown-D');
+        
+        // Clean up pointer listeners
+        this.input.off('pointerdown');
+        this.input.off('pointerup');
+        this.input.off('pointermove');
+    }
+    
+    shutdown() {
+        // Called automatically by Phaser when scene stops
+        this.cleanupEventListeners();
     }
     
     handlePointerDown(pointer) {
@@ -274,12 +300,21 @@ class GameScene extends Phaser.Scene {
         ).setOrigin(0.5);
         
         this.time.delayedCall(2000, () => {
+            this.cleanupEventListeners();
             this.scene.stop();
             this.scene.start('LevelSelectScene');
         });
     }
     
     handleLevelComplete() {
+        // Update cleared level in PlayerData
+        const playerData = PlayerData.Instance;
+        const clearedLevel = playerData.GetNumber('clearedLevel', 0);
+        console.log(`Cleared: ${this.currentLevel}, highest cleared: ${clearedLevel}`)
+        if (this.currentLevel > clearedLevel) {
+            playerData.SetNumber('clearedLevel', this.currentLevel);
+        }
+        
         const completeText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
@@ -291,12 +326,8 @@ class GameScene extends Phaser.Scene {
         ).setOrigin(0.5);
         
         this.time.delayedCall(2000, () => {
-            if (this.currentLevel < 15) {
-                this.scene.restart({ level: this.currentLevel + 1 });
-            } else {
-                this.scene.stop();
-                this.scene.start('LevelSelectScene');
-            }
+            this.cleanupEventListeners();
+            this.scene.restart({ level: this.currentLevel + 1 });
         });
     }
     

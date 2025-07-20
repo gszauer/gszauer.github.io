@@ -1,0 +1,124 @@
+{
+	"textures": [
+		{
+			"image": "atlas_03",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "highlight_0.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 473,
+						"h": 456
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 473,
+						"h": 456
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 473,
+						"h": 456
+					}
+				},
+				{
+					"filename": "highlight_1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 473,
+						"h": 456
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 473,
+						"h": 456
+					},
+					"frame": {
+						"x": 476,
+						"y": 1,
+						"w": 473,
+						"h": 456
+					}
+				},
+				{
+					"filename": "trophy_lock.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 217,
+						"h": 332
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 217,
+						"h": 332
+					},
+					"frame": {
+						"x": 951,
+						"y": 1,
+						"w": 217,
+						"h": 332
+					}
+				},
+				{
+					"filename": "trophy_play.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 217,
+						"h": 332
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 217,
+						"h": 332
+					},
+					"frame": {
+						"x": 1170,
+						"y": 1,
+						"w": 217,
+						"h": 332
+					}
+				},
+				{
+					"filename": "trophy_win.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 217,
+						"h": 332
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 217,
+						"h": 332
+					},
+					"frame": {
+						"x": 1389,
+						"y": 1,
+						"w": 217,
+						"h": 332
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}

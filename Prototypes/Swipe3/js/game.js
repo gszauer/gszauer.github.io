@@ -31,6 +31,7 @@ if (!isDomainAllowed()) {
         </div>
     `;
 } else {
+    // TODO: Do all this on document load only!
     // Domain is allowed, create the game
     const config = {
         type: Phaser.AUTO,
@@ -49,5 +50,6 @@ if (!isDomainAllowed()) {
         scene: [PreloaderScene, LevelSelectScene, GameScene]
     };
 
+    const playerData = new PlayerData();
     const game = new Phaser.Game(config);
 }
