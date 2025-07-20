@@ -67,7 +67,7 @@ class LevelSelectScene extends Phaser.Scene {
 
         // Get cleared level from PlayerData
         const playerData = PlayerData.Instance;
-        const clearedLevel = Math.max(1, playerData.GetNumber('clearedLevel', 1));
+        const clearedLevel = playerData.GetNumber('clearedLevel');
 
         const buttonHeight = 332 * 0.5;
         const padding = 50;
