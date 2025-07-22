@@ -46,6 +46,8 @@ class PreloaderScene extends Phaser.Scene {
             progressBox.destroy();
             loadingText.destroy();
             percentText.destroy();
+
+            AdManager.instance.LoadingFinished();
         });
 
         this.load.json('levelConfig', 'assets/LevelConfig.json');

@@ -81,6 +81,9 @@ class LevelSelectScene extends Phaser.Scene {
         let currentLevelY = null;
         let lastButtonY = null;
         
+        // Arrays to store level button positions for pointer placement
+        const levelPositions = [];
+        
         for (let i = 0; i < totalLevels; i++) {
             const levelNumber = i + 1;
             const config = levelConfigs[i];
@@ -95,6 +98,11 @@ class LevelSelectScene extends Phaser.Scene {
             
             // Y position is current cursor position plus offset
             const y = cursorY + yOffset;
+            
+            // Store position for levels 1 and 2
+            if (levelNumber <= 2) {
+                levelPositions[levelNumber - 1] = { x, y };
+            }
             
             // Track the last button Y position
             lastButtonY = y;
@@ -168,6 +176,49 @@ class LevelSelectScene extends Phaser.Scene {
             });
 
             this.mapContainer.add([button, buttonText]);
+        }
+        
+        // Add animated pointer based on cleared level
+        if (clearedLevel <= 0 && levelPositions[0]) {
+            // Add pointer behind level 1
+            const pos = levelPositions[0];
+            const pointer = this.add.image(pos.x + 90, pos.y - 90, 'atlas_03', 'pointer_down.png');
+            pointer.setOrigin(0.5);
+            pointer.setDepth(-1); // Behind buttons but above map
+            this.mapContainer.add(pointer);
+            
+            // Create animation timer
+            this.time.addEvent({
+                delay: 750,
+                callback: () => {
+                    if (pointer.texture.key === 'atlas_03' && pointer.frame.name === 'pointer_down.png') {
+                        pointer.setTexture('atlas_03', 'pointer_up.png');
+                    } else {
+                        pointer.setTexture('atlas_03', 'pointer_down.png');
+                    }
+                },
+                loop: true
+            });
+        } else if (clearedLevel === 1 && levelPositions[1]) {
+            // Add pointer behind level 2
+            const pos = levelPositions[1];
+            const pointer = this.add.image(pos.x + 90, pos.y - 90, 'atlas_03', 'pointer_down.png');
+            pointer.setOrigin(0.5);
+            pointer.setDepth(-1); // Behind buttons but above map
+            this.mapContainer.add(pointer);
+            
+            // Create animation timer
+            this.time.addEvent({
+                delay: 750,
+                callback: () => {
+                    if (pointer.texture.key === 'atlas_03' && pointer.frame.name === 'pointer_down.png') {
+                        pointer.setTexture('atlas_03', 'pointer_up.png');
+                    } else {
+                        pointer.setTexture('atlas_03', 'pointer_down.png');
+                    }
+                },
+                loop: true
+            });
         }
         
         // If no current level was found (clearedLevel > totalLevels), use the last button

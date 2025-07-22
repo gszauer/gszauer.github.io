@@ -42,6 +42,15 @@ class GameScene extends Phaser.Scene {
         this.createDragVisualization();
         this.setupEventListeners();
         
+        // Show tutorial for level 1
+        if (this.currentLevel === 1) {
+            // Delay slightly to ensure everything is set up
+            this.time.delayedCall(200, () => {
+                const tutorial = new Tutorial(this, 1, "This is your hero. Swipe around to move!", "char_hero.png");
+                tutorial.AddSwipeGesture();
+            });
+        }
+        
         // Delay input setup to prevent carry-over from level select
         this.time.delayedCall(100, () => {
             this.setupInput();
@@ -52,33 +61,30 @@ class GameScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
-        this.levelText = this.add.text(20, 20, `Level: ${this.currentLevel}`, {
-            fontSize: '24px',
-            color: '#ffffff'
-        });
+        // Add menu header tile sprite
+        const headerHeight = 100; // Adjust this based on your sprite's height
+        this.menuHeader = this.add.tileSprite(0, 0, width, headerHeight, 'atlas_03', 'menu_header.png');
+        this.menuHeader.setOrigin(0, 0);
         
-        const backButton = this.add.rectangle(
-            width - 80, 30, 120, 40, 0x27ae60
-        );
+        const backButton = this.add.image(width - 80, 50, 'atlas_03', 'button_menu.png');
         backButton.setInteractive({ useHandCursor: true });
-        
-        const backText = this.add.text(width - 80, 30, 'Back', {
-            fontSize: '18px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-        
-        backButton.on('pointerover', () => backButton.setFillStyle(0x2ecc71));
-        backButton.on('pointerout', () => backButton.setFillStyle(0x27ae60));
+        backButton.setScale(0.6);
+
+        backButton.on('pointerover', () => backButton.setTint(0xcccccc));
+        backButton.on('pointerout', () => backButton.clearTint());
         backButton.on('pointerdown', () => {
-            this.cleanupEventListeners();
-            this.scene.stop();
-            this.scene.start('LevelSelectScene');
+            new GameMenuWindow(this);
+            //new Tutorial(this, 3, "Welcome to the game! Hope you have a good time here", "char_hero.png");
         });
         
         if (this.gameGrid.winCondition) {
-            this.winConditionText = this.add.text(20, 50, this.getWinConditionText(), {
-                fontSize: '24px',
-                color: '#ffffff'
+            this.winConditionText = this.add.text(20, 25, this.getWinConditionText(), {
+                fontSize: '42px',
+                color: '#ffffff',
+                fontStyle: 'bold',
+                align: 'center',
+                stroke: '#000000',
+                strokeThickness: 3,
             });
         }
     }
@@ -88,7 +94,7 @@ class GameScene extends Phaser.Scene {
         if (!condition) return '';
         
         if (condition.type === 'kill') {
-            return `Kill ${this.gameGrid.winProgress}/${condition.target} monsters`;
+            return `Defeat ${this.gameGrid.winProgress}/${condition.target} monsters`;
         } else if (condition.type === 'collect') {
             return `Collect ${this.gameGrid.winProgress}/${condition.target} items`;
         }
@@ -113,14 +119,14 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointerupoutside', this.handlePointerUp, this);
         this.input.on('pointermove', this.handlePointerMove, this);
         
-        this.input.keyboard.on('keydown-UP', () => this.tryMove('up'));
-        this.input.keyboard.on('keydown-DOWN', () => this.tryMove('down'));
-        this.input.keyboard.on('keydown-LEFT', () => this.tryMove('left'));
-        this.input.keyboard.on('keydown-RIGHT', () => this.tryMove('right'));
-        this.input.keyboard.on('keydown-W', () => this.tryMove('up'));
-        this.input.keyboard.on('keydown-S', () => this.tryMove('down'));
-        this.input.keyboard.on('keydown-A', () => this.tryMove('left'));
-        this.input.keyboard.on('keydown-D', () => this.tryMove('right'));
+        this.input.keyboard.on('keydown-UP', () => { if (!Window.hasOpenWindows()) this.tryMove('up'); });
+        this.input.keyboard.on('keydown-DOWN', () => { if (!Window.hasOpenWindows()) this.tryMove('down'); });
+        this.input.keyboard.on('keydown-LEFT', () => { if (!Window.hasOpenWindows()) this.tryMove('left'); });
+        this.input.keyboard.on('keydown-RIGHT', () => { if (!Window.hasOpenWindows()) this.tryMove('right'); });
+        this.input.keyboard.on('keydown-W', () => { if (!Window.hasOpenWindows()) this.tryMove('up'); });
+        this.input.keyboard.on('keydown-S', () => { if (!Window.hasOpenWindows()) this.tryMove('down'); });
+        this.input.keyboard.on('keydown-A', () => { if (!Window.hasOpenWindows()) this.tryMove('left'); });
+        this.input.keyboard.on('keydown-D', () => { if (!Window.hasOpenWindows()) this.tryMove('right'); });
     }
     
     setupEventListeners() {
@@ -128,6 +134,9 @@ class GameScene extends Phaser.Scene {
             this.handleLevelComplete();
         });
         
+        this.events.on('playerDied', () => {
+            this.handleGameOver();
+        });
         
         this.events.on('fireProjectile', (data) => {
             this.fireProjectile(data);
@@ -141,6 +150,7 @@ class GameScene extends Phaser.Scene {
     cleanupEventListeners() {
         // Clean up all event listeners
         this.events.off('levelComplete');
+        this.events.off('playerDied');
         this.events.off('fireProjectile');
         this.events.off('updateWinCondition');
         
@@ -162,6 +172,7 @@ class GameScene extends Phaser.Scene {
     }
     
     handlePointerDown(pointer) {
+        if (Window.hasOpenWindows()) return;
         if (!this.gameGrid.isAnimating) {
             this.dragStartPos = { x: pointer.x, y: pointer.y };
             this.clearDragVisuals();
@@ -182,6 +193,7 @@ class GameScene extends Phaser.Scene {
     }
     
     handlePointerUp(pointer) {
+        if (Window.hasOpenWindows()) return;
         if (this.dragStartPos && !this.gameGrid.isAnimating) {
             const dx = pointer.x - this.dragStartPos.x;
             const dy = pointer.y - this.dragStartPos.y;
@@ -212,6 +224,7 @@ class GameScene extends Phaser.Scene {
     }
     
     handlePointerMove(pointer) {
+        if (Window.hasOpenWindows()) return;
         if (this.dragStartPos && !this.gameGrid.isAnimating) {
             const dx = pointer.x - this.dragStartPos.x;
             const dy = pointer.y - this.dragStartPos.y;
@@ -272,13 +285,13 @@ class GameScene extends Phaser.Scene {
     }
     
     tryMove(direction) {
+        if (Window.hasOpenWindows()) return;
         if (this.gameGrid.isAnimating) return;
         
         const moved = this.gameGrid.shiftPlayer(direction);
         
         if (moved) {
             this.updateWinConditionDisplay();
-            this.checkGameOver();
         }
     }
     
@@ -289,24 +302,109 @@ class GameScene extends Phaser.Scene {
     }
     
     handleGameOver() {
-        const gameOverText = this.add.text(
+        // Prevent any further game actions
+        Window.externalWindowOpen = true;
+        
+        // Create fullscreen black blocker with 50% opacity
+        const blocker = this.add.rectangle(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
-            'Game Over!',
-            {
-                fontSize: '48px',
-                color: '#ff0000'
-            }
-        ).setOrigin(0.5);
+            this.cameras.main.width,
+            this.cameras.main.height,
+            0x000000,
+            0.5
+        );
+        blocker.setDepth(999);
+        blocker.setInteractive(); // Block all input to the game layer below
         
-        this.time.delayedCall(2000, () => {
-            this.cleanupEventListeners();
-            this.scene.stop();
-            this.scene.start('LevelSelectScene');
-        });
+        // Create defeat screen image
+        const defeatScreen = this.add.image(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2 - 170,
+            'atlas_03',
+            'defeat_screen.png'
+        );
+        defeatScreen.setDepth(1000);
+        
+        // Create Try Again button (left button)
+        this.createDefeatButton(
+            this.cameras.main.width / 2 - 170,
+            this.cameras.main.height / 2 + 160,
+            'Restart Level',
+            () => {
+                Window.externalWindowOpen = false;
+                this.cleanupEventListeners();
+                this.scene.restart({ level: this.currentLevel });
+            }
+        );
+        
+        // Create Continue button (right button)
+        const continueButton = this.createDefeatButton(
+            this.cameras.main.width / 2 + 170,
+            this.cameras.main.height / 2 + 160,
+            'Continue',
+            () => {
+                // Disable button during ad
+                continueButton.disableInteractive();
+                
+                AdManager.instance.RewardBreak((success) => {
+                    if (success) {
+                        // Remove defeat UI and continue game
+                        blocker.destroy();
+                        defeatScreen.destroy();
+                        continueButton.destroy();
+                        
+                        // Find and destroy the Try Again button too
+                        const tryAgainButton = this.children.list.find(child => 
+                            child.x === this.cameras.main.width / 2 - 170 && 
+                            child.y === this.cameras.main.height / 2 + 160 &&
+                            child.setInteractive
+                        );
+                        if (tryAgainButton) {
+                            tryAgainButton.destroy();
+                            // Also destroy associated graphics and text
+                            const elementsToDestroy = this.children.list.filter(child => 
+                                child.depth >= 1001 && child.depth <= 1004
+                            );
+                            elementsToDestroy.forEach(element => element.destroy());
+                        }
+                        
+                        // Revive the player
+                        if (this.gameGrid.playerCard) {
+                            this.gameGrid.playerCard.health = this.gameGrid.playerCard.maxHealth;
+                            this.gameGrid.playerCard.updateDisplay();
+                        }
+                        
+                        // Re-enable game input
+                        Window.externalWindowOpen = false;
+                    } else {
+                        // Change button to Level Select
+                        continueButton.buttonText.setText('Level Select');
+                        if (continueButton.subTextObj) {
+                            continueButton.subTextObj.setText('(Ad not available)');
+                        }
+                        
+                        // Update callback to go to level select
+                        continueButton.removeAllListeners('pointerdown');
+                        continueButton.on('pointerdown', () => {
+                            Window.externalWindowOpen = false;
+                            this.cleanupEventListeners();
+                            this.scene.start('LevelSelectScene');
+                        });
+                        
+                        // Re-enable button
+                        continueButton.setInteractive();
+                    }
+                });
+            },
+            '(Watch Ad)'
+        );
     }
     
     handleLevelComplete() {
+        // Prevent any further game actions
+        Window.externalWindowOpen = true;
+        
         // Update cleared level in PlayerData
         const playerData = PlayerData.Instance;
         const clearedLevel = playerData.GetNumber('clearedLevel', 0);
@@ -315,20 +413,198 @@ class GameScene extends Phaser.Scene {
             playerData.SetNumber('clearedLevel', this.currentLevel);
         }
         
-        const completeText = this.add.text(
+        // Create fullscreen black blocker with 50% opacity
+        const blocker = this.add.rectangle(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
-            'Level Complete!',
-            {
-                fontSize: '48px',
-                color: '#00ff00'
-            }
-        ).setOrigin(0.5);
+            this.cameras.main.width,
+            this.cameras.main.height,
+            0x000000,
+            0.5
+        );
+        blocker.setDepth(999);
+        blocker.setInteractive(); // Block all input to the game layer below
         
-        this.time.delayedCall(2000, () => {
-            this.cleanupEventListeners();
-            this.scene.restart({ level: this.currentLevel + 1 });
+        // Create victory screen image
+        const victoryScreen = this.add.image(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2 - 170,
+            'atlas_03',
+            'victory_screen.png'
+        );
+        victoryScreen.setDepth(1000);
+        
+        // Create Level Select button (left button)
+        this.createVictoryButton(
+            this.cameras.main.width / 2 - 170,
+            this.cameras.main.height / 2 + 160,
+            'Level Select',
+            () => {
+                Window.externalWindowOpen = false;
+                this.cleanupEventListeners();
+                this.scene.start('LevelSelectScene');
+            }
+        );
+        
+        // Create Next Level button (right button)
+        this.createVictoryButton(
+            this.cameras.main.width / 2 + 170,
+            this.cameras.main.height / 2 + 160,
+            'Next Level',
+            () => {
+                Window.externalWindowOpen = false;
+                this.cleanupEventListeners();
+                this.scene.restart({ level: this.currentLevel + 1 });
+            }
+        );
+    }
+    
+    createVictoryButton(x, y, text, callback) {
+        // Create drop shadow
+        const shadow = this.add.graphics();
+        shadow.fillStyle(0x45280f, 0.5);
+        shadow.fillRoundedRect(x - 150 + 4, y - 40 + 4, 300, 80, 12);
+        shadow.setDepth(1001);
+        
+        // Create button background with rounded corners
+        const buttonBg = this.add.graphics();
+        buttonBg.fillStyle(0x84471c);
+        buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+        buttonBg.lineStyle(4, 0x45280f);
+        buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        buttonBg.setDepth(1002);
+        
+        // Create invisible hit area for interaction
+        const button = this.add.rectangle(x, y, 300, 80, 0x000000, 0);
+        button.setInteractive();
+        button.setDepth(1003);
+        
+        // Create button text
+        const buttonText = this.add.text(x, y, text, {
+            fontSize: '36px',
+            color: '#e7c28d',
+            fontFamily: 'Arial'
         });
+        buttonText.setOrigin(0.5);
+        buttonText.setDepth(1004);
+        
+        // Add hover effects
+        button.on('pointerover', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x8f632f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        button.on('pointerout', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x84471c);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        button.on('pointerdown', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x45280f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+            if (callback) callback();
+        });
+        
+        button.on('pointerup', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x8f632f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        return button;
+    }
+    
+    createDefeatButton(x, y, text, callback, subText = null) {
+        // Create drop shadow
+        const shadow = this.add.graphics();
+        shadow.fillStyle(0x45280f, 0.5);
+        shadow.fillRoundedRect(x - 150 + 4, y - 40 + 4, 300, 80, 12);
+        shadow.setDepth(1001);
+        
+        // Create button background with rounded corners
+        const buttonBg = this.add.graphics();
+        buttonBg.fillStyle(0x84471c);
+        buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+        buttonBg.lineStyle(4, 0x45280f);
+        buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        buttonBg.setDepth(1002);
+        
+        // Create invisible hit area for interaction
+        const button = this.add.rectangle(x, y, 300, 80, 0x000000, 0);
+        button.setInteractive();
+        button.setDepth(1003);
+        
+        // Create button text
+        const buttonText = this.add.text(x, subText ? y - 15 : y, text, {
+            fontSize: '36px',
+            color: '#e7c28d',
+            fontFamily: 'Arial'
+        });
+        buttonText.setOrigin(0.5);
+        buttonText.setDepth(1004);
+        
+        // Create sub text if provided
+        let subTextObj = null;
+        if (subText) {
+            subTextObj = this.add.text(x, y + 15, subText, {
+                fontSize: '24px',
+                color: '#e7c28d',
+                fontFamily: 'Arial'
+            });
+            subTextObj.setOrigin(0.5);
+            subTextObj.setDepth(1004);
+        }
+        
+        // Add hover effects
+        button.on('pointerover', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x8f632f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        button.on('pointerout', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x84471c);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        button.on('pointerdown', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x45280f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+            if (callback) callback();
+        });
+        
+        button.on('pointerup', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(0x8f632f);
+            buttonBg.fillRoundedRect(x - 150, y - 40, 300, 80, 12);
+            buttonBg.lineStyle(4, 0x45280f);
+            buttonBg.strokeRoundedRect(x - 150, y - 40, 300, 80, 12);
+        });
+        
+        // Store references for updating text later
+        button.buttonText = buttonText;
+        button.subTextObj = subTextObj;
+        
+        return button;
     }
     
     

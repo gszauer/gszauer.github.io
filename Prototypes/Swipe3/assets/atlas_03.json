@@ -10,6 +10,48 @@
 			"scale": 1,
 			"frames": [
 				{
+					"filename": "victory_screen.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 512,
+						"h": 697
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 512,
+						"h": 697
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 512,
+						"h": 697
+					}
+				},
+				{
+					"filename": "defeat_screen.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 512,
+						"h": 565
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 512,
+						"h": 565
+					},
+					"frame": {
+						"x": 518,
+						"y": 2,
+						"w": 512,
+						"h": 565
+					}
+				},
+				{
 					"filename": "highlight_0.png",
 					"rotated": false,
 					"trimmed": false,
@@ -24,8 +66,8 @@
 						"h": 456
 					},
 					"frame": {
-						"x": 1,
-						"y": 1,
+						"x": 2,
+						"y": 703,
 						"w": 473,
 						"h": 456
 					}
@@ -45,31 +87,220 @@
 						"h": 456
 					},
 					"frame": {
-						"x": 476,
-						"y": 1,
+						"x": 479,
+						"y": 703,
 						"w": 473,
 						"h": 456
 					}
 				},
 				{
-					"filename": "trophy_lock.png",
+					"filename": "tutorial_frog_1.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 217,
-						"h": 332
+						"w": 380,
+						"h": 307
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 217,
-						"h": 332
+						"w": 380,
+						"h": 307
 					},
 					"frame": {
-						"x": 951,
-						"y": 1,
-						"w": 217,
-						"h": 332
+						"x": 1034,
+						"y": 2,
+						"w": 380,
+						"h": 307
+					}
+				},
+				{
+					"filename": "window_center_left.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 374,
+						"h": 326
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 374,
+						"h": 326
+					},
+					"frame": {
+						"x": 1034,
+						"y": 313,
+						"w": 374,
+						"h": 326
+					}
+				},
+				{
+					"filename": "window_bottom_left.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 374,
+						"h": 286
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 374,
+						"h": 286
+					},
+					"frame": {
+						"x": 956,
+						"y": 643,
+						"w": 374,
+						"h": 286
+					}
+				},
+				{
+					"filename": "window_top_left.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 374,
+						"h": 282
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 374,
+						"h": 282
+					},
+					"frame": {
+						"x": 2,
+						"y": 1163,
+						"w": 374,
+						"h": 282
+					}
+				},
+				{
+					"filename": "bubble.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 350,
+						"h": 250
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 350,
+						"h": 250
+					},
+					"frame": {
+						"x": 380,
+						"y": 1163,
+						"w": 350,
+						"h": 250
+					}
+				},
+				{
+					"filename": "tutorial_frog_3.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 350,
+						"h": 299
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 350,
+						"h": 299
+					},
+					"frame": {
+						"x": 956,
+						"y": 933,
+						"w": 350,
+						"h": 299
+					}
+				},
+				{
+					"filename": "window_top_right_x.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 344,
+						"h": 282
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 344,
+						"h": 282
+					},
+					"frame": {
+						"x": 1418,
+						"y": 2,
+						"w": 344,
+						"h": 282
+					}
+				},
+				{
+					"filename": "window_center_right.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 344,
+						"h": 326
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 344,
+						"h": 326
+					},
+					"frame": {
+						"x": 1418,
+						"y": 288,
+						"w": 344,
+						"h": 326
+					}
+				},
+				{
+					"filename": "window_top_right.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 344,
+						"h": 282
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 344,
+						"h": 282
+					},
+					"frame": {
+						"x": 1412,
+						"y": 618,
+						"w": 344,
+						"h": 282
+					}
+				},
+				{
+					"filename": "window_bottom_right.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 344,
+						"h": 286
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 344,
+						"h": 286
+					},
+					"frame": {
+						"x": 1334,
+						"y": 904,
+						"w": 344,
+						"h": 286
 					}
 				},
 				{
@@ -87,8 +318,29 @@
 						"h": 332
 					},
 					"frame": {
-						"x": 1170,
-						"y": 1,
+						"x": 2,
+						"y": 1449,
+						"w": 217,
+						"h": 332
+					}
+				},
+				{
+					"filename": "trophy_lock.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 217,
+						"h": 332
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 217,
+						"h": 332
+					},
+					"frame": {
+						"x": 223,
+						"y": 1449,
 						"w": 217,
 						"h": 332
 					}
@@ -108,10 +360,220 @@
 						"h": 332
 					},
 					"frame": {
-						"x": 1389,
-						"y": 1,
+						"x": 734,
+						"y": 1163,
 						"w": 217,
 						"h": 332
+					}
+				},
+				{
+					"filename": "window_center_center.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 166,
+						"h": 326
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 166,
+						"h": 326
+					},
+					"frame": {
+						"x": 444,
+						"y": 1417,
+						"w": 166,
+						"h": 326
+					}
+				},
+				{
+					"filename": "pointer_up.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 220,
+						"h": 309
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 220,
+						"h": 309
+					},
+					"frame": {
+						"x": 1310,
+						"y": 1194,
+						"w": 220,
+						"h": 309
+					}
+				},
+				{
+					"filename": "pointer_down.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 220,
+						"h": 309
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 220,
+						"h": 309
+					},
+					"frame": {
+						"x": 1534,
+						"y": 1194,
+						"w": 220,
+						"h": 309
+					}
+				},
+				{
+					"filename": "pointer_clean.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 220,
+						"h": 309
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 220,
+						"h": 309
+					},
+					"frame": {
+						"x": 955,
+						"y": 1236,
+						"w": 220,
+						"h": 309
+					}
+				},
+				{
+					"filename": "tutorial_frog_2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 300,
+						"h": 281
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 300,
+						"h": 281
+					},
+					"frame": {
+						"x": 614,
+						"y": 1499,
+						"w": 300,
+						"h": 281
+					}
+				},
+				{
+					"filename": "window_bottom_center.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 167,
+						"h": 286
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 167,
+						"h": 286
+					},
+					"frame": {
+						"x": 1682,
+						"y": 904,
+						"w": 167,
+						"h": 286
+					}
+				},
+				{
+					"filename": "window_top_center.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 166,
+						"h": 282
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 166,
+						"h": 282
+					},
+					"frame": {
+						"x": 1760,
+						"y": 618,
+						"w": 166,
+						"h": 282
+					}
+				},
+				{
+					"filename": "menu_header.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 227,
+						"h": 100
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 227,
+						"h": 100
+					},
+					"frame": {
+						"x": 518,
+						"y": 571,
+						"w": 227,
+						"h": 100
+					}
+				},
+				{
+					"filename": "button_menu.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 189,
+						"h": 100
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 189,
+						"h": 100
+					},
+					"frame": {
+						"x": 749,
+						"y": 571,
+						"w": 189,
+						"h": 100
+					}
+				},
+				{
+					"filename": "window_x_button.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 182,
+						"h": 177
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 182,
+						"h": 177
+					},
+					"frame": {
+						"x": 918,
+						"y": 1549,
+						"w": 182,
+						"h": 177
 					}
 				}
 			]

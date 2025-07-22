@@ -3,39 +3,39 @@
         "levelNumber": 1,
         "xOffset": 260,
         "yOffset": -50,
-        "gridWidth": 5,
-        "gridHeight": 5,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "winValue": 3,
-        "disable": [ 0, 4, 20, 24 ],
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "playerHp": 30,
+        "playerShield": 0,
+        "playerSpawnRow": 0,
+        "playerSpawnCol": 0,
+        "winValue": 5,
         "pool": ["monster"]
     },
     {
         "levelNumber": 2,
         "xOffset": -280,
-        "gridWidth": 5,
-        "gridHeight": 5,
-        "playerSpawnRow": 0,
-        "playerSpawnCol": 4,
-        "disable": [ 6, 7, 11, 12 ]
+        "gridWidth": 2,
+        "gridHeight": 3,
+        "playerSpawnRow": 1,
+        "playerSpawnCol": 1
     },
     {
         "levelNumber": 3,
         "xOffset": 260,
         "yOffset": 15,
-        "gridWidth": 5,
-        "gridHeight": 5,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2,
-        "portals": [ 0, 24 ]
+        "gridWidth": 3,
+        "gridHeight": 3,
+        "playerSpawnRow": 1,
+        "playerSpawnCol": 1,
+        "portals": [ 0, 8 ]
     },
      {
         "levelNumber": 4,
         "xOffset": -280,
         "yOffset": 50,
         "gridWidth": 3,
-        "gridHeight": 3,
+        "gridHeight": 4,
         "playerSpawnRow": 2,
         "playerSpawnCol": 2
     },
@@ -43,8 +43,8 @@
         "levelNumber": 5,
         "xOffset": 300,
         "yOffset": 40,
-        "gridWidth": 15,
-        "gridHeight": 15,
+        "gridWidth": 4,
+        "gridHeight": 4,
         "playerSpawnRow": 2,
         "playerSpawnCol": 2
     },
@@ -52,10 +52,12 @@
         "levelNumber": 6,
         "xOffset": -320,
         "yOffset": -40,
-        "gridWidth": 5,
-        "gridHeight": 20,
+        "gridWidth": 4,
+        "gridHeight": 5,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "playerSpawnCol": 2,
+        "disable": [ 6, 7, 11, 12 ]
+
     },
     {
         "levelNumber": 7,

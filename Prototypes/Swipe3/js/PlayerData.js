@@ -102,15 +102,13 @@ class PlayerData {
     }
 
     SetNumber(name, number) {
-        if (!this.initialized) {
-            return;
-        }
-
         try {
             const numValue = Number(number);
             if (!isNaN(numValue)) {
                 this.data[name] = numValue;
-                this._saveData();
+                if (this.initialized && this.db) {
+                    this._saveData();
+                }
             }
         } catch (error) {
             console.error('Error setting number:', error);
@@ -118,10 +116,6 @@ class PlayerData {
     }
 
     GetNumber(name, defaultValue = 0) {
-        if (!this.initialized) {
-            return defaultValue;
-        }
-
         try {
             if (name in this.data) {
                 const value = Number(this.data[name]);
@@ -135,23 +129,17 @@ class PlayerData {
     }
 
     SetString(name, string) {
-        if (!this.initialized) {
-            return;
-        }
-
         try {
             this.data[name] = String(string);
-            this._saveData();
+            if (this.initialized && this.db) {
+                this._saveData();
+            }
         } catch (error) {
             console.error('Error setting string:', error);
         }
     }
 
     GetString(name, defaultValue = "") {
-        if (!this.initialized) {
-            return defaultValue;
-        }
-
         try {
             if (name in this.data) {
                 return String(this.data[name]);
@@ -164,15 +152,22 @@ class PlayerData {
     }
 
     ContainsKey(keyString) {
-        if (!this.initialized) {
-            return false;
-        }
-
         try {
             return keyString in this.data;
         } catch (error) {
             console.error('Error checking key:', error);
             return false;
+        }
+    }
+
+    Reset() {
+        try {
+            this.data = {};
+            if (this.initialized && this.db) {
+                this._saveData();
+            }
+        } catch (error) {
+            console.error('Error resetting player data:', error);
         }
     }
 } 

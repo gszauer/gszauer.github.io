@@ -9,11 +9,11 @@ class MonsterCard extends Card {
         this.monsterSprite.setScale(this.scaleVisual);
         this.add(this.monsterSprite);
         
-        this.heartStamp = scene.add.image(-30, -40, 'atlas_02', 'stamp_heart.png');
+        this.heartStamp = scene.add.image(-30, -45, 'atlas_02', 'stamp_heart.png');
         this.heartStamp.setScale(0.4);
         this.add(this.heartStamp);
         
-        this.powerText = scene.add.text(-30, -40, `${this.power}`, {
+        this.powerText = scene.add.text(-30, -47, `${this.power}`, {
             fontSize: '18px',
             color: '#ffffff',
             fontStyle: 'bold',

@@ -186,7 +186,9 @@ class GameGrid extends Phaser.GameObjects.Container {
     
     spawnPlayer(row, col) {
         const tile = this.tiles[row][col];
-        this.playerCard = new PlayerCard(this.scene, tile.x, tile.y);
+        const playerHp = this.config.playerHp || 20;
+        const playerShield = this.config.playerShield || 0;
+        this.playerCard = new PlayerCard(this.scene, tile.x, tile.y, playerHp, playerShield);
         this.playerCard.setGridPosition(col, row);
         this.add(this.playerCard);
         this.cards.push(this.playerCard);
@@ -373,6 +375,12 @@ class GameGrid extends Phaser.GameObjects.Container {
         
         this.moveCards(cardsToMove, move.dRow, move.dCol, () => {
             this.handlePlayerInteractions();
+            
+            // Check if player died after interactions
+            if (this.playerCard && this.playerCard.isDead()) {
+                this.scene.events.emit('playerDied');
+            }
+            
             this.callPostTurn();
             this.destroyMarkedCards();
             this.spawnCardsOnEmptyTiles();
