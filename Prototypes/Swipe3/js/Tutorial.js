@@ -39,7 +39,7 @@ class Tutorial extends Phaser.GameObjects.Container {
         this.add(this.darkBackground);
 
         if (tutorialNumber < 1) { tutorialNumber = 1;}
-        if (tutorialNumber > 3) { tutorialNumber = 3;}
+        if (tutorialNumber > 4) { tutorialNumber = 4;}
         
         // Create tutorial frog sprite
         const frogSpriteName = `tutorial_frog_${tutorialNumber}.png`;
@@ -77,6 +77,9 @@ class Tutorial extends Phaser.GameObjects.Container {
             this.cardSprite.setOrigin(0.5);
             this.cardSprite.setScale(1.8);
             this.add(this.cardSprite);
+        }
+        else {
+            this.cardSprite = null;
         }
         
         // Create "Ok, Continue" button
@@ -165,9 +168,11 @@ class Tutorial extends Phaser.GameObjects.Container {
     
     AddSwipeGesture() {
         // Create the pointer sprite
-        const centerX = this.scene.cameras.main.width / 2 + 110;
+        const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2 - 250;
-        
+
+        this.cardSprite.x = this.scene.cameras.main.width / 2 - 100;
+
         this.swipePointer = this.scene.add.image(centerX, centerY , 'atlas_03', 'pointer_up.png');
         this.swipePointer.setAlpha(0);
         this.swipePointer.setScale(1.0);
@@ -257,5 +262,328 @@ class Tutorial extends Phaser.GameObjects.Container {
         
         // Start the animation
         animateSwipe();
+    }
+    
+    AddPointGesture() {
+        // Create the hand pointing sprite
+        const centerX = this.scene.cameras.main.width / 2;
+        const topY = 150; // Position near the top header
+        
+        this.pointingHand = this.scene.add.image(centerX - 130, topY, 'atlas_03', 'hand_point.png');
+        this.pointingHand.setAlpha(0);
+        this.pointingHand.setScale(0.5);
+        this.add(this.pointingHand);
+
+        this.darkBackground.y = this.scene.cameras.main.height / 2 + 100;
+        
+        // Store the base Y position
+        const baseY = topY;
+        
+        // Create the bobbing animation
+        const animateBob = () => {
+            // Check if tutorial is destroyed
+            if (this._destroyed) return;
+            
+            // Fade in the hand
+            const fadeInTween = this.scene.tweens.add({
+                targets: this.pointingHand,
+                alpha: 1,
+                duration: 300,
+                onComplete: () => {
+                    if (this._destroyed) return;
+                    
+                    // Create continuous bobbing motion
+                    const bobTween = this.scene.tweens.add({
+                        targets: this.pointingHand,
+                        y: baseY - 20, // Bob up 20 pixels
+                        duration: 600,
+                        ease: 'Sine.easeInOut',
+                        yoyo: true,
+                        repeat: -1 // Repeat forever
+                    });
+                    this.activeTweens.push(bobTween);
+                }
+            });
+            this.activeTweens.push(fadeInTween);
+        };
+        
+        // Start the animation
+        animateBob();
+    }
+    
+    AddMonsterKillAnimation() {
+        // Create a container for both the hand and card
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2 - 150;
+
+        this.cardSprite.x = centerX + 100;
+        
+        this.monsterKillContainer = this.scene.add.container(centerX, centerY);
+        this.add(this.monsterKillContainer);
+        
+        // Create the hero card sprite
+        this.heroCard = this.scene.add.image(0, 0, 'atlas_02', 'char_hero.png');
+        this.heroCard.setScale(1.8);
+        this.monsterKillContainer.add(this.heroCard);
+        
+        // Create the pointer sprite on top of the card
+        this.killPointer = this.scene.add.image(0, -50, 'atlas_03', 'pointer_up.png');
+        this.killPointer.setScale(1.0);
+        this.monsterKillContainer.add(this.killPointer);
+        
+        // Start with container invisible
+        this.monsterKillContainer.setAlpha(0);
+        
+        // Store the starting position
+        const startX = centerX - 200;
+        
+        // Create the animation sequence
+        const animateKill = () => {
+            // Check if tutorial is destroyed
+            if (this._destroyed) return;
+            
+            // Reset position
+            this.monsterKillContainer.x = startX;
+            
+            // Step 1: Fade in with pointer_up
+            const fadeInTween = this.scene.tweens.add({
+                targets: this.monsterKillContainer,
+                alpha: 1,
+                duration: 300,
+                onComplete: () => {
+                    if (this._destroyed) return;
+                    
+                    // Step 2: Show pointer_up for 0.3 seconds
+                    const timer1 = this.scene.time.delayedCall(300, () => {
+                        if (this._destroyed) return;
+                        
+                        // Step 3: Switch to pointer_down
+                        this.killPointer.setTexture('atlas_03', 'pointer_down.png');
+                        
+                        // Step 4: Stay on pointer_down for 0.75 seconds
+                        const timer2 = this.scene.time.delayedCall(750, () => {
+                            if (this._destroyed) return;
+                            
+                            // Step 5: Switch to pointer_clean
+                            this.killPointer.setTexture('atlas_03', 'pointer_clean.png');
+                            
+                            // Step 6: Drag right 100 pixels over 1.0 seconds
+                            const dragTween = this.scene.tweens.add({
+                                targets: this.monsterKillContainer,
+                                x: startX + 250,
+                                duration: 1000,
+                                ease: 'Power2',
+                                onComplete: () => {
+                                    if (this._destroyed) return;
+                                    
+                                    // Step 7: Switch to pointer_up
+                                    this.killPointer.setTexture('atlas_03', 'pointer_up.png');
+                                    
+                                    // Step 8: Stay for 1 second
+                                    const timer3 = this.scene.time.delayedCall(1000, () => {
+                                        if (this._destroyed) return;
+                                        
+                                        // Step 9: Fade out
+                                        const fadeOutTween = this.scene.tweens.add({
+                                            targets: this.monsterKillContainer,
+                                            alpha: 0,
+                                            duration: 300,
+                                            onComplete: () => {
+                                                if (this._destroyed) return;
+                                                
+                                                // Step 10: Wait 0.5 seconds and restart
+                                                const timer4 = this.scene.time.delayedCall(500, () => {
+                                                    // Only restart if the tutorial is still active
+                                                    if (!this._destroyed) {
+                                                        animateKill();
+                                                    }
+                                                });
+                                                this.activeTimers.push(timer4);
+                                            }
+                                        });
+                                        this.activeTweens.push(fadeOutTween);
+                                    });
+                                    this.activeTimers.push(timer3);
+                                }
+                            });
+                            this.activeTweens.push(dragTween);
+                        });
+                        this.activeTimers.push(timer2);
+                    });
+                    this.activeTimers.push(timer1);
+                }
+            });
+            this.activeTweens.push(fadeInTween);
+        };
+        
+        // Start the animation
+        animateKill();
+    }
+    
+    ShowSpikeAnimation() {
+        // Only animate if we have a card sprite
+        if (!this.cardSprite) return;
+        
+        // Store the current texture
+        let isSpikesUp = true;
+        
+        // Create the spike animation
+        const animateSpikes = () => {
+            // Check if tutorial is destroyed
+            if (this._destroyed) return;
+            
+            // Toggle between trap sprites
+            if (isSpikesUp) {
+                this.cardSprite.setTexture('atlas_02', 'char_trap_a.png');
+            } else {
+                this.cardSprite.setTexture('atlas_02', 'char_trap_b.png');
+            }
+            isSpikesUp = !isSpikesUp;
+            
+            // Schedule next toggle
+            const timer = this.scene.time.delayedCall(700, () => {
+                if (!this._destroyed) {
+                    animateSpikes();
+                }
+            });
+            this.activeTimers.push(timer);
+        };
+        
+        // Start the animation
+        animateSpikes();
+    }
+    
+    ShowArrowShooting() {
+        // Create a container for the hero card, arrow and hand
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2 - 150;
+
+        this.cardSprite.x = centerX + 100;
+        
+        this.arrowShootContainer = this.scene.add.container(centerX, centerY);
+        this.add(this.arrowShootContainer);
+        
+        // Create the hero card sprite
+        this.heroCard = this.scene.add.image(0, 0, 'atlas_02', 'char_hero.png');
+        this.heroCard.setScale(1.8);
+        this.arrowShootContainer.add(this.heroCard);
+        
+        // Create the arrow sprite (initially hidden)
+        this.arrow = this.scene.add.image(0, 0, 'atlas_02', 'projectile_up.png');
+        this.arrow.setRotation(Phaser.Math.DegToRad(90)); // Rotate 90 degrees to face right
+        this.arrow.setScale(2.0);
+        this.arrow.setAlpha(0);
+        this.arrow.setVisible(false);
+        this.add(this.arrow); // Add to main container, not the moving container
+        
+        // Create the pointer sprite on top of the card
+        this.shootPointer = this.scene.add.image(0, -50, 'atlas_03', 'pointer_up.png');
+        this.shootPointer.setScale(1.0);
+        this.arrowShootContainer.add(this.shootPointer);
+        
+        // Start with container invisible
+        this.arrowShootContainer.setAlpha(0);
+        
+        // Store the starting position
+        const startX = centerX - 200;
+        
+        // Create the animation sequence
+        const animateShoot = () => {
+            // Check if tutorial is destroyed
+            if (this._destroyed) return;
+            
+            // Reset positions
+            this.arrowShootContainer.x = startX;
+            this.arrow.setAlpha(0);
+            this.arrow.setVisible(false);
+            
+            // Step 1: Fade in with pointer_up
+            const fadeInTween = this.scene.tweens.add({
+                targets: this.arrowShootContainer,
+                alpha: 1,
+                duration: 300,
+                onComplete: () => {
+                    if (this._destroyed) return;
+                    
+                    // Step 2: Show pointer_up for 0.3 seconds
+                    const timer1 = this.scene.time.delayedCall(150, () => {
+                        if (this._destroyed) return;
+                        
+                        // Step 3: Switch to pointer_down
+                        this.shootPointer.setTexture('atlas_03', 'pointer_down.png');
+                        
+                        // Step 4: Stay on pointer_down for 0.75 seconds
+                        const timer2 = this.scene.time.delayedCall(400, () => {
+                            if (this._destroyed) return;
+                            
+                            // Step 5: Switch to pointer_clean
+                            this.shootPointer.setTexture('atlas_03', 'pointer_clean.png');
+                            
+                            // Step 6: Drag right 250 pixels over 1.0 seconds
+                            const dragTween = this.scene.tweens.add({
+                                targets: this.arrowShootContainer,
+                                x: startX + 250,
+                                duration: 700,
+                                ease: 'Power2',
+                                onComplete: () => {
+                                    if (this._destroyed) return;
+                                    
+                                    // Position arrow at the card's location
+                                    this.arrow.x = this.arrowShootContainer.x;
+                                    this.arrow.y = this.arrowShootContainer.y;
+                                    this.arrow.setAlpha(1);
+                                    this.arrow.setVisible(true);
+                                    
+                                    // Shoot the arrow off screen to the right
+                                    const arrowTween = this.scene.tweens.add({
+                                        targets: this.arrow,
+                                        x: this.scene.cameras.main.width + 200,
+                                        duration: 800,
+                                        ease: 'Power1'
+                                    });
+                                    // Step 7: Switch to pointer_up
+                                    this.shootPointer.setTexture('atlas_03', 'pointer_up.png');
+                                    
+                                    // Step 8: Stay for 1 second
+                                    const timer3 = this.scene.time.delayedCall(700, () => {
+                                        if (this._destroyed) return;
+                                        
+                                        // Step 9: Fade out
+                                        const fadeOutTween = this.scene.tweens.add({
+                                            targets: this.arrowShootContainer,
+                                            alpha: 0,
+                                            duration: 300,
+                                            onComplete: () => {
+                                                if (this._destroyed) return;
+                                                
+                                                // Step 10: Wait 0.5 seconds and restart
+                                                const timer4 = this.scene.time.delayedCall(500, () => {
+                                                    // Only restart if the tutorial is still active
+                                                    if (!this._destroyed) {
+                                                        animateShoot();
+                                                    }
+                                                });
+                                                this.activeTimers.push(timer4);
+                                            }
+                                        });
+                                        this.activeTweens.push(fadeOutTween);
+                                    });
+                                    this.activeTimers.push(timer3);
+                                    
+                                    this.activeTweens.push(arrowTween);
+                                }
+                            });
+                            this.activeTweens.push(dragTween);
+                        });
+                        this.activeTimers.push(timer2);
+                    });
+                    this.activeTimers.push(timer1);
+                }
+            });
+            this.activeTweens.push(fadeInTween);
+        };
+        
+        // Start the animation
+        animateShoot();
     }
 }

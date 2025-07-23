@@ -3,6 +3,7 @@ class GameGrid extends Phaser.GameObjects.Container {
         super(scene, x, y);
         this.scene = scene;
         this.config = config;
+        this.levelNumber = config.levelNumber || 0;
         this.gridWidth = config.gridWidth || 5;
         this.gridHeight = config.gridHeight || 5;
         this.tiles = [];
@@ -12,6 +13,8 @@ class GameGrid extends Phaser.GameObjects.Container {
         this.playerRow = -1;
         this.playerCol = -1;
         this.doorSpawned = false;
+        this.firstEnemySpawned = false;
+        this.numberOfShieldsPickedUp = 0;
         this.winCondition = {
             "type": "kill",
             "target": 10
@@ -127,7 +130,15 @@ class GameGrid extends Phaser.GameObjects.Container {
             }
         }
         
-        this.fillEmptyTiles();
+        if (this.levelNumber === 1) {
+            this.fillEmptyTilesWith("dirt");
+        }
+        else if (this.levelNumber === 2) {
+            this.fillEmptyTilesWith("shield");
+        }
+        else {
+            this.fillEmptyTiles();
+        }
         this.adjustTileBackgrounds();
     }
     
@@ -204,15 +215,48 @@ class GameGrid extends Phaser.GameObjects.Container {
     createCard(row, col, type) {
         const tile = this.tiles[row][col];
         let card = null;
+
+        const dellayTutorial = 450;
         
         switch(type) {
             case 'monster':
                 card = new MonsterCard(this.scene, tile.x, tile.y, 
                     Math.floor(Math.random() * 5) + 3,);
+                if (!this.firstEnemySpawned) {
+                    this.firstEnemySpawned = true;
+                    if (this.levelNumber === 1) {
+                        this.scene.time.delayedCall(dellayTutorial, () => {
+                            const newTut = this.showTutorial("Move onto enemies to fight them", 2, card.monsterSprite.frame.name);
+                            if (newTut) {
+                                newTut.AddMonsterKillAnimation();
+                            }
+                        });
+                    }
+                }
+                if (this.levelNumber === 1 && this.winProgress === 4) {
+                    const newTut = this.showTutorial("Your level goals are shown on top. Meet the goal to spawn a door", 1, "char_door.png");
+                    if (newTut) {
+                       newTut.AddPointGesture(); 
+                    }
+                }
                 break;
             case 'potion':
-                card = new PotionCard(this.scene, tile.x, tile.y, 
-                    Math.floor(Math.random() * 3) + 3);
+                {
+                    let cardVal = Math.floor(Math.random() * 3) + 3;
+                    let showTutorial = false;
+                    if (this.levelNumber === 1 && this.winProgress === 2) {
+                        if (this.playerCard && this.playerCard.power < this.playerCard.maxPower) {
+                            cardVal = this.playerCard.maxPower;
+                            showTutorial = true;
+                        }
+                    }
+                    card = new PotionCard(this.scene, tile.x, tile.y, cardVal);
+                    if (showTutorial) {
+                        this.scene.time.delayedCall(dellayTutorial, () => {
+                            this.showTutorial("Keep an eye on your HP, use potions to heal", 3, card.potionSprite.frame.name);
+                        });
+                    }
+                }
                 break;
             case 'shield':
                 card = new ShieldCard(this.scene, tile.x, tile.y, 
@@ -223,6 +267,13 @@ class GameGrid extends Phaser.GameObjects.Container {
                 break;
             case 'projectile':
                 card = new ProjectileCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
+
+                if (this.levelNumber === 2 && this.winProgress === 3) {
+                    const newTut = this.showTutorial("Projectile cards shoot enemy cards when activated.", 1, "crossbow_right_loaded.png");
+                    if (newTut) {
+                       newTut.ShowArrowShooting(); 
+                    }
+                }
                 break;
             case 'cannon':
                 card = new CannonCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
@@ -232,6 +283,12 @@ class GameGrid extends Phaser.GameObjects.Container {
                 break;
             case 'trap':
                 card = new TrapToggleCard(this.scene, tile.x, tile.y);
+                 if (this.levelNumber === 2 && this.numberOfShieldsPickedUp === 3) {
+                    const newTut = this.showTutorial("Watch out! Traps hurt if you step on them with the spikes out!", 4, "char_trap_b.png");
+                    if (newTut) {
+                        newTut.ShowSpikeAnimation();
+                    }
+                }
                 break;
             default:
                 card = new DirtCard(this.scene, tile.x, tile.y);
@@ -249,7 +306,26 @@ class GameGrid extends Phaser.GameObjects.Container {
         if (this.doorSpawned) {
             return 'dirt';
         }
-        
+
+        // Special level 2 logic
+        if (this.levelNumber === 2) {
+            if (this.numberOfShieldsPickedUp <= 2) {
+                return 'dirt';
+            } else if (this.numberOfShieldsPickedUp === 3) {
+                return 'trap';
+            }
+
+            if (this.winProgress === 3) {
+                return "projectile";
+            }
+        }
+
+        if (this.levelNumber === 1 && this.winProgress === 2) {
+            if (this.playerCard && this.playerCard.power < this.playerCard.maxPower) {
+                return 'potion';
+            }
+        }
+
         // Use level-specific pool if available
         if (this.config.pool) {
             return this.config.pool[Math.floor(Math.random() * this.config.pool.length)];
@@ -296,6 +372,19 @@ class GameGrid extends Phaser.GameObjects.Container {
                 const tile = this.tiles[row][col];
                 if (!tile.disabled && !tile.card && tile.type !== 'portal') {
                     const cardType = this.getRandomCardType();
+                    const card = this.createCard(row, col, cardType);
+                    card.fadeIn();
+                }
+            }
+        }
+        this.bringToTop(this.playerCard);
+    }
+
+    fillEmptyTilesWith(cardType) {
+        for (let row = 0; row < this.gridHeight; row++) {
+            for (let col = 0; col < this.gridWidth; col++) {
+                const tile = this.tiles[row][col];
+                if (!tile.disabled && !tile.card && tile.type !== 'portal') {
                     const card = this.createCard(row, col, cardType);
                     card.fadeIn();
                 }
@@ -472,6 +561,14 @@ class GameGrid extends Phaser.GameObjects.Container {
                     this.checkWinCondition();
                 }
             }
+
+            if (card.type === 'shield' && card.requestDestroy) {
+                this.numberOfShieldsPickedUp++;
+            }
+            else if ((card.type === 'trap' || card.type == 'dirt') && card.requestDestroy && this.levelNumber === 2) {
+                // Only in level 2, we track trap / dirt as shield to avoid over spawning.
+                this.numberOfShieldsPickedUp++;
+            }
         });
     }
     
@@ -643,5 +740,19 @@ class GameGrid extends Phaser.GameObjects.Container {
         );
         
         return other ? other : null;
+    }
+    
+    showTutorial(whatToText = "", whatToShow = 1, card = null) {
+        if (this.scene.tutorialWindow) {
+            this.scene.tutorialWindow.destroy();
+            this.scene.tutorialWindow = null;
+        }
+        
+        if (typeof whatToShow == "string") {
+            console.error("Calling old function");
+        }
+
+        this.scene.tutorialWindow = new Tutorial(this.scene, whatToShow, whatToText, card);
+        return this.scene.tutorialWindow;
     }
 }

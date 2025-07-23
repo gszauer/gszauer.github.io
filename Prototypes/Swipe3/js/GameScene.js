@@ -50,6 +50,12 @@ class GameScene extends Phaser.Scene {
                 tutorial.AddSwipeGesture();
             });
         }
+        if (this.currentLevel === 2) {
+            // Delay slightly to ensure everything is set up
+            this.time.delayedCall(200, () => {
+                const tutorial = new Tutorial(this, 1, "If you have a shield, it takes damage instead of your HP", "char_chield.png");
+            });
+        }
         
         // Delay input setup to prevent carry-over from level select
         this.time.delayedCall(100, () => {
