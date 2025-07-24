@@ -34,6 +34,7 @@ class GameMenuWindow extends Window {
                 // Close the window first
                 this.close();
                 // Then handle exit level action
+                AdManager.instance.GameplayStop();
                 scene.scene.start('LevelSelectScene');
             }
         );

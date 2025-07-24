@@ -6,7 +6,9 @@ const allowedDomains = [
 const currentDomain = window.location.hostname;
 
 function isDomainAllowed() {
-    return allowedDomains.includes(currentDomain);
+    const isAllowedDomain = allowedDomains.includes(currentDomain);
+    const isPoki = currentDomain.includes("poki");
+    return isAllowedDomain || isPoki;
 }
 
 if (!isDomainAllowed()) {

@@ -6,27 +6,6 @@ class Tutorial extends Phaser.GameObjects.Container {
         const screenWidth = scene.cameras.main.width;
         const screenHeight = scene.cameras.main.height;
         
-        // Create full screen input blocker
-        this.inputBlocker = scene.add.rectangle(
-            screenWidth / 2, 
-            screenHeight / 2, 
-            screenWidth, 
-            screenHeight, 
-            0x000000, 
-            0
-        );
-        this.inputBlocker.setInteractive({ useHandCursor: false });
-        this.inputBlocker.on('pointerdown', (pointer) => {
-            pointer.event.stopPropagation();
-        });
-        this.inputBlocker.on('pointerup', (pointer) => {
-            pointer.event.stopPropagation();
-        });
-        this.inputBlocker.on('pointermove', (pointer) => {
-            pointer.event.stopPropagation();
-        });
-        this.add(this.inputBlocker);
-        
         // Create semi-transparent black background
         this.darkBackground = scene.add.rectangle(
             screenWidth / 2, 
@@ -36,6 +15,17 @@ class Tutorial extends Phaser.GameObjects.Container {
             0x000000, 
             0.85
         );
+        this.darkBackground.setInteractive({ useHandCursor: false });
+        this.darkBackground.on('pointerdown', (pointer) => {
+            pointer.event.stopPropagation();
+            this.flashContinueButton();
+        });
+        this.darkBackground.on('pointerup', (pointer) => {
+            pointer.event.stopPropagation();
+        });
+        this.darkBackground.on('pointermove', (pointer) => {
+            pointer.event.stopPropagation();
+        });
         this.add(this.darkBackground);
 
         if (tutorialNumber < 1) { tutorialNumber = 1;}
@@ -164,6 +154,48 @@ class Tutorial extends Phaser.GameObjects.Container {
         
         // Destroy the tutorial
         this.destroy();
+    }
+    
+    flashContinueButton() {
+        // Don't flash if already flashing or destroyed
+        if (this._destroyed || this.isFlashing) return;
+        
+        console.log('Flashing continue button');
+        this.isFlashing = true;
+        
+        // Store the original background color
+        const originalColor = '#4080ff';
+        const flashColor = '#40ff40';
+        
+        // Manual flash sequence
+        let flashCount = 0;
+        const doFlash = () => {
+            if (this._destroyed) {
+                this.isFlashing = false;
+                return;
+            }
+            
+            // Toggle color
+            if (flashCount % 2 === 0) {
+                this.continueButton.setBackgroundColor(flashColor);
+            } else {
+                this.continueButton.setBackgroundColor(originalColor);
+            }
+            
+            flashCount++;
+            
+            // Continue flashing or stop
+            if (flashCount < 4) {
+                const timer = this.scene.time.delayedCall(100, doFlash);
+                this.activeTimers.push(timer);
+            } else {
+                this.continueButton.setBackgroundColor(originalColor);
+                this.isFlashing = false;
+            }
+        };
+        
+        // Start the flash
+        doFlash();
     }
     
     AddSwipeGesture() {
@@ -327,7 +359,7 @@ class Tutorial extends Phaser.GameObjects.Container {
         this.monsterKillContainer.add(this.heroCard);
         
         // Create the pointer sprite on top of the card
-        this.killPointer = this.scene.add.image(0, -50, 'atlas_03', 'pointer_up.png');
+        this.killPointer = this.scene.add.image(50, -150, 'atlas_03', 'pointer_up.png');
         this.killPointer.setScale(1.0);
         this.monsterKillContainer.add(this.killPointer);
         
@@ -477,7 +509,7 @@ class Tutorial extends Phaser.GameObjects.Container {
         this.add(this.arrow); // Add to main container, not the moving container
         
         // Create the pointer sprite on top of the card
-        this.shootPointer = this.scene.add.image(0, -50, 'atlas_03', 'pointer_up.png');
+        this.shootPointer = this.scene.add.image(50, -150, 'atlas_03', 'pointer_up.png');
         this.shootPointer.setScale(1.0);
         this.arrowShootContainer.add(this.shootPointer);
         
@@ -544,31 +576,25 @@ class Tutorial extends Phaser.GameObjects.Container {
                                     // Step 7: Switch to pointer_up
                                     this.shootPointer.setTexture('atlas_03', 'pointer_up.png');
                                     
-                                    // Step 8: Stay for 1 second
-                                    const timer3 = this.scene.time.delayedCall(700, () => {
-                                        if (this._destroyed) return;
-                                        
-                                        // Step 9: Fade out
-                                        const fadeOutTween = this.scene.tweens.add({
-                                            targets: this.arrowShootContainer,
-                                            alpha: 0,
-                                            duration: 300,
-                                            onComplete: () => {
-                                                if (this._destroyed) return;
-                                                
-                                                // Step 10: Wait 0.5 seconds and restart
-                                                const timer4 = this.scene.time.delayedCall(500, () => {
-                                                    // Only restart if the tutorial is still active
-                                                    if (!this._destroyed) {
-                                                        animateShoot();
-                                                    }
-                                                });
-                                                this.activeTimers.push(timer4);
-                                            }
-                                        });
-                                        this.activeTweens.push(fadeOutTween);
+                                    // Step 8: Fade out
+                                    const fadeOutTween = this.scene.tweens.add({
+                                        targets: this.arrowShootContainer,
+                                        alpha: 0,
+                                        duration: 300,
+                                        onComplete: () => {
+                                            if (this._destroyed) return;
+                                            
+                                            // Step 10: Wait 0.5 seconds and restart
+                                            const timer4 = this.scene.time.delayedCall(500, () => {
+                                                // Only restart if the tutorial is still active
+                                                if (!this._destroyed) {
+                                                    animateShoot();
+                                                }
+                                            });
+                                            this.activeTimers.push(timer4);
+                                        }
                                     });
-                                    this.activeTimers.push(timer3);
+                                    this.activeTweens.push(fadeOutTween);
                                     
                                     this.activeTweens.push(arrowTween);
                                 }

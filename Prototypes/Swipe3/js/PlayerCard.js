@@ -1,5 +1,5 @@
 class PlayerCard extends Card {
-    constructor(scene, x, y, hp = 15, shield = 5) {
+    constructor(scene, x, y, hp = 10, shield = 0) {
         super(scene, x, y, 'player');
         
         this.power = hp;

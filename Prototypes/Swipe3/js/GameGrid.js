@@ -4,16 +4,18 @@ class GameGrid extends Phaser.GameObjects.Container {
         this.scene = scene;
         this.config = config;
         this.levelNumber = config.levelNumber || 0;
-        this.gridWidth = config.gridWidth || 5;
+        this.gridWidth = config.gridWidth || 4;
         this.gridHeight = config.gridHeight || 5;
         this.tiles = [];
         this.cards = [];
         this.playerCard = null;
         this.isAnimating = false;
-        this.playerRow = -1;
-        this.playerCol = -1;
+        this.playerRow = 0;
+        this.playerCol = 0;
         this.doorSpawned = false;
         this.firstEnemySpawned = false;
+        this.projectileTutorialShown = false;
+        this.shownGoalsTutorial = false;
         this.numberOfShieldsPickedUp = 0;
         this.winCondition = {
             "type": "kill",
@@ -196,8 +198,16 @@ class GameGrid extends Phaser.GameObjects.Container {
     }
     
     spawnPlayer(row, col) {
-        const tile = this.tiles[row][col];
-        const playerHp = this.config.playerHp || 20;
+        let tile = null;
+        if (this.tiles[row]) {
+            tile = this.tiles[row][col];
+        }
+        if (!tile) {
+            console.error("Invalid player start tile");
+            tile = this.tiles[0][0];
+            row = col = 0;
+        }
+        const playerHp = this.config.playerHp || 10;
         const playerShield = this.config.playerShield || 0;
         this.playerCard = new PlayerCard(this.scene, tile.x, tile.y, playerHp, playerShield);
         this.playerCard.setGridPosition(col, row);
@@ -220,23 +230,29 @@ class GameGrid extends Phaser.GameObjects.Container {
         
         switch(type) {
             case 'monster':
-                card = new MonsterCard(this.scene, tile.x, tile.y, 
-                    Math.floor(Math.random() * 5) + 3,);
-                if (!this.firstEnemySpawned) {
-                    this.firstEnemySpawned = true;
-                    if (this.levelNumber === 1) {
-                        this.scene.time.delayedCall(dellayTutorial, () => {
-                            const newTut = this.showTutorial("Move onto enemies to fight them", 2, card.monsterSprite.frame.name);
-                            if (newTut) {
-                                newTut.AddMonsterKillAnimation();
-                            }
-                        });
+                {
+                    let cardPower = Math.floor(Math.random() * 2) + 2;
+                    if (this.levelNumber === 1 || this.levelNumber === 2) {
+                        cardPower = 1;
                     }
-                }
-                if (this.levelNumber === 1 && this.winProgress === 4) {
-                    const newTut = this.showTutorial("Your level goals are shown on top. Meet the goal to spawn a door", 1, "char_door.png");
-                    if (newTut) {
-                       newTut.AddPointGesture(); 
+                    card = new MonsterCard(this.scene, tile.x, tile.y, cardPower);
+                    if (!this.firstEnemySpawned) {
+                        this.firstEnemySpawned = true;
+                        if (this.levelNumber === 1) {
+                            this.scene.time.delayedCall(dellayTutorial, () => {
+                                const newTut = this.showTutorial("Move onto enemies to fight them", 2, card.monsterSprite.frame.name);
+                                if (newTut) {
+                                    newTut.AddMonsterKillAnimation();
+                                }
+                            });
+                        }
+                    }
+                    if (this.levelNumber === 1 && this.winProgress === 4 && !this.shownGoalsTutorial) {
+                        const newTut = this.showTutorial("Your level goals are shown on top. Meet the goal to spawn a door", 1, "char_door.png");
+                        if (newTut) {
+                            newTut.AddPointGesture(); 
+                        }
+                        this.shownGoalsTutorial = true;
                     }
                 }
                 break;
@@ -250,6 +266,9 @@ class GameGrid extends Phaser.GameObjects.Container {
                             showTutorial = true;
                         }
                     }
+                    else if (this.levelNumber === 2) {
+                        cardVal = 10;
+                    }
                     card = new PotionCard(this.scene, tile.x, tile.y, cardVal);
                     if (showTutorial) {
                         this.scene.time.delayedCall(dellayTutorial, () => {
@@ -259,34 +278,64 @@ class GameGrid extends Phaser.GameObjects.Container {
                 }
                 break;
             case 'shield':
-                card = new ShieldCard(this.scene, tile.x, tile.y, 
-                    Math.floor(Math.random() * 2) + 2);
+                {
+                    let cardPower = Math.floor(Math.random() * 2) + 2;
+                    if (this.levelNumber === 2) {
+                        cardPower = 5;
+                    }
+
+                    card = new ShieldCard(this.scene, tile.x, tile.y, cardPower);
+                }
                 break;
             case 'door':
                 card = new DoorCard(this.scene, tile.x, tile.y);
                 break;
             case 'projectile':
-                card = new ProjectileCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
+                {
+                    let cardPower = Math.floor(Math.random() * 4) + 1;
+                    if (this.levelNumber === 2) {
+                        cardPower = 5;
+                    }
 
-                if (this.levelNumber === 2 && this.winProgress === 3) {
-                    const newTut = this.showTutorial("Projectile cards shoot enemy cards when activated.", 1, "crossbow_right_loaded.png");
-                    if (newTut) {
-                       newTut.ShowArrowShooting(); 
+                    const direction = Math.floor(Math.random() * 3);
+                    card = new ProjectileCard(this.scene, tile.x, tile.y, cardPower, direction);
+
+                    if (this.levelNumber === 2 && this.winProgress === 3) {
+                        if (!this.projectileTutorialShown) {
+                            const newTut = this.showTutorial("Projectile cards shoot enemy cards when activated.", 1, "crossbow_right_loaded.png");
+                            if (newTut) {
+                            newTut.ShowArrowShooting(); 
+                            }
+                        }
+                        this.projectileTutorialShown = true;
                     }
                 }
                 break;
             case 'cannon':
-                card = new CannonCard(this.scene, tile.x, tile.y, 3, Math.floor(Math.random() * 4));
+                {
+                    const direction = Math.floor(Math.random() * 3);
+                    card = new CannonCard(this.scene, tile.x, tile.y, Math.floor(Math.random() * 4) + 1, direction);
+                }
                 break;
             case 'magic':
-                card = new MagicProjectileCard(this.scene, tile.x, tile.y, 3);
+                {
+                    const direction = Math.floor(Math.random() * 3);
+                    card = new MagicProjectileCard(this.scene, tile.x, tile.y, Math.floor(Math.random() * 4) + 1);
+                }
                 break;
             case 'trap':
-                card = new TrapToggleCard(this.scene, tile.x, tile.y);
-                 if (this.levelNumber === 2 && this.numberOfShieldsPickedUp === 3) {
-                    const newTut = this.showTutorial("Watch out! Traps hurt if you step on them with the spikes out!", 4, "char_trap_b.png");
-                    if (newTut) {
-                        newTut.ShowSpikeAnimation();
+                {
+                    let cardPower = Math.floor(Math.random() * 4) + 1;
+                    if (this.levelNumber === 2) {
+                        cardPower = 1;
+                    }
+
+                    card = new TrapToggleCard(this.scene, tile.x, tile.y, cardPower);
+                    if (this.levelNumber === 2 && this.numberOfShieldsPickedUp === 3) {
+                        const newTut = this.showTutorial("Watch out! Traps hurt if you step on them with the spikes out!", 4, "char_trap_b.png");
+                        if (newTut) {
+                            newTut.ShowSpikeAnimation();
+                        }
                     }
                 }
                 break;
@@ -316,7 +365,9 @@ class GameGrid extends Phaser.GameObjects.Container {
             }
 
             if (this.winProgress === 3) {
-                return "projectile";
+                if (!this.projectileTutorialShown) {
+                    return "projectile";
+                }
             }
         }
 
@@ -332,17 +383,31 @@ class GameGrid extends Phaser.GameObjects.Container {
         }
         
         // Default types without special cards
-        const types = ['monster', 'potion', 'potion', 'monster', 'shield', 'shield', 'monster', 'trap', 'monster'];
+        const types = ['monster', 'potion', 'monster', 'shield', 'monster', 'trap', 'monster'];
         
         // Add level-specific special card based on level number (1-indexed)
         const pushProjectileToTypes = () => {
             const levelIndex = (this.config.levelNumber - 1) % 3;
-            if (levelIndex === 0) {
-                types.push('projectile');
-            } else if (levelIndex === 1) {
+            if (levelIndex === 1) {
+                if (this.levelNumber === 2 && this.winProgress <= 3) {
+                    // SKIP UNTIL IT'S TIME
+                }
+                else if (this.levelNumber === 2) {
+                    types.push('projectile');
+                    types.push('projectile');
+                    types.push('monster');
+                    types.push('monster');
+                }
+                else {
+                    types.push('projectile');
+                    types.push('monster');
+                }
+            } else if (levelIndex === 0) {
                 types.push('cannon');
+                types.push('monster');
             } else if (levelIndex === 2) {
                 types.push('magic');
+                types.push('monster');
             }
         }
         pushProjectileToTypes();
@@ -413,6 +478,11 @@ class GameGrid extends Phaser.GameObjects.Container {
         // Always include the player if they're at the start position
         if (this.tiles[row][col].card === this.playerCard) {
             cards.push(this.playerCard);
+            
+            // If player is on a portal, don't pull cards through it
+            if (this.tiles[row][col].type === 'portal') {
+                return cards;
+            }
         } else if (this.tiles[row][col].card && this.tiles[row][col].card.type !== 'portal') {
             cards.push(this.tiles[row][col].card);
         }
@@ -483,22 +553,24 @@ class GameGrid extends Phaser.GameObjects.Container {
     moveCards(cards, dRow, dCol, onComplete) {
         let completed = 0;
         
-        // First, check if any non-player card would end up on a portal
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
-            if (card === this.playerCard) continue;
+        // Filter out cards that would land on portals (except the player)
+        const movableCards = cards.filter(card => {
+            if (card === this.playerCard) return true;
             
             const newRow = card.gridY + dRow;
             const newCol = card.gridX + dCol;
             
-            if (this.tiles[newRow][newCol].type === 'portal') {
-                // Block the entire movement if any non-player card would land on a portal
-                this.isAnimating = false;
-                return;
-            }
+            // Don't move non-player cards onto portals
+            return this.tiles[newRow][newCol].type !== 'portal';
+        });
+        
+        // If no cards can move (not even the player), block the movement
+        if (movableCards.length === 0) {
+            this.isAnimating = false;
+            return;
         }
         
-        cards.forEach((card) => {
+        movableCards.forEach((card) => {
             const newRow = card.gridY + dRow;
             const newCol = card.gridX + dCol;
             const newTile = this.tiles[newRow][newCol];
@@ -517,7 +589,7 @@ class GameGrid extends Phaser.GameObjects.Container {
             
             card.animateMoveTo(newTile.x, newTile.y, 500, () => {
                 completed++;
-                if (completed === cards.length && onComplete) {
+                if (completed === movableCards.length && onComplete) {
                     onComplete();
                 }
             });

@@ -12,6 +12,10 @@ class GameScene extends Phaser.Scene {
         this.currentLevel = data.level || 1;
         this.dragStartPos = null;
         this.backgroundNumber = ((this.currentLevel - 1) % 6) + 1;
+
+        if (this.currentLevel >= 5) {
+            AdManager.instance.CommercialBreak();
+        }
     }
     
     create() {
@@ -377,7 +381,9 @@ class GameScene extends Phaser.Scene {
                         
                         // Revive the player
                         if (this.gameGrid.playerCard) {
-                            this.gameGrid.playerCard.health = this.gameGrid.playerCard.maxHealth;
+                            this.gameGrid.playerCard.power = this.gameGrid.playerCard.maxPower;
+                            if (this.gameGrid.playerCard.shield < 0) { this.gameGrid.playerCard.shield = 0; }
+                            this.gameGrid.playerCard.shield += 10;
                             this.gameGrid.playerCard.updateDisplay();
                         }
                         
@@ -395,6 +401,7 @@ class GameScene extends Phaser.Scene {
                         continueButton.on('pointerdown', () => {
                             Window.externalWindowOpen = false;
                             this.cleanupEventListeners();
+                            AdManager.instance.GameplayStop();
                             this.scene.start('LevelSelectScene');
                         });
                         
@@ -414,7 +421,7 @@ class GameScene extends Phaser.Scene {
         // Update cleared level in PlayerData
         const playerData = PlayerData.Instance;
         const clearedLevel = playerData.GetNumber('clearedLevel', 0);
-        console.log(`Cleared: ${this.currentLevel}, highest cleared: ${clearedLevel}`)
+        //console.log(`Cleared: ${this.currentLevel}, highest cleared: ${clearedLevel}`)
         if (this.currentLevel > clearedLevel) {
             playerData.SetNumber('clearedLevel', this.currentLevel);
         }
@@ -448,6 +455,7 @@ class GameScene extends Phaser.Scene {
             () => {
                 Window.externalWindowOpen = false;
                 this.cleanupEventListeners();
+                AdManager.instance.GameplayStop();
                 this.scene.start('LevelSelectScene');
             }
         );
@@ -460,6 +468,11 @@ class GameScene extends Phaser.Scene {
             () => {
                 Window.externalWindowOpen = false;
                 this.cleanupEventListeners();
+                if (this.currentLevel <= 3) {
+                    // Track tutorial levels as start / stop events
+                    AdManager.instance.GameplayStop();
+                    AdManager.instance.GameplayStart();
+                }
                 this.scene.restart({ level: this.currentLevel + 1 });
             }
         );

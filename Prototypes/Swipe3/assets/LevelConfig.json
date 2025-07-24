@@ -5,7 +5,7 @@
         "yOffset": -50,
         "gridWidth": 2,
         "gridHeight": 2,
-        "playerHp": 30,
+        "playerHp": 10,
         "playerShield": 0,
         "playerSpawnRow": 0,
         "playerSpawnCol": 0,
@@ -15,8 +15,10 @@
     {
         "levelNumber": 2,
         "xOffset": -280,
-        "gridWidth": 2,
+        "playerHp": 10,
+        "gridWidth": 3,
         "gridHeight": 3,
+        "winValue": 5,
         "playerSpawnRow": 1,
         "playerSpawnCol": 1
     },
@@ -24,11 +26,14 @@
         "levelNumber": 3,
         "xOffset": 260,
         "yOffset": 15,
+        "playerHp": 15,
         "gridWidth": 3,
         "gridHeight": 3,
         "playerSpawnRow": 1,
         "playerSpawnCol": 1,
-        "portals": [ 0, 8 ]
+        "winValue": 5,
+        "portals": [ 0, 8 ],
+        "pool": ["monster", "monster", "monster", "monster", "trap", "shield", "shield", "projectile", "projectile", "potion"]
     },
      {
         "levelNumber": 4,
@@ -37,16 +42,22 @@
         "gridWidth": 3,
         "gridHeight": 4,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "playerSpawnCol": 2,
+        "playerHp": 15,
+        "winValue": 7,
+        "pool": ["monster", "monster", "monster", "monster", "trap", "shield", "shield", "projectile", "projectile", "potion"]
     },
-     {
+    {
         "levelNumber": 5,
         "xOffset": 300,
         "yOffset": 40,
-        "gridWidth": 4,
+        "gridWidth": 3,
         "gridHeight": 4,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "playerSpawnRow": 1,
+        "playerSpawnCol": 1,
+        "playerHp": 10,
+        "winValue": 8,
+        "pool": ["monster", "monster", "monster", "monster", "trap", "shield", "magic", "magic"]
     },
     {
         "levelNumber": 6,
@@ -56,37 +67,54 @@
         "gridHeight": 5,
         "playerSpawnRow": 2,
         "playerSpawnCol": 2,
-        "disable": [ 6, 7, 11, 12 ]
-
+        "disable": [ 6, 7, 11, 12 ],
+        "playerHp": 10,
+        "winValue": 10,
+        "pool": ["monster","monster", "monster", "monster", "monster", "trap", "shield", "cannon", "potion"]
     },
     {
         "levelNumber": 7,
-        "xOffset": 320,
-        "gridWidth": 20,
-        "gridHeight": 5,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "xOffset": 320
     },
     {
         "levelNumber": 8,
         "xOffset": -250,
         "yOffset": -50,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+
+        "gridWidth": 4,
+        "gridHeight": 5,
+
+        "playerSpawnRow": 0,
+        "playerSpawnCol": 2,
+
+        "playerHp": 15,
+        "winValue": 10,
+
+        "disable": [ 8, 9, 10, 11 ],
+        "pool": ["monster","monster", "monster", "monster", "monster", "trap", "cannon","cannon", "potion"],
+
+        "portals": [ 5, 18 ]
     },
     {
         "levelNumber": 9,
         "xOffset": 250,
         "yOffset": -50,
-        "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "disable": [ 4, 8, 7, 11, 12, 15 ],
+        "playerHp": 10,
+        "winValue": 10,
+         "gridWidth": 4,
+        "gridHeight": 5
     },
     {
         "levelNumber": 10,
         "xOffset": -260,
         "yOffset": -50,
         "playerSpawnRow": 2,
-        "playerSpawnCol": 2
+        "playerSpawnCol": 1,
+
+        "gridWidth": 3,
+        "gridHeight": 4,
+        "disable": [ 0, 3, 8, 11]
     },
     {
         "levelNumber": 11,

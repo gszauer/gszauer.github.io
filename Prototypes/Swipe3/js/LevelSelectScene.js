@@ -163,6 +163,9 @@ class LevelSelectScene extends Phaser.Scene {
             });
             buttonText.setOrigin(0.5);
 
+            // Track which button was pressed down
+            button.levelNumber = levelNumber;
+            
             button.on('pointerover', () => {
                 button.setTint(0x5dade2);
             });
@@ -171,8 +174,29 @@ class LevelSelectScene extends Phaser.Scene {
                 button.clearTint();
             });
 
-            button.on('pointerdown', () => {
-                this.scene.start('GameScene', { level: levelNumber });
+            button.on('pointerdown', (pointer) => {
+                // Store which button was pressed
+                this.pressedButton = button;
+                
+                // Also trigger the drag start behavior
+                this.isDragging = true;
+                this.dragStartY = pointer.y;
+                this.containerStartY = this.mapContainer.y;
+                this.wasDragging = false;
+            });
+
+            button.on('pointerup', () => {
+                // Only load level if we're releasing on the same button we pressed
+                if (this.pressedButton === button && !this.wasDragging) {
+                    // Check if level is unlocked
+                    if (levelNumber <= clearedLevel + 1) {
+                        AdManager.instance.GameplayStart();
+                        this.scene.start('GameScene', { level: levelNumber });
+                    } else {
+                        // Show locked message
+                        this.showLockedMessage();
+                    }
+                }
             });
 
             this.mapContainer.add([button, buttonText]);
@@ -244,11 +268,58 @@ class LevelSelectScene extends Phaser.Scene {
         }
     }
     
+    showLockedMessage() {
+        // Create the locked message if it doesn't exist
+        if (!this.lockedMessage) {
+            const centerX = this.cameras.main.width / 2;
+            const centerY = this.cameras.main.height / 2;
+            
+            // Create semi-transparent black background
+            this.lockedBackground = this.add.rectangle(centerX, centerY, 400, 150, 0x000000, 0.7);
+            this.lockedBackground.setDepth(99);
+            this.lockedBackground.setAlpha(0);
+            
+            this.lockedMessage = this.add.text(centerX, centerY, 'Level Locked', {
+                fontSize: '48px',
+                color: '#ffffff',
+                fontStyle: 'bold',
+                align: 'center',
+                stroke: '#000000',
+                strokeThickness: 6,
+            });
+            this.lockedMessage.setOrigin(0.5);
+            this.lockedMessage.setDepth(100); // Above everything
+            this.lockedMessage.setAlpha(0);
+        }
+        
+        // Cancel any existing tween
+        if (this.lockedTween) {
+            this.lockedTween.stop();
+        }
+        
+        // Flash the message
+        this.lockedMessage.setAlpha(1);
+        this.lockedMessage.setScale(0.8);
+        this.lockedBackground.setAlpha(1);
+        
+        this.lockedTween = this.tweens.add({
+            targets: [this.lockedMessage, this.lockedBackground],
+            alpha: 0,
+            scale: 1.2,
+            duration: 2000,
+            ease: 'Power2'
+        });
+    }
+    
     setupMapDragging() {
         const height = this.cameras.main.height;
-        let isDragging = false;
-        let dragStartY = 0;
-        let containerStartY = 0;
+        
+        // Initialize drag tracking variables as instance properties
+        this.isDragging = false;
+        this.dragStartY = 0;
+        this.containerStartY = 0;
+        this.wasDragging = false;
+        this.dragThreshold = 5; // pixels
         
         // Create an invisible interactive zone covering the entire screen
         const dragZone = this.add.zone(0, 0, this.cameras.main.width, this.cameras.main.height);
@@ -257,15 +328,23 @@ class LevelSelectScene extends Phaser.Scene {
         dragZone.setDepth(-2); // Behind the map
         
         dragZone.on('pointerdown', (pointer) => {
-            isDragging = true;
-            dragStartY = pointer.y;
-            containerStartY = this.mapContainer.y;
+            this.isDragging = true;
+            this.dragStartY = pointer.y;
+            this.containerStartY = this.mapContainer.y;
+            this.wasDragging = false;
+            this.pressedButton = null; // Clear any pressed button when starting drag
         });
         
         this.input.on('pointermove', (pointer) => {
-            if (isDragging) {
-                const deltaY = pointer.y - dragStartY;
-                let newY = containerStartY + deltaY;
+            if (this.isDragging) {
+                const deltaY = pointer.y - this.dragStartY;
+                
+                // Check if we've moved enough to consider it a drag
+                if (Math.abs(deltaY) > this.dragThreshold) {
+                    this.wasDragging = true;
+                }
+                
+                let newY = this.containerStartY + deltaY;
                 
                 // Apply constraints
                 // Bottom constraint: map bottom cannot go above screen bottom
@@ -282,12 +361,12 @@ class LevelSelectScene extends Phaser.Scene {
         });
         
         this.input.on('pointerup', () => {
-            isDragging = false;
+            this.isDragging = false;
         });
         
         // Also stop dragging if pointer leaves the game
         this.input.on('pointerout', () => {
-            isDragging = false;
+            this.isDragging = false;
         });
         
         // Add mouse wheel scrolling
@@ -319,6 +398,7 @@ class LevelSelectScene extends Phaser.Scene {
                     child.off('pointerover');
                     child.off('pointerout');
                     child.off('pointerdown');
+                    child.off('pointerup');
                 }
             });
         }
