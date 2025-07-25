@@ -188,8 +188,9 @@ class LevelSelectScene extends Phaser.Scene {
             button.on('pointerup', () => {
                 // Only load level if we're releasing on the same button we pressed
                 if (this.pressedButton === button && !this.wasDragging) {
+                    const devDomain = isDevelopmentDomain();
                     // Check if level is unlocked
-                    if (levelNumber <= clearedLevel + 1) {
+                    if (levelNumber <= clearedLevel + 1 || devDomain) {
                         AdManager.instance.GameplayStart();
                         this.scene.start('GameScene', { level: levelNumber });
                     } else {

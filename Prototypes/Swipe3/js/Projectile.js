@@ -15,6 +15,7 @@ class Projectile extends Phaser.GameObjects.Container {
         this.dx = dx;
         this.dy = dy;
         this.damage = damage;
+        this.sprite = sprite;
         this.gameGrid = scene.gameGrid;
         
         // Create projectile sprite
@@ -139,7 +140,12 @@ class Projectile extends Phaser.GameObjects.Container {
     }
     
     onHitMonster(monster) {
-        monster.takeDamage(this.damage);
+        // Check if this is a cannonball - if so, instant kill
+        if (this.sprite === 'cannonball.png') {
+            monster.takeDamage(monster.power);
+        } else {
+            monster.takeDamage(this.damage);
+        }
         
         // Check if monster was killed and update win progress
         if (monster.requestDestroy && this.gameGrid.winCondition && 

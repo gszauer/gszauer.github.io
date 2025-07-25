@@ -22,6 +22,9 @@ class PotionCard extends Card {
     }
     
     onPlayerInteraction(player) {
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'gulp');
+        }
         player.heal(this.value);
         this.markForDestruction();
     }

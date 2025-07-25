@@ -21,6 +21,9 @@ class ShieldCard extends Card {
     }
     
     onPlayerInteraction(player) {
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'shield');
+        }
         player.addShield(this.value);
         this.markForDestruction();
     }

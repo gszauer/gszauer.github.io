@@ -33,6 +33,11 @@ class MagicProjectileCard extends Card {
     }
     
     onPlayerInteraction(player) {
+        // Play fire sound
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'fire');
+        }
+        
         // Fire projectiles in all 4 cardinal directions
         const directions = [
             { dx: 0, dy: -1 },  // up

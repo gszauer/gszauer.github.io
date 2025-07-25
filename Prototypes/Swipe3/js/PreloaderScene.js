@@ -54,6 +54,13 @@ class PreloaderScene extends Phaser.Scene {
         this.load.atlas('atlas_01', 'assets/atlas_01.jpg', 'assets/atlas_01.json');
         this.load.atlas('atlas_02', 'assets/atlas_02.png', 'assets/atlas_02.json');
         this.load.atlas('atlas_03', 'assets/atlas_03.png', 'assets/atlas_03.json');
+        
+        this.load.audioSprite('soundbank', 'assets/soundbank.json', [
+            'assets/soundbank.ogg',
+            'assets/soundbank.mp3',
+            'assets/soundbank.m4a',
+            'assets/soundbank.ac3'
+        ]);
     }
 
     create() {

@@ -42,6 +42,10 @@ class MonsterCard extends Card {
         const playerDamage = this.power;
         const monsterDamage = player.power;
         
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'swords');
+        }
+        
         this.takeDamage(monsterDamage);
         player.takeDamage(playerDamage);
     }

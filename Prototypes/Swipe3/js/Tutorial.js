@@ -18,7 +18,15 @@ class Tutorial extends Phaser.GameObjects.Container {
         this.darkBackground.setInteractive({ useHandCursor: false });
         this.darkBackground.on('pointerdown', (pointer) => {
             pointer.event.stopPropagation();
-            this.flashContinueButton();
+            this.outsideClickCount++;
+            
+            if (this.outsideClickCount === 1) {
+                // First click - flash the button
+                this.flashContinueButton();
+            } else {
+                // Second click - dismiss the tutorial
+                this.close();
+            }
         });
         this.darkBackground.on('pointerup', (pointer) => {
             pointer.event.stopPropagation();
@@ -123,6 +131,9 @@ class Tutorial extends Phaser.GameObjects.Container {
         // Initialize arrays to track active animations
         this.activeTimers = [];
         this.activeTweens = [];
+        
+        // Track clicks outside button
+        this.outsideClickCount = 0;
     }
     
     close() {

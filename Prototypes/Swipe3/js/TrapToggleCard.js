@@ -9,6 +9,10 @@ class TrapToggleCard extends Card {
         this.trapSprite.setScale(this.scaleVisual);
         this.add(this.trapSprite);
         
+        this.fightStamp = scene.add.image(0, 0, 'atlas_02', 'stamp_fight.png');
+        this.fightStamp.setScale(0.45, 0.4);
+        this.add(this.fightStamp);
+        
         this.stateText = scene.add.text(0, 0, `${this.value}`, {
             fontSize: '35px',
             color: '#ffffff',
@@ -25,11 +29,23 @@ class TrapToggleCard extends Card {
         this.state = this.state === 'sharp' ? 'dull' : 'sharp';
         this.stateText.setText(`${this.value}`);
         this.trapSprite.setFrame(this.state === 'sharp' ? 'char_trap_b.png' : 'char_trap_a.png');
+        
+        /*if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'trap');
+        }*/
     }
     
     onPlayerInteraction(player) {
         if (this.state === 'sharp') {
             player.takeDamage(this.value);
+            if (soundEffectsEnabled) {
+                this.scene.sound.playAudioSprite('soundbank', 'trap');
+            }
+        }
+        else {
+             if (soundEffectsEnabled) {
+                this.scene.sound.playAudioSprite('soundbank', 'walking');
+            }
         }
         this.markForDestruction();
     }

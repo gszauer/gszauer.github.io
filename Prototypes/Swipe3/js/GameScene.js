@@ -220,6 +220,47 @@ class GameScene extends Phaser.Scene {
                 }
                 
                 this.tryMove(direction);
+            } else {
+                // Small movement - check if it's a click on an adjacent tile
+                if (this.gameGrid.playerCard) {
+                    // Convert pointer to local grid coordinates
+                    const localX = (pointer.x - this.gameGrid.x) / this.gameGrid.scale;
+                    const localY = (pointer.y - this.gameGrid.y) / this.gameGrid.scale;
+                    
+                    // Get player's current grid position
+                    const playerRow = this.gameGrid.playerRow;
+                    const playerCol = this.gameGrid.playerCol;
+                    
+                    // Check each adjacent tile
+                    const adjacentTiles = [
+                        { row: playerRow - 1, col: playerCol, dir: 'up' },
+                        { row: playerRow + 1, col: playerCol, dir: 'down' },
+                        { row: playerRow, col: playerCol - 1, dir: 'left' },
+                        { row: playerRow, col: playerCol + 1, dir: 'right' }
+                    ];
+                    
+                    for (const adj of adjacentTiles) {
+                        if (adj.row >= 0 && adj.row < this.gameGrid.gridHeight &&
+                            adj.col >= 0 && adj.col < this.gameGrid.gridWidth) {
+                            
+                            const tile = this.gameGrid.tiles[adj.row][adj.col];
+                            if (!tile.disabled) {
+                                // Check if click is within this tile's bounds
+                                const tileLeft = tile.x - this.gameGrid.tileSizeX / 2;
+                                const tileRight = tile.x + this.gameGrid.tileSizeX / 2;
+                                const tileTop = tile.y - this.gameGrid.tileSizeY / 2;
+                                const tileBottom = tile.y + this.gameGrid.tileSizeY / 2;
+                                
+                                if (localX >= tileLeft && localX <= tileRight &&
+                                    localY >= tileTop && localY <= tileBottom) {
+                                    // Click is on an adjacent tile - move there
+                                    this.tryMove(adj.dir);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
             
             this.dragStartPos = null;
@@ -312,6 +353,11 @@ class GameScene extends Phaser.Scene {
     }
     
     handleGameOver() {
+        // Play game over sound
+        if (soundEffectsEnabled) {
+            this.sound.playAudioSprite('soundbank', 'loose');
+        }
+        
         // Prevent any further game actions
         Window.externalWindowOpen = true;
         
@@ -415,6 +461,11 @@ class GameScene extends Phaser.Scene {
     }
     
     handleLevelComplete() {
+        // Play win sound
+        if (soundEffectsEnabled) {
+            this.sound.playAudioSprite('soundbank', 'win');
+        }
+        
         // Prevent any further game actions
         Window.externalWindowOpen = true;
         

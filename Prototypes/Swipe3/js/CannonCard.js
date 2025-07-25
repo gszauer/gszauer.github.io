@@ -10,23 +10,6 @@ class CannonCard extends Card {
         this.cannonImage.setOrigin(0.5, 0.5);
         this.cannonImage.setScale(this.scaleVisual);
         this.add(this.cannonImage);
-        
-        // Add weapon stamp icon
-        this.weaponStamp = scene.add.image(-30, -44, 'atlas_02', 'stamp_fight.png');
-        this.weaponStamp.setScale(0.35);
-        this.add(this.weaponStamp);
-        
-        // Add value text
-        this.valueText = scene.add.text(-30, -44, `${this.value}`, {
-            fontSize: '18px',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            align: 'center',
-            stroke: '#000000',
-            strokeThickness: 2,
-        });
-        this.valueText.setOrigin(0.5, 0.5);
-        this.add(this.valueText);
     }
     
     getCannonImageName() {

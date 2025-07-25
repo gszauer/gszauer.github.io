@@ -1,0 +1,55 @@
+{
+  "resources": [
+    "../../dev/assets/soundbank.ogg",
+    "../../dev/assets/soundbank.m4a",
+    "../../dev/assets/soundbank.mp3",
+    "../../dev/assets/soundbank.ac3"
+  ],
+  "spritemap": {
+    "door": {
+      "start": 0,
+      "end": 0.5564399092970521,
+      "loop": false
+    },
+    "gulp": {
+      "start": 2,
+      "end": 2.4561904761904763,
+      "loop": false
+    },
+    "loose": {
+      "start": 4,
+      "end": 5.476984126984127,
+      "loop": false
+    },
+    "swords": {
+      "start": 7,
+      "end": 7.906235827664399,
+      "loop": false
+    },
+    "walking": {
+      "start": 9,
+      "end": 10.200453514739229,
+      "loop": false
+    },
+    "win": {
+      "start": 12,
+      "end": 13.2418820861678,
+      "loop": false
+    },
+    "fire": {
+      "start": 15,
+      "end": 16.26816326530612,
+      "loop": false
+    },
+    "shield": {
+      "start": 18,
+      "end": 18.603356009070296,
+      "loop": false
+    },
+    "trap": {
+      "start": 20,
+      "end": 20.435600907029478,
+      "loop": false
+    }
+  }
+}

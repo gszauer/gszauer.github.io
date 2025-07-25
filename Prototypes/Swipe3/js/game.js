@@ -3,12 +3,22 @@ const allowedDomains = [
     'localhost', '127.0.0.1', 
     'gabormakesgames.com', 'gszauer.github.io'
 ];
+const developmentDomains = [
+    'localhost', '127.0.0.1', 
+];
 const currentDomain = window.location.hostname;
+
+var soundEffectsEnabled = true;
+var bgMusicEnabled = true;
 
 function isDomainAllowed() {
     const isAllowedDomain = allowedDomains.includes(currentDomain);
     const isPoki = currentDomain.includes("poki");
     return isAllowedDomain || isPoki;
+}
+
+function isDevelopmentDomain() {
+    return developmentDomains.includes(currentDomain);
 }
 
 if (!isDomainAllowed()) {

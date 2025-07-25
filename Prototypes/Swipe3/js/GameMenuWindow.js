@@ -12,7 +12,10 @@ class GameMenuWindow extends Window {
             windowCenterX - 180,
             windowCenterY - 100,
             'Sound Effects',
-            true
+            soundEffectsEnabled,
+            (enabledOrNot) => {
+                soundEffectsEnabled = enabledOrNot;
+            }
         );
         
         // Create Background Music checkbox
@@ -43,7 +46,7 @@ class GameMenuWindow extends Window {
         this.createCloseButton(scene);
     }
     
-    createCheckbox(scene, x, y, label, checked = false) {
+    createCheckbox(scene, x, y, label, checked = false, onClicked = null) {
         // Create checkbox container
         const container = scene.add.container(x, y);
         
@@ -73,6 +76,10 @@ class GameMenuWindow extends Window {
         box.on('pointerdown', () => {
             checked = !checked;
             checkmark.setVisible(checked);
+
+            if (onClicked) {
+                onClicked(checked);
+            }
         });
         
         // Add hover effect

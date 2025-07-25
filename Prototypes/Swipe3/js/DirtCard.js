@@ -10,6 +10,9 @@ class DirtCard extends Card {
     }
     
     onPlayerInteraction(player) {
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'walking');
+        }
         this.markForDestruction();
     }
 }

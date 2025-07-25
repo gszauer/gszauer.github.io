@@ -8,6 +8,9 @@ class DoorCard extends Card {
     }
     
     onPlayerInteraction(player) {
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'door');
+        }
         this.scene.events.emit('levelComplete');
     }
 }
