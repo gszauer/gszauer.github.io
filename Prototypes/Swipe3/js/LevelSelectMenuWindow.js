@@ -1,4 +1,4 @@
-class GameMenuWindow extends Window {
+class LevelSelectMenuWindow extends Window {
     constructor(scene) {
         super(scene, 600, 450);
         
@@ -24,31 +24,29 @@ class GameMenuWindow extends Window {
             windowCenterX - 180,
             windowCenterY,
             'Background Music',
-            MusicManager.bgMusicEnabled,
+            !MusicManager.isMuted,
             (enabledOrNot) => {
-                MusicManager.bgMusicEnabled = enabledOrNot;
                 if (enabledOrNot) {
-                    // Resume/restart the background music
-                    MusicManager.playBackgroundMusic(scene, 'bg_gameplay');
+                    MusicManager.unmuteBackgroundMusic();
                 } else {
-                    // Stop the background music
-                    MusicManager.stopBackgroundMusic();
+                    MusicManager.muteBackgroundMusic();
                 }
             }
         );
         
-        // Create Exit Level button
-        this.exitButton = this.createButton(
+        // Create Reset Progress button
+        this.resetButton = this.createButton(
             scene,
             windowCenterX,
             windowCenterY + 110,
-            'Exit Level',
+            'Reset Progress',
             () => {
                 // Close the window first
                 this.close();
-                // Then handle exit level action
-                AdManager.instance.GameplayStop();
-                scene.scene.start('LevelSelectScene');
+                // Reset player progress
+                PlayerData.Instance.Reset();
+                // Refresh the scene to show updated progress
+                scene.scene.restart();
             }
         );
         

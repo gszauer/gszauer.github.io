@@ -7,6 +7,10 @@ class LevelSelectScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        // Start menu background music
+        console.log('[LevelSelectScene] Starting menu music');
+        MusicManager.playBackgroundMusic(this, 'bg_menu');
+
         // Create map background container
         this.mapContainer = this.add.container(0, 0);
         
@@ -167,6 +171,9 @@ class LevelSelectScene extends Phaser.Scene {
             button.levelNumber = levelNumber;
             
             button.on('pointerover', () => {
+                if (soundEffectsEnabled) {
+                    this.sound.playAudioSprite('soundbank', 'hover');
+                }
                 button.setTint(0x5dade2);
             });
 
@@ -175,6 +182,9 @@ class LevelSelectScene extends Phaser.Scene {
             });
 
             button.on('pointerdown', (pointer) => {
+                if (soundEffectsEnabled) {
+                    this.sound.playAudioSprite('soundbank', 'click');
+                }
                 // Store which button was pressed
                 this.pressedButton = button;
                 
@@ -267,6 +277,24 @@ class LevelSelectScene extends Phaser.Scene {
             // Clamp the position
             this.mapContainer.y = Math.max(maxY, Math.min(minY, targetContainerY));
         }
+        
+        // Add menu button in top-right corner
+        const menuButton = this.add.image(width - 80, 50, 'atlas_03', 'button_menu.png');
+        menuButton.setScale(0.6);
+        menuButton.setInteractive({ useHandCursor: true });
+        menuButton.on('pointerover', () => {
+            if (soundEffectsEnabled) {
+                this.sound.playAudioSprite('soundbank', 'hover');
+            }
+            menuButton.setTint(0x5dade2);
+        });
+        menuButton.on('pointerout', () => menuButton.clearTint());
+        menuButton.on('pointerdown', () => {
+            if (soundEffectsEnabled) {
+                this.sound.playAudioSprite('soundbank', 'click');
+            }
+            new LevelSelectMenuWindow(this);
+        });
     }
     
     showLockedMessage() {

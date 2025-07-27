@@ -752,6 +752,11 @@ class GameGrid extends Phaser.GameObjects.Container {
         // Clear the player from current position
         fromTile.card = null;
         
+        // Play portal sound effect
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'portal');
+        }
+        
         // Move player to portal position (portal doesn't occupy tile)
         this.playerRow = toRow;
         this.playerCol = toCol;

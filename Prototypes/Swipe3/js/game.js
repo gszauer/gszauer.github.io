@@ -9,7 +9,6 @@ const developmentDomains = [
 const currentDomain = window.location.hostname;
 
 var soundEffectsEnabled = true;
-var bgMusicEnabled = true;
 
 function isDomainAllowed() {
     const isAllowedDomain = allowedDomains.includes(currentDomain);

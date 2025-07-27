@@ -76,13 +76,12 @@ class AdManager {
             return;
         }
 
-        const wasEverythingMuted = this.getMuteState();
         this.GameplayStop();
 
         PokiSDK.commercialBreak(() => {
-            this.setMuteState(true);
+            muteBackgroundMusic();
         }).then(() => {
-            this.setMuteState(wasEverythingMuted);
+            unmuteBackgroundMusic();
             this.GameplayStart();
         });
     }
@@ -95,26 +94,17 @@ class AdManager {
             return;
         }
 
-        const wasEverythingMuted = this.getMuteState();
         this.GameplayStop();
 
         PokiSDK.rewardedBreak(() => {
-            this.setMuteState(true);
+            muteBackgroundMusic();
         }).then((success) => {
             if (callback) {
                 callback(success? true : false);
             }
 
-            this.setMuteState(wasEverythingMuted);
+            unmuteBackgroundMusic();
             this.GameplayStart();
         });
-    }
-
-    getMuteState() {
-        return false;
-    }
-
-    setMuteState(value) {
-
     }
 } 

@@ -58,6 +58,9 @@ class ProjectileCard extends Card {
     
     onPlayerInteraction(player) {
         const vector = this.getDirectionVector();
+        if (soundEffectsEnabled) {
+            this.scene.sound.playAudioSprite('soundbank', 'arrow');
+        }
         this.scene.events.emit('fireProjectile', {
             startX: this.gridX,
             startY: this.gridY,

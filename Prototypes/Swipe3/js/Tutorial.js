@@ -45,6 +45,11 @@ class Tutorial extends Phaser.GameObjects.Container {
         this.frog.setOrigin(0, 1); // Bottom-left origin
         this.add(this.frog);
         
+        // Play frog sound when tutorial is initialized
+        if (soundEffectsEnabled) {
+            scene.sound.playAudioSprite('soundbank', 'frog');
+        }
+        
         // Create bubble at upper right of the frog
         const bubbleX = this.frog.x + this.frog.displayWidth - 90;
         const bubbleY = this.frog.y - this.frog.displayHeight + 80;
@@ -102,6 +107,9 @@ class Tutorial extends Phaser.GameObjects.Container {
         
         // Add button hover effects
         this.continueButton.on('pointerover', () => {
+            if (soundEffectsEnabled) {
+                scene.sound.playAudioSprite('soundbank', 'hover');
+            }
             this.continueButton.setBackgroundColor('#5090ff');
         });
         
@@ -111,6 +119,9 @@ class Tutorial extends Phaser.GameObjects.Container {
         
         // Close tutorial on button click
         this.continueButton.on('pointerdown', () => {
+            if (soundEffectsEnabled) {
+                scene.sound.playAudioSprite('soundbank', 'click');
+            }
             this.close();
         });
         

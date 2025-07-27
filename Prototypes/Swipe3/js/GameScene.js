@@ -22,6 +22,10 @@ class GameScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
+        // Start gameplay background music
+        console.log('[GameScene] Starting gameplay music');
+        MusicManager.playBackgroundMusic(this, 'bg_gameplay');
+        
         // Add background
         const backgroundKey = `background_${this.backgroundNumber}.png`;
         const background = this.add.image(width / 2, height / 2, 'atlas_01', backgroundKey);
@@ -80,9 +84,17 @@ class GameScene extends Phaser.Scene {
         backButton.setInteractive({ useHandCursor: true });
         backButton.setScale(0.6);
 
-        backButton.on('pointerover', () => backButton.setTint(0xcccccc));
+        backButton.on('pointerover', () => {
+            if (soundEffectsEnabled) {
+                this.sound.playAudioSprite('soundbank', 'hover');
+            }
+            backButton.setTint(0xcccccc);
+        });
         backButton.on('pointerout', () => backButton.clearTint());
         backButton.on('pointerdown', () => {
+            if (soundEffectsEnabled) {
+                this.sound.playAudioSprite('soundbank', 'click');
+            }
             new GameMenuWindow(this);
             //new Tutorial(this, 3, "Welcome to the game! Hope you have a good time here", "char_hero.png");
         });
