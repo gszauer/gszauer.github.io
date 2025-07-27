@@ -1,83 +1,127 @@
-const categories = [
+// Desktop Icons Configuration
+const desktop_icons = [
   {
-    id: 'games',
-    title: 'Games',
+    type: 'folder',
+    name: 'Games',
     icon: '🎮',
+    id: 'games',
     items: [
       {
-        name: 'Treasure',
-        link: 'Treasure/index.html',
+        type: 'iframe',
+        name: 'Slide Swiped',
+        link: 'Swipe3/index.html',
         icon: '💎',
+        width: 600,
+        height: 400
       },
       {
+        type: 'shortcut',
         name: 'Wompus',
         link: 'Wompus/index.html',
-        icon: '🐺',
+        icon: '🐺'
       },
       {
-        name: 'War',
+        type: 'iframe',
+        name: 'Cards of War',
         link: 'war/index.html',
         icon: '⚔️',
+        width: 600,
+        height: 400
       },
       {
-        name: 'Wrestling',
+        type: 'iframe',
+        name: 'Really Real Wrestling',
         link: 'Wrestling/index.html',
         icon: '🤼',
+        width: 600,
+        height: 400
       },
       {
+        type: 'iframe',
+        name: 'Dungelot',
+        link: 'Boxelot5/index.html',
+        icon: '📦',
+        width: 512,
+        height: 768
+      },
+      {
+        type: 'shortcut',
         name: 'Screw It',
         link: 'ScrewIt/index.html',
-        icon: '🔧',
+        icon: '🔧'
       },
       {
+        type: 'shortcut',
         name: 'Screw It (AI gen)',
         link: 'ScrewIt/AI/index.html',
-        icon: '🤖',
+        icon: '🤖'
       },
       {
+        type: 'iframe',
         name: 'Boxelot (AI gen)',
         link: 'Boxelot3/index.html',
         icon: '📦',
+        width: 512,
+        height: 768
       },
-    ],
+      {
+        type: 'shortcut',
+        name: 'Treasure',
+        link: 'Treasure/index.html',
+        icon: '💎'
+      }
+    ]
   },
   {
-    id: 'apps',
-    title: 'Apps',
+    type: 'folder',
+    name: 'Apps',
     icon: '📱',
+    id: 'apps',
     items: [
       {
+        type: 'iframe',
         name: 'Carrot.Code',
         link: 'Carrot/index.html',
         icon: '🥕',
+        width: 800,
+        height: 600
       },
       {
-        name: 'Texture Packer',
-        link: 'TexturePacker/index.html',
-        icon: '🎨',
-      },
-      {
+        type: 'iframe',
         name: 'Emoji Finder',
         link: 'Emojis/index.html',
         icon: '😀',
+        width: 600,
+        height: 400
       },
       {
+        type: 'shortcut',
         name: 'Key Frame Studio V1',
         link: 'Anim/v1/index.html',
-        icon: '🎬',
+        icon: '🎬'
       },
       {
+        type: 'iframe',
         name: 'Key Frame Studio V2',
         link: 'https://keyframestudio.app',
         icon: '🎥',
-      },
-    ],
+        width: 800,
+        height: 600
+      }
+    ]
   },
   {
-    id: 'readme',
-    title: 'README.md',
+    type: 'shortcut',
+    name: 'Blog',
+    icon: '📝',
+    link: 'https://gabormakesgames.com',
+    id: 'blog-shortcut'
+  },
+  {
+    type: 'embedded',
+    name: 'README.md',
     icon: '📄',
-    type: 'file',
+    id: 'readme',
     content: `<h1>Gabor Szauer</h1>
     <p>This is a collection of prototype projects i made. Most of them are usable.</p>
 <ul style="margin-left: 20px">
@@ -85,40 +129,73 @@ const categories = [
 <li><a href="https://github.com/gszauer/">GitHub</a></li>
 <li><a href="https://bsky.app/profile/gszauer.bsky.social">Bluesky</a></li>
 </ul>
-<p>Landing page generated with <a href="https://bolt.new/">bolt.new</a></p>`,
-  },
-  {
-    id: 'blog-shortcut',
-    title: 'Blog',
-    icon: '📝',
-    type: 'shortcut',
-    link: 'https://gabormakesgames.com',
-  },
-  {
-    id: 'boxelot',
-    title: 'Boxelot',
-    icon: '🎮',
-    type: 'iframe',
-    link: 'https://gabormakesgames.com/Prototypes/Boxelot3/index.html',
-    width: 512,
-    height: 768
-  },
-  {
-    id: 'keyframe-studio',
-    title: 'Key Frame Studio',
-    icon: '🎥',
-    type: 'iframe',
-    link: 'https://keyframestudio.app',
-    width: 800,
-    height: 600
-  },
-  {
-    id: 'carrot-code',
-    title: 'Carrot.Code',
-    icon: '🥕',
-    type: 'iframe',
-    link: 'https://gabormakesgames.com/Prototypes/Carrot/',
-    width: 800,
-    height: 600
+<p>Landing page generated with <a href="https://bolt.new/">bolt.new</a></p>`
   }
 ];
+
+// Start Menu Configuration
+const startmenu_items = [
+  {
+    type: 'shortcut',
+    name: 'GitHub',
+    icon: '🐙',
+    link: 'https://github.com/gszauer/'
+  },
+  {
+    type: 'shortcut',
+    name: 'Bluesky',
+    icon: '💬',
+    link: 'https://bsky.app/profile/gszauer.bsky.social'
+  },
+  {
+    type: 'folder',
+    name: 'Games',
+    icon: '🎮',
+    id: 'games'
+  },
+  {
+    type: 'folder',
+    name: 'Apps',
+    icon: '📱',
+    id: 'apps'
+  }
+];
+
+// Run submenu items
+const startmenu_run_items = [
+  {
+    type: 'iframe',
+    name: 'Key Frame Studio',
+    icon: '🎥',
+    link: 'https://keyframestudio.app',
+    width: 800,
+    height: 600,
+    id: 'keyframe-studio'
+  },
+  {
+    type: 'iframe',
+    name: 'Carrot.Code',
+    icon: '🥕',
+    link: 'Carrot/index.html',
+    width: 800,
+    height: 600,
+    id: 'carrot-code'
+  },
+  {
+    type: 'iframe',
+    name: 'Boxelot',
+    icon: '🎮',
+    link: 'Boxelot3/index.html',
+    width: 512,
+    height: 768,
+    id: 'boxelot'
+  }
+];
+
+// Shutdown link
+const startmenu_shutdown = {
+  type: 'shortcut',
+  name: 'Shut Down...',
+  icon: '🚪',
+  link: 'https://gabormakesgames.com'
+};

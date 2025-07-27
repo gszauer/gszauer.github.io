@@ -71,39 +71,76 @@ document.addEventListener('click', (e) => {
 // Initialize Start Menu
 function initializeStartMenu() {
   const startItems = document.querySelector('.start-items');
-  const menuItems = startItems.querySelectorAll('.menu-item[data-iframe]');
-
-  menuItems.forEach(item => {
-    const categoryId = item.dataset.iframe;
-    const category = categories.find(c => c.id === categoryId);
-    
-    if (category) {
-      item.addEventListener('click', () => {
-        startMenu.classList.add('hidden');
-        createWindow(category);
+  const firstSeparator = startItems.querySelector('.separator');
+  const hasSubmenu = startItems.querySelector('.has-submenu');
+  const submenu = hasSubmenu.querySelector('.submenu');
+  
+  // Add menu items from startmenu_items before the first separator
+  startmenu_items.forEach(item => {
+    if (item.type === 'shortcut') {
+      const menuItem = document.createElement('a');
+      menuItem.className = 'menu-item';
+      menuItem.href = item.link;
+      menuItem.target = '_blank';
+      menuItem.rel = 'noopener noreferrer';
+      menuItem.innerHTML = `
+        <span class="menu-icon">${item.icon}</span>
+        <span class="menu-text">${item.name}</span>
+      `;
+      startItems.insertBefore(menuItem, firstSeparator);
+    } else if (item.type === 'folder') {
+      const menuItem = document.createElement('div');
+      menuItem.className = 'menu-item';
+      menuItem.dataset.folder = item.id;
+      menuItem.innerHTML = `
+        <span class="menu-icon">${item.icon}</span>
+        <span class="menu-text">${item.name}</span>
+      `;
+      startItems.insertBefore(menuItem, firstSeparator);
+      
+      menuItem.addEventListener('click', () => {
+        const folder = desktop_icons.find(d => d.id === item.id);
+        if (folder) {
+          startMenu.classList.add('hidden');
+          createWindow(folder);
+        }
       });
     }
+  });
+  
+  // Clear and rebuild Run submenu
+  submenu.innerHTML = '';
+  startmenu_run_items.forEach(item => {
+    const menuItem = document.createElement('div');
+    menuItem.className = 'menu-item';
+    menuItem.dataset.iframe = item.id;
+    menuItem.innerHTML = `
+      <span class="menu-icon">${item.icon}</span>
+      <span class="menu-text">${item.name}</span>
+    `;
+    submenu.appendChild(menuItem);
+    
+    menuItem.addEventListener('click', () => {
+      startMenu.classList.add('hidden');
+      createWindow(item);
+    });
   });
 }
 
 // Desktop Icons
 function createDesktopIcons() {
-  categories.forEach((category, index) => {
-    if (category.id === 'keyframe-studio') return; // Skip keyframe-studio from desktop
-    if (category.id === 'boxelot') return; // Skip keyframe-studio from desktop
-    if (category.id === 'carrot-code') return; // Skip keyframe-studio from desktop
-
+  desktop_icons.forEach((item, index) => {
     const icon = document.createElement('div');
     icon.className = 'desktop-icon';
-    if (category.type === 'shortcut') {
+    if (item.type === 'shortcut') {
       icon.classList.add('shortcut');
     }
     icon.style.left = '25px';
     icon.style.top = `${25 + index * 90}px`;
 
     icon.innerHTML = `
-      <span>${category.icon}</span>
-      <span>${category.title}</span>
+      <span>${item.icon}</span>
+      <span>${item.name}</span>
     `;
 
     // Mouse events
@@ -113,12 +150,12 @@ function createDesktopIcons() {
       icon.classList.add('selected');
       selectedIcon = icon;
 
-      if (category.type === 'shortcut') {
-        window.open(category.link, '_blank');
+      if (item.type === 'shortcut') {
+        window.open(item.link, '_blank');
       } else {
         // Check if window already exists
         const existingWindow = windows.find(
-          (w) => w.category.id === category.id
+          (w) => w.item.id === item.id
         );
         if (existingWindow) {
           if (existingWindow.isMinimized) {
@@ -127,7 +164,7 @@ function createDesktopIcons() {
           }
           setActiveWindow(existingWindow.id);
         } else {
-          createWindow(category);
+          createWindow(item);
         }
       }
     });
@@ -142,12 +179,12 @@ function createDesktopIcons() {
       if (touchTimeout) clearTimeout(touchTimeout);
 
       touchTimeout = setTimeout(() => {
-        if (category.type === 'shortcut') {
-          window.open(category.link, '_blank');
+        if (item.type === 'shortcut') {
+          window.open(item.link, '_blank');
         } else {
           // Check if window already exists
           const existingWindow = windows.find(
-            (w) => w.category.id === category.id
+            (w) => w.item.id === item.id
           );
           if (existingWindow) {
             if (existingWindow.isMinimized) {
@@ -156,7 +193,7 @@ function createDesktopIcons() {
             }
             setActiveWindow(existingWindow.id);
           } else {
-            createWindow(category);
+            createWindow(item);
           }
         }
       }, 100);
@@ -204,7 +241,7 @@ function constrainWindow(windowElement, newPosition = null, newSize = null) {
 }
 
 // Windows
-function createWindow(category) {
+function createWindow(item) {
   const windowId = Date.now().toString();
   const windowElement = document.createElement('div');
   windowElement.className = 'window';
@@ -218,24 +255,24 @@ function createWindow(category) {
   };
 
   const initialSize = {
-    width: category.width || 600,
-    height: category.height || 400,
+    width: item.width || 600,
+    height: item.height || 400,
   };
 
   let content = '';
-  if (category.type === 'file') {
-    content = `<div class="markdown-content">${category.content}</div>`;
-  } else if (category.type === 'iframe') {
-    content = `<iframe src="${category.link}" style="width: 100%; height: 100%; border: none;"></iframe>`;
-  } else {
+  if (item.type === 'embedded') {
+    content = `<div class="markdown-content">${item.content}</div>`;
+  } else if (item.type === 'iframe') {
+    content = `<iframe src="${item.link}" style="width: 100%; height: 100%; border: none;"></iframe>`;
+  } else if (item.type === 'folder' && item.items) {
     content = `
       <div class="folder-grid">
-        ${category.items
+        ${item.items
           .map(
-            (item) => `
-          <a href="${item.link}" class="folder-item" target="_blank">
-            <span>${item.icon}</span>
-            <span class="item-name">${item.name}</span>
+            (subItem) => `
+          <a href="${subItem.link}" class="folder-item" target="_blank">
+            <span>${subItem.icon}</span>
+            <span class="item-name">${subItem.name}</span>
           </a>
         `
           )
@@ -246,7 +283,7 @@ function createWindow(category) {
 
   windowElement.innerHTML = `
     <div class="window-titlebar">
-      <span>${category.title}</span>
+      <span>${item.name}</span>
       <div class="window-controls">
         <button class="window-button minimize">_</button>
         <button class="window-button maximize">□</button>
@@ -278,7 +315,7 @@ function createWindow(category) {
   const windowData = {
     id: windowId,
     element: windowElement,
-    category: category,
+    item: item,
     isMinimized: false,
     isMaximized: false,
     lastPosition: null,
@@ -362,7 +399,7 @@ function createTaskbarButton(windowData) {
   button.dataset.windowId = windowData.id;
 
   button.innerHTML = `
-    <span style="font-family: 'MS Sans Serif', sans-serif;">${windowData.category.title}</span>
+    <span style="font-family: 'MS Sans Serif', sans-serif;">${windowData.item.name}</span>
   `;
 
   button.addEventListener('click', () => {
