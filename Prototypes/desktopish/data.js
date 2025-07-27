@@ -7,12 +7,10 @@ const desktop_icons = [
     id: 'games',
     items: [
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Slide Swiped',
         link: 'Swipe3/index.html',
-        icon: '💎',
-        width: 600,
-        height: 400
+        icon: '💎'
       },
       {
         type: 'shortcut',
@@ -21,54 +19,22 @@ const desktop_icons = [
         icon: '🐺'
       },
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Cards of War',
         link: 'war/index.html',
-        icon: '⚔️',
-        width: 600,
-        height: 400
+        icon: '⚔️'
       },
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Really Real Wrestling',
         link: 'Wrestling/index.html',
-        icon: '🤼',
-        width: 600,
-        height: 400
+        icon: '🤼'
       },
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Dungelot',
         link: 'Boxelot5/index.html',
-        icon: '📦',
-        width: 512,
-        height: 768
-      },
-      {
-        type: 'shortcut',
-        name: 'Screw It',
-        link: 'ScrewIt/index.html',
-        icon: '🔧'
-      },
-      {
-        type: 'shortcut',
-        name: 'Screw It (AI gen)',
-        link: 'ScrewIt/AI/index.html',
-        icon: '🤖'
-      },
-      {
-        type: 'iframe',
-        name: 'Boxelot (AI gen)',
-        link: 'Boxelot3/index.html',
-        icon: '📦',
-        width: 512,
-        height: 768
-      },
-      {
-        type: 'shortcut',
-        name: 'Treasure',
-        link: 'Treasure/index.html',
-        icon: '💎'
+        icon: '📦'
       }
     ]
   },
@@ -79,20 +45,16 @@ const desktop_icons = [
     id: 'apps',
     items: [
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Carrot.Code',
         link: 'Carrot/index.html',
-        icon: '🥕',
-        width: 800,
-        height: 600
+        icon: '🥕'
       },
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Emoji Finder',
         link: 'Emojis/index.html',
-        icon: '😀',
-        width: 600,
-        height: 400
+        icon: '😀'
       },
       {
         type: 'shortcut',
@@ -101,12 +63,10 @@ const desktop_icons = [
         icon: '🎬'
       },
       {
-        type: 'iframe',
+        type: 'shortcut',
         name: 'Key Frame Studio V2',
         link: 'https://keyframestudio.app',
-        icon: '🎥',
-        width: 800,
-        height: 600
+        icon: '🎥'
       }
     ]
   },
@@ -165,30 +125,27 @@ const startmenu_items = [
 const startmenu_run_items = [
   {
     type: 'iframe',
-    name: 'Key Frame Studio',
-    icon: '🎥',
-    link: 'https://keyframestudio.app',
+    name: 'Slide Swiped',
+    icon: '💎',
+    link: 'Swipe3/index.html',
     width: 800,
     height: 600,
-    id: 'keyframe-studio'
   },
   {
     type: 'iframe',
-    name: 'Carrot.Code',
-    icon: '🥕',
-    link: 'Carrot/index.html',
-    width: 800,
-    height: 600,
-    id: 'carrot-code'
+    name: 'Cards of War',
+    icon: '⚔️',
+    link: 'war/index.html',
+    width: 512,
+    height: 768,
   },
   {
     type: 'iframe',
     name: 'Boxelot',
     icon: '🎮',
-    link: 'Boxelot3/index.html',
+    link: 'Boxelot5/index.html',
     width: 512,
     height: 768,
-    id: 'boxelot'
   }
 ];
 
