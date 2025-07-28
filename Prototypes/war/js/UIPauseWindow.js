@@ -56,7 +56,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
             scene: scene,
             x: 512, y: 910 - 260 + 70,
             onValueChanged: (t) => {
-                scene.sound.volume = t * (1.0 - mute.Scale);
+                scene.game.sound.volume = t * (1.0 - mute.Scale);
             },
             text: "Volume",
             onEnter: () => {
@@ -88,7 +88,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         });
 
         mute.OnToggled = () => {
-            scene.sound.volume = volume.Value * (1.0 - mute.Scale);
+            scene.game.sound.volume = volume.Value * (1.0 - mute.Scale);
             scene.ButtonClick();
         }
 
@@ -115,8 +115,10 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
             scene.StopBgm();
             scene.ButtonClick();
             self.Close();
-            scene.Reset(true);
-            scene.scene.switch('SceneMenu'); 
+            // Properly shutdown the scene before switching
+            AdManager.instance.GameplayStop();
+            scene.scene.stop('SceneDungeon');
+            scene.scene.start('SceneMenu'); 
         }
 
         titleText.setTint(0xc42a2a);
@@ -168,7 +170,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
     }
 
     _ApplyOpenVisuals(state) {
-        this.volume.Value = this.scene.sound.volume,
+        this.volume.Value = this.scene.game.sound.volume,
 
         this.blackout.setActive(state).setVisible(state);
         this.TL.setActive(state).setVisible(state);

@@ -16,44 +16,23 @@ window.addEventListener('load', () => {
         },
     }
 
-    /*const resize = () => {
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        const windowRatio = windowWidth / windowHeight;
-        
-        const gameWidth = game.config.width ;
-        const gameHeihgt = game.config.height;
-        const gameRatio = gameWidth / gameHeihgt;
+    AdManager.Initialize(() => {
+        const game = new Phaser.Game(config);
+        game.backgroundElement = null;
 
-        if(windowRatio < gameRatio){
-            let targetWidth = windowWidth;
-            let targetHeight = windowWidth / gameRatio;
-            game.scale.setParentSize(targetWidth, targetHeight);
-        }
-        else{
-            let targetWidth = windowHeight * gameRatio;
-            let targetHeight = windowHeight;
-            game.scale.setParentSize(targetWidth, targetHeight);
-        }
-    };*/
+        game.SetHTMLTint = (state) => {
+            if (game.backgroundElement == null) {
+                game.backgroundElement = document.getElementById('phaser-game');
+            }
 
-    const game = new Phaser.Game(config);
-    game.backgroundElement = null;
-
-    game.SetHTMLTint = (state) => {
-        if (game.backgroundElement == null) {
-            game.backgroundElement = document.getElementById('phaser-game');
+            if (state) {
+                game.backgroundElement.style.backgroundColor  ="rgb(0, 0, 0)";            
+                game.backgroundElement.style.backgroundImage="url(war/WebBGDark.jpg)";            
+            }
+            else {
+                game.backgroundElement.style.backgroundColor  = "rgb(24, 24, 24)";          
+                game.backgroundElement.style.backgroundImage="url(war/WebBG.jpg)";            
+            }
         }
-
-        if (state) {
-            game.backgroundElement.style.backgroundColor  ="rgb(0, 0, 0)";            
-            game.backgroundElement.style.backgroundImage="url(war/WebBGDark.jpg)";            
-        }
-        else {
-            game.backgroundElement.style.backgroundColor  = "rgb(24, 24, 24)";          
-            game.backgroundElement.style.backgroundImage="url(war/WebBG.jpg)";            
-        }
-    }
-    //resize();
-    //window.addEventListener("resize", resize, false);
+    });
 });

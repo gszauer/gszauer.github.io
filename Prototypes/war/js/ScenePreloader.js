@@ -71,7 +71,7 @@ export default class ScenePreloader extends Phaser.Scene {
         this.load.on('fileprogress', function (file) {
             //console.log("Preloader File: " + file.src);
 
-            assetText.setText('Loading asset: ' + file.key);
+            assetText.setText('File: ' + file.key);
         });
 
         this.load.on('complete', function () {
@@ -79,12 +79,12 @@ export default class ScenePreloader extends Phaser.Scene {
             loadingText.setText("Done");
             assetText.setText("Done");
         });
-
         SceneMenu.DoPreload(this);
         SceneDungeon.DoPreload(this);
     }
 
     update() {
+        AdManager.instance.LoadingFinished();
         this.scene.switch('SceneMenu'); 
     }
 }

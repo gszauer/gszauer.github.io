@@ -78,8 +78,10 @@ export default class UIGameOverWindow extends Phaser.GameObjects.Container {
             scene.StopBgm();
             scene.ButtonClick();
             self.Close();
-            scene.Reset(true);
-            scene.scene.switch('SceneMenu'); 
+            // Properly shutdown the scene before switching
+            AdManager.instance.GameplayStop();
+            scene.scene.stop('SceneDungeon');
+            scene.scene.start('SceneMenu'); 
         }
 
         titleText.setTint(0xc42a2a);

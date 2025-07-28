@@ -60,9 +60,9 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         const volume = new UISlider({
             scene: scene,
             x: 512, y: 910,
-            t: scene.sound.volume,
+            t: scene.game.sound.volume,
             onValueChanged: (t) => {
-                scene.sound.volume = t * (1.0 - mute.Scale);
+                scene.game.sound.volume = t * (1.0 - mute.Scale);
             },
             text: "Volume",
             onEnter: () => {
@@ -74,7 +74,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
         });
 
         mute.OnToggled = () => {
-            scene.sound.volume = volume.Value * (1.0 - mute.Scale);
+            scene.game.sound.volume = volume.Value * (1.0 - mute.Scale);
             scene.ButtonClick();
         }
 
@@ -149,7 +149,7 @@ export default class UISettingsWindow extends Phaser.GameObjects.Container {
     }
 
     _ApplyOpenVisuals(state) {
-        this.volume.Value = this.scene.sound.volume,
+        this.volume.Value = this.scene.game.sound.volume,
 
         this.blackout.setActive(state).setVisible(state);
         this.TL.setActive(state).setVisible(state);

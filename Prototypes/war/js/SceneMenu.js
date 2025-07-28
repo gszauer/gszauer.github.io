@@ -104,6 +104,7 @@ export default class SceneMenu extends Phaser.Scene {
                 else {
                     CardPlayer.playerFrame = "CardGirl.png";
                 }
+                AdManager.instance.GameplayStart();
                 self.scene.get('SceneDungeon').UpdatePlayerSprite();
                 self.scene.switch('SceneDungeon'); 
             },

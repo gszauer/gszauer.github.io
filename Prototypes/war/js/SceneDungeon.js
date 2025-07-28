@@ -46,9 +46,9 @@ export default class SceneDungeon extends Phaser.Scene {
         scene.load.audio("Chest1", ["war/chest1.ogg", "war/chest1.mp3", "war/chest1.m4a"]);
         scene.load.audio("Chest2", ["war/chest2.ogg", "war/chest2.mp3", "war/chest2.m4a"]);
 
-        scene.load.audio("Bgm0", ["war/bgm0.ogg", "war/bgm0.mp3", "war/bgm0.m4a"]);
+        //scene.load.audio("Bgm0", ["war/bgm0.ogg", "war/bgm0.mp3", "war/bgm0.m4a"]);
         scene.load.audio("Bgm1", ["war/bgm1.ogg", "war/bgm1.mp3", "war/bgm1.m4a"]);
-        scene.load.audio("Bgm2", ["war/bgm2.ogg", "war/bgm2.mp3", "war/bgm2.m4a"]);
+        //scene.load.audio("Bgm2", ["war/bgm2.ogg", "war/bgm2.mp3", "war/bgm2.m4a"]);
     }
 
     preload() {
@@ -207,19 +207,20 @@ export default class SceneDungeon extends Phaser.Scene {
         ];
 
         this.backgroundMusics = [
-            this.sound.add("Bgm0"),
+            //this.sound.add("Bgm0"),
             this.sound.add("Bgm1"),
-            this.sound.add("Bgm2"),
+            //this.sound.add("Bgm2"),
         ];
-        this.gameOverMusic =  this.sound.add("GameOver"),
+        this.gameOverMusic =  this.sound.add("GameOver");
         this.backgroundMusics[0].loop = true;
-        this.backgroundMusics[1].loop = true;
-        this.backgroundMusics[2].loop = true;
+        //this.backgroundMusics[1].loop = true;
+        //this.backgroundMusics[2].loop = true;
         this.gameOverMusic.loop = true;
-        this.backgroundMusics[0].volume = 0.5;
-        this.backgroundMusics[1].volume = 0.5;
-        this.backgroundMusics[2].volume = 0.5;
+        // Don't set volume here - set it when playing to avoid autoplay issues
         this.backgroundMusic = null;
+
+        // Register shutdown event
+        this.events.on('shutdown', this.shutdown, this);
 
         this.Reset();
     }
@@ -236,9 +237,17 @@ export default class SceneDungeon extends Phaser.Scene {
         if (resetMusic) {
             this.StopBgm();
 
-            const rando = Math.floor(Math.random() * this.backgroundMusics.length);
-            this.backgroundMusic = this.backgroundMusics[rando];
-            this.backgroundMusic.play();
+            // Small delay to ensure previous audio is fully stopped
+            this.time.delayedCall(100, () => {
+                if (this.backgroundMusics && this.backgroundMusics.length > 0) {
+                    const rando = Math.floor(Math.random() * this.backgroundMusics.length);
+                    this.backgroundMusic = this.backgroundMusics[rando];
+                    if (this.backgroundMusic && !this.backgroundMusic.isPlaying) {
+                        this.backgroundMusic.volume = 0.5;
+                        this.backgroundMusic.play();
+                    }
+                }
+            });
         }
 
         this.player.faceSprite.setFrame(CardPlayer.playerFrame);
@@ -251,6 +260,7 @@ export default class SceneDungeon extends Phaser.Scene {
     PlayGameOverMusic() {
         this.StopBgm();
         this.backgroundMusic = this.gameOverMusic;
+        this.backgroundMusic.volume = 0.5;
         this.backgroundMusic.play();
     }
 
@@ -331,5 +341,79 @@ export default class SceneDungeon extends Phaser.Scene {
 
     SoundPortal() {
         this.portalSound.play();
+    }
+
+    shutdown() {
+        // Stop all background music
+        this.StopBgm();
+        
+        // Stop the game over music if playing
+        if (this.gameOverMusic && this.gameOverMusic.isPlaying) {
+            this.gameOverMusic.stop();
+        }
+        
+        // Remove drag event handlers
+        if (this.player) {
+            // Just remove listeners - no need to disable draggable on shutdown
+            this.player.removeAllListeners();
+        }
+        
+        // Clean up event listeners
+        const eventEmitter = this.sys.events;
+        eventEmitter.off('update', this.update, this);
+        eventEmitter.off('shutdown', this.shutdown, this);
+        
+        // Null out references
+        this.player = null;
+        this.grid = null;
+        this.gameOver = null;
+        this.background = null;
+    }
+
+    destroy() {
+        this.shutdown();
+        
+        // Destroy all sound objects
+        if (this.buttonHoverSound) this.buttonHoverSound.destroy();
+        if (this.buttonClickSound) this.buttonClickSound.destroy();
+        if (this.portalSound) this.portalSound.destroy();
+        if (this.dieSound) this.dieSound.destroy();
+        if (this.diedSound) this.diedSound.destroy();
+        if (this.gameOverMusic) this.gameOverMusic.destroy();
+        
+        // Destroy sound arrays
+        if (this.hitSounds) {
+            this.hitSounds.forEach(sound => sound.destroy());
+            this.hitSounds = null;
+        }
+        if (this.coinSounds) {
+            this.coinSounds.forEach(sound => sound.destroy());
+            this.coinSounds = null;
+        }
+        if (this.swordSounds) {
+            this.swordSounds.forEach(sound => sound.destroy());
+            this.swordSounds = null;
+        }
+        if (this.rustleSounds) {
+            this.rustleSounds.forEach(sound => sound.destroy());
+            this.rustleSounds = null;
+        }
+        if (this.chestSounds) {
+            this.chestSounds.forEach(sound => sound.destroy());
+            this.chestSounds = null;
+        }
+        if (this.backgroundMusics) {
+            this.backgroundMusics.forEach(sound => sound.destroy());
+            this.backgroundMusics = null;
+        }
+        
+        // Null out all sound references
+        this.buttonHoverSound = null;
+        this.buttonClickSound = null;
+        this.portalSound = null;
+        this.dieSound = null;
+        this.diedSound = null;
+        this.gameOverMusic = null;
+        this.backgroundMusic = null;
     }
 }
