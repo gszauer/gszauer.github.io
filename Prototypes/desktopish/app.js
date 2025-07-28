@@ -25,6 +25,17 @@ function updateDarkMode() {
   darkModeToggle.innerHTML = `<img src="desktopish/icons/${
     isDarkMode ? 'sun' : 'moon'
   }.svg" alt="Toggle dark mode">`;
+  
+  // Force CSS variable recalculation on iOS
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    // Force a reflow to ensure CSS variables update
+    document.documentElement.style.display = 'none';
+    document.documentElement.offsetHeight; // Trigger reflow
+    document.documentElement.style.display = '';
+    
+    // Also update body background to force repaint
+    document.body.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary');
+  }
 }
 
 // Listen for system dark mode changes
