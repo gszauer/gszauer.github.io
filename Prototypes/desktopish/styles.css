@@ -57,6 +57,11 @@
   --separator-light: rgba(255, 255, 255, 0.15);
 }
 
+/* Force repaint helper class */
+.force-repaint {
+  transform: translateZ(0);
+}
+
 * {
   margin: 0;
   padding: 0;

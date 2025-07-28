@@ -21,20 +21,23 @@ const TASKBAR_HEIGHT = 28;
 
 // Initialize dark mode
 function updateDarkMode() {
-  document.documentElement.classList.toggle('dark-mode', isDarkMode);
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark-mode');
+  } else {
+    document.documentElement.classList.remove('dark-mode');
+  }
+  
   darkModeToggle.innerHTML = `<img src="desktopish/icons/${
     isDarkMode ? 'sun' : 'moon'
   }.svg" alt="Toggle dark mode">`;
   
-  // Force CSS variable recalculation on iOS
-  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-    // Force a reflow to ensure CSS variables update
-    document.documentElement.style.display = 'none';
-    document.documentElement.offsetHeight; // Trigger reflow
-    document.documentElement.style.display = '';
-    
-    // Also update body background to force repaint
-    document.body.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary');
+  // Force style recalculation on iOS/Safari
+  if (/iPhone|iPad|iPod|Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)) {
+    // Force repaint by adding and removing a temporary class
+    document.documentElement.classList.add('force-repaint');
+    setTimeout(() => {
+      document.documentElement.classList.remove('force-repaint');
+    }, 0);
   }
 }
 
