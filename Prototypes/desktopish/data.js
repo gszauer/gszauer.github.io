@@ -10,7 +10,7 @@ const desktop_icons = [
         type: 'shortcut',
         name: 'Slide Swiped',
         link: 'Swipe3/index.html',
-        icon: '💎'
+        icon: '🦔'
       },
       {
         type: 'shortcut',
@@ -32,9 +32,15 @@ const desktop_icons = [
       },
       {
         type: 'shortcut',
-        name: 'Dungelot',
+        name: 'Tapdown Dungeon',
         link: 'Boxelot5/index.html',
-        icon: '📦'
+        icon: '⛓️'
+      },
+      {
+        type: 'shortcut',
+        name: 'Calcul8or',
+        link: 'Calc1/index.html',
+        icon: '🖩'
       }
     ]
   },
@@ -126,7 +132,7 @@ const startmenu_run_items = [
   {
     type: 'iframe',
     name: 'Slide Swiped',
-    icon: '💎',
+    icon: '🦔',
     link: 'Swipe3/index.html',
     width: 800,
     height: 600,
@@ -141,8 +147,8 @@ const startmenu_run_items = [
   },
   {
     type: 'iframe',
-    name: 'Boxelot',
-    icon: '🎮',
+    name: 'Tapdown Dungeon',
+    icon: '⛓️',
     link: 'Boxelot5/index.html',
     width: 512,
     height: 768,
