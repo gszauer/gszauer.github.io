@@ -36,7 +36,7 @@
                         ['EMP', 'EMP', 'EMP'],
                         ['OPT', 'EMP', 'EMP']
                     ],
-                    hint: '+1'
+                    hint: '+1, +1'
                 },
                 {
                     level: 2,
@@ -53,30 +53,6 @@
                 {
                     level: 3,
                     initial: 0,
-                    goal: 12,
-                    moves: 3,
-                    buttons: [
-                        ['EMP', 'x4', 'CLR'],
-                        ['EMP', '+1', 'EMP'],
-                        ['OPT', '+2', 'EMP']
-                    ],
-                    hint: '+1, +2, x4'
-                },
-                {
-                    level: 4,
-                    initial: 1,
-                    goal: 7,
-                    moves: 3,
-                    buttons: [
-                        ['HNT', '+4', 'CLR'],
-                        ['EMP', '-2', 'EMP'],
-                        ['OPT', 'EMP', 'EMP']
-                    ],
-                    hint: '+4, +4, -2'
-                },
-                {
-                    level: 5,
-                    initial: 0,
                     goal: 20,
                     moves: 3,
                     buttons: [
@@ -87,19 +63,7 @@
                     hint: '+4, x4, +4'
                 },
                 {
-                    level: 6,
-                    initial: 0,
-                    goal: 40,
-                    moves: 4,
-                    buttons: [
-                        ['HNT', '+2', 'CLR'],
-                        ['EMP', 'x4', 'EMP'],
-                        ['OPT', 'EMP', 'EMP']
-                    ],
-                    hint: '+2, x4, +2, x4'
-                },
-                {
-                    level: 7,
+                    level: 4,
                     initial: 100,
                     goal: 10,
                     moves: 4,
@@ -111,16 +75,52 @@
                     hint: '/5, /5, +3, +3'
                 },
                 {
-                    level: 8,
-                    initial: 11,
-                    goal: 10,
-                    moves: 2,
+                    level: 5,
+                    initial: 4321,
+                    goal: 4,
+                    moves: 3,
                     buttons: [
-                        ['HNT', 'x10', 'CLR'],
-                        ['EMP', '-10', 'EMP'],
+                        ['HNT', 'EMP', 'CLR'],
+                        ['EMP', 'EMP', '<<<'],
                         ['OPT', 'EMP', 'EMP']
                     ],
-                    hint: 'x10, -10'
+                    hint: '<<<, <<<, <<<'
+                },
+                {
+                    level: 6,
+                    initial: 4321,
+                    goal: 1,
+                    moves: 3,
+                    buttons: [
+                        ['HNT', 'EMP', 'CLR'],
+                        ['EMP', 'EMP', '>>>'],
+                        ['OPT', 'EMP', 'EMP']
+                    ],
+                    hint: '>>>, >>>, >>>'
+                },
+                {
+                    level: 7,
+                    initial: 0,
+                    goal: 11,
+                    moves: 2,
+                    buttons: [
+                        ['HNT', '_1', 'CLR'],
+                        ['EMP', 'EMP', 'EMP'],
+                        ['OPT', 'EMP', 'EMP']
+                    ],
+                    hint: '_1, _1'
+                },
+                {
+                    level: 8,
+                    initial: 0,
+                    goal: 44,
+                    moves: 3,
+                    buttons: [
+                        ['HNT', '2_', 'CLR'],
+                        ['EMP', 'x2', 'EMP'],
+                        ['OPT', 'EMP', 'EMP']
+                    ],
+                    hint: '2_, x2, x2'
                 }
             ];
 
@@ -326,10 +326,17 @@
                         'HNT': 0x4444cc,
                         'OPT': 0xcccc44,
                         'LVL': 0x555555,
+                        '<<<': 0xcc8844,
+                        '>>>': 0xcc8844,
                         'default': 0x555555
                     };
                     
-                    const color = colors[type] || colors['default'];
+                    let color = colors[type] || colors['default'];
+                    
+                    // Handle append (_NUM) and prepend (NUM_) buttons
+                    if (type.includes('_') && (type.startsWith('_') || type.endsWith('_'))) {
+                        color = 0x8844cc; // Purple color
+                    }
                     button.bg.clear();
                     button.bg.fillStyle(color, 1);
                     button.bg.fillRoundedRect(-button.size/2, -button.size/2, button.size, button.size, 15);
@@ -339,6 +346,10 @@
                     if (type.startsWith('LVL')) {
                         button.text.setText(type.substring(3));
                     } else if (type.startsWith('+') || type.startsWith('-') || type.startsWith('x') || type.startsWith('/')) {
+                        button.text.setText(type);
+                    } else if (type === '<<<' || type === '>>>') {
+                        button.text.setText(type);
+                    } else if (type.includes('_') && (type.startsWith('_') || type.endsWith('_'))) {
                         button.text.setText(type);
                     } else {
                         button.text.setText(type);
@@ -420,6 +431,29 @@
                     } else if (type.startsWith('/')) {
                         const num = parseInt(type.substring(1));
                         this.currentValue = Math.floor(this.currentValue / num);
+                        this.movesLeft--;
+                    } else if (type === '<<<') {
+                        // Left shift - remove last digit
+                        this.currentValue = Math.floor(this.currentValue / 10);
+                        this.movesLeft--;
+                    } else if (type === '>>>') {
+                        // Right shift - remove first digit
+                        const str = this.currentValue.toString();
+                        if (str.length > 1) {
+                            this.currentValue = parseInt(str.substring(1));
+                        } else {
+                            this.currentValue = 0;
+                        }
+                        this.movesLeft--;
+                    } else if (type.startsWith('_')) {
+                        // Append digit
+                        const digit = type.substring(1);
+                        this.currentValue = parseInt(this.currentValue.toString() + digit);
+                        this.movesLeft--;
+                    } else if (type.endsWith('_')) {
+                        // Prepend digit
+                        const digit = type.substring(0, type.length - 1);
+                        this.currentValue = parseInt(digit + this.currentValue.toString());
                         this.movesLeft--;
                     }
                     
