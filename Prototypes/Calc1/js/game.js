@@ -267,11 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Yes button
             const yesButton = this.add.graphics();
             yesButton.fillStyle(0xcc4444, 1);
-            yesButton.fillRoundedRect(-90, 40, 80, 40, 10);
+            yesButton.fillRoundedRect(-135, 40, 120, 60, 10);
             this.modalContainer.add(yesButton);
             
-            const yesText = this.add.text(-50, 60, 'Yes', {
-                fontSize: '24px',
+            const yesText = this.add.text(-75, 70, 'Yes', {
+                fontSize: '36px',
                 color: '#ffffff',
                 fontFamily: 'Arial'
             }).setOrigin(0.5);
@@ -280,21 +280,84 @@ document.addEventListener('DOMContentLoaded', function() {
             // No button
             const noButton = this.add.graphics();
             noButton.fillStyle(0x888888, 1);
-            noButton.fillRoundedRect(10, 40, 80, 40, 10);
+            noButton.fillRoundedRect(15, 40, 120, 60, 10);
             this.modalContainer.add(noButton);
             
-            const noText = this.add.text(50, 60, 'No', {
-                fontSize: '24px',
+            const noText = this.add.text(75, 70, 'No', {
+                fontSize: '36px',
                 color: '#ffffff',
                 fontFamily: 'Arial'
             }).setOrigin(0.5);
             this.modalContainer.add(noText);
             
             // Make buttons interactive
-            yesButton.setInteractive(new Phaser.Geom.Rectangle(-90, 40, 80, 40), Phaser.Geom.Rectangle.Contains);
-            noButton.setInteractive(new Phaser.Geom.Rectangle(10, 40, 80, 40), Phaser.Geom.Rectangle.Contains);
+            yesButton.setInteractive(new Phaser.Geom.Rectangle(-135, 40, 120, 60), Phaser.Geom.Rectangle.Contains);
+            noButton.setInteractive(new Phaser.Geom.Rectangle(15, 40, 120, 60), Phaser.Geom.Rectangle.Contains);
             
             yesButton.on('pointerdown', () => this.resetProgress());
+            noButton.on('pointerdown', () => this.hideModal());
+            
+            this.modalContainer.setVisible(true);
+        }
+
+        showLevelLoadModal(levelNumber) {
+            this.showingModal = true;
+            this.modalContainer.removeAll(true);
+            
+            // Full-screen semi-transparent black overlay
+            const overlay = this.add.graphics();
+            overlay.fillStyle(0x000000, 0.5);
+            overlay.fillRect(-360, -640, 720, 1280); // Full screen coverage
+            this.modalContainer.add(overlay);
+            
+            // Modal background
+            const modalBg = this.add.graphics();
+            modalBg.fillStyle(0x333333, 1);
+            modalBg.lineStyle(3, 0x666666, 1);
+            modalBg.fillRoundedRect(-250, -120, 500, 240, 20);
+            modalBg.strokeRoundedRect(-250, -120, 500, 240, 20);
+            this.modalContainer.add(modalBg);
+            
+            // Modal text
+            const modalText = this.add.text(0, -60, `Load level ${levelNumber}?`, {
+                fontSize: '56px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+                align: 'center'
+            }).setOrigin(0.5);
+            this.modalContainer.add(modalText);
+            
+            // Yes button
+            const yesButton = this.add.graphics();
+            yesButton.fillStyle(0x44cc44, 1);
+            yesButton.fillRoundedRect(-180, 10, 160, 80, 10);
+            this.modalContainer.add(yesButton);
+            
+            const yesText = this.add.text(-100, 50, 'Yes', {
+                fontSize: '48px',
+                color: '#ffffff',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            this.modalContainer.add(yesText);
+            
+            // No button
+            const noButton = this.add.graphics();
+            noButton.fillStyle(0x888888, 1);
+            noButton.fillRoundedRect(20, 10, 160, 80, 10);
+            this.modalContainer.add(noButton);
+            
+            const noText = this.add.text(100, 50, 'No', {
+                fontSize: '48px',
+                color: '#ffffff',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            this.modalContainer.add(noText);
+            
+            // Make buttons interactive
+            yesButton.setInteractive(new Phaser.Geom.Rectangle(-180, 40, 160, 80), Phaser.Geom.Rectangle.Contains);
+            noButton.setInteractive(new Phaser.Geom.Rectangle(20, 40, 160, 80), Phaser.Geom.Rectangle.Contains);
+            
+            yesButton.on('pointerdown', () => this.loadSelectedLevel(levelNumber));
             noButton.on('pointerdown', () => this.hideModal());
             
             this.modalContainer.setVisible(true);
@@ -303,6 +366,35 @@ document.addEventListener('DOMContentLoaded', function() {
         hideModal() {
             this.showingModal = false;
             this.modalContainer.setVisible(false);
+        }
+
+        loadSelectedLevel(levelNumber) {
+            // Hide modal
+            this.hideModal();
+            
+            // Exit options mode
+            this.optionsMode = false;
+            
+            // Find the index for the selected level
+            const levelInfo = this.actualLevels.find(l => l.levelNum === levelNumber);
+            if (levelInfo) {
+                this.currentLevel = levelInfo.index;
+                PlayerData.Instance.SetNumber('currentLevel', this.currentLevel);
+                
+                // Restore original font size
+                this.valueText.setFontSize('140px');
+                
+                // Restore button font sizes and alpha when exiting options
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        this.buttons[row][col].text.setFontSize('48px');
+                        this.buttons[row][col].setAlpha(1); // Re-enable all buttons
+                    }
+                }
+                
+                // Load the selected level
+                this.loadLevel(this.currentLevel);
+            }
         }
 
         resetProgress() {
@@ -523,19 +615,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (type.includes('_') && (type.startsWith('_') || type.endsWith('_'))) {
                 color = 0x8844cc; // Purple color
             }
-
             // Handle NUM=>NUM replace buttons
-            if (type.includes('=>')) {
+            else if (type.includes('=>')) {
                 color = 0xdd88cc; // Pink color
             }
-
             // Handle NUM^2 square buttons
-            if (type.includes('^2')) {
+            else if (type.includes('^2')) {
                 color = 0x44ccaa; // Greenish blue
             }
-
+            // Handle operation buttons with numbers (+3, -5, x2, /4, etc.)
+            else if ((type.startsWith('+') || type.startsWith('-') || type.startsWith('x') || type.startsWith('/')) && type !== '+' && type !== '-') {
+                color = 0x555555; // Gray color like default
+            }
             // Handle pure numeric buttons
-            if (!isNaN(parseInt(type)) && !type.includes('_')) {
+            else if (!isNaN(parseInt(type)) && !type.includes('_')) {
                 color = 0x6666cc; // Blue color for numeric buttons
             }
             button.bg.clear();
@@ -632,6 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 3; col++) {
                     this.updateButtonAppearance(this.buttons[row][col], 'EMP');
+                    this.buttons[row][col].setAlpha(1); // Reset alpha
                 }
             }
 
@@ -641,9 +735,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Set up preview button if provided
             if (level.preview_btn) {
-                this.updateButtonAppearance(this.buttons[0][1], level.preview_btn);
-                // Make it non-interactive
-                this.buttons[0][1].removeInteractive();
+                // Position OPT button in lower left, others in upper middle
+                const buttonPosition = level.preview_btn === 'OPT' ? [2, 0] : [0, 1];
+                this.updateButtonAppearance(this.buttons[buttonPosition[0]][buttonPosition[1]], level.preview_btn);
+                // Make it non-interactive and look disabled
+                this.buttons[buttonPosition[0]][buttonPosition[1]].removeInteractive();
+                this.buttons[buttonPosition[0]][buttonPosition[1]].setAlpha(0.3);
             }
         }
 
@@ -689,6 +786,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 3; col++) {
                     this.updateButtonAppearance(this.buttons[row][col], level.buttons[row][col]);
+                    this.buttons[row][col].setAlpha(1); // Reset alpha
                     // Re-enable interactivity
                     if (!this.buttons[row][col].input) {
                         this.buttons[row][col].setInteractive(new Phaser.Geom.Rectangle(-this.buttons[row][col].size/2, -this.buttons[row][col].size/2, this.buttons[row][col].size, this.buttons[row][col].size), Phaser.Geom.Rectangle.Contains);
@@ -730,6 +828,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.updateButtonAppearance(this.buttons[1][1], `LVL${this.selectedLevel}`);
                         this.updateLevelSelectorButtonStates();
                     }
+                    return;
+                } else if (type.startsWith('LVL')) {
+                    // Level number clicked - show load confirmation modal
+                    const levelNumber = parseInt(type.substring(3));
+                    this.showLevelLoadModal(levelNumber);
                     return;
                 }
             }

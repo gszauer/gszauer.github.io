@@ -166,8 +166,8 @@ const levels = [
         moves: 3,
         buttons: [
             ['HNT', 'EMP', 'CLR'],
-            ['EMP', 'EMP', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'EMP', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '<<<, <<<, <<<'
     },
@@ -179,8 +179,8 @@ const levels = [
         moves: 3,
         buttons: [
             ['HNT', '+8', 'CLR'],
-            ['EMP', 'x5', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'x5', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '+8, x5, <<<'
     },
@@ -192,8 +192,8 @@ const levels = [
         moves: 4,
         buttons: [
             ['HNT', '/5', 'CLR'],
-            ['EMP', 'x3', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'x3', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '/5, x3, x3, <<<'
     },
@@ -205,8 +205,8 @@ const levels = [
         moves: 3,
         buttons: [
             ['HNT', '-8', 'CLR'],
-            ['EMP', 'x11', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'x11', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '-8, x11, <<<'
     },
@@ -231,8 +231,8 @@ const levels = [
         moves: 4,
         buttons: [
             ['HNT', 'x2', 'CLR'],
-            ['EMP', '-9', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', '-9', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '-9, <<<, x2, -9'
     },
@@ -244,8 +244,8 @@ const levels = [
         moves: 5,
         buttons: [
             ['HNT', '+5', 'CLR'],
-            ['EMP', 'x3', '<<<'],
-            ['OPT', 'x5', 'EMP']
+            ['EMP', 'x3', 'EMP'],
+            ['OPT', 'x5', '<<<']
         ],
         hint: '+5, x3, x5, <<<, x3'
     },
@@ -270,8 +270,8 @@ const levels = [
         moves: 5,
         buttons: [
             ['HNT', '+4', 'CLR'],
-            ['EMP', 'x9', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'x9', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '+4, x9, <<<, x9, <<<'
     },
@@ -411,8 +411,8 @@ const levels = [
         moves: 4,
         buttons: [
             ['HNT', '_12', 'CLR'],
-            ['EMP', 'EMP', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', 'EMP', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '_12, <<<, _12, <<<'
     },
@@ -424,8 +424,8 @@ const levels = [
         moves: 4,
         buttons: [
             ['HNT', '_10', 'CLR'],
-            ['EMP', '+1', '<<<'],
-            ['OPT', 'EMP', 'EMP']
+            ['EMP', '+1', 'EMP'],
+            ['OPT', 'EMP', '<<<']
         ],
         hint: '_10, _10, <<<, +1'
     },
