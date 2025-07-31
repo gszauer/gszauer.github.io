@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
             this.currentLevel = 0;
             this.progressLevel = 0;
             this.showingModal = false; // For modal popup state
+            this.hintsRemaining = 5; // Default hint count
+            this.hintsUsedPerLevel = {}; // Track which levels have used hints
         }
 
         create() {
@@ -36,6 +38,13 @@ document.addEventListener('DOMContentLoaded', function() {
             this.createButtons();
             this.currentLevel = PlayerData.Instance.GetNumber('currentLevel', 0);
             this.progressLevel = PlayerData.Instance.GetNumber('progressLevel', 0);
+            this.hintsRemaining = PlayerData.Instance.GetNumber('hintsRemaining', 5);
+            const savedHintsUsedStr = PlayerData.Instance.GetString('hintsUsedPerLevel', '{}');
+            try {
+                this.hintsUsedPerLevel = JSON.parse(savedHintsUsedStr);
+            } catch (e) {
+                this.hintsUsedPerLevel = {};
+            }
             this.loadLevel(this.currentLevel);
         }
 
@@ -294,7 +303,10 @@ document.addEventListener('DOMContentLoaded', function() {
             yesButton.setInteractive(new Phaser.Geom.Rectangle(-135, 40, 120, 60), Phaser.Geom.Rectangle.Contains);
             noButton.setInteractive(new Phaser.Geom.Rectangle(15, 40, 120, 60), Phaser.Geom.Rectangle.Contains);
             
-            yesButton.on('pointerdown', () => this.resetProgress());
+            yesButton.on('pointerdown', () => {
+                AdManager.instance.GameplayStart();
+                this.resetProgress();
+            });
             noButton.on('pointerdown', () => this.hideModal());
             
             this.modalContainer.setVisible(true);
@@ -357,7 +369,10 @@ document.addEventListener('DOMContentLoaded', function() {
             yesButton.setInteractive(new Phaser.Geom.Rectangle(-180, 40, 160, 80), Phaser.Geom.Rectangle.Contains);
             noButton.setInteractive(new Phaser.Geom.Rectangle(20, 40, 160, 80), Phaser.Geom.Rectangle.Contains);
             
-            yesButton.on('pointerdown', () => this.loadSelectedLevel(levelNumber));
+            yesButton.on('pointerdown', () => {
+                AdManager.instance.GameplayStart();
+                this.loadSelectedLevel(levelNumber);
+            });
             noButton.on('pointerdown', () => this.hideModal());
             
             this.modalContainer.setVisible(true);
@@ -401,11 +416,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset player data
             PlayerData.Instance.SetNumber('currentLevel', 0);
             PlayerData.Instance.SetNumber('progressLevel', 0);
+            PlayerData.Instance.SetNumber('hintsRemaining', 5);
+            PlayerData.Instance.SetString('hintsUsedPerLevel', '{}');
             
             // Update local state
             this.currentLevel = 0;
             this.progressLevel = 0;
             this.selectedLevel = 1;
+            this.hintsRemaining = 5;
+            this.hintsUsedPerLevel = {};
             
             // Hide modal and exit options mode
             this.hideModal();
@@ -551,7 +570,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const text = this.add.text(0, 0, '', {
                 fontSize: '48px',
-                fontFamily: 'Arial'
+                fontFamily: 'Arial',
+                align: 'center'
             }).setOrigin(0.5);
             container.add(text);
 
@@ -631,17 +651,39 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (!isNaN(parseInt(type)) && !type.includes('_')) {
                 color = 0x6666cc; // Blue color for numeric buttons
             }
+            
+            // Always remove any existing graphics first (gears, lightbulbs, ads, containers)
+            const existingGraphics = button.list.filter(child => (child.type === 'Graphics' || child.type === 'Container') && child !== button.bg);
+            existingGraphics.forEach(graphic => graphic.destroy());
+            
             button.bg.clear();
             button.bg.fillStyle(color, 1);
             button.bg.fillRoundedRect(-button.size/2, -button.size/2, button.size, button.size, 15);
 
             button.text.setColor(type === 'EMP' ? '#444444' : '#ffffff');
+            button.text.setY(0); // Reset text position to center
 
             if (type === 'EMP') {
                 // Empty buttons show no text
                 button.text.setText('');
+            } else if (type === 'OPT' || type === 'BACK') {
+                // Clear text and draw gear icon for both OPT and BACK buttons
+                button.text.setText('');
+                // Draw new gear with white color and button background color for center
+                this.drawGear(button, 0, 0, button.size, 0xffffff, color);
             } else if (type === 'CONFIRM') {
                 // Don't set text here, it will be set separately
+            } else if (type === 'HNT') {
+                // Show hint button with "HINT" text higher up and graphic below
+                button.text.setText('HINT');
+                button.text.setY(-button.size * 0.25); // Move text higher
+                
+                // Draw appropriate graphic below the text
+                if (this.hintsRemaining === 0) {
+                    this.drawAd(button, 0, button.size * 0.2, button.size);
+                } else {
+                    this.drawLightbulb(button, 0, button.size * 0.2 - 10, button.size, this.hintsRemaining);
+                }
             } else if (type.startsWith('LVL')) {
                 button.text.setText(type.substring(3));
             } else if (type === '-' || type === '+') {
@@ -781,6 +823,11 @@ document.addEventListener('DOMContentLoaded', function() {
             this.valueText.setText(this.currentValue.toString());
             this.hintText.setText('');
 
+            // Auto-show hint if this level has already used a hint
+            if (level.level && this.hintsUsedPerLevel[level.level] && level.hint) {
+                this.hintText.setText(level.hint);
+            }
+
             this.drawSmiley('normal');
 
             for (let row = 0; row < 3; row++) {
@@ -852,6 +899,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const nextLevelIndex = (this.currentLevel + 1) % levels.length;
                 const nextLevel = levels[nextLevelIndex];
                 
+                // Check if we should show a commercial break
+                const currentLevelData = levels[this.currentLevel];
+                if (currentLevelData && currentLevelData.level && 
+                    currentLevelData.level > 5 && 
+                    nextLevel && nextLevel.level && 
+                    nextLevel.level % 2 === 0) {
+                    // Show commercial break
+                    AdManager.instance.CommercialBreak();
+                }
+                
                 // If the next level is a gameplay level (not dialog)
                 if (nextLevel && nextLevel.level) {
                     // Update progressLevel if we've reached a new high
@@ -876,7 +933,62 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.gameState !== 'playing' || this.optionsMode) return;
 
             if (type === 'HNT') {
-                this.hintText.setText(levels[this.currentLevel].hint);
+                // Check if we have hints remaining
+                if (this.hintsRemaining > 0) {
+                    // Show the hint
+                    this.hintText.setText(levels[this.currentLevel].hint);
+                    
+                    // Only consume a hint if this level hasn't used one before
+                    const currentLevelData = levels[this.currentLevel];
+                    if (currentLevelData.level && !this.hintsUsedPerLevel[currentLevelData.level]) {
+                        this.hintsRemaining--;
+                        this.hintsUsedPerLevel[currentLevelData.level] = true;
+                        
+                        // Save the updated data
+                        PlayerData.Instance.SetNumber('hintsRemaining', this.hintsRemaining);
+                        PlayerData.Instance.SetString('hintsUsedPerLevel', JSON.stringify(this.hintsUsedPerLevel));
+                        
+                        // Update the button display
+                        for (let row = 0; row < 3; row++) {
+                            for (let col = 0; col < 3; col++) {
+                                if (this.buttons[row][col].buttonType === 'HNT') {
+                                    this.updateButtonAppearance(this.buttons[row][col], 'HNT');
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // No hints remaining - launch ad
+                    AdManager.instance.RewardBreak((success) => {
+                        if (success) {
+                            // Show hint for current level
+                            this.hintText.setText(levels[this.currentLevel].hint);
+                            
+                            // Mark that this level has used a hint
+                            const currentLevelData = levels[this.currentLevel];
+                            if (currentLevelData.level && !this.hintsUsedPerLevel[currentLevelData.level]) {
+                                this.hintsUsedPerLevel[currentLevelData.level] = true;
+                                PlayerData.Instance.SetString('hintsUsedPerLevel', JSON.stringify(this.hintsUsedPerLevel));
+                            }
+                            
+                            // Refill 5 hints
+                            this.hintsRemaining = 5;
+                            PlayerData.Instance.SetNumber('hintsRemaining', this.hintsRemaining);
+                            
+                            // Update the button display
+                            for (let row = 0; row < 3; row++) {
+                                for (let col = 0; col < 3; col++) {
+                                    if (this.buttons[row][col].buttonType === 'HNT') {
+                                        this.updateButtonAppearance(this.buttons[row][col], 'HNT');
+                                    }
+                                }
+                            }
+                        } else {
+                            // Display "Ad failed to play" in the hints section
+                            this.hintText.setText('Ad failed to play');
+                        }
+                    });
+                }
                 return;
             }
 
@@ -952,6 +1064,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         toggleOptionsMode() {
             this.optionsMode = !this.optionsMode;
+            if (this.optionsMode) {
+                AdManager.instance.GameplayStop();
+            }
+            else {
+                AdManager.instance.GameplayStart();
+            }
 
             if (this.optionsMode) {
                 // Find current level number
@@ -1016,6 +1134,190 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 this.loadLevel(this.currentLevel);
             }
+        }
+
+        drawGear(container, x, y, size, color, bgColor) {
+            const gear = this.add.graphics();
+            gear.x = x;
+            gear.y = y;
+            
+            // Scale parameters based on button size
+            const teeth = 8;
+            const innerRadius = size * 0.25;    // Radius for the 'valleys' between teeth
+            const outerRadius = size * 0.35;    // Radius for the 'peaks' of the teeth
+            const holeRadius = size * 0.12;     // Radius of the central hole
+            
+            // Calculate the angle for one full segment (which includes one tooth and one valley)
+            const anglePerSegment = (Math.PI * 2) / teeth;
+            // Make the tooth 2x the width of the valley (2/3 of the segment for the tooth, 1/3 for the valley)
+            const valleyAngle = anglePerSegment / 3;
+            
+            // Set the fill style for the gear body
+            gear.fillStyle(color, 1);
+            gear.beginPath();
+            
+            // Loop to construct the outer path of the gear by alternating arcs
+            for (let i = 0; i < teeth; i++) {
+                const startAngle = i * anglePerSegment;
+                
+                // Draw the valley using an arc on the inner radius
+                gear.arc(0, 0, innerRadius, startAngle, startAngle + valleyAngle, false);
+                
+                // Draw the tooth using an arc on the outer radius
+                gear.arc(0, 0, outerRadius, startAngle + valleyAngle, startAngle + anglePerSegment, false);
+            }
+            
+            // Close the path to form the complete outer shape
+            gear.closePath();
+            
+            // Create the inner hole by defining a counter-clockwise arc path
+            // In Phaser's graphics, a counter-clockwise path within a clockwise path creates a hole
+            gear.arc(0, 0, holeRadius, 0, Math.PI * 2, true);
+            
+            // Fill the entire complex path (the outer shape with the inner hole)
+            gear.fillPath();
+            
+            container.add(gear);
+        }
+
+        drawLightbulb(container, x, y, size, hintsRemaining) {
+            const lightbulbContainer = this.add.container(x, y);
+            
+            // Scale based on button size
+            const scale = size * 0.005; // Adjust scale factor as needed
+            
+            const graphics = this.add.graphics();
+            
+            // Colors and styles
+            const bulbColor = 0xFFFFE0;   // Light yellow for the bulb glass
+            const baseColor = 0xADB5BD;   // Metallic gray for the base
+            const outlineColor = 0x495057; // Darker gray for outlines
+            
+            // Scale dimensions
+            const bulbRadius = 40 * scale;
+            const neckWidth = 30 * scale;
+            const neckHeight = 15 * scale;
+            const baseWidth = 40 * scale;
+            const baseHeight = 20 * scale;
+            
+            // Draw the bulb glass
+            graphics.fillStyle(bulbColor);
+            graphics.lineStyle(3 * scale, outlineColor, 1);
+            
+            // Main circular part of the bulb
+            graphics.fillCircle(0, 0, bulbRadius);
+            graphics.strokeCircle(0, 0, bulbRadius);
+            
+            // Rectangle for the neck of the bulb
+            graphics.fillRect(-neckWidth/2, bulbRadius - 5 * scale, neckWidth, neckHeight);
+            
+            // Draw outlines for the neck
+            graphics.beginPath();
+            graphics.moveTo(-neckWidth/2, bulbRadius - 5 * scale);
+            graphics.lineTo(-neckWidth/2, bulbRadius - 5 * scale + neckHeight);
+            graphics.moveTo(neckWidth/2, bulbRadius - 5 * scale);
+            graphics.lineTo(neckWidth/2, bulbRadius - 5 * scale + neckHeight);
+            graphics.strokePath();
+            
+            // Draw the screw base
+            graphics.fillStyle(baseColor);
+            
+            const baseY = bulbRadius - 5 * scale + neckHeight;
+            graphics.fillRect(-baseWidth/2, baseY, baseWidth, baseHeight);
+            graphics.strokeRect(-baseWidth/2, baseY, baseWidth, baseHeight);
+            
+            // Draw screw threads
+            graphics.lineStyle(2 * scale, outlineColor, 1);
+            for (let i = 0; i < 2; i++) {
+                const lineY = baseY + 5 * scale + (i * 8 * scale);
+                graphics.beginPath();
+                graphics.moveTo(-baseWidth/2, lineY);
+                graphics.lineTo(baseWidth/2, lineY);
+                graphics.strokePath();
+            }
+            
+            lightbulbContainer.add(graphics);
+            
+            // Add the number text in the center of the bulb
+            const numberText = this.add.text(0, 0, hintsRemaining.toString(), {
+                fontFamily: 'Arial',
+                fontSize: Math.floor(50 * scale) + 'px',
+                color: '#343A40',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            lightbulbContainer.add(numberText);
+            
+            container.add(lightbulbContainer);
+        }
+
+        drawAd(container, x, y, size) {
+            const adContainer = this.add.container(x, y);
+            
+            // Scale based on button size
+            const scale = size * 0.005; // Adjust scale factor as needed
+            
+            // Icon parameters & styles
+            const cellWidth = 100 * scale;
+            const cellHeight = 75 * scale;
+            const sprocketWidth = 10 * scale;
+            const sprocketHeight = 8 * scale;
+            const sprocketMargin = 8 * scale;
+            const cellColor = 0x212529; // Dark film color
+            const textColorLight = '#ADB5BD'; // Lighter gray for "WATCH"
+            const textColorBold = '#F8F9FA';  // Off-white for "AD"
+            
+            const numSprockets = 3;
+            const totalSprocketSpace = (numSprockets * sprocketHeight) + ((numSprockets - 1) * sprocketMargin);
+            const startY = -totalSprocketSpace / 2;
+
+            // Draw the film cell
+            const graphics = this.add.graphics();
+
+            {
+                const borderSide = 5;
+                const borderTop = 5;
+                const bgLeft = (-cellWidth / 2) - sprocketWidth - 3 * scale - borderSide;
+                const bgTop = startY - (sprocketHeight + sprocketMargin) - borderTop;
+                graphics.fillStyle(0x000000, 1);
+                graphics.fillRect(bgLeft, bgTop, cellWidth + (sprocketWidth + sprocketMargin) * 2.0 + borderSide, cellHeight + borderTop * 2.0);
+            }
+
+            // Set the fill style for the main cell body
+            graphics.fillStyle(cellColor, 1);
+            graphics.fillRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight);
+            
+            // Draw the sprocket holes on both sides
+           
+            
+            for (let i = 0; i < numSprockets; i++) {
+                const yPos = startY + i * (sprocketHeight + sprocketMargin);
+                // Left side
+                graphics.fillRect((-cellWidth / 2) - sprocketWidth - 3 * scale, yPos, sprocketWidth, sprocketHeight);
+                // Right side
+                graphics.fillRect((cellWidth / 2) + 3 * scale, yPos, sprocketWidth, sprocketHeight);
+            }
+            
+            adContainer.add(graphics);
+            
+            // Add the text
+            const watchText = this.add.text(0, -20 * scale, 'WATCH', {
+                fontFamily: 'Arial',
+                fontSize: Math.floor(16 * scale) + 'px',
+                color: textColorLight,
+            }).setOrigin(0.5);
+            
+            const adText = this.add.text(0, 12 * scale, 'AD', {
+                fontFamily: 'Arial',
+                fontSize: Math.floor(40 * scale) + 'px',
+                color: textColorBold,
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            adContainer.add(watchText);
+            adContainer.add(adText);
+            
+            container.add(adContainer);
         }
 
         updateDisplay() {
@@ -1091,23 +1393,12 @@ document.addEventListener('DOMContentLoaded', function() {
         antialias: true,
         pixelArt: false,
         roundPixels: false,
-        scene: GameScene
+        scene: [PreloaderScene, GameScene]
     };
 
     AdManager.Initialize(() => {
-        // Load saved data BEFORE creating the game
         const playerData = new PlayerData(() => {
             const game = new Phaser.Game(config);
         });
-        
-        // Some fake events for now
-        setTimeout(() => {
-            AdManager.instance.LoadingFinished();
-            AdManager.instance.GameplayStart();
-            setTimeout(() => {
-                AdManager.instance.GameplayStop();
-                AdManager.instance.GameplayStart();
-            }, 2000);
-        }, 2000);
     });
 });
