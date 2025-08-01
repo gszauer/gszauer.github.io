@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
             this.showingModal = false; // For modal popup state
             this.hintsRemaining = 5; // Default hint count
             this.hintsUsedPerLevel = {}; // Track which levels have used hints
+            this.isPlayerMuted = false; // Player-controlled mute state
+            this.isSystemMuted = false; // System/ad-controlled mute state
         }
 
         create() {
@@ -26,6 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             this.displayContainer = this.add.container(360, 320);
             this.buttonsContainer = this.add.container(360, 920);
+
+            // Play background music
+            this.backgroundMusic = this.sound.addAudioSprite('soundbank');
+            this.backgroundMusic.play('background', { loop: true, volume: 0.5 });
 
             // Find all actual gameplay levels (not dialogs)
             this.actualLevels = [];
@@ -106,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.valueText = this.add.text(300, 0, '0', {
                 fontSize: '140px',
                 color: '#2a2a2a',
-                fontFamily: 'Arial'
+                fontFamily: 'Digital-7'
             }).setOrigin(1, 0.5);
             this.displayContainer.add(this.valueText);
 
@@ -304,10 +310,18 @@ document.addEventListener('DOMContentLoaded', function() {
             noButton.setInteractive(new Phaser.Geom.Rectangle(15, 40, 120, 60), Phaser.Geom.Rectangle.Contains);
             
             yesButton.on('pointerdown', () => {
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
+                }
                 AdManager.instance.GameplayStart();
                 this.resetProgress();
             });
-            noButton.on('pointerdown', () => this.hideModal());
+            noButton.on('pointerdown', () => {
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
+                }
+                this.hideModal();
+            });
             
             this.modalContainer.setVisible(true);
         }
@@ -370,10 +384,18 @@ document.addEventListener('DOMContentLoaded', function() {
             noButton.setInteractive(new Phaser.Geom.Rectangle(20, 40, 160, 80), Phaser.Geom.Rectangle.Contains);
             
             yesButton.on('pointerdown', () => {
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
+                }
                 AdManager.instance.GameplayStart();
                 this.loadSelectedLevel(levelNumber);
             });
-            noButton.on('pointerdown', () => this.hideModal());
+            noButton.on('pointerdown', () => {
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
+                }
+                this.hideModal();
+            });
             
             this.modalContainer.setVisible(true);
         }
@@ -536,6 +558,79 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        /**
+         * Draws a standard volume icon using a Phaser Graphics object.
+         * @param {Phaser.GameObjects.Graphics} graphics - The graphics object to draw on.
+         * @param {number} x - The center x-coordinate of the icon.
+         * @param {number} y - The center y-coordinate of the icon.
+         * @param {number} scale - Scale factor for the icon size.
+         */
+        drawVolumeIcon(graphics, x, y, scale = 1) {
+            const iconColor = 0xffffff; // White color
+            const speakerWidth = 40 * scale;
+            const speakerHeight = 60 * scale;
+            const coneWidth = 40 * scale;
+
+            // --- Draw the speaker base (rectangle) ---
+            graphics.fillStyle(iconColor, 1);
+            graphics.fillRect(x - speakerWidth / 2, y - speakerHeight / 2, speakerWidth, speakerHeight);
+
+            // --- Draw the speaker cone (polygon/trapezoid) ---
+            const points = [
+                { x: x + speakerWidth / 2, y: y - speakerHeight / 2 },
+                { x: x + speakerWidth / 2 + coneWidth, y: y - speakerHeight },
+                { x: x + speakerWidth / 2 + coneWidth, y: y + speakerHeight },
+                { x: x + speakerWidth / 2, y: y + speakerHeight / 2 }
+            ];
+            graphics.fillPoints(points, true);
+
+            // --- Draw the sound waves (arcs) ---
+            graphics.lineStyle(8 * scale, iconColor, 1);
+            graphics.beginPath();
+
+            // Arc 1 (smallest)
+            graphics.arc(x + 20 * scale, y, 40 * scale, Phaser.Math.DegToRad(-45), Phaser.Math.DegToRad(45));
+            graphics.strokePath();
+
+            // Arc 2 (medium)
+            graphics.beginPath();
+            graphics.arc(x + 20 * scale, y, 70 * scale, Phaser.Math.DegToRad(-45), Phaser.Math.DegToRad(45));
+            graphics.strokePath();
+
+            // Arc 3 (largest)
+            graphics.beginPath();
+            graphics.arc(x + 20 * scale, y, 100 * scale, Phaser.Math.DegToRad(-45), Phaser.Math.DegToRad(45));
+            graphics.strokePath();
+        }
+
+        /**
+         * Draws a muted (crossed-out) volume icon.
+         * @param {Phaser.GameObjects.Graphics} graphics - The graphics object to draw on.
+         * @param {number} x - The center x-coordinate of the icon.
+         * @param {number} y - The center y-coordinate of the icon.
+         * @param {number} scale - Scale factor for the icon size.
+         */
+        drawMutedVolumeIcon(graphics, x, y, scale = 1) {
+            // First, draw the base volume icon
+            this.drawVolumeIcon(graphics, x, y, scale);
+
+            // --- Draw the cross-out line ---
+            const crossColor = 0xff0000; // Red color for the line
+            const crossThickness = 12 * scale;
+            const iconBounds = {
+                x1: x - 60 * scale,
+                y1: y - 80 * scale,
+                x2: x + 120 * scale,
+                y2: y + 80 * scale
+            };
+
+            graphics.lineStyle(crossThickness, crossColor, 1);
+            graphics.beginPath();
+            graphics.moveTo(iconBounds.x1, iconBounds.y1);
+            graphics.lineTo(iconBounds.x2, iconBounds.y2);
+            graphics.strokePath();
+        }
+
         createButtons() {
             const buttonSize = 180;
             const spacing = 20;
@@ -626,6 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '+': 0x888888, // Gray for increase
                 'RESET': 0xcc4444, // Red for reset
                 'BACK': 0x44cc44, // Green for back
+                'MUTE': 0x4444cc, // Blue for mute button
                 'default': 0x555555
             };
 
@@ -671,6 +767,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.text.setText('');
                 // Draw new gear with white color and button background color for center
                 this.drawGear(button, 0, 0, button.size, 0xffffff, color);
+            } else if (type === 'MUTE') {
+                // Clear text and draw volume icon
+                button.text.setText('');
+                const volumeGraphics = this.add.graphics();
+                // Scale the icon to fit the button
+                const iconScale = button.size * 0.0035;
+                if (this.isPlayerMuted) {
+                    this.drawMutedVolumeIcon(volumeGraphics, -30, 0, iconScale);
+                } else {
+                    this.drawVolumeIcon(volumeGraphics, -30, 0, iconScale);
+                }
+                button.add(volumeGraphics);
             } else if (type === 'CONFIRM') {
                 // Don't set text here, it will be set separately
             } else if (type === 'HNT') {
@@ -850,6 +958,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Block all button clicks when modal is showing
             if (this.showingModal) return;
 
+            // Play click sound for all button clicks (unless muted)
+            if (!this.isMuted()) {
+                this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
+            }
+
             // Handle narrative level confirm button
             if (this.gameState === 'narrative' && type === 'CONFIRM') {
                 this.removePointingArrow(); // Remove arrow when leaving narrative
@@ -891,6 +1004,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (type === 'RESET' && this.optionsMode) {
                 this.showResetModal();
+                return;
+            }
+
+            if (type === 'MUTE' && this.optionsMode) {
+                this.togglePlayerMute();
                 return;
             }
 
@@ -1062,6 +1180,34 @@ document.addEventListener('DOMContentLoaded', function() {
             this.checkGameState();
         }
 
+        togglePlayerMute() {
+            this.isPlayerMuted = !this.isPlayerMuted;
+            // Update the mute button appearance
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (this.buttons[row][col].buttonType === 'MUTE') {
+                        this.updateButtonAppearance(this.buttons[row][col], 'MUTE');
+                    }
+                }
+            }
+            // Update background music volume
+            this.updateBackgroundMusicVolume();
+        }
+
+        isMuted() {
+            return this.isPlayerMuted || this.isSystemMuted;
+        }
+
+        updateBackgroundMusicVolume() {
+            if (this.backgroundMusic) {
+                if (this.isMuted()) {
+                    this.backgroundMusic.setVolume(0);
+                } else {
+                    this.backgroundMusic.setVolume(0.5);
+                }
+            }
+        }
+
         toggleOptionsMode() {
             this.optionsMode = !this.optionsMode;
             if (this.optionsMode) {
@@ -1106,6 +1252,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.buttons[2][2].text.setText('RESET');
               //  this.buttons[2][2].text.setFontSize('36px');
                 this.buttons[2][2].text.setAlign('center');
+                
+                // Add Mute button in bottom center
+                this.updateButtonAppearance(this.buttons[2][1], 'MUTE');
             } else {
                 // Check if selected level changed
                 const currentLevelData = levels[this.currentLevel];
@@ -1352,6 +1501,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.gameState = 'win';
                 this.valueText.setText('WIN');
                 this.drawSmiley('win');
+                
+                // Play win sound (unless muted)
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'win', { volume: 0.8 });
+                }
 
                 for (let row = 0; row < 3; row++) {
                     for (let col = 0; col < 3; col++) {
@@ -1366,6 +1520,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.gameState = 'lose';
                 this.valueText.setText('LOSE');
                 this.drawSmiley('lose');
+                
+                // Play lose sound (unless muted)
+                if (!this.isMuted()) {
+                    this.sound.playAudioSprite('soundbank', 'loose', { volume: 0.8 });
+                }
 
                 for (let row = 0; row < 3; row++) {
                     for (let col = 0; col < 3; col++) {
@@ -1396,9 +1555,34 @@ document.addEventListener('DOMContentLoaded', function() {
         scene: [PreloaderScene, GameScene]
     };
 
+    // Store game reference globally for mute/unmute functions
+    let gameInstance = null;
+    
     AdManager.Initialize(() => {
         const playerData = new PlayerData(() => {
             const game = new Phaser.Game(config);
+            gameInstance = game;
         });
     });
+    
+    // Global mute/unmute functions for AdManager
+    window.muteBackgroundMusic = function() {
+        if (gameInstance && gameInstance.scene && gameInstance.scene.isActive('GameScene')) {
+            const gameScene = gameInstance.scene.getScene('GameScene');
+            if (gameScene) {
+                gameScene.isSystemMuted = true;
+                gameScene.updateBackgroundMusicVolume();
+            }
+        }
+    };
+    
+    window.unmuteBackgroundMusic = function() {
+        if (gameInstance && gameInstance.scene && gameInstance.scene.isActive('GameScene')) {
+            const gameScene = gameInstance.scene.getScene('GameScene');
+            if (gameScene) {
+                gameScene.isSystemMuted = false;
+                gameScene.updateBackgroundMusicVolume();
+            }
+        }
+    };
 });

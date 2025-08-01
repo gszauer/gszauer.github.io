@@ -6,89 +6,24 @@
     "../../dev/assets/soundbank.ac3"
   ],
   "spritemap": {
-    "door": {
+    "background": {
       "start": 0,
-      "end": 0.5564399092970521,
-      "loop": false
-    },
-    "gulp": {
-      "start": 2,
-      "end": 2.4561904761904763,
-      "loop": false
-    },
-    "loose": {
-      "start": 4,
-      "end": 5.476984126984127,
-      "loop": false
-    },
-    "swords": {
-      "start": 7,
-      "end": 7.906235827664399,
-      "loop": false
-    },
-    "walking": {
-      "start": 9,
-      "end": 10.200453514739229,
-      "loop": false
-    },
-    "win": {
-      "start": 12,
-      "end": 13.2418820861678,
-      "loop": false
-    },
-    "fire": {
-      "start": 15,
-      "end": 16.26816326530612,
-      "loop": false
-    },
-    "shield": {
-      "start": 18,
-      "end": 18.603356009070296,
-      "loop": false
-    },
-    "trap": {
-      "start": 20,
-      "end": 20.435600907029478,
-      "loop": false
-    },
-    "arrow": {
-      "start": 22,
-      "end": 22.47687074829932,
-      "loop": false
-    },
-    "cannon": {
-      "start": 24,
-      "end": 25.5553514739229,
-      "loop": false
-    },
-    "portal": {
-      "start": 27,
-      "end": 28.091791383219956,
-      "loop": false
-    },
-    "hover": {
-      "start": 30,
-      "end": 30.786961451247166,
+      "end": 53.039251700680275,
       "loop": false
     },
     "click": {
-      "start": 32,
-      "end": 32.90501133786848,
+      "start": 55,
+      "end": 55.70333333333333,
       "loop": false
     },
-    "frog": {
-      "start": 34,
-      "end": 34.51605442176871,
+    "loose": {
+      "start": 57,
+      "end": 63,
       "loop": false
     },
-    "bg_gameplay": {
-      "start": 36,
-      "end": 108,
-      "loop": false
-    },
-    "bg_menu": {
-      "start": 109,
-      "end": 241,
+    "win": {
+      "start": 64,
+      "end": 70,
       "loop": false
     }
   }

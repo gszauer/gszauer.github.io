@@ -57,6 +57,7 @@ class PreloaderScene extends Phaser.Scene {
                 'assets/soundbank.ac3'
             ]
         );
+
     }
 
     create() {
@@ -196,6 +197,7 @@ class PreloaderScene extends Phaser.Scene {
         playButton.setInteractive({ useHandCursor: true });
         
         playButton.on('pointerdown', () => {
+            this.sound.playAudioSprite('soundbank', 'click', { volume: 0.7 });
             AdManager.instance.GameplayStart();
             this.scene.start('GameScene');
         });
