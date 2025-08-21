@@ -1,0 +1,512 @@
+# PALADINGED REFACTOR PLAN
+
+## Overview
+This document outlines the refactoring plan to transform the current monolithic GameScene into a well-architected, object-oriented Phaser.js game with proper separation of concerns, scene management, and entity hierarchy.
+
+## Architecture Overview
+
+### File Structure (Flat src directory)
+```
+/src
+  - PreloaderScene.js
+  - LevelSelectScene.js
+  - GameplayScene.js
+  - Player.js (extends Phaser.GameObjects.Container)
+  - Monster.js (extends Phaser.GameObjects.Container, base for all monster types)
+  - Obstacle.js (extends Phaser.GameObjects.Container)
+  - Hammer.js (extends Phaser.GameObjects.Container)
+  - ExitDoor.js (extends Phaser.GameObjects.Container)
+  - CollisionManager.js
+  - LevelManager.js
+  - UIManager.js
+  - InputManager.js
+  - PhysicsManager.js
+  - GameConfig.js
+  - LevelData.js (all level definitions)
+  - CollisionUtils.js
+  - Game.js (main entry point)
+```
+
+## Class Hierarchy and Responsibilities
+
+### 1. SCENES (Only 3 scenes as specified)
+
+#### PreloaderScene
+**Responsibility**: Load all game assets and show loading progress
+- Properties:
+  - loadingBar (graphics object)
+  - loadingText (text object)
+  - assetsToLoad (array)
+- Methods:
+  - preload(): Load sprites, sounds, fonts
+  - create(): Transition to LevelSelectScene
+  - updateLoadingBar(percentage): Update loading visualization
+- Transitions to: LevelSelectScene
+
+#### LevelSelectScene
+**Responsibility**: Display available levels and handle level selection
+- Properties:
+  - availableLevels (array from LevelData.js)
+  - completedLevels (array from localStorage)
+  - selectedLevel (number)
+- Methods:
+  - create(): Display level grid
+  - createLevelButton(levelNumber, isUnlocked): Create clickable level
+  - selectLevel(levelNumber): Handle level selection
+  - loadPlayerProgress(): Get completed levels from storage
+- Transitions to: GameplayScene (with level data)
+
+#### GameplayScene
+**Responsibility**: Main game loop, gameplay, game over, and win states
+- Properties:
+  - currentLevel (number)
+  - levelManager (LevelManager instance)
+  - collisionManager (CollisionManager instance)
+  - uiManager (UIManager instance)
+  - inputManager (InputManager instance)
+  - physicsManager (PhysicsManager instance)
+  - player (Player instance)
+  - hammer (Hammer instance)
+  - entities (array of all entities)
+  - gameState (playing/gameOver/win)
+- Methods:
+  - init(data): Receive level selection
+  - create(): Initialize all managers and entities
+  - update(time, delta): Main game loop
+  - showGameOver(): Display game over overlay (within scene)
+  - showWin(): Display win overlay (within scene)
+  - restart(): Restart current level
+  - returnToLevelSelect(): Go back to level select
+- Transitions to: LevelSelectScene (on menu), GameplayScene (on restart)
+
+### 2. GAME OBJECTS (Using Phaser native classes)
+
+#### Player extends Phaser.GameObjects.Container
+**Responsibility**: Player character with hammer
+- Properties:
+  - hp (health points)
+  - maxHp
+  - invulnerable (boolean)
+  - invulnerabilityTimer (number)
+  - playerCircle (Phaser.GameObjects.Arc)
+  - hammer (Hammer reference)
+  - radius (for collision)
+- Methods:
+  - takeDamage(amount): Handle damage with invulnerability
+  - heal(amount): Restore health
+  - update(time, delta): Update invulnerability, called by scene
+  - isAlive(): Check if player alive
+  - getCollisionBounds(): Return collision data
+
+#### Monster extends Phaser.GameObjects.Container (Base for all monster types)
+**Responsibility**: Common enemy behavior and states
+- Properties:
+  - state (idle/bouncing)
+  - velocityX, velocityY
+  - bounceSpeed (number)
+  - monsterType (string identifier)
+  - monsterCircle (Phaser.GameObjects.Arc)
+  - radius (for collision)
+- Methods:
+  - update(time, delta): Handle movement based on state (can be overridden)
+  - setBouncing(velocityX, velocityY): Enter bounce state
+  - checkOutOfBounds(): Destroy if off screen
+  - onHit(): Handle being hit (virtual for special behaviors)
+  - onCollideWithPlayer(player): Handle player collision (virtual for special behaviors)
+  - getCollisionBounds(): Return collision data
+
+**Note**: Designed for extension. Future monster types can extend this class and override methods for unique behaviors (e.g., ShieldedMonster, FastMonster, SplittingMonster)
+
+#### Obstacle extends Phaser.GameObjects.Container
+**Responsibility**: Destructible obstacles
+- Properties:
+  - goldValue (reward amount)
+  - durability (hits needed to destroy)
+  - obstacleCircle (Phaser.GameObjects.Arc)
+  - radius (for collision)
+- Methods:
+  - hit(): Reduce durability
+  - isDestroyed(): Check if should be removed
+  - getGoldValue(): Return gold reward
+  - getCollisionBounds(): Return collision data
+
+#### Hammer extends Phaser.GameObjects.Container
+**Responsibility**: Weapon mechanics and rendering
+- Properties:
+  - player (reference)
+  - angle (current rotation)
+  - minAngle, maxAngle
+  - length (distance from player)
+  - headWidth, headHeight
+  - swinging (boolean)
+  - swingDirection (1 or -1)
+  - swingTween (Phaser tween reference)
+  - hammerHandle (Phaser.GameObjects.Rectangle)
+  - hammerHead (Phaser.GameObjects.Rectangle)
+  - obb (oriented bounding box for collision)
+- Methods:
+  - startSwing(): Initiate swing animation using Phaser tween
+  - update(time, delta): Update OBB position
+  - getOBB(): Return current collision box
+  - isSwinging(): Check swing state
+  - stopSwing(): Cancel swing
+
+#### ExitDoor extends Phaser.GameObjects.Container
+**Responsibility**: Level exit trigger
+- Properties:
+  - size (width/height)
+  - triggered (boolean)
+  - doorRect (Phaser.GameObjects.Rectangle)
+- Methods:
+  - checkPlayerCollision(player): Test for completion
+  - getCollisionBounds(): Return collision data
+
+### 3. MANAGERS
+
+#### CollisionManager
+**Responsibility**: Handle all collision detection and response
+- Properties:
+  - scene (reference)
+  - collisionPairs (array of collision rules)
+- Methods:
+  - checkCollisions(entities): Main collision loop
+  - checkCircleCollision(entity1, entity2): Circle-circle test
+  - checkOBBCircleCollision(obb, circle): OBB-circle test
+  - handleMonsterPlayerCollision(monster, player): Damage logic
+  - handleHammerMonsterCollision(hammer, monster): Knockback logic
+  - handleHammerObstacleCollision(hammer, obstacle): Destroy logic
+  - handleMonsterMonsterCollision(monster1, monster2): Chain reaction
+  - handleMonsterObstacleCollision(monster, obstacle): Both destroy
+  - handlePlayerExitCollision(player, exit): Win condition
+
+#### LevelManager
+**Responsibility**: Level data and entity spawning
+- Properties:
+  - currentLevelId (number)
+  - levelData (from LevelData.js)
+  - scrollSpeed (pixels/second, from level config)
+  - scrollOffset (current scroll position)
+  - spawnedEntities (array)
+  - gridDimensions (auto-calculated from level data)
+  - levelConfig (merged GameConfig + level-specific overrides)
+- Methods:
+  - loadLevel(levelId): Load level from LevelData.js
+  - generateEntities(): Create initial entities from level data
+  - update(delta): Handle scrolling
+  - getEntityAtPosition(row, col): Parse level data character
+  - calculateWorldPosition(row, col): Grid to world coords
+  - isLevelComplete(): Check if reached end
+  - getTotalLevelHeight(): Calculate from rows * rowHeight
+  - mergeConfigs(baseConfig, levelOverrides): Merge configurations
+
+#### UIManager
+**Responsibility**: HUD and UI overlays
+- Properties:
+  - scene (reference)
+  - heartsDisplay (text)
+  - goldDisplay (text)
+  - levelDisplay (text)
+  - pauseButton (sprite)
+- Methods:
+  - create(): Initialize UI elements
+  - updateHealth(current, max): Update heart display
+  - updateGold(amount): Update gold display
+  - showPauseMenu(): Display pause overlay
+  - hidePauseMenu(): Hide pause overlay
+  - showMessage(text, duration): Temporary messages
+
+#### InputManager
+**Responsibility**: Handle all input and dispatch events
+- Properties:
+  - scene (reference)
+  - enabled (boolean)
+  - touchStartPosition (for swipe detection)
+- Methods:
+  - create(): Setup input listeners
+  - handlePointerDown(pointer): Process clicks/touches
+  - handlePointerUp(pointer): Process releases
+  - handleKeyDown(keyCode): Process keyboard
+  - isSwipeGesture(start, end): Detect swipes
+  - setEnabled(enabled): Toggle input
+
+#### PhysicsManager
+**Responsibility**: Handle physics calculations and knockback
+- Properties:
+  - knockbackForce (base force)
+  - knockbackBias (upward bias)
+  - gravityEnabled (for future features)
+- Methods:
+  - calculateKnockback(source, target): Get knockback vector
+  - applyKnockback(entity, forceX, forceY): Apply forces
+  - updateEntityPhysics(entity, delta): Update positions
+  - calculateBounceVector(incoming, normal): Bounce calculations
+
+### 4. CONFIGURATION AND LEVEL DATA
+
+#### GameConfig.js
+```javascript
+export const GameConfig = {
+  canvas: {
+    width: 720,
+    height: 1280,
+    backgroundColor: '#1a1a1a'
+  },
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  physics: {
+    knockbackForce: 1500,
+    knockbackBias: 150
+  },
+  ui: {
+    fontSize: {
+      small: '24px',
+      medium: '32px',
+      large: '48px'
+    },
+    colors: {
+      health: '#ff0000',
+      gold: '#ffff00',
+      text: '#ffffff'
+    }
+  },
+  // Default entity config (can be overridden per level)
+  entities: {
+    player: {
+      radius: 100,
+      padding: 10,
+      startHp: 3,
+      invulnerabilityTime: 1000
+    },
+    monster: {
+      radius: 60,
+      bounceSpeed: 1500
+    },
+    obstacle: {
+      radius: 40,
+      goldValue: 5
+    },
+    exitDoor: {
+      size: 50
+    }
+  },
+  hammer: {
+    length: 200,
+    headWidth: 70,
+    headHeight: 140,
+    minAngle: -90,
+    maxAngle: 90,
+    swingDuration: 300
+  },
+  rewards: {
+    obstacleDestroy: 5,
+    monsterObstacleCombo: 10
+  }
+};
+```
+
+#### LevelData.js
+```javascript
+export const LevelData = {
+  levels: [
+    {
+      id: 1,
+      name: "First Steps",
+      // Grid dimensions auto-calculated from data array length and first row length
+      data: [
+        '*******',  // Row 0 (top, where door spawns)
+        '*M*****',
+        '*******',
+        '**M****',
+        '****O**',
+        '*******',
+        '****O**',
+        'M**M**M',
+        '*M*M*M*',
+        '***M***',
+        '*M***M*',
+        '**M*M**',
+        '*M*M*M*',
+        '***M***',
+        '**O****',
+        '*******',
+        '*M*****',
+        '*******',
+        '*******',
+        'O******',
+        '*******',
+        '*MMM***',
+        '*******',
+        '*******'   // Row 23 (bottom, where player starts)
+      ],
+      // Optional level-specific config overrides
+      config: {
+        scrollSpeed: 300,
+        playerHp: 3
+      }
+    },
+    {
+      id: 2,
+      name: "Narrow Passage",
+      data: [
+        '*******',
+        'MM***MM',
+        '*O***O*',
+        '**M*M**',
+        // ... more rows
+      ],
+      config: {
+        scrollSpeed: 350,
+        playerHp: 3,
+        // Can override any entity properties
+        monster: {
+          radius: 65,
+          bounceSpeed: 1600
+        }
+      }
+    },
+    {
+      id: 3,
+      name: "Obstacle Course",
+      data: [
+        'O*O*O*O',
+        '*******',
+        'O*O*O*O',
+        // ... more rows
+      ],
+      config: {
+        scrollSpeed: 400,
+        playerHp: 4,
+        rewards: {
+          obstacleDestroy: 10  // Double gold for this level
+        }
+      }
+    }
+  ],
+  
+  // Helper methods
+  getLevel(id) {
+    return this.levels.find(level => level.id === id);
+  },
+  
+  getLevelCount() {
+    return this.levels.length;
+  },
+  
+  // Auto-calculate grid dimensions from level data
+  getGridDimensions(levelId) {
+    const level = this.getLevel(levelId);
+    if (!level) return null;
+    
+    return {
+      lanes: level.data[0].length,
+      rows: level.data.length
+    };
+  }
+};
+```
+
+### 5. UTILITIES
+
+#### CollisionUtils.js (Only collision-specific utilities, use Phaser's built-in math)
+- circleCircleCollision(circle1, circle2)
+- obbCircleCollision(obb, circle)
+- pointInCircle(px, py, circle)
+- createOBB(centerX, centerY, halfWidth, halfHeight, rotation)
+
+## Data Flow and Interactions
+
+### Scene Flow
+```
+PreloaderScene
+    ↓
+LevelSelectScene ←─────┐
+    ↓                  │
+GameplayScene ─────────┘
+  (handles game over 
+   and win internally)
+
+```
+
+### GameplayScene Update Loop
+```
+1. InputManager.processInput()
+2. PhysicsManager.updateEntities(delta)
+3. LevelManager.updateScroll(delta)
+4. CollisionManager.checkCollisions()
+5. Entities.update(delta)
+6. UIManager.update()
+7. Render all entities
+```
+
+### Game Object Communication
+- Game objects (Player, Monster, etc.) don't directly communicate
+- All interactions go through managers
+- Managers can emit Phaser events that scenes handle
+- Example: CollisionManager detects hit → emits 'monster-hit' event → GameplayScene updates score
+- Game objects are added to scene's display list and update list
+
+## Configuration Improvements
+
+### Current Issues
+- Hard-coded values throughout code
+- Level data mixed with game logic
+- No easy way to add new levels
+- Grid dimensions hardcoded instead of calculated from level data
+
+### Improvements
+- All configuration in separate files
+- Level data centralized in LevelData.js with per-level config overrides
+- Grid dimensions auto-calculated from level data array
+- Easy difficulty scaling through level-specific config
+- Configurable physics parameters
+- Support for multiple levels with progression
+
+## Benefits of Refactoring
+
+1. **Maintainability**: Each class has single responsibility
+2. **Testability**: Individual components can be tested
+3. **Reusability**: Entities and managers can be reused
+4. **Scalability**: Easy to add new levels, entities, features
+5. **Performance**: Better memory management, object pooling possible
+6. **Debugging**: Clear separation makes bugs easier to find
+7. **Collaboration**: Multiple developers can work on different parts
+
+## Migration Strategy
+
+### Phase 1: Setup Structure
+1. Create folder structure
+2. Set up base classes
+
+### Phase 2: Create Game Objects
+1. Create Player class extending Phaser.GameObjects.Container
+2. Create Monster base class extending Phaser.GameObjects.Container
+3. Create Obstacle class extending Phaser.GameObjects.Container
+4. Create Hammer class extending Phaser.GameObjects.Container
+5. Create ExitDoor class extending Phaser.GameObjects.Container
+
+### Phase 3: Create Managers
+1. Extract collision logic to CollisionManager
+2. Create LevelManager for level data
+3. Create UIManager for HUD
+
+### Phase 4: Implement Scenes
+1. Create PreloaderScene (initially minimal)
+2. Create LevelSelectScene with level grid
+3. Refactor GameScene to GameplayScene with internal game over/win states
+
+## Notes for Implementation
+
+- Game objects extend Phaser native classes (Container, Graphics, etc.)
+- Managers remain mostly framework-agnostic
+- Use ES6 modules for clean imports
+- Use Phaser's built-in math functions (Phaser.Math.DegToRad, Phaser.Math.Distance.Between, etc.)
+- Use Phaser's tween system for animations (hammer swing, etc.)
+- Add JSDoc comments for all public methods
+- Consider using Phaser's Group class for object pooling
+- Add debug mode with collision box visualization
+- Monster class designed for inheritance - future monster types can extend and override methods
+- Level configuration system allows per-level overrides of any game parameter
+- Grid dimensions are auto-calculated from level data arrays
+- Each game object is a Phaser.GameObjects.Container that manages its own visual components

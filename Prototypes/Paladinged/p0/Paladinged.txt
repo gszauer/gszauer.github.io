@@ -1,0 +1,243 @@
+## Overview
+
+Create a rhythm-based monster slaying prototype using PhaserJS (vanilla JavaScript).  The name of the game is Paladinged, a play on words for paladin and dinged.
+
+The game features a paladin with a hammer fighting monsters while running forward through a scrolling level.
+
+## Project Structure
+Create two files:
+1. **index.html** - Include Phaser from CDN and reference game.js
+2. **game.js** - Main game code
+
+## HTML Setup (index.html)
+```html
+- Include the latest Phaser from CDN
+- Create a game div
+- Dark background styling
+- Include game.js script
+```
+
+## Game Configuration
+- Canvas size: 720x1280 pixels (logical, no min or max tough).
+- Background color: #1a1a1a
+- Parent container: 'game-container'
+- The game must be centered, use Phaser.Scale.FIT and CENTER_BOTH.
+
+The HMTL css can look something like:
+```
+<style>
+   html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* Prevents scrollbars */
+      min-height: 100vh;
+      background-color: #2c3e50;
+      justify-content: center;
+      align-items: center;
+   }
+   #game-container {
+      width: 100%;
+      height: 100%;
+   }
+
+   canvas {
+      border: 2px solid #34495e;
+   }
+</style>
+```
+
+## Core Game Mechanics
+
+### Level Configuration
+Create a `levelConfig` object with these default values:
+- `lanes`: 7 (columns in the grid)
+- `rows`: 24 (rows in the grid)
+- `scrollSpeed`: 300 (pixels per second)
+- `playerRadius`: 100
+- `playerPadding`: 10
+- `hammerLength`: 200
+- `hammerHeadWidth`: 70
+- `hammerHeadHeight`: 140
+- `hammerMinAngle`: -90 (degrees)
+- `hammerMaxAngle`: 90 (degrees)
+- `monsterRadius`: 60
+- `obstacleRadius`: 40
+- `exitDoorSize`: 50
+
+The hammer min and max angle is relative to (0, -1), not the default (1, 0). So it's given with a logical up, not a logical right. But phaser by default starts angle 0 at logical right.
+
+### State Management
+**CRITICAL**: Use Phaser's `init()` method (not constructor) to initialize all game state variables to ensure proper reset on replay:
+- `playerHP`: 3
+- `gold`: 0
+- `hammerAngle`: starts at hammerMaxAngle
+- `hammerSwinging`: false
+- `hammerDirection`: 1 (1 for right, -1 for left)
+- `scrollOffset`: 0
+- `gameState`: 'playing' (can be 'playing', 'gameOver', or 'win')
+- `monsters`: [] (array of monster objects)
+- `obstacles`: [] (array of obstacle objects)
+
+### Level Generation
+
+Use this demo level layout :
+
+```
+const levelData = [
+   // D - Door is here 
+   '*******',
+   '*M*****',
+   '*******',
+   '**M****',
+   '****O**',
+   '*******',
+   '****O**',
+   'M**M**M',
+   '*M*M*M*',
+   '***M***',
+   '*M***M*',
+   '**M*M**',
+   '*M*M*M*',
+   '***M***',
+   '**O****',
+   '*******',
+   '*M*****',
+   '*******',
+   '*******',
+   'O******',
+   '*******',
+   '*MMM***',
+   '*******',
+   '*******'
+   // P - PLayer is here (walking up towards the door)
+]
+
+```
+- `*` = empty space
+- `M` = monster (red circle)
+- `O` = obstacle (blue circle)
+- `P` - Player is at bottom center.
+- `D` - Door is at the top.
+
+Position calculation:
+- Each lane width = screenWidth / lanes
+- Each row height = playerRadius 
+- Entities spawn at center of their grid cell
+
+Add exit door (green square, 50x50) at the end of the level. End of the level is (player radius * number of rows).
+
+### Player
+- Render as green circle at `(screenWidth/2, screenHeight - playerRadius - playerPadding)`
+- Always stays at this position on screen
+- Takes damage when touched by non-bouncing monsters
+- Dies when HP reaches 0
+
+### Hammer Mechanics
+1. **Visual**:
+   - Brown rectangle for hammer head
+   - Brown line connecting player center to hammer head center, the handle
+   - "Draw the hammer handle with sufficient thickness (e.g., 15-20 pixels)"
+   - Hammer head rotates to match swing direction
+
+2. **Swing Mechanics**:
+   - Starts at right side (hammerMaxAngle)
+   - Click or SPACE to swing to opposite side
+   - 300ms swing duration with easing
+   - Cannot swing while already swinging
+   - Only check collisions while swinging
+
+3. **Oriented Bounding Box (OBB)**:
+   - Track hammer head as OBB with center, halfExtents, and rotation
+   - Use OBB-circle collision detection for accurate hits
+
+### Collision System
+
+#### Monster-Player Collision
+- Only check non-bouncing monsters
+- If distance < playerRadius + monsterRadius: player loses 1 HP, monster destroyed
+
+#### Hammer-Monster Collision
+- Only during swing and for non-bouncing monsters
+- On hit: calculate direction vector from hammer to monster
+- Set monster to bouncing state with velocity (1500 units/second initially)
+- Velocity never dampens
+
+#### Hammer-Obstacle Collision
+- Only during swing
+- Obstacle destroyed on hit, player gains 5 gold
+
+#### Monster-Obstacle Collision
+- Only for bouncing monsters
+- Both destroyed on contact, player gains 10 gold
+
+#### Monster-Monster Collision (Ball Physics)
+- Only between bouncing and non bouncing monsters
+- Can hit multiple other monsters in one frame
+- Non bouncing monster becomes a bouncing monster
+- calculate direction vector for non bouncing monster from intersection
+- Not real physics, nothing ever stops or slows down
+- Ball does not intersect with screen boundary. Balls are free to leave screen, and destroy themselves if not in view.
+
+### Grid Visualization
+- Draw vertical lines at lane boundaries
+- Draw horizontal lines at row boundaries
+- Lines use color #333333
+
+### UI Elements
+1. **Hearts Display**: Top-left, red hearts showing remaining HP
+2. **Gold Display**: Below hearts, shows collected gold
+3. **Game Over Screen**: 
+   - Semi-transparent black overlay
+   - "GAME OVER" text
+   - "Press SPACE or click to restart"
+4. **Win Screen**:
+   - Semi-transparent black overlay
+   - "YOU WIN!" text
+   - Gold collected display
+   - "Press SPACE or click to restart"
+
+### Input Handling
+- Click or SPACE to swing hammer (only in 'playing' state)
+- Click or SPACE to restart on game over/win screens
+- **Important**: Prevent click events from triggering game actions during restart
+
+### Restart Functionality
+**CRITICAL**: Ensure complete state reset:
+1. Use `scene.restart()` for replay
+2. All game variables must reinitialize in `init()` method
+3. Prevent input conflicts between game over clicks and gameplay clicks
+4. monsters, obstacles, gold, HP, and scroll position should all reset
+
+## Common Pitfalls to Avoid
+* Don't initialize state in constructor - use `init()` method
+* Check `gameState` before processing gameplay inputs
+* Use proper collision detection for OBB vs circles
+* Remember to convert degrees to radians for angles
+* Destroy enemies that bounce out of screen bounds
+* Destroy enemies that scroll down out of screen bounds (y is positive radius * 2)
+* Handle edge cases like zero velocity or overlapping spawns
+* "Ensure all lines (grid lines, hammer handle) are drawn using beginPath() and strokePath() methods for proper rendering"
+* "Use a line thickness of at least 2px for grid lines and 15-20px for the hammer handle for visibility"
+* When enemies are knocked away, add a small upwards (in the direction of: 0, -1) bias to it so it travels a little bit up and not just sideways. This bias strength should be configurable in level config.
+* The player is stationary at the bottom of the screen, walking forward/upward. The level scrolls down past the player (grid lines move from top of screen toward bottom). 
+* The player appears to be walking up through the level toward the door at the top.
+* Enemies and obstacles do not spawn at random, they are a part of level config data, and have deterministic positions they spawn in.
+* Make sure enemies and obstacles both spawn and work.
+* Create the phaser game in ```document.addEventListener('DOMContentLoaded', function() {```
+* The last row of levelData is the one closest to the player (at the bottom). This means:
+   ```
+   for (let row = 0; row < this.levelConfig.rows; row++) {
+               const rowData = this.levelData[(this.levelConfig.rows - 1) - row]; // Loop backwards, since index 0 is at top
+               for (let col = 0; col < this.levelConfig.lanes; col++) {
+   ```
+
+## Implementation Checklist
+- [ ] Scene properly uses `init()` for state initialization
+- [ ] Hammer swings correctly between min/max angles
+- [ ] OBB collision detection implemented for hammer
+- [ ] Monster-to-monster collisions work like billiard balls
+- [ ] Game over and win conditions trigger correctly
+- [ ] Restart fully resets all game state
+- [ ] Click handlers don't conflict between states
