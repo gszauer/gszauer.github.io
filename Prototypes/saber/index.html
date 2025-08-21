@@ -3,56 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Selector</title>
+    <title>Three.js Game</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        canvas {
+            display: block;
         }
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .links {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        a {
-            display: inline-block;
-            padding: 15px 30px;
-            background-color: #007bff;
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 18px;
-            transition: background-color 0.3s;
-        }
-        a:hover {
-            background-color: #0056b3;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Select a Game</h1>
-        <div class="links">
-            <a href="2d/">2D Game</a>
-            <a href="3d/">3D Game</a>
-            <a href="foddy/">Foddy Game</a>
-        </div>
-    </div>
+    <div id="score">Score: 0</div>
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/+esm';
+        window.THREE = THREE;
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const script = document.createElement('script');
+            script.src = 'game.js';
+            document.body.appendChild(script);
+        });
+    </script>
 </body>
 </html>
