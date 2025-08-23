@@ -2,7 +2,7 @@
 const desktop_icons = [
   {
     type: 'folder',
-    name: 'Games',
+    name: 'Games (Finished)',
     icon: '🎮',
     id: 'games',
     items: [
@@ -14,21 +14,9 @@ const desktop_icons = [
       },
       {
         type: 'shortcut',
-        name: 'Wompus',
-        link: 'Wompus/index.html',
-        icon: '🐺'
-      },
-      {
-        type: 'shortcut',
         name: 'Cards of War',
         link: 'war/index.html',
         icon: '⚔️'
-      },
-      {
-        type: 'shortcut',
-        name: 'Really Real Wrestling',
-        link: 'Wrestling/index.html',
-        icon: '🤼'
       },
       {
         type: 'shortcut',
@@ -41,6 +29,32 @@ const desktop_icons = [
         name: 'Calcul8or',
         link: 'Calc1/index.html',
         icon: '🖩'
+      }
+    ]
+  },
+  {
+    type: 'folder',
+    name: 'Games (Abandoned)',
+    icon: '🎲',
+    id: 'moregames',
+    items: [
+      {
+        type: 'shortcut',
+        name: 'Wompus',
+        link: 'Wompus/index.html',
+        icon: '🐺'
+      },
+      {
+        type: 'shortcut',
+        name: 'Really Real Wrestling',
+        link: 'Wrestling/index.html',
+        icon: '🤼'
+      },
+      {
+        type: 'shortcut',
+        name: 'Paladinged',
+        link: 'Paladinged/index.html',
+        icon: '🔨'
       }
     ]
   },
