@@ -1,0 +1,271 @@
+{
+	"textures": [
+		{
+			"image": "characters",
+			"format": "RGBA8888",
+			"size": {
+				"w": 2048,
+				"h": 2048
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "enemy_bishop.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 305,
+						"h": 742
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 305,
+						"h": 742
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 305,
+						"h": 742
+					}
+				},
+				{
+					"filename": "enemy_pawn.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 349,
+						"h": 720
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 349,
+						"h": 720
+					},
+					"frame": {
+						"x": 2,
+						"y": 748,
+						"w": 349,
+						"h": 720
+					}
+				},
+				{
+					"filename": "enemy_king.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 337,
+						"h": 720
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 337,
+						"h": 720
+					},
+					"frame": {
+						"x": 311,
+						"y": 2,
+						"w": 337,
+						"h": 720
+					}
+				},
+				{
+					"filename": "hero_bishop.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 326,
+						"h": 715
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 326,
+						"h": 715
+					},
+					"frame": {
+						"x": 355,
+						"y": 726,
+						"w": 326,
+						"h": 715
+					}
+				},
+				{
+					"filename": "hero_knight.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 337,
+						"h": 712
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 337,
+						"h": 712
+					},
+					"frame": {
+						"x": 652,
+						"y": 2,
+						"w": 337,
+						"h": 712
+					}
+				},
+				{
+					"filename": "hero_king.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 355,
+						"h": 703
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 355,
+						"h": 703
+					},
+					"frame": {
+						"x": 685,
+						"y": 718,
+						"w": 355,
+						"h": 703
+					}
+				},
+				{
+					"filename": "hero_queen.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 301,
+						"h": 694
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 301,
+						"h": 694
+					},
+					"frame": {
+						"x": 993,
+						"y": 2,
+						"w": 301,
+						"h": 694
+					}
+				},
+				{
+					"filename": "hero_rook.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 373,
+						"h": 686
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 373,
+						"h": 686
+					},
+					"frame": {
+						"x": 1298,
+						"y": 2,
+						"w": 373,
+						"h": 686
+					}
+				},
+				{
+					"filename": "enemy_rook.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 362,
+						"h": 642
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 362,
+						"h": 642
+					},
+					"frame": {
+						"x": 1675,
+						"y": 2,
+						"w": 362,
+						"h": 642
+					}
+				},
+				{
+					"filename": "hero_pawn.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 341,
+						"h": 691
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 341,
+						"h": 691
+					},
+					"frame": {
+						"x": 1675,
+						"y": 648,
+						"w": 341,
+						"h": 691
+					}
+				},
+				{
+					"filename": "enemy_knight.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 330,
+						"h": 662
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 330,
+						"h": 662
+					},
+					"frame": {
+						"x": 1675,
+						"y": 1343,
+						"w": 330,
+						"h": 662
+					}
+				},
+				{
+					"filename": "enemy_queen.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 269,
+						"h": 645
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 269,
+						"h": 645
+					},
+					"frame": {
+						"x": 1298,
+						"y": 692,
+						"w": 269,
+						"h": 645
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}
