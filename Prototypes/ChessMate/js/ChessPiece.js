@@ -15,30 +15,46 @@ class ChessPiece extends Phaser.GameObjects.Container {
     }
 
     createPieceGraphics() {
-        const graphics = this.scene.add.graphics();
-        const size = this.board.tileSize * 0.7;
-        const fillColor = this.color === 'white' ? 0xFFFFFF : 0x333333;
-        const strokeColor = this.color === 'white' ? 0x333333 : 0xFFFFFF;
+        // Add the real chess piece image
+        const prefix = this.color === 'white' ? 'hero_' : 'enemy_';
+        const frameName = prefix + this.unit + '.png';
         
-        graphics.fillStyle(fillColor, 1);
-        graphics.lineStyle(2, strokeColor, 1);
-        
-        switch(this.unit) {
-            case 'knight':
-                this.drawKnight(graphics, size);
-                break;
-            case 'king':
-                this.drawKing(graphics, size);
-                break;
-            case 'pawn':
-                this.drawPawn(graphics, size);
-                break;
-            case 'bishop':
-                this.drawBishop(graphics, size);
-                break;
+        if (this.scene.textures.exists('characters')) {
+            const pieceImage = this.scene.add.image(0, this.board.tileSize / 2.0, 'characters', frameName);
+            const scale = (this.board.tileSize * 0.8) / pieceImage.width; // max (width, height), but i only need to fit width wise
+            pieceImage.setScale(scale);
+            pieceImage.setOrigin(0.5, 1.0);
+            this.add(pieceImage);
         }
         
-        this.add(graphics);
+        if (Gameplay.ShowGraphics) {
+            // Keep the existing graphics as a fallback/overlay
+            const graphics = this.scene.add.graphics();
+            const size = this.board.tileSize * 0.7;
+            const fillColor = this.color === 'white' ? 0xFFFFFF : 0x333333;
+            const strokeColor = this.color === 'white' ? 0x333333 : 0xFFFFFF;
+            
+            graphics.fillStyle(fillColor, 1);
+            graphics.lineStyle(2, strokeColor, 1);
+            
+            switch(this.unit) {
+                case 'knight':
+                    this.drawKnight(graphics, size);
+                    break;
+                case 'king':
+                    this.drawKing(graphics, size);
+                    break;
+                case 'pawn':
+                    this.drawPawn(graphics, size);
+                    break;
+                case 'bishop':
+                    this.drawBishop(graphics, size);
+                    break;
+            }
+            
+            //graphics.setAlpha(0.3);  // Make graphics semi-transparent since we have real images
+            this.add(graphics);
+        }
     }
 
     drawKnight(graphics, size) {

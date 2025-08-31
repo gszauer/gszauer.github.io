@@ -38,6 +38,7 @@ class ChessBoard extends Phaser.GameObjects.Container {
         );
         
         this.add(graphics);
+        //graphics.alpha = 0.2;
         this.boardGraphics = graphics;
     }
 

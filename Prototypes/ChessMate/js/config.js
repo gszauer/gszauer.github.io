@@ -1,13 +1,13 @@
-const TILE_SIZE = 200;
+const TILE_SIZE = 234;
 const BOARD_WIDTH = 6;
 const BOARD_HEIGHT = 7;
-const BOARD_TILE_SIZE = 80;
-const ICON_DIAMETER = 150;
-const GRID_OFFSET = { x: 90, y: 150 };
-const DOT_RADIUS = 7;
-const DOT_STEP = 18;
+const BOARD_TILE_SIZE = 207;
+const ICON_DIAMETER = 200;
+const GRID_OFFSET = { x: 0, y: 0 };
+const DOT_RADIUS = 12;
+const DOT_STEP = 35;
 const CORNER_RADIUS = TILE_SIZE * 0.35;
-const GUARD = ICON_DIAMETER * 0.56;
+const GUARD = ICON_DIAMETER * 0.45;
 
 const COLORS = {
     gold: 0xF2C94C,
@@ -46,15 +46,43 @@ const LEVELS = [
             { unit: 'king', color: 'black', x: 5, y: 0 },
             { unit: 'bishop', color: 'black', x: 3, y: 3 }
         ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
     }
 ];
 
 const LEVEL_POSITIONS = [
-    { gx: 0, gy: 2 },
-    { gx: 1, gy: 2 },
-    { gx: 2, gy: 3 },
-    { gx: 3, gy: 3 },
-    { gx: 4, gy: 2 },
+    { gx: 1, gy: 9 },
+    { gx: 3, gy: 9 },
+    { gx: 4, gy: 8 },
+    { gx: 4, gy: 6 },
     { gx: 4, gy: 4 },
-    { gx: 3, gy: 5 }
+    { gx: 3, gy: 4 },
+    { gx: 3, gy: 5 },
+    { gx: 5, gy: 5 }
 ];

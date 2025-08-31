@@ -11,7 +11,7 @@ class LevelSelect extends Phaser.Scene {
     }
 
     addCheckerBackground() {
-        const ts = this.add.tileSprite(0, 0, 1179, 2556, 'checker');
+        const ts = this.add.tileSprite(0, 0, 1400, 2556, 'checker');
         ts.setOrigin(0, 0);
     }
 

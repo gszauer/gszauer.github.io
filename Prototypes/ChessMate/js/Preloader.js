@@ -35,6 +35,9 @@ class Preloader extends Phaser.Scene {
             loadingText.destroy();
         });
 
+        this.load.image('background', 'assets/background.png');
+        this.load.atlas('characters', 'assets/characters.png', 'assets/characters.json');
+        
         this.time.delayedCall(100, () => {
             this.scene.start('LevelSelect');
         });

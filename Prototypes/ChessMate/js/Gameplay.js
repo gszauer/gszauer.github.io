@@ -1,4 +1,6 @@
 class Gameplay extends Phaser.Scene {
+    static ShowGraphics = false;
+    
     constructor() {
         super('Gameplay');
         this.currentLevel = null;
@@ -24,10 +26,18 @@ class Gameplay extends Phaser.Scene {
         
         this.input.removeAllListeners();
         
+        // Add background image aligned to top center
+        const bg = this.add.image(700, 160, 'background');
+        bg.setOrigin(0.5, 0);
+        
+        // Scale to fit width of 1400
+        const bgScale = 1600 / bg.width;
+        bg.setScale(bgScale);
+        
         this.cameras.main.setBackgroundColor(0x312E2B);
         
-        const boardX = (1179 - BOARD_WIDTH * BOARD_TILE_SIZE) / 2;
-        const boardY = (2556 - BOARD_HEIGHT * BOARD_TILE_SIZE) / 2;
+        const boardX = (1400 - BOARD_WIDTH * BOARD_TILE_SIZE) / 2;
+        const boardY = (3100 - BOARD_HEIGHT * BOARD_TILE_SIZE) / 2;
         
         this.board = new ChessBoard(this, boardX, boardY, BOARD_TILE_SIZE);
         
@@ -45,13 +55,13 @@ class Gameplay extends Phaser.Scene {
         this.moveText = this.add.text(20, 20, `Moves: ${this.moveCount}/${this.currentLevel.maxMoves}`, style);
         this.levelText = this.add.text(20, 50, `Level ${this.levelId}`, style);
         
-        const backButton = this.add.text(1179 - 100, 20, 'Back', style);
+        const backButton = this.add.text(1400 - 100, 20, 'Back', style);
         backButton.setInteractive();
         backButton.on('pointerup', () => {
             this.scene.start('LevelSelect');
         });
         
-        this.messageText = this.add.text(1179 / 2, 100, '', {
+        this.messageText = this.add.text(1400 / 2, 100, '', {
             font: '32px Arial',
             fill: '#ffff00'
         });
