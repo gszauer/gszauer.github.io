@@ -10,11 +10,16 @@ const CORNER_RADIUS = TILE_SIZE * 0.35;
 const GUARD = ICON_DIAMETER * 0.45;
 
 const COLORS = {
-    gold: 0xF2C94C,
-    silver: 0xC0C0C0,
-    grayEdge: 0x8E8E8E,
-    darkSquare: 0x769656,
-    lightSquare: 0xEEEED2,
+   // level selectors (use these keys as before)
+  gold: 0xFFFFFF,      // unlocked → white checker
+  silver: 0x000000,    // locked   → black checker
+  grayEdge: 0x3E2A1F,  // dark rim/outline for pieces
+
+  // board squares (warm wood tones)
+  darkSquare: 0x7B5133, // dark wood
+  lightSquare: 0xCDAB7E, // light wood (slightly richer/darker)
+
+
     highlight: 0xF6F669,
     attackHighlight: 0xFF6B6B,
     captureHighlight: 0xFFA500,
@@ -25,7 +30,7 @@ const LEVELS = [
     {
         maxMoves: 3,
         pieces: [
-            { unit: 'knight', color: 'white', x: 2, y: 3 },
+            { unit: 'knight', color: 'white', x: 3, y: 3 },
             { unit: 'king', color: 'black', x: 4, y: 1 }
         ]
     },
@@ -73,16 +78,134 @@ const LEVELS = [
             { unit: 'king', color: 'black', x: 5, y: 0 },
             { unit: 'bishop', color: 'black', x: 3, y: 3 }
         ]
-    }
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
+    {
+        maxMoves: 5,
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 6 },
+            { unit: 'pawn', color: 'white', x: 2, y: 4 },
+            { unit: 'king', color: 'black', x: 5, y: 0 },
+            { unit: 'bishop', color: 'black', x: 3, y: 3 }
+        ]
+    },
 ];
 
 const LEVEL_POSITIONS = [
-    { gx: 1, gy: 9 },
-    { gx: 3, gy: 9 },
-    { gx: 4, gy: 8 },
-    { gx: 4, gy: 6 },
-    { gx: 4, gy: 4 },
-    { gx: 3, gy: 4 },
-    { gx: 3, gy: 5 },
-    { gx: 5, gy: 5 }
+    { gx: 1, gy: 10 }, // 1
+    { gx: 3, gy: 10 },
+    { gx: 4, gy: 9 },
+    { gx: 4, gy: 7 },
+    { gx: 4, gy: 5 },  // 5
+    { gx: 3, gy: 6 },
+    { gx: 3, gy: 8 },
+    { gx: 2, gy: 9 },
+    { gx: 0, gy: 9 },
+    { gx: 0, gy: 7 }, // 10
+    { gx: 1, gy: 6 }, 
+    { gx: 2, gy: 5 }, 
+    { gx: 1, gy: 4 }, 
+    { gx: 3, gy: 4 }, 
+    { gx: 5, gy: 4 }, // 15
+    { gx: 5, gy: 6 }, 
+    { gx: 5, gy: 8 }, 
+    { gx: 5, gy: 10 }, 
 ];

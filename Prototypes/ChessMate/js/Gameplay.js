@@ -199,9 +199,9 @@ class Gameplay extends Phaser.Scene {
 
     winLevel() {
         this.messageText.setText('Victory!');
-        const completed = parseInt(localStorage.getItem('chessmate_completed') || '0');
+        const completed = PlayerData.Instance.GetNumber('chessmate_completed', 0);
         if (this.levelId > completed) {
-            localStorage.setItem('chessmate_completed', this.levelId.toString());
+            PlayerData.Instance.SetNumber('chessmate_completed', this.levelId);
         }
         
         this.time.delayedCall(2000, () => {

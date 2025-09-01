@@ -29,8 +29,10 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     <script src="js/config.js"></script>
+    <script src="js/PlayerData.js"></script>
     <script src="js/ChessPiece.js"></script>
     <script src="js/ChessBoard.js"></script>
+    <script src="js/DebugWindow.js"></script>
     <script src="js/Preloader.js"></script>
     <script src="js/LevelSelect.js"></script>
     <script src="js/Gameplay.js"></script>
@@ -53,6 +55,7 @@
             scene: [Preloader, LevelSelect, Gameplay]
         };
 
+        const playerData = new PlayerData();
         const game = new Phaser.Game(config);
     </script>
 </body>

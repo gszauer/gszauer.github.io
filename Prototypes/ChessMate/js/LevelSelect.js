@@ -1,13 +1,98 @@
 class LevelSelect extends Phaser.Scene {
     constructor() {
         super('LevelSelect');
-        this.unlockedLevels = 2;
+        // Set unlocked levels based on saved progress
+        const completedLevels = PlayerData.Instance.GetNumber('chessmate_completed', 0);
+        this.unlockedLevels = Math.min(completedLevels + 1, LEVELS.length);
+        // Ensure at least 1 level is unlocked
+        if (this.unlockedLevels < 1) this.unlockedLevels = 1;
+        
+        // Store references for updating
+        this.levelIcons = [];
+        this.pathGraphics = [];
     }
 
     create() {
+        // Check and update progress on scene start
+        const completedLevels = PlayerData.Instance.GetNumber('chessmate_completed', 0);
+        let newUnlockedLevels = Math.min(completedLevels + 1, LEVELS.length);
+        if (newUnlockedLevels < 1) newUnlockedLevels = 1;
+        
+        // Only rebuild if progress changed
+        if (newUnlockedLevels !== this.unlockedLevels) {
+            this.unlockedLevels = newUnlockedLevels;
+            
+            // Clear old elements if they exist
+            this.pathGraphics.forEach(g => g.destroy());
+            this.pathGraphics = [];
+            this.levelIcons.forEach(icon => icon.destroy());
+            this.levelIcons = [];
+        }
+        
         this.addCheckerBackground();
+        this.addMapHeader();
         this.createLevelPaths();
         this.createLevelIcons();
+        this.addDebugButton();
+        this.debugWindow = new DebugWindow(this);
+    }
+    
+    addDebugButton() {
+        const buttonSize = 120;  // 2x bigger
+        const margin = 20;
+        const x = margin;  // Upper left instead of upper right
+        const y = margin;
+        
+        // Button background
+        const debugButton = this.add.rectangle(x, y, buttonSize, buttonSize, 0x606060);
+        debugButton.setOrigin(0, 0);
+        debugButton.setInteractive({ useHandCursor: true });
+        debugButton.setStrokeStyle(3, 0x404040);
+        debugButton.setDepth(25);
+        
+        // Bug emoji
+        const debugText = this.add.text(x + buttonSize / 2, y + buttonSize / 2, '🐞', {
+            fontSize: '64px',  // 2x bigger
+            fontFamily: 'Arial, sans-serif'
+        });
+        debugText.setOrigin(0.5, 0.5);
+        debugText.setDepth(26);
+        
+        // Hover effect
+        debugButton.on('pointerover', () => {
+            debugButton.setFillStyle(0x808080);
+        });
+        
+        debugButton.on('pointerout', () => {
+            debugButton.setFillStyle(0x606060);
+        });
+        
+        // Click to open debug window
+        debugButton.on('pointerup', () => {
+            this.debugWindow.show();
+        });
+    }
+    
+    addMapHeader() {
+        const header = this.add.image(0, 0, 'ui', 'map_header.png');
+        header.setOrigin(0, 0);
+        
+        // Scale to match screen width
+        const screenWidth = this.cameras.main.width;
+        const scale = screenWidth / header.width;
+        header.setScale(scale);
+        
+        header.setDepth(20);
+        
+        // Add separator below header
+        const separator = this.add.image(0, header.height * scale, 'ui', 'header_seperator.png');
+        separator.setOrigin(0, 0);
+        
+        // Scale separator to match screen width
+        const separatorScale = screenWidth / separator.width;
+        separator.setScale(separatorScale);
+        
+        separator.setDepth(20);
     }
 
     addCheckerBackground() {
@@ -16,7 +101,8 @@ class LevelSelect extends Phaser.Scene {
     }
 
     createLevelPaths() {
-        for (let i = 0; i < Math.min(this.unlockedLevels, LEVEL_POSITIONS.length - 1); i++) {
+        // Draw paths only between unlocked levels (stop at last unlocked level)
+        for (let i = 0; i < Math.min(this.unlockedLevels - 1, LEVEL_POSITIONS.length - 1); i++) {
             if (i >= LEVELS.length - 1) break;
             
             const aGrid = LEVEL_POSITIONS[i];
@@ -24,12 +110,14 @@ class LevelSelect extends Phaser.Scene {
             const points = this.generateTrailPoints(aGrid, bGrid);
             
             const g = this.add.graphics();
-            g.fillStyle(0xF8E57C, 1);
+            g.fillStyle(0x808080, 1);  // Gray dots for path between levels
             g.setDepth(6);
             
             points.forEach(p => {
                 g.fillCircle(p.x, p.y, DOT_RADIUS);
             });
+            
+            this.pathGraphics.push(g);
         }
     }
 
@@ -43,6 +131,7 @@ class LevelSelect extends Phaser.Scene {
 
     addLevelIcon(pos, label, isLocked, levelIndex) {
         const container = this.add.container(pos.x, pos.y);
+        this.levelIcons.push(container);
         const key = isLocked ? 'silver_icon' : 'gold_icon';
         const circle = this.add.image(0, 0, key);
         circle.setDisplaySize(ICON_DIAMETER, ICON_DIAMETER);
@@ -59,11 +148,11 @@ class LevelSelect extends Phaser.Scene {
                 fontFamily: 'Arial, Helvetica, sans-serif',
                 fontSize: Math.floor(ICON_DIAMETER * 0.42) + 'px',
                 fontStyle: 'bold',
-                color: '#2e2e2e'
+                color: '#000000'  // Black text on white checker
             });
             text.setOrigin(0.5, 0.54);
-            text.setStroke('#2b230a', 2);
-            text.setShadow(0, 2, 'rgba(0,0,0,0.35)', 3);
+            text.setStroke('#FFFFFF', 2);  // White stroke for better contrast
+            text.setShadow(0, 2, 'rgba(0,0,0,0.2)', 2);
             container.add(text);
         }
 
@@ -104,15 +193,18 @@ class LevelSelect extends Phaser.Scene {
         const shackleThickness = 12 * scale;
         const shackleY = (shackleRadius - bodyHeight) / 2;
 
-        graphics.lineStyle(shackleThickness, 0x4d4d4d, 1);
+        // Silver/light gray shackle for visibility on black
+        graphics.lineStyle(shackleThickness, 0xA0A0A0, 1);
         graphics.beginPath();
         graphics.arc(x, y + shackleY, shackleRadius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(360), false);
         graphics.strokePath();
 
-        graphics.fillStyle(0x8C5E3A, 1);
+        // Silver/metallic lock body
+        graphics.fillStyle(0x606060, 1);
         graphics.fillRoundedRect(x - bodyWidth / 2, y + shackleY, bodyWidth, bodyHeight, bodyCornerRadius);
 
-        graphics.fillStyle(0x4d4d4d, 1);
+        // Darker keyhole
+        graphics.fillStyle(0x202020, 1);
         graphics.fillCircle(x, y + shackleY + bodyHeight / 3, 6 * scale);
         
         graphics.beginPath();
@@ -251,11 +343,4 @@ class LevelSelect extends Phaser.Scene {
         return trimmed;
     }
 
-    update() {
-        const completedLevels = parseInt(localStorage.getItem('chessmate_completed') || '0');
-        if (completedLevels + 1 > this.unlockedLevels) {
-            this.unlockedLevels = Math.min(completedLevels + 1, LEVELS.length);
-            this.scene.restart();
-        }
-    }
 }

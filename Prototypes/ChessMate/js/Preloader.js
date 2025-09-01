@@ -37,16 +37,22 @@ class Preloader extends Phaser.Scene {
 
         this.load.image('background', 'assets/background.png');
         this.load.atlas('characters', 'assets/characters.png', 'assets/characters.json');
-        
-        this.time.delayedCall(100, () => {
-            this.scene.start('LevelSelect');
-        });
+        this.load.atlas('ui', 'assets/ui.png', 'assets/ui.json');
     }
 
     create() {
-        this.makeCheckerTexture('checker', TILE_SIZE, 0x2C8D43, 0x287B3B);
-        this.makeLevelIconTexture('gold_icon', ICON_DIAMETER, COLORS.gold, 0xB3882E);
-        this.makeLevelIconTexture('silver_icon', ICON_DIAMETER, COLORS.silver, COLORS.grayEdge);
+        this.makeCheckerTexture('checker', TILE_SIZE, COLORS.lightSquare, COLORS.darkSquare);
+        this.makeLevelIconTexture('gold_icon', ICON_DIAMETER, 0xF5F5F5, 0x808080);  // White checker with gray edge
+        this.makeLevelIconTexture('silver_icon', ICON_DIAMETER, 0x2A2A2A, 0x000000);  // Black checker with black edge
+        
+        this.texturesReady = true;
+    }
+    
+    update() {
+        // Transition only once after all textures are created
+        if (this.texturesReady) {
+            this.scene.start('LevelSelect');
+        }
     }
 
     makeCheckerTexture(key, tileSize, colorA, colorB) {
@@ -67,7 +73,9 @@ class Preloader extends Phaser.Scene {
         const cx = d / 2, cy = d / 2;
         
         const grad = ctx.createRadialGradient(cx - d * 0.18, cy - d * 0.18, d * 0.05, cx, cy, d * 0.55);
-        grad.addColorStop(0, '#FFF6A5');
+        // Adjust highlight based on whether it's white or black checker
+        const isWhite = baseColor > 0x800000;
+        grad.addColorStop(0, isWhite ? '#FFFFFF' : '#555555');  // Highlight
         grad.addColorStop(0.45, '#' + baseColor.toString(16).padStart(6, '0'));
         grad.addColorStop(1, '#' + edgeColor.toString(16).padStart(6, '0'));
         

@@ -122,18 +122,58 @@ class ChessPiece extends Phaser.GameObjects.Container {
     }
 
     moveTo(boardX, boardY) {
+        const oldBoardX = this.boardX;
+        const oldBoardY = this.boardY;
         this.boardX = boardX;
         this.boardY = boardY;
         const newX = this.board.xOffset + boardX * this.board.tileSize + this.board.tileSize / 2;
         const newY = this.board.yOffset + boardY * this.board.tileSize + this.board.tileSize / 2;
         
-        this.scene.tweens.add({
-            targets: this,
-            x: newX,
-            y: newY,
-            duration: 300,
-            ease: 'Power2'
-        });
+        // Special L-shaped movement for knights
+        if (this.unit === 'knight') {
+            const dx = boardX - oldBoardX;
+            const dy = boardY - oldBoardY;
+            
+            // Determine intermediate position (move larger distance first)
+            let intermediateX, intermediateY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Move horizontally first, then vertically
+                intermediateX = this.board.xOffset + boardX * this.board.tileSize + this.board.tileSize / 2;
+                intermediateY = this.board.yOffset + oldBoardY * this.board.tileSize + this.board.tileSize / 2;
+            } else {
+                // Move vertically first, then horizontally
+                intermediateX = this.board.xOffset + oldBoardX * this.board.tileSize + this.board.tileSize / 2;
+                intermediateY = this.board.yOffset + boardY * this.board.tileSize + this.board.tileSize / 2;
+            }
+            
+            // First part of L-shape
+            this.scene.tweens.add({
+                targets: this,
+                x: intermediateX,
+                y: intermediateY,
+                duration: 150,
+                ease: 'Power2',
+                onComplete: () => {
+                    // Second part of L-shape
+                    this.scene.tweens.add({
+                        targets: this,
+                        x: newX,
+                        y: newY,
+                        duration: 150,
+                        ease: 'Power2'
+                    });
+                }
+            });
+        } else {
+            // Normal linear movement for other pieces
+            this.scene.tweens.add({
+                targets: this,
+                x: newX,
+                y: newY,
+                duration: 300,
+                ease: 'Power2'
+            });
+        }
     }
 
     getValidMoves() {
