@@ -2,7 +2,7 @@
 const desktop_icons = [
   {
     type: 'folder',
-    name: 'Games (Finished)',
+    name: 'Games',
     icon: '🎮',
     id: 'games',
     items: [
@@ -28,13 +28,19 @@ const desktop_icons = [
         type: 'shortcut',
         name: 'Calcul8or',
         link: 'Calc1/index.html',
-        icon: '🖩'
+        icon: '🔢'
+      },
+       {
+        type: 'shortcut',
+        name: 'ChessMate',
+        link: 'ChessMate/index.html',
+        icon: '♟️'
       }
     ]
   },
   {
     type: 'folder',
-    name: 'Games (Abandoned)',
+    name: 'Abandoned',
     icon: '🎲',
     id: 'moregames',
     items: [
@@ -55,6 +61,12 @@ const desktop_icons = [
         name: 'Paladinged',
         link: 'Paladinged/index.html',
         icon: '🔨'
+      },
+      {
+        type: 'shortcut',
+        name: 'IK Beat Saber',
+        link: 'saber/index.html',
+        icon: '🔦'
       }
     ]
   },

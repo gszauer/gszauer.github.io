@@ -4,35 +4,39 @@ class Preloader extends Phaser.Scene {
     }
 
     preload() {
+        // Set black background
+        this.cameras.main.setBackgroundColor(0x000000);
+        
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        const progressBar = this.add.graphics();
-        const progressBox = this.add.graphics();
-        progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
+        this.progressBar = this.add.graphics();
+        this.progressBox = this.add.graphics();
+        this.progressBox.fillStyle(0x222222, 0.8);
+        this.progressBox.fillRect(width / 2 - 480, height / 2 - 75, 960, 150);  // 3x size
 
-        const loadingText = this.make.text({
+        this.loadingText = this.make.text({
             x: width / 2,
-            y: height / 2 - 50,
+            y: height / 2 - 150,  // Adjusted for bigger bar
             text: 'Loading...',
             style: {
-                font: '20px monospace',
+                font: '60px monospace',  // 3x size
                 color: '#ffffff'
             }
         });
-        loadingText.setOrigin(0.5, 0.5);
+        this.loadingText.setOrigin(0.5, 0.5);
 
         this.load.on('progress', (value) => {
-            progressBar.clear();
-            progressBar.fillStyle(0xffffff, 1);
-            progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
+            this.progressBar.clear();
+            this.progressBar.fillStyle(0xffffff, 1);
+            this.progressBar.fillRect(width / 2 - 450, height / 2 - 45, 900 * value, 90);  // 3x size
         });
 
         this.load.on('complete', () => {
-            progressBar.destroy();
-            progressBox.destroy();
-            loadingText.destroy();
+            // Remove loading bar and text
+            this.progressBar.destroy();
+            this.progressBox.destroy();
+            this.loadingText.destroy();
         });
 
         this.load.image('background', 'assets/background.png');
@@ -45,14 +49,163 @@ class Preloader extends Phaser.Scene {
         this.makeLevelIconTexture('gold_icon', ICON_DIAMETER, 0xF5F5F5, 0x808080);  // White checker with gray edge
         this.makeLevelIconTexture('silver_icon', ICON_DIAMETER, 0x2A2A2A, 0x000000);  // Black checker with black edge
         
-        this.texturesReady = true;
+        // Show logo and play button
+        this.showLogo();
+        this.createPlayButton();
     }
     
-    update() {
-        // Transition only once after all textures are created
-        if (this.texturesReady) {
+    showLogo() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Display the logo higher up
+        const logo = this.add.image(width / 2, height / 2 - 400, 'ui', 'logo_transparent.png');
+        logo.setOrigin(0.5, 0.5);
+        
+        // Scale the logo appropriately (adjust scale as needed)
+        logo.setScale(1.5);
+        
+        // Fade in animation
+        logo.setAlpha(0);
+        this.tweens.add({
+            targets: logo,
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2'
+        });
+    }
+    
+    createPlayButton() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Create play button container - positioned lower
+        const container = this.add.container(width / 2, height / 2 + 500);
+        const graphics = this.add.graphics();
+        container.add(graphics);
+        
+        // Button properties - smaller size
+        const buttonWidth = 250;
+        const buttonHeight = 100;
+        const cornerCut = 15;
+        const shadowOffset = 4;
+        
+        // Colors - green theme for play
+        const colors = {
+            baseDark: 0x2E5A2E,      // Dark green
+            baseMedium: 0x4A8B4A,    // Medium green
+            baseLight: 0x6AB56A,     // Light green
+            highlight: 0x8BC78B,     // Green highlight
+            hoverBase: 0x5A9C5A,     // Hover green
+            hoverHighlight: 0x9BD89B // Hover highlight
+        };
+        
+        // Pre-calculate button geometry (octagonal shape)
+        const buttonPoints = [
+            { x: -buttonWidth, y: -buttonHeight + cornerCut },
+            { x: -buttonWidth + cornerCut, y: -buttonHeight },
+            { x: buttonWidth - cornerCut, y: -buttonHeight },
+            { x: buttonWidth, y: -buttonHeight + cornerCut },
+            { x: buttonWidth, y: buttonHeight - cornerCut },
+            { x: buttonWidth - cornerCut, y: buttonHeight },
+            { x: -buttonWidth + cornerCut, y: buttonHeight },
+            { x: -buttonWidth, y: buttonHeight - cornerCut }
+        ];
+        
+        // Shadow points
+        const shadowPoints = buttonPoints.map(p => ({ 
+            x: p.x + shadowOffset, 
+            y: p.y + shadowOffset 
+        }));
+        
+        // Inset points
+        const insetButtonPoints = buttonPoints.map(p => ({ x: p.x * 0.92, y: p.y * 0.85 }));
+        
+        // Polygons for 3D effect
+        const highlightPolygon = [
+            buttonPoints[0], buttonPoints[1], buttonPoints[2], buttonPoints[3],
+            insetButtonPoints[3], insetButtonPoints[2], insetButtonPoints[1], insetButtonPoints[0]
+        ];
+        
+        const shadowPolygon = [
+            buttonPoints[4], buttonPoints[5], buttonPoints[6], buttonPoints[7],
+            insetButtonPoints[7], insetButtonPoints[6], insetButtonPoints[5], insetButtonPoints[4]
+        ];
+        
+        // Store current colors for hover effect
+        let currentBaseColor = colors.baseMedium;
+        let currentHighlightColor = colors.highlight;
+        
+        // Draw button function
+        const drawButton = () => {
+            graphics.clear();
+            
+            // Draw shadow layer
+            graphics.fillStyle(0x000000, 0.3);
+            graphics.fillPoints(shadowPoints, true);
+            
+            // Draw main button base
+            graphics.fillStyle(currentBaseColor);
+            graphics.fillPoints(buttonPoints, true);
+            
+            // Draw beveled edges
+            graphics.fillStyle(currentHighlightColor);
+            graphics.fillPoints(highlightPolygon, true);
+            
+            graphics.fillStyle(colors.baseDark);
+            graphics.fillPoints(shadowPolygon, true);
+            
+            // Draw inner face
+            graphics.fillStyle(currentBaseColor);
+            graphics.fillPoints(insetButtonPoints, true);
+        };
+        
+        // Initial draw
+        drawButton();
+        
+        // Add button text - keep it big
+        const playText = this.add.text(0, 0, 'PLAY', {
+            fontSize: '96px',
+            fontFamily: 'Arial, sans-serif',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+        });
+        playText.setOrigin(0.5, 0.5);
+        container.add(playText);
+        
+        // Make the button interactive
+        const hitArea = new Phaser.Geom.Rectangle(-buttonWidth, -buttonHeight, buttonWidth * 2, buttonHeight * 2);
+        container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+        container.input.cursor = 'pointer';
+        
+        // Hover effect
+        container.on('pointerover', () => {
+            currentBaseColor = colors.hoverBase;
+            currentHighlightColor = colors.hoverHighlight;
+            drawButton();
+            container.setScale(1.05);
+        });
+        
+        container.on('pointerout', () => {
+            currentBaseColor = colors.baseMedium;
+            currentHighlightColor = colors.highlight;
+            drawButton();
+            container.setScale(1.0);
+        });
+        
+        // Click to start
+        container.on('pointerup', () => {
             this.scene.start('LevelSelect');
-        }
+        });
+        
+        // Fade in animation
+        container.setAlpha(0);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2'
+        });
     }
 
     makeCheckerTexture(key, tileSize, colorA, colorB) {

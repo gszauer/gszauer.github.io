@@ -111,30 +111,26 @@ class Gameplay extends Phaser.Scene {
         this.selectedPiece = piece;
         this.validMoves = piece.getValidMoves();
         
-        const highlightMoves = this.validMoves.map(move => {
+        // Reuse existing moves array, modify in place
+        for (let i = 0; i < this.validMoves.length; i++) {
+            const move = this.validMoves[i];
             const targetPiece = this.board.getPieceAt(move.x, move.y);
-            return {
-                ...move,
-                color: targetPiece && targetPiece.color !== piece.color ? COLORS.captureHighlight : COLORS.highlight
-            };
-        });
+            move.color = targetPiece && targetPiece.color !== piece.color ? COLORS.captureHighlight : COLORS.highlight;
+        }
         
-        this.board.highlightSquares(highlightMoves, COLORS.highlight);
+        this.board.highlightSquares(this.validMoves, COLORS.highlight);
     }
 
     showEnemyMoves(enemyPiece) {
         this.selectedEnemy = enemyPiece;
         const enemyAttacks = enemyPiece.getAttackPositions();
         
-        const highlightMoves = enemyAttacks.map(move => {
-            return {
-                x: move.x,
-                y: move.y,
-                color: COLORS.enemyMoveHighlight
-            };
-        });
+        // Modify in place instead of creating new array
+        for (let i = 0; i < enemyAttacks.length; i++) {
+            enemyAttacks[i].color = COLORS.enemyMoveHighlight;
+        }
         
-        this.board.highlightSquares(highlightMoves, COLORS.enemyMoveHighlight);
+        this.board.highlightSquares(enemyAttacks, COLORS.enemyMoveHighlight);
     }
 
     makeMove(piece, toX, toY) {

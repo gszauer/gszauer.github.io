@@ -47,6 +47,30 @@
         "x": 0.5,
         "y": 0.5
       }
+    },
+    "logo_transparent.png": {
+      "frame": {
+        "x": 1023,
+        "y": 152,
+        "w": 964,
+        "h": 967
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 964,
+        "h": 967
+      },
+      "sourceSize": {
+        "w": 964,
+        "h": 967
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
     }
   },
   "meta": {

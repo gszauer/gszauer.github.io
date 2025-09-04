@@ -1,4 +1,18 @@
 class ChessPiece extends Phaser.GameObjects.Container {
+    // Static constants for move patterns to avoid recreating arrays
+    static KNIGHT_MOVES = [
+        [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+        [1, -2], [1, 2], [2, -1], [2, 1]
+    ];
+    
+    static KING_MOVES = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+    ];
+    
+    static BISHOP_DIRECTIONS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    
     constructor(scene, x, y, unit, color, board) {
         super(scene, x, y);
         this.unit = unit;
@@ -181,11 +195,9 @@ class ChessPiece extends Phaser.GameObjects.Container {
         
         switch(this.unit) {
             case 'knight':
-                const knightMoves = [
-                    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-                    [1, -2], [1, 2], [2, -1], [2, 1]
-                ];
-                knightMoves.forEach(([dx, dy]) => {
+                // Use static constant instead of recreating array each time
+                for (let i = 0; i < ChessPiece.KNIGHT_MOVES.length; i++) {
+                    const [dx, dy] = ChessPiece.KNIGHT_MOVES[i];
                     const newX = this.boardX + dx;
                     const newY = this.boardY + dy;
                     if (newX >= 0 && newX < BOARD_WIDTH && newY >= 0 && newY < BOARD_HEIGHT) {
@@ -194,7 +206,7 @@ class ChessPiece extends Phaser.GameObjects.Container {
                             moves.push({ x: newX, y: newY });
                         }
                     }
-                });
+                }
                 break;
                 
             case 'pawn':
@@ -219,8 +231,9 @@ class ChessPiece extends Phaser.GameObjects.Container {
                 break;
                 
             case 'bishop':
-                const bishopDirections = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-                bishopDirections.forEach(([dx, dy]) => {
+                // Use static constant instead of recreating array each time
+                for (let d = 0; d < ChessPiece.BISHOP_DIRECTIONS.length; d++) {
+                    const [dx, dy] = ChessPiece.BISHOP_DIRECTIONS[d];
                     for (let i = 1; i < Math.max(BOARD_WIDTH, BOARD_HEIGHT); i++) {
                         const newX = this.boardX + dx * i;
                         const newY = this.boardY + dy * i;
@@ -235,16 +248,13 @@ class ChessPiece extends Phaser.GameObjects.Container {
                         }
                         moves.push({ x: newX, y: newY });
                     }
-                });
+                }
                 break;
                 
             case 'king':
-                const kingMoves = [
-                    [-1, -1], [-1, 0], [-1, 1],
-                    [0, -1], [0, 1],
-                    [1, -1], [1, 0], [1, 1]
-                ];
-                kingMoves.forEach(([dx, dy]) => {
+                // Use static constant instead of recreating array each time
+                for (let i = 0; i < ChessPiece.KING_MOVES.length; i++) {
+                    const [dx, dy] = ChessPiece.KING_MOVES[i];
                     const newX = this.boardX + dx;
                     const newY = this.boardY + dy;
                     if (newX >= 0 && newX < BOARD_WIDTH && newY >= 0 && newY < BOARD_HEIGHT) {
@@ -253,7 +263,7 @@ class ChessPiece extends Phaser.GameObjects.Container {
                             moves.push({ x: newX, y: newY });
                         }
                     }
-                });
+                }
                 break;
         }
         
