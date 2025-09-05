@@ -1,8 +1,32 @@
 {
   "frames": {
-    "map_header.png": {
+    "move_guide.png": {
       "frame": {
         "x": 1,
+        "y": 1,
+        "w": 1024,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 514
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "map_header.png": {
+      "frame": {
+        "x": 1027,
         "y": 1,
         "w": 1020,
         "h": 565
@@ -26,8 +50,8 @@
     },
     "header_seperator.png": {
       "frame": {
-        "x": 1023,
-        "y": 1,
+        "x": 1,
+        "y": 517,
         "w": 1020,
         "h": 149
       },
@@ -48,10 +72,34 @@
         "y": 0.5
       }
     },
-    "logo_transparent.png": {
+    "header_ingame.png": {
       "frame": {
         "x": 1023,
-        "y": 152,
+        "y": 568,
+        "w": 1020,
+        "h": 100
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1020,
+        "h": 100
+      },
+      "sourceSize": {
+        "w": 1020,
+        "h": 100
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "logo_transparent.png": {
+      "frame": {
+        "x": 1,
+        "y": 668,
         "w": 964,
         "h": 967
       },

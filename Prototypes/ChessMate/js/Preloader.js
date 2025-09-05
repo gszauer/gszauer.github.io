@@ -52,6 +52,7 @@ class Preloader extends Phaser.Scene {
         // Show logo and play button
         this.showLogo();
         this.createPlayButton();
+        this.showMoveGuide();
     }
     
     showLogo() {
@@ -59,7 +60,7 @@ class Preloader extends Phaser.Scene {
         const height = this.cameras.main.height;
         
         // Display the logo higher up
-        const logo = this.add.image(width / 2, height / 2 - 400, 'ui', 'logo_transparent.png');
+        const logo = this.add.image(width / 2, height / 2 - 500, 'ui', 'logo_transparent.png');
         logo.setOrigin(0.5, 0.5);
         
         // Scale the logo appropriately (adjust scale as needed)
@@ -80,7 +81,7 @@ class Preloader extends Phaser.Scene {
         const height = this.cameras.main.height;
         
         // Create play button container - positioned lower
-        const container = this.add.container(width / 2, height / 2 + 500);
+        const container = this.add.container(width / 2, height / 2 + 380);
         const graphics = this.add.graphics();
         container.add(graphics);
         
@@ -205,6 +206,28 @@ class Preloader extends Phaser.Scene {
             alpha: 1,
             duration: 500,
             ease: 'Power2'
+        });
+    }
+    
+    showMoveGuide() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Display the move guide below the play button
+        const moveGuide = this.add.image(width / 2, height / 2 + 900, 'ui', 'move_guide.png');
+        moveGuide.setOrigin(0.5, 0.5);
+        
+        // Scale the guide appropriately
+        moveGuide.setScale(1.4);
+        
+        // Fade in animation
+        moveGuide.setAlpha(0);
+        this.tweens.add({
+            targets: moveGuide,
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2',
+            delay: 200
         });
     }
 

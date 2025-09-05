@@ -26,6 +26,16 @@ class Gameplay extends Phaser.Scene {
         
         this.input.removeAllListeners();
         
+        // Add header background at the top
+        const header = this.add.image(700, 0, 'ui', 'header_ingame.png');
+        header.setOrigin(0.5, 0);
+        
+        // Scale to fit full width if needed
+        const headerScale = 1400 / header.width;
+        if (headerScale > 1) {
+            header.setScale(headerScale);
+        }
+        
         // Add background image aligned to top center
         const bg = this.add.image(700, 160, 'background');
         bg.setOrigin(0.5, 0);
@@ -94,10 +104,21 @@ class Gameplay extends Phaser.Scene {
             if (this.selectedPiece && this.validMoves.some(m => m.x === boardPos.x && m.y === boardPos.y)) {
                 this.makeMove(this.selectedPiece, boardPos.x, boardPos.y);
             } else if (clickedPiece && clickedPiece.color === 'white') {
-                this.selectPiece(clickedPiece);
+                if (this.selectedPiece === clickedPiece) {
+                    this.board.clearHighlights();
+                    this.selectedPiece = null;
+                    this.validMoves = [];
+                } else {
+                    this.selectPiece(clickedPiece);
+                }
                 this.selectedEnemy = null;
             } else if (clickedPiece && clickedPiece.color === 'black') {
-                this.showEnemyMoves(clickedPiece);
+                if (this.selectedEnemy === clickedPiece) {
+                    this.board.clearHighlights();
+                    this.selectedEnemy = null;
+                } else {
+                    this.showEnemyMoves(clickedPiece);
+                }
                 this.selectedPiece = null;
             } else {
                 this.board.clearHighlights();
