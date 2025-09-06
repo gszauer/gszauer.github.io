@@ -28,21 +28,18 @@ const COLORS = {
 
 const LEVELS = [
     {
-        maxMoves: 3,
         pieces: [
             { unit: 'knight', color: 'white', x: 3, y: 3 },
             { unit: 'king', color: 'black', x: 4, y: 1 }
         ]
     },
     {
-        maxMoves: 4,
         pieces: [
            { unit: 'knight', color: 'white', x: 3, y: 3 },
             { unit: 'king', color: 'black', x: 4, y: 1 }
         ]
     },
     { // DONE, lvl 3
-        maxMoves: 20,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'black', x: 1, y: 4 },
@@ -51,7 +48,6 @@ const LEVELS = [
         ]
     },
     { // DONE, lvl 4
-        maxMoves: 15,
         pieces: [
             { unit: 'knight', color: 'white', x: 4, y: 6 },
             { unit: 'pawn', color: 'black', x: 2, y: 5 },
@@ -60,7 +56,6 @@ const LEVELS = [
         ]
     },
     { // DONE, lvl 5
-        maxMoves: 10,
         pieces: [
             { unit: 'knight', color: 'white', x: 4, y: 6 },
             { unit: 'pawn', color: 'black', x: 2, y: 5 },
@@ -70,16 +65,51 @@ const LEVELS = [
         ]
     },
     { // DONE, lvl 6
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 3, y: 5 },
             { unit: 'pawn', color: 'black', x: 1, y: 4 },
-            { unit: 'bishop', color: 'black', x: 2, y: 2 },
+            { unit: 'pawn', color: 'black', x: 2, y: 2 },
             { unit: 'king', color: 'black', x: 3, y: 3 },
         ]
     },
+    { // DONE, lvl 7
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 5 },
+            { unit: 'rook', color: 'black', x: 3, y: 4 },
+            { unit: 'rook', color: 'black', x: 4, y: 3 },
+            { unit: 'king', color: 'black', x: 3, y: 1 },
+        ]
+    },
+    { // DONE, lvl 8
+        pieces: [
+            { unit: 'knight', color: 'white', x: 3, y: 5 },
+            { unit: 'rook', color: 'black', x: 4, y: 4 },
+            { unit: 'rook', color: 'black', x: 1, y: 6 },
+            { unit: 'king', color: 'black', x: 3, y: 2 },
+        ]
+    },
+    { // DONE, lvl 9
+        pieces: [
+            { unit: 'knight', color: 'white', x: 0, y: 5 },
+            {   unit: 'pawn', color: 'white', x: 3, y: 6 },
+            {   unit: 'rook', color: 'black', x: 2, y: 4 },
+            {   unit: 'rook', color: 'black', x: 1, y: 2 },
+            {   unit: 'rook', color: 'black', x: 2, y: 0 },
+            {   unit: 'king', color: 'black', x: 3, y: 1 },
+        ]
+    },
+    { // DONE, lvl 10 
+        pieces: [
+            { unit: 'knight', color: 'white', x: 2, y: 5 },
+            { unit: 'rook', color: 'white', x: 1, y: 6 },
+            { unit: 'pawn', color: 'black', x: 1, y: 3 },
+            { unit: 'rook', color: 'black', x: 4, y: 3 },
+            { unit: 'rook', color: 'black', x: 3, y: 0 },
+            { unit: 'rook', color: 'white', x: 5, y: 4 },
+            { unit: 'king', color: 'black', x: 3, y: 4 },
+        ]
+    },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -88,7 +118,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -97,7 +126,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -106,7 +134,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -115,7 +142,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -124,7 +150,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -133,7 +158,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },
@@ -142,43 +166,6 @@ const LEVELS = [
         ]
     },
     {
-        maxMoves: 5,
-        pieces: [
-            { unit: 'knight', color: 'white', x: 0, y: 6 },
-            { unit: 'pawn', color: 'white', x: 2, y: 4 },
-            { unit: 'king', color: 'black', x: 5, y: 0 },
-            { unit: 'bishop', color: 'black', x: 3, y: 3 }
-        ]
-    },
-    {
-        maxMoves: 5,
-        pieces: [
-            { unit: 'knight', color: 'white', x: 0, y: 6 },
-            { unit: 'pawn', color: 'white', x: 2, y: 4 },
-            { unit: 'king', color: 'black', x: 5, y: 0 },
-            { unit: 'bishop', color: 'black', x: 3, y: 3 }
-        ]
-    },
-    {
-        maxMoves: 5,
-        pieces: [
-            { unit: 'knight', color: 'white', x: 0, y: 6 },
-            { unit: 'pawn', color: 'white', x: 2, y: 4 },
-            { unit: 'king', color: 'black', x: 5, y: 0 },
-            { unit: 'bishop', color: 'black', x: 3, y: 3 }
-        ]
-    },
-    {
-        maxMoves: 5,
-        pieces: [
-            { unit: 'knight', color: 'white', x: 0, y: 6 },
-            { unit: 'pawn', color: 'white', x: 2, y: 4 },
-            { unit: 'king', color: 'black', x: 5, y: 0 },
-            { unit: 'bishop', color: 'black', x: 3, y: 3 }
-        ]
-    },
-    {
-        maxMoves: 5,
         pieces: [
             { unit: 'knight', color: 'white', x: 0, y: 6 },
             { unit: 'pawn', color: 'white', x: 2, y: 4 },

@@ -48,12 +48,12 @@
         "y": 0.5
       }
     },
-    "header_seperator.png": {
+    "header_ingame.png": {
       "frame": {
         "x": 1,
         "y": 517,
         "w": 1020,
-        "h": 149
+        "h": 200
       },
       "rotated": false,
       "trimmed": false,
@@ -61,23 +61,23 @@
         "x": 0,
         "y": 0,
         "w": 1020,
-        "h": 149
+        "h": 200
       },
       "sourceSize": {
         "w": 1020,
-        "h": 149
+        "h": 200
       },
       "pivot": {
         "x": 0.5,
         "y": 0.5
       }
     },
-    "header_ingame.png": {
+    "header_seperator.png": {
       "frame": {
         "x": 1023,
         "y": 568,
         "w": 1020,
-        "h": 100
+        "h": 149
       },
       "rotated": false,
       "trimmed": false,
@@ -85,11 +85,11 @@
         "x": 0,
         "y": 0,
         "w": 1020,
-        "h": 100
+        "h": 149
       },
       "sourceSize": {
         "w": 1020,
-        "h": 100
+        "h": 149
       },
       "pivot": {
         "x": 0.5,
@@ -99,7 +99,7 @@
     "logo_transparent.png": {
       "frame": {
         "x": 1,
-        "y": 668,
+        "y": 719,
         "w": 964,
         "h": 967
       },
