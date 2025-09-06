@@ -167,10 +167,8 @@ class Gameplay extends Phaser.Scene {
                 }
             }
             
-            // Delay before enemy retaliation
-            this.time.delayedCall(1000, () => {
-                this.enemyRetaliation(toX, toY);
-            });
+            // Immediate enemy retaliation check (no delay)
+            this.enemyRetaliation(toX, toY);
         });
         
         this.moveCount++;
@@ -183,11 +181,13 @@ class Gameplay extends Phaser.Scene {
     enemyRetaliation(playerX, playerY) {
         const enemyPieces = this.board.pieces.filter(p => p.color === 'black');
         
+        let hasRetaliation = false;
         for (let enemy of enemyPieces) {
             const moves = enemy.getValidMoves();
             const canAttack = moves.some(m => m.x === playerX && m.y === playerY);
             
             if (canAttack) {
+                hasRetaliation = true;
                 const targetPiece = this.board.getPieceAt(playerX, playerY);
                 if (targetPiece) {
                     // Move enemy piece with callback to remove target after movement
@@ -196,13 +196,18 @@ class Gameplay extends Phaser.Scene {
                         if (targetPiece.unit === 'knight') {
                             this.loseLevel('Your knight was captured!');
                         }
+                        // Re-enable player turn after enemy move completes
+                        this.isPlayerTurn = true;
                     });
                 }
                 break;
             }
         }
         
-        this.isPlayerTurn = true;
+        // If no enemy can retaliate, immediately enable player turn
+        if (!hasRetaliation) {
+            this.isPlayerTurn = true;
+        }
     }
 
     addSettingsButton() {

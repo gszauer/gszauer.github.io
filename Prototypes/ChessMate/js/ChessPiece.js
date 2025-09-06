@@ -504,9 +504,13 @@ class ChessPiece extends Phaser.GameObjects.Container {
         // Clear any existing path
         this.clearMovementPath();
         
-        // Create graphics for the path
+        // Create graphics for the path - add to board container
         this.pathGraphics = this.scene.add.graphics();
-        this.pathGraphics.setDepth(10); // Below pieces (which are at depth 20+)
+        this.board.add(this.pathGraphics);
+        
+        // Move path to just after the board graphics (floor) but before pieces
+        // The board graphics is the first child (index 0)
+        this.board.moveTo(this.pathGraphics, 1);
         
         // Get world coordinates for start and end
         const startX = this.board.xOffset + fromX * this.board.tileSize + this.board.tileSize / 2;
