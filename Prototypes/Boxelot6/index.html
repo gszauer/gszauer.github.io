@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tapdown Dungeon</title>
+    <style>
+        body { 
+            margin: 0; background-color: #111; height: 100vh; overflow: hidden; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        canvas { display: block; width: 100vw !important; height: 100vh !important; }
+    </style>
+</head>
+<body>
+    <script src="phaser.3.80.1.min.js"></script>
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+    <script src="game/constants.js"></script>
+    <script src="game/localization.js"></script>
+    <script src="game/ad_integration.js"></script>
+    <script src="game/game.js"></script>
+    <script src="game/player.js"></script>
+    <script src="game/item.js"></script>
+    <script src="game/monster.js"></script>
+    <script src="game/window.js"></script>
+    <script src="game/screenui.js"></script>
+    <script src="game/tile.js"></script>
+    <script src="game/PlayerData.js"></script>
+
+    <div id="game-container"></div>
+
+    <script>
+        // Global error handling
+        /*window.addEventListener('error', function(event) {
+            console.error('JavaScript Error:', event.error);
+            alert('JavaScript Error Detected!\n\nError: ' + event.error.message + '\nFile: ' + event.filename + '\nLine: ' + event.lineno + '\n\nCheck the console for details.');
+        });*/
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled Promise Rejection:', event.reason);
+            alert('Promise Rejection Error!\n\nReason: ' + event.reason + '\n\nCheck the console for details.');
+        });
+
+        /*window.addEventListener('keydown', ev => {
+            if (['ArrowDown', 'ArrowUp', ' '].includes(ev.key)) {
+                ev.preventDefault();
+            }
+        });
+        window.addEventListener('wheel', ev => ev.preventDefault(), { passive: false });*/
+
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'game-container',
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                autoRound: false
+            },
+            render: {
+                pixelArt: false,
+                antialias: true,
+                resolution: window.devicePixelRatio || 1
+            },
+            scene: [Game]
+        };
+
+        AdManager.Initialize(() => {
+            const phaserGame = new Phaser.Game(config);
+
+            phaserGame.events.once('ready', () => {
+                AdManager.instance.game = phaserGame.scene.scenes[0];
+            });
+        });
+    </script>
+</body>
+</html>
