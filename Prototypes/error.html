@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handler Demo</title>
+    <style>
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+        
+        /* Demo styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // JavaScript Error Handler
+        (function() {
+            'use strict';
+            
+            const MAX_ERRORS = 100;
+            const DISPLAY_DURATION = 3000; // 3 seconds
+            
+            let errorQueue = [];
+            let overlay = null;
+            let currentTimeout = null;
+            
+            // Create overlay container
+            function createOverlay() {
+                if (!overlay || !document.body.contains(overlay)) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'error-overlay';
+                    // Add inline styles as backup in case CSS doesn't load
+                    overlay.style.cssText = `
+                        position: absolute !important;
+                        top: 20px !important;
+                        right: 20px !important;
+                        z-index: 999999999 !important;
+                        font-family: 'Courier New', monospace !important;
+                        font-size: 12px !important;
+                        max-width: 400px !important;
+                        pointer-events: none !important;
+                        isolation: isolate !important;
+                    `;
+                    
+                    // Ensure it's added after DOM is ready and Phaser has initialized
+                    const addOverlay = () => {
+                        if (document.body) {
+                            document.body.appendChild(overlay);
+                            // Force it to be on top of everything
+                            overlay.style.zIndex = '999999999';
+                            overlay.style.position = 'absolute';
+                        } else {
+                            setTimeout(addOverlay, 10);
+                        }
+                    };
+                    addOverlay();
+                }
+                return overlay;
+            }
+            
+            // Add error to display queue
+            function addError(message, type = 'error', stack = '') {
+                const errorObj = {
+                    message,
+                    type,
+                    stack,
+                    timestamp: new Date().toLocaleTimeString(),
+                    id: Date.now() + Math.random()
+                };
+                
+                // Maintain max count
+                if (errorQueue.length >= MAX_ERRORS) {
+                    removeOldestError();
+                }
+                
+                errorQueue.push(errorObj);
+                displayError(errorObj);
+                
+                // Only set timeout for the newest (top) error
+                if (errorQueue.length === 1) {
+                    scheduleRemoval();
+                }
+            }
+            
+            // Display error in overlay
+            function displayError(errorObj) {
+                const container = createOverlay();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = `error-message ${errorObj.type}`;
+                errorDiv.setAttribute('data-error-id', errorObj.id);
+                
+                const header = document.createElement('div');
+                header.className = 'error-header';
+                header.textContent = `${errorObj.type.toUpperCase()} [${errorObj.timestamp}]`;
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = errorObj.message;
+                
+                errorDiv.appendChild(header);
+                errorDiv.appendChild(messageDiv);
+                
+                if (errorObj.stack) {
+                    const stackDiv = document.createElement('div');
+                    stackDiv.className = 'error-stack';
+                    stackDiv.textContent = errorObj.stack;
+                    errorDiv.appendChild(stackDiv);
+                }
+                
+                // Add to bottom of overlay (oldest on top, newest on bottom)
+                container.appendChild(errorDiv);
+            }
+            
+            // Remove oldest error from queue and display
+            function removeOldestError() {
+                if (errorQueue.length === 0) return;
+                
+                const oldestError = errorQueue.shift();
+                const errorElement = overlay.querySelector(`[data-error-id="${oldestError.id}"]`);
+                
+                if (errorElement) {
+                    errorElement.classList.add('removing');
+                    setTimeout(() => {
+                        if (errorElement.parentNode) {
+                            errorElement.parentNode.removeChild(errorElement);
+                        }
+                    }, 300);
+                }
+                
+                // Schedule removal of next error if queue is not empty
+                if (errorQueue.length > 0) {
+                    scheduleRemoval();
+                }
+            }
+            
+            // Schedule removal of the oldest error
+            function scheduleRemoval() {
+                if (currentTimeout) {
+                    clearTimeout(currentTimeout);
+                }
+                
+                currentTimeout = setTimeout(() => {
+                    removeOldestError();
+                }, DISPLAY_DURATION);
+            }
+            
+            // Handle JavaScript errors
+            const handleError = function(event) {
+                try {
+                    const message = `${event.message || 'Unknown error'}\nFile: ${event.filename || 'unknown'}\nLine: ${event.lineno || 0}:${event.colno || 0}`;
+                    const stack = event.error && event.error.stack ? event.error.stack : '';
+                    addError(message, 'error', stack);
+                } catch (e) {
+                    // Fallback if error handling fails
+                    console.log('Error handler failed:', e);
+                }
+            };
+
+            const handleRejection = function(event) {
+                try {
+                    const message = `Unhandled Promise Rejection: ${event.reason || 'Unknown rejection'}`;
+                    const stack = event.reason && event.reason.stack ? event.reason.stack : '';
+                    addError(message, 'error', stack);
+                } catch (e) {
+                    console.log('Rejection handler failed:', e);
+                }
+            };
+
+            // Use both addEventListener and direct assignment for maximum compatibility
+            if (window.addEventListener) {
+                window.addEventListener('error', handleError, true);
+                window.addEventListener('unhandledrejection', handleRejection, true);
+            }
+            window.onerror = function(message, filename, lineno, colno, error) {
+                handleError({
+                    message: message,
+                    filename: filename,
+                    lineno: lineno,
+                    colno: colno,
+                    error: error
+                });
+                return false; // Don't prevent default error handling
+            };
+            window.onunhandledrejection = handleRejection;
+            
+            // Override console methods to capture warnings (with safety checks)
+            const originalConsole = {};
+            
+            ['warn', 'error', 'info'].forEach(method => {
+                if (console[method]) {
+                    originalConsole[method] = console[method];
+                    console[method] = function(...args) {
+                        try {
+                            const message = args.map(arg => 
+                                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                            ).join(' ');
+                            
+                            const type = method === 'warn' ? 'warning' : method;
+                            addError(message, type);
+                            
+                            // Call original method
+                            originalConsole[method].apply(console, args);
+                        } catch (e) {
+                            // Fallback to original method if override fails
+                            originalConsole[method].apply(console, args);
+                        }
+                    };
+                }
+            });
+            
+            // Expose method to manually add errors (for testing)
+            window.ErrorHandler = {
+                addError: addError,
+                getQueueLength: () => errorQueue.length,
+                clearAll: () => {
+                    errorQueue = [];
+                    if (overlay && overlay.parentNode) {
+                        overlay.innerHTML = '';
+                    }
+                    if (currentTimeout) {
+                        clearTimeout(currentTimeout);
+                        currentTimeout = null;
+                    }
+                },
+                // Add method to check if handler is working
+                test: () => {
+                    addError('Error handler is working!', 'info');
+                    return 'Test error added';
+                }
+            };
+
+            // Initialize immediately if DOM is ready, otherwise wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', createOverlay);
+            } else {
+                createOverlay();
+            }
+        })();
+    </script>
+
+    <!-- JavaScript Error Handler - Copy this script tag to your page -->
+    <div class="demo-section">
+        <h2>📋 Copy This JavaScript Error Handler</h2>
+        <p>Copy the entire script block below and paste it into your Phaser.js page:</p>
+        <textarea readonly style="width: 100%; height: 400px; font-family: monospace; font-size: 11px; background: #f8f8f8; border: 1px solid #ddd; padding: 10px;">
+&lt;script&gt;
+// JavaScript Error Handler - Paste this at the top of your page
+(function() {
+    'use strict';
+    
+    const MAX_ERRORS = 100;
+    const DISPLAY_DURATION = 3000; // 3 seconds
+    
+    let errorQueue = [];
+    let overlay = null;
+    let currentTimeout = null;
+    
+    // Add keyframes for animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOut {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Create overlay container
+    function createOverlay() {
+        if (!overlay || !document.body.contains(overlay)) {
+            overlay = document.createElement('div');
+            overlay.style.cssText = \`
+                position: absolute !important;
+                top: 20px !important;
+                right: 20px !important;
+                z-index: 999999999 !important;
+                font-family: 'Courier New', monospace !important;
+                font-size: 12px !important;
+                max-width: 400px !important;
+                pointer-events: none !important;
+                isolation: isolate !important;
+            \`;
+            
+            const addOverlay = () => {
+                if (document.body) {
+                    document.body.appendChild(overlay);
+                    overlay.style.zIndex = '999999999';
+                    overlay.style.position = 'absolute';
+                } else {
+                    setTimeout(addOverlay, 10);
+                }
+            };
+            addOverlay();
+        }
+        return overlay;
+    }
+    
+    // Add error to display queue
+    function addError(message, type = 'error', stack = '') {
+        const errorObj = {
+            message, type, stack,
+            timestamp: new Date().toLocaleTimeString(),
+            id: Date.now() + Math.random()
+        };
+        
+        if (errorQueue.length >= MAX_ERRORS) {
+            removeOldestError();
+        }
+        
+        errorQueue.push(errorObj);
+        displayError(errorObj);
+        
+        if (errorQueue.length === 1) {
+            scheduleRemoval();
+        }
+    }
+    
+    // Display error in overlay
+    function displayError(errorObj) {
+        const container = createOverlay();
+        const errorDiv = document.createElement('div');
+        errorDiv.setAttribute('data-error-id', errorObj.id);
+        
+        let backgroundColor = '#ff4444', borderColor = '#cc0000';
+        if (errorObj.type === 'warning') {
+            backgroundColor = '#ff9900'; borderColor = '#cc7700';
+        } else if (errorObj.type === 'info') {
+            backgroundColor = '#0099ff'; borderColor = '#0077cc';
+        }
+        
+        errorDiv.style.cssText = \`
+            background: \${backgroundColor} !important;
+            color: white !important;
+            padding: 12px !important;
+            margin-bottom: 8px !important;
+            border-radius: 4px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+            border-left: 4px solid \${borderColor} !important;
+            opacity: 0; transform: translateX(100%);
+            animation: slideIn 0.3s ease-out forwards;
+            word-wrap: break-word !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            position: relative !important;
+            z-index: 999999999 !important;
+        \`;
+        
+        const header = document.createElement('div');
+        header.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
+        header.textContent = \`\${errorObj.type.toUpperCase()} [\${errorObj.timestamp}]\`;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = errorObj.message;
+        
+        errorDiv.appendChild(header);
+        errorDiv.appendChild(messageDiv);
+        
+        if (errorObj.stack) {
+            const stackDiv = document.createElement('div');
+            stackDiv.style.cssText = 'font-size: 10px; opacity: 0.8; margin-top: 4px; white-space: pre-wrap;';
+            stackDiv.textContent = errorObj.stack;
+            errorDiv.appendChild(stackDiv);
+        }
+        
+        container.appendChild(errorDiv);
+    }
+    
+    // Remove oldest error
+    function removeOldestError() {
+        if (errorQueue.length === 0) return;
+        
+        const oldestError = errorQueue.shift();
+        const errorElement = overlay.querySelector(\`[data-error-id="\${oldestError.id}"]\`);
+        
+        if (errorElement) {
+            errorElement.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => {
+                if (errorElement.parentNode) {
+                    errorElement.parentNode.removeChild(errorElement);
+                }
+            }, 300);
+        }
+        
+        if (errorQueue.length > 0) {
+            scheduleRemoval();
+        }
+    }
+    
+    // Schedule removal
+    function scheduleRemoval() {
+        if (currentTimeout) clearTimeout(currentTimeout);
+        currentTimeout = setTimeout(removeOldestError, DISPLAY_DURATION);
+    }
+    
+    // Error handlers
+    const handleError = function(event) {
+        try {
+            const message = \`\${event.message || 'Unknown error'}\\nFile: \${event.filename || 'unknown'}\\nLine: \${event.lineno || 0}:\${event.colno || 0}\`;
+            const stack = event.error && event.error.stack ? event.error.stack : '';
+            addError(message, 'error', stack);
+        } catch (e) {
+            console.log('Error handler failed:', e);
+        }
+    };
+
+    const handleRejection = function(event) {
+        try {
+            const message = \`Unhandled Promise Rejection: \${event.reason || 'Unknown rejection'}\`;
+            const stack = event.reason && event.reason.stack ? event.reason.stack : '';
+            addError(message, 'error', stack);
+        } catch (e) {
+            console.log('Rejection handler failed:', e);
+        }
+    };
+
+    if (window.addEventListener) {
+        window.addEventListener('error', handleError, true);
+        window.addEventListener('unhandledrejection', handleRejection, true);
+    }
+    window.onerror = function(message, filename, lineno, colno, error) {
+        handleError({ message, filename, lineno, colno, error });
+        return false;
+    };
+    window.onunhandledrejection = handleRejection;
+    
+    // Console override
+    const originalConsole = {};
+    ['warn', 'error', 'info'].forEach(method => {
+        if (console[method]) {
+            originalConsole[method] = console[method];
+            console[method] = function(...args) {
+                try {
+                    const message = args.map(arg => 
+                        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                    ).join(' ');
+                    const type = method === 'warn' ? 'warning' : method;
+                    addError(message, type);
+                    originalConsole[method].apply(console, args);
+                } catch (e) {
+                    originalConsole[method].apply(console, args);
+                }
+            };
+        }
+    });
+    
+    // Global API
+    window.ErrorHandler = {
+        addError: addError,
+        getQueueLength: () => errorQueue.length,
+        clearAll: () => {
+            errorQueue = [];
+            if (overlay && overlay.parentNode) {
+                overlay.innerHTML = '';
+            }
+            if (currentTimeout) {
+                clearTimeout(currentTimeout);
+                currentTimeout = null;
+            }
+        },
+        test: () => {
+            addError('Error handler is working!', 'info');
+            return 'Test error added';
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createOverlay);
+    } else {
+        createOverlay();
+    }
+})();
+&lt;/script&gt;</textarea>
+    </div>
+    <h1>JavaScript Error Handler Demo</h1>
+    
+    <div class="demo-section">
+        <h2>Test the Error Handler</h2>
+        <p>Click these buttons to generate different types of errors:</p>
+        
+        <button onclick="throw new Error('Test runtime error!')">Throw Error</button>
+        <button onclick="console.warn('This is a warning message')">Console Warning</button>
+        <button onclick="console.error('This is an error message')">Console Error</button>
+        <button onclick="console.info('This is an info message')">Console Info</button>
+        <button onclick="undefinedFunction()">Reference Error</button>
+        <button onclick="Promise.reject('Unhandled promise rejection')">Promise Rejection</button>
+        <button onclick="for(let i = 0; i < 10; i++) { console.warn('Spam warning ' + i); }">Spam Warnings</button>
+        <button onclick="ErrorHandler.clearAll()">Clear All Errors</button>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Features</h2>
+        <ul>
+            <li>Catches JavaScript runtime errors</li>
+            <li>Captures console warnings, errors, and info messages</li>
+            <li>Handles unhandled promise rejections</li>
+            <li>Shows errors in a stack with oldest on top</li>
+            <li>Only the oldest error (top) times out and disappears after 3 seconds</li>
+            <li>Maximum of 100 errors in the queue</li>
+            <li>Smooth slide-in/slide-out animations</li>
+            <li>Color-coded by type (red for errors, orange for warnings, blue for info)</li>
+            <li>Shows timestamp and stack trace when available</li>
+        </ul>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Usage</h2>
+        <p>Simply include this script at the top of your HTML page. It will automatically start capturing errors and displaying them in the overlay.</p>
+        <p>The error handler exposes a global <code>ErrorHandler</code> object with methods:</p>
+        <ul>
+            <li><code>ErrorHandler.addError(message, type, stack)</code> - Manually add an error</li>
+            <li><code>ErrorHandler.getQueueLength()</code> - Get current queue length</li>
+            <li><code>ErrorHandler.clearAll()</code> - Clear all errors</li>
+        </ul>
+    </div>
+</body>
+</html>
