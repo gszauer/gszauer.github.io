@@ -40,8 +40,46 @@ const desktop_icons = [
   },
   {
     type: 'folder',
+    name: 'Apps',
+    icon: '📱',
+    id: 'apps',
+    items: [
+      {
+        type: 'shortcut',
+        name: 'Carrot Code V1',
+        link: 'CarrotV1/index.html',
+        icon: '🐰'
+      },
+      {
+        type: 'shortcut',
+        name: 'Carrot Code V2',
+        link: 'Carrot/index.html',
+        icon: '🥕'
+      },
+      {
+        type: 'shortcut',
+        name: 'Emoji Finder',
+        link: 'Emojis/index.html',
+        icon: '😀'
+      },
+      {
+        type: 'shortcut',
+        name: 'Key Frame Studio V1',
+        link: 'Anim/v1/index.html',
+        icon: '🎬'
+      },
+      {
+        type: 'shortcut',
+        name: 'Key Frame Studio V2',
+        link: 'https://keyframestudio.app',
+        icon: '🎥'
+      }
+    ]
+  },
+  {
+    type: 'folder',
     name: 'Abandoned',
-    icon: '🎲',
+    icon: '🗑️',
     id: 'moregames',
     items: [
       {
@@ -67,38 +105,6 @@ const desktop_icons = [
         name: 'IK Beat Saber',
         link: 'saber/index.html',
         icon: '🔦'
-      }
-    ]
-  },
-  {
-    type: 'folder',
-    name: 'Apps',
-    icon: '📱',
-    id: 'apps',
-    items: [
-      {
-        type: 'shortcut',
-        name: 'Carrot.Code',
-        link: 'Carrot/index.html',
-        icon: '🥕'
-      },
-      {
-        type: 'shortcut',
-        name: 'Emoji Finder',
-        link: 'Emojis/index.html',
-        icon: '😀'
-      },
-      {
-        type: 'shortcut',
-        name: 'Key Frame Studio V1',
-        link: 'Anim/v1/index.html',
-        icon: '🎬'
-      },
-      {
-        type: 'shortcut',
-        name: 'Key Frame Studio V2',
-        link: 'https://keyframestudio.app',
-        icon: '🎥'
       }
     ]
   },
@@ -157,28 +163,20 @@ const startmenu_items = [
 const startmenu_run_items = [
   {
     type: 'iframe',
-    name: 'Slide Swiped',
-    icon: '🦔',
-    link: 'Swipe3/index.html',
-    width: 800,
-    height: 600,
-  },
-  {
-    type: 'iframe',
-    name: 'Cards of War',
-    icon: '⚔️',
-    link: 'war/index.html',
-    width: 512,
-    height: 768,
-  },
-  {
-    type: 'iframe',
     name: 'Tapdown Dungeon',
     icon: '⛓️',
     link: 'Boxelot5/index.html',
     width: 512,
     height: 768,
-  }
+  },
+  {
+    type: 'iframe',
+    name: 'Carrot Code V2',
+    link: 'Carrot/index.html',
+    width: 800,
+    height: 600,
+    icon: '🥕'
+  },
 ];
 
 // Shutdown link

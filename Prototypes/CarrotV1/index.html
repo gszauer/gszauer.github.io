@@ -1,0 +1,187 @@
+<!doctype html>
+<!-- https://github.com/floooh/sokol-samples/blob/master/webpage/shell.html -->
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
+    <title>Emscripten-Generated Code</title>
+    <style>
+        body { margin: 0; background-color: black }
+        .game {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            margin: 0px;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: block;
+            image-rendering: optimizeSpeed;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+        .drag-over {
+            border: 3px dashed #4CAF50 !important;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        /* Loading screen styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        #loadingText {
+            color: #ff69b4;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #loadingProgress {
+            width: 300px;
+            height: 6px;
+            background-color: #2d2d30;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        #loadingBar {
+            height: 100%;
+            background-color: #ff69b4;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        #loadingPercent {
+            color: #ff69b4;
+            font-size: 14px;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+    </style>
+     <link href="icon.png" rel="icon"  type="image/png">
+     <link href="icon.png" rel="apple-touch-icon"  type="image/png">
+     <!-- Adding PWA Capabilities -->
+     <!-- https://medium.com/codechef-vit/convert-your-website-into-a-pwa-ee8f6b67bca7 -->
+     <link rel="manifest" href="manifest.json">
+     <script>
+         if ('serviceWorker' in navigator) {
+             navigator.serviceWorker.register('/sw.js')
+                 .then(function () {
+                     console.log('Service Worker Registered');
+                 });
+         }
+     </script>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div id="loadingText">Loading Editor...</div>
+        <div id="loadingProgress">
+            <div id="loadingBar"></div>
+        </div>
+        <div id="loadingPercent">0%</div>
+    </div>
+    
+    <canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script type='text/javascript'>
+      var Module = {
+        preRun: [],
+        canvas: document.getElementById("canvas"),
+        print: (...args) => console.log('[stdout]: ' + args.join(' ')),
+        printErr: (...args) => console.log('[stderr]: ' + args.join(' ')),
+        // Loading progress callbacks
+        setStatus: function(text) {
+          console.log('[status]: ' + text);
+          if (text === '') {
+            // Loading complete, hide loading screen
+            document.getElementById('loadingScreen').style.display = 'none';
+          }
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          if (left === 0) {
+            // All dependencies loaded
+            document.getElementById('loadingScreen').style.display = 'none';
+          } else {
+            // Update loading progress
+            const progress = ((this.totalDependencies - left) / this.totalDependencies) * 100;
+            document.getElementById('loadingBar').style.width = progress + '%';
+            document.getElementById('loadingPercent').textContent = Math.floor(progress) + '%';
+          }
+        },
+        // WASM instantiation progress
+        instantiateWasm: function(imports, successCallback) {
+          const loadingBar = document.getElementById('loadingBar');
+          const loadingPercent = document.getElementById('loadingPercent');
+          
+          // Default instantiation with progress tracking
+          const wasmBinaryFile = 'index.wasm';
+          
+          fetch(wasmBinaryFile)
+            .then(response => {
+              if (!response.ok) throw new Error('Failed to load WASM');
+              const contentLength = response.headers.get('content-length');
+              const total = parseInt(contentLength, 10);
+              let loaded = 0;
+              
+              const reader = response.body.getReader();
+              const chunks = [];
+              
+              function read() {
+                return reader.read().then(({ done, value }) => {
+                  if (done) return;
+                  chunks.push(value);
+                  loaded += value.length;
+                  
+                  if (total) {
+                    const progress = (loaded / total) * 100;
+                    loadingBar.style.width = progress + '%';
+                    loadingPercent.textContent = Math.floor(progress) + '%';
+                  }
+                  
+                  return read();
+                });
+              }
+              
+              return read().then(() => {
+                const wasmBytes = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+                let offset = 0;
+                for (const chunk of chunks) {
+                  wasmBytes.set(chunk, offset);
+                  offset += chunk.length;
+                }
+                return WebAssembly.instantiate(wasmBytes, imports);
+              });
+            })
+            .then(result => {
+              successCallback(result.instance);
+            })
+            .catch(err => {
+              console.error('WASM loading error:', err);
+              document.getElementById('loadingText').textContent = 'Loading failed!';
+              document.getElementById('loadingText').style.color = '#ff4444';
+            });
+          
+          return {}; // Return empty object as required by Emscripten
+        }
+      };
+      window.onerror = (event) => console.log('[onerror]: ' + event.message);
+    </script>
+    <script async type="text/javascript" src="index.js"></script>
+  </body>
+</html>

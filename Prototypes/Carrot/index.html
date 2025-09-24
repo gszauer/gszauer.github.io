@@ -1,187 +1,254 @@
-<!doctype html>
-<!-- https://github.com/floooh/sokol-samples/blob/master/webpage/shell.html -->
-<!doctype html>
-<html lang="en-us">
-  <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
-    <title>Emscripten-Generated Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrot Code</title>
     <style>
-        body { margin: 0; background-color: black }
-        .game {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            margin: 0px;
-            border: 0;
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            display: block;
-            image-rendering: optimizeSpeed;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -o-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: optimize-contrast;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated;
-            -ms-interpolation-mode: nearest-neighbor;
+            background: #121212;
+            font-family: "Segoe UI", sans-serif;
+            color: #e4e4e4;
         }
-        .drag-over {
-            border: 3px dashed #4CAF50 !important;
-            background-color: rgba(76, 175, 80, 0.1);
-        }
-        /* Loading screen styles */
-        #loadingScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1e1e1e;
+
+        body {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            align-items: stretch;
+            justify-content: stretch;
+
+            /* Disable selection of html elements */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #carrot-canvas {
+            flex: 1;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            background: #1e1e1e;
+            outline: none;
+            image-rendering: pixelated;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
             align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.65);
             z-index: 1000;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         }
-        #loadingText {
-            color: #ff69b4;
-            font-size: 24px;
-            margin-bottom: 20px;
+
+        .modal.hidden {
+            display: none;
         }
-        #loadingProgress {
-            width: 300px;
-            height: 6px;
-            background-color: #2d2d30;
-            border-radius: 3px;
-            overflow: hidden;
+
+        .modal-dialog {
+            min-width: min(480px, 90vw);
+            max-width: 640px;
+            background: #232323;
+            border: 1px solid #3d3d3d;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
-        #loadingBar {
-            height: 100%;
-            background-color: #ff69b4;
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 3px;
+
+        .modal-dialog h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+            color: #f0f0f0;
         }
-        #loadingPercent {
-            color: #ff69b4;
-            font-size: 14px;
-            margin-top: 10px;
-            opacity: 0.8;
+
+        .modal-dialog p {
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+
+        .modal-dialog textarea,
+        .modal-dialog input[type="text"] {
+            width: 100%;
+            margin: 12px 0 16px 0;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+            background: #151515;
+            color: #f5f5f5;
+            font-size: 0.95rem;
+            resize: vertical;
+            /* Allow text selection and input in modal fields */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        .modal-dialog textarea {
+            min-height: 140px;
+            max-height: 320px;
+        }
+
+        .modal-dialog .button-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-dialog button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background: #2e2e2e;
+            color: #f0f0f0;
+            transition: background 0.2s ease;
+        }
+
+        .modal-dialog button.primary {
+            background: #7a3a6e;
+        }
+
+        .modal-dialog button:hover {
+            background: #3a3a3a;
+        }
+
+        .modal-dialog button.primary:hover {
+            background: #8a437c;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #9d9d9d;
+        }
+
+        .shutdown-container {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #121212;
+            z-index: 2000;
+        }
+
+        .shutdown-container.hidden {
+            display: none;
+        }
+
+        .shutdown-content {
+            text-align: center;
+            color: #e4e4e4;
+        }
+
+        .shutdown-content h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin: 0 0 1rem 0;
+            color: #f0f0f0;
+        }
+
+        .shutdown-content p {
+            font-size: 1.2rem;
+            margin: 0;
+            color: #9d9d9d;
+        }
+
+        /* Drag and drop visual feedback */
+        body.drag-over::after {
+            content: 'Drop file to open';
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(122, 58, 110, 0.9);
+            color: #f0f0f0;
+            font-size: 2rem;
+            font-weight: 300;
+            z-index: 1500;
+            pointer-events: none;
+            border: 4px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            margin: 20px;
         }
     </style>
-     <link href="icon.png" rel="icon"  type="image/png">
-     <link href="icon.png" rel="apple-touch-icon"  type="image/png">
-     <!-- Adding PWA Capabilities -->
-     <!-- https://medium.com/codechef-vit/convert-your-website-into-a-pwa-ee8f6b67bca7 -->
-     <link rel="manifest" href="manifest.json">
-     <script>
-         if ('serviceWorker' in navigator) {
-             navigator.serviceWorker.register('/sw.js')
-                 .then(function () {
-                     console.log('Service Worker Registered');
-                 });
-         }
-     </script>
-  </head>
-  <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen">
-        <div id="loadingText">Loading Editor...</div>
-        <div id="loadingProgress">
-            <div id="loadingBar"></div>
+</head>
+<body>
+<canvas id="carrot-canvas" tabindex="0"></canvas>
+
+<div id="copy-modal" class="modal hidden">
+    <div class="modal-dialog">
+        <h2>Copy To Clipboard</h2>
+        <textarea id="copy-modal-text"></textarea>
+        <p class="helper-text">Use the copy button or select the text and press Ctrl+C / Command+C.</p>
+        <div class="button-row">
+            <button id="copy-modal-close">Close</button>
+            <button id="copy-modal-copy" class="primary">Copy</button>
         </div>
-        <div id="loadingPercent">0%</div>
     </div>
-    
-    <canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
-    <script type='text/javascript'>
-      var Module = {
-        preRun: [],
-        canvas: document.getElementById("canvas"),
-        print: (...args) => console.log('[stdout]: ' + args.join(' ')),
-        printErr: (...args) => console.log('[stderr]: ' + args.join(' ')),
-        // Loading progress callbacks
-        setStatus: function(text) {
-          console.log('[status]: ' + text);
-          if (text === '') {
-            // Loading complete, hide loading screen
-            document.getElementById('loadingScreen').style.display = 'none';
-          }
-        },
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          if (left === 0) {
-            // All dependencies loaded
-            document.getElementById('loadingScreen').style.display = 'none';
-          } else {
-            // Update loading progress
-            const progress = ((this.totalDependencies - left) / this.totalDependencies) * 100;
-            document.getElementById('loadingBar').style.width = progress + '%';
-            document.getElementById('loadingPercent').textContent = Math.floor(progress) + '%';
-          }
-        },
-        // WASM instantiation progress
-        instantiateWasm: function(imports, successCallback) {
-          const loadingBar = document.getElementById('loadingBar');
-          const loadingPercent = document.getElementById('loadingPercent');
-          
-          // Default instantiation with progress tracking
-          const wasmBinaryFile = 'index.wasm';
-          
-          fetch(wasmBinaryFile)
-            .then(response => {
-              if (!response.ok) throw new Error('Failed to load WASM');
-              const contentLength = response.headers.get('content-length');
-              const total = parseInt(contentLength, 10);
-              let loaded = 0;
-              
-              const reader = response.body.getReader();
-              const chunks = [];
-              
-              function read() {
-                return reader.read().then(({ done, value }) => {
-                  if (done) return;
-                  chunks.push(value);
-                  loaded += value.length;
-                  
-                  if (total) {
-                    const progress = (loaded / total) * 100;
-                    loadingBar.style.width = progress + '%';
-                    loadingPercent.textContent = Math.floor(progress) + '%';
-                  }
-                  
-                  return read();
-                });
-              }
-              
-              return read().then(() => {
-                const wasmBytes = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
-                let offset = 0;
-                for (const chunk of chunks) {
-                  wasmBytes.set(chunk, offset);
-                  offset += chunk.length;
-                }
-                return WebAssembly.instantiate(wasmBytes, imports);
-              });
-            })
-            .then(result => {
-              successCallback(result.instance);
-            })
-            .catch(err => {
-              console.error('WASM loading error:', err);
-              document.getElementById('loadingText').textContent = 'Loading failed!';
-              document.getElementById('loadingText').style.color = '#ff4444';
-            });
-          
-          return {}; // Return empty object as required by Emscripten
-        }
-      };
-      window.onerror = (event) => console.log('[onerror]: ' + event.message);
-    </script>
-    <script async type="text/javascript" src="index.js"></script>
-  </body>
+</div>
+
+<div id="paste-modal" class="modal hidden">
+    <div class="modal-dialog">
+        <h2>Paste From Clipboard</h2>
+        <textarea id="paste-modal-text" placeholder="Paste text here (Ctrl+V / Command+V)"></textarea>
+        <div class="button-row">
+            <button id="paste-modal-cancel">Cancel</button>
+            <button id="paste-modal-submit" class="primary">Paste</button>
+        </div>
+    </div>
+</div>
+
+<div id="yesno-modal" class="modal hidden">
+    <div class="modal-dialog">
+        <h2>Confirm</h2>
+        <p id="yesno-modal-message"></p>
+        <div class="button-row">
+            <button id="yesno-modal-no">No</button>
+            <button id="yesno-modal-yes" class="primary">Yes</button>
+        </div>
+    </div>
+</div>
+
+<div id="save-modal" class="modal hidden">
+    <div class="modal-dialog">
+        <h2>Save File As</h2>
+        <input type="text" id="save-modal-name" placeholder="document.txt" autocomplete="off">
+        <div class="button-row">
+            <button id="save-modal-cancel">Cancel</button>
+            <button id="save-modal-save" class="primary">Save</button>
+        </div>
+    </div>
+</div>
+
+<input id="file-input" type="file" style="display:none" />
+
+<div id="shutdown-message" class="shutdown-container hidden">
+    <div class="shutdown-content">
+        <h1>Carrot Code Closed</h1>
+        <p>Refresh page to re-launch</p>
+    </div>
+</div>
+
+<script src="emscripten.js"></script>
+<script src="carrotcode.js"></script>
+</body>
 </html>
