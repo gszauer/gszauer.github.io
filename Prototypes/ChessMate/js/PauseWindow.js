@@ -12,23 +12,23 @@ class PauseWindow extends Phaser.GameObjects.Container {
     createWindow() {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
-        
+
         // Modal background blocker with tint
         this.blocker = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0.6);
         this.blocker.setOrigin(0, 0);
         this.blocker.setInteractive();
         this.add(this.blocker);
-        
+
         // Window dimensions
         const windowWidth = 1250;
         const windowHeight = 900;  // Taller window to fit both buttons
         const windowX = width / 2;  // Center X position
         const windowY = height / 2; // Center Y position
-        
+
         // Create window using the static function from SettingsWindow
         const windowContainer = SettingsWindow.createWindowBackground(this.scene, windowX, windowY, windowWidth, windowHeight);
         this.add(windowContainer);
-        
+
         // Title text (now relative to window center)
         this.titleText = this.scene.add.text(windowX, windowY - windowHeight/2 + 100, 'PAUSED', {
             fontSize: '100px',
@@ -38,24 +38,35 @@ class PauseWindow extends Phaser.GameObjects.Container {
         });
         this.titleText.setOrigin(0.5, 0.5);
         this.add(this.titleText);
-        
+
         // Create close button using graphics (overlapping window edge)
         const closeX = windowX + windowWidth/2 - 25;
         const closeY = windowY - windowHeight/2 + 25;
         this.createCloseButton(closeX, closeY);
-        
+
         // Create checkboxes for sound settings
         this.createSoundCheckboxes(windowX, windowY);
-        
+
         // Create action buttons at bottom
-        const buttonSpacing = 550;  // Increased spacing to prevent overlap
         const buttonsY = windowY + windowHeight/2 - 120;
-        
-        // Back to menu button (left)
-        this.createMenuButton(windowX - buttonSpacing/2, buttonsY);
-        
-        // Restart level button (right)
-        this.createRestartButton(windowX + buttonSpacing/2, buttonsY);
+
+        // Check if we should show the "Back to menu" button (hide for levels 1 and 2)
+        const levelId = this.scene.levelId;
+        const showMenuButton = !levelId || levelId > 2;
+
+        if (showMenuButton) {
+            // Both buttons shown - use normal spacing
+            const buttonSpacing = 550;  // Increased spacing to prevent overlap
+
+            // Back to menu button (left)
+            this.createMenuButton(windowX - buttonSpacing/2, buttonsY);
+
+            // Restart level button (right)
+            this.createRestartButton(windowX + buttonSpacing/2, buttonsY);
+        } else {
+            // Only restart button - center it
+            this.createRestartButton(windowX, buttonsY);
+        }
     }
     
     createSoundCheckboxes(centerX, centerY) {
@@ -64,29 +75,46 @@ class PauseWindow extends Phaser.GameObjects.Container {
         const checkboxSize = 120;  // 3x bigger
         const spacing = 180;       // Increased spacing for bigger checkboxes
         
-        // Create Sound Effects checkbox (starts unchecked)
+        // Create Sound Effects checkbox (uses SfxMuted state)
         // Position more to the left (using window edge as reference)
         this.createCheckbox(
             centerX - 500,  // More to the left
             startY,
             checkboxSize,
             'Mute Sound Effects',
-            false,
+            Gameplay.SfxMuted,
             (checked) => {
-                // Handle sound effects muting logic here if needed
+                Gameplay.SfxMuted = checked;
+                // Save mute state (1 = muted, 0 = not muted)
+                PlayerData.Instance.SetNumber("SfxMuted", checked ? 1 : 0);
                 console.log('Sound effects muted:', checked);
             }
         );
         
-        // Create Music checkbox (starts unchecked)
+        // Create Music checkbox (uses BgmMuted state)
         this.createCheckbox(
             centerX - 500,  // More to the left
             startY + spacing,
             checkboxSize,
             'Mute Music',
-            false,
+            Gameplay.BgmMuted,
             (checked) => {
-                // Handle music muting logic here if needed
+                Gameplay.BgmMuted = checked;
+                // Save mute state (1 = muted, 0 = not muted)
+                PlayerData.Instance.SetNumber("BgmMuted", checked ? 1 : 0);
+                // Stop or start music in Gameplay scene
+                if (Gameplay.BgmMuted) {
+                    // Stop music completely when muted
+                    if (this.scene.gameplayMusic) {
+                        this.scene.gameplayMusic.stop();
+                        this.scene.gameplayMusic = null;
+                    }
+                } else {
+                    // Start music when unmuted
+                    if (!this.scene.gameplayMusic || !this.scene.gameplayMusic.isPlaying) {
+                        this.scene.startGameplayMusic();
+                    }
+                }
                 console.log('Music muted:', checked);
             }
         );
@@ -155,6 +183,10 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Hover effects
         graphics.on('pointerover', () => {
+            // Play level button hover sound for checkbox
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'level_button_hover', { volume: 0.35 });
+            }
             drawCheckbox(true);
         });
         
@@ -164,6 +196,10 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Click to toggle
         graphics.on('pointerup', () => {
+            // Play level button click sound for checkbox
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'level_button_click', { volume: 0.35 });
+            }
             isChecked = !isChecked;
             drawCheckbox();
             if (onToggle) {
@@ -412,6 +448,10 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Hover effect
         container.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             currentBaseColor = colors.hoverBrown;
             currentHighlightColor = colors.hoverHighlight;
             drawButton();
@@ -427,6 +467,10 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Click to go back to menu
         container.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_click');
+            }
             this.hide();
             this.scene.scene.start('LevelSelect');
         });
@@ -539,6 +583,10 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Hover effect
         container.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             currentBaseColor = colors.hoverBrown;
             currentHighlightColor = colors.hoverHighlight;
             drawButton();
@@ -554,7 +602,14 @@ class PauseWindow extends Phaser.GameObjects.Container {
         
         // Click to restart level
         container.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_click');
+            }
             this.hide();
+            if (this.scene && typeof this.scene.stopMusicOnShutdown === 'boolean') {
+                this.scene.stopMusicOnShutdown = false;
+            }
             this.scene.scene.restart({ levelIndex: this.scene.levelIndex });
         });
         

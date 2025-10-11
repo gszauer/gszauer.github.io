@@ -39,16 +39,47 @@ class Preloader extends Phaser.Scene {
             this.loadingText.destroy();
         });
 
-        this.load.image('background', 'assets/background.png');
         this.load.atlas('characters', 'assets/characters.png', 'assets/characters.json');
         this.load.atlas('ui', 'assets/ui.png', 'assets/ui.json');
+        this.load.image('logo', 'assets/logo_transparent.png');
+        this.load.audio('gameplay_music', 'assets/placeholder_gameplay.wav');
+
+        // Load soundbank audio sprite
+        this.load.audioSprite('soundbank', 'assets/soundbank.json', [
+            'assets/soundbank.ogg',
+            'assets/soundbank.m4a',
+            'assets/soundbank.mp3',
+            'assets/soundbank.ac3'
+        ]);
     }
 
     create() {
+        // Load saved mute states from PlayerData
+        // 0 = not muted (default), 1 = muted
+        const bgmMuted = PlayerData.Instance.GetNumber("BgmMuted", 0);
+        const sfxMuted = PlayerData.Instance.GetNumber("SfxMuted", 0);
+
+        // Set global mute states
+        Gameplay.BgmMuted = bgmMuted === 1;
+        Gameplay.SfxMuted = sfxMuted === 1;
+
+        console.log('Loaded mute states - BGM:', Gameplay.BgmMuted, 'SFX:', Gameplay.SfxMuted);
+
+        // Debug: Check if soundbank loaded properly
+        if (this.cache.audio.exists('soundbank')) {
+            console.log('Soundbank loaded successfully');
+            const audioData = this.cache.json.get('soundbank');
+            if (audioData && audioData.spritemap) {
+                console.log('Available sounds in soundbank:', Object.keys(audioData.spritemap));
+            }
+        } else {
+            console.log('WARNING: Soundbank not loaded!');
+        }
+
         this.makeCheckerTexture('checker', TILE_SIZE, COLORS.lightSquare, COLORS.darkSquare);
         this.makeLevelIconTexture('gold_icon', ICON_DIAMETER, 0xF5F5F5, 0x808080);  // White checker with gray edge
         this.makeLevelIconTexture('silver_icon', ICON_DIAMETER, 0x2A2A2A, 0x000000);  // Black checker with black edge
-        
+
         // Show logo and play button
         this.showLogo();
         this.createPlayButton();
@@ -60,7 +91,7 @@ class Preloader extends Phaser.Scene {
         const height = this.cameras.main.height;
         
         // Display the logo higher up
-        const logo = this.add.image(width / 2, height / 2 - 500, 'ui', 'logo_transparent.png');
+        const logo = this.add.image(width / 2, height / 2 - 500, 'logo');
         logo.setOrigin(0.5, 0.5);
         
         // Scale the logo appropriately (adjust scale as needed)
@@ -196,7 +227,22 @@ class Preloader extends Phaser.Scene {
         
         // Click to start
         container.on('pointerup', () => {
-            this.scene.start('LevelSelect');
+            // Check level progression
+            const completedLevels = PlayerData.Instance.GetNumber('chessmate_completed', 0);
+            const unlockedLevels = Math.min(completedLevels + 1, LEVELS.length);
+
+            // If only level 1 is unlocked (no levels completed), go directly to level 1
+            if (completedLevels === 0) {
+                this.scene.start('Gameplay', { levelIndex: 0 });
+            }
+            // If only level 1 is completed and level 2 is unlocked, go directly to level 2
+            else if (completedLevels === 1) {
+                this.scene.start('Gameplay', { levelIndex: 1 });
+            }
+            // Otherwise go to level select
+            else {
+                this.scene.start('LevelSelect');
+            }
         });
         
         // Fade in animation

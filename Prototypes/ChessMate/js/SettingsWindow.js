@@ -59,29 +59,37 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         const checkboxSize = 120;  // 3x bigger
         const spacing = 180;       // Increased spacing for bigger checkboxes
         
-        // Create Sound Effects checkbox (starts unchecked)
+        // Create Sound Effects checkbox (uses SfxMuted state)
         // Position more to the left (using window edge as reference)
         this.createCheckbox(
             centerX - 500,  // More to the left
             startY,
             checkboxSize,
             'Mute Sound Effects',
-            false,
+            Gameplay.SfxMuted,
             (checked) => {
-                // Handle sound effects muting logic here if needed
+                Gameplay.SfxMuted = checked;
+                // Save mute state (1 = muted, 0 = not muted)
+                PlayerData.Instance.SetNumber("SfxMuted", checked ? 1 : 0);
                 console.log('Sound effects muted:', checked);
             }
         );
         
-        // Create Music checkbox (starts unchecked)
+        // Create Music checkbox (uses BgmMuted state)
         this.createCheckbox(
             centerX - 500,  // More to the left
             startY + spacing,
             checkboxSize,
             'Mute Music',
-            false,
+            Gameplay.BgmMuted,
             (checked) => {
-                // Handle music muting logic here if needed
+                Gameplay.BgmMuted = checked;
+                // Save mute state (1 = muted, 0 = not muted)
+                PlayerData.Instance.SetNumber("BgmMuted", checked ? 1 : 0);
+                // Update music volume in LevelSelect scene
+                if (this.scene.scene.get('LevelSelect').updateMusicVolume) {
+                    this.scene.scene.get('LevelSelect').updateMusicVolume();
+                }
                 console.log('Music muted:', checked);
             }
         );
@@ -150,6 +158,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Hover effects
         graphics.on('pointerover', () => {
+            // Play level button hover sound for checkbox
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'level_button_hover', { volume: 0.35 });
+            }
             drawCheckbox(true);
         });
         
@@ -159,6 +171,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Click to toggle
         graphics.on('pointerup', () => {
+            // Play level button click sound for checkbox
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'level_button_click', { volume: 0.35 });
+            }
             isChecked = !isChecked;
             drawCheckbox();
             if (onToggle) {
@@ -281,6 +297,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Hover effect
         container.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             currentBaseColor = colors.hoverRed;
             currentHighlightColor = colors.hoverHighlight;
             drawButton();
@@ -296,6 +316,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Click to close
         container.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_click');
+            }
             this.hide();
         });
         
@@ -407,6 +431,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Hover effect
         container.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             currentBaseColor = colors.hoverBrown;
             currentHighlightColor = colors.hoverHighlight;
             drawButton();
@@ -422,6 +450,10 @@ class SettingsWindow extends Phaser.GameObjects.Container {
         
         // Click to open reset confirmation window
         container.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_click');
+            }
             // Create reset window if it doesn't exist
             if (!this.scene.resetWindow) {
                 this.scene.resetWindow = new ResetWindow(this.scene);

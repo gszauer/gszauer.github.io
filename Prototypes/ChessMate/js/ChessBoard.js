@@ -45,6 +45,7 @@ class ChessBoard extends Phaser.GameObjects.Container {
     addPiece(piece) {
         this.pieces.push(piece);
         this.add(piece);
+        this.sortPiecesByY();
     }
 
     removePiece(piece) {
@@ -53,6 +54,28 @@ class ChessBoard extends Phaser.GameObjects.Container {
             this.pieces.splice(index, 1);
             piece.destroy();
         }
+        this.sortPiecesByY();
+    }
+
+    sortPiecesByY() {
+        if (this.pieces.length <= 1) {
+            return;
+        }
+
+        const sortedPieces = this.pieces
+            .slice()
+            .sort((a, b) => {
+                if (a.y === b.y) {
+                    return a.x - b.x;
+                }
+                return a.y - b.y;
+            });
+
+        sortedPieces.forEach(piece => {
+            if (piece.parentContainer === this) {
+                this.bringToTop(piece);
+            }
+        });
     }
 
     getPieceAt(boardX, boardY) {
@@ -66,23 +89,23 @@ class ChessBoard extends Phaser.GameObjects.Container {
 
     highlightSquares(squares, defaultColor = COLORS.highlight) {
         this.clearHighlights();
-        
+
         squares.forEach((square) => {
             const x = square.x;
             const y = square.y;
             const color = square.color || defaultColor;
-            
+
             const highlight = this.scene.add.graphics();
-            highlight.fillStyle(color, 0.5);
+            highlight.fillStyle(color, 0.7);
             highlight.fillRect(
                 this.xOffset + x * this.tileSize,
                 this.yOffset + y * this.tileSize,
                 this.tileSize,
                 this.tileSize
             );
-            highlight.setDepth(10);
             this.highlights.push(highlight);
-            this.add(highlight);
+            // Add highlight at index 1 (after board graphics at index 0, but before any pieces)
+            this.addAt(highlight, 1);
         });
     }
 

@@ -10,129 +10,45 @@
 			"scale": 1,
 			"frames": [
 				{
-					"filename": "enemy_bishop.png",
+					"filename": "bubble.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 305,
-						"h": 742
+						"w": 350,
+						"h": 250
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 305,
-						"h": 742
+						"w": 350,
+						"h": 250
 					},
 					"frame": {
 						"x": 2,
 						"y": 2,
-						"w": 305,
-						"h": 742
+						"w": 350,
+						"h": 250
 					}
 				},
 				{
-					"filename": "enemy_pawn.png",
+					"filename": "tutorial_1.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 349,
-						"h": 720
+						"w": 467,
+						"h": 495
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 349,
-						"h": 720
+						"w": 467,
+						"h": 495
 					},
 					"frame": {
-						"x": 2,
-						"y": 748,
-						"w": 349,
-						"h": 720
-					}
-				},
-				{
-					"filename": "enemy_king.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 337,
-						"h": 720
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 337,
-						"h": 720
-					},
-					"frame": {
-						"x": 311,
+						"x": 356,
 						"y": 2,
-						"w": 337,
-						"h": 720
-					}
-				},
-				{
-					"filename": "tutorial_3.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 489,
-						"h": 507
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 489,
-						"h": 507
-					},
-					"frame": {
-						"x": 2,
-						"y": 1472,
-						"w": 489,
-						"h": 507
-					}
-				},
-				{
-					"filename": "hero_bishop.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 326,
-						"h": 715
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 326,
-						"h": 715
-					},
-					"frame": {
-						"x": 355,
-						"y": 726,
-						"w": 326,
-						"h": 715
-					}
-				},
-				{
-					"filename": "hero_knight.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 337,
-						"h": 712
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 337,
-						"h": 712
-					},
-					"frame": {
-						"x": 652,
-						"y": 2,
-						"w": 337,
-						"h": 712
+						"w": 467,
+						"h": 495
 					}
 				},
 				{
@@ -150,94 +66,52 @@
 						"h": 500
 					},
 					"frame": {
-						"x": 495,
-						"y": 1445,
+						"x": 827,
+						"y": 2,
 						"w": 496,
 						"h": 500
 					}
 				},
 				{
-					"filename": "hero_king.png",
+					"filename": "tutorial_3.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 355,
-						"h": 703
+						"w": 489,
+						"h": 507
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 355,
-						"h": 703
+						"w": 489,
+						"h": 507
 					},
 					"frame": {
-						"x": 685,
-						"y": 718,
-						"w": 355,
-						"h": 703
+						"x": 1327,
+						"y": 2,
+						"w": 489,
+						"h": 507
 					}
 				},
 				{
-					"filename": "hero_queen.png",
+					"filename": "enemy_queen.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 301,
-						"h": 694
+						"w": 269,
+						"h": 645
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 301,
-						"h": 694
+						"w": 269,
+						"h": 645
 					},
 					"frame": {
-						"x": 995,
-						"y": 2,
-						"w": 301,
-						"h": 694
-					}
-				},
-				{
-					"filename": "hero_pawn.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 341,
-						"h": 691
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 341,
-						"h": 691
-					},
-					"frame": {
-						"x": 1300,
-						"y": 2,
-						"w": 341,
-						"h": 691
-					}
-				},
-				{
-					"filename": "hero_rook.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 373,
-						"h": 686
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 373,
-						"h": 686
-					},
-					"frame": {
-						"x": 1645,
-						"y": 2,
-						"w": 373,
-						"h": 686
+						"x": 2,
+						"y": 256,
+						"w": 269,
+						"h": 645
 					}
 				},
 				{
@@ -255,8 +129,8 @@
 						"h": 642
 					},
 					"frame": {
-						"x": 1645,
-						"y": 692,
+						"x": 275,
+						"y": 501,
 						"w": 362,
 						"h": 642
 					}
@@ -276,52 +150,199 @@
 						"h": 662
 					},
 					"frame": {
-						"x": 1300,
-						"y": 697,
+						"x": 641,
+						"y": 506,
 						"w": 330,
 						"h": 662
 					}
 				},
 				{
-					"filename": "enemy_queen.png",
+					"filename": "hero_pawn.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 269,
-						"h": 645
+						"w": 341,
+						"h": 691
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 269,
-						"h": 645
+						"w": 341,
+						"h": 691
 					},
 					"frame": {
-						"x": 1044,
-						"y": 1363,
-						"w": 269,
-						"h": 645
+						"x": 975,
+						"y": 506,
+						"w": 341,
+						"h": 691
 					}
 				},
 				{
-					"filename": "tutorial_1.png",
+					"filename": "hero_rook.png",
 					"rotated": false,
 					"trimmed": false,
 					"sourceSize": {
-						"w": 467,
-						"h": 495
+						"w": 373,
+						"h": 686
 					},
 					"spriteSourceSize": {
 						"x": 0,
 						"y": 0,
-						"w": 467,
-						"h": 495
+						"w": 373,
+						"h": 686
 					},
 					"frame": {
-						"x": 1317,
-						"y": 1363,
-						"w": 467,
-						"h": 495
+						"x": 1320,
+						"y": 513,
+						"w": 373,
+						"h": 686
+					}
+				},
+				{
+					"filename": "hero_queen.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 301,
+						"h": 694
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 301,
+						"h": 694
+					},
+					"frame": {
+						"x": 1697,
+						"y": 513,
+						"w": 301,
+						"h": 694
+					}
+				},
+				{
+					"filename": "hero_king.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 355,
+						"h": 703
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 355,
+						"h": 703
+					},
+					"frame": {
+						"x": 2,
+						"y": 1147,
+						"w": 355,
+						"h": 703
+					}
+				},
+				{
+					"filename": "hero_knight.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 337,
+						"h": 712
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 337,
+						"h": 712
+					},
+					"frame": {
+						"x": 361,
+						"y": 1172,
+						"w": 337,
+						"h": 712
+					}
+				},
+				{
+					"filename": "hero_bishop.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 326,
+						"h": 715
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 326,
+						"h": 715
+					},
+					"frame": {
+						"x": 702,
+						"y": 1201,
+						"w": 326,
+						"h": 715
+					}
+				},
+				{
+					"filename": "enemy_king.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 337,
+						"h": 720
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 337,
+						"h": 720
+					},
+					"frame": {
+						"x": 1032,
+						"y": 1203,
+						"w": 337,
+						"h": 720
+					}
+				},
+				{
+					"filename": "enemy_pawn.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 349,
+						"h": 720
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 349,
+						"h": 720
+					},
+					"frame": {
+						"x": 1373,
+						"y": 1211,
+						"w": 349,
+						"h": 720
+					}
+				},
+				{
+					"filename": "enemy_bishop.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 305,
+						"h": 742
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 305,
+						"h": 742
+					},
+					"frame": {
+						"x": 1726,
+						"y": 1211,
+						"w": 305,
+						"h": 742
 					}
 				}
 			]

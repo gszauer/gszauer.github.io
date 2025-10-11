@@ -6,10 +6,11 @@ class LevelSelect extends Phaser.Scene {
         this.unlockedLevels = Math.min(completedLevels + 1, LEVELS.length);
         // Ensure at least 1 level is unlocked
         if (this.unlockedLevels < 1) this.unlockedLevels = 1;
-        
+
         // Store references for updating
         this.levelIcons = [];
         this.pathGraphics = [];
+        this.levelSelectMusic = null;
     }
 
     create() {
@@ -37,6 +38,74 @@ class LevelSelect extends Phaser.Scene {
         this.addSettingsButton();
         this.debugWindow = new DebugWindow(this);
         this.settingsWindow = new SettingsWindow(this);
+        this.startLevelSelectMusic();
+    }
+
+    startLevelSelectMusic() {
+        // Stop any existing music first to prevent stacking
+        if (this.levelSelectMusic) {
+            if (typeof this.levelSelectMusic.stop === 'function') {
+                this.levelSelectMusic.stop();
+            } else if (typeof this.levelSelectMusic.destroy === 'function') {
+                this.levelSelectMusic.destroy();
+            } else {
+                // Last resort: stop all sounds from soundbank
+                this.sound.stopByKey('soundbank');
+            }
+            this.levelSelectMusic = null;
+        }
+
+        // Only play music if not muted
+        if (!Gameplay.BgmMuted) {
+            this.levelSelectMusic = this.sound.playAudioSprite('soundbank', 'level_select_bg', {
+                loop: true,
+                volume: 0.1
+            });
+            console.log('Started level select music:', this.levelSelectMusic);
+        }
+    }
+
+    updateMusicVolume() {
+        // When muted, stop music completely. When unmuted, start it.
+        if (Gameplay.BgmMuted) {
+            // Stop and destroy music if it's playing
+            if (this.levelSelectMusic) {
+                if (typeof this.levelSelectMusic.stop === 'function') {
+                    this.levelSelectMusic.stop();
+                } else if (typeof this.levelSelectMusic.destroy === 'function') {
+                    this.levelSelectMusic.destroy();
+                } else {
+                    // Last resort: stop all sounds from soundbank
+                    this.sound.stopByKey('soundbank');
+                }
+                this.levelSelectMusic = null;
+            }
+        } else {
+            // Start music if it's not playing
+            if (!this.levelSelectMusic) {
+                this.levelSelectMusic = this.sound.playAudioSprite('soundbank', 'level_select_bg', {
+                    loop: true,
+                    volume: 0.1
+                });
+            }
+        }
+    }
+
+    shutdown() {
+        // Stop music when leaving the scene
+        if (this.levelSelectMusic) {
+            console.log('Shutdown: stopping level select music');
+            // For audio sprites, we need to use the sound's stop method if available
+            if (typeof this.levelSelectMusic.stop === 'function') {
+                this.levelSelectMusic.stop();
+            } else if (typeof this.levelSelectMusic.destroy === 'function') {
+                this.levelSelectMusic.destroy();
+            } else {
+                // Last resort: stop all sounds from soundbank
+                this.sound.stopByKey('soundbank');
+            }
+            this.levelSelectMusic = null;
+        }
     }
     
     addDebugButton() {
@@ -212,6 +281,10 @@ class LevelSelect extends Phaser.Scene {
         
         // Add hover effect
         settingsButton.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.sound && this.sound.playAudioSprite) {
+                this.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             settingsButton.setScale(scale * 1.07); // Proportional hover scale
         });
         
@@ -221,6 +294,10 @@ class LevelSelect extends Phaser.Scene {
         
         // Click to open settings window
         settingsButton.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.sound && this.sound.playAudioSprite) {
+                this.sound.playAudioSprite('soundbank', 'button_click');
+            }
             this.settingsWindow.show();
         });
     }
@@ -237,7 +314,7 @@ class LevelSelect extends Phaser.Scene {
         header.setDepth(20);
         
         // Add separator below header
-        const separator = this.add.image(0, header.height * scale, 'ui', 'header_seperator.png');
+        const separator = this.add.image(0, header.height * scale - 1, 'ui', 'header_seperator.png');
         separator.setOrigin(0, 0);
         
         // Scale separator to match screen width
@@ -312,6 +389,10 @@ class LevelSelect extends Phaser.Scene {
             circle.setInteractive({ useHandCursor: true });
             
             circle.on('pointerover', () => {
+                // Play level button hover sound
+                if (!Gameplay.SfxMuted && this.sound && this.sound.playAudioSprite) {
+                    this.sound.playAudioSprite('soundbank', 'level_button_hover', { volume: 0.35 });
+                }
                 this.tweens.add({
                     targets: container,
                     scaleX: 1.1,
@@ -332,6 +413,24 @@ class LevelSelect extends Phaser.Scene {
             });
 
             circle.on('pointerup', () => {
+                // Play level button click sound
+                if (!Gameplay.SfxMuted && this.sound && this.sound.playAudioSprite) {
+                    this.sound.playAudioSprite('soundbank', 'level_button_click', { volume: 0.35 });
+                }
+                // Stop level select music before transitioning
+                if (this.levelSelectMusic) {
+                    console.log('Stopping level select music, object type:', this.levelSelectMusic);
+                    // For audio sprites, we need to use the sound's stop method if available
+                    if (typeof this.levelSelectMusic.stop === 'function') {
+                        this.levelSelectMusic.stop();
+                    } else if (typeof this.levelSelectMusic.destroy === 'function') {
+                        this.levelSelectMusic.destroy();
+                    } else {
+                        // Last resort: stop all sounds from soundbank (not ideal but works)
+                        this.sound.stopByKey('soundbank');
+                    }
+                    this.levelSelectMusic = null;
+                }
                 this.scene.start('Gameplay', { levelIndex: levelIndex });
             });
         }

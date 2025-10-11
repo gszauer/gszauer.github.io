@@ -1,0 +1,80 @@
+{
+  "resources": [
+    "../dev/assets/soundbank.ogg",
+    "../dev/assets/soundbank.m4a",
+    "../dev/assets/soundbank.mp3",
+    "../dev/assets/soundbank.ac3"
+  ],
+  "spritemap": {
+    "button_click": {
+      "start": 0,
+      "end": 1,
+      "loop": false
+    },
+    "button_hover": {
+      "start": 2,
+      "end": 2.48,
+      "loop": false
+    },
+    "chess_move": {
+      "start": 4,
+      "end": 4.6,
+      "loop": false
+    },
+    "gameplay_bg": {
+      "start": 6,
+      "end": 50.95383219954648,
+      "loop": false
+    },
+    "loose": {
+      "start": 52,
+      "end": 53.47698412698413,
+      "loop": false
+    },
+    "take_piece": {
+      "start": 55,
+      "end": 55.906235827664396,
+      "loop": false
+    },
+    "win": {
+      "start": 57,
+      "end": 58.2418820861678,
+      "loop": false
+    },
+    "piece_hit": {
+      "start": 60,
+      "end": 60.6,
+      "loop": false
+    },
+    "piece_move": {
+      "start": 62,
+      "end": 62.6,
+      "loop": false
+    },
+    "level_button_click": {
+      "start": 64,
+      "end": 65,
+      "loop": false
+    },
+    "level_button_hover": {
+      "start": 66,
+      "end": 68,
+      "loop": false
+    },
+    "level_select_bg": {
+      "start": 69,
+      "end": 91,
+      "loop": false
+    },
+    "piece_click": {
+      "start": 92,
+      "end": 93,
+      "loop": false
+    },
+    "piece_hover": {
+      "start": 94,
+      "end": 94.48,
+      "loop": false
+    }
+  }
+}

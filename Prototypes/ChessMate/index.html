@@ -14,6 +14,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
+
+             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         #game-container {
             position: relative;
@@ -27,7 +32,7 @@
             height: 100%;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script src="phaser.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/PlayerData.js"></script>
     <script src="js/ChessPiece.js"></script>
@@ -35,9 +40,12 @@
     <script src="js/DebugWindow.js"></script>
     <script src="js/SettingsWindow.js"></script>
     <script src="js/PauseWindow.js"></script>
+    <script src="js/NewPieceWindow.js"></script>
     <script src="js/ResetWindow.js"></script>
+    <script src="js/LevelEndDialog.js"></script>
     <script src="js/Preloader.js"></script>
     <script src="js/LevelSelect.js"></script>
+    <script src="js/TutorialInstruction.js"></script>
     <script src="js/Gameplay.js"></script>
 </head>
 <body>

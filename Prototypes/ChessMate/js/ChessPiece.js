@@ -28,6 +28,17 @@ class ChessPiece extends Phaser.GameObjects.Container {
         this.setSize(board.tileSize * 0.8, board.tileSize * 0.8);
         this.setInteractive();
         this.setDepth(20);
+
+        this.holdTween = null;
+        this.progressGraphics = null;
+        this.holdDisplayTimer = null;
+        this.currentHoldProgress = 0;
+
+        this.on('pointerover', this.handlePointerOver, this);
+        this.on('pointerdown', this.handlePointerDown, this);
+        this.on('pointerup', this.cancelHold, this);
+        this.on('pointerout', this.cancelHold, this);
+        this.on('pointerupoutside', this.cancelHold, this);
     }
 
     createPieceGraphics() {
@@ -193,17 +204,157 @@ class ChessPiece extends Phaser.GameObjects.Container {
         graphics.fillCircle(0, -size * 0.4, size * 0.06);
     }
 
-    moveTo(boardX, boardY, onComplete) {
+    handlePointerOver() {
+        // Play piece hover sound
+        if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+            this.scene.sound.playAudioSprite('soundbank', 'piece_hover', { volume: 0.35 });
+        }
+    }
+
+    handlePointerDown(pointer) {
+        if (this.scene.newPieceWindow && this.scene.newPieceWindow.visible) {
+            return;
+        }
+        if (pointer.pointerType === 'mouse' && !pointer.leftButtonDown()) {
+            return;
+        }
+        // Play piece click sound
+        if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+            this.scene.sound.playAudioSprite('soundbank', 'piece_click', { volume: 0.35 });
+        }
+        this.startHoldProgress();
+    }
+
+    startHoldProgress() {
+        this.stopHoldTween();
+        this.clearHoldProgress();
+        this.currentHoldProgress = 0;
+
+        this.holdDisplayTimer = this.scene.time.delayedCall(250, () => {
+            this.ensureProgressGraphics();
+            this.drawHoldProgress(0);
+            this.beginHoldTween();
+        });
+    }
+
+    stopHoldTween() {
+        if (this.holdTween) {
+            this.holdTween.stop();
+            if (this.scene && this.scene.tweens) {
+                this.scene.tweens.remove(this.holdTween);
+            }
+            this.holdTween = null;
+        }
+    }
+
+    cancelHold() {
+        this.stopHoldTween();
+        this.clearHoldProgress();
+    }
+
+    drawHoldProgress(progress) {
+        if (!this.progressGraphics) {
+            return;
+        }
+
+        const radius = this.board.tileSize * 0.45;
+        const startAngle = Phaser.Math.DegToRad(-90);
+        const endAngle = startAngle + Phaser.Math.DegToRad(360 * Phaser.Math.Clamp(progress, 0, 1));
+
+        this.progressGraphics.clear();
+        this.progressGraphics.lineStyle(30, 0xFFFFFF, 0.2);
+        this.progressGraphics.strokeCircle(0, 0, radius);
+
+        if (progress <= 0) {
+            return;
+        }
+
+        this.progressGraphics.lineStyle(30, 0xF6F669, 1);
+        this.progressGraphics.beginPath();
+        this.progressGraphics.arc(0, 0, radius, startAngle, endAngle, false);
+        this.progressGraphics.strokePath();
+    }
+
+    clearHoldProgress() {
+        this.cancelHoldDisplayTimer();
+        this.destroyProgressGraphics();
+        this.currentHoldProgress = 0;
+    }
+
+    triggerHoldComplete() {
+        const modal = this.scene.newPieceWindow;
+        if (modal) {
+            modal.show(this.unit, this.color);
+        }
+        this.clearHoldProgress();
+    }
+
+    destroy(fromScene) {
+        this.cancelHold();
+        super.destroy(fromScene);
+    }
+
+    ensureProgressGraphics() {
+        if (this.progressGraphics) {
+            return;
+        }
+        this.progressGraphics = this.scene.add.graphics();
+        this.progressGraphics.setDepth(30);
+        this.add(this.progressGraphics);
+        this.progressGraphics.setPosition(0, 0);
+    }
+
+    cancelHoldDisplayTimer() {
+        if (this.holdDisplayTimer) {
+            this.holdDisplayTimer.remove(false);
+            this.holdDisplayTimer = null;
+        }
+    }
+
+    destroyProgressGraphics() {
+        if (this.progressGraphics) {
+            this.progressGraphics.destroy();
+            this.progressGraphics = null;
+        }
+    }
+
+    beginHoldTween() {
+        this.stopHoldTween();
+        const holdDuration = 1750;
+        this.ensureProgressGraphics();
+        this.holdDisplayTimer = null;
+        this.holdTween = this.scene.tweens.addCounter({
+            from: 0,
+            to: 1,
+            duration: holdDuration,
+            onUpdate: (tween) => {
+                this.currentHoldProgress = tween.getValue();
+                this.drawHoldProgress(this.currentHoldProgress);
+            },
+            onComplete: () => {
+                this.holdTween = null;
+                this.currentHoldProgress = 1;
+                this.drawHoldProgress(1);
+                this.triggerHoldComplete();
+            }
+        });
+    }
+
+    moveTo(boardX, boardY, onComplete, isCapture = false) {
         const oldBoardX = this.boardX;
         const oldBoardY = this.boardY;
         this.boardX = boardX;
         this.boardY = boardY;
         const newX = this.board.xOffset + boardX * this.board.tileSize + this.board.tileSize / 2;
         const newY = this.board.yOffset + boardY * this.board.tileSize + this.board.tileSize / 2;
+        this.board.bringToTop(this);
         
-        // Bring moving piece to front
-        this.setDepth(100);
-        
+        const finalizeMove = () => {
+            this.clearMovementPath();
+            this.board.sortPiecesByY();
+            if (onComplete) onComplete();
+        };
+
         // Create dotted path for movement
         this.createMovementPath(oldBoardX, oldBoardY, boardX, boardY);
         
@@ -255,25 +406,25 @@ class ChessPiece extends Phaser.GameObjects.Container {
                         y: newY,
                         duration: duration2,
                         ease: 'Linear',
-                        onComplete: () => {
-                            // Reset depth after movement
-                            this.setDepth(20);
-                            // Clear the movement path
-                            this.clearMovementPath();
-                            // Call the completion callback if provided
-                            if (onComplete) onComplete();
-                        }
+                        onComplete: finalizeMove
                     });
                     
                     // Create bouncing animation during second segment
                     for (let i = 0; i < bounceCount2; i++) {
+                        const isLastBounce = (i === bounceCount2 - 1);
                         this.scene.tweens.add({
                             targets: this.list[0], // Target the piece image
                             y: -bounceHeight,
                             duration: bounceDuration,
                             delay: i * (bounceDuration * 2),
                             yoyo: true,
-                            ease: 'Sine.easeOut'
+                            ease: 'Sine.easeOut',
+                            onYoyo: () => {
+                                // Play bounce sound when piece hits the board (skip last bounce on captures)
+                                if (!(isCapture && isLastBounce) && !Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                                    this.scene.sound.playAudioSprite('soundbank', 'piece_move');
+                                }
+                            }
                         });
                     }
                 }
@@ -295,7 +446,13 @@ class ChessPiece extends Phaser.GameObjects.Container {
                     duration: bounceDuration,
                     delay: i * (bounceDuration * 2),
                     yoyo: true,
-                    ease: 'Sine.easeOut'
+                    ease: 'Sine.easeOut',
+                    onYoyo: () => {
+                        // Play bounce sound when piece hits the board (always for first segment)
+                        if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                            this.scene.sound.playAudioSprite('soundbank', 'piece_move');
+                        }
+                    }
                 });
             }
         } else {
@@ -317,25 +474,25 @@ class ChessPiece extends Phaser.GameObjects.Container {
                 y: newY,
                 duration: moveDuration,
                 ease: 'Linear',
-                onComplete: () => {
-                    // Reset depth after movement
-                    this.setDepth(20);
-                    // Clear the movement path
-                    this.clearMovementPath();
-                    // Call the completion callback if provided
-                    if (onComplete) onComplete();
-                }
+                onComplete: finalizeMove
             });
             
             // Create bouncing animation during movement
             for (let i = 0; i < bounceCount; i++) {
+                const isLastBounce = (i === bounceCount - 1);
                 this.scene.tweens.add({
                     targets: this.list[0], // Target the piece image
                     y: -bounceHeight,
                     duration: bounceDuration,
                     delay: i * (bounceDuration * 2),
                     yoyo: true,
-                    ease: 'Sine.easeOut'
+                    ease: 'Sine.easeOut',
+                    onYoyo: () => {
+                        // Play bounce sound when piece hits the board (skip last bounce on captures)
+                        if (!(isCapture && isLastBounce) && !Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                            this.scene.sound.playAudioSprite('soundbank', 'piece_move');
+                        }
+                    }
                 });
             }
         }

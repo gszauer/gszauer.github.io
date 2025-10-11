@@ -69,6 +69,17 @@ class ResetWindow extends Phaser.GameObjects.Container {
                 hoverHighlight: 0xFF6666 // Hover highlight
             },
             () => {
+                // Stop any playing music before reset
+                const levelSelect = this.scene.scene.get('LevelSelect');
+                if (levelSelect && levelSelect.levelSelectMusic) {
+                    if (levelSelect.levelSelectMusic.stop) {
+                        levelSelect.levelSelectMusic.stop();
+                    } else if (levelSelect.levelSelectMusic.manager && levelSelect.levelSelectMusic.manager.remove) {
+                        levelSelect.levelSelectMusic.manager.remove(levelSelect.levelSelectMusic);
+                    }
+                    levelSelect.levelSelectMusic = null;
+                }
+
                 // Reset all player data
                 PlayerData.Instance.Reset();
                 // Reload the game
@@ -92,6 +103,11 @@ class ResetWindow extends Phaser.GameObjects.Container {
             },
             () => {
                 this.hide();
+                // Show the settings window again when clicking No
+                const settingsWindow = this.scene.settingsWindow;
+                if (settingsWindow) {
+                    settingsWindow.show();
+                }
             }
         );
     }
@@ -187,6 +203,10 @@ class ResetWindow extends Phaser.GameObjects.Container {
         
         // Hover effect
         container.on('pointerover', () => {
+            // Play button hover sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_hover', { volume: 0.35 });
+            }
             currentBaseColor = colors.hoverBase;
             currentHighlightColor = colors.hoverHighlight;
             drawButton();
@@ -201,7 +221,13 @@ class ResetWindow extends Phaser.GameObjects.Container {
         });
         
         // Click handler
-        container.on('pointerup', onClick);
+        container.on('pointerup', () => {
+            // Play button click sound
+            if (!Gameplay.SfxMuted && this.scene.sound && this.scene.sound.playAudioSprite) {
+                this.scene.sound.playAudioSprite('soundbank', 'button_click');
+            }
+            onClick();
+        });
         
         this.add(container);
     }
