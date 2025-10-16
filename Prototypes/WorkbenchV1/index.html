@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workbench</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="container">
+        <div class="file-browser">
+            <div class="file-tree" id="fileTree"></div>
+            <div class="file-section collapsed" id="fileSection">
+                <div class="file-toggle" onclick="toggleFileSection()">
+                    <div class="file-status">
+                        <span class="file-indicator" id="fileIndicator"></span>
+                        <span>File Browser Settings</span>
+                    </div>
+                    <span class="file-toggle-icon">▲</span>
+                </div>
+                <div class="file-controls">
+                    <button class="btn" id="importZipBtn">Import ZIP</button>
+                    <button class="btn" id="exportZipBtn">Export ZIP</button>
+                    <button class="btn btn-danger" id="clearFilesBtn" onclick="if(confirm('Clear all files?')) window.fileBrowser.clearAllFiles()">Clear Files</button>
+                </div>
+                <div class="github-controls">
+                    <input type="password" id="githubToken" placeholder="GitHub Personal Access Token">
+                    <button class="btn" id="saveGithubToken">Connect</button>
+                </div>
+                <div class="github-repo-controls">
+                    <select id="ownerSelect" disabled>
+                        <option value="">Select User/Org</option>
+                    </select>
+                    <select id="repoSelect" disabled>
+                        <option value="">Select Repository</option>
+                    </select>
+                    <select id="branchSelect" disabled>
+                        <option value="">Select Branch</option>
+                    </select>
+                    <div class="github-actions">
+                        <button class="btn" id="pullBtn" disabled>Pull</button>
+                        <button class="btn btn-primary" id="pushBtn" disabled>Push</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="tab-bar" id="tabBar" style="display: none;">
+                <div class="tab chat-tab active" data-tab="chat">Chat</div>
+            </div>
+            <div class="tab-content" id="tabContent">
+                <div class="tab-pane active" id="chat-pane">
+                    <div class="chat-panel">
+                        <div class="chat-window" id="chatWindow"></div>
+                        <div class="message-input">
+                            <textarea id="messageInput" placeholder="Type your message here... (Enter to send, Shift+Enter for new line)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+                            <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">Send</button>
+                        </div>
+                        <div class="api-section collapsed" id="apiSection">
+                <div class="api-toggle" onclick="toggleApiSection()">
+                    <div class="api-status">
+                        <span class="api-indicator" id="apiIndicator"></span>
+                        <span id="apiStatusText">API Settings</span>
+                        <span id="modelDisplay" style="color: #007acc; margin-left: 10px;"></span>
+                        <span id="tokenDisplay" style="color: #b8960f; margin-left: 10px;"></span>
+                        <span id="costDisplay" style="color: #4a7c4e; margin-left: 10px;"></span>
+                    </div>
+                    <span class="api-toggle-icon">▲</span>
+                </div>
+                <div class="api-controls">
+                    <select id="providerSelect" style="padding: 8px; background-color: #2a2a2a; border: 1px solid #3a3a3a; color: #e0e0e0; border-radius: 4px; width: 100px;">
+                        <option value="claude">Claude</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="gemini">Gemini</option>
+                        <option value="ollama">Ollama</option>
+                    </select>
+                    <select id="modelSelect" style="padding: 8px; background-color: #2a2a2a; border: 1px solid #3a3a3a; color: #e0e0e0; border-radius: 4px; width: 130px;">
+                        <!-- Will be populated based on provider -->
+                    </select>
+                    <input type="password" id="apiKey" placeholder="Enter API Key (auto-saves)" style="flex: 1;">
+                </div>
+                <div class="chat-controls">
+                    <div class="chat-buttons" style="width: 100%; display: flex; justify-content: space-between;">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" id="systemPromptBtn" onclick="window.chat.openSystemPromptEditor()">System Prompt</button>
+                            <button class="btn" id="toolsPromptBtn" onclick="window.chat.openToolsViewer()">Tools</button>
+                            <button class="btn" id="envPromptBtn" onclick="window.chat.openEnvironmentEditor()">Environment</button>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" id="exportChatBtn" onclick="window.chat.exportChatHistory()">Export Chat</button>
+                            <button class="btn" id="importChatBtn" onclick="document.getElementById('chatHistoryInput').click()">Import Chat</button>
+                            <button class="btn btn-danger" id="clearChatBtn" onclick="if(confirm('Clear all messages?')) window.chat.clearChat()">Clear Chat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" multiple>
+    <input type="file" id="zipInput" accept=".zip">
+    <input type="file" id="contextFileInput" multiple webkitdirectory>
+    <input type="file" id="chatHistoryInput" accept=".json">
+
+    <!-- Generic Info Viewer Modal -->
+    <div id="infoViewerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="infoViewerTitle">Information</h2>
+                <span class="modal-close" onclick="window.chat.closeInfoViewer()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="infoViewerContent" readonly placeholder="Loading..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="window.chat.copyInfoContent()">Copy</button>
+                <button class="btn" onclick="window.chat.closeInfoViewer()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Editor Modal -->
+    <div id="environmentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Environment</h2>
+                <span class="modal-close" onclick="window.chat.closeEnvironmentEditor()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="environmentEditor" placeholder="Enter environment information to send with messages (optional)..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="window.chat.saveEnvironment()">Save</button>
+                <button class="btn" onclick="window.chat.closeEnvironmentEditor()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Prompt Modal -->
+    <div id="systemPromptModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>System Prompt</h2>
+                <span class="modal-close" onclick="window.chat.closeSystemPromptEditor()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="systemPromptEditor" placeholder="Enter system prompt to set the AI's behavior and context..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="window.chat.saveSystemPrompt()">Save</button>
+                <button class="btn" onclick="window.chat.closeSystemPromptEditor()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-item" data-action="new-file">New File</div>
+        <div class="context-menu-item" data-action="new-folder">New Folder</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="upload-files">Upload Files</div>
+        <div class="context-menu-item" data-action="upload-folder">Upload Folder</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="rename">Rename</div>
+        <div class="context-menu-item" data-action="delete">Delete</div>
+        <div class="context-menu-item" data-action="download">Download</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.min.js"></script>
+    <script src="ai-providers.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
