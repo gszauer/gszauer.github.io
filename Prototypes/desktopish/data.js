@@ -7,34 +7,44 @@ const desktop_icons = [
     id: 'games',
     items: [
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Slide Swiped',
         link: 'Swipe3/index.html',
-        icon: '🦔'
+        icon: '🦔',
+        width: 512,
+        height: 768,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Cards of War',
         link: 'war/index.html',
-        icon: '⚔️'
+        icon: '⚔️',
+        width: 512,
+        height: 768,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Tapdown Dungeon',
         link: 'Boxelot5/index.html',
-        icon: '⛓️'
+        icon: '⛓️',
+        width: 512,
+        height: 768,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Calcul8or',
         link: 'Calc1/index.html',
-        icon: '🔢'
+        icon: '🔢',
+        width: 512,
+        height: 768,
       },
        {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'ChessMate',
         link: 'ChessMate/index.html',
-        icon: '♟️'
+        icon: '♟️',
+        width: 512,
+        height: 768,
       }
     ]
   },
@@ -45,34 +55,50 @@ const desktop_icons = [
     id: 'apps',
     items: [
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Carrot Code V1',
         link: 'CarrotV1/index.html',
-        icon: '🐰'
+        icon: '🐰',
+        width: 800,
+        height: 600,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Carrot Code V2',
         link: 'Carrot/index.html',
-        icon: '🥕'
+        icon: '🥕',
+        width: 800,
+        height: 600,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Emoji Finder',
         link: 'Emojis/index.html',
-        icon: '😀'
+        icon: '😀',
+        width: 800,
+        height: 600,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Key Frame Studio V1',
         link: 'Anim/v1/index.html',
-        icon: '🎬'
+        icon: '🎬',
+        width: 800,
+        height: 600,
       },
       {
         type: 'shortcut',
         name: 'Key Frame Studio V2',
         link: 'https://keyframestudio.app',
         icon: '🎥'
+      },
+      {
+        type: 'iframe',
+        name: 'Code Chat',
+        link: 'VibeCoder/index.html',
+        icon: '💬',
+        width: 800,
+        height: 600,
       }
     ]
   },
@@ -159,23 +185,31 @@ const startmenu_items = [
   }
 ];
 
-// Run submenu items
+// Books submenu items
 const startmenu_run_items = [
   {
     type: 'iframe',
-    name: 'Tapdown Dungeon',
-    icon: '⛓️',
-    link: 'Boxelot5/index.html',
-    width: 512,
-    height: 768,
+    name: 'Animation Programming',
+    icon: '🎨',
+    link: 'https://animationprogramming.com/',
+    width: 800,
+    height: 600,
   },
   {
     type: 'iframe',
-    name: 'Carrot Code V2',
-    link: 'Carrot/index.html',
+    name: 'Game Physics Cookbook',
+    icon: '📖',
+    link: 'https://gamephysicscookbook.com/',
     width: 800,
     height: 600,
-    icon: '🥕'
+  },
+  {
+    type: 'iframe',
+    name: 'Lua Quick Start Guide',
+    icon: '📕',
+    link: 'https://luaquickstartguide.com/',
+    width: 800,
+    height: 600,
   },
 ];
 

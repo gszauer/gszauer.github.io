@@ -283,12 +283,23 @@ function createWindow(item) {
       <div class="folder-grid">
         ${item.items
           .map(
-            (subItem) => `
+            (subItem) => {
+              if (subItem.type === 'iframe') {
+                return `
+          <div class="folder-item" data-subitem='${JSON.stringify(subItem)}'>
+            <span>${subItem.icon}</span>
+            <span class="item-name">${subItem.name}</span>
+          </div>
+        `;
+              } else {
+                return `
           <a href="${subItem.link}" class="folder-item" target="_blank">
             <span>${subItem.icon}</span>
             <span class="item-name">${subItem.name}</span>
           </a>
-        `
+        `;
+              }
+            }
           )
           .join('')}
       </div>
@@ -362,6 +373,20 @@ function createWindow(item) {
     if (!e.target.closest('a')) {
       setActiveWindow(windowId);
     }
+  });
+
+  // Handle folder item clicks (for iframe items)
+  const folderItems = windowElement.querySelectorAll('[data-subitem]');
+  folderItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const subItem = JSON.parse(item.dataset.subitem);
+      if (subItem.type === 'iframe') {
+        createWindow(subItem);
+      }
+    });
+    // Add pointer cursor to indicate clickability
+    item.style.cursor = 'pointer';
   });
 
   // Handle window constraints on resize
