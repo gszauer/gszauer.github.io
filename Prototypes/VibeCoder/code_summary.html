@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Code Summary Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        pre {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Code Summary Tool</h1>
+    <button onclick="testCodeSummary()">Run Code Summary</button>
+    <pre id="output">Click the button to run the code_summary tool...</pre>
+
+    <script src="FileSystemManager.js"></script>
+    <script src="WorkbenchTools.js"></script>
+    <script>
+        // Initialize file system
+        let fileSystem;
+        let tools;
+
+        async function initializeSystem() {
+            fileSystem = new FileSystemManager();
+            await fileSystem.init();
+            tools = new WorkbenchTools(fileSystem);
+            console.log('System initialized');
+        }
+
+        async function testCodeSummary() {
+            const output = document.getElementById('output');
+
+            if (!tools) {
+                output.textContent = 'Initializing system...\n';
+                await initializeSystem();
+            }
+
+            output.textContent = 'Running code_summary tool...\n';
+
+            try {
+                const result = await tools.code_summary();
+                output.textContent = result;
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeSystem);
+    </script>
+</body>
+</html>

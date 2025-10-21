@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Class Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0b1026 0%, #141d3a 100%);
+            color: #f5f7ff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #151a2c;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1f2b56 0%, #303f78 100%);
+            color: #f5f7ff;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .panel {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel h2 {
+            color: #9aa5ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 500px;
+            padding: 15px;
+            border: 2px solid #2b3149;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s, background 0.3s;
+            background: #10162b;
+            color: #f5f7ff;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #0d1222;
+        }
+        
+        .output {
+            width: 100%;
+            height: 500px;
+            padding: 15px;
+            border: 2px solid #2b3149;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: #10162b;
+            color: #f5f7ff;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 0 30px 30px 30px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #3d4b8a 0%, #5b6fe3 100%);
+            color: #f5f7ff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(91, 111, 227, 0.35);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background: linear-gradient(135deg, #a74ef7 0%, #f5576c 100%);
+        }
+        
+        .class-item {
+            color: #9bd4ff;
+            font-weight: bold;
+        }
+        
+        .method-item {
+            color: #7ef29d;
+        }
+        
+        .static-item {
+            color: #ff7a6a;
+        }
+        
+        .property-item {
+            color: #ffc561;
+        }
+        
+        .getter-item {
+            color: #71b7ff;
+        }
+        
+        .setter-item {
+            color: #c79bff;
+        }
+        
+        .private-item {
+            color: #ffa86b;
+        }
+        
+        .generator-item {
+            color: #63f7c4;
+        }
+        
+        .constant-item {
+            color: #ff8b86;
+        }
+        
+        @media (max-width: 968px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 JavaScript Class Analyzer</h1>
+            <p>Parse object-oriented JavaScript and visualize class hierarchies</p>
+        </div>
+        
+        <div class="content">
+            <div class="panel">
+                <h2>Input JavaScript Code</h2>
+                <textarea id="codeInput">// RPG Game Example Code with Modern Features
+
+const MAX_INVENTORY_SIZE = 50;
+const GAME_VERSION = "1.0.0";
+
+class Entity {
+    #id;
+    #lastDamageTime;
+    
+    constructor(name, health) {
+        this.name = name;
+        this._health = health;
+        this._maxHealth = health;
+        this.#id = Math.random().toString(36);
+        this.#lastDamageTime = 0;
+    }
+    
+    get health() {
+        return this._health;
+    }
+    
+    set health(value) {
+        this._health = Math.max(0, Math.min(value, this._maxHealth));
+    }
+    
+    get maxHealth() {
+        return this._maxHealth;
+    }
+    
+    get id() {
+        return this.#id;
+    }
+    
+    takeDamage(amount) {
+        this.health -= amount;
+        this.#lastDamageTime = Date.now();
+    }
+    
+    heal(amount) {
+        this.health += amount;
+    }
+    
+    isAlive() {
+        return this.health > 0;
+    }
+    
+    *damageHistory() {
+        yield this.#lastDamageTime;
+        yield this.health;
+    }
+}
+
+class Character extends Entity {
+    #inventory;
+    
+    constructor(name, health, mana, level = 1) {
+        super(name, health);
+        this.mana = mana;
+        this.maxMana = mana;
+        this.level = level;
+        this.experience = 0;
+        this.#inventory = [];
+    }
+    
+    get inventoryCount() {
+        return this.#inventory.length;
+    }
+    
+    set inventoryCount(value) {
+        // Read-only, ignore sets
+    }
+    
+    async castSpell(cost) {
+        if (this.mana >= cost) {
+            this.mana -= cost;
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return true;
+        }
+        return false;
+    }
+    
+    restoreMana(amount) {
+        this.mana += amount;
+        if (this.mana > this.maxMana) {
+            this.mana = this.maxMana;
+        }
+    }
+    
+    gainExperience(amount) {
+        this.experience += amount;
+        if (this.experience >= this.level * 100) {
+            this.levelUp();
+        }
+    }
+    
+    levelUp() {
+        this.level++;
+        this._maxHealth += 10;
+        this.maxMana += 5;
+        this.health = this.maxHealth;
+        this.mana = this.maxMana;
+    }
+    
+    *getInventoryItems() {
+        for (const item of this.#inventory) {
+            yield item;
+        }
+    }
+}
+
+class Warrior extends Character {
+    constructor(name, health = 120, mana = 30) {
+        super(name, health, mana);
+        this.rage = 0;
+        this.maxRage = 100;
+    }
+    
+    powerAttack(target) {
+        if (this.rage >= 30) {
+            const damage = 25 + (this.level * 3);
+            target.takeDamage(damage);
+            this.rage -= 30;
+            return damage;
+        }
+        return 0;
+    }
+    
+    buildRage(amount) {
+        this.rage += amount;
+        if (this.rage > this.maxRage) {
+            this.rage = this.maxRage;
+        }
+    }
+    
+    static getClassName() {
+        return "Warrior";
+    }
+}
+
+class Mage extends Character {
+    #spellBook;
+    
+    constructor(name, health = 80, mana = 100) {
+        super(name, health, mana);
+        this._spellPower = 1.0;
+        this.#spellBook = new Set();
+    }
+    
+    get spellPower() {
+        return this._spellPower;
+    }
+    
+    set spellPower(value) {
+        this._spellPower = Math.max(0, value);
+    }
+    
+    async fireball(target) {
+        const manaCost = 20;
+        if (await this.castSpell(manaCost)) {
+            const damage = (30 + this.level * 5) * this.spellPower;
+            target.takeDamage(damage);
+            return damage;
+        }
+        return 0;
+    }
+    
+    increaseSpellPower(amount) {
+        this.spellPower += amount;
+    }
+    
+    static getClassName() {
+        return "Mage";
+    }
+    
+    static getElementalAffinity() {
+        return "Fire";
+    }
+}
+
+class Item {
+    constructor(name, value, weight) {
+        this.name = name;
+        this.value = value;
+        this.weight = weight;
+    }
+    
+    getDescription() {
+        return `${this.name} (Value: ${this.value}g, Weight: ${this.weight}kg)`;
+    }
+}
+
+class Weapon extends Item {
+    constructor(name, value, weight, damage, durability = 100) {
+        super(name, value, weight);
+        this.damage = damage;
+        this._durability = durability;
+        this.maxDurability = durability;
+    }
+    
+    get durability() {
+        return this._durability;
+    }
+    
+    set durability(value) {
+        this._durability = Math.max(0, Math.min(value, this.maxDurability));
+    }
+    
+    use() {
+        if (this.durability > 0) {
+            this.durability--;
+            return this.damage;
+        }
+        return 0;
+    }
+    
+    repair(amount) {
+        this.durability += amount;
+    }
+    
+    isBroken() {
+        return this.durability <= 0;
+    }
+}
+
+class GameManager {
+    static #instance;
+    
+    constructor() {
+        this.players = [];
+        this.enemies = [];
+        this.turnCount = 0;
+    }
+    
+    addPlayer(player) {
+        this.players.push(player);
+    }
+    
+    addEnemy(enemy) {
+        this.enemies.push(enemy);
+    }
+    
+    nextTurn() {
+        this.turnCount++;
+    }
+    
+    static getInstance() {
+        if (!GameManager.#instance) {
+            GameManager.#instance = new GameManager();
+        }
+        return GameManager.#instance;
+    }
+    
+    static resetGame() {
+        GameManager.#instance = null;
+    }
+}</textarea>
+            </div>
+            
+            <div class="panel">
+                <h2>Class Hierarchy Output</h2>
+                <div id="output" class="output">Click "Process Code" to analyze...</div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button onclick="processCode()">Process Code</button>
+            <button class="secondary" onclick="exportAnalysis()">Export as Text</button>
+        </div>
+    </div>
+
+    <script>
+        let lastAnalysis = '';
+        
+        function processCode() {
+            const code = document.getElementById('codeInput').value;
+            const output = document.getElementById('output');
+            
+            try {
+                const ast = Babel.transform(code, {
+                    ast: true,
+                    code: false
+                }).ast;
+                
+                const classes = [];
+                const classMap = new Map();
+                const topLevelDeclarations = [];
+                
+                // Helper function to format default values
+                function formatValue(node) {
+                    if (!node) return '';
+                    if (node.type === 'NumericLiteral') return node.value;
+                    if (node.type === 'StringLiteral') return `"${node.value}"`;
+                    if (node.type === 'BooleanLiteral') return node.value;
+                    if (node.type === 'NullLiteral') return 'null';
+                    if (node.type === 'Identifier') return node.name;
+                    return '...';
+                }
+                
+                // First pass: collect all classes and top-level declarations
+                function traverse(node, isTopLevel = false) {
+                    if (!node) return;
+                    
+                    if (isTopLevel && node.type === 'VariableDeclaration') {
+                        node.declarations.forEach(decl => {
+                            if (decl.id && decl.id.name) {
+                                topLevelDeclarations.push({
+                                    kind: node.kind,
+                                    name: decl.id.name,
+                                    type: 'variable'
+                                });
+                            }
+                        });
+                    }
+                    
+                    if (node.type === 'ClassDeclaration') {
+                        const className = node.id.name;
+                        const superClass = node.superClass ? node.superClass.name : null;
+                        
+                        const classInfo = {
+                            name: className,
+                            superClass: superClass,
+                            methods: [],
+                            staticMethods: [],
+                            properties: [],
+                            privateProperties: [],
+                            getters: [],
+                            setters: [],
+                            staticGetters: [],
+                            staticSetters: []
+                        };
+                        
+                        // Analyze class body
+                        if (node.body && node.body.body) {
+                            node.body.body.forEach(member => {
+                                if (member.type === 'ClassMethod') {
+                                    // Extract parameter names
+                                    const params = member.params.map(param => {
+                                        if (param.type === 'Identifier') {
+                                            return param.name;
+                                        } else if (param.type === 'AssignmentPattern') {
+                                            return `${param.left.name} = ${formatValue(param.right)}`;
+                                        } else if (param.type === 'RestElement') {
+                                            return `...${param.argument.name}`;
+                                        }
+                                        return 'param';
+                                    });
+                                    
+                                    const methodInfo = {
+                                        name: member.key.name || member.key.id?.name,
+                                        isStatic: member.static,
+                                        kind: member.kind,
+                                        params: params,
+                                        isAsync: member.async,
+                                        isGenerator: member.generator
+                                    };
+                                    
+                                    if (member.kind === 'get') {
+                                        if (member.static) {
+                                            classInfo.staticGetters.push(methodInfo);
+                                        } else {
+                                            classInfo.getters.push(methodInfo);
+                                        }
+                                    } else if (member.kind === 'set') {
+                                        if (member.static) {
+                                            classInfo.staticSetters.push(methodInfo);
+                                        } else {
+                                            classInfo.setters.push(methodInfo);
+                                        }
+                                    } else {
+                                        if (member.static) {
+                                            classInfo.staticMethods.push(methodInfo);
+                                        } else {
+                                            classInfo.methods.push(methodInfo);
+                                        }
+                                    }
+                                } else if (member.type === 'ClassProperty' || member.type === 'ClassPrivateProperty') {
+                                    const propName = member.key.name || member.key.id?.name;
+                                    const isPrivate = member.type === 'ClassPrivateProperty' || 
+                                                     (propName && propName.startsWith('#'));
+                                    
+                                    const propInfo = {
+                                        name: propName,
+                                        isStatic: member.static,
+                                        isPrivate: isPrivate
+                                    };
+                                    
+                                    if (isPrivate) {
+                                        classInfo.privateProperties.push(propInfo);
+                                    } else {
+                                        classInfo.properties.push(propInfo);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        classes.push(classInfo);
+                        classMap.set(className, classInfo);
+                    }
+                    
+                    // Recursively traverse
+                    for (const key in node) {
+                        if (node[key] && typeof node[key] === 'object') {
+                            if (Array.isArray(node[key])) {
+                                node[key].forEach(child => traverse(child, false));
+                            } else {
+                                traverse(node[key], false);
+                            }
+                        }
+                    }
+                }
+                
+                // Traverse the program body for top-level declarations
+                if (ast.program && ast.program.body) {
+                    ast.program.body.forEach(node => traverse(node, true));
+                }
+                
+                // Build hierarchy
+                const rootClasses = classes.filter(c => !c.superClass);
+                
+                function buildOutput(classInfo, indent = 0) {
+                    const indentStr = '  '.repeat(indent);
+                    let result = '';
+                    
+                    result += `${indentStr}<span class="class-item">📦 Class: ${classInfo.name}</span>`;
+                    if (classInfo.superClass) {
+                        result += ` <span style="color: #95a5a6;">(extends ${classInfo.superClass})</span>`;
+                    }
+                    result += '\n';
+                    
+                    // Private properties
+                    classInfo.privateProperties.forEach(prop => {
+                        const prefix = prop.isStatic ? '⚡ static ' : '';
+                        result += `${indentStr}  <span class="private-item">🔒 ${prefix}${prop.name}</span> [private]\n`;
+                    });
+                    
+                    // Static getters
+                    classInfo.staticGetters.forEach(getter => {
+                        result += `${indentStr}  <span class="getter-item">⚡ static get ${getter.name}</span>\n`;
+                    });
+                    
+                    // Static setters
+                    classInfo.staticSetters.forEach(setter => {
+                        const paramsStr = setter.params.join(', ');
+                        result += `${indentStr}  <span class="setter-item">⚡ static set ${setter.name}(${paramsStr})</span>\n`;
+                    });
+                    
+                    // Static methods
+                    classInfo.staticMethods.forEach(method => {
+                        const asyncMark = method.isAsync ? 'async ' : '';
+                        const generatorMark = method.isGenerator ? '*' : '';
+                        const paramsStr = method.params.join(', ');
+                        const className = method.isGenerator ? 'generator-item' : 'static-item';
+                        result += `${indentStr}  <span class="${className}">⚡ ${asyncMark}static ${generatorMark}${method.name}(${paramsStr})</span>\n`;
+                    });
+                    
+                    // Getters
+                    classInfo.getters.forEach(getter => {
+                        result += `${indentStr}  <span class="getter-item">📖 get ${getter.name}</span>\n`;
+                    });
+                    
+                    // Setters
+                    classInfo.setters.forEach(setter => {
+                        const paramsStr = setter.params.join(', ');
+                        result += `${indentStr}  <span class="setter-item">✏️ set ${setter.name}(${paramsStr})</span>\n`;
+                    });
+                    
+                    // Instance methods
+                    classInfo.methods.forEach(method => {
+                        const asyncMark = method.isAsync ? 'async ' : '';
+                        const generatorMark = method.isGenerator ? '*' : '';
+                        const paramsStr = method.params.join(', ');
+                        if (method.kind === 'constructor') {
+                            result += `${indentStr}  <span class="method-item">🔧 constructor(${paramsStr})</span>\n`;
+                        } else {
+                            const className = method.isGenerator ? 'generator-item' : 'method-item';
+                            result += `${indentStr}  <span class="${className}">🔹 ${asyncMark}${generatorMark}${method.name}(${paramsStr})</span>\n`;
+                        }
+                    });
+                    
+                    // Properties
+                    classInfo.properties.forEach(prop => {
+                        const prefix = prop.isStatic ? '⚡ static ' : '';
+                        result += `${indentStr}  <span class="property-item">🔸 ${prefix}${prop.name}</span>\n`;
+                    });
+                    
+                    // Find and process children
+                    const children = classes.filter(c => c.superClass === classInfo.name);
+                    children.forEach(child => {
+                        result += '\n';
+                        result += buildOutput(child, indent + 1);
+                    });
+                    
+                    return result;
+                }
+                
+                let finalOutput = '<div style="font-family: monospace; line-height: 1.6;">';
+                finalOutput += '<span style="color: #667eea; font-weight: bold; font-size: 1.1em;">📊 JavaScript Analysis</span>\n\n';
+                
+                // Top-level declarations
+                if (topLevelDeclarations.length > 0) {
+                    finalOutput += '<span style="color: #667eea; font-weight: bold;">📋 Top-Level Declarations:</span>\n';
+                    topLevelDeclarations.forEach(decl => {
+                        finalOutput += `  <span class="constant-item">${decl.kind} ${decl.name}</span>\n`;
+                    });
+                    finalOutput += '\n';
+                }
+                
+                // Classes
+                if (classes.length === 0) {
+                    finalOutput += '<span style="color: #e74c3c;">No classes found in the code.</span>';
+                } else {
+                    finalOutput += '<span style="color: #667eea; font-weight: bold;">🏛️ Class Hierarchy:</span>\n\n';
+                    rootClasses.forEach(rootClass => {
+                        finalOutput += buildOutput(rootClass);
+                        finalOutput += '\n';
+                    });
+                    
+                    finalOutput += `<span style="color: #95a5a6;">───────────────────────────</span>\n`;
+                    finalOutput += `<span style="color: #667eea;">Total Classes: ${classes.length}</span>`;
+                }
+                
+                finalOutput += '</div>';
+                
+                output.innerHTML = finalOutput;
+                lastAnalysis = output.innerText;
+                
+            } catch (error) {
+                output.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">❌ Error parsing code:</span>\n\n${error.message}`;
+                lastAnalysis = '';
+            }
+        }
+        
+        function exportAnalysis() {
+            if (!lastAnalysis) {
+                alert('Please process code first before exporting!');
+                return;
+            }
+            
+            const blob = new Blob([lastAnalysis], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'class-analysis.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html> 
