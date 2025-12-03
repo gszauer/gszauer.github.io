@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GabGPT Chat</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .top-bar h1 {
+            font-size: 1rem;
+            color: var(--accent-blue);
+            font-family: 'SF Mono', 'Consolas', monospace;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .control-group input {
+            width: 60px;
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+        }
+
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .model-info .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .model-info .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .model-info .status-dot.loaded {
+            background: var(--accent-green);
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Loading Screen */
+        .load-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .load-screen h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .load-screen p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .file-loaders {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .file-loader {
+            width: 200px;
+            padding: 30px 20px;
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .file-loader:hover {
+            border-color: var(--accent-blue);
+            background: var(--bg-tertiary);
+        }
+
+        .file-loader.loaded {
+            border-color: var(--accent-green);
+            border-style: solid;
+        }
+
+        .file-loader input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-loader .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .file-loader .label {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .file-loader .hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .file-loader .filename {
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        .start-btn {
+            padding: 12px 40px;
+            background: var(--accent-green);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            background: #56d364;
+        }
+
+        .start-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .mode-option {
+            flex: 1;
+            max-width: 200px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .mode-option:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .mode-option.active {
+            border-color: var(--accent-green);
+            background: rgba(63, 185, 80, 0.1);
+        }
+
+        .mode-option .mode-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .mode-option .mode-hint {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-container.active {
+            display: flex;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: var(--accent-blue);
+            color: #000;
+        }
+
+        .message.assistant .avatar {
+            background: var(--accent-purple);
+            color: #fff;
+        }
+
+        .message .content {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .message.user .content {
+            background: var(--accent-blue);
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message .content.generating {
+            color: var(--text-secondary);
+        }
+
+        .message .content.generating::after {
+            content: '▋';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .chat-input-container {
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding: 8px 12px;
+            resize: none;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .chat-input:focus {
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            padding: 8px 20px;
+            background: var(--accent-blue);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            align-self: flex-end;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #79b8ff;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            padding: 4px 12px;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-message {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>GabGPT Chat</h1>
+        <div class="header-controls">
+            <button class="clear-btn" id="clearBtn" onclick="clearChat()">Clear Chat</button>
+            <div class="divider"></div>
+            <div class="control-group">
+                <label>Temp:</label>
+                <input type="number" id="temperature" value="0.7" min="0.1" max="2" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Max tokens:</label>
+                <input type="number" id="maxTokens" value="100" min="1" max="500" step="10">
+            </div>
+            <div class="divider"></div>
+            <div class="model-info">
+                <div class="status">
+                    <span class="status-dot" id="tokenizerStatus"></span>
+                    <span>Tokenizer</span>
+                </div>
+                <div class="status">
+                    <span class="status-dot" id="modelStatus"></span>
+                    <span>Model</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Load Screen -->
+        <div class="load-screen" id="loadScreen">
+            <p>Upload your trained tokenizer and model files to start chatting. Or <a href="train.html" style="color: var(--accent-blue);">train a new model</a>.</p>
+            
+            <div class="file-loaders">
+                <div class="file-loader" id="tokenizerLoader">
+                    <input type="file" accept=".bpe" onchange="loadTokenizer(event)">
+                    <div class="icon">📝</div>
+                    <div class="label">Tokenizer</div>
+                    <div class="hint">.bpe file</div>
+                    <div class="filename" id="tokenizerFilename"></div>
+                </div>
+                
+                <div class="file-loader" id="modelLoader">
+                    <input type="file" accept=".gab" onchange="loadModel(event)">
+                    <div class="icon">🧠</div>
+                    <div class="label">Model</div>
+                    <div class="hint">.gab file</div>
+                    <div class="filename" id="modelFilename"></div>
+                </div>
+            </div>
+
+            <div class="mode-selector">
+                <div class="mode-option active" data-mode="chat" onclick="selectMode('chat')">
+                    <div class="mode-label">Chat Mode</div>
+                    <div class="mode-hint">ChatML format with conversation history</div>
+                </div>
+                <div class="mode-option" data-mode="generate" onclick="selectMode('generate')">
+                    <div class="mode-label">Generate Mode</div>
+                    <div class="mode-hint">Raw text completion</div>
+                </div>
+            </div>
+
+            <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
+            
+            <div class="error-message hidden" id="errorMessage"></div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea 
+                        class="chat-input" 
+                        id="chatInput" 
+                        placeholder="Type your message..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script src="gab.js"></script>
+    <script>
+        class ChatApp {
+            constructor() {
+                this.tokenizer = null;
+                this.model = null;
+                this.isGenerating = false;
+                this.conversationTokens = [];
+                this.mode = 'chat'; // 'chat' or 'generate'
+                
+                this.userTokenId = null;
+                this.assistantTokenId = null;
+                this.endTokenId = null;
+                
+                this.setupTextareaAutoResize();
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+                
+                // Update UI
+                const options = document.querySelectorAll('.mode-option');
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].dataset.mode === mode) {
+                        options[i].classList.add('active');
+                    } else {
+                        options[i].classList.remove('active');
+                    }
+                }
+            }
+
+            setupTextareaAutoResize() {
+                const textarea = document.getElementById('chatInput');
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+                });
+            }
+
+            showError(message) {
+                const errorEl = document.getElementById('errorMessage');
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+
+            hideError() {
+                document.getElementById('errorMessage').classList.add('hidden');
+            }
+
+            loadTokenizer(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const bytes = new Uint8Array(e.target.result);
+                        this.tokenizer = Tokenizer.deserialize(bytes);
+                        
+                        document.getElementById('tokenizerLoader').classList.add('loaded');
+                        document.getElementById('tokenizerStatus').classList.add('loaded');
+                        document.getElementById('tokenizerFilename').textContent = file.name;
+                        
+                        console.log('Tokenizer loaded, vocab size:', this.tokenizer.getVocabSize());
+                        this.hideError();
+                        this.checkReady();
+                    } catch (err) {
+                        this.showError('Failed to load tokenizer: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            loadModel(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const bytes = new Uint8Array(e.target.result);
+                        this.model = GabGPT.deserialize(bytes);
+                        
+                        document.getElementById('modelLoader').classList.add('loaded');
+                        document.getElementById('modelStatus').classList.add('loaded');
+                        document.getElementById('modelFilename').textContent = file.name;
+                        
+                        console.log('Model loaded, vocab size:', this.model.vocabSize);
+                        this.hideError();
+                        this.checkReady();
+                    } catch (err) {
+                        this.showError('Failed to load model: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            checkReady() {
+                const ready = this.tokenizer !== null && this.model !== null;
+                document.getElementById('startBtn').disabled = !ready;
+            }
+
+            startChat() {
+                // Try to find special tokens (only needed for chat mode)
+                if (this.mode === 'chat') {
+                    try {
+                        const userTokens = this.tokenizer.encode('<|user|>');
+                        const assistantTokens = this.tokenizer.encode('<|assistant|>');
+                        const endTokens = this.tokenizer.encode('<|end|>');
+                        
+                        // Check if they're single tokens (reserved)
+                        if (userTokens.length === 1) {
+                            this.userTokenId = userTokens[0];
+                            console.log('Found <|user|> token:', this.userTokenId);
+                        }
+                        if (assistantTokens.length === 1) {
+                            this.assistantTokenId = assistantTokens[0];
+                            console.log('Found <|assistant|> token:', this.assistantTokenId);
+                        }
+                        if (endTokens.length === 1) {
+                            this.endTokenId = endTokens[0];
+                            console.log('Found <|end|> token:', this.endTokenId);
+                        }
+                    } catch (err) {
+                        console.log('Special tokens not found, will use raw encoding');
+                    }
+                }
+
+                document.getElementById('loadScreen').classList.add('hidden');
+                document.getElementById('chatContainer').classList.add('active');
+                document.getElementById('chatInput').focus();
+                
+                // Update placeholder based on mode
+                const input = document.getElementById('chatInput');
+                if (this.mode === 'chat') {
+                    input.placeholder = 'Type your message...';
+                } else {
+                    input.placeholder = 'Enter text to continue generating from...';
+                }
+            }
+
+            addMessage(role, content, isGenerating = false) {
+                const messagesEl = document.getElementById('chatMessages');
+                
+                const messageEl = document.createElement('div');
+                messageEl.className = 'message ' + role;
+                
+                const avatar = role === 'user' ? 'U' : 'G';
+                
+                messageEl.innerHTML = `
+                    <div class="avatar">${avatar}</div>
+                    <div class="content ${isGenerating ? 'generating' : ''}">${this.escapeHtml(content)}</div>
+                `;
+                
+                messagesEl.appendChild(messageEl);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+                
+                return messageEl;
+            }
+
+            updateMessage(messageEl, content, isGenerating = false) {
+                const contentEl = messageEl.querySelector('.content');
+                contentEl.textContent = content;
+                if (isGenerating) {
+                    contentEl.classList.add('generating');
+                } else {
+                    contentEl.classList.remove('generating');
+                }
+                
+                const messagesEl = document.getElementById('chatMessages');
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            async sendMessage() {
+                if (this.isGenerating) return;
+                
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                if (!message) return;
+                
+                input.value = '';
+                input.style.height = 'auto';
+                
+                this.addMessage('user', message);
+                
+                if (this.mode === 'chat') {
+                    // Chat mode: use ChatML format
+                    const prompt = `<|user|>${message}<|end|><|assistant|>`;
+                    const promptTokens = this.tokenizer.encode(prompt);
+                    
+                    // Add to conversation history
+                    this.conversationTokens = this.conversationTokens.concat(promptTokens);
+                    
+                    // Trim conversation if too long
+                    const maxContext = this.model.embedding.maxSequenceLength - 100;
+                    if (this.conversationTokens.length > maxContext) {
+                        this.conversationTokens = this.conversationTokens.slice(-maxContext);
+                    }
+                    
+                    await this.generate(true);
+                } else {
+                    // Generate mode: raw text completion
+                    const promptTokens = this.tokenizer.encode(message);
+                    this.conversationTokens = promptTokens;
+                    
+                    await this.generate(false);
+                }
+            }
+
+            async generate(isChatMode) {
+                this.isGenerating = true;
+                document.getElementById('sendBtn').disabled = true;
+                document.getElementById('chatInput').disabled = true;
+                
+                const messageEl = this.addMessage('assistant', '', true);
+                
+                const temperature = parseFloat(document.getElementById('temperature').value) || 0.7;
+                const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
+                
+                let tokens = this.conversationTokens.slice();
+                let generated = [];
+                let responseText = '';
+                
+                try {
+                    for (let i = 0; i < maxTokens; i++) {
+                        // Truncate if exceeding max sequence length
+                        const maxSeqLen = this.model.embedding.maxSequenceLength;
+                        let inputTokens = tokens;
+                        if (tokens.length > maxSeqLen) {
+                            inputTokens = tokens.slice(-maxSeqLen);
+                        }
+                        
+                        // Forward pass
+                        const batchedInput = [inputTokens];
+                        const probs = this.model.forward(batchedInput);
+                        const lastProbs = probs[0][inputTokens.length - 1];
+                        
+                        // Sample with temperature
+                        const nextToken = this.sampleWithTemperature(lastProbs, temperature);
+                        
+                        // Check for end token (only in chat mode)
+                        if (isChatMode && this.endTokenId !== null && nextToken === this.endTokenId) {
+                            break;
+                        }
+                        
+                        tokens.push(nextToken);
+                        generated.push(nextToken);
+                        
+                        // Decode and update display
+                        responseText = this.tokenizer.decode(generated);
+                        
+                        // Remove special tokens from display (only in chat mode)
+                        if (isChatMode) {
+                            responseText = responseText.replace(/<\|end\|>/g, '').replace(/<\|user\|>/g, '').replace(/<\|assistant\|>/g, '');
+                        }
+                        
+                        this.updateMessage(messageEl, responseText, true);
+                        
+                        // Yield to UI
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
+                    
+                    // Final update
+                    this.updateMessage(messageEl, responseText || '(empty response)', false);
+                    
+                    // Update conversation history
+                    if (isChatMode) {
+                        this.conversationTokens = tokens;
+                        if (this.endTokenId !== null) {
+                            this.conversationTokens.push(this.endTokenId);
+                        }
+                    }
+                    // In generate mode, don't accumulate history
+                    
+                } catch (err) {
+                    console.error('Generation error:', err);
+                    this.updateMessage(messageEl, 'Error: ' + err.message, false);
+                }
+                
+                this.isGenerating = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('chatInput').focus();
+            }
+
+            sampleWithTemperature(probs, temperature) {
+                // Convert probabilities to logits
+                const logits = [];
+                for (let i = 0; i < probs.length; i++) {
+                    logits.push(Math.log(probs[i] + 1e-10));
+                }
+                
+                // Apply temperature
+                const scaledLogits = [];
+                for (let i = 0; i < logits.length; i++) {
+                    scaledLogits.push(logits[i] / temperature);
+                }
+                
+                // Softmax
+                let maxLogit = scaledLogits[0];
+                for (let i = 1; i < scaledLogits.length; i++) {
+                    if (scaledLogits[i] > maxLogit) {
+                        maxLogit = scaledLogits[i];
+                    }
+                }
+                
+                const expLogits = [];
+                let sum = 0;
+                for (let i = 0; i < scaledLogits.length; i++) {
+                    const exp = Math.exp(scaledLogits[i] - maxLogit);
+                    expLogits.push(exp);
+                    sum += exp;
+                }
+                
+                const scaledProbs = [];
+                for (let i = 0; i < expLogits.length; i++) {
+                    scaledProbs.push(expLogits[i] / sum);
+                }
+                
+                // Sample
+                const random = Math.random();
+                let cumulative = 0;
+                for (let i = 0; i < scaledProbs.length; i++) {
+                    cumulative += scaledProbs[i];
+                    if (random < cumulative) {
+                        return i;
+                    }
+                }
+                
+                return scaledProbs.length - 1;
+            }
+
+            clearChat() {
+                document.getElementById('chatMessages').innerHTML = '';
+                this.conversationTokens = [];
+            }
+        }
+
+        // Global instance
+        let app;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new ChatApp();
+        });
+
+        function loadTokenizer(event) {
+            const file = event.target.files[0];
+            if (file) {
+                app.loadTokenizer(file);
+            }
+        }
+
+        function loadModel(event) {
+            const file = event.target.files[0];
+            if (file) {
+                app.loadModel(file);
+            }
+        }
+
+        function startChat() {
+            app.startChat();
+        }
+
+        function selectMode(mode) {
+            app.setMode(mode);
+        }
+
+        function sendMessage() {
+            app.sendMessage();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function clearChat() {
+            app.clearChat();
+        }
+    </script>
+</body>
+</html>
