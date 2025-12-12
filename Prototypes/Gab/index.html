@@ -840,7 +840,10 @@
                 <div class="loading-spinner"></div>
                 <div class="loading-text">Loading sample model...</div>
             </div>
-            <p>
+
+            <button class="load-sample-btn" id="loadSampleBtn" onclick="loadSampleModel()">Load Sample Model</button>
+
+            <p style="margin-top: -15px;">
                 Upload your trained tokenizer and model files to start chatting.<br>
                 Or <a href="train.html" style="color: var(--accent-blue);">train a new model</a>.
             </p>
@@ -875,8 +878,6 @@
             </div>
 
             <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
-
-            <button class="load-sample-btn" id="loadSampleBtn" onclick="loadSampleModel()">Load Sample Model</button>
 
             <div class="error-message hidden" id="errorMessage"></div>
         </div>
@@ -1252,10 +1253,7 @@ Format:
 
                     btn.textContent = 'Loaded!';
                     this.checkReady();
-
-                    // Auto-start after loading
                     overlay.classList.remove('visible');
-                    this.startChat();
                 } catch (err) {
                     this.showError('Failed to load sample: ' + err.message);
                     overlay.classList.remove('visible');
