@@ -1,0 +1,160 @@
+ChatML Format Documentation
+===========================
+
+This document describes the chat format used by GabGPT Chat for multi-turn conversations.
+
+
+SPECIAL TOKENS
+--------------
+
+Four special tokens control conversation structure:
+
+  <|user|>       Marks the start of a user message
+  <|think|>      Marks the start of model thinking/reasoning (optional)
+  <|assistant|>  Marks the start of the assistant's response
+  <|end|>        Marks the end of any message segment
+
+
+BASIC CONVERSATION STRUCTURE
+----------------------------
+
+A minimal conversation looks like:
+
+  <|user|>Hello<|assistant|>Hi there!<|end|>
+
+With thinking enabled:
+
+  <|user|>What is 2+2?<|think|>I need to add 2 and 2<|assistant|>4<|end|>
+
+Multi-turn conversation:
+
+  <|user|>Hi<|assistant|>Hello!<|end|><|user|>How are you?<|assistant|>I'm good!<|end|>
+
+
+CHAT LOG PREPARATION RULES
+--------------------------
+
+Before sending to the model for generation, the chat log is prepared as follows:
+
+1. SANITIZE: Remove any leading <|think|>, <|assistant|>, or <|end|> tokens
+   - The chat log should always start with <|user|> or raw user text
+   - Loop until no more leading think/assistant/end tokens exist
+
+2. ENSURE USER PREFIX: If the chat log doesn't start with <|user|>, prepend it
+   - Raw text "Hello" becomes "<|user|>Hello"
+
+3. REMOVE TRAILING SPECIAL TOKENS: Strip any trailing special tokens
+   - This ensures clean concatenation of new content
+   - Remove tokens from the end repeatedly until none remain
+
+4. APPEND SUFFIX TOKEN: Add the appropriate token to prompt generation
+   - If "think" mode is enabled: append <|think|>
+   - Otherwise: append <|assistant|>
+
+
+GENERATION RULES
+----------------
+
+During generation:
+
+1. TOKEN-BY-TOKEN: Generate one token at a time
+
+2. END TOKEN DETECTION: Stop generation immediately when <|end|> is produced
+   - Do not include the <|end|> token in the output
+   - The model has signaled completion
+
+3. THINK-TO-ASSISTANT TRANSITION:
+   - When generating in think mode, watch for <|assistant|> in output
+   - Once <|assistant|> appears, the model has finished thinking
+   - Continue generating the assistant response
+
+4. SECOND GENERATION ROUND (think mode only):
+   - If think mode was requested but <|assistant|> never appeared
+   - Append <|assistant|> manually and run another generation round
+   - This ensures the assistant always provides a final response
+
+5. POST-GENERATION CLEANUP:
+   - Remove any trailing special tokens from the result
+   - Append <|user|> to prepare for the next user message
+
+
+EXAMPLE: FULL PREPARATION FLOW
+------------------------------
+
+Starting state (after previous turn):
+  "<|user|>Hi<|assistant|>Hello!<|end|><|user|>"
+
+User types: "How are you?"
+
+Step 1 - Sanitize (remove leading think/assistant/end):
+  No change needed, starts with <|user|>
+
+Step 2 - Check starts with <|user|>:
+  Yes, it does
+
+Step 3 - Remove trailing special tokens:
+  "<|user|>Hi<|assistant|>Hello!<|end|>" (removed trailing <|user|>)
+  Wait, we need to keep content. Actually:
+  Current log: "<|user|>Hi<|assistant|>Hello!<|end|><|user|>"
+  After removing trailing: "<|user|>Hi<|assistant|>Hello!<|end|>"
+
+Step 4 - Append new user message + suffix:
+  "<|user|>Hi<|assistant|>Hello!<|end|><|user|>How are you?<|assistant|>"
+
+Ready for generation.
+
+
+EXAMPLE: FIRST MESSAGE
+----------------------
+
+Chat log is empty: ""
+
+User types: "Hello"
+
+Step 1 - Sanitize: "" (no change)
+
+Step 2 - Doesn't start with <|user|>, so prepend it:
+  Result: "<|user|>Hello"
+
+Step 3 - Remove trailing special tokens:
+  No change needed
+
+Step 4 - Append suffix (assuming no think mode):
+  "<|user|>Hello<|assistant|>"
+
+Ready for generation.
+
+
+EXAMPLE: WITH THINK MODE
+------------------------
+
+User types: "What is 2+2?" with think mode enabled
+
+After preparation:
+  "<|user|>What is 2+2?<|think|>"
+
+Generation produces:
+  "Let me calculate... 2+2=4<|assistant|>The answer is 4<|end|>"
+
+The <|think|> content is the reasoning, <|assistant|> content is the response.
+
+
+DISPLAY RULES
+-------------
+
+When displaying in a chat UI:
+
+1. Parse the log by splitting on special tokens
+2. Content after <|user|> goes in user bubbles
+3. Content after <|think|> goes in thinking bubbles (styled differently)
+4. Content after <|assistant|> goes in assistant bubbles
+5. <|end|> marks segment boundaries (not displayed)
+6. Strip special tokens from displayed text
+
+IMPLEMENTATION NOTES
+--------------------
+
+- Special tokens should be single tokens in the vocabulary
+- The <|end|> token ID should be detected to stop generation
+- Temperature and other sampling parameters apply normally
+- Context length limits: truncate from the BEGINNING to preserve recent context

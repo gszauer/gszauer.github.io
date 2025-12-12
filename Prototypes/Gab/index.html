@@ -12,7 +12,7 @@
             --border-color: #30363d;
             --text-primary: #e6edf3;
             --text-secondary: #8b949e;
-            --accent-blue: #58a6ff;
+            --accent-blue: #4a8ed0;
             --accent-green: #3fb950;
             --accent-orange: #d29922;
             --accent-red: #f85149;
@@ -38,10 +38,49 @@
         .top-bar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             padding: 12px 20px;
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-secondary);
+        }
+
+        .top-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .header-controls > .chat-controls,
+        .header-controls > .param-controls {
+            flex-shrink: 0;
+        }
+
+        .param-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .top-bar-inner {
+                justify-content: center;
+            }
+
+            .header-controls {
+                justify-content: center;
+                gap: 10px;
+            }
         }
 
         .top-bar h1 {
@@ -60,18 +99,25 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
         .control-group input {
-            width: 60px;
+            width: 50px;
             padding: 4px 8px;
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
             border-radius: 4px;
             color: var(--text-primary);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            text-align: center;
+            -moz-appearance: textfield;
+            transition: all 0.2s;
+        }
+
+        .control-group input:hover {
+            border-color: var(--accent-blue);
         }
 
         .control-group input:focus {
@@ -79,35 +125,130 @@
             border-color: var(--accent-blue);
         }
 
+        .control-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-group input::-webkit-inner-spin-button,
+        .control-group input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-group:hover {
+            color: var(--text-primary);
+        }
+
+        .checkbox-group:has(input:checked) {
+            color: var(--text-primary);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle {
+            position: relative;
+            width: 28px;
+            height: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 10px;
+            height: 10px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .checkbox-group input:checked + .toggle {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .checkbox-group input:checked + .toggle::after {
+            left: 14px;
+            background: #fff;
+        }
+
+        .checkbox-group:has(input:disabled) {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .chat-controls {
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-controls.visible {
+            display: flex;
+        }
+
+        .tokens-control {
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tokens-control.visible {
+            display: flex;
+        }
+
+        .special-tokens-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: auto;
+            font-size: 0.7rem;
+            font-family: 'SF Mono', 'Consolas', monospace;
+        }
+
+        .special-tokens-list span {
+            padding: 2px 6px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .special-tokens-list span:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        #clearBtnWrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .divider {
             width: 1px;
             height: 24px;
             background: var(--border-color);
-        }
-
-        .model-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .model-info .status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .model-info .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-secondary);
-        }
-
-        .model-info .status-dot.loaded {
-            background: var(--accent-green);
         }
 
         .main-container {
@@ -169,7 +310,7 @@
         }
 
         .file-loader.loaded {
-            border-color: var(--accent-green);
+            border-color: var(--accent-blue);
             border-style: solid;
         }
 
@@ -198,14 +339,14 @@
 
         .file-loader .filename {
             font-size: 0.75rem;
-            color: var(--accent-green);
+            color: var(--accent-blue);
             margin-top: 8px;
             word-break: break-all;
         }
 
         .start-btn {
             padding: 12px 40px;
-            background: var(--accent-green);
+            background: var(--accent-blue);
             color: #000;
             border: none;
             border-radius: 6px;
@@ -216,10 +357,31 @@
         }
 
         .start-btn:hover:not(:disabled) {
-            background: #56d364;
+            background: #5a9ee0;
         }
 
         .start-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .load-sample-btn {
+            padding: 8px 20px;
+            background: none;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .load-sample-btn:hover:not(:disabled) {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .load-sample-btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
         }
@@ -247,8 +409,8 @@
         }
 
         .mode-option.active {
-            border-color: var(--accent-green);
-            background: rgba(63, 185, 80, 0.1);
+            border-color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
         }
 
         .mode-option .mode-label {
@@ -296,43 +458,55 @@
         }
 
         .message .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
+            font-size: 1rem;
             flex-shrink: 0;
+            margin-top: 4px;
         }
 
         .message.user .avatar {
-            background: var(--accent-blue);
-            color: #000;
+            background: linear-gradient(135deg, #8b7ec8 0%, #7a6bb5 100%);
         }
 
         .message.assistant .avatar {
-            background: var(--accent-purple);
-            color: #fff;
+            background: linear-gradient(135deg, #353d49 0%, #252d38 100%);
         }
 
         .message .content {
             padding: 12px 16px;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 0.95rem;
             line-height: 1.5;
         }
 
         .message.user .content {
-            background: var(--accent-blue);
-            color: #000;
+            background: rgba(139, 126, 200, 0.15);
+            border: 1px solid rgba(139, 126, 200, 0.3);
+            color: var(--text-primary);
             border-bottom-right-radius: 4px;
         }
 
         .message.assistant .content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: rgba(90, 100, 115, 0.22);
+            border: 1px solid rgba(90, 100, 115, 0.35);
             border-bottom-left-radius: 4px;
+        }
+
+        .message.think .avatar {
+            background: linear-gradient(135deg, #4a8ed0 0%, #3a7bc0 100%);
+        }
+
+        .message.think .content {
+            background: rgba(74, 142, 208, 0.15);
+            border: 1px solid rgba(74, 142, 208, 0.3);
+            color: var(--text-secondary);
+            border-bottom-left-radius: 4px;
+            font-style: italic;
         }
 
         .message .content.generating {
@@ -416,9 +590,14 @@
             transition: all 0.2s;
         }
 
-        .clear-btn:hover {
-            border-color: var(--accent-red);
-            color: var(--accent-red);
+        .clear-btn:hover:not(:disabled) {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .clear-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .hidden {
@@ -434,31 +613,181 @@
             font-size: 0.85rem;
             margin-top: 15px;
         }
+
+        /* Raw Chat Interface */
+        .raw-chat-container {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            gap: 15px;
+        }
+
+        .raw-chat-container.active {
+            display: flex;
+        }
+
+        /* Editor Interface (Generate Mode) */
+        .editor-container {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            gap: 15px;
+        }
+
+        .editor-container.active {
+            display: flex;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            padding: 20px;
+            resize: none;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .editor-textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .editor-textarea.generating {
+            color: var(--text-secondary);
+        }
+
+        .editor-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .generate-btn {
+            padding: 10px 30px;
+            background: var(--accent-blue);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            background: #5a9ee0;
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Token highlighting */
+        .editor-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .token-highlight-layer {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            padding: 20px;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            pointer-events: none;
+            border-radius: 7px;
+            display: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .token-highlight-layer.visible {
+            display: block;
+        }
+
+        .editor-wrapper .editor-textarea.tokens-mode {
+            background: transparent;
+            color: transparent;
+            caret-color: var(--text-primary);
+        }
+
+        .token-highlight-layer .token {
+            border-radius: 2px;
+        }
+
+        .token-highlight-layer .token.c0 { background: rgba(74, 142, 208, 0.3); }
+        .token-highlight-layer .token.c1 { background: rgba(163, 113, 247, 0.3); }
+        .token-highlight-layer .token.c2 { background: rgba(63, 185, 80, 0.3); }
+        .token-highlight-layer .token.c3 { background: rgba(210, 153, 34, 0.3); }
+        .token-highlight-layer .token.c4 { background: rgba(248, 81, 73, 0.3); }
+        .token-highlight-layer .token.c5 { background: rgba(56, 189, 248, 0.3); }
+        .token-highlight-layer .token.c6 { background: rgba(244, 114, 182, 0.3); }
+        .token-highlight-layer .token.c7 { background: rgba(167, 139, 250, 0.3); }
     </style>
 </head>
 <body>
     <div class="top-bar">
-        <h1>GabGPT Chat</h1>
-        <div class="header-controls">
-            <button class="clear-btn" id="clearBtn" onclick="clearChat()">Clear Chat</button>
-            <div class="divider"></div>
-            <div class="control-group">
-                <label>Temp:</label>
-                <input type="number" id="temperature" value="0.7" min="0.1" max="2" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Max tokens:</label>
-                <input type="number" id="maxTokens" value="100" min="1" max="500" step="10">
-            </div>
-            <div class="divider"></div>
-            <div class="model-info">
-                <div class="status">
-                    <span class="status-dot" id="tokenizerStatus"></span>
-                    <span>Tokenizer</span>
+        <div class="top-bar-inner">
+            <h1 onclick="location.reload()" style="cursor: pointer;">GabGPT Chat</h1>
+            <div class="header-controls">
+                <div class="tokens-control" id="tokensControl">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="tokensToggle" onchange="toggleTokensMode()">
+                        <span class="toggle"></span>
+                        <span>Tokens</span>
+                    </label>
+                    <div class="divider"></div>
                 </div>
-                <div class="status">
-                    <span class="status-dot" id="modelStatus"></span>
-                    <span>Model</span>
+                <div class="chat-controls" id="chatControls">
+                    <span id="clearBtnWrapper">
+                        <button class="clear-btn" id="clearBtnHeader" onclick="clearChat()">Clear</button>
+                        <div class="divider"></div>
+                    </span>
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="chatUiToggle" checked onchange="toggleChatUi()">
+                        <span class="toggle"></span>
+                        <span>Chat UI</span>
+                    </label>
+                    <div class="divider"></div>
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="requestThink">
+                        <span class="toggle"></span>
+                        <span>Think</span>
+                    </label>
+                    <div class="divider"></div>
+                </div>
+                <div class="param-controls">
+                    <div class="control-group">
+                        <label>Temp:</label>
+                        <input type="number" id="temperature" value="0.7" min="0.1" max="2" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>Max tokens:</label>
+                        <input type="number" id="maxTokens" value="100" min="1" max="500" step="10">
+                    </div>
                 </div>
             </div>
         </div>
@@ -467,7 +796,7 @@
     <div class="main-container">
         <!-- Load Screen -->
         <div class="load-screen" id="loadScreen">
-            <p>Upload your trained tokenizer and model files to start chatting. Or <a href="train.html" style="color: var(--accent-blue);">train a new model</a>.</p>
+            <p>Upload your trained tokenizer and model files to start chatting.</p>
             
             <div class="file-loaders">
                 <div class="file-loader" id="tokenizerLoader">
@@ -499,26 +828,79 @@
             </div>
 
             <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
-            
+
+            <button class="load-sample-btn" id="loadSampleBtn" onclick="loadSampleModel()">Load Sample Model</button>
+
             <div class="error-message hidden" id="errorMessage"></div>
         </div>
 
-        <!-- Chat Interface -->
+        <!-- Chat Interface (bubble UI) -->
         <div class="chat-container" id="chatContainer">
             <div class="chat-messages" id="chatMessages"></div>
-            
+
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                    <textarea 
-                        class="chat-input" 
-                        id="chatInput" 
+                    <textarea
+                        class="chat-input"
+                        id="chatInput"
                         placeholder="Type your message..."
                         rows="1"
                         onkeydown="handleKeyDown(event)"
                     ></textarea>
                     <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
                 </div>
-                
+
+            </div>
+        </div>
+
+        <!-- Chat Interface (raw text) -->
+        <div class="raw-chat-container" id="rawChatContainer">
+            <div class="editor-wrapper">
+                <div class="token-highlight-layer" id="rawChatHighlight"></div>
+                <textarea
+                    class="editor-textarea"
+                    id="rawChatTextarea"
+                    placeholder="Chat log will appear here. You can edit it directly.
+
+Format:
+<|user|>Your message
+<|think|>Optional thinking (if requested)
+<|assistant|>AI response
+<|end|>"
+                    oninput="updateTokenHighlight('rawChat')"
+                    onscroll="syncScroll('rawChat')"
+                ></textarea>
+            </div>
+            <div class="editor-controls">
+                <div class="special-tokens-list">
+                    <span onclick="insertSpecialToken('&lt;|user|&gt;')">&lt;|user|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;|think|&gt;')">&lt;|think|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;|assistant|&gt;')">&lt;|assistant|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;|tool|&gt;')">&lt;|tool|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;|result|&gt;')">&lt;|result|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;|end|&gt;')">&lt;|end|&gt;</span>
+                    <span onclick="insertSpecialToken('&lt;pad&gt;')">&lt;pad&gt;</span>
+                </div>
+                <button class="clear-btn" onclick="clearChat()">Clear</button>
+                <button class="generate-btn" id="rawChatGenerateBtn" onclick="generateFromRawChat()">Generate</button>
+            </div>
+        </div>
+
+        <!-- Editor Interface (Generate Mode) -->
+        <div class="editor-container" id="editorContainer">
+            <div class="editor-wrapper">
+                <div class="token-highlight-layer" id="editorHighlight"></div>
+                <textarea
+                    class="editor-textarea"
+                    id="editorTextarea"
+                    placeholder="Enter your text here... Press 'Generate' to continue writing."
+                    oninput="updateTokenHighlight('editor')"
+                    onscroll="syncScroll('editor')"
+                ></textarea>
+            </div>
+            <div class="editor-controls">
+                <button class="clear-btn" onclick="clearEditor()">Clear</button>
+                <button class="generate-btn" id="generateBtn" onclick="generateText()">Generate</button>
             </div>
         </div>
     </div>
@@ -530,14 +912,80 @@
                 this.tokenizer = null;
                 this.model = null;
                 this.isGenerating = false;
-                this.conversationTokens = [];
+                this.chatLog = ''; // String-based chat log
                 this.mode = 'chat'; // 'chat' or 'generate'
-                
-                this.userTokenId = null;
-                this.assistantTokenId = null;
+                this.chatUiMode = true; // true = bubble UI, false = raw text
+                this.tokensMode = false; // show token boundaries
+                this.stopRequested = false;
+
+                this.specialTokens = ['<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
                 this.endTokenId = null;
-                
+
                 this.setupTextareaAutoResize();
+            }
+
+            // Sanitize chat log: remove leading <|think|>, <|assistant|>, or <|end|>
+            sanitizeChatLog() {
+                let log = this.chatLog;
+                while (true) {
+                    if (log.startsWith('<|think|>')) {
+                        log = log.slice('<|think|>'.length);
+                    } else if (log.startsWith('<|assistant|>')) {
+                        log = log.slice('<|assistant|>'.length);
+                    } else if (log.startsWith('<|end|>')) {
+                        log = log.slice('<|end|>'.length);
+                    } else {
+                        break;
+                    }
+                }
+                this.chatLog = log;
+            }
+
+            // Remove trailing special tokens
+            removeTrailingSpecialTokens() {
+                let log = this.chatLog.trimEnd();
+                while (true) {
+                    let found = false;
+                    for (const token of this.specialTokens) {
+                        if (log.endsWith(token)) {
+                            log = log.slice(0, -token.length);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) break;
+                }
+                this.chatLog = log;
+            }
+
+            // Check if chat log starts with <|user|>
+            startsWithUser() {
+                return this.chatLog.startsWith('<|user|>');
+            }
+
+            // Prepare chat log for sending
+            prepareChatLog(inputText) {
+                // 1. Always sanitize first (remove leading think/assistant/end)
+                this.sanitizeChatLog();
+
+                const requestThink = document.getElementById('requestThink').checked;
+                const suffixToken = requestThink ? '<|think|>' : '<|assistant|>';
+
+                if (!this.startsWithUser() || this.chatLog.trim() === '') {
+                    // First user message
+                    // 2. Trim and remove trailing special tokens first
+                    this.removeTrailingSpecialTokens();
+                    // 3. Prepend <|user|>
+                    this.chatLog = '<|user|>' + this.chatLog + inputText + suffixToken;
+                } else {
+                    // Subsequent user message
+                    // 2. Trim and remove trailing special tokens
+                    this.removeTrailingSpecialTokens();
+                    // 3. Append <|user|> + input + suffix
+                    this.chatLog += '<|user|>' + inputText + suffixToken;
+                }
+
+                return this.chatLog;
             }
 
             setMode(mode) {
@@ -562,6 +1010,41 @@
                 });
             }
 
+            setInferenceControls(isGenerating) {
+                // Disable/enable parameter controls
+                document.getElementById('temperature').disabled = isGenerating;
+                document.getElementById('maxTokens').disabled = isGenerating;
+                document.getElementById('chatUiToggle').disabled = isGenerating;
+                document.getElementById('requestThink').disabled = isGenerating;
+                document.getElementById('tokensToggle').disabled = isGenerating;
+                document.getElementById('clearBtnHeader').disabled = isGenerating;
+
+                // Update button states
+                const sendBtn = document.getElementById('sendBtn');
+                const generateBtn = document.getElementById('generateBtn');
+                const rawChatGenerateBtn = document.getElementById('rawChatGenerateBtn');
+
+                if (isGenerating) {
+                    sendBtn.textContent = 'Stop';
+                    sendBtn.onclick = () => this.stopGeneration();
+                    generateBtn.textContent = 'Stop';
+                    generateBtn.onclick = () => this.stopGeneration();
+                    rawChatGenerateBtn.textContent = 'Stop';
+                    rawChatGenerateBtn.onclick = () => this.stopGeneration();
+                } else {
+                    sendBtn.textContent = 'Send';
+                    sendBtn.onclick = () => this.sendMessage();
+                    generateBtn.textContent = 'Generate';
+                    generateBtn.onclick = () => this.generateText();
+                    rawChatGenerateBtn.textContent = 'Generate';
+                    rawChatGenerateBtn.onclick = () => this.generateFromRawChat();
+                }
+            }
+
+            stopGeneration() {
+                this.stopRequested = true;
+            }
+
             showError(message) {
                 const errorEl = document.getElementById('errorMessage');
                 errorEl.textContent = message;
@@ -578,9 +1061,8 @@
                     try {
                         const bytes = new Uint8Array(e.target.result);
                         this.tokenizer = Tokenizer.deserialize(bytes);
-                        
+
                         document.getElementById('tokenizerLoader').classList.add('loaded');
-                        document.getElementById('tokenizerStatus').classList.add('loaded');
                         document.getElementById('tokenizerFilename').textContent = file.name;
                         
                         console.log('Tokenizer loaded, vocab size:', this.tokenizer.getVocabSize());
@@ -599,12 +1081,81 @@
                     try {
                         const bytes = new Uint8Array(e.target.result);
                         this.model = GabGPT.deserialize(bytes);
-                        
+
                         document.getElementById('modelLoader').classList.add('loaded');
-                        document.getElementById('modelStatus').classList.add('loaded');
                         document.getElementById('modelFilename').textContent = file.name;
-                        
-                        console.log('Model loaded, vocab size:', this.model.vocabSize);
+
+                        // Log model hyperparameters
+                        const vocabSize = this.model.vocabSize;
+                        const embeddingDim = this.model.embedding.embeddingDim;
+                        const maxSeqLength = this.model.embedding.maxSequenceLength;
+                        const numBlocks = this.model.blocks.length;
+                        const numHeads = this.model.blocks[0].attention.numHeads;
+                        const headDim = embeddingDim / numHeads;
+                        const hiddenDim = embeddingDim * 4; // MLP expansion factor
+
+                        // Calculate total parameters
+                        let totalParams = 0;
+
+                        // Token embeddings: vocabSize * embeddingDim
+                        const tokenEmbParams = vocabSize * embeddingDim;
+                        totalParams += tokenEmbParams;
+
+                        // Position embeddings: maxSeqLength * embeddingDim
+                        const posEmbParams = maxSeqLength * embeddingDim;
+                        totalParams += posEmbParams;
+
+                        // Per transformer block
+                        let paramsPerBlock = 0;
+                        // LayerNorm1: gamma + beta
+                        paramsPerBlock += 2 * embeddingDim;
+                        // Attention: Q, K, V, O weights (4 * embeddingDim^2)
+                        paramsPerBlock += 4 * embeddingDim * embeddingDim;
+                        // LayerNorm2: gamma + beta
+                        paramsPerBlock += 2 * embeddingDim;
+                        // MLP Dense1: hiddenDim neurons * (embeddingDim weights + 1 bias)
+                        paramsPerBlock += hiddenDim * (embeddingDim + 1);
+                        // MLP Dense2: embeddingDim neurons * (hiddenDim weights + 1 bias)
+                        paramsPerBlock += embeddingDim * (hiddenDim + 1);
+
+                        totalParams += paramsPerBlock * numBlocks;
+
+                        // Final LayerNorm: gamma + beta
+                        totalParams += 2 * embeddingDim;
+
+                        // Output layer: weights (embeddingDim * vocabSize) + bias (vocabSize)
+                        totalParams += embeddingDim * vocabSize + vocabSize;
+
+                        // Format parameter count
+                        const formatParams = (n) => {
+                            if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+                            if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+                            if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+                            return n.toString();
+                        };
+
+                        console.log('%c📊 Model Loaded', 'font-size: 14px; font-weight: bold; color: #3fb950;');
+                        console.log('%c═══════════════════════════════════════', 'color: #30363d;');
+                        console.log('%cArchitecture:', 'font-weight: bold; color: #58a6ff;');
+                        console.log(`  Vocab Size:        ${vocabSize.toLocaleString()}`);
+                        console.log(`  Embedding Dim:     ${embeddingDim}`);
+                        console.log(`  Max Seq Length:    ${maxSeqLength}`);
+                        console.log(`  Transformer Blocks: ${numBlocks}`);
+                        console.log(`  Attention Heads:   ${numHeads}`);
+                        console.log(`  Head Dimension:    ${headDim}`);
+                        console.log(`  MLP Hidden Dim:    ${hiddenDim} (4x expansion)`);
+                        console.log('%c───────────────────────────────────────', 'color: #30363d;');
+                        console.log('%cParameter Count:', 'font-weight: bold; color: #58a6ff;');
+                        console.log(`  Token Embeddings:  ${formatParams(tokenEmbParams)} (${tokenEmbParams.toLocaleString()})`);
+                        console.log(`  Position Embeds:   ${formatParams(posEmbParams)} (${posEmbParams.toLocaleString()})`);
+                        console.log(`  Per Block:         ${formatParams(paramsPerBlock)} (${paramsPerBlock.toLocaleString()})`);
+                        console.log(`  All Blocks (${numBlocks}):    ${formatParams(paramsPerBlock * numBlocks)} (${(paramsPerBlock * numBlocks).toLocaleString()})`);
+                        console.log(`  Final LayerNorm:   ${formatParams(2 * embeddingDim)} (${(2 * embeddingDim).toLocaleString()})`);
+                        console.log(`  Output Layer:      ${formatParams(embeddingDim * vocabSize + vocabSize)} (${(embeddingDim * vocabSize + vocabSize).toLocaleString()})`);
+                        console.log('%c───────────────────────────────────────', 'color: #30363d;');
+                        console.log(`%c  TOTAL PARAMETERS:  ${formatParams(totalParams)} (${totalParams.toLocaleString()})`, 'font-weight: bold; color: #a371f7;');
+                        console.log('%c═══════════════════════════════════════', 'color: #30363d;');
+
                         this.hideError();
                         this.checkReady();
                     } catch (err) {
@@ -619,61 +1170,259 @@
                 document.getElementById('startBtn').disabled = !ready;
             }
 
+            async loadSampleModel() {
+                const btn = document.getElementById('loadSampleBtn');
+                btn.disabled = true;
+                btn.textContent = 'Loading...';
+                this.hideError();
+
+                try {
+                    // Load tokenizer
+                    const tokenizerResponse = await fetch('model.bpe');
+                    if (!tokenizerResponse.ok) throw new Error('model.bpe not found');
+                    const tokenizerBytes = new Uint8Array(await tokenizerResponse.arrayBuffer());
+                    this.tokenizer = Tokenizer.deserialize(tokenizerBytes);
+                    document.getElementById('tokenizerLoader').classList.add('loaded');
+                    document.getElementById('tokenizerFilename').textContent = 'model.bpe';
+                    console.log('Tokenizer loaded, vocab size:', this.tokenizer.getVocabSize());
+
+                    // Load model
+                    const modelResponse = await fetch('model.gab');
+                    if (!modelResponse.ok) throw new Error('model.gab not found');
+                    const modelBytes = new Uint8Array(await modelResponse.arrayBuffer());
+                    this.model = GabGPT.deserialize(modelBytes);
+                    document.getElementById('modelLoader').classList.add('loaded');
+                    document.getElementById('modelFilename').textContent = 'model.gab';
+
+                    // Log model info
+                    const vocabSize = this.model.vocabSize;
+                    const embeddingDim = this.model.embedding.embeddingDim;
+                    const numBlocks = this.model.blocks.length;
+                    console.log(`Model loaded: vocab=${vocabSize}, dim=${embeddingDim}, blocks=${numBlocks}`);
+
+                    btn.textContent = 'Loaded!';
+                    this.checkReady();
+                } catch (err) {
+                    this.showError('Failed to load sample: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Load Sample Model';
+                }
+            }
+
             startChat() {
-                // Try to find special tokens (only needed for chat mode)
-                if (this.mode === 'chat') {
-                    try {
-                        const userTokens = this.tokenizer.encode('<|user|>');
-                        const assistantTokens = this.tokenizer.encode('<|assistant|>');
-                        const endTokens = this.tokenizer.encode('<|end|>');
-                        
-                        // Check if they're single tokens (reserved)
-                        if (userTokens.length === 1) {
-                            this.userTokenId = userTokens[0];
-                            console.log('Found <|user|> token:', this.userTokenId);
-                        }
-                        if (assistantTokens.length === 1) {
-                            this.assistantTokenId = assistantTokens[0];
-                            console.log('Found <|assistant|> token:', this.assistantTokenId);
-                        }
-                        if (endTokens.length === 1) {
-                            this.endTokenId = endTokens[0];
-                            console.log('Found <|end|> token:', this.endTokenId);
-                        }
-                    } catch (err) {
-                        console.log('Special tokens not found, will use raw encoding');
+                // Try to find end token (needed for stopping generation)
+                try {
+                    const endTokens = this.tokenizer.encode('<|end|>');
+                    if (endTokens.length === 1) {
+                        this.endTokenId = endTokens[0];
+                        console.log('Found <|end|> token:', this.endTokenId);
                     }
+                } catch (err) {
+                    console.log('End token not found');
                 }
 
                 document.getElementById('loadScreen').classList.add('hidden');
-                document.getElementById('chatContainer').classList.add('active');
-                document.getElementById('chatInput').focus();
-                
-                // Update placeholder based on mode
-                const input = document.getElementById('chatInput');
+
                 if (this.mode === 'chat') {
-                    input.placeholder = 'Type your message...';
+                    // Show chat controls in header
+                    document.getElementById('chatControls').classList.add('visible');
+                    document.getElementById('editorContainer').classList.remove('active');
+
+                    // Show appropriate chat interface
+                    this.updateChatInterface();
                 } else {
-                    input.placeholder = 'Enter text to continue generating from...';
+                    // Hide chat controls in generate mode
+                    document.getElementById('chatControls').classList.remove('visible');
+                    document.getElementById('chatContainer').classList.remove('active');
+                    document.getElementById('rawChatContainer').classList.remove('active');
+                    document.getElementById('editorContainer').classList.add('active');
+                    // Show tokens control in generate mode
+                    document.getElementById('tokensControl').classList.add('visible');
+                    document.getElementById('editorTextarea').focus();
+                }
+            }
+
+            updateChatInterface() {
+                const clearBtnWrapper = document.getElementById('clearBtnWrapper');
+                const tokensControl = document.getElementById('tokensControl');
+                if (this.chatUiMode) {
+                    document.getElementById('chatContainer').classList.add('active');
+                    document.getElementById('rawChatContainer').classList.remove('active');
+                    clearBtnWrapper.style.display = '';
+                    tokensControl.classList.remove('visible');
+                    document.getElementById('chatInput').focus();
+                } else {
+                    document.getElementById('chatContainer').classList.remove('active');
+                    document.getElementById('rawChatContainer').classList.add('active');
+                    clearBtnWrapper.style.display = 'none';
+                    tokensControl.classList.add('visible');
+                    // Sync chat log to textarea
+                    document.getElementById('rawChatTextarea').value = this.chatLog;
+                    this.updateTokenHighlight('rawChat');
+                    document.getElementById('rawChatTextarea').focus();
+                }
+            }
+
+            toggleChatUi() {
+                if (this.isGenerating) return;
+
+                this.chatUiMode = document.getElementById('chatUiToggle').checked;
+
+                if (!this.chatUiMode) {
+                    // Switching to raw mode - sync chat log to textarea
+                    document.getElementById('rawChatTextarea').value = this.chatLog;
+                } else {
+                    // Switching to bubble mode - sync textarea to chat log and rebuild UI
+                    this.chatLog = document.getElementById('rawChatTextarea').value;
+                    this.rebuildChatMessages();
+                }
+
+                this.updateChatInterface();
+            }
+
+            toggleTokensMode() {
+                if (this.isGenerating) return;
+
+                this.tokensMode = document.getElementById('tokensToggle').checked;
+
+                // Update both textareas
+                const editorTextarea = document.getElementById('editorTextarea');
+                const rawChatTextarea = document.getElementById('rawChatTextarea');
+                const editorHighlight = document.getElementById('editorHighlight');
+                const rawChatHighlight = document.getElementById('rawChatHighlight');
+
+                if (this.tokensMode) {
+                    editorTextarea.classList.add('tokens-mode');
+                    rawChatTextarea.classList.add('tokens-mode');
+                    editorHighlight.classList.add('visible');
+                    rawChatHighlight.classList.add('visible');
+                    // Update highlights
+                    this.updateTokenHighlight('editor');
+                    this.updateTokenHighlight('rawChat');
+                } else {
+                    editorTextarea.classList.remove('tokens-mode');
+                    rawChatTextarea.classList.remove('tokens-mode');
+                    editorHighlight.classList.remove('visible');
+                    rawChatHighlight.classList.remove('visible');
+                }
+            }
+
+            updateTokenHighlight(target) {
+                if (!this.tokensMode || !this.tokenizer) return;
+
+                const textarea = document.getElementById(target === 'editor' ? 'editorTextarea' : 'rawChatTextarea');
+                const highlight = document.getElementById(target === 'editor' ? 'editorHighlight' : 'rawChatHighlight');
+                const text = textarea.value;
+
+                if (!text) {
+                    highlight.innerHTML = '';
+                    return;
+                }
+
+                // Tokenize and decode each token individually
+                const tokens = this.tokenizer.encode(text);
+                let html = '';
+
+                for (let i = 0; i < tokens.length; i++) {
+                    const tokenText = this.tokenizer.decode([tokens[i]]);
+                    const escaped = this.escapeHtml(tokenText);
+                    html += `<span class="token c${i % 8}">${escaped}</span>`;
+                }
+
+                highlight.innerHTML = html;
+            }
+
+            syncScroll(target) {
+                const textarea = document.getElementById(target === 'editor' ? 'editorTextarea' : 'rawChatTextarea');
+                const highlight = document.getElementById(target === 'editor' ? 'editorHighlight' : 'rawChatHighlight');
+                highlight.scrollTop = textarea.scrollTop;
+                highlight.scrollLeft = textarea.scrollLeft;
+            }
+
+            insertSpecialToken(token) {
+                if (this.isGenerating) return;
+
+                const textarea = document.getElementById('rawChatTextarea');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+
+                textarea.value = text.substring(0, start) + token + text.substring(end);
+                textarea.selectionStart = textarea.selectionEnd = start + token.length;
+                textarea.focus();
+
+                this.updateTokenHighlight('rawChat');
+            }
+
+            rebuildChatMessages() {
+                // Clear current messages
+                document.getElementById('chatMessages').innerHTML = '';
+
+                // Parse chat log and rebuild messages
+                const log = this.chatLog;
+                if (!log.trim()) return;
+
+                // Split by special tokens while keeping them
+                const tokenPattern = /(<\|user\|>|<\|think\|>|<\|assistant\|>|<\|end\|>)/g;
+                const parts = log.split(tokenPattern).filter(p => p);
+
+                let currentRole = null;
+                let currentContent = '';
+
+                for (const part of parts) {
+                    if (part === '<|user|>') {
+                        if (currentRole && currentContent.trim()) {
+                            this.addMessage(currentRole, currentContent.trim(), false);
+                        }
+                        currentRole = 'user';
+                        currentContent = '';
+                    } else if (part === '<|think|>') {
+                        if (currentRole && currentContent.trim()) {
+                            this.addMessage(currentRole, currentContent.trim(), false);
+                        }
+                        currentRole = 'think';
+                        currentContent = '';
+                    } else if (part === '<|assistant|>') {
+                        if (currentRole && currentContent.trim()) {
+                            this.addMessage(currentRole, currentContent.trim(), false);
+                        }
+                        currentRole = 'assistant';
+                        currentContent = '';
+                    } else if (part === '<|end|>') {
+                        if (currentRole && currentContent.trim()) {
+                            this.addMessage(currentRole, currentContent.trim(), false);
+                        }
+                        currentRole = null;
+                        currentContent = '';
+                    } else {
+                        currentContent += part;
+                    }
+                }
+
+                // Add any remaining content
+                if (currentRole && currentContent.trim()) {
+                    this.addMessage(currentRole, currentContent.trim(), false);
                 }
             }
 
             addMessage(role, content, isGenerating = false) {
                 const messagesEl = document.getElementById('chatMessages');
-                
+
                 const messageEl = document.createElement('div');
                 messageEl.className = 'message ' + role;
-                
-                const avatar = role === 'user' ? 'U' : 'G';
-                
+
+                let avatar = '🤖';
+                if (role === 'user') avatar = '👤';
+                else if (role === 'think') avatar = '💭';
+
                 messageEl.innerHTML = `
                     <div class="avatar">${avatar}</div>
                     <div class="content ${isGenerating ? 'generating' : ''}">${this.escapeHtml(content)}</div>
                 `;
-                
+
                 messagesEl.appendChild(messageEl);
                 messagesEl.scrollTop = messagesEl.scrollHeight;
-                
+
                 return messageEl;
             }
 
@@ -698,112 +1447,210 @@
 
             async sendMessage() {
                 if (this.isGenerating) return;
-                
+
                 const input = document.getElementById('chatInput');
                 const message = input.value.trim();
                 if (!message) return;
-                
+
                 input.value = '';
                 input.style.height = 'auto';
-                
+
                 this.addMessage('user', message);
-                
-                if (this.mode === 'chat') {
-                    // Chat mode: use ChatML format
-                    const prompt = `<|user|>${message}<|end|><|assistant|>`;
-                    const promptTokens = this.tokenizer.encode(prompt);
-                    
-                    // Add to conversation history
-                    this.conversationTokens = this.conversationTokens.concat(promptTokens);
-                    
-                    // Trim conversation if too long
-                    const maxContext = this.model.embedding.maxSequenceLength - 100;
-                    if (this.conversationTokens.length > maxContext) {
-                        this.conversationTokens = this.conversationTokens.slice(-maxContext);
-                    }
-                    
-                    await this.generate(true);
-                } else {
-                    // Generate mode: raw text completion
-                    const promptTokens = this.tokenizer.encode(message);
-                    this.conversationTokens = promptTokens;
-                    
-                    await this.generate(false);
-                }
+
+                // Prepare chat log with the new message
+                this.prepareChatLog(message);
+
+                await this.generateChat();
             }
 
-            async generate(isChatMode) {
+            async generateChat() {
                 this.isGenerating = true;
-                document.getElementById('sendBtn').disabled = true;
+                this.stopRequested = false;
+                this.setInferenceControls(true);
                 document.getElementById('chatInput').disabled = true;
-                
-                const messageEl = this.addMessage('assistant', '', true);
-                
+
+                const requestThink = document.getElementById('requestThink').checked;
+                const messageEl = this.addMessage(requestThink ? 'think' : 'assistant', '', true);
+
                 const temperature = parseFloat(document.getElementById('temperature').value) || 0.7;
                 const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
-                
-                let tokens = this.conversationTokens.slice();
+
+                // Tokenize the chat log
+                let tokens = this.tokenizer.encode(this.chatLog);
+
+                // Truncate from the beginning if too long
+                const maxSeqLen = this.model.embedding.maxSequenceLength;
+                if (tokens.length > maxSeqLen) {
+                    tokens = tokens.slice(-maxSeqLen);
+                }
+
                 let generated = [];
                 let responseText = '';
-                
+                let currentRole = requestThink ? 'think' : 'assistant';
+
                 try {
+                    // Let UI update before starting generation
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+
                     for (let i = 0; i < maxTokens; i++) {
+                        // Check for stop request
+                        if (this.stopRequested) break;
+
                         // Truncate if exceeding max sequence length
-                        const maxSeqLen = this.model.embedding.maxSequenceLength;
                         let inputTokens = tokens;
                         if (tokens.length > maxSeqLen) {
                             inputTokens = tokens.slice(-maxSeqLen);
                         }
-                        
+
                         // Forward pass
                         const batchedInput = [inputTokens];
                         const probs = this.model.forward(batchedInput);
                         const lastProbs = probs[0][inputTokens.length - 1];
-                        
+
                         // Sample with temperature
                         const nextToken = this.sampleWithTemperature(lastProbs, temperature);
-                        
-                        // Check for end token (only in chat mode)
-                        if (isChatMode && this.endTokenId !== null && nextToken === this.endTokenId) {
+
+                        // Check for end token
+                        if (this.endTokenId !== null && nextToken === this.endTokenId) {
                             break;
                         }
-                        
+
                         tokens.push(nextToken);
                         generated.push(nextToken);
-                        
+
                         // Decode and update display
                         responseText = this.tokenizer.decode(generated);
-                        
-                        // Remove special tokens from display (only in chat mode)
-                        if (isChatMode) {
-                            responseText = responseText.replace(/<\|end\|>/g, '').replace(/<\|user\|>/g, '').replace(/<\|assistant\|>/g, '');
+
+                        // Check if we've transitioned from think to assistant
+                        if (currentRole === 'think' && responseText.includes('<|assistant|>')) {
+                            // Split the response
+                            const parts = responseText.split('<|assistant|>');
+                            const thinkContent = parts[0].replace(/<\|[^>]+\|>/g, '');
+                            const assistantContent = parts.slice(1).join('<|assistant|>').replace(/<\|[^>]+\|>/g, '');
+
+                            // Update think message
+                            this.updateMessage(messageEl, thinkContent || '(thinking...)', false);
+
+                            // Create assistant message if we have content after the tag
+                            if (!this.assistantMessageEl) {
+                                this.assistantMessageEl = this.addMessage('assistant', assistantContent, true);
+                            } else {
+                                this.updateMessage(this.assistantMessageEl, assistantContent, true);
+                            }
+                            currentRole = 'assistant';
+                        } else {
+                            // Clean response for display
+                            const cleanResponse = responseText.replace(/<\|[^>]+\|>/g, '');
+                            if (currentRole === 'think') {
+                                this.updateMessage(messageEl, cleanResponse, true);
+                            } else if (this.assistantMessageEl) {
+                                const parts = responseText.split('<|assistant|>');
+                                const assistantContent = parts.slice(1).join('<|assistant|>').replace(/<\|[^>]+\|>/g, '');
+                                this.updateMessage(this.assistantMessageEl, assistantContent, true);
+                            } else {
+                                this.updateMessage(messageEl, cleanResponse, true);
+                            }
                         }
-                        
-                        this.updateMessage(messageEl, responseText, true);
-                        
-                        // Yield to UI
-                        await new Promise(resolve => setTimeout(resolve, 0));
+
+                        // Yield to UI via requestAnimationFrame
+                        await new Promise(resolve => requestAnimationFrame(resolve));
                     }
-                    
+
                     // Final update
-                    this.updateMessage(messageEl, responseText || '(empty response)', false);
-                    
-                    // Update conversation history
-                    if (isChatMode) {
-                        this.conversationTokens = tokens;
-                        if (this.endTokenId !== null) {
-                            this.conversationTokens.push(this.endTokenId);
+                    const finalResponse = this.tokenizer.decode(generated);
+                    if (currentRole === 'think' && finalResponse.includes('<|assistant|>')) {
+                        const parts = finalResponse.split('<|assistant|>');
+                        const thinkContent = parts[0].replace(/<\|[^>]+\|>/g, '');
+                        const assistantContent = parts.slice(1).join('<|assistant|>').replace(/<\|[^>]+\|>/g, '');
+                        this.updateMessage(messageEl, thinkContent || '(no thinking)', false);
+                        if (this.assistantMessageEl) {
+                            this.updateMessage(this.assistantMessageEl, assistantContent || '(empty response)', false);
+                        } else {
+                            this.addMessage('assistant', assistantContent || '(empty response)', false);
                         }
+                    } else if (this.assistantMessageEl) {
+                        const parts = finalResponse.split('<|assistant|>');
+                        const thinkContent = parts[0].replace(/<\|[^>]+\|>/g, '');
+                        const assistantContent = parts.slice(1).join('<|assistant|>').replace(/<\|[^>]+\|>/g, '');
+                        this.updateMessage(messageEl, thinkContent || '(no thinking)', false);
+                        this.updateMessage(this.assistantMessageEl, assistantContent || '(empty response)', false);
+                    } else {
+                        const cleanResponse = finalResponse.replace(/<\|[^>]+\|>/g, '');
+                        this.updateMessage(messageEl, cleanResponse || '(empty response)', false);
                     }
-                    // In generate mode, don't accumulate history
-                    
+
+                    // Update chat log with generated content
+                    this.chatLog += this.tokenizer.decode(generated);
+
+                    // Check if we need a second round for assistant response (when thinking)
+                    const generatedText = this.tokenizer.decode(generated);
+                    const needsAssistantRound = requestThink && !generatedText.includes('<|assistant|>');
+
+                    if (needsAssistantRound && !this.stopRequested) {
+                        // Append <|assistant|> and do another generation round
+                        this.removeTrailingSpecialTokens();
+                        this.chatLog += '<|assistant|>';
+
+                        // Create assistant message element
+                        this.assistantMessageEl = this.addMessage('assistant', '', true);
+
+                        // Second generation round
+                        let tokens2 = this.tokenizer.encode(this.chatLog);
+                        if (tokens2.length > maxSeqLen) {
+                            tokens2 = tokens2.slice(-maxSeqLen);
+                        }
+
+                        let generated2 = [];
+
+                        for (let i = 0; i < maxTokens; i++) {
+                            // Check for stop request
+                            if (this.stopRequested) break;
+
+                            let inputTokens2 = tokens2;
+                            if (tokens2.length > maxSeqLen) {
+                                inputTokens2 = tokens2.slice(-maxSeqLen);
+                            }
+
+                            const batchedInput2 = [inputTokens2];
+                            const probs2 = this.model.forward(batchedInput2);
+                            const lastProbs2 = probs2[0][inputTokens2.length - 1];
+
+                            const nextToken2 = this.sampleWithTemperature(lastProbs2, temperature);
+
+                            if (this.endTokenId !== null && nextToken2 === this.endTokenId) {
+                                break;
+                            }
+
+                            tokens2.push(nextToken2);
+                            generated2.push(nextToken2);
+
+                            const responseText2 = this.tokenizer.decode(generated2).replace(/<\|[^>]+\|>/g, '');
+                            this.updateMessage(this.assistantMessageEl, responseText2, true);
+
+                            await new Promise(resolve => requestAnimationFrame(resolve));
+                        }
+
+                        const finalResponse2 = this.tokenizer.decode(generated2).replace(/<\|[^>]+\|>/g, '');
+                        this.updateMessage(this.assistantMessageEl, finalResponse2 || '(empty response)', false);
+
+                        this.chatLog += this.tokenizer.decode(generated2);
+                    }
+
+                    // Remove <|end|> if present, then append <|user|> for next message
+                    this.removeTrailingSpecialTokens();
+                    this.chatLog += '<|user|>';
+
+                    // Reset assistant message element
+                    this.assistantMessageEl = null;
+
                 } catch (err) {
                     console.error('Generation error:', err);
                     this.updateMessage(messageEl, 'Error: ' + err.message, false);
+                    this.assistantMessageEl = null;
                 }
-                
+
                 this.isGenerating = false;
-                document.getElementById('sendBtn').disabled = false;
+                this.setInferenceControls(false);
                 document.getElementById('chatInput').disabled = false;
                 document.getElementById('chatInput').focus();
             }
@@ -856,8 +1703,255 @@
             }
 
             clearChat() {
+                if (this.isGenerating) return;
+
                 document.getElementById('chatMessages').innerHTML = '';
-                this.conversationTokens = [];
+                document.getElementById('rawChatTextarea').value = '';
+                this.chatLog = '';
+            }
+
+            async generateFromRawChat() {
+                if (this.isGenerating) return;
+
+                // Get text from raw textarea
+                const textarea = document.getElementById('rawChatTextarea');
+                this.chatLog = textarea.value;
+
+                // Apply full chat logic:
+                // 1. Sanitize - remove leading think/assistant/end
+                this.sanitizeChatLog();
+
+                // 2. If doesn't start with <|user|>, prepend it
+                if (!this.startsWithUser()) {
+                    this.chatLog = '<|user|>' + this.chatLog;
+                }
+
+                // 3. Trim and remove trailing special tokens
+                this.removeTrailingSpecialTokens();
+
+                // 4. Add suffix token
+                const requestThink = document.getElementById('requestThink').checked;
+                const suffixToken = requestThink ? '<|think|>' : '<|assistant|>';
+                this.chatLog += suffixToken;
+
+                // Update textarea to show prepared log
+                textarea.value = this.chatLog;
+
+                // Now generate
+                this.isGenerating = true;
+                this.stopRequested = false;
+                this.setInferenceControls(true);
+                textarea.disabled = true;
+                textarea.classList.add('generating');
+
+                const temperature = parseFloat(document.getElementById('temperature').value) || 0.7;
+                const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
+
+                // Tokenize the chat log
+                let tokens = this.tokenizer.encode(this.chatLog);
+
+                // Truncate from the beginning if too long
+                const maxSeqLen = this.model.embedding.maxSequenceLength;
+                if (tokens.length > maxSeqLen) {
+                    tokens = tokens.slice(-maxSeqLen);
+                }
+
+                let generated = [];
+
+                try {
+                    // Let UI update before starting generation
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+
+                    for (let i = 0; i < maxTokens; i++) {
+                        // Check for stop request
+                        if (this.stopRequested) break;
+
+                        let inputTokens = tokens;
+                        if (tokens.length > maxSeqLen) {
+                            inputTokens = tokens.slice(-maxSeqLen);
+                        }
+
+                        const batchedInput = [inputTokens];
+                        const probs = this.model.forward(batchedInput);
+                        const lastProbs = probs[0][inputTokens.length - 1];
+
+                        const nextToken = this.sampleWithTemperature(lastProbs, temperature);
+
+                        if (this.endTokenId !== null && nextToken === this.endTokenId) {
+                            break;
+                        }
+
+                        tokens.push(nextToken);
+                        generated.push(nextToken);
+
+                        // Update textarea with generated content
+                        const generatedText = this.tokenizer.decode(generated);
+                        textarea.value = this.chatLog + generatedText;
+                        this.updateTokenHighlight('rawChat');
+                        textarea.scrollTop = textarea.scrollHeight;
+
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                    }
+
+                    // Final update - add generated content
+                    this.chatLog += this.tokenizer.decode(generated);
+                    textarea.value = this.chatLog;
+                    this.updateTokenHighlight('rawChat');
+
+                    // Check if we need a second round for assistant response (when thinking)
+                    const generatedText = this.tokenizer.decode(generated);
+                    const needsAssistantRound = requestThink && !generatedText.includes('<|assistant|>');
+
+                    if (needsAssistantRound && !this.stopRequested) {
+                        // Append <|assistant|> and do another generation round
+                        this.removeTrailingSpecialTokens();
+                        this.chatLog += '<|assistant|>';
+                        textarea.value = this.chatLog;
+
+                        // Second generation round
+                        let tokens2 = this.tokenizer.encode(this.chatLog);
+                        const maxSeqLen2 = this.model.embedding.maxSequenceLength;
+                        if (tokens2.length > maxSeqLen2) {
+                            tokens2 = tokens2.slice(-maxSeqLen2);
+                        }
+
+                        let generated2 = [];
+
+                        for (let i = 0; i < maxTokens; i++) {
+                            // Check for stop request
+                            if (this.stopRequested) break;
+
+                            let inputTokens2 = tokens2;
+                            if (tokens2.length > maxSeqLen2) {
+                                inputTokens2 = tokens2.slice(-maxSeqLen2);
+                            }
+
+                            const batchedInput2 = [inputTokens2];
+                            const probs2 = this.model.forward(batchedInput2);
+                            const lastProbs2 = probs2[0][inputTokens2.length - 1];
+
+                            const nextToken2 = this.sampleWithTemperature(lastProbs2, temperature);
+
+                            if (this.endTokenId !== null && nextToken2 === this.endTokenId) {
+                                break;
+                            }
+
+                            tokens2.push(nextToken2);
+                            generated2.push(nextToken2);
+
+                            const generatedText2 = this.tokenizer.decode(generated2);
+                            textarea.value = this.chatLog + generatedText2;
+                            this.updateTokenHighlight('rawChat');
+                            textarea.scrollTop = textarea.scrollHeight;
+
+                            await new Promise(resolve => requestAnimationFrame(resolve));
+                        }
+
+                        this.chatLog += this.tokenizer.decode(generated2);
+                        this.updateTokenHighlight('rawChat');
+                    }
+
+                    // Remove <|end|> if present, append <|user|>
+                    this.removeTrailingSpecialTokens();
+                    this.chatLog += '<|user|>';
+                    textarea.value = this.chatLog;
+                    this.updateTokenHighlight('rawChat');
+
+                } catch (err) {
+                    console.error('Generation error:', err);
+                }
+
+                this.isGenerating = false;
+                this.setInferenceControls(false);
+                textarea.disabled = false;
+                textarea.classList.remove('generating');
+                textarea.focus();
+                textarea.selectionStart = textarea.value.length;
+                textarea.selectionEnd = textarea.value.length;
+            }
+
+            clearEditor() {
+                if (this.isGenerating) return;
+
+                document.getElementById('editorTextarea').value = '';
+            }
+
+            async generateText() {
+                if (this.isGenerating) return;
+
+                const textarea = document.getElementById('editorTextarea');
+                const text = textarea.value;
+
+                if (!text.trim()) {
+                    return;
+                }
+
+                this.isGenerating = true;
+                this.stopRequested = false;
+                this.setInferenceControls(true);
+                textarea.disabled = true;
+                textarea.classList.add('generating');
+
+                const temperature = parseFloat(document.getElementById('temperature').value) || 0.7;
+                const maxTokens = parseInt(document.getElementById('maxTokens').value) || 100;
+
+                // Tokenize the current text
+                let tokens = this.tokenizer.encode(text);
+
+                // Truncate if exceeding max sequence length
+                const maxSeqLen = this.model.embedding.maxSequenceLength;
+                if (tokens.length > maxSeqLen) {
+                    tokens = tokens.slice(-maxSeqLen);
+                }
+
+                try {
+                    // Let UI update before starting generation
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+
+                    for (let i = 0; i < maxTokens; i++) {
+                        // Check for stop request
+                        if (this.stopRequested) break;
+
+                        // Forward pass
+                        let inputTokens = tokens;
+                        if (tokens.length > maxSeqLen) {
+                            inputTokens = tokens.slice(-maxSeqLen);
+                        }
+
+                        const batchedInput = [inputTokens];
+                        const probs = this.model.forward(batchedInput);
+                        const lastProbs = probs[0][inputTokens.length - 1];
+
+                        // Sample with temperature
+                        const nextToken = this.sampleWithTemperature(lastProbs, temperature);
+
+                        tokens.push(nextToken);
+
+                        // Decode and update textarea
+                        const fullText = this.tokenizer.decode(tokens);
+                        textarea.value = fullText;
+                        this.updateTokenHighlight('editor');
+
+                        // Scroll to bottom
+                        textarea.scrollTop = textarea.scrollHeight;
+
+                        // Yield to UI via requestAnimationFrame
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                    }
+                } catch (err) {
+                    console.error('Generation error:', err);
+                }
+
+                this.isGenerating = false;
+                this.setInferenceControls(false);
+                textarea.disabled = false;
+                textarea.classList.remove('generating');
+                this.updateTokenHighlight('editor');
+                textarea.focus();
+
+                // Place cursor at the end
+                textarea.selectionStart = textarea.value.length;
+                textarea.selectionEnd = textarea.value.length;
             }
         }
 
@@ -866,6 +1960,11 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             app = new ChatApp();
+
+            // Ensure checkbox states match their defaults (browser may restore old state)
+            document.getElementById('chatUiToggle').checked = true;
+            document.getElementById('tokensToggle').checked = false;
+            document.getElementById('requestThink').checked = false;
         });
 
         function loadTokenizer(event) {
@@ -903,6 +2002,46 @@
 
         function clearChat() {
             app.clearChat();
+        }
+
+        function clearEditor() {
+            app.clearEditor();
+        }
+
+        function generateText() {
+            app.generateText();
+        }
+
+        function toggleChatUi() {
+            app.toggleChatUi();
+        }
+
+        function generateFromRawChat() {
+            app.generateFromRawChat();
+        }
+
+        function toggleTokensMode() {
+            app.toggleTokensMode();
+        }
+
+        function updateTokenHighlight(target) {
+            app.updateTokenHighlight(target);
+        }
+
+        function syncScroll(target) {
+            app.syncScroll(target);
+        }
+
+        function stopGeneration() {
+            app.stopGeneration();
+        }
+
+        function insertSpecialToken(token) {
+            app.insertSpecialToken(token);
+        }
+
+        function loadSampleModel() {
+            app.loadSampleModel();
         }
     </script>
 </body>
