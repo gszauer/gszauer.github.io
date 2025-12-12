@@ -270,6 +270,7 @@
             align-items: center;
             justify-content: center;
             gap: 30px;
+            position: relative;
         }
 
         .load-screen h2 {
@@ -384,6 +385,45 @@
         .load-sample-btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 17, 23, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .loading-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         .mode-selector {
@@ -796,8 +836,12 @@
     <div class="main-container">
         <!-- Load Screen -->
         <div class="load-screen" id="loadScreen">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading sample model...</div>
+            </div>
             <p>
-                Upload your trained tokenizer and model files to start chatting.<br />
+                Upload your trained tokenizer and model files to start chatting.<br>
                 Or <a href="train.html" style="color: var(--accent-blue);">train a new model</a>.
             </p>
             
@@ -876,6 +920,7 @@ Format:
             </div>
             <div class="editor-controls">
                 <div class="special-tokens-list">
+                    <span onclick="insertSpecialToken('&lt;|system|&gt;')">&lt;|system|&gt;</span>
                     <span onclick="insertSpecialToken('&lt;|user|&gt;')">&lt;|user|&gt;</span>
                     <span onclick="insertSpecialToken('&lt;|think|&gt;')">&lt;|think|&gt;</span>
                     <span onclick="insertSpecialToken('&lt;|assistant|&gt;')">&lt;|assistant|&gt;</span>
@@ -921,7 +966,7 @@ Format:
                 this.tokensMode = false; // show token boundaries
                 this.stopRequested = false;
 
-                this.specialTokens = ['<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
+                this.specialTokens = ['<|system|>', '<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
                 this.endTokenId = null;
 
                 this.setupTextareaAutoResize();
@@ -1175,8 +1220,10 @@ Format:
 
             async loadSampleModel() {
                 const btn = document.getElementById('loadSampleBtn');
+                const overlay = document.getElementById('loadingOverlay');
                 btn.disabled = true;
                 btn.textContent = 'Loading...';
+                overlay.classList.add('visible');
                 this.hideError();
 
                 try {
@@ -1205,8 +1252,13 @@ Format:
 
                     btn.textContent = 'Loaded!';
                     this.checkReady();
+
+                    // Auto-start after loading
+                    overlay.classList.remove('visible');
+                    this.startChat();
                 } catch (err) {
                     this.showError('Failed to load sample: ' + err.message);
+                    overlay.classList.remove('visible');
                     btn.disabled = false;
                     btn.textContent = 'Load Sample Model';
                 }
