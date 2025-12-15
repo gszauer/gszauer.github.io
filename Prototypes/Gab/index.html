@@ -268,9 +268,72 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: safe center;
             gap: 30px;
             position: relative;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        @media (max-height: 700px) {
+            .load-screen {
+                justify-content: flex-start;
+                gap: 15px;
+            }
+
+            .load-screen h2 {
+                font-size: 1.2rem;
+            }
+
+            .load-screen p {
+                font-size: 0.8rem;
+            }
+
+            .file-loaders {
+                gap: 10px;
+            }
+
+            .file-loader {
+                width: 150px;
+                padding: 15px 10px;
+            }
+
+            .file-loader .icon {
+                font-size: 1.5rem;
+                margin-bottom: 5px;
+            }
+
+            .file-loader .label {
+                font-size: 0.8rem;
+            }
+
+            .mode-selector {
+                gap: 10px;
+                margin-top: 5px;
+            }
+
+            .mode-option {
+                padding: 10px;
+                max-width: 150px;
+            }
+
+            .mode-option .mode-label {
+                font-size: 0.8rem;
+            }
+
+            .mode-option .mode-hint {
+                font-size: 0.65rem;
+            }
+
+            .start-btn {
+                padding: 10px 30px;
+                font-size: 0.9rem;
+            }
+
+            .load-sample-btn {
+                padding: 6px 15px;
+                font-size: 0.8rem;
+            }
         }
 
         .load-screen h2 {
