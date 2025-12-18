@@ -1,126 +1,7 @@
 // ============================================================================
-// TOKENIZER (unchanged from CPU version)
+// GABGPT GPU - WebGL accelerated inference
+// Requires gab.js to be loaded first (for Tokenizer class)
 // ============================================================================
-
-class Tokenizer {
-    merges = new Map();
-    vocabulary = new Map();
-    nextTokenId = 256;
-
-    constructor() {
-        for (let i = 0; i < 256; i++) {
-            this.vocabulary.set(i, [i]);
-        }
-    }
-
-    #stringToBytes(text) {
-        const encoder = new TextEncoder();
-        const uint8Array = encoder.encode(text);
-        const bytes = [];
-        for (let i = 0; i < uint8Array.length; i++) {
-            bytes.push(uint8Array[i]);
-        }
-        return bytes;
-    }
-
-    #bytesToString(bytes) {
-        return new TextDecoder().decode(new Uint8Array(bytes));
-    }
-
-    #applyMerge(tokens, token1, token2, mergedTokenId) {
-        const result = [];
-        let i = 0;
-        while (i < tokens.length) {
-            if (i < tokens.length - 1 && tokens[i] === token1 && tokens[i + 1] === token2) {
-                result.push(mergedTokenId);
-                i += 2;
-            } else {
-                result.push(tokens[i]);
-                i += 1;
-            }
-        }
-        return result;
-    }
-
-    encode(text) {
-        let tokens = this.#stringToBytes(text);
-        for (const [mergeKey, mergedToken] of this.merges) {
-            const [token1, token2] = mergeKey.split(',').map(Number);
-            tokens = this.#applyMerge(tokens, token1, token2, mergedToken);
-        }
-        return tokens;
-    }
-
-    decode(tokens) {
-        const bytes = [];
-        for (let i = 0; i < tokens.length; i++) {
-            const tokenBytes = this.vocabulary.get(tokens[i]);
-            if (tokenBytes) {
-                for (let j = 0; j < tokenBytes.length; j++) {
-                    bytes.push(tokenBytes[j]);
-                }
-            }
-        }
-        return this.#bytesToString(bytes);
-    }
-
-    getVocabSize() {
-        return this.vocabulary.size;
-    }
-
-    static deserialize(data) {
-        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-        let offset = 0;
-
-        const magic = view.getUint32(offset, true);
-        offset += 4;
-        if (magic !== 0x42504531) {
-            throw new Error('Invalid tokenizer file format');
-        }
-
-        const version = view.getUint32(offset, true);
-        offset += 4;
-        if (version !== 1) {
-            throw new Error(`Unsupported tokenizer version: ${version}`);
-        }
-
-        const tokenizer = new Tokenizer();
-        tokenizer.nextTokenId = view.getUint32(offset, true);
-        offset += 4;
-
-        const numMerges = view.getUint32(offset, true);
-        offset += 4;
-
-        tokenizer.merges.clear();
-        for (let i = 0; i < numMerges; i++) {
-            const token1 = view.getUint32(offset, true);
-            offset += 4;
-            const token2 = view.getUint32(offset, true);
-            offset += 4;
-            const mergedToken = view.getUint32(offset, true);
-            offset += 4;
-            tokenizer.merges.set(`${token1},${token2}`, mergedToken);
-        }
-
-        const numVocab = view.getUint32(offset, true);
-        offset += 4;
-
-        tokenizer.vocabulary.clear();
-        for (let i = 0; i < numVocab; i++) {
-            const tokenId = view.getUint32(offset, true);
-            offset += 4;
-            const length = view.getUint32(offset, true);
-            offset += 4;
-            const bytes = [];
-            for (let j = 0; j < length; j++) {
-                bytes.push(data[offset++]);
-            }
-            tokenizer.vocabulary.set(tokenId, bytes);
-        }
-
-        return tokenizer;
-    }
-}
 
 // ============================================================================
 // WEBGL UTILITIES
@@ -720,10 +601,10 @@ void main() {
 }`;
 
 // ============================================================================
-// GABGPT CLASS
+// GABGPT GPU CLASS
 // ============================================================================
 
-class GabGPT {
+class GabGPTGPU {
     gl = null;
     programs = {};
     textures = {};
@@ -1279,7 +1160,7 @@ class GabGPT {
 
         // Create GL context and model
         const gl = createGLContext();
-        const model = new GabGPT(gl, {
+        const model = new GabGPTGPU(gl, {
             vocabSize,
             embeddingDim,
             numHeads,

@@ -498,6 +498,7 @@
         .mode-option {
             flex: 1;
             max-width: 200px;
+            min-width: 150px;
             padding: 15px;
             background: var(--bg-secondary);
             border: 2px solid var(--border-color);
@@ -526,6 +527,64 @@
         .mode-option .mode-hint {
             font-size: 0.7rem;
             color: var(--text-secondary);
+        }
+
+        /* Device Selector */
+        .device-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+
+        .device-option {
+            flex: 1;
+            max-width: 150px;
+            padding: 12px 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .device-option:hover:not(.disabled) {
+            border-color: var(--accent-blue);
+        }
+
+        .device-option.active {
+            border-color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .device-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .device-option .device-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .device-option .device-hint {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .device-status {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: -21px;
+            margin-bottom: 0;
+        }
+
+        .device-status.hidden {
+            display: none;
         }
 
         /* Chat Interface */
@@ -905,17 +964,12 @@
             </div>
 
             <button class="load-sample-btn" id="loadSampleBtn" onclick="loadSampleModel()">Load Sample Model</button>
-
-            <p style="margin-top: -15px;">
-                Upload your trained tokenizer and model files to start chatting.<br>
-                Or <a href="train.html" style="color: var(--accent-blue);">train a new model</a>.
-            </p>
             
             <div class="file-loaders">
                 <div class="file-loader" id="tokenizerLoader">
                     <input type="file" accept=".bpe" onchange="loadTokenizer(event)">
                     <div class="icon">📝</div>
-                    <div class="label">Tokenizer</div>
+                    <div class="label">Upload Tokenizer</div>
                     <div class="hint">.bpe file</div>
                     <div class="filename" id="tokenizerFilename"></div>
                 </div>
@@ -923,7 +977,7 @@
                 <div class="file-loader" id="modelLoader">
                     <input type="file" accept=".gab" onchange="loadModel(event)">
                     <div class="icon">🧠</div>
-                    <div class="label">Model</div>
+                    <div class="label">Upload Model</div>
                     <div class="hint">.gab file</div>
                     <div class="filename" id="modelFilename"></div>
                 </div>
@@ -932,13 +986,25 @@
             <div class="mode-selector">
                 <div class="mode-option active" data-mode="chat" onclick="selectMode('chat')">
                     <div class="mode-label">Chat Mode</div>
-                    <div class="mode-hint">ChatML format with conversation history</div>
+                    <div class="mode-hint">ChatML with history</div>
                 </div>
                 <div class="mode-option" data-mode="generate" onclick="selectMode('generate')">
                     <div class="mode-label">Generate Mode</div>
                     <div class="mode-hint">Raw text completion</div>
                 </div>
             </div>
+
+            <div class="device-selector">
+                <div class="device-option active" data-device="cpu" id="deviceCpu" onclick="selectDevice('cpu')">
+                    <div class="device-label">CPU</div>
+                    <div class="device-hint">JavaScript</div>
+                </div>
+                <div class="device-option disabled" data-device="gpu" id="deviceGpu" onclick="selectDevice('gpu')">
+                    <div class="device-label">GPU</div>
+                    <div class="device-hint" id="gpuHint">WebGL</div>
+                </div>
+            </div>
+            <div class="device-status" id="deviceStatus">Load a compatible model to enable GPU<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048</div>
 
             <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
 
@@ -1018,22 +1084,107 @@ Format:
     </div>
 
     <script src="gab.js"></script>
+    <script src="gab-gpu.js"></script>
     <script>
         class ChatApp {
             constructor() {
                 this.tokenizer = null;
                 this.model = null;
+                this.modelBytes = null; // Store raw bytes for device switching
                 this.isGenerating = false;
                 this.chatLog = ''; // String-based chat log
                 this.mode = 'chat'; // 'chat' or 'generate'
                 this.chatUiMode = true; // true = bubble UI, false = raw text
                 this.tokensMode = false; // show token boundaries
                 this.stopRequested = false;
+                this.device = 'cpu'; // 'cpu' or 'gpu'
+                this.webgl2Supported = false;
+                this.modelGPUCompatible = false;
 
                 this.specialTokens = ['<|system|>', '<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
                 this.endTokenId = null;
 
                 this.setupTextareaAutoResize();
+                this.checkWebGL2Support();
+            }
+
+            checkWebGL2Support() {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl2');
+                this.webgl2Supported = !!gl;
+                // Update UI to reflect initial state
+                this.updateGPUOption();
+            }
+
+            updateGPUOption() {
+                const gpuOption = document.getElementById('deviceGpu');
+                const gpuHint = document.getElementById('gpuHint');
+                const deviceStatus = document.getElementById('deviceStatus');
+
+                if (!this.webgl2Supported) {
+                    gpuOption.classList.add('disabled');
+                    gpuHint.textContent = 'Not supported';
+                    deviceStatus.innerHTML = 'GPU not available: WebGL2 is not supported in this browser';
+                    deviceStatus.classList.remove('hidden');
+                } else if (!this.modelGPUCompatible) {
+                    gpuOption.classList.add('disabled');
+                    gpuHint.textContent = 'WebGL';
+                    if (this.modelBytes) {
+                        // Model loaded but not compatible
+                        deviceStatus.innerHTML = 'GPU not available: model exceeds limits<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048';
+                    } else {
+                        // No model loaded yet
+                        deviceStatus.innerHTML = 'Load a compatible model to enable GPU<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048';
+                    }
+                    deviceStatus.classList.remove('hidden');
+                } else {
+                    gpuOption.classList.remove('disabled');
+                    gpuHint.textContent = 'WebGL';
+                    deviceStatus.classList.add('hidden');
+                }
+            }
+
+            setDevice(device) {
+                const gpuOption = document.getElementById('deviceGpu');
+
+                // Don't allow selecting disabled GPU
+                if (device === 'gpu' && gpuOption.classList.contains('disabled')) {
+                    return;
+                }
+
+                // If switching device and model is loaded, reload with new backend
+                if (this.device !== device && this.modelBytes) {
+                    this.device = device;
+                    this.reloadModelWithCurrentDevice();
+                } else {
+                    this.device = device;
+                }
+
+                // Update UI
+                const options = document.querySelectorAll('.device-option');
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].dataset.device === device) {
+                        options[i].classList.add('active');
+                    } else {
+                        options[i].classList.remove('active');
+                    }
+                }
+            }
+
+            reloadModelWithCurrentDevice() {
+                if (!this.modelBytes) return;
+
+                try {
+                    if (this.device === 'gpu') {
+                        this.model = GabGPTGPU.deserialize(this.modelBytes);
+                    } else {
+                        this.model = GabGPT.deserialize(this.modelBytes);
+                    }
+                    const deviceLabel = this.device === 'gpu' ? 'GPU (WebGL)' : 'CPU (JavaScript)';
+                    console.log(`%c🔄 Model reloaded on ${deviceLabel}`, 'font-size: 12px; color: #58a6ff;');
+                } catch (err) {
+                    this.showError('Failed to reload model: ' + err.message);
+                }
             }
 
             // Sanitize chat log: remove leading <|think|>, <|assistant|>, or <|end|>
@@ -1192,17 +1343,49 @@ Format:
                 reader.onload = (e) => {
                     try {
                         const bytes = new Uint8Array(e.target.result);
+
+                        // Store bytes for potential device switching later
+                        this.modelBytes = bytes;
+
+                        // Parse model header to check GPU compatibility
+                        // Header format: magic(4) + version(4) + vocabSize(4) + embeddingDim(4) + numHeads(4) + numBlocks(4) + maxSeqLength(4)
+                        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+                        const headerVocabSize = view.getUint32(8, true);
+                        const headerEmbeddingDim = view.getUint32(12, true);
+                        const headerMaxSeqLength = view.getUint32(24, true);
+
+                        // Check GPU compatibility (texture size limits)
+                        // - vocabSize ≤ 8192 (token embedding texture width)
+                        // - maxSeqLength ≤ 2048 (attention score texture)
+                        // - embeddingDim ≤ 2048 (MLP hidden = embeddingDim * 4 ≤ 8192)
+                        this.modelGPUCompatible = headerVocabSize <= 8192 &&
+                                                   headerMaxSeqLength <= 2048 &&
+                                                   headerEmbeddingDim <= 2048;
+                        this.updateGPUOption();
+
+                        // Always load with CPU initially (GPU must be explicitly selected after)
                         this.model = GabGPT.deserialize(bytes);
+                        this.device = 'cpu';
+
+                        // Update device UI to show CPU selected
+                        const options = document.querySelectorAll('.device-option');
+                        for (let i = 0; i < options.length; i++) {
+                            if (options[i].dataset.device === 'cpu') {
+                                options[i].classList.add('active');
+                            } else {
+                                options[i].classList.remove('active');
+                            }
+                        }
 
                         document.getElementById('modelLoader').classList.add('loaded');
                         document.getElementById('modelFilename').textContent = file.name;
 
-                        // Log model hyperparameters
+                        // Log model hyperparameters (handle both CPU and GPU model structures)
                         const vocabSize = this.model.vocabSize;
-                        const embeddingDim = this.model.embedding.embeddingDim;
-                        const maxSeqLength = this.model.embedding.maxSequenceLength;
-                        const numBlocks = this.model.blocks.length;
-                        const numHeads = this.model.blocks[0].attention.numHeads;
+                        const embeddingDim = this.model.embeddingDim || this.model.embedding?.embeddingDim;
+                        const maxSeqLength = this.model.maxSeqLength || this.model.embedding?.maxSequenceLength;
+                        const numBlocks = this.model.numBlocks || this.model.blocks?.length;
+                        const numHeads = this.model.numHeads || this.model.blocks?.[0]?.attention?.numHeads;
                         const headDim = embeddingDim / numHeads;
                         const hiddenDim = embeddingDim * 4; // MLP expansion factor
 
@@ -1246,7 +1429,8 @@ Format:
                             return n.toString();
                         };
 
-                        console.log('%c📊 Model Loaded', 'font-size: 14px; font-weight: bold; color: #3fb950;');
+                        const deviceLabel = this.device === 'gpu' ? 'GPU (WebGL)' : 'CPU (JavaScript)';
+                        console.log(`%c📊 Model Loaded on ${deviceLabel}`, 'font-size: 14px; font-weight: bold; color: #3fb950;');
                         console.log('%c═══════════════════════════════════════', 'color: #30363d;');
                         console.log('%cArchitecture:', 'font-weight: bold; color: #58a6ff;');
                         console.log(`  Vocab Size:        ${vocabSize.toLocaleString()}`);
@@ -1304,7 +1488,16 @@ Format:
                     const modelResponse = await fetch('model.gab');
                     if (!modelResponse.ok) throw new Error('model.gab not found');
                     const modelBytes = new Uint8Array(await modelResponse.arrayBuffer());
+
+                    // Store bytes for device switching
+                    this.modelBytes = modelBytes;
+
+                    // Sample model is guaranteed GPU compatible
+                    this.modelGPUCompatible = true;
+                    this.updateGPUOption();
+
                     this.model = GabGPT.deserialize(modelBytes);
+                    this.device = 'cpu';
                     document.getElementById('modelLoader').classList.add('loaded');
                     document.getElementById('modelFilename').textContent = 'model.gab';
 
@@ -2103,6 +2296,10 @@ Format:
 
         function selectMode(mode) {
             app.setMode(mode);
+        }
+
+        function selectDevice(device) {
+            app.setDevice(device);
         }
 
         function sendMessage() {
