@@ -1005,6 +1005,24 @@
                 </div>
             </div>
             <div class="device-status" id="deviceStatus">Load a compatible model to enable GPU</div>
+            <script>
+                // Early WebGL check to display limits immediately
+                (function() {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl2');
+                    if (gl) {
+                        const maxTexSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+                        const maxEmbed = Math.floor(maxTexSize / 4);
+                        console.log('WebGL2 MAX_TEXTURE_SIZE:', maxTexSize);
+                        document.getElementById('deviceStatus').innerHTML =
+                            `Load a compatible model to enable GPU<br>vocab ≤ ${maxTexSize}, embed ≤ ${maxEmbed}, seq ≤ 2048`;
+                    } else {
+                        console.log('WebGL2 not supported');
+                        document.getElementById('deviceStatus').innerHTML =
+                            'GPU not available: WebGL2 is not supported in this browser';
+                    }
+                })();
+            </script>
 
             <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
 
@@ -1115,6 +1133,7 @@ Format:
                 this.webgl2Supported = !!gl;
                 if (gl) {
                     this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+                    console.log(`WebGL2 MAX_TEXTURE_SIZE: ${this.maxTextureSize}`);
                 }
                 // Update UI to reflect initial state
                 this.updateGPUOption();
