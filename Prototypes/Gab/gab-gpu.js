@@ -7,6 +7,10 @@
 // WEBGL UTILITIES
 // ============================================================================
 
+function nextPowerOfTwo(n) {
+    return Math.pow(2, Math.ceil(Math.log2(n)));
+}
+
 function createGLContext() {
     let canvas;
     if (typeof OffscreenCanvas !== 'undefined') {
@@ -30,6 +34,10 @@ function createGLContext() {
     gl.getExtension('OES_texture_float_linear');
 
     return gl;
+}
+
+function getMaxTextureSize(gl) {
+    return gl.getParameter(gl.MAX_TEXTURE_SIZE);
 }
 
 function createTexture(gl, width, height, data = null) {
@@ -613,6 +621,7 @@ class GabGPTGPU {
     embedding = null;
 
     vocabSize = 0;
+    vocabPadded = 0;
     embeddingDim = 0;
     numHeads = 0;
     numBlocks = 0;
@@ -622,6 +631,7 @@ class GabGPTGPU {
     constructor(gl, config) {
         this.gl = gl;
         this.vocabSize = config.vocabSize;
+        this.vocabPadded = config.vocabPadded;
         this.embeddingDim = config.embeddingDim;
         this.numHeads = config.numHeads;
         this.numBlocks = config.numBlocks;
@@ -684,7 +694,7 @@ class GabGPTGPU {
         const seq = 2048;  // Max sequence length
         const emb = this.embeddingDim;
         const hidden = emb * 4;
-        const vocabPadded = 8192;
+        const vocabPadded = this.vocabPadded;
 
         // Hidden states (ping-pong)
         this.textures.hiddenA = createTexture(gl, emb, seq);
@@ -1025,7 +1035,7 @@ class GabGPTGPU {
         this.#runProgram(
             this.programs.outputProjection,
             this.framebuffers.logits,
-            8192,
+            this.vocabPadded,
             1,
             {
                 u_input: this.textures.norm,
@@ -1041,7 +1051,7 @@ class GabGPTGPU {
         this.#runProgram(
             this.programs.softmaxRow,
             this.framebuffers.probs,
-            8192,
+            this.vocabPadded,
             1,
             {
                 u_input: this.textures.logits,
@@ -1050,9 +1060,9 @@ class GabGPTGPU {
         );
 
         // Read back probabilities
-        const probsData = new Float32Array(8192);
+        const probsData = new Float32Array(this.vocabPadded);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffers.probs);
-        gl.readPixels(0, 0, 8192, 1, gl.RED, gl.FLOAT, probsData);
+        gl.readPixels(0, 0, this.vocabPadded, 1, gl.RED, gl.FLOAT, probsData);
 
         // Return in same format as CPU version: [batch][seq][vocab]
         // Only the last position has valid data, but we place it at the correct index
@@ -1160,8 +1170,16 @@ class GabGPTGPU {
 
         // Create GL context and model
         const gl = createGLContext();
+        const maxTextureSize = getMaxTextureSize(gl);
+        const vocabPadded = nextPowerOfTwo(vocabSize);
+
+        if (vocabPadded > maxTextureSize) {
+            throw new Error(`Vocabulary size ${vocabSize} requires texture size ${vocabPadded}, but GPU only supports ${maxTextureSize}`);
+        }
+
         const model = new GabGPTGPU(gl, {
             vocabSize,
+            vocabPadded,
             embeddingDim,
             numHeads,
             numBlocks,
@@ -1185,15 +1203,15 @@ class GabGPTGPU {
         };
 
         // Read and upload token embeddings [vocabSize x embeddingDim]
-        const tokenEmbData = new Float32Array(8192 * embeddingDim);
+        const tokenEmbData = new Float32Array(vocabPadded * embeddingDim);
         for (let v = 0; v < vocabSize; v++) {
             for (let d = 0; d < embeddingDim; d++) {
                 tokenEmbData[v * embeddingDim + d] = view.getFloat32(offset, true);
                 offset += 4;
             }
         }
-        model.textures.tokenEmb = uploadTexture(embeddingDim, 8192, tokenEmbData);
-        verifyTextureUpload(gl, model.textures.tokenEmb, tokenEmbData, embeddingDim, 8192, 'tokenEmb');
+        model.textures.tokenEmb = uploadTexture(embeddingDim, vocabPadded, tokenEmbData);
+        verifyTextureUpload(gl, model.textures.tokenEmb, tokenEmbData, embeddingDim, vocabPadded, 'tokenEmb');
 
         // Read and upload position embeddings [maxSeqLength x embeddingDim]
         const posEmbData = new Float32Array(2048 * embeddingDim);
@@ -1290,22 +1308,22 @@ class GabGPTGPU {
 
         // Output layer [embeddingDim x vocabSize] + bias
         // Original format: weights[inputIdx][vocabIdx], stored row-major
-        const outputW = new Float32Array(8192 * embeddingDim);
+        const outputW = new Float32Array(vocabPadded * embeddingDim);
         for (let i = 0; i < embeddingDim; i++) {
             for (let v = 0; v < vocabSize; v++) {
-                outputW[i * 8192 + v] = view.getFloat32(offset, true);
+                outputW[i * vocabPadded + v] = view.getFloat32(offset, true);
                 offset += 4;
             }
         }
-        // Texture: width=8192 (padded vocab), height=512 (embeddingDim)
-        model.textures.outputW = uploadTexture(8192, embeddingDim, outputW);
+        // Texture: width=vocabPadded, height=embeddingDim
+        model.textures.outputW = uploadTexture(vocabPadded, embeddingDim, outputW);
 
-        const outputB = new Float32Array(8192);
+        const outputB = new Float32Array(vocabPadded);
         for (let v = 0; v < vocabSize; v++) {
             outputB[v] = view.getFloat32(offset, true);
             offset += 4;
         }
-        model.textures.outputB = uploadTexture(8192, 1, outputB);
+        model.textures.outputB = uploadTexture(vocabPadded, 1, outputB);
 
         // Quick sanity check: verify embedding lookup works
         console.log('=== Running sanity checks ===');
@@ -1317,7 +1335,7 @@ class GabGPTGPU {
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 2048, 1, gl.RED, gl.FLOAT, testTokens);
 
         // Read back token embedding for token 65
-        const tokenEmbReadback = readTextureData(gl, model.textures.tokenEmb, embeddingDim, 8192);
+        const tokenEmbReadback = readTextureData(gl, model.textures.tokenEmb, embeddingDim, vocabPadded);
         const token65Emb = tokenEmbReadback.slice(65 * embeddingDim, 66 * embeddingDim);
         console.log(`Token 65 embedding[0..4]: ${token65Emb.slice(0, 5)}`);
         console.log(`Token 65 embedding sum: ${token65Emb.reduce((a, b) => a + b, 0)}`);
@@ -1379,6 +1397,9 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         Tokenizer,
         GabGPT,
-        chat
+        chat,
+        createGLContext,
+        getMaxTextureSize,
+        nextPowerOfTwo
     };
 }

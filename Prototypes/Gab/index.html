@@ -1004,7 +1004,7 @@
                     <div class="device-hint" id="gpuHint">WebGL</div>
                 </div>
             </div>
-            <div class="device-status" id="deviceStatus">Load a compatible model to enable GPU<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048</div>
+            <div class="device-status" id="deviceStatus">Load a compatible model to enable GPU</div>
 
             <button class="start-btn" id="startBtn" disabled onclick="startChat()">Start Chatting</button>
 
@@ -1099,6 +1099,7 @@ Format:
                 this.stopRequested = false;
                 this.device = 'cpu'; // 'cpu' or 'gpu'
                 this.webgl2Supported = false;
+                this.maxTextureSize = 0;
                 this.modelGPUCompatible = false;
 
                 this.specialTokens = ['<|system|>', '<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
@@ -1112,6 +1113,9 @@ Format:
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl2');
                 this.webgl2Supported = !!gl;
+                if (gl) {
+                    this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+                }
                 // Update UI to reflect initial state
                 this.updateGPUOption();
             }
@@ -1129,12 +1133,14 @@ Format:
                 } else if (!this.modelGPUCompatible) {
                     gpuOption.classList.add('disabled');
                     gpuHint.textContent = 'WebGL';
+                    const maxVocab = this.maxTextureSize || 8192;
+                    const maxEmbed = Math.floor(this.maxTextureSize / 4) || 2048;
                     if (this.modelBytes) {
                         // Model loaded but not compatible
-                        deviceStatus.innerHTML = 'GPU not available: model exceeds limits<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048';
+                        deviceStatus.innerHTML = `GPU not available: model exceeds limits<br>vocab ≤ ${maxVocab}, embed ≤ ${maxEmbed}, seq ≤ 2048`;
                     } else {
                         // No model loaded yet
-                        deviceStatus.innerHTML = 'Load a compatible model to enable GPU<br>vocab ≤ 8192, embed ≤ 2048, seq ≤ 2048';
+                        deviceStatus.innerHTML = `Load a compatible model to enable GPU<br>vocab ≤ ${maxVocab}, embed ≤ ${maxEmbed}, seq ≤ 2048`;
                     }
                     deviceStatus.classList.remove('hidden');
                 } else {
@@ -1355,12 +1361,14 @@ Format:
                         const headerMaxSeqLength = view.getUint32(24, true);
 
                         // Check GPU compatibility (texture size limits)
-                        // - vocabSize ≤ 8192 (token embedding texture width)
+                        // - vocabPadded (next power of 2 >= vocabSize) must fit in maxTextureSize
                         // - maxSeqLength ≤ 2048 (attention score texture)
-                        // - embeddingDim ≤ 2048 (MLP hidden = embeddingDim * 4 ≤ 8192)
-                        this.modelGPUCompatible = headerVocabSize <= 8192 &&
+                        // - embeddingDim * 4 (MLP hidden) must fit in maxTextureSize
+                        const vocabPadded = Math.pow(2, Math.ceil(Math.log2(headerVocabSize)));
+                        const maxTexSize = this.maxTextureSize || 8192;
+                        this.modelGPUCompatible = vocabPadded <= maxTexSize &&
                                                    headerMaxSeqLength <= 2048 &&
-                                                   headerEmbeddingDim <= 2048;
+                                                   (headerEmbeddingDim * 4) <= maxTexSize;
                         this.updateGPUOption();
 
                         // Always load with CPU initially (GPU must be explicitly selected after)
