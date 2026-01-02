@@ -99,6 +99,14 @@ const desktop_icons = [
         icon: '💬',
         width: 800,
         height: 600,
+      },
+      {
+        type: 'iframe',
+        name: 'Pixel Placer',
+        link: 'PixelPlacer/index.html',
+        icon: '🖼️',
+        width: 800,
+        height: 600,
       }
     ]
   },
