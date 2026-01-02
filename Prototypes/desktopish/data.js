@@ -87,16 +87,10 @@ const desktop_icons = [
         height: 600,
       },
       {
-        type: 'shortcut',
+        type: 'iframe',
         name: 'Key Frame Studio V2',
         link: 'https://keyframestudio.app',
-        icon: '🎥'
-      },
-      {
-        type: 'iframe',
-        name: 'Code Chat',
-        link: 'VibeCoder/index.html',
-        icon: '💬',
+        icon: '🎥',
         width: 800,
         height: 600,
       },
@@ -116,6 +110,12 @@ const desktop_icons = [
     icon: '🗑️',
     id: 'moregames',
     items: [
+      {
+        type: 'shortcut',
+        name: 'Code Chat',
+        link: 'VibeCoder/index.html',
+        icon: '💬'
+      },
       {
         type: 'shortcut',
         name: 'Wompus',
