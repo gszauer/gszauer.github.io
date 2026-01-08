@@ -1122,6 +1122,7 @@ Format:
 
                 this.specialTokens = ['<|system|>', '<|user|>', '<|think|>', '<|assistant|>', '<|end|>'];
                 this.endTokenId = null;
+                this.endOfTextTokenId = null;
 
                 this.setupTextareaAutoResize();
                 this.checkWebGL2Support();
@@ -1546,7 +1547,7 @@ Format:
             }
 
             startChat() {
-                // Try to find end token (needed for stopping generation)
+                // Try to find end tokens (needed for stopping generation)
                 try {
                     const endTokens = this.tokenizer.encode('<|end|>');
                     if (endTokens.length === 1) {
@@ -1554,7 +1555,17 @@ Format:
                         console.log('Found <|end|> token:', this.endTokenId);
                     }
                 } catch (err) {
-                    console.log('End token not found');
+                    console.log('<|end|> token not found');
+                }
+
+                try {
+                    const endOfTextTokens = this.tokenizer.encode('<|endoftext|>');
+                    if (endOfTextTokens.length === 1) {
+                        this.endOfTextTokenId = endOfTextTokens[0];
+                        console.log('Found <|endoftext|> token:', this.endOfTextTokenId);
+                    }
+                } catch (err) {
+                    console.log('<|endoftext|> token not found');
                 }
 
                 document.getElementById('loadScreen').classList.add('hidden');
@@ -1846,8 +1857,9 @@ Format:
                         // Sample with temperature
                         const nextToken = this.sampleWithTemperature(lastProbs, temperature);
 
-                        // Check for end token
-                        if (this.endTokenId !== null && nextToken === this.endTokenId) {
+                        // Check for stop tokens
+                        if ((this.endTokenId !== null && nextToken === this.endTokenId) ||
+                            (this.endOfTextTokenId !== null && nextToken === this.endOfTextTokenId)) {
                             break;
                         }
 
@@ -1953,7 +1965,8 @@ Format:
 
                             const nextToken2 = this.sampleWithTemperature(lastProbs2, temperature);
 
-                            if (this.endTokenId !== null && nextToken2 === this.endTokenId) {
+                            if ((this.endTokenId !== null && nextToken2 === this.endTokenId) ||
+                                (this.endOfTextTokenId !== null && nextToken2 === this.endOfTextTokenId)) {
                                 break;
                             }
 
@@ -2113,7 +2126,8 @@ Format:
 
                         const nextToken = this.sampleWithTemperature(lastProbs, temperature);
 
-                        if (this.endTokenId !== null && nextToken === this.endTokenId) {
+                        if ((this.endTokenId !== null && nextToken === this.endTokenId) ||
+                            (this.endOfTextTokenId !== null && nextToken === this.endOfTextTokenId)) {
                             break;
                         }
 
@@ -2168,7 +2182,8 @@ Format:
 
                             const nextToken2 = this.sampleWithTemperature(lastProbs2, temperature);
 
-                            if (this.endTokenId !== null && nextToken2 === this.endTokenId) {
+                            if ((this.endTokenId !== null && nextToken2 === this.endTokenId) ||
+                                (this.endOfTextTokenId !== null && nextToken2 === this.endOfTextTokenId)) {
                                 break;
                             }
 
@@ -2260,6 +2275,12 @@ Format:
 
                         // Sample with temperature
                         const nextToken = this.sampleWithTemperature(lastProbs, temperature);
+
+                        // Check for stop tokens
+                        if ((this.endTokenId !== null && nextToken === this.endTokenId) ||
+                            (this.endOfTextTokenId !== null && nextToken === this.endOfTextTokenId)) {
+                            break;
+                        }
 
                         tokens.push(nextToken);
 
