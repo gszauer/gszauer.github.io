@@ -1,0 +1,3364 @@
+[
+  {
+    "id": "C001",
+    "name": "Abomination",
+    "series": "Starter",
+    "description": "Foolish rabble! You are beneath me!",
+    "abilities": [],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/Abomination/"
+  },
+  {
+    "id": "C002",
+    "name": "Absorbing Man",
+    "series": "Series 3",
+    "description": "On Reveal: If the last card you played has an On Reveal, copy its text. (if able)",
+    "abilities": [
+      "On Reveal",
+      "Copy Text"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/AbsorbingMan/"
+  },
+  {
+    "id": "C003",
+    "name": "Adam Warlock",
+    "series": "Series 3",
+    "description": "End of Turn: Draw a card if you're winning here. Otherwise, +1 Power.",
+    "abilities": [
+      "Card Draw",
+      "Increase Power",
+      "End of Turn"
+    ],
+    "cost": 2,
+    "power": 0,
+    "url": "https://snap.fan/cards/AdamWarlock/"
+  },
+  {
+    "id": "C004",
+    "name": "Adamantium Infusion",
+    "series": "Series 5",
+    "description": "On Reveal: Revive your highest-Power destroyed card here with its Power doubled.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 4,
+    "power": 0,
+    "url": "https://snap.fan/cards/AdamantiumInfusion/"
+  },
+  {
+    "id": "C005",
+    "name": "Aero",
+    "series": "Series 3",
+    "description": "On Reveal: The last card your opponent played moves to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/Aero/"
+  },
+  {
+    "id": "C006",
+    "name": "Agent 13",
+    "series": "Series 2",
+    "description": "On Reveal: Add a random card to your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Agent13/"
+  },
+  {
+    "id": "C007",
+    "name": "Agent Coulson",
+    "series": "Series 3",
+    "description": "On Reveal: Add a random 4-Cost and 5-Cost card to your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/AgentCoulson/"
+  },
+  {
+    "id": "C008",
+    "name": "Agent Venom",
+    "series": "Series 5",
+    "description": "On Reveal: Set the Power of all cards in your deck to 3.",
+    "abilities": [
+      "On Reveal",
+      "Set Power"
+    ],
+    "cost": 2,
+    "power": 5,
+    "url": "https://snap.fan/cards/AgentVenom/"
+  },
+  {
+    "id": "C009",
+    "name": "Agony",
+    "series": "Series 4",
+    "description": "After you play a card here, merge this into it.",
+    "abilities": [
+      "Merge"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/Agony/"
+  },
+  {
+    "id": "C010",
+    "name": "Air-Walker",
+    "series": "Series 4",
+    "description": "When Destroyed: Replace this with a 4-Cost card from your hand or deck.",
+    "abilities": [
+      "Destroy",
+      "Add Card At Location"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/AirWalker/"
+  },
+  {
+    "id": "C011",
+    "name": "Ajax",
+    "series": "Series 5",
+    "description": "Ongoing: +1 Power for each card in play afflicted with negative Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power",
+      "Afflict"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Ajax/"
+  },
+  {
+    "id": "C012",
+    "name": "Alioth",
+    "series": "Series 5",
+    "description": "On Reveal: Remove the text from all unrevealed enemy characters here.",
+    "abilities": [
+      "On Reveal",
+      "Remove Text"
+    ],
+    "cost": 6,
+    "power": 8,
+    "url": "https://snap.fan/cards/Alioth/"
+  },
+  {
+    "id": "C013",
+    "name": "America Chavez",
+    "series": "Series 1",
+    "description": "On Reveal: Give the top card of your deck +3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/AmericaChavez/"
+  },
+  {
+    "id": "C014",
+    "name": "Angel",
+    "series": "Series 1",
+    "description": "When one of your cards is destroyed, this flies out of your hand or deck to replace it.",
+    "abilities": [
+      "Destroy"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Angel/"
+  },
+  {
+    "id": "C015",
+    "name": "Angela",
+    "series": "Series 1",
+    "description": "After you play a card here, +1 Power.",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Angela/"
+  },
+  {
+    "id": "C016",
+    "name": "Annihilus",
+    "series": "Series 4",
+    "description": "On Reveal: Your cards with Power below 0 switch sides. Destroy those that can't.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Switch Sides"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Annihilus/"
+  },
+  {
+    "id": "C017",
+    "name": "Ant Man",
+    "series": "Starter",
+    "description": "Ongoing: If your side of this location is full, +4 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/AntMan/"
+  },
+  {
+    "id": "C018",
+    "name": "Anti-Venom",
+    "series": "Series 5",
+    "description": "On Reveal: Set the Cost and Power of your deck's top card to 0.",
+    "abilities": [
+      "On Reveal",
+      "Set Power",
+      "Set Cost"
+    ],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/AntiVenom/"
+  },
+  {
+    "id": "C019",
+    "name": "Apocalypse",
+    "series": "Series 1",
+    "description": "When Discarded: Put this back in your hand with +4 Power.",
+    "abilities": [
+      "Increase Power",
+      "Discard"
+    ],
+    "cost": 6,
+    "power": 8,
+    "url": "https://snap.fan/cards/Apocalypse/"
+  },
+  {
+    "id": "C020",
+    "name": "Ares",
+    "series": "Series 5",
+    "description": "On Reveal: Compare the Power of the top 3 cards of both decks. If your total is higher, +6 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/Ares/"
+  },
+  {
+    "id": "C021",
+    "name": "Armor",
+    "series": "Series 1",
+    "description": "Ongoing: Cards here can't be destroyed.",
+    "abilities": [
+      "Ongoing",
+      "Destroy"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Armor/"
+  },
+  {
+    "id": "C022",
+    "name": "Arnim Zola",
+    "series": "Series 3",
+    "description": "On Reveal: Destroy one of your other cards here to copy it at the other locations.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Add Card At Location"
+    ],
+    "cost": 6,
+    "power": 0,
+    "url": "https://snap.fan/cards/ArnimZola/"
+  },
+  {
+    "id": "C023",
+    "name": "Astral Projection",
+    "series": "Series 4",
+    "description": "On Reveal: Copy the text of an On Reveal card in your hand.",
+    "abilities": [
+      "On Reveal",
+      "Copy Text",
+      "Skill"
+    ],
+    "cost": 4,
+    "power": 0,
+    "url": "https://snap.fan/cards/AstralProjection/"
+  },
+  {
+    "id": "C024",
+    "name": "Attuma",
+    "series": "Series 3",
+    "description": "End of Turn: Destroy one of your cards here with less Power.",
+    "abilities": [
+      "Destroy",
+      "End of Turn"
+    ],
+    "cost": 4,
+    "power": 10,
+    "url": "https://snap.fan/cards/Attuma/"
+  },
+  {
+    "id": "C025",
+    "name": "Baron Mordo",
+    "series": "Series 3",
+    "description": "On Reveal: The top card of your opponent's deck costs 6",
+    "abilities": [
+      "On Reveal",
+      "Set Cost"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/BaronMordo/"
+  },
+  {
+    "id": "C026",
+    "name": "Baron Zemo",
+    "series": "Series 5",
+    "description": "On Reveal: Recruit a card that costs the least from your opponent's deck to your side of this location.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/BaronZemo/"
+  },
+  {
+    "id": "C027",
+    "name": "Bast",
+    "series": "Series 3",
+    "description": "On Reveal: Set the Power of all cards in your hand to 3.",
+    "abilities": [
+      "On Reveal",
+      "Set Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Bast/"
+  },
+  {
+    "id": "C028",
+    "name": "Bastion",
+    "series": "Series 5",
+    "description": "On Reveal: Add copies of your other cards here to your hand. Set their Costs to 2 and Power to 3.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand",
+      "Set Power",
+      "Set Cost"
+    ],
+    "cost": 4,
+    "power": 3,
+    "url": "https://snap.fan/cards/Bastion/"
+  },
+  {
+    "id": "C029",
+    "name": "Beast",
+    "series": "Series 3",
+    "description": "On Reveal: Return your other cards here to your hand. They cost 1 less next turn.",
+    "abilities": [
+      "On Reveal",
+      "Return To Hand",
+      "Decrease Cost"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Beast/"
+  },
+  {
+    "id": "C030",
+    "name": "Bishop",
+    "series": "Series 1",
+    "description": "After you play a card, this gains +1 Power.",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/Bishop/"
+  },
+  {
+    "id": "C031",
+    "name": "Black Bolt",
+    "series": "Series 3",
+    "description": "On Reveal: Discard the card that costs the least from your opponent's hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/BlackBolt/"
+  },
+  {
+    "id": "C032",
+    "name": "Black Cat",
+    "series": "Series 3",
+    "description": "End of Turn: Discard this from your hand.",
+    "abilities": [
+      "Discard",
+      "End of Turn"
+    ],
+    "cost": 1,
+    "power": 4,
+    "url": "https://snap.fan/cards/BlackCat/"
+  },
+  {
+    "id": "C033",
+    "name": "Black Panther",
+    "series": "Series 3",
+    "description": "On Reveal: Double this card's Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power",
+      "Double Power"
+    ],
+    "cost": 5,
+    "power": 5,
+    "url": "https://snap.fan/cards/BlackPanther/"
+  },
+  {
+    "id": "C034",
+    "name": "Blade",
+    "series": "Series 1",
+    "description": "On Reveal: Discard the rightmost card from your hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/Blade/"
+  },
+  {
+    "id": "C035",
+    "name": "Blink",
+    "series": "Series 5",
+    "description": "On Reveal: Swap the last card you played with a card that costs more from your deck.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location",
+      "Add Card to Deck"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Blink/"
+  },
+  {
+    "id": "C036",
+    "name": "Blob",
+    "series": "Series 4",
+    "description": "On Reveal: Merge cards from your deck into this until it gains 13 or more Power.",
+    "abilities": [
+      "On Reveal",
+      "Merge"
+    ],
+    "cost": 6,
+    "power": 0,
+    "url": "https://snap.fan/cards/Blob/"
+  },
+  {
+    "id": "C037",
+    "name": "Blue Marvel",
+    "series": "Series 0",
+    "description": "Ongoing: Your other cards have +1 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 3,
+    "url": "https://snap.fan/cards/BlueMarvel/"
+  },
+  {
+    "id": "C038",
+    "name": "Brood",
+    "series": "Series 3",
+    "description": "On Reveal: Add 2 Broodlings here with the same Power as this card.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location",
+      "No Ability",
+      "Set Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/Brood/"
+  },
+  {
+    "id": "C039",
+    "name": "Bruce Banner",
+    "series": "Series 5",
+    "description": "End of Turn: If you have unspent Energy, 33% chance to HULK OUT!",
+    "abilities": [
+      "Transform",
+      "End of Turn"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/BruceBanner/"
+  },
+  {
+    "id": "C040",
+    "name": "Cable",
+    "series": "Series 1",
+    "description": "On Reveal: Draw a card from your opponent's deck.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/Cable/"
+  },
+  {
+    "id": "C041",
+    "name": "Caiera",
+    "series": "Series 5",
+    "description": "Ongoing: Your 1 and 6-Cost cards can't be destroyed.",
+    "abilities": [
+      "Ongoing",
+      "Destroy"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Caiera/"
+  },
+  {
+    "id": "C042",
+    "name": "Cannonball",
+    "series": "Series 4",
+    "description": "On Reveal: Move the highest-Power enemy card here away. If you can't, destroy it with a Rock.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Move"
+    ],
+    "cost": 5,
+    "power": 6,
+    "url": "https://snap.fan/cards/Cannonball/"
+  },
+  {
+    "id": "C043",
+    "name": "Captain America",
+    "series": "Series 1",
+    "description": "Ongoing: Your other Ongoing cards here have +2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/CaptainAmerica/"
+  },
+  {
+    "id": "C044",
+    "name": "Captain Marvel",
+    "series": "Series 3",
+    "description": "At the end of the game, move to a location that wins you the game. (If possible)",
+    "abilities": [
+      "Move",
+      "Game End"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/CaptainMarvel/"
+  },
+  {
+    "id": "C045",
+    "name": "Carnage",
+    "series": "Series 1",
+    "description": "On Reveal: Destroy your other cards here. +2 Power for each destroyed.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Carnage/"
+  },
+  {
+    "id": "C046",
+    "name": "Cassandra Nova",
+    "series": "Series 5",
+    "description": "On Reveal: Steal 1 Power from each card in your opponent's deck.",
+    "abilities": [
+      "On Reveal",
+      "Steal Power"
+    ],
+    "cost": 3,
+    "power": 0,
+    "url": "https://snap.fan/cards/CassandraNova/"
+  },
+  {
+    "id": "C047",
+    "name": "Cerebro",
+    "series": "Series 3",
+    "description": "Ongoing: Your highest-Power cards have +3 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 0,
+    "url": "https://snap.fan/cards/Cerebro/"
+  },
+  {
+    "id": "C048",
+    "name": "Cloak",
+    "series": "Series 2",
+    "description": "On Reveal: Next turn, both players can move cards to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/Cloak/"
+  },
+  {
+    "id": "C049",
+    "name": "Colleen Wing",
+    "series": "Series 3",
+    "description": "On Reveal: Discard the card that costs the least from your hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/ColleenWing/"
+  },
+  {
+    "id": "C050",
+    "name": "Colossus",
+    "series": "Starter",
+    "description": "Ongoing: Can't be destroyed, moved, or have its Power reduced.",
+    "abilities": [
+      "Ongoing",
+      "Destroy",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/Colossus/"
+  },
+  {
+    "id": "C051",
+    "name": "Corvus Glaive",
+    "series": "Series 4",
+    "description": "On Reveal: Discard 2 cards from your hand to get +1 Max Energy.",
+    "abilities": [
+      "On Reveal",
+      "Max Energy",
+      "Discard"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/CorvusGlaive/"
+  },
+  {
+    "id": "C052",
+    "name": "Cosmic Ghost Rider",
+    "series": "Series 5",
+    "description": "On Reveal: Remove the text from front-row enemy cards here.",
+    "abilities": [
+      "On Reveal",
+      "Remove Text"
+    ],
+    "cost": 5,
+    "power": 6,
+    "url": "https://snap.fan/cards/CosmicGhostRider/"
+  },
+  {
+    "id": "C053",
+    "name": "Cosmo",
+    "series": "Series 1",
+    "description": "Ongoing: On Reveal abilities won't happen here.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Cosmo/"
+  },
+  {
+    "id": "C054",
+    "name": "Crystal",
+    "series": "Series 3",
+    "description": "On Reveal: Each player draws a card.",
+    "abilities": [
+      "On Reveal",
+      "Card Draw"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Crystal/"
+  },
+  {
+    "id": "C055",
+    "name": "Cyclops",
+    "series": "Starter",
+    "description": "Let's move, X-Men.",
+    "abilities": [],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Cyclops/"
+  },
+  {
+    "id": "C056",
+    "name": "Dagger",
+    "series": "Series 3",
+    "description": "When this moves to a location, +2 Power for each enemy card there.",
+    "abilities": [
+      "Move",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Dagger/"
+  },
+  {
+    "id": "C057",
+    "name": "Darkhawk",
+    "series": "Series 4",
+    "description": "Ongoing: +2 Power for each card in your opponent's deck.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 3,
+    "url": "https://snap.fan/cards/Darkhawk/"
+  },
+  {
+    "id": "C058",
+    "name": "Dazzler",
+    "series": "Series 3",
+    "description": "Ongoing: +2 Power for each location that's full on your side.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Dazzler/"
+  },
+  {
+    "id": "C059",
+    "name": "Deadpool",
+    "series": "Series 3",
+    "description": "When Destroyed: Return this to your hand with double the Power.",
+    "abilities": [
+      "Destroy",
+      "Return To Hand",
+      "Increase Power",
+      "Double Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Deadpool/"
+  },
+  {
+    "id": "C060",
+    "name": "Deafening Chord",
+    "series": "Series 4",
+    "description": "On Reveal: Afflict an enemy character here that costs 3 or less with -1 Power and remove its text.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 4,
+    "power": 0,
+    "url": "https://snap.fan/cards/DeafeningChord/"
+  },
+  {
+    "id": "C061",
+    "name": "Death",
+    "series": "Series 3",
+    "description": "Costs 1 less for each card destroyed this game.",
+    "abilities": [
+      "Destroy",
+      "Decrease Cost"
+    ],
+    "cost": 8,
+    "power": 12,
+    "url": "https://snap.fan/cards/Death/"
+  },
+  {
+    "id": "C062",
+    "name": "Deathlok",
+    "series": "Series 1",
+    "description": "On Reveal: Destroy your other cards here.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Deathlok/"
+  },
+  {
+    "id": "C063",
+    "name": "Destroyer",
+    "series": "Series 3",
+    "description": "On Reveal: Destroy your cards at other locations.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 6,
+    "power": 18,
+    "url": "https://snap.fan/cards/Destroyer/"
+  },
+  {
+    "id": "C064",
+    "name": "Devil Dinosaur",
+    "series": "Series 1",
+    "description": "Ongoing: +2 Power for each card in your hand.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 4,
+    "url": "https://snap.fan/cards/DevilDinosaur/"
+  },
+  {
+    "id": "C065",
+    "name": "Diamondback",
+    "series": "Series 5",
+    "description": "Ongoing: Enemy cards here afflicted with negative Power have an additional -2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Diamondback/"
+  },
+  {
+    "id": "C066",
+    "name": "Doctor Octopus",
+    "series": "Series 3",
+    "description": "On Reveal: Pull the lowest-Power card from your opponent's hand to their side of this location.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location"
+    ],
+    "cost": 4,
+    "power": 8,
+    "url": "https://snap.fan/cards/DoctorOctopus/"
+  },
+  {
+    "id": "C067",
+    "name": "Doctor Strange",
+    "series": "Series 1",
+    "description": "On Reveal: Move your highest-Power card(s) to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/DoctorStrange/"
+  },
+  {
+    "id": "C068",
+    "name": "Dracula",
+    "series": "Series 3",
+    "description": "At the end of the game, discard a card from your hand to gain its Power.",
+    "abilities": [
+      "Discard",
+      "Game End",
+      "Set Power"
+    ],
+    "cost": 4,
+    "power": 1,
+    "url": "https://snap.fan/cards/Dracula/"
+  },
+  {
+    "id": "C069",
+    "name": "Dragon Lord",
+    "series": "Series 3",
+    "description": "On Reveal: Put a card from your hand here.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 5,
+    "power": 5,
+    "url": "https://snap.fan/cards/DragonLord/"
+  },
+  {
+    "id": "C070",
+    "name": "Dragon of the Moon",
+    "series": "Series 5",
+    "description": "On Reveal: Steal 1 Power from even-costed cards in ALL hands.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/DragonOfTheMoon/"
+  },
+  {
+    "id": "C071",
+    "name": "Drax",
+    "series": "Series 3",
+    "description": "On Reveal: If your opponent played a card here this turn, +4 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/Drax/"
+  },
+  {
+    "id": "C072",
+    "name": "Electro",
+    "series": "Series 3",
+    "description": "On Reveal: +1 Max Energy. Ongoing: You can only play 1 card a turn.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Max Energy"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Electro/"
+  },
+  {
+    "id": "C073",
+    "name": "Elektra",
+    "series": "Series 1",
+    "description": "On Reveal: Destroy an enemy 1-Cost card here.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Elektra/"
+  },
+  {
+    "id": "C074",
+    "name": "Elixir",
+    "series": "Series 5",
+    "description": "On Reveal: One of your cards destroyed last turn gets revived here.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Elixir/"
+  },
+  {
+    "id": "C075",
+    "name": "Elsa Bloodstone",
+    "series": "Series 4",
+    "description": "Each card you play to fill your side of a location gains +2 Power.",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/ElsaBloodstone/"
+  },
+  {
+    "id": "C076",
+    "name": "Enchantress",
+    "series": "Series 1",
+    "description": "On Reveal: Remove the abilities from all Ongoing cards here.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Remove Text"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Enchantress/"
+  },
+  {
+    "id": "C077",
+    "name": "Esme Cuckoo",
+    "series": "Series 5",
+    "description": "On Reveal: Copy a card from your deck into your hand. Set its Cost to 3 and Power to 4.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand",
+      "Set Power",
+      "Set Cost"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/EsmeCuckoo/"
+  },
+  {
+    "id": "C078",
+    "name": "Fantomex",
+    "series": "Series 5",
+    "description": "On Reveal: If you've had cards discarded and destroyed, afflict front-row enemy cards at each location with -2 Power.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/Fantomex/"
+  },
+  {
+    "id": "C079",
+    "name": "Fastball Special",
+    "series": "Series 4",
+    "description": "On Reveal: Destroy your highest-Power card here to afflict an enemy card here with that much negative Power.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 4,
+    "power": 0,
+    "url": "https://snap.fan/cards/FastballSpecial/"
+  },
+  {
+    "id": "C080",
+    "name": "Fin Fang Foom",
+    "series": "Series 5",
+    "description": "On Reveal: Gain the Power of front-row enemy cards here.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 7,
+    "power": 12,
+    "url": "https://snap.fan/cards/FinFangFoom/"
+  },
+  {
+    "id": "C081",
+    "name": "Firehair",
+    "series": "Series 5",
+    "description": "When one of your cards is destroyed, this uses that card’s On Reveal.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Firehair/"
+  },
+  {
+    "id": "C082",
+    "name": "Firelord",
+    "series": "Series 4",
+    "description": "On Reveal: Revive one of your discarded or destroyed 3-Cost cards here.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Add Card At Location",
+      "Discard"
+    ],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/Firelord/"
+  },
+  {
+    "id": "C083",
+    "name": "Frigga",
+    "series": "Series 5",
+    "description": "On Reveal: Add a copy of the last card you played to your hand. (if able)",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Frigga/"
+  },
+  {
+    "id": "C084",
+    "name": "Galacta",
+    "series": "Series 5",
+    "description": "Each turn, the first card you play at another location reveals with +2 Power.",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/Galacta/"
+  },
+  {
+    "id": "C085",
+    "name": "Galactus",
+    "series": "Series 5",
+    "description": "On Reveal: If you're winning this location and this is your only card here, destroy all other locations.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 6,
+    "power": 6,
+    "url": "https://snap.fan/cards/Galactus/"
+  },
+  {
+    "id": "C086",
+    "name": "Gambit",
+    "series": "Series 3",
+    "description": "On Reveal: Discard a card from your hand to destroy a random enemy card.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Discard"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Gambit/"
+  },
+  {
+    "id": "C087",
+    "name": "Gamora",
+    "series": "Series 1",
+    "description": "On Reveal: If your opponent played a card here this turn, +4 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Gamora/"
+  },
+  {
+    "id": "C088",
+    "name": "Ghost Rider",
+    "series": "Series 3",
+    "description": "On Reveal: Bring back one of your discarded cards to this location.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location",
+      "Discard"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/GhostRider/"
+  },
+  {
+    "id": "C089",
+    "name": "Ghost-Spider",
+    "series": "Series 3",
+    "description": "On Reveal: The last card you played moves here.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/GhostSpider/"
+  },
+  {
+    "id": "C090",
+    "name": "Giganto",
+    "series": "Series 3",
+    "description": "You can only play this at the left location.",
+    "abilities": [
+      "Play At Location Restriction"
+    ],
+    "cost": 6,
+    "power": 16,
+    "url": "https://snap.fan/cards/Giganto/"
+  },
+  {
+    "id": "C091",
+    "name": "Gilgamesh",
+    "series": "Series 5",
+    "description": "On Reveal: +1 Power for each of your other cards in play with increased Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/Gilgamesh/"
+  },
+  {
+    "id": "C092",
+    "name": "Gladiator",
+    "series": "Series 4",
+    "description": "On Reveal: Add a card from your opponent's deck to their side of this location. If it has less Power, destroy it.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Add Card At Location"
+    ],
+    "cost": 3,
+    "power": 8,
+    "url": "https://snap.fan/cards/Gladiator/"
+  },
+  {
+    "id": "C093",
+    "name": "Goliath",
+    "series": "Series 5",
+    "description": "Ongoing: +1 Power for each other Ongoing card you have in play.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/Goliath/"
+  },
+  {
+    "id": "C094",
+    "name": "Goose",
+    "series": "Series 3",
+    "description": "Ongoing: Nobody can play cards that cost 4, 5, or 6 here.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Goose/"
+  },
+  {
+    "id": "C095",
+    "name": "Gorr",
+    "series": "Series 5",
+    "description": "Ongoing: +2 Power for EACH On Reveal card in play.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 6,
+    "power": -1,
+    "url": "https://snap.fan/cards/Gorr/"
+  },
+  {
+    "id": "C096",
+    "name": "Grand Master",
+    "series": "Series 4",
+    "description": "On Reveal: Move one of your other On Reveal cards here to the middle location. Its ability happens again.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/GrandMaster/"
+  },
+  {
+    "id": "C097",
+    "name": "Green Goblin",
+    "series": "Series 3",
+    "description": "On Reveal: Switch sides.",
+    "abilities": [
+      "On Reveal",
+      "Switch Sides"
+    ],
+    "cost": 3,
+    "power": -4,
+    "url": "https://snap.fan/cards/GreenGoblin/"
+  },
+  {
+    "id": "C098",
+    "name": "Groot",
+    "series": "Series 1",
+    "description": "On Reveal: If your opponent played a card here this turn, +4 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Groot/"
+  },
+  {
+    "id": "C099",
+    "name": "Havok",
+    "series": "Series 3",
+    "description": "End of Turn: You lose 1 Max Energy and this gains +3 Power.",
+    "abilities": [
+      "Increase Power",
+      "Max Energy",
+      "End of Turn"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/Havok/"
+  },
+  {
+    "id": "C100",
+    "name": "Hawkeye",
+    "series": "Starter",
+    "description": "On Reveal: If you play a card at this location next turn, +3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Hawkeye/"
+  },
+  {
+    "id": "C101",
+    "name": "Hazmat",
+    "series": "Series 3",
+    "description": "On Reveal: Afflict all other cards with -1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Afflict"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Hazmat/"
+  },
+  {
+    "id": "C102",
+    "name": "Headpool",
+    "series": "Series 5",
+    "description": "When Destroyed: Return this to your hand, then give all cards in your hand +1 Power.",
+    "abilities": [
+      "Destroy",
+      "Return To Hand",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Headpool/"
+  },
+  {
+    "id": "C103",
+    "name": "Heimdall",
+    "series": "Series 1",
+    "description": "On Reveal: Move your other cards one location to the left.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 6,
+    "power": 10,
+    "url": "https://snap.fan/cards/Heimdall/"
+  },
+  {
+    "id": "C104",
+    "name": "Hela",
+    "series": "Series 3",
+    "description": "On Reveal: For each different Cost among them, resurrect a card you discarded to a random location.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location",
+      "Discard"
+    ],
+    "cost": 6,
+    "power": 6,
+    "url": "https://snap.fan/cards/Hela/"
+  },
+  {
+    "id": "C105",
+    "name": "Helicarrier",
+    "series": "Series 3",
+    "description": "When Discarded: Fill your hand with random cards.",
+    "abilities": [
+      "Add Card to Hand",
+      "Discard"
+    ],
+    "cost": 6,
+    "power": 12,
+    "url": "https://snap.fan/cards/Helicarrier/"
+  },
+  {
+    "id": "C106",
+    "name": "Hellcow",
+    "series": "Series 3",
+    "description": "On Reveal: Discard a card from your hand.",
+    "abilities": [
+      "Discard",
+      "On Reveal"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/Hellcow/"
+  },
+  {
+    "id": "C107",
+    "name": "Hellion",
+    "series": "Series 4",
+    "description": "On Reveal: Next turn, you can move cards to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Hellion/"
+  },
+  {
+    "id": "C108",
+    "name": "Hercules",
+    "series": "Series 3",
+    "description": "The first time another one of your cards moves here each turn, move it to another location.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Hercules/"
+  },
+  {
+    "id": "C109",
+    "name": "Hobgoblin",
+    "series": "Series 2",
+    "description": "On Reveal: Switch sides.",
+    "abilities": [
+      "On Reveal",
+      "Switch Sides"
+    ],
+    "cost": 5,
+    "power": -8,
+    "url": "https://snap.fan/cards/Hobgoblin/"
+  },
+  {
+    "id": "C110",
+    "name": "Hope Summers",
+    "series": "Series 5",
+    "description": "After you play a card here, you get +1 Energy next turn.",
+    "abilities": [
+      "Bonus Energy"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/HopeSummers/"
+  },
+  {
+    "id": "C111",
+    "name": "Hulk",
+    "series": "Starter",
+    "description": "HULK SMASH!",
+    "abilities": [],
+    "cost": 6,
+    "power": 14,
+    "url": "https://snap.fan/cards/Hulk/"
+  },
+  {
+    "id": "C112",
+    "name": "Hulkbuster",
+    "series": "Series 1",
+    "description": "On Reveal: Merge this into one of your cards here.",
+    "abilities": [
+      "On Reveal",
+      "Merge"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Hulkbuster/"
+  },
+  {
+    "id": "C113",
+    "name": "Human Torch",
+    "series": "Series 3",
+    "description": "When this moves, double its Power.",
+    "abilities": [
+      "Move",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/HumanTorch/"
+  },
+  {
+    "id": "C114",
+    "name": "Hydra Stomper",
+    "series": "Series 5",
+    "description": "Ongoing: +1 Power for each time one of your cards moved this game.",
+    "abilities": [
+      "Ongoing",
+      "Move"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/HydraStomper/"
+  },
+  {
+    "id": "C115",
+    "name": "Hydro-Man",
+    "series": "Series 4",
+    "description": "On Reveal: Set the Cost of EACH deck's top card to 1.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/HydroMan/"
+  },
+  {
+    "id": "C116",
+    "name": "Iceman",
+    "series": "Series 2",
+    "description": "On Reveal: Give a card in your opponent's hand +1 Cost. (maximum 6)",
+    "abilities": [
+      "On Reveal",
+      "Increase Cost"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Iceman/"
+  },
+  {
+    "id": "C117",
+    "name": "Iron Fist",
+    "series": "Series 1",
+    "description": "On Reveal: After you play your next card, move it one location to the left.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/IronFist/"
+  },
+  {
+    "id": "C118",
+    "name": "Iron Man",
+    "series": "Starter",
+    "description": "Ongoing: Your total Power is doubled here.",
+    "abilities": [
+      "Ongoing",
+      "Double Power"
+    ],
+    "cost": 5,
+    "power": 0,
+    "url": "https://snap.fan/cards/IronMan/"
+  },
+  {
+    "id": "C119",
+    "name": "Iron Patriot",
+    "series": "Series 5",
+    "description": "On Reveal: Add a random 4, 5, or 6-Cost card to your hand. If you’re winning here after next turn, give it -3 Cost.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand",
+      "Decrease Cost"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/IronPatriot/"
+  },
+  {
+    "id": "C120",
+    "name": "Ironheart",
+    "series": "Starter",
+    "description": "On Reveal: Give 2 of your other cards +3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 0,
+    "url": "https://snap.fan/cards/Ironheart/"
+  },
+  {
+    "id": "C121",
+    "name": "Jane Foster Mighty Thor",
+    "series": "Series 3",
+    "description": "On Reveal: Draw all cards that cost 0 from your deck.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/JaneFoster/"
+  },
+  {
+    "id": "C122",
+    "name": "Jean Grey",
+    "series": "Series 3",
+    "description": "Ongoing: Players must play their first card here each turn. (if possible)",
+    "abilities": [
+      "Ongoing",
+      "Play At Location Restriction"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/JeanGrey/"
+  },
+  {
+    "id": "C123",
+    "name": "Jeff the Baby Land Shark",
+    "series": "Series 5",
+    "description": "You can move this once. Nothing can stop you from moving or playing this to any location.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/JeffTheBabyLandShark/"
+  },
+  {
+    "id": "C124",
+    "name": "Jessica Jones",
+    "series": "Starter",
+    "description": "On Reveal: If you don't play a card at this location next turn, +5 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/JessicaJones/"
+  },
+  {
+    "id": "C125",
+    "name": "Jim Hammond Human Torch",
+    "series": "Series 5",
+    "description": "At the start of each turn, +1 Power for each bonus Energy you have.",
+    "abilities": [
+      "Increase Power",
+      "Bonus Energy"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/JimHammond/"
+  },
+  {
+    "id": "C126",
+    "name": "Joaquin Torres Falcon II",
+    "series": "Series 5",
+    "description": "Ongoing: The On Reveal abilities of your 1-Cost cards here happen twice.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/JoaquinTorres/"
+  },
+  {
+    "id": "C127",
+    "name": "Jubilee",
+    "series": "Series 2",
+    "description": "On Reveal: Add the top card of your deck to this location.",
+    "abilities": [
+      "On Reveal",
+      "Add Card At Location"
+    ],
+    "cost": 4,
+    "power": 1,
+    "url": "https://snap.fan/cards/Jubilee/"
+  },
+  {
+    "id": "C128",
+    "name": "Juggernaut",
+    "series": "Series 3",
+    "description": "On Reveal: Move away all enemy cards played here this turn. (including unrevealed cards)",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/Juggernaut/"
+  },
+  {
+    "id": "C129",
+    "name": "Ka-Zar",
+    "series": "Series 0",
+    "description": "Ongoing: Your 1-Cost cards have +1 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/KaZar/"
+  },
+  {
+    "id": "C130",
+    "name": "Killmonger",
+    "series": "Series 2",
+    "description": "On Reveal: Destroy ALL 1-Cost cards.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Killmonger/"
+  },
+  {
+    "id": "C131",
+    "name": "Kingpin",
+    "series": "Series 3",
+    "description": "When an enemy card moves here, afflict it with -2 Power.",
+    "abilities": [
+      "Move",
+      "Afflict"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Kingpin/"
+  },
+  {
+    "id": "C132",
+    "name": "Kitty Pryde",
+    "series": "Series 3",
+    "description": "When this returns to your hand, +1 Power. Returns at the start of each turn.",
+    "abilities": [
+      "Return To Hand",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/KittyPryde/"
+  },
+  {
+    "id": "C133",
+    "name": "Klaw",
+    "series": "Series 1",
+    "description": "Ongoing: The location to the right has +7 Power.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 5,
+    "power": 4,
+    "url": "https://snap.fan/cards/Klaw/"
+  },
+  {
+    "id": "C134",
+    "name": "Knull",
+    "series": "Series 3",
+    "description": "Ongoing: Has the combined Power of all cards destroyed this game.",
+    "abilities": [
+      "Ongoing",
+      "Destroy",
+      "Increase Power"
+    ],
+    "cost": 6,
+    "power": 0,
+    "url": "https://snap.fan/cards/Knull/"
+  },
+  {
+    "id": "C135",
+    "name": "Korg",
+    "series": "Series 1",
+    "description": "On Reveal: Shuffle a Rock into your opponent's deck.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Deck",
+      "No Ability"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Korg/"
+  },
+  {
+    "id": "C136",
+    "name": "Kraven",
+    "series": "Series 1",
+    "description": "When a card moves here, this gains +2 Power.",
+    "abilities": [
+      "Move",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Kraven/"
+  },
+  {
+    "id": "C137",
+    "name": "Lady Deathstrike",
+    "series": "Series 3",
+    "description": "On Reveal: Destroy each card here with 3 or less Power.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/LadyDeathstrike/"
+  },
+  {
+    "id": "C138",
+    "name": "Lady Sif",
+    "series": "Series 1",
+    "description": "On Reveal: Discard the card that costs the most from your hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/LadySif/"
+  },
+  {
+    "id": "C139",
+    "name": "Laufey",
+    "series": "Series 4",
+    "description": "On Reveal: Steal 1 Power from each other card here.",
+    "abilities": [
+      "On Reveal",
+      "Steal Power"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/Laufey/"
+  },
+  {
+    "id": "C140",
+    "name": "Leech",
+    "series": "Series 2",
+    "description": "On Reveal: Remove the text from 6-Cost cards in your opponent's hand.",
+    "abilities": [
+      "On Reveal",
+      "Remove Text"
+    ],
+    "cost": 4,
+    "power": 4,
+    "url": "https://snap.fan/cards/Leech/"
+  },
+  {
+    "id": "C141",
+    "name": "Legion",
+    "series": "Series 4",
+    "description": "On Reveal: Replace each other location with this one.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Legion/"
+  },
+  {
+    "id": "C142",
+    "name": "Lizard",
+    "series": "Series 1",
+    "description": "Ongoing: -4 Power if your opponent has 4 cards here.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 2,
+    "power": 6,
+    "url": "https://snap.fan/cards/Lizard/"
+  },
+  {
+    "id": "C143",
+    "name": "Luke Cage",
+    "series": "Series 3",
+    "description": "Ongoing: Your cards can't have their Power reduced.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/LukeCage/"
+  },
+  {
+    "id": "C144",
+    "name": "M.O.D.O.K.",
+    "series": "Series 3",
+    "description": "On Reveal: Discard your hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Modok/"
+  },
+  {
+    "id": "C145",
+    "name": "M'Baku",
+    "series": "Series 3",
+    "description": "At the end of the game, this jumps from your deck to your lowest-Power location. (that isn't full)",
+    "abilities": [
+      "Game End"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/MBaku/"
+  },
+  {
+    "id": "C146",
+    "name": "Madame Web",
+    "series": "Series 5",
+    "description": "Ongoing: You can move one of your other cards away from here each turn.",
+    "abilities": [
+      "Ongoing",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/MadameWeb/"
+  },
+  {
+    "id": "C147",
+    "name": "Magik",
+    "series": "Series 3",
+    "description": "On Reveal: Replace this location with 'Limbo'. Doesn't work after turn 5.",
+    "abilities": [
+      "On Reveal",
+      "Change Location"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/Magik/"
+  },
+  {
+    "id": "C148",
+    "name": "Magneto",
+    "series": "Series 3",
+    "description": "On Reveal: Move all enemy 3 and 4-Cost cards to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 6,
+    "power": 12,
+    "url": "https://snap.fan/cards/Magneto/"
+  },
+  {
+    "id": "C149",
+    "name": "Majestic Wingbeat",
+    "series": "Series 4",
+    "description": "On Reveal: Give the leftmost card in your hand +2 Power. If it’s 5-Cost or higher, -1 Cost too.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 3,
+    "power": 0,
+    "url": "https://snap.fan/cards/MajesticWingbeat/"
+  },
+  {
+    "id": "C150",
+    "name": "Man-Spider",
+    "series": "Series 5",
+    "description": "On Reveal: Merge the last card you played into this. When this merges, double its Power.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 5,
+    "power": 1,
+    "url": "https://snap.fan/cards/ManSpider/"
+  },
+  {
+    "id": "C151",
+    "name": "Man-Thing",
+    "series": "Series 4",
+    "description": "Ongoing: 1, 2, and 3-Cost cards here have -2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/ManThing/"
+  },
+  {
+    "id": "C152",
+    "name": "Mantis",
+    "series": "Series 1",
+    "description": "On Reveal: If your opponent played any cards here this turn, copy one of them into your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Mantis/"
+  },
+  {
+    "id": "C153",
+    "name": "Maria Hill",
+    "series": "Series 3",
+    "description": "On Reveal: Add a random 2-Cost card to your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/MariaHill/"
+  },
+  {
+    "id": "C154",
+    "name": "Martyr",
+    "series": "Series 3",
+    "description": "At the end of the game, move to a location that LOSES you the game. (if possible)",
+    "abilities": [
+      "Move",
+      "Game End"
+    ],
+    "cost": 1,
+    "power": 5,
+    "url": "https://snap.fan/cards/Martyr/"
+  },
+  {
+    "id": "C155",
+    "name": "Maximus",
+    "series": "Series 3",
+    "description": "On Reveal: Your opponent draws 2 cards.",
+    "abilities": [
+      "On Reveal",
+      "Card Draw"
+    ],
+    "cost": 2,
+    "power": 6,
+    "url": "https://snap.fan/cards/Maximus/"
+  },
+  {
+    "id": "C156",
+    "name": "Medusa",
+    "series": "Starter",
+    "description": "On Reveal: If this is at the middle location, +3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Medusa/"
+  },
+  {
+    "id": "C157",
+    "name": "Mercury",
+    "series": "Series 4",
+    "description": "You can move this once. Ongoing: Enemy cards here can't move.",
+    "abilities": [
+      "Ongoing",
+      "Move"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Mercury/"
+  },
+  {
+    "id": "C158",
+    "name": "Mirage",
+    "series": "Series 3",
+    "description": "On Reveal: Copy the character that costs the least from your opponent's hand into your hand. Give it +2 Power.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Mirage/"
+  },
+  {
+    "id": "C159",
+    "name": "Misery",
+    "series": "Series 5",
+    "description": "On Reveal: Repeat the On Reveal abilities of your other cards here, then destroy them.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 4,
+    "power": 8,
+    "url": "https://snap.fan/cards/Misery/"
+  },
+  {
+    "id": "C160",
+    "name": "Mister Fantastic",
+    "series": "Series 0",
+    "description": "Ongoing: Adjacent locations have +3 Power.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 3,
+    "power": 1,
+    "url": "https://snap.fan/cards/MrFantastic/"
+  },
+  {
+    "id": "C161",
+    "name": "Mister Negative",
+    "series": "Series 3",
+    "description": "On Reveal: Swap the Power and Cost of all cards in your deck.",
+    "abilities": [
+      "On Reveal",
+      "Set Power",
+      "Set Cost"
+    ],
+    "cost": 4,
+    "power": -1,
+    "url": "https://snap.fan/cards/MrNegative/"
+  },
+  {
+    "id": "C162",
+    "name": "Misty Knight",
+    "series": "Starter",
+    "description": "We've got to save this city.",
+    "abilities": [],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/MistyKnight/"
+  },
+  {
+    "id": "C163",
+    "name": "Mobius M. Mobius",
+    "series": "Series 3",
+    "description": "Ongoing: Your Costs can't be increased. Your opponent's Costs can't be reduced.",
+    "abilities": [
+      "Ongoing",
+      "Increase Cost",
+      "Decrease Cost"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/MobiusMMobius/"
+  },
+  {
+    "id": "C164",
+    "name": "Mojo",
+    "series": "Series 3",
+    "description": "Ongoing: If both sides here are full, +6 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Mojo/"
+  },
+  {
+    "id": "C165",
+    "name": "Moon Girl",
+    "series": "Series 1",
+    "description": "On Reveal: Copy your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/MoonGirl/"
+  },
+  {
+    "id": "C166",
+    "name": "Moon Knight",
+    "series": "Series 3",
+    "description": "On Reveal: Discard an even-costed card from each player's hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/MoonKnight/"
+  },
+  {
+    "id": "C167",
+    "name": "Morbius",
+    "series": "Series 2",
+    "description": "Ongoing: +2 Power for each time you discarded a card this game.",
+    "abilities": [
+      "Ongoing",
+      "Discard"
+    ],
+    "cost": 2,
+    "power": 0,
+    "url": "https://snap.fan/cards/Morbius/"
+  },
+  {
+    "id": "C168",
+    "name": "Ms. Marvel",
+    "series": "Series 4",
+    "description": "Ongoing: Your adjacent locations with 2+ cards and no repeated Costs have +5 Power.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/MsMarvel/"
+  },
+  {
+    "id": "C169",
+    "name": "Mystique",
+    "series": "Series 3",
+    "description": "On Reveal: If the last card you played has an Ongoing, copy its text. (if able)",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Copy Text"
+    ],
+    "cost": 3,
+    "power": 1,
+    "url": "https://snap.fan/cards/Mystique/"
+  },
+  {
+    "id": "C170",
+    "name": "Nakia",
+    "series": "Series 2",
+    "description": "On Reveal: Give all cards in your hand +1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Nakia/"
+  },
+  {
+    "id": "C171",
+    "name": "Namor",
+    "series": "Series 1",
+    "description": "Ongoing: +5 Power if this is your only card here.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/Namor/"
+  },
+  {
+    "id": "C172",
+    "name": "Namora",
+    "series": "Series 5",
+    "description": "On Reveal: Give +5 Power to each of your cards alone at another location.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Namora/"
+  },
+  {
+    "id": "C173",
+    "name": "Nebula",
+    "series": "Series 3",
+    "description": "Each turn your opponent doesn't play a card here, +2 Power. (except the turn you play this)",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Nebula/"
+  },
+  {
+    "id": "C174",
+    "name": "Negasonic Teenage Warhead",
+    "series": "Series 3",
+    "description": "After an enemy character is played here, destroy it. (once per game)",
+    "abilities": [
+      "Destroy"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/NegasonicTeenageWarhead/"
+  },
+  {
+    "id": "C175",
+    "name": "Nick Fury",
+    "series": "Series 3",
+    "description": "On Reveal: Add 3 random 6-Cost cards to your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/NickFury/"
+  },
+  {
+    "id": "C176",
+    "name": "Nightcrawler",
+    "series": "Series 0",
+    "description": "You can move this once.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Nightcrawler/"
+  },
+  {
+    "id": "C177",
+    "name": "Nimrod",
+    "series": "Series 3",
+    "description": "When Destroyed: Add a copy of this to each other location.",
+    "abilities": [
+      "Destroy",
+      "Add Card At Location"
+    ],
+    "cost": 5,
+    "power": 6,
+    "url": "https://snap.fan/cards/Nimrod/"
+  },
+  {
+    "id": "C178",
+    "name": "Nocturne",
+    "series": "Series 5",
+    "description": "You can move this once. When this moves, replace its location with a random new one.",
+    "abilities": [
+      "Move",
+      "Change Location"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Nocturne/"
+  },
+  {
+    "id": "C179",
+    "name": "Nova",
+    "series": "Series 1",
+    "description": "When Destroyed: Give your cards +1 Power.",
+    "abilities": [
+      "Destroy",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Nova/"
+  },
+  {
+    "id": "C180",
+    "name": "Odin",
+    "series": "Series 0",
+    "description": "On Reveal: Repeat the On Reveal abilities of your other cards here.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 6,
+    "power": 9,
+    "url": "https://snap.fan/cards/Odin/"
+  },
+  {
+    "id": "C181",
+    "name": "Okoye",
+    "series": "Series 2",
+    "description": "On Reveal: Give every card in your deck +1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Okoye/"
+  },
+  {
+    "id": "C182",
+    "name": "Omega Red",
+    "series": "Series 3",
+    "description": "Ongoing: If you're winning here, +3 Power to other locations.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/OmegaRed/"
+  },
+  {
+    "id": "C183",
+    "name": "Orka",
+    "series": "Series 3",
+    "description": "Ongoing: +7 Power if this is your only card here.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 6,
+    "power": 11,
+    "url": "https://snap.fan/cards/Orka/"
+  },
+  {
+    "id": "C184",
+    "name": "Patriot",
+    "series": "Series 3",
+    "description": "Ongoing: Your cards with no abilities have +2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/Patriot/"
+  },
+  {
+    "id": "C185",
+    "name": "Phastos",
+    "series": "Series 4",
+    "description": "On Reveal: Give each card in your deck -1 Cost or +2 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power",
+      "Decrease Cost"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Phastos/"
+  },
+  {
+    "id": "C186",
+    "name": "Pixie",
+    "series": "Series 4",
+    "description": "On Reveal: Shuffle the base Costs of all cards in your deck that started there.",
+    "abilities": [
+      "On Reveal",
+      "Set Cost"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Pixie/"
+  },
+  {
+    "id": "C187",
+    "name": "Polaris",
+    "series": "Series 3",
+    "description": "On Reveal: Move an enemy 1 or 2-Cost card to this location.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Polaris/"
+  },
+  {
+    "id": "C188",
+    "name": "Professor X",
+    "series": "Series 1",
+    "description": "Ongoing: Moving is the only way to add or remove a character from here.",
+    "abilities": [
+      "Ongoing",
+      "Move",
+      "Play At Location Restriction"
+    ],
+    "cost": 5,
+    "power": 2,
+    "url": "https://snap.fan/cards/ProfessorX/"
+  },
+  {
+    "id": "C189",
+    "name": "Psylocke",
+    "series": "Series 3",
+    "description": "On Reveal: Next turn, you get +1 Energy.",
+    "abilities": [
+      "On Reveal",
+      "Bonus Energy"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Psylocke/"
+  },
+  {
+    "id": "C190",
+    "name": "Punisher",
+    "series": "Starter",
+    "description": "Ongoing: +1 Power for each enemy card here.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Punisher/"
+  },
+  {
+    "id": "C191",
+    "name": "Quake",
+    "series": "Series 3",
+    "description": "On Reveal: Swap the positions of the other two locations.",
+    "abilities": [
+      "On Reveal",
+      "Change Location"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Quake/"
+  },
+  {
+    "id": "C192",
+    "name": "Quicksilver",
+    "series": "Starter",
+    "description": "None",
+    "abilities": [
+      "None"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Quicksilver/"
+  },
+  {
+    "id": "C193",
+    "name": "Red Guardian",
+    "series": "Series 5",
+    "description": "On Reveal: Afflict the lowest-Power enemy card here with -2 Power and remove its text.",
+    "abilities": [
+      "On Reveal",
+      "Afflict",
+      "Remove Text"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/RedGuardian/"
+  },
+  {
+    "id": "C194",
+    "name": "Red Skull",
+    "series": "Series 3",
+    "description": "Ongoing: Enemy cards here have +2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 14,
+    "url": "https://snap.fan/cards/RedSkull/"
+  },
+  {
+    "id": "C195",
+    "name": "Redwing",
+    "series": "Series 5",
+    "description": "The first time this moves, add a card from your hand to the old location.",
+    "abilities": [
+      "Add Card At Location",
+      "Move"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Redwing/"
+  },
+  {
+    "id": "C196",
+    "name": "Rescue",
+    "series": "Series 3",
+    "description": "On Reveal: If you play a card at this location next turn, +5 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 4,
+    "url": "https://snap.fan/cards/Rescue/"
+  },
+  {
+    "id": "C197",
+    "name": "Rocket Raccoon",
+    "series": "Series 1",
+    "description": "On Reveal: If your opponent played a card here this turn, +4 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/RocketRaccoon/"
+  },
+  {
+    "id": "C198",
+    "name": "Rogue",
+    "series": "Series 3",
+    "description": "On Reveal: Steal the text from an enemy Ongoing card here.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Remove Text",
+      "Copy Text"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Rogue/"
+  },
+  {
+    "id": "C199",
+    "name": "Ronan the Accuser",
+    "series": "Series 3",
+    "description": "Ongoing: +2 Power for each card in your opponent's hand.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 5,
+    "power": 5,
+    "url": "https://snap.fan/cards/Ronan/"
+  },
+  {
+    "id": "C200",
+    "name": "Sabretooth",
+    "series": "Series 2",
+    "description": "When Destroyed: Return this to your hand. It costs 0.",
+    "abilities": [
+      "Destroy",
+      "Return To Hand",
+      "Set Cost"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Sabretooth/"
+  },
+  {
+    "id": "C201",
+    "name": "Sage",
+    "series": "Series 5",
+    "description": "On Reveal: +2 Power for each different Power among all other cards here.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 0,
+    "url": "https://snap.fan/cards/Sage/"
+  },
+  {
+    "id": "C202",
+    "name": "Sandman",
+    "series": "Series 2",
+    "description": "On Reveal: Next turn, cards cost 1 more. (maximum 6)",
+    "abilities": [
+      "Ongoing",
+      "Increase Cost"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/Sandman/"
+  },
+  {
+    "id": "C203",
+    "name": "Sauron",
+    "series": "Series 3",
+    "description": "On Reveal: Remove the abilities from all Ongoing cards in your deck.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Remove Text"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Sauron/"
+  },
+  {
+    "id": "C204",
+    "name": "Scarlet Witch",
+    "series": "Series 1",
+    "description": "On Reveal: Replace this location with a new one.",
+    "abilities": [
+      "On Reveal",
+      "Change Location"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/ScarletWitch/"
+  },
+  {
+    "id": "C205",
+    "name": "Scorpion",
+    "series": "Series 2",
+    "description": "On Reveal: Afflict cards in your opponent's hand with -1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Afflict"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Scorpion/"
+  },
+  {
+    "id": "C206",
+    "name": "Scream",
+    "series": "Series 5",
+    "description": "When an enemy card moves, steal 2 Power from it. (once per turn)",
+    "abilities": [
+      "Move",
+      "Steal Power"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/Scream/"
+  },
+  {
+    "id": "C207",
+    "name": "Selene",
+    "series": "Series 3",
+    "description": "On Reveal: Afflict the lowest-Power card in each player's hand with -3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Afflict"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Selene/"
+  },
+  {
+    "id": "C208",
+    "name": "Sentinel",
+    "series": "Starter",
+    "description": "On Reveal: Add another Sentinel to your hand.",
+    "abilities": [
+      "On Reveal",
+      "Add Card to Hand"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Sentinel/"
+  },
+  {
+    "id": "C209",
+    "name": "Sera",
+    "series": "Series 3",
+    "description": "Ongoing: Cards in your hand cost 1 less. (minimum 1)",
+    "abilities": [
+      "Ongoing",
+      "Decrease Cost"
+    ],
+    "cost": 5,
+    "power": 5,
+    "url": "https://snap.fan/cards/Sera/"
+  },
+  {
+    "id": "C210",
+    "name": "Sersi",
+    "series": "Series 5",
+    "description": "On Reveal: Transform your other characters here into random ones that cost 1 more. (if possible)",
+    "abilities": [
+      "On Reveal",
+      "Transform"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Sersi/"
+  },
+  {
+    "id": "C211",
+    "name": "Shadow King",
+    "series": "Series 3",
+    "description": "On Reveal: Reset all cards here to their original Power.",
+    "abilities": [
+      "On Reveal"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/ShadowKing/"
+  },
+  {
+    "id": "C212",
+    "name": "Shang-Chi",
+    "series": "Series 2",
+    "description": "On Reveal: Destroy an enemy card here that has 10 or more Power.",
+    "abilities": [
+      "On Reveal",
+      "Destroy"
+    ],
+    "cost": 4,
+    "power": 3,
+    "url": "https://snap.fan/cards/ShangChi/"
+  },
+  {
+    "id": "C213",
+    "name": "Shocker",
+    "series": "Starter",
+    "description": "None",
+    "abilities": [],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/Shocker/"
+  },
+  {
+    "id": "C214",
+    "name": "Shuri",
+    "series": "Series 3",
+    "description": "On Reveal: If you play your next card at this location, double its Power.",
+    "abilities": [
+      "On Reveal",
+      "Double Power"
+    ],
+    "cost": 4,
+    "power": 3,
+    "url": "https://snap.fan/cards/Shuri/"
+  },
+  {
+    "id": "C215",
+    "name": "Silk",
+    "series": "Series 3",
+    "description": "After ANY card is played here, move this to another location.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 2,
+    "power": 5,
+    "url": "https://snap.fan/cards/Silk/"
+  },
+  {
+    "id": "C216",
+    "name": "Silver Sable",
+    "series": "Series 5",
+    "description": "On Reveal: Steal 2 Power from the top card of your opponent's deck.",
+    "abilities": [
+      "On Reveal",
+      "Steal Power"
+    ],
+    "cost": 1,
+    "power": 0,
+    "url": "https://snap.fan/cards/SilverSable/"
+  },
+  {
+    "id": "C217",
+    "name": "Silver Samurai",
+    "series": "Series 3",
+    "description": "On Reveal: Each player discards the lowest-Power card from their hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/SilverSamurai/"
+  },
+  {
+    "id": "C218",
+    "name": "Silver Surfer",
+    "series": "Series 3",
+    "description": "On Reveal: Give your other 3-Cost cards +2 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/SilverSurfer/"
+  },
+  {
+    "id": "C219",
+    "name": "Spectrum",
+    "series": "Series 0",
+    "description": "On Reveal: Give your Ongoing cards +2 Power.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 6,
+    "power": 7,
+    "url": "https://snap.fan/cards/Spectrum/"
+  },
+  {
+    "id": "C220",
+    "name": "Spider-Ham",
+    "series": "Series 3",
+    "description": "On Reveal: Replace the text of a random character in your opponent's hand with oink!",
+    "abilities": [
+      "On Reveal",
+      "Remove Text"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/SpiderHam/"
+  },
+  {
+    "id": "C221",
+    "name": "Spider-Man",
+    "series": "Series 3",
+    "description": "On Reveal: Move to another location and pull an enemy card from here to there.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 2,
+    "power": 4,
+    "url": "https://snap.fan/cards/SpiderMan/"
+  },
+  {
+    "id": "C222",
+    "name": "Spider-Man 2099",
+    "series": "Series 3",
+    "description": "The first time this moves to any location, destroy an enemy card there.",
+    "abilities": [
+      "Destroy",
+      "Move"
+    ],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/SpiderMan2099/"
+  },
+  {
+    "id": "C223",
+    "name": "Spider-Punk",
+    "series": "Series 5",
+    "description": "You can move this once. When this moves to a location, steal 2 Power from the highest-Power enemy there.",
+    "abilities": [],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/SpiderPunk/"
+  },
+  {
+    "id": "C224",
+    "name": "Spider-Woman",
+    "series": "Series 1",
+    "description": "On Reveal: Afflict all enemy cards here with -1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Afflict"
+    ],
+    "cost": 5,
+    "power": 8,
+    "url": "https://snap.fan/cards/SpiderWoman/"
+  },
+  {
+    "id": "C225",
+    "name": "Star-Lord",
+    "series": "Starter",
+    "description": "On Reveal: If your opponent played a card here this turn, +4 Power.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Starlord/"
+  },
+  {
+    "id": "C226",
+    "name": "Starbrand",
+    "series": "Series 5",
+    "description": "Ongoing: Your opponent has +3 Power at each other location.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 3,
+    "power": 10,
+    "url": "https://snap.fan/cards/Starbrand/"
+  },
+  {
+    "id": "C227",
+    "name": "Stature",
+    "series": "Series 3",
+    "description": "Costs 1 if your opponent discarded a card this game.",
+    "abilities": [
+      "Discard",
+      "Set Cost"
+    ],
+    "cost": 5,
+    "power": 7,
+    "url": "https://snap.fan/cards/Stature/"
+  },
+  {
+    "id": "C228",
+    "name": "Stegron",
+    "series": "Series 3",
+    "description": "On Reveal: Move an enemy card here one location to the right.",
+    "abilities": [
+      "On Reveal",
+      "Move"
+    ],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/Stegron/"
+  },
+  {
+    "id": "C229",
+    "name": "Sunspot",
+    "series": "Series 2",
+    "description": "End of Turn: Gain +1 Power for each unspent Energy.",
+    "abilities": [
+      "Increase Power",
+      "End of Turn"
+    ],
+    "cost": 1,
+    "power": 0,
+    "url": "https://snap.fan/cards/Sunspot/"
+  },
+  {
+    "id": "C230",
+    "name": "Super-Skrull",
+    "series": "Series 3",
+    "description": "Ongoing: Has the Ongoing effects of all enemy cards.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 4,
+    "power": 2,
+    "url": "https://snap.fan/cards/SuperSkrull/"
+  },
+  {
+    "id": "C231",
+    "name": "Sword Master",
+    "series": "Series 1",
+    "description": "On Reveal: Discard an odd-costed card from your hand.",
+    "abilities": [
+      "On Reveal",
+      "Discard"
+    ],
+    "cost": 3,
+    "power": 7,
+    "url": "https://snap.fan/cards/SwordMaster/"
+  },
+  {
+    "id": "C232",
+    "name": "Taskmaster",
+    "series": "Series 3",
+    "description": "On Reveal: Set this card’s Power equal to that of the last card you played. (if able)",
+    "abilities": [
+      "On Reveal",
+      "Set Power"
+    ],
+    "cost": 6,
+    "power": 0,
+    "url": "https://snap.fan/cards/Taskmaster/"
+  },
+  {
+    "id": "C233",
+    "name": "The Collector",
+    "series": "Series 2",
+    "description": "When a card enters your hand from anywhere (except your deck), +1 Power.",
+    "abilities": [
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/TheCollector/"
+  },
+  {
+    "id": "C234",
+    "name": "The Fallen One",
+    "series": "Series 5",
+    "description": "On Reveal: Set your Max Energy equal to this card's Power.",
+    "abilities": [
+      "On Reveal",
+      "Max Energy"
+    ],
+    "cost": 5,
+    "power": 5,
+    "url": "https://snap.fan/cards/FallenOne/"
+  },
+  {
+    "id": "C235",
+    "name": "The Infinaut",
+    "series": "Series 2",
+    "description": "If you played a card last turn, you can't play this.",
+    "abilities": [],
+    "cost": 6,
+    "power": 20,
+    "url": "https://snap.fan/cards/Infinaut/"
+  },
+  {
+    "id": "C236",
+    "name": "The Living Tribunal",
+    "series": "Series 4",
+    "description": "Ongoing: Split your total Power evenly among all locations.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 6,
+    "power": 9,
+    "url": "https://snap.fan/cards/LivingTribunal/"
+  },
+  {
+    "id": "C237",
+    "name": "The Thing",
+    "series": "Starter",
+    "description": "It's clobberin' time!",
+    "abilities": [],
+    "cost": 4,
+    "power": 7,
+    "url": "https://snap.fan/cards/TheThing/"
+  },
+  {
+    "id": "C238",
+    "name": "Titania",
+    "series": "Series 3",
+    "description": "After ANY card is played here, this card switches sides.",
+    "abilities": [
+      "Switch Sides"
+    ],
+    "cost": 1,
+    "power": 5,
+    "url": "https://snap.fan/cards/Titania/"
+  },
+  {
+    "id": "C239",
+    "name": "Topaz",
+    "series": "Series 4",
+    "description": "After you play a card here, move it to the middle location.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 3,
+    "power": 5,
+    "url": "https://snap.fan/cards/Topaz/"
+  },
+  {
+    "id": "C240",
+    "name": "Toxin",
+    "series": "Series 5",
+    "description": "On Reveal: Return your other cards here to your hand. +2 Power for each returned.",
+    "abilities": [
+      "On Reveal",
+      "Return To Hand",
+      "Increase Power"
+    ],
+    "cost": 2,
+    "power": 2,
+    "url": "https://snap.fan/cards/Toxin/"
+  },
+  {
+    "id": "C241",
+    "name": "Typhoid Mary",
+    "series": "Series 3",
+    "description": "Ongoing: Your other cards here have -2 Power.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 4,
+    "power": 10,
+    "url": "https://snap.fan/cards/TyphoidMary/"
+  },
+  {
+    "id": "C242",
+    "name": "U.S. Agent",
+    "series": "Series 5",
+    "description": "Ongoing: 4, 5, and 6-Cost cards here have -3 Power.",
+    "abilities": [
+      "Ongoing",
+      "Afflict"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/USAgent/"
+  },
+  {
+    "id": "C243",
+    "name": "Valkyrie",
+    "series": "Series 3",
+    "description": "On Reveal: Set ALL cards here to 3 Power.",
+    "abilities": [
+      "On Reveal",
+      "Set Power"
+    ],
+    "cost": 5,
+    "power": 3,
+    "url": "https://snap.fan/cards/Valkyrie/"
+  },
+  {
+    "id": "C244",
+    "name": "Venom",
+    "series": "Series 3",
+    "description": "On Reveal: Destroy your other cards here. Add their Power to this card.",
+    "abilities": [
+      "On Reveal",
+      "Destroy",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 3,
+    "url": "https://snap.fan/cards/Venom/"
+  },
+  {
+    "id": "C245",
+    "name": "Viper",
+    "series": "Series 3",
+    "description": "On Reveal: One of your other cards here with the lowest Power switches sides.",
+    "abilities": [
+      "On Reveal",
+      "Switch Sides"
+    ],
+    "cost": 3,
+    "power": 4,
+    "url": "https://snap.fan/cards/Viper/"
+  },
+  {
+    "id": "C246",
+    "name": "Vision",
+    "series": "Series 2",
+    "description": "You can move this each turn.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 5,
+    "power": 9,
+    "url": "https://snap.fan/cards/Vision/"
+  },
+  {
+    "id": "C247",
+    "name": "Vulture",
+    "series": "Series 2",
+    "description": "When this card moves, +3 Power.",
+    "abilities": [
+      "Move",
+      "Increase Power"
+    ],
+    "cost": 1,
+    "power": 3,
+    "url": "https://snap.fan/cards/Vulture/"
+  },
+  {
+    "id": "C248",
+    "name": "Warpath",
+    "series": "Series 2",
+    "description": "Ongoing: If any of your locations are empty, +5 Power.",
+    "abilities": [
+      "Ongoing",
+      "Increase Power"
+    ],
+    "cost": 4,
+    "power": 5,
+    "url": "https://snap.fan/cards/Warpath/"
+  },
+  {
+    "id": "C249",
+    "name": "Wasp",
+    "series": "Series 3",
+    "description": "My secret power is that I get things done.",
+    "abilities": [],
+    "cost": 0,
+    "power": 1,
+    "url": "https://snap.fan/cards/Wasp/"
+  },
+  {
+    "id": "C250",
+    "name": "Wave",
+    "series": "Series 3",
+    "description": "On Reveal: All cards cost a maximum of 4 until the end of next turn.",
+    "abilities": [
+      "On Reveal",
+      "Decrease Cost"
+    ],
+    "cost": 3,
+    "power": 6,
+    "url": "https://snap.fan/cards/Wave/"
+  },
+  {
+    "id": "C251",
+    "name": "Wiccan",
+    "series": "Series 5",
+    "description": "On Reveal: If you've spent all your Energy on previous turns, +2 Max Energy.",
+    "abilities": [
+      "On Reveal",
+      "Max Energy"
+    ],
+    "cost": 4,
+    "power": 6,
+    "url": "https://snap.fan/cards/Wiccan/"
+  },
+  {
+    "id": "C252",
+    "name": "Wild Child",
+    "series": "Series 4",
+    "description": "Ongoing: +4 Power if you’ve discarded a card. +4 Power if one of your cards has been destroyed.",
+    "abilities": [
+      "Ongoing"
+    ],
+    "cost": 2,
+    "power": 1,
+    "url": "https://snap.fan/cards/WildChild/"
+  },
+  {
+    "id": "C253",
+    "name": "Wolfsbane",
+    "series": "Series 0",
+    "description": "On Reveal: +2 Power for each other card you have here.",
+    "abilities": [
+      "On Reveal",
+      "Increase Power"
+    ],
+    "cost": 3,
+    "power": 2,
+    "url": "https://snap.fan/cards/Wolfsbane/"
+  },
+  {
+    "id": "C254",
+    "name": "Wolverine",
+    "series": "Series 1",
+    "description": "When Discarded or Destroyed: Regenerate this with +2 Power at a random location.",
+    "abilities": [
+      "Destroy",
+      "Add Card At Location",
+      "Increase Power",
+      "Discard"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Wolverine/"
+  },
+  {
+    "id": "C255",
+    "name": "Wong",
+    "series": "Series 3",
+    "description": "Ongoing: Your On Reveal abilities here happen twice.",
+    "abilities": [
+      "On Reveal",
+      "Ongoing"
+    ],
+    "cost": 4,
+    "power": 2,
+    "url": "https://snap.fan/cards/Wong/"
+  },
+  {
+    "id": "C256",
+    "name": "X-23",
+    "series": "Series 4",
+    "description": "When Discarded or Destroyed: Regenerate this at a random location and you get +1 Energy next turn.",
+    "abilities": [
+      "Destroy",
+      "Discard"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/X23/"
+  },
+  {
+    "id": "C257",
+    "name": "Xorn",
+    "series": "Series 5",
+    "description": "After ANY 3 or 4-Cost card is played here, move it to another location.",
+    "abilities": [
+      "Move"
+    ],
+    "cost": 2,
+    "power": 3,
+    "url": "https://snap.fan/cards/Xorn/"
+  },
+  {
+    "id": "C258",
+    "name": "Yellowjacket",
+    "series": "Series 3",
+    "description": "On Reveal: Afflict your other cards here with -1 Power.",
+    "abilities": [
+      "On Reveal",
+      "Afflict"
+    ],
+    "cost": 0,
+    "power": 2,
+    "url": "https://snap.fan/cards/Yellowjacket/"
+  },
+  {
+    "id": "C259",
+    "name": "Yondu",
+    "series": "Series 1",
+    "description": "On Reveal: Banish the card that costs the least in your opponent's deck.",
+    "abilities": [
+      "On Reveal",
+      "Banish"
+    ],
+    "cost": 1,
+    "power": 2,
+    "url": "https://snap.fan/cards/Yondu/"
+  },
+  {
+    "id": "C260",
+    "name": "Zabu",
+    "series": "Series 3",
+    "description": "On Reveal: Give each 4-Cost card in your deck -1 Cost.",
+    "abilities": [
+      "On Reveal",
+      "Decrease Cost"
+    ],
+    "cost": 1,
+    "power": 1,
+    "url": "https://snap.fan/cards/Zabu/"
+  }
+]

@@ -1,0 +1,2330 @@
+ID: C001
+Name: Abomination
+Series: Starter
+Description: Foolish rabble! You are beneath me!
+Abilities: No Ability
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/Abomination/
+------------------------------------------------------------------
+ID: C002
+Name: Absorbing Man
+Series: Series 3
+Description: On Reveal: If the last card you played has an On Reveal, copy its text. (if able)
+Abilities: On Reveal, Copy Text
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/AbsorbingMan/
+------------------------------------------------------------------
+ID: C003
+Name: Adam Warlock
+Series: Series 3
+Description: End of Turn: Draw a card if you're winning here. Otherwise, +1 Power.
+Abilities: Card Draw, Increase Power, End of Turn
+Cost: 2
+Power: 0
+Url: https://snap.fan/cards/AdamWarlock/
+------------------------------------------------------------------
+ID: C004
+Name: Adamantium Infusion
+Series: Series 5
+Description: On Reveal: Revive your highest-Power destroyed card here with its Power doubled.
+Abilities: On Reveal
+Cost: 4
+Power: 0
+Url: https://snap.fan/cards/AdamantiumInfusion/
+------------------------------------------------------------------
+ID: C005
+Name: Aero
+Series: Series 3
+Description: On Reveal: The last card your opponent played moves to this location.
+Abilities: On Reveal, Move
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/Aero/
+------------------------------------------------------------------
+ID: C006
+Name: Agent 13
+Series: Series 2
+Description: On Reveal: Add a random card to your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Agent13/
+------------------------------------------------------------------
+ID: C007
+Name: Agent Coulson
+Series: Series 3
+Description: On Reveal: Add a random 4-Cost and 5-Cost card to your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/AgentCoulson/
+------------------------------------------------------------------
+ID: C008
+Name: Agent Venom
+Series: Series 5
+Description: On Reveal: Set the Power of all cards in your deck to 3.
+Abilities: On Reveal, Set Power
+Cost: 2
+Power: 5
+Url: https://snap.fan/cards/AgentVenom/
+------------------------------------------------------------------
+ID: C009
+Name: Agony
+Series: Series 4
+Description: After you play a card here, merge this into it.
+Abilities: Merge
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/Agony/
+------------------------------------------------------------------
+ID: C010
+Name: Air-Walker
+Series: Series 4
+Description: When Destroyed: Replace this with a 4-Cost card from your hand or deck.
+Abilities: Destroy, Add Card At Location
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/AirWalker/
+------------------------------------------------------------------
+ID: C011
+Name: Ajax
+Series: Series 5
+Description: Ongoing: +1 Power for each card in play afflicted with negative Power.
+Abilities: Ongoing, Increase Power, Afflict
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Ajax/
+------------------------------------------------------------------
+ID: C012
+Name: Alioth
+Series: Series 5
+Description: On Reveal: Remove the text from all unrevealed enemy characters here.
+Abilities: On Reveal, Remove Text
+Cost: 6
+Power: 8
+Url: https://snap.fan/cards/Alioth/
+------------------------------------------------------------------
+ID: C013
+Name: America Chavez
+Series: Series 1
+Description: On Reveal: Give the top card of your deck +3 Power.
+Abilities: On Reveal, Increase Power
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/AmericaChavez/
+------------------------------------------------------------------
+ID: C014
+Name: Angel
+Series: Series 1
+Description: When one of your cards is destroyed, this flies out of your hand or deck to replace it.
+Abilities: Destroy
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Angel/
+------------------------------------------------------------------
+ID: C015
+Name: Angela
+Series: Series 1
+Description: After you play a card here, +1 Power.
+Abilities: Increase Power
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Angela/
+------------------------------------------------------------------
+ID: C016
+Name: Annihilus
+Series: Series 4
+Description: On Reveal: Your cards with Power below 0 switch sides. Destroy those that can't.
+Abilities: On Reveal, Destroy, Switch Sides
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Annihilus/
+------------------------------------------------------------------
+ID: C017
+Name: Ant Man
+Series: Starter
+Description: Ongoing: If your side of this location is full, +4 Power.
+Abilities: Ongoing, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/AntMan/
+------------------------------------------------------------------
+ID: C018
+Name: Anti-Venom
+Series: Series 5
+Description: On Reveal: Set the Cost and Power of your deck's top card to 0.
+Abilities: On Reveal, Set Power, Set Cost
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/AntiVenom/
+------------------------------------------------------------------
+ID: C019
+Name: Apocalypse
+Series: Series 1
+Description: When Discarded: Put this back in your hand with +4 Power.
+Abilities: Increase Power, Discard
+Cost: 6
+Power: 8
+Url: https://snap.fan/cards/Apocalypse/
+------------------------------------------------------------------
+ID: C020
+Name: Ares
+Series: Series 5
+Description: On Reveal: Compare the Power of the top 3 cards of both decks. If your total is higher, +6 Power.
+Abilities: On Reveal, Increase Power
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/Ares/
+------------------------------------------------------------------
+ID: C021
+Name: Armor
+Series: Series 1
+Description: Ongoing: Cards here can't be destroyed.
+Abilities: Ongoing, Destroy
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Armor/
+------------------------------------------------------------------
+ID: C022
+Name: Arnim Zola
+Series: Series 3
+Description: On Reveal: Destroy one of your other cards here to copy it at the other locations.
+Abilities: On Reveal, Destroy, Add Card At Location
+Cost: 6
+Power: 0
+Url: https://snap.fan/cards/ArnimZola/
+------------------------------------------------------------------
+ID: C023
+Name: Astral Projection
+Series: Series 4
+Description: On Reveal: Copy the text of an On Reveal card in your hand.
+Abilities: On Reveal, Copy Text, Skill
+Cost: 4
+Power: 0
+Url: https://snap.fan/cards/AstralProjection/
+------------------------------------------------------------------
+ID: C024
+Name: Attuma
+Series: Series 3
+Description: End of Turn: Destroy one of your cards here with less Power.
+Abilities: Destroy, End of Turn
+Cost: 4
+Power: 10
+Url: https://snap.fan/cards/Attuma/
+------------------------------------------------------------------
+ID: C025
+Name: Baron Mordo
+Series: Series 3
+Description: On Reveal: The top card of your opponent's deck costs 6
+Abilities: On Reveal, Set Cost
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/BaronMordo/
+------------------------------------------------------------------
+ID: C026
+Name: Baron Zemo
+Series: Series 5
+Description: On Reveal: Recruit a card that costs the least from your opponent's deck to your side of this location.
+Abilities: On Reveal, Add Card At Location
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/BaronZemo/
+------------------------------------------------------------------
+ID: C027
+Name: Bast
+Series: Series 3
+Description: On Reveal: Set the Power of all cards in your hand to 3.
+Abilities: On Reveal, Set Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Bast/
+------------------------------------------------------------------
+ID: C028
+Name: Bastion
+Series: Series 5
+Description: On Reveal: Add copies of your other cards here to your hand. Set their Costs to 2 and Power to 3.
+Abilities: On Reveal, Add Card to Hand, Set Power, Set Cost
+Cost: 4
+Power: 3
+Url: https://snap.fan/cards/Bastion/
+------------------------------------------------------------------
+ID: C029
+Name: Beast
+Series: Series 3
+Description: On Reveal: Return your other cards here to your hand. They cost 1 less next turn.
+Abilities: On Reveal, Return To Hand, Decrease Cost
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Beast/
+------------------------------------------------------------------
+ID: C030
+Name: Bishop
+Series: Series 1
+Description: After you play a card, this gains +1 Power.
+Abilities: Increase Power
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/Bishop/
+------------------------------------------------------------------
+ID: C031
+Name: Black Bolt
+Series: Series 3
+Description: On Reveal: Discard the card that costs the least from your opponent's hand.
+Abilities: On Reveal, Discard
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/BlackBolt/
+------------------------------------------------------------------
+ID: C032
+Name: Black Cat
+Series: Series 3
+Description: End of Turn: Discard this from your hand.
+Abilities: Discard, End of Turn
+Cost: 1
+Power: 4
+Url: https://snap.fan/cards/BlackCat/
+------------------------------------------------------------------
+ID: C033
+Name: Black Panther
+Series: Series 3
+Description: On Reveal: Double this card's Power.
+Abilities: On Reveal, Increase Power, Double Power
+Cost: 5
+Power: 5
+Url: https://snap.fan/cards/BlackPanther/
+------------------------------------------------------------------
+ID: C034
+Name: Blade
+Series: Series 1
+Description: On Reveal: Discard the rightmost card from your hand.
+Abilities: On Reveal, Discard
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/Blade/
+------------------------------------------------------------------
+ID: C035
+Name: Blink
+Series: Series 5
+Description: On Reveal: Swap the last card you played with a card that costs more from your deck.
+Abilities: On Reveal, Add Card At Location, Add Card to Deck
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Blink/
+------------------------------------------------------------------
+ID: C036
+Name: Blob
+Series: Series 4
+Description: On Reveal: Merge cards from your deck into this until it gains 13 or more Power.
+Abilities: On Reveal, Merge
+Cost: 6
+Power: 0
+Url: https://snap.fan/cards/Blob/
+------------------------------------------------------------------
+ID: C037
+Name: Blue Marvel
+Series: Series 0
+Description: Ongoing: Your other cards have +1 Power.
+Abilities: Ongoing, Increase Power
+Cost: 5
+Power: 3
+Url: https://snap.fan/cards/BlueMarvel/
+------------------------------------------------------------------
+ID: C039
+Name: Bruce Banner
+Series: Series 5
+Description: End of Turn: If you have unspent Energy, 33% chance to turn into the hulk.
+Abilities: Transform, End of Turn
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/BruceBanner/
+------------------------------------------------------------------
+ID: C040
+Name: Cable
+Series: Series 1
+Description: On Reveal: Draw a card from your opponent's deck.
+Abilities: On Reveal, Add Card to Hand
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/Cable/
+------------------------------------------------------------------
+ID: C041
+Name: Caiera
+Series: Series 5
+Description: Ongoing: Your 1 and 6-Cost cards can't be destroyed.
+Abilities: Ongoing, Destroy
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Caiera/
+------------------------------------------------------------------
+ID: C042
+Name: Cannonball
+Series: Series 4
+Description: On Reveal: Move the highest-Power enemy card here away. If you can't, destroy it with a Rock.
+Abilities: On Reveal, Destroy, Move
+Cost: 5
+Power: 6
+Url: https://snap.fan/cards/Cannonball/
+------------------------------------------------------------------
+ID: C043
+Name: Captain America
+Series: Series 1
+Description: Ongoing: Your other Ongoing cards here have +2 Power.
+Abilities: Ongoing, Increase Power
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/CaptainAmerica/
+------------------------------------------------------------------
+ID: C044
+Name: Captain Marvel
+Series: Series 3
+Description: At the end of the game, move to a location that wins you the game. (If possible)
+Abilities: Move, Game End
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/CaptainMarvel/
+------------------------------------------------------------------
+ID: C045
+Name: Carnage
+Series: Series 1
+Description: On Reveal: Destroy your other cards here. +2 Power for each destroyed.
+Abilities: On Reveal, Destroy, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Carnage/
+------------------------------------------------------------------
+ID: C046
+Name: Cassandra Nova
+Series: Series 5
+Description: On Reveal: Steal 1 Power from each card in your opponent's deck.
+Abilities: On Reveal, Steal Power
+Cost: 3
+Power: 0
+Url: https://snap.fan/cards/CassandraNova/
+------------------------------------------------------------------
+ID: C047
+Name: Cerebro
+Series: Series 3
+Description: Ongoing: Your highest-Power cards have +3 Power.
+Abilities: Ongoing, Increase Power
+Cost: 3
+Power: 0
+Url: https://snap.fan/cards/Cerebro/
+------------------------------------------------------------------
+ID: C048
+Name: Cloak
+Series: Series 2
+Description: On Reveal: Next turn, both players can move cards to this location.
+Abilities: On Reveal, Move
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/Cloak/
+------------------------------------------------------------------
+ID: C049
+Name: Colleen Wing
+Series: Series 3
+Description: On Reveal: Discard the card that costs the least from your hand.
+Abilities: On Reveal, Discard
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/ColleenWing/
+------------------------------------------------------------------
+ID: C050
+Name: Colossus
+Series: Starter
+Description: Ongoing: Can't be destroyed, moved, or have its Power reduced.
+Abilities: Ongoing, Destroy, Move
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/Colossus/
+------------------------------------------------------------------
+ID: C051
+Name: Corvus Glaive
+Series: Series 4
+Description: On Reveal: Discard 2 cards from your hand to get +1 Max Energy.
+Abilities: On Reveal, Max Energy, Discard
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/CorvusGlaive/
+------------------------------------------------------------------
+ID: C052
+Name: Cosmic Ghost Rider
+Series: Series 5
+Description: On Reveal: Remove the text from front-row enemy cards here.
+Abilities: On Reveal, Remove Text
+Cost: 5
+Power: 6
+Url: https://snap.fan/cards/CosmicGhostRider/
+------------------------------------------------------------------
+ID: C053
+Name: Cosmo
+Series: Series 1
+Description: Ongoing: On Reveal abilities won't happen here.
+Abilities: On Reveal, Ongoing
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Cosmo/
+------------------------------------------------------------------
+ID: C054
+Name: Crystal
+Series: Series 3
+Description: On Reveal: Each player draws a card.
+Abilities: On Reveal, Card Draw
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Crystal/
+------------------------------------------------------------------
+ID: C055
+Name: Cyclops
+Series: Starter
+Description: Let's move, X-Men.
+Abilities: No Ability
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Cyclops/
+------------------------------------------------------------------
+ID: C056
+Name: Dagger
+Series: Series 3
+Description: When this moves to a location, +2 Power for each enemy card there.
+Abilities: Move, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Dagger/
+------------------------------------------------------------------
+ID: C057
+Name: Darkhawk
+Series: Series 4
+Description: Ongoing: +2 Power for each card in your opponent's deck.
+Abilities: Ongoing, Increase Power
+Cost: 5
+Power: 3
+Url: https://snap.fan/cards/Darkhawk/
+------------------------------------------------------------------
+ID: C058
+Name: Dazzler
+Series: Series 3
+Description: Ongoing: +2 Power for each location that's full on your side.
+Abilities: Ongoing, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Dazzler/
+------------------------------------------------------------------
+ID: C059
+Name: Deadpool
+Series: Series 3
+Description: When Destroyed: Return this to your hand with double the Power.
+Abilities: Destroy, Return To Hand, Increase Power, Double Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Deadpool/
+------------------------------------------------------------------
+ID: C060
+Name: Deafening Chord
+Series: Series 4
+Description: On Reveal: Afflict an enemy character here that costs 3 or less with -1 Power and remove its text.
+Abilities: On Reveal
+Cost: 4
+Power: 0
+Url: https://snap.fan/cards/DeafeningChord/
+------------------------------------------------------------------
+ID: C061
+Name: Death
+Series: Series 3
+Description: Costs 1 less for each card destroyed this game.
+Abilities: Destroy, Decrease Cost
+Cost: 8
+Power: 12
+Url: https://snap.fan/cards/Death/
+------------------------------------------------------------------
+ID: C062
+Name: Deathlok
+Series: Series 1
+Description: On Reveal: Destroy your other cards here.
+Abilities: On Reveal, Destroy
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Deathlok/
+------------------------------------------------------------------
+ID: C063
+Name: Destroyer
+Series: Series 3
+Description: On Reveal: Destroy your cards at other locations.
+Abilities: On Reveal, Destroy
+Cost: 6
+Power: 18
+Url: https://snap.fan/cards/Destroyer/
+------------------------------------------------------------------
+ID: C064
+Name: Devil Dinosaur
+Series: Series 1
+Description: Ongoing: +2 Power for each card in your hand.
+Abilities: Ongoing, Increase Power
+Cost: 5
+Power: 4
+Url: https://snap.fan/cards/DevilDinosaur/
+------------------------------------------------------------------
+ID: C065
+Name: Diamondback
+Series: Series 5
+Description: Ongoing: Enemy cards here afflicted with negative Power have an additional -2 Power.
+Abilities: Ongoing, Afflict
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Diamondback/
+------------------------------------------------------------------
+ID: C066
+Name: Doctor Octopus
+Series: Series 3
+Description: On Reveal: Pull the lowest-Power card from your opponent's hand to their side of this location.
+Abilities: On Reveal, Add Card At Location
+Cost: 4
+Power: 8
+Url: https://snap.fan/cards/DoctorOctopus/
+------------------------------------------------------------------
+ID: C067
+Name: Doctor Strange
+Series: Series 1
+Description: On Reveal: Move your highest-Power card(s) to this location.
+Abilities: On Reveal, Move
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/DoctorStrange/
+------------------------------------------------------------------
+ID: C068
+Name: Dracula
+Series: Series 3
+Description: At the end of the game, discard a card from your hand to gain its Power.
+Abilities: Discard, Game End, Set Power
+Cost: 4
+Power: 1
+Url: https://snap.fan/cards/Dracula/
+------------------------------------------------------------------
+ID: C069
+Name: Dragon Lord
+Series: Series 3
+Description: On Reveal: Put a card from your hand here.
+Abilities: On Reveal
+Cost: 5
+Power: 5
+Url: https://snap.fan/cards/DragonLord/
+------------------------------------------------------------------
+ID: C070
+Name: Dragon of the Moon
+Series: Series 5
+Description: On Reveal: Steal 1 Power from even-costed cards in ALL hands.
+Abilities: On Reveal
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/DragonOfTheMoon/
+------------------------------------------------------------------
+ID: C071
+Name: Drax
+Series: Series 3
+Description: On Reveal: If your opponent played a card here this turn, +4 Power.
+Abilities: On Reveal, Increase Power
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/Drax/
+------------------------------------------------------------------
+ID: C072
+Name: Electro
+Series: Series 3
+Description: On Reveal: +1 Max Energy. Ongoing: You can only play 1 card a turn.
+Abilities: On Reveal, Ongoing, Max Energy
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Electro/
+------------------------------------------------------------------
+ID: C073
+Name: Elektra
+Series: Series 1
+Description: On Reveal: Destroy an enemy 1-Cost card here.
+Abilities: On Reveal, Destroy
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Elektra/
+------------------------------------------------------------------
+ID: C074
+Name: Elixir
+Series: Series 5
+Description: On Reveal: One of your cards destroyed last turn gets revived here.
+Abilities: On Reveal, Destroy
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Elixir/
+------------------------------------------------------------------
+ID: C075
+Name: Elsa Bloodstone
+Series: Series 4
+Description: Each card you play to fill your side of a location gains +2 Power.
+Abilities: Increase Power
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/ElsaBloodstone/
+------------------------------------------------------------------
+ID: C076
+Name: Enchantress
+Series: Series 1
+Description: On Reveal: Remove the abilities from all Ongoing cards here.
+Abilities: On Reveal, Ongoing, Remove Text
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Enchantress/
+------------------------------------------------------------------
+ID: C077
+Name: Esme Cuckoo
+Series: Series 5
+Description: On Reveal: Copy a card from your deck into your hand. Set its Cost to 3 and Power to 4.
+Abilities: On Reveal, Add Card to Hand, Set Power, Set Cost
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/EsmeCuckoo/
+------------------------------------------------------------------
+ID: C078
+Name: Fantomex
+Series: Series 5
+Description: On Reveal: If you've had cards discarded and destroyed, afflict front-row enemy cards at each location with -2 Power.
+Abilities: On Reveal
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/Fantomex/
+------------------------------------------------------------------
+ID: C079
+Name: Fastball Special
+Series: Series 4
+Description: On Reveal: Destroy your highest-Power card here to afflict an enemy card here with that much negative Power.
+Abilities: On Reveal
+Cost: 4
+Power: 0
+Url: https://snap.fan/cards/FastballSpecial/
+------------------------------------------------------------------
+ID: C080
+Name: Fin Fang Foom
+Series: Series 5
+Description: On Reveal: Gain the Power of front-row enemy cards here.
+Abilities: On Reveal
+Cost: 7
+Power: 12
+Url: https://snap.fan/cards/FinFangFoom/
+------------------------------------------------------------------
+ID: C081
+Name: Firehair
+Series: Series 5
+Description: When one of your cards is destroyed, this uses that card’s On Reveal.
+Abilities: On Reveal, Destroy
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Firehair/
+------------------------------------------------------------------
+ID: C082
+Name: Firelord
+Series: Series 4
+Description: On Reveal: Revive one of your discarded or destroyed 3-Cost cards here.
+Abilities: On Reveal, Destroy, Add Card At Location, Discard
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/Firelord/
+------------------------------------------------------------------
+ID: C083
+Name: Frigga
+Series: Series 5
+Description: On Reveal: Add a copy of the last card you played to your hand. (if able)
+Abilities: On Reveal, Add Card to Hand
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Frigga/
+------------------------------------------------------------------
+ID: C084
+Name: Galacta
+Series: Series 5
+Description: Each turn, the first card you play at another location reveals with +2 Power.
+Abilities: Increase Power
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/Galacta/
+------------------------------------------------------------------
+ID: C085
+Name: Galactus
+Series: Series 5
+Description: On Reveal: If you're winning this location and this is your only card here, destroy all other locations.
+Abilities: On Reveal, Destroy
+Cost: 6
+Power: 6
+Url: https://snap.fan/cards/Galactus/
+------------------------------------------------------------------
+ID: C086
+Name: Gambit
+Series: Series 3
+Description: On Reveal: Discard a card from your hand to destroy a random enemy card.
+Abilities: On Reveal, Destroy, Discard
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Gambit/
+------------------------------------------------------------------
+ID: C087
+Name: Gamora
+Series: Series 1
+Description: On Reveal: If your opponent played a card here this turn, +4 Power.
+Abilities: On Reveal, Increase Power
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Gamora/
+------------------------------------------------------------------
+ID: C088
+Name: Ghost Rider
+Series: Series 3
+Description: On Reveal: Bring back one of your discarded cards to this location.
+Abilities: On Reveal, Add Card At Location, Discard
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/GhostRider/
+------------------------------------------------------------------
+ID: C089
+Name: Ghost-Spider
+Series: Series 3
+Description: On Reveal: The last card you played moves here.
+Abilities: On Reveal, Move
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/GhostSpider/
+------------------------------------------------------------------
+ID: C090
+Name: Giganto
+Series: Series 3
+Description: You can only play this at the left location.
+Abilities: Play At Location Restriction
+Cost: 6
+Power: 16
+Url: https://snap.fan/cards/Giganto/
+------------------------------------------------------------------
+ID: C091
+Name: Gilgamesh
+Series: Series 5
+Description: On Reveal: +1 Power for each of your other cards in play with increased Power.
+Abilities: On Reveal, Increase Power
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/Gilgamesh/
+------------------------------------------------------------------
+ID: C092
+Name: Gladiator
+Series: Series 4
+Description: On Reveal: Add a card from your opponent's deck to their side of this location. If it has less Power, destroy it.
+Abilities: On Reveal, Destroy, Add Card At Location
+Cost: 3
+Power: 8
+Url: https://snap.fan/cards/Gladiator/
+------------------------------------------------------------------
+ID: C093
+Name: Goliath
+Series: Series 5
+Description: Ongoing: +1 Power for each other Ongoing card you have in play.
+Abilities: Ongoing, Increase Power
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/Goliath/
+------------------------------------------------------------------
+ID: C094
+Name: Goose
+Series: Series 3
+Description: Ongoing: Nobody can play cards that cost 4, 5, or 6 here.
+Abilities: Ongoing
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Goose/
+------------------------------------------------------------------
+ID: C095
+Name: Gorr
+Series: Series 5
+Description: Ongoing: +2 Power for EACH On Reveal card in play.
+Abilities: On Reveal, Ongoing, Increase Power
+Cost: 6
+Power: -1
+Url: https://snap.fan/cards/Gorr/
+------------------------------------------------------------------
+ID: C096
+Name: Grand Master
+Series: Series 4
+Description: On Reveal: Move one of your other On Reveal cards here to the middle location. Its ability happens again.
+Abilities: On Reveal, Move
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/GrandMaster/
+------------------------------------------------------------------
+ID: C097
+Name: Green Goblin
+Series: Series 3
+Description: On Reveal: Switch sides.
+Abilities: On Reveal, Switch Sides
+Cost: 3
+Power: -4
+Url: https://snap.fan/cards/GreenGoblin/
+------------------------------------------------------------------
+ID: C098
+Name: Groot
+Series: Series 1
+Description: On Reveal: If your opponent played a card here this turn, +4 Power.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Groot/
+------------------------------------------------------------------
+ID: C099
+Name: Havok
+Series: Series 3
+Description: End of Turn: You lose 1 Max Energy and this gains +3 Power.
+Abilities: Increase Power, Max Energy, End of Turn
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/Havok/
+------------------------------------------------------------------
+ID: C100
+Name: Hawkeye
+Series: Starter
+Description: On Reveal: If you play a card at this location next turn, +3 Power.
+Abilities: On Reveal, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Hawkeye/
+------------------------------------------------------------------
+ID: C101
+Name: Hazmat
+Series: Series 3
+Description: On Reveal: Afflict all other cards with -1 Power.
+Abilities: On Reveal, Afflict
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Hazmat/
+------------------------------------------------------------------
+ID: C102
+Name: Headpool
+Series: Series 5
+Description: When Destroyed: Return this to your hand, then give all cards in your hand +1 Power.
+Abilities: Destroy, Return To Hand, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Headpool/
+------------------------------------------------------------------
+ID: C103
+Name: Heimdall
+Series: Series 1
+Description: On Reveal: Move your other cards one location to the left.
+Abilities: On Reveal, Move
+Cost: 6
+Power: 10
+Url: https://snap.fan/cards/Heimdall/
+------------------------------------------------------------------
+ID: C104
+Name: Hela
+Series: Series 3
+Description: On Reveal: For each different Cost among them, resurrect a card you discarded to a random location.
+Abilities: On Reveal, Add Card At Location, Discard
+Cost: 6
+Power: 6
+Url: https://snap.fan/cards/Hela/
+------------------------------------------------------------------
+ID: C105
+Name: Helicarrier
+Series: Series 3
+Description: When Discarded: Fill your hand with random cards.
+Abilities: Add Card to Hand, Discard
+Cost: 6
+Power: 12
+Url: https://snap.fan/cards/Helicarrier/
+------------------------------------------------------------------
+ID: C106
+Name: Hellcow
+Series: Series 3
+Description: On Reveal: Discard a card from your hand.
+Abilities: Discard, On Reveal
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/Hellcow/
+------------------------------------------------------------------
+ID: C107
+Name: Hellion
+Series: Series 4
+Description: On Reveal: Next turn, you can move cards to this location.
+Abilities: On Reveal, Move
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Hellion/
+------------------------------------------------------------------
+ID: C108
+Name: Hercules
+Series: Series 3
+Description: The first time another one of your cards moves here each turn, move it to another location.
+Abilities: Move
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Hercules/
+------------------------------------------------------------------
+ID: C109
+Name: Hobgoblin
+Series: Series 2
+Description: On Reveal: Switch sides.
+Abilities: On Reveal, Switch Sides
+Cost: 5
+Power: -8
+Url: https://snap.fan/cards/Hobgoblin/
+------------------------------------------------------------------
+ID: C110
+Name: Hope Summers
+Series: Series 5
+Description: After you play a card here, you get +1 Energy next turn.
+Abilities: Bonus Energy
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/HopeSummers/
+------------------------------------------------------------------
+ID: C111
+Name: Hulk
+Series: Starter
+Description: HULK SMASH!
+Abilities: No Ability
+Cost: 6
+Power: 14
+Url: https://snap.fan/cards/Hulk/
+------------------------------------------------------------------
+ID: C112
+Name: Hulkbuster
+Series: Series 1
+Description: On Reveal: Merge this into one of your cards here.
+Abilities: On Reveal, Merge
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Hulkbuster/
+------------------------------------------------------------------
+ID: C113
+Name: Human Torch
+Series: Series 3
+Description: When this moves, double its Power.
+Abilities: Move, Increase Power
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/HumanTorch/
+------------------------------------------------------------------
+ID: C114
+Name: Hydra Stomper
+Series: Series 5
+Description: Ongoing: +1 Power for each time one of your cards moved this game.
+Abilities: Ongoing, Move
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/HydraStomper/
+------------------------------------------------------------------
+ID: C115
+Name: Hydro-Man
+Series: Series 4
+Description: On Reveal: Set the Cost of EACH deck's top card to 1.
+Abilities: On Reveal
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/HydroMan/
+------------------------------------------------------------------
+ID: C116
+Name: Iceman
+Series: Series 2
+Description: On Reveal: Give a card in your opponent's hand +1 Cost. (maximum 6)
+Abilities: On Reveal, Increase Cost
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Iceman/
+------------------------------------------------------------------
+ID: C117
+Name: Iron Fist
+Series: Series 1
+Description: On Reveal: After you play your next card, move it one location to the left.
+Abilities: On Reveal, Move
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/IronFist/
+------------------------------------------------------------------
+ID: C118
+Name: Iron Man
+Series: Starter
+Description: Ongoing: Your total Power is doubled here.
+Abilities: Ongoing, Double Power
+Cost: 5
+Power: 0
+Url: https://snap.fan/cards/IronMan/
+------------------------------------------------------------------
+ID: C119
+Name: Iron Patriot
+Series: Series 5
+Description: On Reveal: Add a random 4, 5, or 6-Cost card to your hand. If you’re winning here after next turn, give it -3 Cost.
+Abilities: On Reveal, Add Card to Hand, Decrease Cost
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/IronPatriot/
+------------------------------------------------------------------
+ID: C120
+Name: Ironheart
+Series: Starter
+Description: On Reveal: Give 2 of your other cards +3 Power.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 0
+Url: https://snap.fan/cards/Ironheart/
+------------------------------------------------------------------
+ID: C121
+Name: Jane Foster Mighty Thor
+Series: Series 3
+Description: On Reveal: Draw all cards that cost 0 from your deck.
+Abilities: On Reveal, Add Card to Hand
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/JaneFoster/
+------------------------------------------------------------------
+ID: C122
+Name: Jean Grey
+Series: Series 3
+Description: Ongoing: Players must play their first card here each turn. (if possible)
+Abilities: Ongoing, Play At Location Restriction
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/JeanGrey/
+------------------------------------------------------------------
+ID: C123
+Name: Jeff the Baby Land Shark
+Series: Series 5
+Description: You can move this once. Nothing can stop you from moving or playing this to any location.
+Abilities: Move
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/JeffTheBabyLandShark/
+------------------------------------------------------------------
+ID: C124
+Name: Jessica Jones
+Series: Starter
+Description: On Reveal: If you don't play a card at this location next turn, +5 Power.
+Abilities: On Reveal, Increase Power
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/JessicaJones/
+------------------------------------------------------------------
+ID: C125
+Name: Jim Hammond Human Torch
+Series: Series 5
+Description: At the start of each turn, +1 Power for each bonus Energy you have.
+Abilities: Increase Power, Bonus Energy
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/JimHammond/
+------------------------------------------------------------------
+ID: C126
+Name: Joaquin Torres Falcon II
+Series: Series 5
+Description: Ongoing: The On Reveal abilities of your 1-Cost cards here happen twice.
+Abilities: On Reveal, Ongoing
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/JoaquinTorres/
+------------------------------------------------------------------
+ID: C127
+Name: Jubilee
+Series: Series 2
+Description: On Reveal: Add the top card of your deck to this location.
+Abilities: On Reveal, Add Card At Location
+Cost: 4
+Power: 1
+Url: https://snap.fan/cards/Jubilee/
+------------------------------------------------------------------
+ID: C128
+Name: Juggernaut
+Series: Series 3
+Description: On Reveal: Move away all enemy cards played here this turn. (including unrevealed cards)
+Abilities: On Reveal, Move
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/Juggernaut/
+------------------------------------------------------------------
+ID: C129
+Name: Ka-Zar
+Series: Series 0
+Description: Ongoing: Your 1-Cost cards have +1 Power.
+Abilities: Ongoing, Increase Power
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/KaZar/
+------------------------------------------------------------------
+ID: C130
+Name: Killmonger
+Series: Series 2
+Description: On Reveal: Destroy ALL 1-Cost cards.
+Abilities: On Reveal, Destroy
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Killmonger/
+------------------------------------------------------------------
+ID: C131
+Name: Kingpin
+Series: Series 3
+Description: When an enemy card moves here, afflict it with -2 Power.
+Abilities: Move, Afflict
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Kingpin/
+------------------------------------------------------------------
+ID: C132
+Name: Kitty Pryde
+Series: Series 3
+Description: When this returns to your hand, +1 Power. Returns at the start of each turn.
+Abilities: Return To Hand, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/KittyPryde/
+------------------------------------------------------------------
+ID: C133
+Name: Klaw
+Series: Series 1
+Description: Ongoing: The location to the right has +7 Power.
+Abilities: Ongoing
+Cost: 5
+Power: 4
+Url: https://snap.fan/cards/Klaw/
+------------------------------------------------------------------
+ID: C134
+Name: Knull
+Series: Series 3
+Description: Ongoing: Has the combined Power of all cards destroyed this game.
+Abilities: Ongoing, Destroy, Increase Power
+Cost: 6
+Power: 0
+Url: https://snap.fan/cards/Knull/
+------------------------------------------------------------------
+ID: C135
+Name: Korg
+Series: Series 1
+Description: On Reveal: Shuffle a Rock into your opponent's deck.
+Abilities: On Reveal, Add Card to Deck, No Ability
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Korg/
+------------------------------------------------------------------
+ID: C136
+Name: Kraven
+Series: Series 1
+Description: When a card moves here, this gains +2 Power.
+Abilities: Move, Increase Power
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Kraven/
+------------------------------------------------------------------
+ID: C137
+Name: Lady Deathstrike
+Series: Series 3
+Description: On Reveal: Destroy each card here with 3 or less Power.
+Abilities: On Reveal, Destroy
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/LadyDeathstrike/
+------------------------------------------------------------------
+ID: C138
+Name: Lady Sif
+Series: Series 1
+Description: On Reveal: Discard the card that costs the most from your hand.
+Abilities: On Reveal, Discard
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/LadySif/
+------------------------------------------------------------------
+ID: C139
+Name: Laufey
+Series: Series 4
+Description: On Reveal: Steal 1 Power from each other card here.
+Abilities: On Reveal, Steal Power
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/Laufey/
+------------------------------------------------------------------
+ID: C140
+Name: Leech
+Series: Series 2
+Description: On Reveal: Remove the text from 6-Cost cards in your opponent's hand.
+Abilities: On Reveal, Remove Text
+Cost: 4
+Power: 4
+Url: https://snap.fan/cards/Leech/
+------------------------------------------------------------------
+ID: C141
+Name: Legion
+Series: Series 4
+Description: On Reveal: Replace each other location with this one.
+Abilities: On Reveal
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Legion/
+------------------------------------------------------------------
+ID: C142
+Name: Lizard
+Series: Series 1
+Description: Ongoing: -4 Power if your opponent has 4 cards here.
+Abilities: Ongoing, Afflict
+Cost: 2
+Power: 6
+Url: https://snap.fan/cards/Lizard/
+------------------------------------------------------------------
+ID: C143
+Name: Luke Cage
+Series: Series 3
+Description: Ongoing: Your cards can't have their Power reduced.
+Abilities: Ongoing, Afflict
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/LukeCage/
+------------------------------------------------------------------
+ID: C144
+Name: M.O.D.O.K.
+Series: Series 3
+Description: On Reveal: Discard your hand.
+Abilities: On Reveal, Discard
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Modok/
+------------------------------------------------------------------
+ID: C145
+Name: M'Baku
+Series: Series 3
+Description: At the end of the game, this jumps from your deck to your lowest-Power location. (that isn't full)
+Abilities: Game End
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/MBaku/
+------------------------------------------------------------------
+ID: C146
+Name: Madame Web
+Series: Series 5
+Description: Ongoing: You can move one of your other cards away from here each turn.
+Abilities: Ongoing, Move
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/MadameWeb/
+------------------------------------------------------------------
+ID: C147
+Name: Magik
+Series: Series 3
+Description: On Reveal: Replace this location with 'Limbo'. Doesn't work after turn 5.
+Abilities: On Reveal, Change Location
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/Magik/
+------------------------------------------------------------------
+ID: C148
+Name: Magneto
+Series: Series 3
+Description: On Reveal: Move all enemy 3 and 4-Cost cards to this location.
+Abilities: On Reveal, Move
+Cost: 6
+Power: 12
+Url: https://snap.fan/cards/Magneto/
+------------------------------------------------------------------
+ID: C149
+Name: Majestic Wingbeat
+Series: Series 4
+Description: On Reveal: Give the leftmost card in your hand +2 Power. If it’s 5-Cost or higher, -1 Cost too.
+Abilities: On Reveal
+Cost: 3
+Power: 0
+Url: https://snap.fan/cards/MajesticWingbeat/
+------------------------------------------------------------------
+ID: C150
+Name: Man-Spider
+Series: Series 5
+Description: On Reveal: Merge the last card you played into this. When this merges, double its Power.
+Abilities: On Reveal
+Cost: 5
+Power: 1
+Url: https://snap.fan/cards/ManSpider/
+------------------------------------------------------------------
+ID: C151
+Name: Man-Thing
+Series: Series 4
+Description: Ongoing: 1, 2, and 3-Cost cards here have -2 Power.
+Abilities: Ongoing, Afflict
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/ManThing/
+------------------------------------------------------------------
+ID: C152
+Name: Mantis
+Series: Series 1
+Description: On Reveal: If your opponent played any cards here this turn, copy one of them into your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Mantis/
+------------------------------------------------------------------
+ID: C153
+Name: Maria Hill
+Series: Series 3
+Description: On Reveal: Add a random 2-Cost card to your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/MariaHill/
+------------------------------------------------------------------
+ID: C154
+Name: Martyr
+Series: Series 3
+Description: At the end of the game, move to a location that LOSES you the game. (if possible)
+Abilities: Move, Game End
+Cost: 1
+Power: 5
+Url: https://snap.fan/cards/Martyr/
+------------------------------------------------------------------
+ID: C155
+Name: Maximus
+Series: Series 3
+Description: On Reveal: Your opponent draws 2 cards.
+Abilities: On Reveal, Card Draw
+Cost: 2
+Power: 6
+Url: https://snap.fan/cards/Maximus/
+------------------------------------------------------------------
+ID: C156
+Name: Medusa
+Series: Starter
+Description: On Reveal: If this is at the middle location, +3 Power.
+Abilities: On Reveal, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Medusa/
+------------------------------------------------------------------
+ID: C157
+Name: Mercury
+Series: Series 4
+Description: You can move this once. Ongoing: Enemy cards here can't move.
+Abilities: Ongoing, Move
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Mercury/
+------------------------------------------------------------------
+ID: C158
+Name: Mirage
+Series: Series 3
+Description: On Reveal: Copy the character that costs the least from your opponent's hand into your hand. Give it +2 Power.
+Abilities: On Reveal, Add Card to Hand, Increase Power
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Mirage/
+------------------------------------------------------------------
+ID: C159
+Name: Misery
+Series: Series 5
+Description: On Reveal: Repeat the On Reveal abilities of your other cards here, then destroy them.
+Abilities: On Reveal, Destroy
+Cost: 4
+Power: 8
+Url: https://snap.fan/cards/Misery/
+------------------------------------------------------------------
+ID: C160
+Name: Mister Fantastic
+Series: Series 0
+Description: Ongoing: Adjacent locations have +3 Power.
+Abilities: Ongoing
+Cost: 3
+Power: 1
+Url: https://snap.fan/cards/MrFantastic/
+------------------------------------------------------------------
+ID: C161
+Name: Mister Negative
+Series: Series 3
+Description: On Reveal: Swap the Power and Cost of all cards in your deck.
+Abilities: On Reveal, Set Power, Set Cost
+Cost: 4
+Power: -1
+Url: https://snap.fan/cards/MrNegative/
+------------------------------------------------------------------
+ID: C162
+Name: Misty Knight
+Series: Starter
+Description: We've got to save this city.
+Abilities: No Ability
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/MistyKnight/
+------------------------------------------------------------------
+ID: C163
+Name: Mobius M. Mobius
+Series: Series 3
+Description: Ongoing: Your Costs can't be increased. Your opponent's Costs can't be reduced.
+Abilities: Ongoing, Increase Cost, Decrease Cost
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/MobiusMMobius/
+------------------------------------------------------------------
+ID: C164
+Name: Mojo
+Series: Series 3
+Description: Ongoing: If both sides here are full, +6 Power.
+Abilities: Ongoing, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Mojo/
+------------------------------------------------------------------
+ID: C165
+Name: Moon Girl
+Series: Series 1
+Description: On Reveal: Copy your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/MoonGirl/
+------------------------------------------------------------------
+ID: C166
+Name: Moon Knight
+Series: Series 3
+Description: On Reveal: Discard an even-costed card from each player's hand.
+Abilities: On Reveal, Discard
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/MoonKnight/
+------------------------------------------------------------------
+ID: C167
+Name: Morbius
+Series: Series 2
+Description: Ongoing: +2 Power for each time you discarded a card this game.
+Abilities: Ongoing, Discard
+Cost: 2
+Power: 0
+Url: https://snap.fan/cards/Morbius/
+------------------------------------------------------------------
+ID: C168
+Name: Ms. Marvel
+Series: Series 4
+Description: Ongoing: Your adjacent locations with 2+ cards and no repeated Costs have +5 Power.
+Abilities: Ongoing
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/MsMarvel/
+------------------------------------------------------------------
+ID: C169
+Name: Mystique
+Series: Series 3
+Description: On Reveal: If the last card you played has an Ongoing, copy its text. (if able)
+Abilities: On Reveal, Ongoing, Copy Text
+Cost: 3
+Power: 1
+Url: https://snap.fan/cards/Mystique/
+------------------------------------------------------------------
+ID: C170
+Name: Nakia
+Series: Series 2
+Description: On Reveal: Give all cards in your hand +1 Power.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Nakia/
+------------------------------------------------------------------
+ID: C171
+Name: Namor
+Series: Series 1
+Description: Ongoing: +5 Power if this is your only card here.
+Abilities: Ongoing, Increase Power
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/Namor/
+------------------------------------------------------------------
+ID: C172
+Name: Namora
+Series: Series 5
+Description: On Reveal: Give +5 Power to each of your cards alone at another location.
+Abilities: On Reveal, Increase Power
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Namora/
+------------------------------------------------------------------
+ID: C173
+Name: Nebula
+Series: Series 3
+Description: Each turn your opponent doesn't play a card here, +2 Power. (except the turn you play this)
+Abilities: Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Nebula/
+------------------------------------------------------------------
+ID: C174
+Name: Negasonic Teenage Warhead
+Series: Series 3
+Description: After an enemy character is played here, destroy it. (once per game)
+Abilities: Destroy
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/NegasonicTeenageWarhead/
+------------------------------------------------------------------
+ID: C175
+Name: Nick Fury
+Series: Series 3
+Description: On Reveal: Add 3 random 6-Cost cards to your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/NickFury/
+------------------------------------------------------------------
+ID: C176
+Name: Nightcrawler
+Series: Series 0
+Description: You can move this once.
+Abilities: Move
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Nightcrawler/
+------------------------------------------------------------------
+ID: C177
+Name: Nimrod
+Series: Series 3
+Description: When Destroyed: Add a copy of this to each other location.
+Abilities: Destroy, Add Card At Location
+Cost: 5
+Power: 6
+Url: https://snap.fan/cards/Nimrod/
+------------------------------------------------------------------
+ID: C178
+Name: Nocturne
+Series: Series 5
+Description: You can move this once. When this moves, replace its location with a random new one.
+Abilities: Move, Change Location
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Nocturne/
+------------------------------------------------------------------
+ID: C179
+Name: Nova
+Series: Series 1
+Description: When Destroyed: Give your cards +1 Power.
+Abilities: Destroy, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Nova/
+------------------------------------------------------------------
+ID: C180
+Name: Odin
+Series: Series 0
+Description: On Reveal: Repeat the On Reveal abilities of your other cards here.
+Abilities: On Reveal
+Cost: 6
+Power: 9
+Url: https://snap.fan/cards/Odin/
+------------------------------------------------------------------
+ID: C181
+Name: Okoye
+Series: Series 2
+Description: On Reveal: Give every card in your deck +1 Power.
+Abilities: On Reveal, Increase Power
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Okoye/
+------------------------------------------------------------------
+ID: C182
+Name: Omega Red
+Series: Series 3
+Description: Ongoing: If you're winning here, +3 Power to other locations.
+Abilities: Ongoing
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/OmegaRed/
+------------------------------------------------------------------
+ID: C183
+Name: Orka
+Series: Series 3
+Description: Ongoing: +7 Power if this is your only card here.
+Abilities: Ongoing, Increase Power
+Cost: 6
+Power: 11
+Url: https://snap.fan/cards/Orka/
+------------------------------------------------------------------
+ID: C184
+Name: Patriot
+Series: Series 3
+Description: Ongoing: Your cards with no abilities have +2 Power.
+Abilities: Ongoing, Increase Power
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/Patriot/
+------------------------------------------------------------------
+ID: C185
+Name: Phastos
+Series: Series 4
+Description: On Reveal: Give each card in your deck -1 Cost or +2 Power.
+Abilities: On Reveal, Increase Power, Decrease Cost
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Phastos/
+------------------------------------------------------------------
+ID: C186
+Name: Pixie
+Series: Series 4
+Description: On Reveal: Shuffle the base Costs of all cards in your deck that started there.
+Abilities: On Reveal, Set Cost
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Pixie/
+------------------------------------------------------------------
+ID: C187
+Name: Polaris
+Series: Series 3
+Description: On Reveal: Move an enemy 1 or 2-Cost card to this location.
+Abilities: On Reveal, Move
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Polaris/
+------------------------------------------------------------------
+ID: C188
+Name: Professor X
+Series: Series 1
+Description: Ongoing: Moving is the only way to add or remove a character from here.
+Abilities: Ongoing, Move, Play At Location Restriction
+Cost: 5
+Power: 2
+Url: https://snap.fan/cards/ProfessorX/
+------------------------------------------------------------------
+ID: C189
+Name: Psylocke
+Series: Series 3
+Description: On Reveal: Next turn, you get +1 Energy.
+Abilities: On Reveal, Bonus Energy
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Psylocke/
+------------------------------------------------------------------
+ID: C190
+Name: Punisher
+Series: Starter
+Description: Ongoing: +1 Power for each enemy card here.
+Abilities: Ongoing, Increase Power
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Punisher/
+------------------------------------------------------------------
+ID: C191
+Name: Quake
+Series: Series 3
+Description: On Reveal: Swap the positions of the other two locations.
+Abilities: On Reveal, Change Location
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Quake/
+------------------------------------------------------------------
+ID: C192
+Name: Quicksilver
+Series: Starter
+Description: None
+Abilities: None
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Quicksilver/
+------------------------------------------------------------------
+ID: C193
+Name: Red Guardian
+Series: Series 5
+Description: On Reveal: Afflict the lowest-Power enemy card here with -2 Power and remove its text.
+Abilities: On Reveal, Afflict, Remove Text
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/RedGuardian/
+------------------------------------------------------------------
+ID: C194
+Name: Red Skull
+Series: Series 3
+Description: Ongoing: Enemy cards here have +2 Power.
+Abilities: Ongoing, Increase Power
+Cost: 5
+Power: 14
+Url: https://snap.fan/cards/RedSkull/
+------------------------------------------------------------------
+ID: C195
+Name: Redwing
+Series: Series 5
+Description: The first time this moves, add a card from your hand to the old location.
+Abilities: Add Card At Location, Move
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Redwing/
+------------------------------------------------------------------
+ID: C196
+Name: Rescue
+Series: Series 3
+Description: On Reveal: If you play a card at this location next turn, +5 Power.
+Abilities: On Reveal, Increase Power
+Cost: 4
+Power: 4
+Url: https://snap.fan/cards/Rescue/
+------------------------------------------------------------------
+ID: C197
+Name: Rocket Raccoon
+Series: Series 1
+Description: On Reveal: If your opponent played a card here this turn, +4 Power.
+Abilities: On Reveal, Increase Power
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/RocketRaccoon/
+------------------------------------------------------------------
+ID: C198
+Name: Rogue
+Series: Series 3
+Description: On Reveal: Steal the text from an enemy Ongoing card here.
+Abilities: On Reveal, Ongoing, Remove Text, Copy Text
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Rogue/
+------------------------------------------------------------------
+ID: C199
+Name: Ronan the Accuser
+Series: Series 3
+Description: Ongoing: +2 Power for each card in your opponent's hand.
+Abilities: Ongoing, Increase Power
+Cost: 5
+Power: 5
+Url: https://snap.fan/cards/Ronan/
+------------------------------------------------------------------
+ID: C200
+Name: Sabretooth
+Series: Series 2
+Description: When Destroyed: Return this to your hand. It costs 0.
+Abilities: Destroy, Return To Hand, Set Cost
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Sabretooth/
+------------------------------------------------------------------
+ID: C201
+Name: Sage
+Series: Series 5
+Description: On Reveal: +2 Power for each different Power among all other cards here.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 0
+Url: https://snap.fan/cards/Sage/
+------------------------------------------------------------------
+ID: C202
+Name: Sandman
+Series: Series 2
+Description: On Reveal: Next turn, cards cost 1 more. (maximum 6)
+Abilities: Ongoing, Increase Cost
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/Sandman/
+------------------------------------------------------------------
+ID: C203
+Name: Sauron
+Series: Series 3
+Description: On Reveal: Remove the abilities from all Ongoing cards in your deck.
+Abilities: On Reveal, Ongoing, Remove Text
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Sauron/
+------------------------------------------------------------------
+ID: C204
+Name: Scarlet Witch
+Series: Series 1
+Description: On Reveal: Replace this location with a new one.
+Abilities: On Reveal, Change Location
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/ScarletWitch/
+------------------------------------------------------------------
+ID: C205
+Name: Scorpion
+Series: Series 2
+Description: On Reveal: Afflict cards in your opponent's hand with -1 Power.
+Abilities: On Reveal, Afflict
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Scorpion/
+------------------------------------------------------------------
+ID: C206
+Name: Scream
+Series: Series 5
+Description: When an enemy card moves, steal 2 Power from it. (once per turn)
+Abilities: Move, Steal Power
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/Scream/
+------------------------------------------------------------------
+ID: C207
+Name: Selene
+Series: Series 3
+Description: On Reveal: Afflict the lowest-Power card in each player's hand with -3 Power.
+Abilities: On Reveal, Afflict
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Selene/
+------------------------------------------------------------------
+ID: C208
+Name: Sentinel
+Series: Starter
+Description: On Reveal: Add another Sentinel to your hand.
+Abilities: On Reveal, Add Card to Hand
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Sentinel/
+------------------------------------------------------------------
+ID: C209
+Name: Sera
+Series: Series 3
+Description: Ongoing: Cards in your hand cost 1 less. (minimum 1)
+Abilities: Ongoing, Decrease Cost
+Cost: 5
+Power: 5
+Url: https://snap.fan/cards/Sera/
+------------------------------------------------------------------
+ID: C210
+Name: Sersi
+Series: Series 5
+Description: On Reveal: Transform your other characters here into random ones that cost 1 more. (if possible)
+Abilities: On Reveal, Transform
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Sersi/
+------------------------------------------------------------------
+ID: C211
+Name: Shadow King
+Series: Series 3
+Description: On Reveal: Reset all cards here to their original Power.
+Abilities: On Reveal
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/ShadowKing/
+------------------------------------------------------------------
+ID: C212
+Name: Shang-Chi
+Series: Series 2
+Description: On Reveal: Destroy an enemy card here that has 10 or more Power.
+Abilities: On Reveal, Destroy
+Cost: 4
+Power: 3
+Url: https://snap.fan/cards/ShangChi/
+------------------------------------------------------------------
+ID: C213
+Name: Shocker
+Series: Starter
+Description: None
+Abilities: No Ability
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/Shocker/
+------------------------------------------------------------------
+ID: C214
+Name: Shuri
+Series: Series 3
+Description: On Reveal: If you play your next card at this location, double its Power.
+Abilities: On Reveal, Double Power
+Cost: 4
+Power: 3
+Url: https://snap.fan/cards/Shuri/
+------------------------------------------------------------------
+ID: C215
+Name: Silk
+Series: Series 3
+Description: After ANY card is played here, move this to another location.
+Abilities: Move
+Cost: 2
+Power: 5
+Url: https://snap.fan/cards/Silk/
+------------------------------------------------------------------
+ID: C216
+Name: Silver Sable
+Series: Series 5
+Description: On Reveal: Steal 2 Power from the top card of your opponent's deck.
+Abilities: On Reveal, Steal Power
+Cost: 1
+Power: 0
+Url: https://snap.fan/cards/SilverSable/
+------------------------------------------------------------------
+ID: C217
+Name: Silver Samurai
+Series: Series 3
+Description: On Reveal: Each player discards the lowest-Power card from their hand.
+Abilities: On Reveal, Discard
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/SilverSamurai/
+------------------------------------------------------------------
+ID: C218
+Name: Silver Surfer
+Series: Series 3
+Description: On Reveal: Give your other 3-Cost cards +2 Power.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/SilverSurfer/
+------------------------------------------------------------------
+ID: C219
+Name: Spectrum
+Series: Series 0
+Description: On Reveal: Give your Ongoing cards +2 Power.
+Abilities: On Reveal, Ongoing, Increase Power
+Cost: 6
+Power: 7
+Url: https://snap.fan/cards/Spectrum/
+------------------------------------------------------------------
+ID: C220
+Name: Spider-Ham
+Series: Series 3
+Description: On Reveal: Replace the text of a random character in your opponent's hand with oink!
+Abilities: On Reveal, Remove Text
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/SpiderHam/
+------------------------------------------------------------------
+ID: C221
+Name: Spider-Man
+Series: Series 3
+Description: On Reveal: Move to another location and pull an enemy card from here to there.
+Abilities: On Reveal, Move
+Cost: 2
+Power: 4
+Url: https://snap.fan/cards/SpiderMan/
+------------------------------------------------------------------
+ID: C222
+Name: Spider-Man 2099
+Series: Series 3
+Description: The first time this moves to any location, destroy an enemy card there.
+Abilities: Destroy, Move
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/SpiderMan2099/
+------------------------------------------------------------------
+ID: C223
+Name: Spider-Punk
+Series: Series 5
+Description: You can move this once. When this moves to a location, steal 2 Power from the highest-Power enemy there.
+Abilities: No Ability
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/SpiderPunk/
+------------------------------------------------------------------
+ID: C224
+Name: Spider-Woman
+Series: Series 1
+Description: On Reveal: Afflict all enemy cards here with -1 Power.
+Abilities: On Reveal, Afflict
+Cost: 5
+Power: 8
+Url: https://snap.fan/cards/SpiderWoman/
+------------------------------------------------------------------
+ID: C225
+Name: Star-Lord
+Series: Starter
+Description: On Reveal: If your opponent played a card here this turn, +4 Power.
+Abilities: On Reveal, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Starlord/
+------------------------------------------------------------------
+ID: C226
+Name: Starbrand
+Series: Series 5
+Description: Ongoing: Your opponent has +3 Power at each other location.
+Abilities: Ongoing
+Cost: 3
+Power: 10
+Url: https://snap.fan/cards/Starbrand/
+------------------------------------------------------------------
+ID: C227
+Name: Stature
+Series: Series 3
+Description: Costs 1 if your opponent discarded a card this game.
+Abilities: Discard, Set Cost
+Cost: 5
+Power: 7
+Url: https://snap.fan/cards/Stature/
+------------------------------------------------------------------
+ID: C228
+Name: Stegron
+Series: Series 3
+Description: On Reveal: Move an enemy card here one location to the right.
+Abilities: On Reveal, Move
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/Stegron/
+------------------------------------------------------------------
+ID: C229
+Name: Sunspot
+Series: Series 2
+Description: End of Turn: Gain +1 Power for each unspent Energy.
+Abilities: Increase Power, End of Turn
+Cost: 1
+Power: 0
+Url: https://snap.fan/cards/Sunspot/
+------------------------------------------------------------------
+ID: C230
+Name: Super-Skrull
+Series: Series 3
+Description: Ongoing: Has the Ongoing effects of all enemy cards.
+Abilities: Ongoing
+Cost: 4
+Power: 2
+Url: https://snap.fan/cards/SuperSkrull/
+------------------------------------------------------------------
+ID: C231
+Name: Sword Master
+Series: Series 1
+Description: On Reveal: Discard an odd-costed card from your hand.
+Abilities: On Reveal, Discard
+Cost: 3
+Power: 7
+Url: https://snap.fan/cards/SwordMaster/
+------------------------------------------------------------------
+ID: C232
+Name: Taskmaster
+Series: Series 3
+Description: On Reveal: Set this card’s Power equal to that of the last card you played. (if able)
+Abilities: On Reveal, Set Power
+Cost: 6
+Power: 0
+Url: https://snap.fan/cards/Taskmaster/
+------------------------------------------------------------------
+ID: C233
+Name: The Collector
+Series: Series 2
+Description: When a card enters your hand from anywhere (except your deck), +1 Power.
+Abilities: Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/TheCollector/
+------------------------------------------------------------------
+ID: C234
+Name: The Fallen One
+Series: Series 5
+Description: On Reveal: Set your Max Energy equal to this card's Power.
+Abilities: On Reveal, Max Energy
+Cost: 5
+Power: 5
+Url: https://snap.fan/cards/FallenOne/
+------------------------------------------------------------------
+ID: C235
+Name: The Infinaut
+Series: Series 2
+Description: If you played a card last turn, you can't play this.
+Abilities: No Ability
+Cost: 6
+Power: 20
+Url: https://snap.fan/cards/Infinaut/
+------------------------------------------------------------------
+ID: C236
+Name: The Living Tribunal
+Series: Series 4
+Description: Ongoing: Split your total Power evenly among all locations.
+Abilities: Ongoing
+Cost: 6
+Power: 9
+Url: https://snap.fan/cards/LivingTribunal/
+------------------------------------------------------------------
+ID: C237
+Name: The Thing
+Series: Starter
+Description: It's clobberin' time!
+Abilities: No Ability
+Cost: 4
+Power: 7
+Url: https://snap.fan/cards/TheThing/
+------------------------------------------------------------------
+ID: C238
+Name: Titania
+Series: Series 3
+Description: After ANY card is played here, this card switches sides.
+Abilities: Switch Sides
+Cost: 1
+Power: 5
+Url: https://snap.fan/cards/Titania/
+------------------------------------------------------------------
+ID: C239
+Name: Topaz
+Series: Series 4
+Description: After you play a card here, move it to the middle location.
+Abilities: Move
+Cost: 3
+Power: 5
+Url: https://snap.fan/cards/Topaz/
+------------------------------------------------------------------
+ID: C240
+Name: Toxin
+Series: Series 5
+Description: On Reveal: Return your other cards here to your hand. +2 Power for each returned.
+Abilities: On Reveal, Return To Hand, Increase Power
+Cost: 2
+Power: 2
+Url: https://snap.fan/cards/Toxin/
+------------------------------------------------------------------
+ID: C241
+Name: Typhoid Mary
+Series: Series 3
+Description: Ongoing: Your other cards here have -2 Power.
+Abilities: Ongoing, Afflict
+Cost: 4
+Power: 10
+Url: https://snap.fan/cards/TyphoidMary/
+------------------------------------------------------------------
+ID: C242
+Name: U.S. Agent
+Series: Series 5
+Description: Ongoing: 4, 5, and 6-Cost cards here have -3 Power.
+Abilities: Ongoing, Afflict
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/USAgent/
+------------------------------------------------------------------
+ID: C243
+Name: Valkyrie
+Series: Series 3
+Description: On Reveal: Set ALL cards here to 3 Power.
+Abilities: On Reveal, Set Power
+Cost: 5
+Power: 3
+Url: https://snap.fan/cards/Valkyrie/
+------------------------------------------------------------------
+ID: C244
+Name: Venom
+Series: Series 3
+Description: On Reveal: Destroy your other cards here. Add their Power to this card.
+Abilities: On Reveal, Destroy, Increase Power
+Cost: 3
+Power: 3
+Url: https://snap.fan/cards/Venom/
+------------------------------------------------------------------
+ID: C245
+Name: Viper
+Series: Series 3
+Description: On Reveal: One of your other cards here with the lowest Power switches sides.
+Abilities: On Reveal, Switch Sides
+Cost: 3
+Power: 4
+Url: https://snap.fan/cards/Viper/
+------------------------------------------------------------------
+ID: C246
+Name: Vision
+Series: Series 2
+Description: You can move this each turn.
+Abilities: Move
+Cost: 5
+Power: 9
+Url: https://snap.fan/cards/Vision/
+------------------------------------------------------------------
+ID: C247
+Name: Vulture
+Series: Series 2
+Description: When this card moves, +3 Power.
+Abilities: Move, Increase Power
+Cost: 1
+Power: 3
+Url: https://snap.fan/cards/Vulture/
+------------------------------------------------------------------
+ID: C248
+Name: Warpath
+Series: Series 2
+Description: Ongoing: If any of your locations are empty, +5 Power.
+Abilities: Ongoing, Increase Power
+Cost: 4
+Power: 5
+Url: https://snap.fan/cards/Warpath/
+------------------------------------------------------------------
+ID: C249
+Name: Wasp
+Series: Series 3
+Description: My secret power is that I get things done.
+Abilities: No Ability
+Cost: 0
+Power: 1
+Url: https://snap.fan/cards/Wasp/
+------------------------------------------------------------------
+ID: C250
+Name: Wave
+Series: Series 3
+Description: On Reveal: All cards cost a maximum of 4 until the end of next turn.
+Abilities: On Reveal, Decrease Cost
+Cost: 3
+Power: 6
+Url: https://snap.fan/cards/Wave/
+------------------------------------------------------------------
+ID: C251
+Name: Wiccan
+Series: Series 5
+Description: On Reveal: If you've spent all your Energy on previous turns, +2 Max Energy.
+Abilities: On Reveal, Max Energy
+Cost: 4
+Power: 6
+Url: https://snap.fan/cards/Wiccan/
+------------------------------------------------------------------
+ID: C252
+Name: Wild Child
+Series: Series 4
+Description: Ongoing: +4 Power if you’ve discarded a card. +4 Power if one of your cards has been destroyed.
+Abilities: Ongoing
+Cost: 2
+Power: 1
+Url: https://snap.fan/cards/WildChild/
+------------------------------------------------------------------
+ID: C253
+Name: Wolfsbane
+Series: Series 0
+Description: On Reveal: +2 Power for each other card you have here.
+Abilities: On Reveal, Increase Power
+Cost: 3
+Power: 2
+Url: https://snap.fan/cards/Wolfsbane/
+------------------------------------------------------------------
+ID: C254
+Name: Wolverine
+Series: Series 1
+Description: When Discarded or Destroyed: Regenerate this with +2 Power at a random location.
+Abilities: Destroy, Add Card At Location, Increase Power, Discard
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Wolverine/
+------------------------------------------------------------------
+ID: C255
+Name: Wong
+Series: Series 3
+Description: Ongoing: Your On Reveal abilities here happen twice.
+Abilities: On Reveal, Ongoing
+Cost: 4
+Power: 2
+Url: https://snap.fan/cards/Wong/
+------------------------------------------------------------------
+ID: C256
+Name: X-23
+Series: Series 4
+Description: When Discarded or Destroyed: Regenerate this at a random location and you get +1 Energy next turn.
+Abilities: Destroy, Discard
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/X23/
+------------------------------------------------------------------
+ID: C257
+Name: Xorn
+Series: Series 5
+Description: After ANY 3 or 4-Cost card is played here, move it to another location.
+Abilities: Move
+Cost: 2
+Power: 3
+Url: https://snap.fan/cards/Xorn/
+------------------------------------------------------------------
+ID: C258
+Name: Yellowjacket
+Series: Series 3
+Description: On Reveal: Afflict your other cards here with -1 Power.
+Abilities: On Reveal, Afflict
+Cost: 0
+Power: 2
+Url: https://snap.fan/cards/Yellowjacket/
+------------------------------------------------------------------
+ID: C259
+Name: Yondu
+Series: Series 1
+Description: On Reveal: Banish the card that costs the least in your opponent's deck.
+Abilities: On Reveal, Banish
+Cost: 1
+Power: 2
+Url: https://snap.fan/cards/Yondu/
+------------------------------------------------------------------
+ID: C260
+Name: Zabu
+Series: Series 3
+Description: On Reveal: Give each 4-Cost card in your deck -1 Cost.
+Abilities: On Reveal, Decrease Cost
+Cost: 1
+Power: 1
+Url: https://snap.fan/cards/Zabu/

@@ -1,0 +1,668 @@
+[
+  {
+    "id": "L001",
+    "name": "Altar of Death",
+    "description": "After you play a card here, destroy it to get +2 Energy next turn.",
+    "url": "https://snap.fan/locations/AltarOfDeath/"
+  },
+  {
+    "id": "L002",
+    "name": "Asgard",
+    "description": "After turn 4, whoever is winning here draws 2 cards.",
+    "url": "https://snap.fan/locations/Asgard/"
+  },
+  {
+    "id": "L003",
+    "name": "Asgard Besieged",
+    "description": "After turn 3, add The Destroyer to the winning side.",
+    "url": "https://snap.fan/locations/AsgardBesieged/"
+  },
+  {
+    "id": "L004",
+    "name": "Asteroid M",
+    "description": "After you play a 3 or 4-Cost card, move it here.",
+    "url": "https://snap.fan/locations/AsteroidM/"
+  },
+  {
+    "id": "L005",
+    "name": "Astral Plane",
+    "description": "After this turn, add a 0-Power copy of a card from hand here.",
+    "url": "https://snap.fan/locations/AstralPlane/"
+  },
+  {
+    "id": "L006",
+    "name": "Atlantis",
+    "description": "If you only have one card here, it has +5 Power.",
+    "url": "https://snap.fan/locations/Atlantis/"
+  },
+  {
+    "id": "L007",
+    "name": "Attilan",
+    "description": "After turn 3, shuffle your hand into your deck. Draw 3 cards.",
+    "url": "https://snap.fan/locations/Attilan/"
+  },
+  {
+    "id": "L008",
+    "name": "Aunt May's",
+    "description": "The next card you play here gains +3 Power and moves.",
+    "url": "https://snap.fan/locations/AuntMays/"
+  },
+  {
+    "id": "L009",
+    "name": "Avengers Compound",
+    "description": "On turn 5, all cards must be played here.",
+    "url": "https://snap.fan/locations/AvengersCompound/"
+  },
+  {
+    "id": "L010",
+    "name": "Bar Sinister",
+    "description": "After you play a card here, fill this location with copies of it.",
+    "url": "https://snap.fan/locations/BarSinister/"
+  },
+  {
+    "id": "L011",
+    "name": "Bar With No Name",
+    "description": "Whoever has the least Power here wins.",
+    "url": "https://snap.fan/locations/BarWithNoName/"
+  },
+  {
+    "id": "L012",
+    "name": "Baxter Building",
+    "description": "Whoever is winning this location gets +4 Power at the others.",
+    "url": "https://snap.fan/locations/BaxterBuilding/"
+  },
+  {
+    "id": "L013",
+    "name": "The Bifrost",
+    "description": "After turn 4, move all cards one location to the right.",
+    "url": "https://snap.fan/locations/Bifrost/"
+  },
+  {
+    "id": "L014",
+    "name": "Camelot",
+    "description": "After turn 5, set all cards here to 5 Power.",
+    "url": "https://snap.fan/locations/Camelot/"
+  },
+  {
+    "id": "L015",
+    "name": "Camp Lehigh",
+    "description": "Add a random 3-Cost card to each player's hand.",
+    "url": "https://snap.fan/locations/CampLehigh/"
+  },
+  {
+    "id": "L016",
+    "name": "Cancun",
+    "description": "Power here doesn't count toward winning the game.",
+    "url": "https://snap.fan/locations/Cancun/"
+  },
+  {
+    "id": "L017",
+    "name": "Castle Blackstone",
+    "description": "The player winning here gets +1 Energy each turn.",
+    "url": "https://snap.fan/locations/CastleBlackstone/"
+  },
+  {
+    "id": "L018",
+    "name": "Castle Zemo",
+    "description": "The next card you play here switches sides.",
+    "url": "https://snap.fan/locations/CastleZemo/"
+  },
+  {
+    "id": "L019",
+    "name": "Cave of The Dragon",
+    "description": "After turn 4, add a random 5-Cost card to each side.",
+    "url": "https://snap.fan/locations/CaveOfTheDragon/"
+  },
+  {
+    "id": "L020",
+    "name": "Celestial Burial Ground",
+    "description": "Discard a card. Replace it with one that costs the same.",
+    "url": "https://snap.fan/locations/CelestialBurialGround/"
+  },
+  {
+    "id": "L021",
+    "name": "Cloning Vats",
+    "description": "After you play a card here, add a copy to your hand.",
+    "url": "https://snap.fan/locations/CloningVats/"
+  },
+  {
+    "id": "L022",
+    "name": "Clown City",
+    "description": "Whoever is losing here has +4 Power at adjacent locations.",
+    "url": "https://snap.fan/locations/ClownCity/"
+  },
+  {
+    "id": "L023",
+    "name": "Crimson Cosmos",
+    "description": "Cards that cost 1, 2, or 3 can't be played here.",
+    "url": "https://snap.fan/locations/CrimsonCosmos/"
+  },
+  {
+    "id": "L024",
+    "name": "Crown City",
+    "description": "Whoever is winning here gets +4 Power at adjacent locations.",
+    "url": "https://snap.fan/locations/CrownCity/"
+  },
+  {
+    "id": "L025",
+    "name": "Crystal Towers",
+    "description": "Shuffle your hand into your deck. Draw 3 cards.",
+    "url": "https://snap.fan/locations/CrystalTowers/"
+  },
+  {
+    "id": "L026",
+    "name": "Danger Room",
+    "description": "Cards played here have a 25% chance to be destroyed.",
+    "url": "https://snap.fan/locations/DangerRoom/"
+  },
+  {
+    "id": "L027",
+    "name": "Death's Domain",
+    "description": "After you play a card here, destroy it.",
+    "url": "https://snap.fan/locations/DeathsDomain/"
+  },
+  {
+    "id": "L028",
+    "name": "Dream Dimension",
+    "description": "On turn 5, cards cost 1 more.",
+    "url": "https://snap.fan/locations/DreamDimension/"
+  },
+  {
+    "id": "L029",
+    "name": "Elysium",
+    "description": "Cards cost 1 less.",
+    "url": "https://snap.fan/locations/Elysium/"
+  },
+  {
+    "id": "L030",
+    "name": "F.E.A.S.T.",
+    "description": "After you play a card here, ALL players get +1 Energy next turn.",
+    "url": "https://snap.fan/locations/Feast/"
+  },
+  {
+    "id": "L031",
+    "name": "Fisk Tower",
+    "description": "When a card moves here, afflict it with -4 Power.",
+    "url": "https://snap.fan/locations/FiskTower/"
+  },
+  {
+    "id": "L032",
+    "name": "Flooded",
+    "description": "Cards can't be played here.",
+    "url": "https://snap.fan/locations/Flooded/"
+  },
+  {
+    "id": "L033",
+    "name": "Flooding",
+    "description": "This is the last turn cards can be played here. Turns into Flooded next turn.",
+    "url": "https://snap.fan/locations/Flooding/"
+  },
+  {
+    "id": "L034",
+    "name": "Gamma Lab",
+    "description": "After turn 3, transform all cards here into the Hulk.",
+    "url": "https://snap.fan/locations/GammaLab/"
+  },
+  {
+    "id": "L035",
+    "name": "Genosha",
+    "description": "After turn 5, all but your highest-Cost here are destroyed.",
+    "url": "https://snap.fan/locations/Genosha/"
+  },
+  {
+    "id": "L036",
+    "name": "Grand Central",
+    "description": "After turn 5, put a card from each player's hand here.",
+    "url": "https://snap.fan/locations/GrandCentral/"
+  },
+  {
+    "id": "L037",
+    "name": "Great Portal",
+    "description": "Add a random card with 10 or more Power to your hand.",
+    "url": "https://snap.fan/locations/GreatPortal/"
+  },
+  {
+    "id": "L038",
+    "name": "Great Web",
+    "description": "End of Turn: Move one card to here for a random player.",
+    "url": "https://snap.fan/locations/GreatWeb/"
+  },
+  {
+    "id": "L039",
+    "name": "Hala",
+    "description": "After turn 4, destroy all cards controlled by the player losing here.",
+    "url": "https://snap.fan/locations/Hala/"
+  },
+  {
+    "id": "L040",
+    "name": "Hellfire Club",
+    "description": "Cards that cost 1 can't be played here.",
+    "url": "https://snap.fan/locations/HellfireClub/"
+  },
+  {
+    "id": "L041",
+    "name": "Isle of Silence",
+    "description": "Ongoing effects are disabled here.",
+    "url": "https://snap.fan/locations/IsleOfSilence/"
+  },
+  {
+    "id": "L042",
+    "name": "Jotunheim",
+    "description": "End of Turn: Cards here lose 1 Power.",
+    "url": "https://snap.fan/locations/Jotunheim/"
+  },
+  {
+    "id": "L043",
+    "name": "Kamar-Taj",
+    "description": "On Reveal effects happen twice at this location.",
+    "url": "https://snap.fan/locations/KamarTaj/"
+  },
+  {
+    "id": "L044",
+    "name": "Knowhere",
+    "description": "On Reveal effects do not happen at this location.",
+    "url": "https://snap.fan/locations/Knowhere/"
+  },
+  {
+    "id": "L045",
+    "name": "K'un-Lun",
+    "description": "When a card moves here, give it +2 Power.",
+    "url": "https://snap.fan/locations/KunLun/"
+  },
+  {
+    "id": "L046",
+    "name": "Kyln",
+    "description": "You can't play cards here after turn 4.",
+    "url": "https://snap.fan/locations/Kyln/"
+  },
+  {
+    "id": "L047",
+    "name": "Lake Hellas",
+    "description": "1-Cost cards here have +2 Power.",
+    "url": "https://snap.fan/locations/LakeHellas/"
+  },
+  {
+    "id": "L048",
+    "name": "Limbo",
+    "description": "There is a turn 7 this game.",
+    "url": "https://snap.fan/locations/Limbo/"
+  },
+  {
+    "id": "L049",
+    "name": "Luke's Bar",
+    "description": "After you play a card here, return it to your hand.",
+    "url": "https://snap.fan/locations/LukesBar/"
+  },
+  {
+    "id": "L050",
+    "name": "Machineworld",
+    "description": "After you play a card here, add a copy to the opponent's hand.",
+    "url": "https://snap.fan/locations/Machineworld/"
+  },
+  {
+    "id": "L051",
+    "name": "Madripoor",
+    "description": "End of Turn: Give each highest-Cost card here +3 Power.",
+    "url": "https://snap.fan/locations/Madripoor/"
+  },
+  {
+    "id": "L052",
+    "name": "Mercworld",
+    "description": "After turn 3, return cards here to hand. Double their Power.",
+    "url": "https://snap.fan/locations/Mercworld/"
+  },
+  {
+    "id": "L053",
+    "name": "Mindscape",
+    "description": "At the start of turn 6, swap hands.",
+    "url": "https://snap.fan/locations/Mindscape/"
+  },
+  {
+    "id": "L054",
+    "name": "Miniaturized Lab",
+    "description": "On turns 3, 4, and 5, no cards can be added here.",
+    "url": "https://snap.fan/locations/MiniaturizedLab/"
+  },
+  {
+    "id": "L055",
+    "name": "Mojoworld",
+    "description": "Whoever has more cards here gets +100 Power.",
+    "url": "https://snap.fan/locations/Mojoworld/"
+  },
+  {
+    "id": "L056",
+    "name": "Monster Metropolis",
+    "description": "The card(s) with the highest Power here get +3 Power.",
+    "url": "https://snap.fan/locations/MonsterMetropolis/"
+  },
+  {
+    "id": "L057",
+    "name": "Morag",
+    "description": "You can't play your first card here each turn.",
+    "url": "https://snap.fan/locations/Morag/"
+  },
+  {
+    "id": "L058",
+    "name": "Mt. Wundagore",
+    "description": "After you play a card here, discard a card.",
+    "url": "https://snap.fan/locations/MountWundagore/"
+  },
+  {
+    "id": "L059",
+    "name": "Muir Island",
+    "description": "End of Turn: Give cards here +1 Power.",
+    "url": "https://snap.fan/locations/MuirIsland/"
+  },
+  {
+    "id": "L060",
+    "name": "Murderworld",
+    "description": "After turn 3, destroy all cards here.",
+    "url": "https://snap.fan/locations/Murderworld/"
+  },
+  {
+    "id": "L061",
+    "name": "Necrosha",
+    "description": "Cards here have -2 Power.",
+    "url": "https://snap.fan/locations/Necrosha/"
+  },
+  {
+    "id": "L062",
+    "name": "Negative Zone",
+    "description": "Cards here have -3 Power.",
+    "url": "https://snap.fan/locations/NegativeZone/"
+  },
+  {
+    "id": "L063",
+    "name": "New York",
+    "description": "On turn 6, you can move cards to this location.",
+    "url": "https://snap.fan/locations/NewYork/"
+  },
+  {
+    "id": "L064",
+    "name": "Nidavellir",
+    "description": "Cards here have +5 Power.",
+    "url": "https://snap.fan/locations/Nidavellir/"
+  },
+  {
+    "id": "L065",
+    "name": "Nova Roma",
+    "description": "Draw a card.",
+    "url": "https://snap.fan/locations/NovaRoma/"
+  },
+  {
+    "id": "L066",
+    "name": "Olympia",
+    "description": "Draw 2 cards.",
+    "url": "https://snap.fan/locations/Olympia/"
+  },
+  {
+    "id": "L067",
+    "name": "Onslaught's Citadel",
+    "description": "Ongoing effects here are doubled.",
+    "url": "https://snap.fan/locations/OnslaughtsCitadel/"
+  },
+  {
+    "id": "L068",
+    "name": "Oscorp Tower",
+    "description": "After turn 3, all cards here switch sides.",
+    "url": "https://snap.fan/locations/OscorpTower/"
+  },
+  {
+    "id": "L069",
+    "name": "Pet Mansion",
+    "description": "This turn, all cards must be played here.",
+    "url": "https://snap.fan/locations/PetAvengersMansion/"
+  },
+  {
+    "id": "L070",
+    "name": "Pit of Exile",
+    "description": "Cards with 10 or more Power can't be played here.",
+    "url": "https://snap.fan/locations/PitOfExile/"
+  },
+  {
+    "id": "L071",
+    "name": "Plunder Castle",
+    "description": "Only cards that cost 6 can be played here.",
+    "url": "https://snap.fan/locations/PlunderCastle/"
+  },
+  {
+    "id": "L072",
+    "name": "Project Pegasus",
+    "description": "+5 Energy this turn.",
+    "url": "https://snap.fan/locations/ProjectPegasus/"
+  },
+  {
+    "id": "L073",
+    "name": "Quantum Tunnel",
+    "description": "After you play a card here, swap it with a card in your deck.",
+    "url": "https://snap.fan/locations/QuantumTunnel/"
+  },
+  {
+    "id": "L074",
+    "name": "The Raft",
+    "description": "First to fill this gets a random a 6-Cost card. It costs 0.",
+    "url": "https://snap.fan/locations/Raft/"
+  },
+  {
+    "id": "L075",
+    "name": "Rickety Bridge",
+    "description": "End of Turn: If there is more than one card here, destroy them.",
+    "url": "https://snap.fan/locations/RicketyBridge/"
+  },
+  {
+    "id": "L076",
+    "name": "Rocket Pad",
+    "description": "After turn 4, give cards on the winning side here +1 Power.",
+    "url": "https://snap.fan/locations/RocketPad/"
+  },
+  {
+    "id": "L077",
+    "name": "Ruins",
+    "description": "None",
+    "url": "https://snap.fan/locations/Ruins/"
+  },
+  {
+    "id": "L078",
+    "name": "Sakaar",
+    "description": "After this turn, put a card from each player's hand here.",
+    "url": "https://snap.fan/locations/Sakaar/"
+  },
+  {
+    "id": "L079",
+    "name": "Sakaar Grand Prix",
+    "description": "After turn 4, the winner here gets +1 Max Energy.",
+    "url": "https://snap.fan/locations/SakaarGrandPrix/"
+  },
+  {
+    "id": "L080",
+    "name": "Sanctum Sanctorum",
+    "description": "Cards can't be played here.",
+    "url": "https://snap.fan/locations/SanctumSanctorum/"
+  },
+  {
+    "id": "L081",
+    "name": "Sewer System",
+    "description": "Cards here have -1 Power.",
+    "url": "https://snap.fan/locations/SewerSystem/"
+  },
+  {
+    "id": "L082",
+    "name": "Xandar",
+    "description": "Cards here have +1 Power.",
+    "url": "https://snap.fan/locations/Xandar/"
+  },
+  {
+    "id": "L083",
+    "name": "Shuri's Lab",
+    "description": "After you play a card here, double its Power.",
+    "url": "https://snap.fan/locations/ShurisLab/"
+  },
+  {
+    "id": "L084",
+    "name": "Sinister London",
+    "description": "After you play a card here, add a copy to another location.",
+    "url": "https://snap.fan/locations/SinisterLondon/"
+  },
+  {
+    "id": "L085",
+    "name": "Sokovia",
+    "description": "Discard a card from each player's hand.",
+    "url": "https://snap.fan/locations/Sokovia/"
+  },
+  {
+    "id": "L086",
+    "name": "Spider Island",
+    "description": "After you play a card here, move it.",
+    "url": "https://snap.fan/locations/SpiderIsland/"
+  },
+  {
+    "id": "L087",
+    "name": "Star Brand Crater",
+    "description": "If you have 10 or more Power here, +1 Energy each turn.",
+    "url": "https://snap.fan/locations/StarBrandCrater/"
+  },
+  {
+    "id": "L088",
+    "name": "Stark Tower",
+    "description": "After turn 5, give all cards here +2 Power.",
+    "url": "https://snap.fan/locations/StarkTower/"
+  },
+  {
+    "id": "L089",
+    "name": "Strange Academy",
+    "description": "After turn 5, move all cards here to other random locations.",
+    "url": "https://snap.fan/locations/StrangeAcademy/"
+  },
+  {
+    "id": "L090",
+    "name": "The Superflow",
+    "description": "If you have no cards here, +1 energy each turn.",
+    "url": "https://snap.fan/locations/Superflow/"
+  },
+  {
+    "id": "L091",
+    "name": "The Big House",
+    "description": "Cards that cost 4, 5, or 6 can't be played here.",
+    "url": "https://snap.fan/locations/TheBigHouse/"
+  },
+  {
+    "id": "L092",
+    "name": "The Hub",
+    "description": "Add a random card to each player's hand.",
+    "url": "https://snap.fan/locations/TheHub/"
+  },
+  {
+    "id": "L093",
+    "name": "The Ice Box",
+    "description": "Give a card in each player’s hand +1 Cost.",
+    "url": "https://snap.fan/locations/TheIceBox/"
+  },
+  {
+    "id": "L094",
+    "name": "The Nexus",
+    "description": "Your Power here is granted to other locations as well.",
+    "url": "https://snap.fan/locations/TheNexus/"
+  },
+  {
+    "id": "L095",
+    "name": "Thunderbolts Tower",
+    "description": "After turn 5, give all cards here -2 Power.",
+    "url": "https://snap.fan/locations/ThunderboltsTower/"
+  },
+  {
+    "id": "L096",
+    "name": "Tinkerer's Workshop",
+    "description": "+1 Energy this turn.",
+    "url": "https://snap.fan/locations/TinkerersWorkshop/"
+  },
+  {
+    "id": "L097",
+    "name": "Titan",
+    "description": "6-Cost cards cost 1 less.",
+    "url": "https://snap.fan/locations/Titan/"
+  },
+  {
+    "id": "L098",
+    "name": "Eternals' Ark",
+    "description": "After turn 5, flood the other locations.",
+    "url": "https://snap.fan/locations/UtnapishtimsArk/"
+  },
+  {
+    "id": "L099",
+    "name": "Utopia",
+    "description": "3 and 4-Cost cards cost 1 less.",
+    "url": "https://snap.fan/locations/Utopia/"
+  },
+  {
+    "id": "L100",
+    "name": "Valhalla",
+    "description": "After turn 4, cards here repeat their On Reveal abilities.",
+    "url": "https://snap.fan/locations/Valhalla/"
+  },
+  {
+    "id": "L101",
+    "name": "Valley Of The Hand",
+    "description": "After turn 5, your destroyed cards revive here.",
+    "url": "https://snap.fan/locations/ValleyOfTheHand/"
+  },
+  {
+    "id": "L102",
+    "name": "The Vault",
+    "description": "On turn 6, cards can't be played here.",
+    "url": "https://snap.fan/locations/Vault/"
+  },
+  {
+    "id": "L103",
+    "name": "Vormir",
+    "description": "The first card you play here is destroyed.",
+    "url": "https://snap.fan/locations/Vormir/"
+  },
+  {
+    "id": "L104",
+    "name": "Wakanda",
+    "description": "Cards here can't be destroyed.",
+    "url": "https://snap.fan/locations/Wakanda/"
+  },
+  {
+    "id": "L105",
+    "name": "Wakandan Embassy",
+    "description": "Give +2 Power to cards in players hands.",
+    "url": "https://snap.fan/locations/WakandanEmbassy/"
+  },
+  {
+    "id": "L106",
+    "name": "Throne Room",
+    "description": "The highest-Power card(s) here have their Power doubled.",
+    "url": "https://snap.fan/locations/WakandanThroneRoom/"
+  },
+  {
+    "id": "L107",
+    "name": "Warrior Falls",
+    "description": "End of Turn: Destroy the lowest power cards here.",
+    "url": "https://snap.fan/locations/WarriorFalls/"
+  },
+  {
+    "id": "L108",
+    "name": "Washington D.C.",
+    "description": "Cards here with no abilities have +3 Power.",
+    "url": "https://snap.fan/locations/WashingtonDC/"
+  },
+  {
+    "id": "L109",
+    "name": "Westview",
+    "description": "Turns into a new location on turn 4.",
+    "url": "https://snap.fan/locations/Westview/"
+  },
+  {
+    "id": "L110",
+    "name": "White Hot Room",
+    "description": "First to fill this gets +3 Max Energy.",
+    "url": "https://snap.fan/locations/WhiteHotRoom/"
+  },
+  {
+    "id": "L111",
+    "name": "X-Mansion",
+    "description": "After turn 3, add a random card here for each player.",
+    "url": "https://snap.fan/locations/XMansion/"
+  }
+]

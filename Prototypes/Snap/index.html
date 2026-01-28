@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Snap Card Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0a1628;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+        /* Error toast */
+        #error-toast {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #dc2626;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            max-width: 90vw;
+        }
+        #error-toast .error-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        #error-toast .error-text {
+            white-space: pre-line;
+        }
+        #error-toast .dismiss-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        #error-toast .dismiss-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="error-toast">
+        <div class="error-content">
+            <span class="error-text">A JavaScript error has occurred.
+Check the developer console for details.</span>
+            <button class="dismiss-btn" onclick="document.getElementById('error-toast').style.display='none'">Dismiss</button>
+        </div>
+    </div>
+    <div id="game-container"></div>
+
+    <!-- Error handler - must be first -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Error:', message, '\nSource:', source, '\nLine:', lineno, '\nColumn:', colno, '\nError object:', error);
+            document.getElementById('error-toast').style.display = 'block';
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            document.getElementById('error-toast').style.display = 'block';
+        });
+    </script>
+
+    <!-- Phaser 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+    <!-- Game Constants -->
+    <script src="code/constants.js"></script>
+
+    <!-- Core Game Classes -->
+    <script src="code/Card.js"></script>
+    <script src="code/HandCard.js"></script>
+    <script src="code/PlayedCard.js"></script>
+    <script src="code/Location.js"></script>
+    <script src="code/Deck.js"></script>
+    <script src="code/Hand.js"></script>
+    <script src="code/Player.js"></script>
+    <script src="code/CardRegistry.js"></script>
+    <script src="code/LocationRegistry.js"></script>
+
+    <!-- Action System -->
+    <script src="code/actions/GameAction.js"></script>
+    <script src="code/actions/DrawCardAction.js"></script>
+    <script src="code/actions/PlayCardAction.js"></script>
+    <script src="code/actions/RevealCardAction.js"></script>
+    <script src="code/actions/RevealLocationAction.js"></script>
+    <script src="code/actions/ModifyPowerAction.js"></script>
+    <script src="code/ActionQueue.js"></script>
+
+    <!-- Game State & Turn Management -->
+    <script src="code/GameState.js"></script>
+    <script src="code/TurnManager.js"></script>
+    <script src="code/AIController.js"></script>
+
+    <!-- Card & Location Implementations -->
+    <script src="code/cards/StarterCards.js"></script>
+    <script src="code/locations/BasicLocations.js"></script>
+
+    <!-- Visual Components -->
+    <script src="code/PowerBadge.js"></script>
+    <script src="code/CardVisual.js"></script>
+    <script src="code/LocationVisual.js"></script>
+    <script src="code/HandVisual.js"></script>
+    <script src="code/BoardVisual.js"></script>
+
+    <!-- Scenes -->
+    <script src="code/Preloader.js"></script>
+    <script src="code/MainMenu.js"></script>
+    <script src="code/GameScene.js"></script>
+
+    <!-- Game Bootstrap -->
+    <script src="code/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+ID: L001
+Name: Altar of Death
+Description: After you play a card here, destroy it to get +2 Energy next turn.
+Url: https://snap.fan/locations/AltarOfDeath/
+------------------------------------------------------------------
+ID: L002
+Name: Asgard
+Description: After turn 4, whoever is winning here draws 2 cards.
+Url: https://snap.fan/locations/Asgard/
+------------------------------------------------------------------
+ID: L003
+Name: Asgard Besieged
+Description: After turn 3, add The Destroyer to the winning side.
+Url: https://snap.fan/locations/AsgardBesieged/
+------------------------------------------------------------------
+ID: L004
+Name: Asteroid M
+Description: After you play a 3 or 4-Cost card, move it here.
+Url: https://snap.fan/locations/AsteroidM/
+------------------------------------------------------------------
+ID: L005
+Name: Astral Plane
+Description: After this turn, add a 0-Power copy of a card from hand here.
+Url: https://snap.fan/locations/AstralPlane/
+------------------------------------------------------------------
+ID: L006
+Name: Atlantis
+Description: If you only have one card here, it has +5 Power.
+Url: https://snap.fan/locations/Atlantis/
+------------------------------------------------------------------
+ID: L007
+Name: Attilan
+Description: After turn 3, shuffle your hand into your deck. Draw 3 cards.
+Url: https://snap.fan/locations/Attilan/
+------------------------------------------------------------------
+ID: L008
+Name: Aunt May's
+Description: The next card you play here gains +3 Power and moves.
+Url: https://snap.fan/locations/AuntMays/
+------------------------------------------------------------------
+ID: L009
+Name: Avengers Compound
+Description: On turn 5, all cards must be played here.
+Url: https://snap.fan/locations/AvengersCompound/
+------------------------------------------------------------------
+ID: L010
+Name: Bar Sinister
+Description: After you play a card here, fill this location with copies of it.
+Url: https://snap.fan/locations/BarSinister/
+------------------------------------------------------------------
+ID: L011
+Name: Bar With No Name
+Description: Whoever has the least Power here wins.
+Url: https://snap.fan/locations/BarWithNoName/
+------------------------------------------------------------------
+ID: L012
+Name: Baxter Building
+Description: Whoever is winning this location gets +4 Power at the others.
+Url: https://snap.fan/locations/BaxterBuilding/
+------------------------------------------------------------------
+ID: L013
+Name: The Bifrost
+Description: After turn 4, move all cards one location to the right.
+Url: https://snap.fan/locations/Bifrost/
+------------------------------------------------------------------
+ID: L014
+Name: Camelot
+Description: After turn 5, set all cards here to 5 Power.
+Url: https://snap.fan/locations/Camelot/
+------------------------------------------------------------------
+ID: L015
+Name: Camp Lehigh
+Description: Add a random 3-Cost card to each player's hand.
+Url: https://snap.fan/locations/CampLehigh/
+------------------------------------------------------------------
+ID: L016
+Name: Cancun
+Description: Power here doesn't count toward winning the game.
+Url: https://snap.fan/locations/Cancun/
+------------------------------------------------------------------
+ID: L017
+Name: Castle Blackstone
+Description: The player winning here gets +1 Energy each turn.
+Url: https://snap.fan/locations/CastleBlackstone/
+------------------------------------------------------------------
+ID: L018
+Name: Castle Zemo
+Description: The next card you play here switches sides.
+Url: https://snap.fan/locations/CastleZemo/
+------------------------------------------------------------------
+ID: L019
+Name: Cave of The Dragon
+Description: After turn 4, add a random 5-Cost card to each side.
+Url: https://snap.fan/locations/CaveOfTheDragon/
+------------------------------------------------------------------
+ID: L020
+Name: Celestial Burial Ground
+Description: Discard a card. Replace it with one that costs the same.
+Url: https://snap.fan/locations/CelestialBurialGround/
+------------------------------------------------------------------
+ID: L021
+Name: Cloning Vats
+Description: After you play a card here, add a copy to your hand.
+Url: https://snap.fan/locations/CloningVats/
+------------------------------------------------------------------
+ID: L022
+Name: Clown City
+Description: Whoever is losing here has +4 Power at adjacent locations.
+Url: https://snap.fan/locations/ClownCity/
+------------------------------------------------------------------
+ID: L023
+Name: Crimson Cosmos
+Description: Cards that cost 1, 2, or 3 can't be played here.
+Url: https://snap.fan/locations/CrimsonCosmos/
+------------------------------------------------------------------
+ID: L024
+Name: Crown City
+Description: Whoever is winning here gets +4 Power at adjacent locations.
+Url: https://snap.fan/locations/CrownCity/
+------------------------------------------------------------------
+ID: L025
+Name: Crystal Towers
+Description: Shuffle your hand into your deck. Draw 3 cards.
+Url: https://snap.fan/locations/CrystalTowers/
+------------------------------------------------------------------
+ID: L026
+Name: Danger Room
+Description: Cards played here have a 25% chance to be destroyed.
+Url: https://snap.fan/locations/DangerRoom/
+------------------------------------------------------------------
+ID: L027
+Name: Death's Domain
+Description: After you play a card here, destroy it.
+Url: https://snap.fan/locations/DeathsDomain/
+------------------------------------------------------------------
+ID: L028
+Name: Dream Dimension
+Description: On turn 5, cards cost 1 more.
+Url: https://snap.fan/locations/DreamDimension/
+------------------------------------------------------------------
+ID: L029
+Name: Elysium
+Description: Cards cost 1 less.
+Url: https://snap.fan/locations/Elysium/
+------------------------------------------------------------------
+ID: L030
+Name: F.E.A.S.T.
+Description: After you play a card here, ALL players get +1 Energy next turn.
+Url: https://snap.fan/locations/Feast/
+------------------------------------------------------------------
+ID: L031
+Name: Fisk Tower
+Description: When a card moves here, afflict it with -4 Power.
+Url: https://snap.fan/locations/FiskTower/
+------------------------------------------------------------------
+ID: L032
+Name: Flooded
+Description: Cards can't be played here.
+Url: https://snap.fan/locations/Flooded/
+------------------------------------------------------------------
+ID: L033
+Name: Flooding
+Description: This is the last turn cards can be played here. Turns into Flooded next turn.
+Url: https://snap.fan/locations/Flooding/
+------------------------------------------------------------------
+ID: L034
+Name: Gamma Lab
+Description: After turn 3, transform all cards here into the Hulk.
+Url: https://snap.fan/locations/GammaLab/
+------------------------------------------------------------------
+ID: L035
+Name: Genosha
+Description: After turn 5, all but your highest-Cost here are destroyed.
+Url: https://snap.fan/locations/Genosha/
+------------------------------------------------------------------
+ID: L036
+Name: Grand Central
+Description: After turn 5, put a card from each player's hand here.
+Url: https://snap.fan/locations/GrandCentral/
+------------------------------------------------------------------
+ID: L037
+Name: Great Portal
+Description: Add a random card with 10 or more Power to your hand.
+Url: https://snap.fan/locations/GreatPortal/
+------------------------------------------------------------------
+ID: L038
+Name: Great Web
+Description: End of Turn: Move one card to here for a random player.
+Url: https://snap.fan/locations/GreatWeb/
+------------------------------------------------------------------
+ID: L039
+Name: Hala
+Description: After turn 4, destroy all cards controlled by the player losing here.
+Url: https://snap.fan/locations/Hala/
+------------------------------------------------------------------
+ID: L040
+Name: Hellfire Club
+Description: Cards that cost 1 can't be played here.
+Url: https://snap.fan/locations/HellfireClub/
+------------------------------------------------------------------
+ID: L041
+Name: Isle of Silence
+Description: Ongoing effects are disabled here.
+Url: https://snap.fan/locations/IsleOfSilence/
+------------------------------------------------------------------
+ID: L042
+Name: Jotunheim
+Description: End of Turn: Cards here lose 1 Power.
+Url: https://snap.fan/locations/Jotunheim/
+------------------------------------------------------------------
+ID: L043
+Name: Kamar-Taj
+Description: On Reveal effects happen twice at this location.
+Url: https://snap.fan/locations/KamarTaj/
+------------------------------------------------------------------
+ID: L044
+Name: Knowhere
+Description: On Reveal effects do not happen at this location.
+Url: https://snap.fan/locations/Knowhere/
+------------------------------------------------------------------
+ID: L045
+Name: K'un-Lun
+Description: When a card moves here, give it +2 Power.
+Url: https://snap.fan/locations/KunLun/
+------------------------------------------------------------------
+ID: L046
+Name: Kyln
+Description: You can't play cards here after turn 4.
+Url: https://snap.fan/locations/Kyln/
+------------------------------------------------------------------
+ID: L047
+Name: Lake Hellas
+Description: 1-Cost cards here have +2 Power.
+Url: https://snap.fan/locations/LakeHellas/
+------------------------------------------------------------------
+ID: L048
+Name: Limbo
+Description: There is a turn 7 this game.
+Url: https://snap.fan/locations/Limbo/
+------------------------------------------------------------------
+ID: L049
+Name: Luke's Bar
+Description: After you play a card here, return it to your hand.
+Url: https://snap.fan/locations/LukesBar/
+------------------------------------------------------------------
+ID: L050
+Name: Machineworld
+Description: After you play a card here, add a copy to the opponent's hand.
+Url: https://snap.fan/locations/Machineworld/
+------------------------------------------------------------------
+ID: L051
+Name: Madripoor
+Description: End of Turn: Give each highest-Cost card here +3 Power.
+Url: https://snap.fan/locations/Madripoor/
+------------------------------------------------------------------
+ID: L052
+Name: Mercworld
+Description: After turn 3, return cards here to hand. Double their Power.
+Url: https://snap.fan/locations/Mercworld/
+------------------------------------------------------------------
+ID: L053
+Name: Mindscape
+Description: At the start of turn 6, swap hands.
+Url: https://snap.fan/locations/Mindscape/
+------------------------------------------------------------------
+ID: L054
+Name: Miniaturized Lab
+Description: On turns 3, 4, and 5, no cards can be added here.
+Url: https://snap.fan/locations/MiniaturizedLab/
+------------------------------------------------------------------
+ID: L055
+Name: Mojoworld
+Description: Whoever has more cards here gets +100 Power.
+Url: https://snap.fan/locations/Mojoworld/
+------------------------------------------------------------------
+ID: L056
+Name: Monster Metropolis
+Description: The card(s) with the highest Power here get +3 Power.
+Url: https://snap.fan/locations/MonsterMetropolis/
+------------------------------------------------------------------
+ID: L057
+Name: Morag
+Description: You can't play your first card here each turn.
+Url: https://snap.fan/locations/Morag/
+------------------------------------------------------------------
+ID: L058
+Name: Mt. Wundagore
+Description: After you play a card here, discard a card.
+Url: https://snap.fan/locations/MountWundagore/
+------------------------------------------------------------------
+ID: L059
+Name: Muir Island
+Description: End of Turn: Give cards here +1 Power.
+Url: https://snap.fan/locations/MuirIsland/
+------------------------------------------------------------------
+ID: L060
+Name: Murderworld
+Description: After turn 3, destroy all cards here.
+Url: https://snap.fan/locations/Murderworld/
+------------------------------------------------------------------
+ID: L061
+Name: Necrosha
+Description: Cards here have -2 Power.
+Url: https://snap.fan/locations/Necrosha/
+------------------------------------------------------------------
+ID: L062
+Name: Negative Zone
+Description: Cards here have -3 Power.
+Url: https://snap.fan/locations/NegativeZone/
+------------------------------------------------------------------
+ID: L063
+Name: New York
+Description: On turn 6, you can move cards to this location.
+Url: https://snap.fan/locations/NewYork/
+------------------------------------------------------------------
+ID: L064
+Name: Nidavellir
+Description: Cards here have +5 Power.
+Url: https://snap.fan/locations/Nidavellir/
+------------------------------------------------------------------
+ID: L065
+Name: Nova Roma
+Description: Draw a card.
+Url: https://snap.fan/locations/NovaRoma/
+------------------------------------------------------------------
+ID: L066
+Name: Olympia
+Description: Draw 2 cards.
+Url: https://snap.fan/locations/Olympia/
+------------------------------------------------------------------
+ID: L067
+Name: Onslaught's Citadel
+Description: Ongoing effects here are doubled.
+Url: https://snap.fan/locations/OnslaughtsCitadel/
+------------------------------------------------------------------
+ID: L068
+Name: Oscorp Tower
+Description: After turn 3, all cards here switch sides.
+Url: https://snap.fan/locations/OscorpTower/
+------------------------------------------------------------------
+ID: L069
+Name: Pet Mansion
+Description: This turn, all cards must be played here.
+Url: https://snap.fan/locations/PetAvengersMansion/
+------------------------------------------------------------------
+ID: L070
+Name: Pit of Exile
+Description: Cards with 10 or more Power can't be played here.
+Url: https://snap.fan/locations/PitOfExile/
+------------------------------------------------------------------
+ID: L071
+Name: Plunder Castle
+Description: Only cards that cost 6 can be played here.
+Url: https://snap.fan/locations/PlunderCastle/
+------------------------------------------------------------------
+ID: L072
+Name: Project Pegasus
+Description: +5 Energy this turn.
+Url: https://snap.fan/locations/ProjectPegasus/
+------------------------------------------------------------------
+ID: L073
+Name: Quantum Tunnel
+Description: After you play a card here, swap it with a card in your deck.
+Url: https://snap.fan/locations/QuantumTunnel/
+------------------------------------------------------------------
+ID: L074
+Name: The Raft
+Description: First to fill this gets a random a 6-Cost card. It costs 0.
+Url: https://snap.fan/locations/Raft/
+------------------------------------------------------------------
+ID: L075
+Name: Rickety Bridge
+Description: End of Turn: If there is more than one card here, destroy them.
+Url: https://snap.fan/locations/RicketyBridge/
+------------------------------------------------------------------
+ID: L076
+Name: Rocket Pad
+Description: After turn 4, give cards on the winning side here +1 Power.
+Url: https://snap.fan/locations/RocketPad/
+------------------------------------------------------------------
+ID: L077
+Name: Ruins
+Description: None
+Url: https://snap.fan/locations/Ruins/
+------------------------------------------------------------------
+ID: L078
+Name: Sakaar
+Description: After this turn, put a card from each player's hand here.
+Url: https://snap.fan/locations/Sakaar/
+------------------------------------------------------------------
+ID: L079
+Name: Sakaar Grand Prix
+Description: After turn 4, the winner here gets +1 Max Energy.
+Url: https://snap.fan/locations/SakaarGrandPrix/
+------------------------------------------------------------------
+ID: L080
+Name: Sanctum Sanctorum
+Description: Cards can't be played here.
+Url: https://snap.fan/locations/SanctumSanctorum/
+------------------------------------------------------------------
+ID: L081
+Name: Sewer System
+Description: Cards here have -1 Power.
+Url: https://snap.fan/locations/SewerSystem/
+------------------------------------------------------------------
+ID: L082
+Name: Xandar
+Description: Cards here have +1 Power.
+Url: https://snap.fan/locations/Xandar/
+------------------------------------------------------------------
+ID: L083
+Name: Shuri's Lab
+Description: After you play a card here, double its Power.
+Url: https://snap.fan/locations/ShurisLab/
+------------------------------------------------------------------
+ID: L084
+Name: Sinister London
+Description: After you play a card here, add a copy to another location.
+Url: https://snap.fan/locations/SinisterLondon/
+------------------------------------------------------------------
+ID: L085
+Name: Sokovia
+Description: Discard a card from each player's hand.
+Url: https://snap.fan/locations/Sokovia/
+------------------------------------------------------------------
+ID: L086
+Name: Spider Island
+Description: After you play a card here, move it.
+Url: https://snap.fan/locations/SpiderIsland/
+------------------------------------------------------------------
+ID: L087
+Name: Star Brand Crater
+Description: If you have 10 or more Power here, +1 Energy each turn.
+Url: https://snap.fan/locations/StarBrandCrater/
+------------------------------------------------------------------
+ID: L088
+Name: Stark Tower
+Description: After turn 5, give all cards here +2 Power.
+Url: https://snap.fan/locations/StarkTower/
+------------------------------------------------------------------
+ID: L089
+Name: Strange Academy
+Description: After turn 5, move all cards here to other random locations.
+Url: https://snap.fan/locations/StrangeAcademy/
+------------------------------------------------------------------
+ID: L090
+Name: The Superflow
+Description: If you have no cards here, +1 energy each turn.
+Url: https://snap.fan/locations/Superflow/
+------------------------------------------------------------------
+ID: L091
+Name: The Big House
+Description: Cards that cost 4, 5, or 6 can't be played here.
+Url: https://snap.fan/locations/TheBigHouse/
+------------------------------------------------------------------
+ID: L092
+Name: The Hub
+Description: Add a random card to each player's hand.
+Url: https://snap.fan/locations/TheHub/
+------------------------------------------------------------------
+ID: L093
+Name: The Ice Box
+Description: Give a card in each player’s hand +1 Cost.
+Url: https://snap.fan/locations/TheIceBox/
+------------------------------------------------------------------
+ID: L094
+Name: The Nexus
+Description: Your Power here is granted to other locations as well.
+Url: https://snap.fan/locations/TheNexus/
+------------------------------------------------------------------
+ID: L095
+Name: Thunderbolts Tower
+Description: After turn 5, give all cards here -2 Power.
+Url: https://snap.fan/locations/ThunderboltsTower/
+------------------------------------------------------------------
+ID: L096
+Name: Tinkerer's Workshop
+Description: +1 Energy this turn.
+Url: https://snap.fan/locations/TinkerersWorkshop/
+------------------------------------------------------------------
+ID: L097
+Name: Titan
+Description: 6-Cost cards cost 1 less.
+Url: https://snap.fan/locations/Titan/
+------------------------------------------------------------------
+ID: L098
+Name: Eternals' Ark
+Description: After turn 5, flood the other locations.
+Url: https://snap.fan/locations/UtnapishtimsArk/
+------------------------------------------------------------------
+ID: L099
+Name: Utopia
+Description: 3 and 4-Cost cards cost 1 less.
+Url: https://snap.fan/locations/Utopia/
+------------------------------------------------------------------
+ID: L100
+Name: Valhalla
+Description: After turn 4, cards here repeat their On Reveal abilities.
+Url: https://snap.fan/locations/Valhalla/
+------------------------------------------------------------------
+ID: L101
+Name: Valley Of The Hand
+Description: After turn 5, your destroyed cards revive here.
+Url: https://snap.fan/locations/ValleyOfTheHand/
+------------------------------------------------------------------
+ID: L102
+Name: The Vault
+Description: On turn 6, cards can't be played here.
+Url: https://snap.fan/locations/Vault/
+------------------------------------------------------------------
+ID: L103
+Name: Vormir
+Description: The first card you play here is destroyed.
+Url: https://snap.fan/locations/Vormir/
+------------------------------------------------------------------
+ID: L104
+Name: Wakanda
+Description: Cards here can't be destroyed.
+Url: https://snap.fan/locations/Wakanda/
+------------------------------------------------------------------
+ID: L105
+Name: Wakandan Embassy
+Description: Give +2 Power to cards in players hands.
+Url: https://snap.fan/locations/WakandanEmbassy/
+------------------------------------------------------------------
+ID: L106
+Name: Throne Room
+Description: The highest-Power card(s) here have their Power doubled.
+Url: https://snap.fan/locations/WakandanThroneRoom/
+------------------------------------------------------------------
+ID: L107
+Name: Warrior Falls
+Description: End of Turn: Destroy the lowest power cards here.
+Url: https://snap.fan/locations/WarriorFalls/
+------------------------------------------------------------------
+ID: L108
+Name: Washington D.C.
+Description: Cards here with no abilities have +3 Power.
+Url: https://snap.fan/locations/WashingtonDC/
+------------------------------------------------------------------
+ID: L109
+Name: Westview
+Description: Turns into a new location on turn 4.
+Url: https://snap.fan/locations/Westview/
+------------------------------------------------------------------
+ID: L110
+Name: White Hot Room
+Description: First to fill this gets +3 Max Energy.
+Url: https://snap.fan/locations/WhiteHotRoom/
+------------------------------------------------------------------
+ID: L111
+Name: X-Mansion
+Description: After turn 3, add a random card here for each player.
+Url: https://snap.fan/locations/XMansion/
+------------------------------------------------------------------
