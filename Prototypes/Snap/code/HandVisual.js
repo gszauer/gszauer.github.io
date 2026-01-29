@@ -136,6 +136,12 @@ class HandVisual extends Phaser.GameObjects.Container {
             const localPoint = this.getLocalPoint(pointer.x, pointer.y);
             cardVisual.x = localPoint.x;
             cardVisual.y = localPoint.y;
+
+            // Notify of drag movement for context-sensitive UI updates
+            if (this.onCardDrag) {
+                const worldPoint = this.getWorldPoint(cardVisual.x, cardVisual.y);
+                this.onCardDrag(cardVisual, cardVisual.handCard, worldPoint.x, worldPoint.y);
+            }
         });
 
         cardVisual.on('dragend', (pointer) => {

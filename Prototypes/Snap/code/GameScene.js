@@ -57,11 +57,18 @@ class GameScene extends Phaser.Scene {
     }
 
     initializeGame() {
-        // Create player deck
-        const playerDeck = new Deck(STARTER_DECK_IDS, cardRegistry);
+        // Randomly select decks for player and AI
+        const playerDeckIds = ALL_DECK_IDS[Math.floor(Math.random() * ALL_DECK_IDS.length)];
+        let aiDeckIds = ALL_DECK_IDS[Math.floor(Math.random() * ALL_DECK_IDS.length)];
 
-        // Create AI deck (use alternate deck for variety)
-        const aiDeck = new Deck(STARTER_DECK_2_IDS, cardRegistry);
+        // Try to give AI a different deck if possible
+        if (aiDeckIds === playerDeckIds && ALL_DECK_IDS.length > 1) {
+            const otherDecks = ALL_DECK_IDS.filter(d => d !== playerDeckIds);
+            aiDeckIds = otherDecks[Math.floor(Math.random() * otherDecks.length)];
+        }
+
+        const playerDeck = new Deck(playerDeckIds, cardRegistry);
+        const aiDeck = new Deck(aiDeckIds, cardRegistry);
 
         // Create players
         const player = new Player('player', playerDeck, false);
@@ -118,6 +125,7 @@ class GameScene extends Phaser.Scene {
 
         // Setup hand callbacks
         this.handVisual.onCardDragStart = (cv, hc) => this.onCardDragStart(cv, hc);
+        this.handVisual.onCardDrag = (cv, hc, x, y) => this.onCardDrag(cv, hc, x, y);
         this.handVisual.onCardDragEnd = (cv, hc, x, y) => this.onCardDragEnd(cv, hc, x, y);
         this.handVisual.onCardClicked = (cv, hc) => this.onCardClicked(cv);
 
@@ -256,9 +264,20 @@ class GameScene extends Phaser.Scene {
         }
 
         this.draggedCard = { visual: cardVisual, handCard: handCard };
+
+        // Update blocked indicators to show where this card can't be played
+        this.updateBlockedIndicatorsForCard(handCard);
+    }
+
+    onCardDrag(cardVisual, handCard, worldX, worldY) {
+        // Update any visual feedback during drag if needed
+        // Blocked indicators are already shown from dragStart
     }
 
     onCardDragEnd(cardVisual, handCard, worldX, worldY) {
+        // Clear blocked indicators
+        this.clearBlockedIndicators();
+
         if (!this.allowInput || !this.draggedCard) {
             this.handVisual.returnCard(cardVisual);
             this.draggedCard = null;
@@ -285,6 +304,29 @@ class GameScene extends Phaser.Scene {
 
         this.draggedCard = null;
         this.boardVisual.clearHighlights();
+    }
+
+    /**
+     * Update blocked indicators on all locations for a specific card being dragged
+     */
+    updateBlockedIndicatorsForCard(handCard) {
+        const player = this.gameState.players[0];
+        const locationVisuals = this.boardVisual.getLocationVisuals();
+
+        for (let i = 0; i < locationVisuals.length; i++) {
+            locationVisuals[i].updateBlockedIndicators(player, this.gameState, handCard);
+        }
+    }
+
+    /**
+     * Clear all blocked indicators (when drag ends)
+     */
+    clearBlockedIndicators() {
+        const locationVisuals = this.boardVisual.getLocationVisuals();
+
+        for (let i = 0; i < locationVisuals.length; i++) {
+            locationVisuals[i].clearBlockedIndicators();
+        }
     }
 
     tryPlanCard(handCard, location) {
@@ -441,11 +483,7 @@ class GameScene extends Phaser.Scene {
     animateRevealLocation(data) {
         const lv = this.boardVisual.getLocationVisual(data.location.index);
         lv.reveal();
-
-        // Update blocked indicators after reveal animation completes
-        this.time.delayedCall(ANIM.LOCATION_REVEAL + 100, () => {
-            lv.updateBlockedIndicators(this.gameState.players[0], this.gameState);
-        });
+        // Blocked indicators are now shown only when dragging a card
     }
 
     animateDrawCard(data) {
@@ -646,11 +684,8 @@ class GameScene extends Phaser.Scene {
         // Update location powers
         this.boardVisual.updateAllPowers();
 
-        // Update blocked slot indicators for all locations
-        for (let i = 0; i < this.boardVisual.locationVisuals.length; i++) {
-            const lv = this.boardVisual.locationVisuals[i];
-            lv.updateBlockedIndicators(this.gameState.players[0], this.gameState);
-        }
+        // Blocked indicators are now shown only when dragging a card
+        // (context-sensitive to the specific card being dragged)
 
         // Trigger ongoing effects (recalculate powers)
         this.gameState.triggerOnGoing();

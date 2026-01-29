@@ -36,6 +36,13 @@ class BoardVisual extends Phaser.GameObjects.Container {
     }
 
     /**
+     * Get all location visuals
+     */
+    getLocationVisuals() {
+        return this.locationVisuals;
+    }
+
+    /**
      * Update all location power displays
      */
     updateAllPowers() {

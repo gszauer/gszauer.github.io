@@ -358,15 +358,6 @@ Cost: 3
 Power: 4
 Url: https://snap.fan/cards/Caiera/
 ------------------------------------------------------------------
-ID: C042
-Name: Cannonball
-Series: Series 4
-Description: On Reveal: Move the highest-Power enemy card here away. If you can't, destroy it with a Rock.
-Abilities: On Reveal, Destroy, Move
-Cost: 5
-Power: 6
-Url: https://snap.fan/cards/Cannonball/
-------------------------------------------------------------------
 ID: C043
 Name: Captain America
 Series: Series 1
@@ -1194,15 +1185,6 @@ Abilities: Ongoing, Destroy, Increase Power
 Cost: 6
 Power: 0
 Url: https://snap.fan/cards/Knull/
-------------------------------------------------------------------
-ID: C135
-Name: Korg
-Series: Series 1
-Description: On Reveal: Shuffle a Rock into your opponent's deck.
-Abilities: On Reveal, Add Card to Deck, No Ability
-Cost: 1
-Power: 2
-Url: https://snap.fan/cards/Korg/
 ------------------------------------------------------------------
 ID: C136
 Name: Kraven

@@ -132,20 +132,25 @@ class LocationVisual extends Phaser.GameObjects.Container {
 
     /**
      * Update blocked slot indicators based on location restrictions
+     * @param {Player} player - The player
+     * @param {GameState} game - The game state
+     * @param {HandCard} draggedCard - Optional: the card being dragged (for context-sensitive display)
      */
-    updateBlockedIndicators(player, game) {
+    updateBlockedIndicators(player, game, draggedCard = null) {
         // Clear existing indicators
         this.blockedIndicators.removeAll(true);
 
         if (!this.location || !this.location.isRevealed()) return;
 
-        // Check if location blocks card plays
-        const canPlay = this.location.canPlayCard(null, player, game);
+        // If no card is being dragged, don't show any X marks
+        // (context-sensitive: only show restrictions when relevant)
+        if (!draggedCard) return;
+
+        // Check if this specific card can be played here
+        const canPlay = this.location.canPlayCard(draggedCard, player, game);
         if (canPlay) return;
 
-        // Draw X on player slots
-        const cardW = LAYOUT.CARD_WIDTH_BOARD;
-        const cardH = LAYOUT.CARD_HEIGHT_BOARD;
+        // Draw X on player slots to indicate this card can't be played here
         const xSpacing = LAYOUT.CARD_SLOT_SPACING_X;
         const ySpacing = LAYOUT.CARD_SLOT_SPACING_Y;
 
@@ -163,6 +168,13 @@ class LocationVisual extends Phaser.GameObjects.Container {
             xGraphics.lineBetween(x + xSize/2, y - xSize/2, x - xSize/2, y + xSize/2);
             this.blockedIndicators.add(xGraphics);
         }
+    }
+
+    /**
+     * Clear blocked indicators (call when drag ends)
+     */
+    clearBlockedIndicators() {
+        this.blockedIndicators.removeAll(true);
     }
 
     drawBackground(revealed) {

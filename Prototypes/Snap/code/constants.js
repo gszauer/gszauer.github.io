@@ -234,47 +234,91 @@ const TEXT_STYLES = {
 // STARTER DECK CARD IDS (IDs match all_cards.txt)
 // ============================================================================
 const STARTER_DECK_IDS = [
-    'C001',  // Abomination (5/9)
     'C017',  // Ant Man (1/1)
+    'C040',  // Cable (2/4)
+    'C043',  // Captain America (3/3)
+    'C045',  // Carnage (2/2)
+    'C047',  // Cerebro (3/0)
     'C055',  // Cyclops (3/5)
     'C100',  // Hawkeye (1/1)
     'C111',  // Hulk (6/14)
     'C118',  // Iron Man (5/0)
     'C120',  // Ironheart (3/0)
     'C156',  // Medusa (2/2)
-    'C162',  // Misty Knight (1/3)
-    'C213',  // Shocker (2/4)
-    'C225',  // Star-Lord (2/2)
     'C237'   // The Thing (4/7)
 ];
 
 // Alternative starter deck for variety
 const STARTER_DECK_2_IDS = [
     'C015',  // Angela (2/3)
+    'C039',  // Bruce Banner (2/1)
+    'C044',  // Captain Marvel (4/5)
+    'C049',  // Colleen Wing (2/3)
     'C050',  // Colossus (2/4)
+    'C051',  // Corvus Glaive (3/5)
     'C055',  // Cyclops (3/5)
     'C111',  // Hulk (6/14)
-    'C124',  // Jessica Jones (4/5)
     'C156',  // Medusa (2/2)
-    'C162',  // Misty Knight (1/3)
     'C190',  // Punisher (3/3)
     'C192',  // Quicksilver (1/2)
-    'C208',  // Sentinel (2/3)
-    'C213',  // Shocker (2/4)
-    'C237'   // The Thing (4/7)
+    'C208'   // Sentinel (2/3)
+];
+
+// Third deck - Destruction/Control themed
+const STARTER_DECK_3_IDS = [
+    'C021',  // Armor (2/3)
+    'C022',  // Arnim Zola (6/0)
+    'C041',  // Caiera (3/4)
+    'C042',  // Cannonball (5/6)
+    'C046',  // Cassandra Nova (3/0)
+    'C048',  // Cloak (2/4)
+    'C052',  // Cosmic Ghost Rider (5/6)
+    'C162',  // Misty Knight (1/3)
+    'C192',  // Quicksilver (1/2)
+    'C225',  // Star-Lord (2/2)
+    'C237',  // The Thing (4/7)
+    'C001'   // Abomination (5/9)
+];
+
+// All available decks for random selection
+const ALL_DECK_IDS = [
+    STARTER_DECK_IDS,
+    STARTER_DECK_2_IDS,
+    STARTER_DECK_3_IDS
 ];
 
 // ============================================================================
 // BASIC LOCATION IDS (for random selection - IDs match all_locations.txt)
 // ============================================================================
 const BASIC_LOCATION_IDS = [
-    'L077',  // Ruins - No effect
+    'L002',  // Asgard - Winner draws 2 after turn 4
     'L006',  // Atlantis - +5 Power if only 1 card
-    'L082',  // Xandar - Cards have +1 Power
+    'L007',  // Attilan - After turn 3, shuffle hand, draw 3
+    'L008',  // Aunt May's - Next card gains +3 and moves
+    'L009',  // Avengers Compound - Turn 5, must play here
+    'L010',  // Bar Sinister - Fill with copies
     'L011',  // Bar With No Name - Lowest power wins
-    'L044',  // Knowhere - On Reveal disabled
-    'L043',  // Kamar-Taj - On Reveal twice
-    'L080',  // Sanctum Sanctorum - Can't play cards
+    'L012',  // Baxter Building - Winner gets +4 at others
+    'L013',  // The Bifrost - After turn 4, move cards right
+    'L014',  // Camelot - After turn 5, set all to 5 Power
+    'L015',  // Camp Lehigh - Add random 3-cost to hands
+    'L016',  // Cancun - Power doesn't count for game
+    'L017',  // Castle Blackstone - Winner gets +1 energy
+    'L018',  // Castle Zemo - Next card switches sides
+    'L019',  // Cave of The Dragon - After turn 4, add 5-cost
+    'L020',  // Celestial Burial Ground - Discard and replace
     'L021',  // Cloning Vats - Copy card to hand
-    'L002'   // Asgard - Winner draws 2 after turn 4
+    'L022',  // Clown City - Loser gets +4 at adjacent
+    'L023',  // Crimson Cosmos - No 1-3 cost cards
+    'L024',  // Crown City - Winner gets +4 at adjacent
+    'L025',  // Crystal Towers - Shuffle hand, draw 3
+    'L026',  // Danger Room - 25% chance to destroy
+    'L027',  // Death's Domain - Destroy cards played here
+    'L028',  // Dream Dimension - Turn 5, cards cost +1
+    'L029',  // Elysium - Cards cost 1 less
+    'L043',  // Kamar-Taj - On Reveal twice
+    'L044',  // Knowhere - On Reveal disabled
+    'L077',  // Ruins - No effect
+    'L080',  // Sanctum Sanctorum - Can't play cards
+    'L082'   // Xandar - Cards have +1 Power
 ];
