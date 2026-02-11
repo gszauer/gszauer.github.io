@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Harvest Moon</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Courier New',monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+#gameboy{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(98vw,440px);background:linear-gradient(145deg,#2ca5a5,#1e7878);border-radius:min(4vw,20px);padding:min(2.5vw,12px);box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.15)}
+#screen-label{text-align:center;color:#0e4f4f;font-size:min(2.5vw,11px);font-weight:bold;letter-spacing:2px;margin-bottom:min(.8vw,4px);text-shadow:0 1px 0 rgba(255,255,255,.2)}
+#screen-bezel{background:#111;border-radius:min(2vw,10px);padding:min(1.5vw,6px);margin-bottom:min(2vw,10px);box-shadow:inset 0 2px 8px rgba(0,0,0,.8)}
+#screen-wrap{position:relative;width:100%;padding-bottom:90%;border-radius:min(1vw,4px);overflow:hidden;background:#2a3a1a}
+#screen-wrap canvas{position:absolute!important;top:0;left:0;width:100%!important;height:100%!important}
+#controls{display:flex;justify-content:space-between;align-items:center;padding:min(1.5vw,8px) min(1vw,4px) min(.5vw,2px)}
+#dpad-area{position:relative;width:min(30vw,126px);height:min(30vw,126px);flex-shrink:0}
+.dpad-btn{position:absolute;background:#222;border:none;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center}
+.dpad-btn:active,.dpad-btn.pressed{background:#444}
+.dpad-center{position:absolute;width:33.3%;height:33.3%;left:33.3%;top:33.3%;background:#1a1a1a;z-index:1;border-radius:2px}
+#dpad-up{width:33.3%;height:38%;left:33.3%;top:0;border-radius:min(1.2vw,6px) min(1.2vw,6px) 0 0}
+#dpad-down{width:33.3%;height:38%;left:33.3%;bottom:0;border-radius:0 0 min(1.2vw,6px) min(1.2vw,6px)}
+#dpad-left{width:38%;height:33.3%;left:0;top:33.3%;border-radius:min(1.2vw,6px) 0 0 min(1.2vw,6px)}
+#dpad-right{width:38%;height:33.3%;right:0;top:33.3%;border-radius:0 min(1.2vw,6px) min(1.2vw,6px) 0}
+.dpad-btn .arr{color:#666;font-size:min(3vw,14px);pointer-events:none}
+#mid-controls{display:flex;flex-direction:row;align-items:flex-end;gap:min(3vw,14px);align-self:flex-end;margin-bottom:min(0.5vw,2px)}
+#right-controls{display:flex;align-items:center;gap:min(3vw,14px);flex-shrink:0}
+.action-btn{width:min(14vw,58px);height:min(14vw,58px);border-radius:50%;border:none;font-size:min(3.5vw,16px);font-weight:bold;color:#fff;cursor:pointer;text-shadow:0 -1px 0 rgba(0,0,0,.4);box-shadow:0 3px 0 rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.2)}
+.action-btn:active,.action-btn.pressed{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+#btn-a{background:linear-gradient(180deg,#dd4444,#aa2222)}
+#btn-b{background:linear-gradient(180deg,#dd8833,#aa6622)}
+.sys-btn{width:min(15vw,62px);height:min(5vw,22px);border-radius:min(2vw,10px);border:none;background:#1a5e5e;color:#0e4f4f;font-size:min(2vw,9px);font-weight:bold;letter-spacing:1px;cursor:pointer;box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.sys-btn:active,.sys-btn.pressed{background:#155050}
+#kb-hint{text-align:center;color:#0e4f4f;font-size:min(1.8vw,8px);margin-top:min(.5vw,2px);opacity:.6}
+</style>
+</head>
+<body>
+<div id="gameboy">
+  <div id="screen-label">&#x2B25; HARVEST MOON &#x2B25;</div>
+  <div id="screen-bezel"><div id="screen-wrap"></div></div>
+  <div id="controls">
+    <div id="dpad-area">
+      <button class="dpad-btn" id="dpad-up" data-btn="up"><span class="arr">&#9650;</span></button>
+      <button class="dpad-btn" id="dpad-down" data-btn="down"><span class="arr">&#9660;</span></button>
+      <button class="dpad-btn" id="dpad-left" data-btn="left"><span class="arr">&#9664;</span></button>
+      <button class="dpad-btn" id="dpad-right" data-btn="right"><span class="arr">&#9654;</span></button>
+      <div class="dpad-center"></div>
+    </div>
+    <div id="mid-controls">
+      <button class="sys-btn" id="btn-select" data-btn="select">SELECT</button>
+      <button class="sys-btn" id="btn-start" data-btn="start">START</button>
+    </div>
+    <div id="right-controls">
+      <button class="action-btn" id="btn-b" data-btn="b">B</button>
+      <button class="action-btn" id="btn-a" data-btn="a">A</button>
+    </div>
+  </div>
+  <div id="kb-hint">KB: Arrows / Z=A X=B / Enter=Start Shift=Select</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+<script>
+'use strict';
+
+const T=32,GW=640,GH=576,HUD_H=58;
+const FARM_W=16,FARM_H=14,HOUSE_W=10,HOUSE_H=9,TOWN_W=16,TOWN_H=14;
+const INT_W=10,INT_H=8;
+const BARN_W=12,BARN_H=10;
+const MS_PER_MIN=600;
+const DIR_VEC={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+const SEASONS=['spring','summer','fall','winter'];
+const PAL={
+  spring:{g1:0x6abf4b,g2:0x5aaf3b,till:0x6b4b2a,wet:0x4a3520,water:0x4488cc},
+  summer:{g1:0x4a9f3b,g2:0x3a8f2b,till:0x6b4b2a,wet:0x4a3520,water:0x3378bc},
+  fall:{g1:0xb8943b,g2:0xa8842b,till:0x5b3b1a,wet:0x3a2a10,water:0x5588aa},
+  winter:{g1:0xc8d8e8,g2:0xb8c8d8,till:0x8898a8,wet:0x788898,water:0x7799bb}
+};
+const CROPS={
+  turnip:{name:'Turnip',season:'spring',days:4,cost:30,sell:60,color:0xf0e0d0,multi:false},
+  potato:{name:'Potato',season:'spring',days:7,cost:40,sell:80,color:0xc8a050,multi:true,regrow:3},
+  cabbage:{name:'Cabbage',season:'spring',days:9,cost:100,sell:250,color:0x80c840,multi:false},
+  tomato:{name:'Tomato',season:'summer',days:9,cost:60,sell:100,color:0xe03020,multi:true,regrow:3},
+  corn:{name:'Corn',season:'summer',days:13,cost:60,sell:120,color:0xf0d030,multi:true,regrow:3},
+  eggplant:{name:'Eggplant',season:'fall',days:9,cost:60,sell:80,color:0x7030b0,multi:true,regrow:3}
+};
+const TT={
+  EMPTY:0,FENCE:1,STUMP:2,ROCK:3,WEEDS:4,BRANCH:5,
+  HROOF:6,HWALL:7,HDOOR:8,BROOF:9,BWALL:10,BDOOR:11,
+  COOP:12,BIN:13,WELL:14,SHOP:15,FARMEXIT:16,
+  WALL:20,FLOOR:21,BED:22,TABLE:23,TV:24,KITCHEN:25,CAL:26,IDOOR:27,
+  TREE:30,PATH:31,POND:32,FLOWER:33,SIGN:34,BENCH:35,LAMP:36,
+  CHROOF:40,CHWALL:41,CHDOOR:42,STROOF:43,STWALL:44,STDOOR:45,
+  INROOF:46,INWALL:47,INDOOR:48,BKROOF:49,BKWALL:50,BKDOOR:51,
+  NHROOF:52,NHWALL:53,NHDOOR:54,TOWNEXIT:55,
+  COUNTER:60,SHELF:61,PEW:62,ALTAR:63,ANVIL:64,FORGE:65,
+  BAR:66,STOOL:67,BOOKCASE:68,FIREPLC:69,RUG:70,PLANT:71,STAIRS:72,BARREL:73,
+  HAY:74,TROUGH:75,STALL:76,FODBIN:77
+};
+
+const ANIMAL_DEFS={
+  cow:{name:'Cow',cost:5000,product:'milk',prodName:'Milk',sellPrice:300,color:0xeeddcc,spots:0x885533},
+  chicken:{name:'Chicken',cost:1500,product:'egg',prodName:'Egg',sellPrice:50,color:0xffeeaa,comb:0xdd3322}
+};
+
+const TOOL_NAMES=['Hoe','Water Can','Axe','Hammer','Sickle'];
+const TOOL_LVLS=['Basic','Copper','Silver','Gold','Mystrile'];
+const TOOL_LVL_COLORS=[0x888888,0xcc7733,0xbbbbcc,0xffcc00,0x66ddff];
+const TOOL_UPGRADES=[
+  {ore:'copper_ore',oreQty:3,gold:1000},
+  {ore:'silver_ore',oreQty:3,gold:2000},
+  {ore:'gold_ore',oreQty:3,gold:5000},
+  {ore:'mystrile_ore',oreQty:3,gold:10000},
+];
+const ORE_NAMES={copper_ore:'Copper Ore',silver_ore:'Silver Ore',gold_ore:'Gold Ore',mystrile_ore:'Mystrile Ore'};
+
+// Fish: {name, seasons[], rarity(0-1 lower=rarer), sell, color}
+const FISH={
+  sm_fish:{name:'Small Fish',seasons:['spring','summer','fall','winter'],rarity:0.45,sell:50,color:0x88aacc},
+  md_fish:{name:'Medium Fish',seasons:['spring','summer','fall','winter'],rarity:0.25,sell:120,color:0x5588bb},
+  lg_fish:{name:'Large Fish',seasons:['spring','summer','fall'],rarity:0.10,sell:300,color:0x3366aa},
+  catfish:{name:'Catfish',seasons:['spring','summer'],rarity:0.15,sell:200,color:0x887744},
+  salmon:{name:'Salmon',seasons:['fall'],rarity:0.25,sell:250,color:0xcc6644},
+  squid:{name:'Squid',seasons:['summer'],rarity:0.12,sell:350,color:0xcc88bb},
+  snapper:{name:'Snapper',seasons:['fall','winter'],rarity:0.10,sell:400,color:0xdd4444},
+  legend:{name:'Sea Legend',seasons:['winter'],rarity:0.03,sell:5000,color:0xffdd44},
+};
+// Stall positions inside barn (x,y)
+const COW_STALLS=[{x:2,y:2},{x:4,y:2},{x:6,y:2},{x:8,y:2}];
+const CHICK_STALLS=[{x:2,y:5},{x:4,y:5},{x:6,y:5},{x:8,y:5}];
+
+// ── INPUT ──
+const BTNS=['up','down','left','right','a','b','x','y','start','select'];
+const inp={_c:{},_p:{}};
+for(const b of BTNS){inp._c[b]=false;inp._p[b]=false;}
+inp.held=function(b){return this._c[b];};
+inp.just=function(b){return this._c[b]&&!this._p[b];};
+inp.snap=function(){for(const b of BTNS)this._p[b]=this._c[b];};
+function setupInput(){
+  for(const el of document.querySelectorAll('[data-btn]')){
+    const id=el.dataset.btn;
+    const dn=(e)=>{e.preventDefault();inp._c[id]=true;el.classList.add('pressed');};
+    const up=(e)=>{e.preventDefault();inp._c[id]=false;el.classList.remove('pressed');};
+    el.addEventListener('pointerdown',dn,{passive:false});
+    el.addEventListener('pointerup',up,{passive:false});
+    el.addEventListener('pointerleave',up,{passive:false});
+    el.addEventListener('pointercancel',up,{passive:false});
+  }
+  const km={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
+    z:'a',x:'b',a:'x',s:'y',Enter:'start',Shift:'select'};
+  window.addEventListener('keydown',(e)=>{const k=km[e.key];if(k){e.preventDefault();inp._c[k]=true;sfx.init();sfx.resume();}});
+  window.addEventListener('keyup',(e)=>{const k=km[e.key];if(k){e.preventDefault();inp._c[k]=false;}});
+  // Also init on touch
+  document.addEventListener('pointerdown',()=>{sfx.init();sfx.resume();},{once:false});
+}
+
+// ── MAP BUILDERS ──
+function buildFarm(){
+  const _=TT.EMPTY,F=TT.FENCE,S=TT.STUMP,R=TT.ROCK,W=TT.WEEDS,B=TT.BRANCH;
+  const HR=TT.HROOF,HW=TT.HWALL,HD=TT.HDOOR,BR=TT.BROOF,BW=TT.BWALL,BD=TT.BDOOR;
+  const C=TT.COOP,BI=TT.BIN,WE=TT.WELL,FE=TT.FARMEXIT;
+  const raw=[
+    [F,F,F,F,F,F,F,F,F,F,F,F,F,F,F,F],
+    [F,_,_,_,_,_,_,_,_,_,_,_,_,_,_,F],
+    [F,_,S,_,W,_,_,_,_,_,B,_,_,_,_,F],
+    [F,_,_,_,_,_,_,_,R,_,_,_,W,_,_,F],
+    [F,_,_,_,_,_,_,_,_,_,_,_,_,_,_,F],
+    [F,_,HR,HR,HR,_,_,_,_,BR,BR,_,_,_,_,F],
+    [F,_,HW,HW,HW,_,_,_,_,BW,BW,_,_,_,_,F],
+    [F,_,HW,HD,HW,_,_,_,_,BW,BD,_,_,_,_,F],
+    [F,_,_,_,_,_,_,_,_,_,_,_,_,_,_,F],
+    [F,_,_,_,_,_,_,_,_,_,_,C,C,_,_,F],
+    [F,_,_,_,_,_,_,_,_,_,_,_,_,_,_,F],
+    [F,_,_,WE,_,_,_,_,_,_,BI,_,S,_,_,F],
+    [F,_,_,_,_,_,_,_,_,_,_,_,_,B,_,F],
+    [F,F,F,F,F,F,F,FE,FE,F,F,F,F,F,F,F],
+  ];
+  const grid=[];
+  for(let y=0;y<FARM_H;y++){grid[y]=[];
+    for(let x=0;x<FARM_W;x++){const t=raw[y][x];
+      grid[y][x]={type:t,tilled:false,watered:false,crop:null,
+        hp:(t===TT.STUMP||t===TT.ROCK)?6:(t===TT.BRANCH)?2:(t===TT.WEEDS)?1:0};}}
+  return grid;
+}
+function buildHouse(){
+  const W=TT.WALL,F=TT.FLOOR,B=TT.BED,TB=TT.TABLE,TV=TT.TV,K=TT.KITCHEN,C=TT.CAL,D=TT.IDOOR;
+  return[
+    [W,W,W,W,W,W,W,W,W,W],[W,TV,F,F,F,F,F,B,B,W],[W,F,F,F,F,F,F,F,F,W],
+    [W,F,F,F,F,F,F,F,F,W],[W,F,F,TB,TB,F,F,F,F,W],[W,F,F,F,F,F,F,F,F,W],
+    [W,F,F,F,F,F,F,F,F,W],[W,K,K,F,F,F,C,F,D,W],[W,W,W,W,W,W,W,W,W,W],
+  ];
+}
+function buildBarn(){
+  const W=TT.WALL,F=TT.FLOOR,D=TT.IDOOR,H=TT.HAY,TR=TT.TROUGH,ST=TT.STALL,FB=TT.FODBIN;
+  return[
+    [W,W,W,W,W,W,W,W,W,W,W,W],
+    [W,TR,TR,TR,TR,TR,TR,TR,TR,TR,FB,W],
+    [W,ST,F,ST,F,ST,F,ST,F,F,F,W],
+    [W,F,F,F,F,F,F,F,F,F,F,W],
+    [W,H,F,F,F,F,F,F,F,F,H,W],
+    [W,ST,F,ST,F,ST,F,ST,F,F,F,W],
+    [W,F,F,F,F,F,F,F,F,F,F,W],
+    [W,H,F,F,F,F,F,F,F,F,H,W],
+    [W,F,F,F,F,F,F,F,F,F,F,W],
+    [W,W,W,W,W,D,D,W,W,W,W,W],
+  ];
+}
+function buildTown(){
+  const _=TT.EMPTY,TR=TT.TREE,P=TT.PATH,PD=TT.POND,FL=TT.FLOWER,SI=TT.SIGN,BE=TT.BENCH,LA=TT.LAMP;
+  const CR=TT.CHROOF,CW=TT.CHWALL,CD=TT.CHDOOR;
+  const SR=TT.STROOF,SW=TT.STWALL,SD=TT.STDOOR;
+  const IR=TT.INROOF,IW=TT.INWALL,ID=TT.INDOOR;
+  const BR=TT.BKROOF,BW=TT.BKWALL,BD=TT.BKDOOR;
+  const NR=TT.NHROOF,NW=TT.NHWALL,ND=TT.NHDOOR;
+  const TE=TT.TOWNEXIT;
+  const raw=[
+    [TR,TR,TR,TR,TR,TR,TR,TE,TE,TR,TR,TR,TR,TR,TR,TR],
+    [TR,_,FL,_,_,_,P,P,P,P,_,_,_,FL,_,TR],
+    [TR,_,CR,CR,CR,_,P,P,P,P,_,SR,SR,SR,_,TR],
+    [TR,_,CW,CD,CW,_,P,P,P,P,_,SW,SD,SW,_,TR],
+    [TR,_,_,_,_,_,P,SI,LA,P,_,_,_,_,_,TR],
+    [TR,FL,_,_,_,_,P,P,P,P,_,_,_,_,FL,TR],
+    [TR,_,IR,IR,IR,_,P,P,P,P,_,FL,PD,PD,_,TR],
+    [TR,_,IW,ID,IW,_,P,BE,BE,P,_,FL,PD,PD,_,TR],
+    [TR,_,_,_,_,_,P,P,P,P,_,_,_,_,_,TR],
+    [TR,_,_,_,_,_,P,P,P,P,_,_,_,_,_,TR],
+    [TR,_,BR,BR,BR,_,P,P,P,P,_,NR,NR,NR,_,TR],
+    [TR,_,BW,BD,BW,_,P,P,P,P,_,NW,ND,NW,_,TR],
+    [TR,_,_,_,FL,_,P,P,P,P,_,FL,_,_,_,TR],
+    [TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR,TR],
+  ];
+  const grid=[];
+  for(let y=0;y<14;y++){grid[y]=[];for(let x=0;x<16;x++){grid[y][x]={type:raw[y][x]};}}
+  return grid;
+}
+
+function buildInterior(name){
+  const W=TT.WALL,F=TT.FLOOR,D=TT.IDOOR,TB=TT.TABLE,
+    CT=TT.COUNTER,SH=TT.SHELF,PW=TT.PEW,AL=TT.ALTAR,
+    AN=TT.ANVIL,FG=TT.FORGE,BR=TT.BAR,ST=TT.STOOL,
+    BK=TT.BOOKCASE,FP=TT.FIREPLC,RG=TT.RUG,PL=TT.PLANT,
+    SR=TT.STAIRS,BL=TT.BARREL,BD=TT.BED,KT=TT.KITCHEN;
+  const layouts={
+    church:[
+      [W,W,W,W,W,W,W,W,W,W],[W,PL,F,F,AL,AL,F,F,PL,W],
+      [W,F,F,F,RG,RG,F,F,F,W],[W,F,PW,F,RG,RG,F,PW,F,W],
+      [W,F,PW,F,RG,RG,F,PW,F,W],[W,F,PW,F,F,F,F,PW,F,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,W,W,W,D,D,W,W,W,W],
+    ],
+    store:[
+      [W,W,W,W,W,W,W,W,W,W],[W,SH,SH,F,F,F,F,SH,SH,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,CT,CT,CT,CT,F,F,BL,F,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,SH,F,F,F,F,F,F,SH,W],
+      [W,F,F,F,F,F,F,PL,F,W],[W,W,W,W,D,D,W,W,W,W],
+    ],
+    inn:[
+      [W,W,W,W,W,W,W,W,W,W],[W,BR,BR,BR,F,F,KT,KT,BL,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,ST,F,F,TB,TB,F,F,SR,W],
+      [W,F,F,F,F,F,F,F,SR,W],[W,PL,F,TB,TB,F,F,F,F,W],
+      [W,F,F,ST,F,F,F,PL,F,W],[W,W,W,W,D,D,W,W,W,W],
+    ],
+    blacksmith:[
+      [W,W,W,W,W,W,W,W,W,W],[W,FG,FG,F,F,F,SH,SH,BL,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,F,AN,AN,F,F,F,BL,F,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,BL,F,F,F,F,TB,TB,F,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,W,W,W,D,D,W,W,W,W],
+    ],
+    npchouse:[
+      [W,W,W,W,W,W,W,W,W,W],[W,FP,F,F,F,F,F,BD,BD,W],
+      [W,F,F,F,F,F,F,F,F,W],[W,F,F,TB,TB,F,F,BK,F,W],
+      [W,F,F,F,F,F,F,BK,F,W],[W,PL,F,F,RG,RG,F,F,F,W],
+      [W,F,F,F,RG,RG,F,PL,F,W],[W,W,W,W,D,D,W,W,W,W],
+    ]
+  };
+  return layouts[name];
+}
+
+const INT_META={
+  church:{exitZone:'town',exitX:3,exitY:4,doorX:4,doorY:7},
+  store:{exitZone:'town',exitX:12,exitY:4,doorX:4,doorY:7},
+  inn:{exitZone:'town',exitX:3,exitY:8,doorX:4,doorY:7},
+  blacksmith:{exitZone:'town',exitX:3,exitY:12,doorX:4,doorY:7},
+  npchouse:{exitZone:'town',exitX:12,exitY:12,doorX:4,doorY:7},
+};
+
+const GIFT_CATS={
+  loved:3, liked:1, neutral:0, disliked:-2
+};
+
+// Cooking recipes: id -> {name, ingredients, sellPrice}
+const RECIPES={
+  salad:{name:'Salad',ing:['cabbage','tomato'],sell:200},
+  corn_soup:{name:'Corn Soup',ing:['corn','milk'],sell:250},
+  stew:{name:'Stew',ing:['potato','turnip'],sell:180},
+  egg_rice:{name:'Egg Rice',ing:['egg','turnip'],sell:160},
+  veggie_juice:{name:'Veggie Juice',ing:['tomato','cabbage'],sell:220},
+  eggplant_curry:{name:'Eggplant Curry',ing:['eggplant','potato'],sell:280},
+  cake:{name:'Cake',ing:['egg','milk'],sell:350},
+  sashimi:{name:'Sashimi',ing:['md_fish','sm_fish'],sell:300},
+  grilled_fish:{name:'Grilled Fish',ing:['lg_fish','corn'],sell:500},
+};
+
+// Birthdays: season, day
+const NPC_BDAYS={
+  'Ann':{season:'summer',day:17},'Karen':{season:'fall',day:15},
+  'Gray':{season:'winter',day:6},'Ellen':{season:'spring',day:20},
+  'Mayor Thomas':{season:'summer',day:25},'Jeff':{season:'fall',day:29},
+  'Saibara':{season:'spring',day:11},'Doug':{season:'winter',day:20},
+};
+
+// Marriage candidates and their rivals
+const MARRIAGE_DATA={
+  'Ann':{rival:'Gray',gender:'f'},
+  'Karen':{rival:'Jeff',gender:'f'},
+  'Gray':{rival:'Ann',gender:'m'},
+  'Ellen':{rival:null,gender:'f'},
+};
+
+// Heart events per marriage candidate: triggers at 2,4,6,8 hearts
+const HEART_EVENTS={
+  'Ann':{
+    2:["You find Ann at the inn\ncooking breakfast.","Ann: Hey! Want to try\nmy scrambled eggs?","They're actually\npretty good!","Ann: I'm glad\nyou like them!"],
+    4:["Ann is sitting alone\nby the pond.","Ann: Sometimes I wonder\nwhat I want from life.","Ann: Having you here to\ntalk to really helps.","You feel closer\nto Ann."],
+    6:["Ann drags you to the\nmountain trail.","Ann: Race you to\nthe top!","You both collapse\nlaughing at the summit.","Ann looks at you\nwith warm eyes."],
+    8:["Ann is waiting for you\noutside the inn.","Ann: I made this\njust for you.","She hands you a\nhand-knit scarf.","Ann: You mean\neverything to me."]
+  },
+  'Karen':{
+    2:["Karen is staring at\nthe pond, lost in\nthought.","Karen: Oh, hey.\nJust thinking.","Karen: This town feels\nso small sometimes.","Karen: But you make it\nfeel less boring."],
+    4:["Karen surprises you\noutside the store.","Karen: Dad is driving\nme crazy. Walk with me?","You walk through town\ntogether in silence.","Karen: ...Thanks.\nI needed that."],
+    6:["Karen hands you a\nwildflower.","Karen: Don't read into\nit! I just found it.","She's blushing.","You feel closer\nto Karen."],
+    8:["Karen is outside your\nfarm at sunset.","Karen: I've been\nthinking about us.","Karen: I've never felt\nthis way before.","She squeezes\nyour hand."]
+  },
+  'Gray':{
+    2:["Gray is struggling\nwith a horseshoe.","Gray: Oh. You again.","Gray: ...Fine, hold\nthis for me.","You helped Gray.\nHe seems grateful."],
+    4:["Gray shows you a\nblade he forged.","Gray: It's not perfect,\nbut it's mine.","Gray: Grandpa said it\nwas 'acceptable'.\nThat's high praise.","You feel closer\nto Gray."],
+    6:["Gray waits for you\noutside the blacksmith.","Gray: I made\nsomething for you.","He hands you a small\nornamental pendant.","Gray: Don't make a\nbig deal out of it."],
+    8:["Gray meets you by\nthe pond at dusk.","Gray: You're the only\none who gets me.","Gray: I'm not good\nwith words but...","Gray: You matter\nto me. A lot."]
+  },
+  'Ellen':{
+    2:["Ellen is arranging\nflowers at church.","Ellen: These remind me\nof my late husband.","Ellen: But seeing you\ncheers me right up!","You feel closer\nto Ellen."],
+    4:["Ellen baked you\ncookies.","Ellen: A growing farmer\nneeds good food!","They're delicious.","Ellen beams\nwith pride."],
+    6:["Ellen shows you old\nphotos of the town.","Ellen: This was me,\n40 years ago!","Ellen: Time flies.\nCherish every day.","You feel closer\nto Ellen."],
+    8:["Ellen is knitting\nby the fire.","Ellen: I think of you\nas my own grandchild.","Ellen: Promise me\nyou'll always visit.","Ellen: You've given\nthis old woman\nso much joy."]
+  }
+};
+const NPCS=[
+  {name:'Ann',hair:0xff6644,shirt:0xff8866,
+    sched:[{zone:'inn',x:2,y:2},{zone:'town',x:5,y:4},{zone:'inn',x:3,y:5}],
+    loved:['corn','tomato','corn_soup','cake','catfish'],liked:['turnip','potato','cabbage','egg','milk','salad','stew'],disliked:['copper_ore','silver_ore','gold_ore','mystrile_ore'],
+    dlg:[
+      ["Hi! I'm Ann.\nI help run the inn.","My dad makes the\nbest food in town!"],
+      ["Oh hey! Good to see\nyou again.","Want to grab a\nmeal sometime?"],
+      ["I always look forward\nto seeing you!","You're so kind...\nI really mean it."],
+      ["You're my best friend.\nI'm so glad you moved\nhere!","I can't imagine this\ntown without you."]
+    ]},
+  {name:'Mayor Thomas',hair:0x888888,shirt:0x6644aa,
+    sched:[{zone:'town',x:8,y:9},{zone:'town',x:7,y:4},{zone:'town',x:8,y:9}],
+    loved:['cabbage'],liked:['turnip','potato','tomato','corn'],disliked:[],
+    dlg:[
+      ["Welcome!\nI'm Mayor Thomas.","Work hard on\nyour farm!"],
+      ["The farm is looking\nbetter every day.","Keep up the\ngood work!"],
+      ["You've become a real\npart of this town.","I'm proud of you."],
+      ["You're one of our\nfinest citizens!","This town thrives\nbecause of you."]
+    ]},
+  {name:'Jeff',hair:0x553311,shirt:0x448844,
+    sched:[{zone:'store',x:2,y:2},{zone:'store',x:5,y:4},{zone:'town',x:12,y:8}],
+    loved:['turnip','cabbage'],liked:['potato','tomato','corn','egg'],disliked:['copper_ore','silver_ore'],
+    dlg:[
+      ["Welcome to my store!\nNeed any seeds?","I stock fresh seeds\neach season."],
+      ["Good to see a\nregular customer!","Business has been\ngood lately."],
+      ["You're one of my\nbest customers!","Let me know if you\nneed anything special."],
+      ["I think of you as\nfamily at this point!","Karen speaks highly\nof you too."]
+    ]},
+  {name:'Ellen',hair:0xdd8844,shirt:0xcc4466,
+    sched:[{zone:'church',x:4,y:3},{zone:'town',x:3,y:5},{zone:'npchouse',x:4,y:3}],
+    loved:['milk','egg','cake','egg_rice','snapper'],liked:['turnip','potato','cabbage','tomato','salad','corn_soup'],disliked:['copper_ore','gold_ore'],
+    dlg:[
+      ["Hello dear!\nI'm Ellen.","The church is lovely\nthis time of year."],
+      ["Oh, it's you!\nHow nice.","I hope you're\nsettling in well!"],
+      ["You remind me of\nmy grandchildren.","Come visit anytime,\ndear."],
+      ["You've brought such\njoy to this town!","I pray for your\nhappiness always."]
+    ]},
+  {name:'Gray',hair:0x444444,shirt:0x666666,
+    sched:[{zone:'blacksmith',x:3,y:2},{zone:'blacksmith',x:4,y:4},{zone:'town',x:3,y:12}],
+    loved:['copper_ore','silver_ore','gold_ore','mystrile_ore','stew'],liked:['potato','corn','egg_rice'],disliked:['turnip','egg'],
+    dlg:[
+      ["...Hey.\nI'm Gray.","Grandpa Saibara is\na tough teacher..."],
+      ["Oh. Hey again.","...I don't mind\nyou being here."],
+      ["You're... not bad.\nFor a farmer.","Maybe I'll show you\nsome smithing\nsometime."],
+      ["You're my closest\nfriend here.","Don't tell grandpa\nI said that."]
+    ]},
+  {name:'Karen',hair:0xaa7733,shirt:0xcc3355,
+    sched:[{zone:'store',x:7,y:2},{zone:'town',x:13,y:5},{zone:'town',x:8,y:8}],
+    loved:['eggplant','corn','eggplant_curry','veggie_juice','squid'],liked:['tomato','potato','cabbage','milk','salad','stew'],disliked:['turnip'],
+    dlg:[
+      ["Hey there! I'm Karen.","The pond is my\nfavorite spot."],
+      ["Oh hey, you again!\nWhat's up?","I like people who\nwork hard."],
+      ["You know, you're\npretty cool.","Want to hang out\nby the pond later?"],
+      ["I feel like I can\ntell you anything.","You make this town\nso much better."]
+    ]},
+  {name:'Saibara',hair:0xcccccc,shirt:0x885533,
+    sched:[{zone:'blacksmith',x:2,y:4},{zone:'blacksmith',x:2,y:2},{zone:'blacksmith',x:6,y:5}],
+    loved:['gold_ore','mystrile_ore'],liked:['copper_ore','silver_ore'],disliked:['egg','milk','turnip'],
+    dlg:[
+      ["Hmm? Oh, a visitor.","I'm Saibara, the\nblacksmith."],
+      ["Back again, eh?\nGood.","A hard worker\ndeserves good tools."],
+      ["You've earned my\nrespect, farmer.","I'll give you my\nbest work."],
+      ["Ha! You remind me\nof myself when\nI was young.","Keep that fire\nburning!"]
+    ]},
+  {name:'Doug',hair:0x994422,shirt:0xcc8844,
+    sched:[{zone:'inn',x:2,y:1},{zone:'inn',x:4,y:3},{zone:'inn',x:2,y:1}],
+    loved:['milk','cabbage','corn_soup','cake'],liked:['turnip','potato','tomato','corn','egg','salad','stew'],disliked:['copper_ore','mystrile_ore'],
+    dlg:[
+      ["Welcome to the inn!\nI'm Doug.","Ann is my daughter.\nShe's a hard worker!"],
+      ["Good to see you!\nHungry?","The usual table\nis open for you."],
+      ["You're practically\nfamily now!","Meals are on the\nhouse for you."],
+      ["I couldn't ask for\na better friend\nfor Ann.","This inn is your\nsecond home."]
+    ]},
+];
+
+// Doors are walkable — NOT in solid lists
+const SOLID_FARM=[TT.FENCE,TT.HWALL,TT.HROOF,TT.BWALL,TT.BROOF,TT.COOP,TT.WELL,TT.BIN,TT.STUMP,TT.ROCK];
+const SOLID_HOUSE=[TT.WALL,TT.TABLE,TT.TV,TT.KITCHEN,TT.CAL];
+const SOLID_TOWN=[TT.TREE,TT.POND,TT.CHROOF,TT.CHWALL,TT.STROOF,TT.STWALL,TT.INROOF,TT.INWALL,TT.BKROOF,TT.BKWALL,TT.NHROOF,TT.NHWALL,TT.BENCH,TT.LAMP,TT.SIGN];
+const SOLID_INT=[TT.WALL,TT.COUNTER,TT.SHELF,TT.ALTAR,TT.ANVIL,TT.FORGE,TT.BAR,TT.BOOKCASE,TT.FIREPLC,TT.BARREL,TT.TABLE,TT.KITCHEN,TT.BED,TT.STAIRS,TT.PEW];
+const SOLID_BARN=[TT.WALL,TT.TROUGH,TT.HAY,TT.FODBIN];
+const INTERIOR_ZONES=['church','store','inn','blacksmith','npchouse'];
+
+// ── PROCEDURAL SOUND ──
+class SFX{
+  constructor(){
+    this.ctx=null;this.vol=null;this.ready=false;
+  }
+  init(){
+    if(this.ready)return;
+    try{
+      this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+      this.vol=this.ctx.createGain();
+      this.vol.gain.value=0.3;
+      this.vol.connect(this.ctx.destination);
+      this.ready=true;
+    }catch(e){}
+  }
+  resume(){if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();}
+  // Core: play oscillator
+  tone(freq,dur,type='square',vol=0.3,slide=0){
+    if(!this.ready)return;
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator();
+    const g=this.ctx.createGain();
+    o.type=type;o.frequency.setValueAtTime(freq,t);
+    if(slide)o.frequency.linearRampToValueAtTime(freq+slide,t+dur);
+    g.gain.setValueAtTime(vol,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g);g.connect(this.vol);
+    o.start(t);o.stop(t+dur);
+  }
+  // Noise burst
+  noise(dur,vol=0.15){
+    if(!this.ready)return;
+    const t=this.ctx.currentTime;
+    const sr=this.ctx.sampleRate;
+    const buf=this.ctx.createBuffer(1,sr*dur,sr);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1);
+    const s=this.ctx.createBufferSource();
+    s.buffer=buf;
+    const g=this.ctx.createGain();
+    g.gain.setValueAtTime(vol,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    s.connect(g);g.connect(this.vol);
+    s.start(t);
+  }
+  // ── Sound Effects ──
+  step(){this.noise(0.04,0.06);}
+  hoe(){this.tone(120,0.15,'square',0.2);this.noise(0.08,0.1);}
+  water(){
+    this.tone(600,0.2,'sine',0.15,200);
+    this.tone(800,0.15,'sine',0.1,-300);
+  }
+  axe(){this.tone(200,0.08,'square',0.25);this.noise(0.12,0.15);}
+  hammer(){this.tone(100,0.1,'square',0.3);this.noise(0.15,0.2);}
+  sickle(){this.tone(400,0.1,'sawtooth',0.15,300);}
+  harvest(){
+    this.tone(520,0.1,'square',0.2);
+    setTimeout(()=>this.tone(660,0.1,'square',0.2),80);
+    setTimeout(()=>this.tone(780,0.15,'square',0.2),160);
+  }
+  plant(){this.tone(330,0.12,'sine',0.15);this.noise(0.06,0.05);}
+  select(){this.tone(660,0.08,'square',0.15);setTimeout(()=>this.tone(880,0.1,'square',0.15),60);}
+  cancel(){this.tone(330,0.1,'square',0.15);setTimeout(()=>this.tone(220,0.12,'square',0.15),70);}
+  dialog(){this.tone(500,0.05,'square',0.1);}
+  menuMove(){this.tone(440,0.03,'square',0.08);}
+  coin(){
+    this.tone(988,0.08,'square',0.15);
+    setTimeout(()=>this.tone(1320,0.12,'square',0.15),70);
+  }
+  buy(){
+    this.tone(440,0.06,'square',0.12);
+    setTimeout(()=>this.tone(550,0.06,'square',0.12),50);
+    setTimeout(()=>this.tone(660,0.1,'square',0.12),100);
+  }
+  heart(){
+    this.tone(520,0.12,'sine',0.2);
+    setTimeout(()=>this.tone(660,0.12,'sine',0.2),100);
+    setTimeout(()=>this.tone(780,0.15,'sine',0.2),200);
+  }
+  heartDown(){this.tone(400,0.15,'sine',0.15,-100);}
+  morning(){
+    this.tone(440,0.15,'sine',0.15);
+    setTimeout(()=>this.tone(550,0.15,'sine',0.15),150);
+    setTimeout(()=>this.tone(660,0.15,'sine',0.15),300);
+    setTimeout(()=>this.tone(880,0.25,'sine',0.15),450);
+  }
+  fishCast(){this.tone(300,0.2,'sine',0.12,200);this.noise(0.08,0.06);}
+  fishBite(){
+    for(let i=0;i<3;i++)setTimeout(()=>this.tone(880,0.06,'square',0.25),i*70);
+  }
+  fishCatch(){
+    this.tone(440,0.1,'square',0.2);
+    setTimeout(()=>this.tone(660,0.1,'square',0.2),90);
+    setTimeout(()=>this.tone(880,0.1,'square',0.2),180);
+    setTimeout(()=>this.tone(1100,0.18,'square',0.2),270);
+  }
+  fishMiss(){this.tone(300,0.2,'square',0.15,-150);}
+  ship(){
+    this.tone(330,0.08,'square',0.12);
+    setTimeout(()=>this.tone(440,0.08,'square',0.12),80);
+    setTimeout(()=>this.tone(550,0.12,'square',0.12),160);
+  }
+  collapse(){this.tone(400,0.3,'sine',0.2,-200);setTimeout(()=>this.tone(200,0.4,'sine',0.15,-100),200);}
+  wed(){
+    const notes=[523,587,659,784,880,784,880,1047];
+    for(let i=0;i<notes.length;i++)setTimeout(()=>this.tone(notes[i],0.2,'sine',0.18),i*150);
+  }
+  ore(){this.tone(880,0.06,'square',0.15);this.noise(0.05,0.08);}
+  feed(){this.tone(350,0.1,'sine',0.12);setTimeout(()=>this.tone(440,0.12,'sine',0.12),80);}
+  cook(){
+    this.noise(0.1,0.08);
+    setTimeout(()=>this.tone(550,0.1,'sine',0.15),100);
+    setTimeout(()=>this.tone(660,0.12,'sine',0.15),200);
+  }
+}
+const sfx=new SFX();
+
+// ── BOOT SCENE ──
+class BootScene extends Phaser.Scene{
+  constructor(){super('BootScene');}
+  create(){
+    const dirs=['down','up','left','right'];
+    const eyes=[[[10,7],[18,7]],null,[[10,7]],[[18,7]]];
+    for(let d=0;d<4;d++){
+      const g=this.make.graphics({add:false});
+      g.fillStyle(0xcc8833);g.fillRect(8,0,16,6);g.fillRect(6,4,20,3);
+      g.fillStyle(0xffcc88);g.fillRect(9,5,14,10);
+      if(eyes[d])for(const e of eyes[d]){g.fillStyle(0x222222);g.fillRect(e[0],e[1],3,3);}
+      g.fillStyle(0x3366cc);g.fillRect(7,15,18,10);
+      g.fillStyle(0x664422);g.fillRect(7,22,18,2);
+      g.fillStyle(0x5544aa);g.fillRect(8,25,6,7);g.fillRect(18,25,6,7);
+      g.generateTexture('p-'+dirs[d],T,T);g.destroy();
+    }
+    this.scene.start('GameScene');
+  }
+}
+
+// ── GAME SCENE ──
+class GameScene extends Phaser.Scene{
+  constructor(){super('GameScene');}
+
+  init(){
+    this.season='spring';this.year=1;this.day=1;
+    this.hour=6;this.minute=0;this.weather='sunny';this.tmrwWeather='sunny';
+    this.timeAcc=0;
+    this.px=3;this.py=9;this.pdir='down';
+    this.moving=false;this.acting=false;this.turnTimer=0;
+    this.stamina=100;this.maxSt=100;this.gold=500;this.didCollapse=false;
+    this.inv=[];this.shipBin=[];this.lastShip=[];
+    this.toolLevels=[0,0,0,0,0]; // one per tool: Hoe,WaterCan,Axe,Hammer,Sickle
+    this.upgrading=null; // {toolIdx, daysLeft} or null
+    this.zone='farm';this.indoor=false;
+    this.ui='splash';
+    this.dlgLines=[];this.dlgIdx=0;this.dlgCb=null;
+    this.prmTxt='';this.prmOpts=[];this.prmIdx=0;this.prmCb=null;
+    this.shopList=[];this.shopIdx=0;this.splashT=0;this.statusScroll=0;
+    this.npcMoveTimer=0;
+    this.animals=[];
+    this.upgradeMsg=null;
+    // Fishing state
+    this.fishState=null; // null, 'cast', 'wait', 'bite', 'caught', 'missed'
+    this.fishTimer=0;
+    this.fishBiteWindow=0;
+    this.fishCaughtId=null;
+    this.rivalMsg=null;
+    // Rain particles
+    this.rainDrops=[];
+    for(let i=0;i<120;i++){
+      this.rainDrops.push({x:Math.random()*FARM_W*T,y:Math.random()*FARM_H*T,
+        speed:300+Math.random()*200,len:8+Math.random()*12,drift:-20-Math.random()*30});
+    }
+  }
+
+  create(){
+    this.farm=buildFarm();this.house=buildHouse();this.town=buildTown();
+    this.barn=buildBarn();
+    this.interiors={};
+    for(const name of INTERIOR_ZONES)this.interiors[name]=buildInterior(name);
+    this.npcs=JSON.parse(JSON.stringify(NPCS));
+    for(const n of this.npcs){const s=n.sched[0];n.zone=s.zone;n.x=s.x;n.y=s.y;n.hearts=0;n.talkedToday=false;n.giftedToday=false;n.eventsSeen={};}
+    this.married=null; // NPC name or null
+    this.spouse=null; // ref to married NPC runtime obj
+    this.rivalHearts={}; // 'Ann-Gray':0, etc.
+    for(const[name,data] of Object.entries(MARRIAGE_DATA)){
+      if(data.rival&&data.gender==='f')this.rivalHearts[name+'-'+data.rival]=0;
+    }
+    this.addInv('turnip_seed',4);
+
+    this.gMap=this.add.graphics().setDepth(0);
+    this.gNpc=this.add.graphics().setDepth(1);
+    this.gOver=this.add.graphics().setDepth(3);
+    this.gHud=this.add.graphics().setDepth(10).setScrollFactor(0);
+    this.gUI=this.add.graphics().setDepth(20).setScrollFactor(0);
+    this.player=this.add.image(this.px*T+T/2,this.py*T+T/2,'p-down').setDepth(2);
+
+    const dpr=Math.max(2,window.devicePixelRatio||2);
+    const mt=(d,s,c)=>this.add.text(0,0,'',{fontFamily:'"Courier New",monospace',fontSize:s+'px',color:c,resolution:dpr,lineSpacing:4}).setDepth(d).setScrollFactor(0);
+    this.th1=mt(11,18,'#fff');this.th2=mt(11,15,'#ccc');this.th3=mt(11,15,'#ffdd44');
+    this.tu1=mt(21,20,'#fff');this.tu2=mt(21,17,'#fff');this.tu3=mt(21,14,'#aaa');
+    this.tu1.setWordWrapWidth(GW-64);this.tu2.setWordWrapWidth(GW-64);
+
+    this.camSet();
+    this.cameras.main.startFollow(this.player,true,0.2,0.2);
+    this.cameras.main.setZoom(2);
+    this.uiCam=this.cameras.add(0,0,GW,GH);
+    this.uiCam.setScroll(0,0);
+    this.cameras.main.ignore([this.gHud,this.gUI,this.th1,this.th2,this.th3,this.tu1,this.tu2,this.tu3]);
+    this.uiCam.ignore([this.gMap,this.gNpc,this.gOver,this.player]);
+
+    this.rollWeather();this.tmrwWeather=this._genWeather();
+    this.splashT=2000;this.ui='splash';
+    setupInput();
+  }
+
+  camSet(){
+    const c=this.cameras.main;
+    if(this.zone==='farm')c.setBounds(0,0,FARM_W*T,FARM_H*T);
+    else if(this.zone==='house')c.setBounds(0,0,HOUSE_W*T,HOUSE_H*T);
+    else if(this.zone==='town')c.setBounds(0,0,TOWN_W*T,TOWN_H*T);
+    else if(this.zone==='barn')c.setBounds(0,0,BARN_W*T,BARN_H*T);
+    else c.setBounds(0,0,INT_W*T,INT_H*T);
+  }
+
+  update(t,dt){
+    this.drawMap();this.drawPlayer();this.drawHud();this.drawUI();
+    switch(this.ui){
+    case 'splash':
+      this.splashT-=dt;if(this.splashT<=0||inp.just('a')){sfx.morning();
+        const msgs=[];
+        if(this.upgradeMsg){msgs.push(this.upgradeMsg);this.upgradeMsg=null;}
+        if(this.rivalMsg){msgs.push(this.rivalMsg);this.rivalMsg=null;}
+        // Birthday check
+        for(const[name,bd] of Object.entries(NPC_BDAYS)){
+          if(bd.season===this.season&&bd.day===this.day)msgs.push("Today is "+name+"'s\nbirthday!");
+        }
+        // Spouse morning greeting
+        if(this.married&&msgs.length===0){
+          const greets=["Good morning, dear!","Have a great day\non the farm!","I made breakfast\nfor you!","Be careful out there!"];
+          msgs.push(this.married+': "'+greets[this.day%greets.length]+'"');
+        }
+        if(msgs.length>0){this.ui='play';this.dlg(msgs);}
+        else this.ui='play';
+      }break;
+    case 'play':
+      if(!this.indoor){
+        this.timeAcc+=dt;
+        while(this.timeAcc>=MS_PER_MIN){this.timeAcc-=MS_PER_MIN;this.minute++;
+          if(this.minute>=60){this.minute=0;this.hour++;}
+          if(this.hour>=26&&!this.didCollapse)this.collapse();}
+      }
+      this.updateNpcs(dt);
+      if(!this.moving&&!this.acting){
+        let d=null;
+        if(inp.held('up'))d='up';else if(inp.held('down'))d='down';
+        else if(inp.held('left'))d='left';else if(inp.held('right'))d='right';
+        if(d){
+          if(this.pdir!==d){this.pdir=d;this.turnTimer=125;}
+          else if(this.turnTimer>0){this.turnTimer-=dt;}
+          else{const nx=this.px+DIR_VEC[d].x,ny=this.py+DIR_VEC[d].y;
+          if(this.canWalk(nx,ny))this.doMove(nx,ny);}
+        }else{this.turnTimer=0;}
+        if(inp.just('start'))this.ui='status';
+        if(inp.just('select'))this.tileInfo();
+        if(inp.just('a'))this.doAction();
+      }
+      break;
+    case 'dialog':
+      if(inp.just('a')||inp.just('b')){sfx.dialog();this.dlgIdx++;
+        if(this.dlgIdx>=this.dlgLines.length){this.ui='play';if(this.dlgCb){const cb=this.dlgCb;this.dlgCb=null;cb();}}}
+      break;
+    case 'prompt':
+      if(inp.just('up')){this.prmIdx=Math.max(0,this.prmIdx-1);sfx.menuMove();}
+      if(inp.just('down')){this.prmIdx=Math.min(this.prmOpts.length-1,this.prmIdx+1);sfx.menuMove();}
+      if(inp.just('a')){sfx.select();const cb=this.prmCb,i=this.prmIdx;this.prmCb=null;this.ui='play';if(cb)cb(i);}
+      if(inp.just('b')){sfx.cancel();const cb=this.prmCb;this.prmCb=null;this.ui='play';if(cb)cb(this.prmOpts.length-1);}
+      break;
+    case 'shop':
+      if(inp.just('b')){sfx.cancel();this.ui='play';}
+      if(inp.just('up')){this.shopIdx=Math.max(0,this.shopIdx-1);sfx.menuMove();}
+      if(inp.just('down')){this.shopIdx=Math.min(this.shopList.length-1,this.shopIdx+1);sfx.menuMove();}
+      if(inp.just('a')){const it=this.shopList[this.shopIdx];
+        if(this.gold>=it.price){this.gold-=it.price;sfx.buy();
+          if(it.animal){this.buyAnimal(it.animal);}else{this.addInv(it.id,1);}}}
+      break;
+    case 'ship':
+      if(inp.just('a')){this.splashT=2000;this.ui='splash';}break;
+    case 'status':
+      if(inp.just('a')||inp.just('b')||inp.just('start')){this.statusScroll=0;this.ui='play';}
+      if(inp.just('up'))this.statusScroll=Math.max(0,this.statusScroll-1);
+      if(inp.just('down'))this.statusScroll++;
+      break;
+    case 'fishing':
+      this.updateFishing(dt);break;
+    }
+    inp.snap();
+  }
+
+  // ── NPCs ──
+  updateNpcs(dt){
+    this.npcMoveTimer+=dt;
+    if(this.npcMoveTimer<3000)return;
+    this.npcMoveTimer=0;
+    const si=this.hour<10?0:(this.hour<16?1:2);
+    for(const n of this.npcs){
+      const target=n.sched[si];
+      if(n.zone!==target.zone){n.zone=target.zone;n.x=target.x;n.y=target.y;continue;}
+      if(n.x===target.x&&n.y===target.y){
+        const dirs=['up','down','left','right'];
+        const d=dirs[Math.floor(Math.random()*4)];
+        const nx=n.x+DIR_VEC[d].x,ny=n.y+DIR_VEC[d].y;
+        if(this.npcCanWalk(n,nx,ny)){n.x=nx;n.y=ny;}
+      }else{
+        const dx=target.x-n.x,dy=target.y-n.y;
+        if(Math.abs(dx)>Math.abs(dy)){const nx=n.x+(dx>0?1:-1);if(this.npcCanWalk(n,nx,n.y))n.x=nx;}
+        else{const ny=n.y+(dy>0?1:-1);if(this.npcCanWalk(n,n.x,ny))n.y=ny;}
+      }
+    }
+  }
+  npcCanWalk(npc,x,y){
+    const z=npc.zone;
+    if(INTERIOR_ZONES.includes(z)){
+      if(x<0||x>=INT_W||y<0||y>=INT_H)return false;
+      if(SOLID_INT.includes(this.interiors[z][y][x]))return false;
+    }else if(z==='town'){
+      if(x<0||x>=TOWN_W||y<0||y>=TOWN_H)return false;
+      if(SOLID_TOWN.includes(this.town[y][x].type))return false;
+    }else return false;
+    if(z===this.zone&&x===this.px&&y===this.py)return false;
+    for(const o of this.npcs){if(o!==npc&&o.zone===z&&o.x===x&&o.y===y)return false;}
+    return true;
+  }
+
+  // ── MOVEMENT ──
+  canWalk(x,y){
+    if(this.zone==='farm'){
+      if(x<0||x>=FARM_W||y<0||y>=FARM_H)return false;
+      return !SOLID_FARM.includes(this.farm[y][x].type);
+    }
+    if(this.zone==='house'){
+      if(x<0||x>=HOUSE_W||y<0||y>=HOUSE_H)return false;
+      return !SOLID_HOUSE.includes(this.house[y][x]);
+    }
+    if(this.zone==='town'){
+      if(x<0||x>=TOWN_W||y<0||y>=TOWN_H)return false;
+      if(SOLID_TOWN.includes(this.town[y][x].type))return false;
+      for(const n of this.npcs){if(n.zone==='town'&&n.x===x&&n.y===y)return false;}
+      return true;
+    }
+    if(this.zone==='barn'){
+      if(x<0||x>=BARN_W||y<0||y>=BARN_H)return false;
+      if(SOLID_BARN.includes(this.barn[y][x]))return false;
+      // Block walking onto animal tiles
+      for(const a of this.animals){if(a.x===x&&a.y===y)return false;}
+      return true;
+    }
+    if(INTERIOR_ZONES.includes(this.zone)){
+      if(x<0||x>=INT_W||y<0||y>=INT_H)return false;
+      if(SOLID_INT.includes(this.interiors[this.zone][y][x]))return false;
+      for(const n of this.npcs){if(n.zone===this.zone&&n.x===x&&n.y===y)return false;}
+      return true;
+    }
+    return false;
+  }
+
+  doMove(nx,ny){
+    this.moving=true;this.px=nx;this.py=ny;sfx.step();
+    this.tweens.add({targets:this.player,x:nx*T+T/2,y:ny*T+T/2,duration:110,ease:'Linear',
+      onComplete:()=>{this.moving=false;this.stepTrig();}});
+  }
+
+  // All door entries are walk-in
+  stepTrig(){
+    if(this.zone==='farm'){
+      const t=this.farm[this.py][this.px].type;
+      if(t===TT.HDOOR)this.warp('house',8,6);
+      if(t===TT.BDOOR)this.warp('barn',5,8);
+      if(t===TT.FARMEXIT)this.warp('town',7,1);
+    }
+    if(this.zone==='house'&&this.house[this.py][this.px]===TT.IDOOR)this.warp('farm',3,9);
+    if(this.zone==='barn'&&this.barn[this.py][this.px]===TT.IDOOR)this.warp('farm',10,8);
+    if(this.zone==='town'){
+      const tt=this.town[this.py][this.px].type;
+      if(tt===TT.TOWNEXIT)this.warp('farm',7,12);
+      if(tt===TT.CHDOOR)this.warp('church',4,6);
+      if(tt===TT.STDOOR)this.warp('store',4,6);
+      if(tt===TT.INDOOR)this.warp('inn',4,6);
+      if(tt===TT.BKDOOR)this.warp('blacksmith',4,6);
+      if(tt===TT.NHDOOR)this.warp('npchouse',4,6);
+    }
+    if(INTERIOR_ZONES.includes(this.zone)){
+      const grid=this.interiors[this.zone];
+      if(grid[this.py][this.px]===TT.IDOOR){
+        const m=INT_META[this.zone];this.warp(m.exitZone,m.exitX,m.exitY);
+      }
+    }
+  }
+
+  warp(zone,tx,ty){
+    this.ui='transition';
+    this.cameras.main.fadeOut(200,0,0,0);
+    this.cameras.main.once('camerafadeoutcomplete',()=>{
+      this.zone=zone;this.indoor=(zone==='house'||zone==='barn'||INTERIOR_ZONES.includes(zone));
+      this.px=tx;this.py=ty;this.player.setPosition(tx*T+T/2,ty*T+T/2);
+      this.camSet();
+      this.cameras.main.fadeIn(200,0,0,0);
+      this.cameras.main.once('camerafadeincomplete',()=>{this.ui='play';});
+    });
+  }
+
+  // ── ACTIONS ──
+  doAction(){
+    const fx=this.px+DIR_VEC[this.pdir].x,fy=this.py+DIR_VEC[this.pdir].y;
+    for(const n of this.npcs){if(n.zone===this.zone&&n.x===fx&&n.y===fy){this.interactNpc(n);return;}}
+    if(this.zone==='house')return this.actHouse(fx,fy);
+    if(this.zone==='farm')return this.actFarm(fx,fy);
+    if(this.zone==='town')return this.actTown(fx,fy);
+    if(this.zone==='barn')return this.actBarn(fx,fy);
+    if(INTERIOR_ZONES.includes(this.zone))return this.actInterior(fx,fy);
+  }
+
+  actHouse(fx,fy){
+    if(fx<0||fx>=HOUSE_W||fy<0||fy>=HOUSE_H)return;
+    const t=this.house[fy][fx];
+    if(t===TT.BED)this.prompt('Go to sleep?',['Yes','No'],(i)=>{if(i===0)this.sleep();});
+    if(t===TT.TV){const w=this.tmrwWeather[0].toUpperCase()+this.tmrwWeather.slice(1);this.dlg(["Tomorrow's weather:\n"+w]);}
+    if(t===TT.CAL){
+      let cal=this.sName()+' '+this.day+', Year '+this.year+'\n';
+      for(const[name,bd] of Object.entries(NPC_BDAYS)){
+        if(bd.season===this.season)cal+=name+"'s birthday: "+bd.day+'\n';
+      }
+      this.dlg([cal.trim()]);
+    }
+    if(t===TT.KITCHEN)this.openCooking();
+  }
+
+  actFarm(fx,fy){
+    if(fx<0||fx>=FARM_W||fy<0||fy>=FARM_H)return;
+    const tile=this.farm[fy][fx];
+    if(tile.type===TT.BIN){this.shipAll();return;}
+    if(tile.type===TT.WELL){
+      this.prompt('Well',['Refill Water','Fish','Cancel'],(i)=>{
+        if(i===0){sfx.water();this.dlg(['Refilled watering can!']);}
+        else if(i===1)this.startFishing('well');
+      });return;}
+    // Harvest mature crop
+    if(tile.crop&&tile.crop.stg>=3){this.harvest(fx,fy);return;}
+    // Water growing crop
+    if(tile.crop&&tile.tilled&&!tile.watered){if(!this.useSt(this.tCost(1)))return;sfx.water();tile.watered=true;this.flash(fx,fy,0x4488cc);return;}
+    // Axe for stumps/branches
+    if(tile.type===TT.STUMP||tile.type===TT.BRANCH){
+      if(!this.useSt(this.tCost(2)))return;sfx.axe();
+      const dmg=1+this.toolLevels[2];tile.hp-=dmg;
+      if(tile.hp<=0){tile.type=TT.EMPTY;tile.hp=0;this.flash(fx,fy,0xffff00);}
+      else this.flash(fx,fy,0xff8800);return;}
+    // Hammer for rocks — may drop ore
+    if(tile.type===TT.ROCK){
+      if(!this.useSt(this.tCost(3)))return;sfx.hammer();
+      const dmg=1+this.toolLevels[3];tile.hp-=dmg;
+      if(tile.hp<=0){tile.type=TT.EMPTY;tile.hp=0;this.dropOre();this.flash(fx,fy,0xffff00);}
+      else this.flash(fx,fy,0xff8800);return;}
+    // Sickle for weeds
+    if(tile.type===TT.WEEDS){if(!this.useSt(this.tCost(4)))return;sfx.sickle();tile.type=TT.EMPTY;tile.hp=0;this.flash(fx,fy,0x88ff88);return;}
+    // Hoe untilled ground
+    if(tile.type===TT.EMPTY&&!tile.tilled&&!tile.crop){if(!this.useSt(this.tCost(0)))return;sfx.hoe();tile.tilled=true;this.flash(fx,fy,0xffffff);return;}
+    // Water dry tilled soil
+    if(tile.type===TT.EMPTY&&tile.tilled&&!tile.watered&&!tile.crop){if(!this.useSt(this.tCost(1)))return;sfx.water();tile.watered=true;this.flash(fx,fy,0x4488cc);return;}
+    // Plant on tilled soil
+    if(tile.type===TT.EMPTY&&tile.tilled&&!tile.crop){this.smartPlant(fx,fy);return;}
+  }
+
+  actTown(fx,fy){
+    if(fx<0||fx>=TOWN_W||fy<0||fy>=TOWN_H)return;
+    const tt=this.town[fy][fx].type;
+    if(tt===TT.SIGN)this.dlg(['Welcome to\nMineral Town!']);
+    else if(tt===TT.BENCH)this.dlg(['A nice place to sit.']);
+    else if(tt===TT.POND)this.startFishing('pond');
+    else if(tt===TT.FLOWER)this.dlg(['Pretty flowers!']);
+  }
+
+  actBarn(fx,fy){
+    if(fx<0||fx>=BARN_W||fy<0||fy>=BARN_H)return;
+    // Check animal interaction
+    for(const a of this.animals){
+      if(a.x===fx&&a.y===fy){this.interactAnimal(a);return;}
+    }
+    const t=this.barn[fy][fx];
+    if(t===TT.TROUGH)this.feedAllAnimals();
+    else if(t===TT.FODBIN)this.dlg(['Fodder storage.\nUse the trough to feed\nyour animals.']);
+    else if(t===TT.HAY)this.dlg(['A bale of hay.']);
+  }
+
+  actInterior(fx,fy){
+    if(fx<0||fx>=INT_W||fy<0||fy>=INT_H)return;
+    const t=this.interiors[this.zone][fy][fx];
+    if(this.zone==='store'&&t===TT.COUNTER){this.openShop();return;}
+    if(t===TT.SHELF)this.dlg(['Shelves full of goods.']);
+    else if(t===TT.ALTAR)this.dlg(['A beautiful altar.']);
+    else if(t===TT.PEW)this.dlg(['A wooden pew.']);
+    else if(t===TT.ANVIL){if(this.zone==='blacksmith')this.openBlacksmith();else this.dlg(['A heavy anvil.\nStill hot!']);}
+    else if(t===TT.FORGE){if(this.zone==='blacksmith')this.openBlacksmith();else this.dlg(['The forge burns bright!']);}
+    else if(t===TT.BAR)this.dlg(['The bar counter.\nSmells like fresh bread.']);
+    else if(t===TT.BOOKCASE)this.dlg(['Books about farming\nand cooking.']);
+    else if(t===TT.FIREPLC)this.dlg(['A warm fireplace.\nCozy!']);
+    else if(t===TT.BARREL)this.dlg(['A wooden barrel.']);
+    else if(t===TT.STAIRS)this.dlg(['Stairs to the\nsecond floor.\n(Not accessible yet)']);
+    else if(t===TT.BED)this.dlg(["Someone else's bed!"]);
+    else if(t===TT.COUNTER)this.dlg(['A counter.']);
+  }
+
+  // ── ANIMALS ──
+  buyAnimal(type){
+    const def=ANIMAL_DEFS[type];
+    const stalls=type==='cow'?COW_STALLS:CHICK_STALLS;
+    const count=this.animals.filter(a=>a.type===type).length;
+    if(count>=stalls.length){this.dlg(['No more room for\n'+def.name+'s!']);return;}
+    const pos=stalls[count];
+    this.animals.push({type,x:pos.x,y:pos.y,fed:false,collected:false,hearts:0,name:def.name+' '+(count+1)});
+    this.dlg(['You bought a '+def.name+'!\nIt\'s in your barn.']);
+  }
+
+  interactAnimal(a){
+    const def=ANIMAL_DEFS[a.type];
+    if(!a.fed){
+      this.prompt(a.name+'\n'+a.hearts+' hearts',['Pet','Cancel'],(i)=>{
+        if(i===0){a.hearts=Math.min(10,a.hearts+1);this.dlg([a.name+' looks happy!\n(Feed at trough first\nto collect '+def.prodName+')']);}
+      });
+    }else if(!a.collected){
+      this.prompt(a.name+'\n'+a.hearts+' hearts',['Collect '+def.prodName,'Pet','Cancel'],(i)=>{
+        if(i===0){a.collected=true;this.addInv(def.product,1);this.dlg(['Got '+def.prodName+'\nfrom '+a.name+'!']);}
+        else if(i===1){a.hearts=Math.min(10,a.hearts+1);this.dlg([a.name+' looks happy!']);}
+      });
+    }else{
+      this.prompt(a.name+'\n'+a.hearts+' hearts',['Pet','Cancel'],(i)=>{
+        if(i===0){a.hearts=Math.min(10,a.hearts+1);this.dlg([a.name+' looks happy!\n(Already collected today)']);}
+      });
+    }
+  }
+
+  feedAllAnimals(){
+    const barnAnimals=this.animals;
+    if(barnAnimals.length===0){this.dlg(['No animals to feed.\nBuy some at the store!']);return;}
+    let unfed=0;
+    for(const a of barnAnimals){if(!a.fed)unfed++;}
+    if(unfed===0){this.dlg(['All animals are fed!']);return;}
+    if(!this.useSt(unfed))return;
+    for(const a of barnAnimals){a.fed=true;}
+    sfx.feed();this.dlg(['Fed '+unfed+' animal'+(unfed>1?'s':'')+'!']);
+  }
+
+  smartPlant(fx,fy){
+    const tile=this.farm[fy][fx];
+    if(this.season==='winter'){this.dlg(['Nothing grows in winter.']);return;}
+    // Get plantable seeds for this season
+    const valid=[];
+    for(const s of this.seedList()){
+      const def=CROPS[s];
+      if(def&&def.season===this.season)valid.push(s);
+    }
+    if(valid.length===0){this.dlg(['No seeds for\n'+this.sName()+'.']);return;}
+    if(valid.length===1){this.doPlant(fx,fy,valid[0]);return;}
+    // Multiple seeds — show picker
+    const opts=[];
+    for(const id of valid){const d=CROPS[id];opts.push(d.name+' ('+this.cntInv(id+'_seed')+')');}
+    opts.push('Cancel');
+    this.prompt('Plant which seed?',opts,(i)=>{if(i<valid.length)this.doPlant(fx,fy,valid[i]);});
+  }
+
+  doPlant(fx,fy,cid){
+    const tile=this.farm[fy][fx],def=CROPS[cid];
+    if(tile.type!==TT.EMPTY||!tile.tilled||tile.crop)return;
+    if(!this.hasInv(cid+'_seed'))return;
+    if(!this.useSt(2))return;
+    this.remInv(cid+'_seed',1);tile.crop={id:cid,stg:0,days:0};sfx.plant();
+    this.flash(fx,fy,0x88ff88);
+  }
+
+  plant(fx,fy){this.smartPlant(fx,fy);}
+  harvest(fx,fy){
+    const tile=this.farm[fy][fx];if(!tile.crop||tile.crop.stg<3)return;
+    const def=CROPS[tile.crop.id];
+    this.addInv(tile.crop.id,1);sfx.harvest();this.dlg(['Harvested '+def.name+'!']);
+    if(def.multi){tile.crop.stg=1;tile.crop.days=Math.max(0,def.days-def.regrow);}
+    else{tile.crop=null;tile.tilled=false;}
+  }
+  flash(tx,ty,c){
+    this.acting=true;
+    const r=this.add.rectangle(tx*T+T/2,ty*T+T/2,T,T,c,0.5).setDepth(4);
+    if(this.uiCam)this.uiCam.ignore(r);
+    this.tweens.add({targets:r,alpha:0,duration:200,onComplete:()=>{r.destroy();this.acting=false;}});
+  }
+
+  // ── Tools/Inventory ──
+  seedList(){const ids=[];for(const s of this.inv){if(s.id.endsWith('_seed')&&s.qty>0){const c=s.id.replace('_seed','');if(!ids.includes(c))ids.push(c);}}return ids;}
+
+  _tlvl(ti){const l=this.toolLevels[ti];return{name:(l>0?TOOL_LVLS[l]+' ':'')+TOOL_NAMES[ti],color:TOOL_LVL_COLORS[l]};}
+  getContextTool(){
+    // Fishing rod for water tiles in town
+    if(this.zone==='town'){
+      const fx=this.px+DIR_VEC[this.pdir].x,fy=this.py+DIR_VEC[this.pdir].y;
+      if(fx>=0&&fx<TOWN_W&&fy>=0&&fy<TOWN_H&&this.town[fy][fx].type===TT.POND)return{name:'Fishing Rod',color:0x4488cc};
+      return{name:'Interact',color:0xaaaaaa};
+    }
+    if(this.zone!=='farm')return{name:'Interact',color:0xaaaaaa};
+    const fx=this.px+DIR_VEC[this.pdir].x,fy=this.py+DIR_VEC[this.pdir].y;
+    if(fx<0||fx>=FARM_W||fy<0||fy>=FARM_H)return{name:'---',color:0x444444};
+    const tile=this.farm[fy][fx];
+    if(tile.crop&&tile.crop.stg>=3)return{name:'Harvest',color:0x44aa33};
+    if(tile.crop&&!tile.watered)return this._tlvl(1);
+    if(tile.crop&&tile.watered)return{name:CROPS[tile.crop.id].name+' (growing)',color:0x338822};
+    if(tile.type===TT.STUMP||tile.type===TT.BRANCH)return this._tlvl(2);
+    if(tile.type===TT.ROCK)return this._tlvl(3);
+    if(tile.type===TT.WEEDS)return this._tlvl(4);
+    if(tile.type===TT.EMPTY&&!tile.tilled&&!tile.crop)return this._tlvl(0);
+    if(tile.type===TT.EMPTY&&tile.tilled&&!tile.watered&&!tile.crop)return this._tlvl(1);
+    if(tile.type===TT.EMPTY&&tile.tilled&&tile.watered&&!tile.crop){
+      const valid=[];for(const s of this.seedList()){if(CROPS[s]&&CROPS[s].season===this.season)valid.push(s);}
+      if(valid.length>0)return{name:'Plant',color:0x44aa33};
+    }
+    if(tile.type===TT.BIN)return{name:'Ship',color:0x885522};
+    if(tile.type===TT.WELL)return{name:'Well',color:0x4488cc};
+    return{name:'---',color:0x444444};
+  }
+  tName(){return this.getContextTool().name;}
+  tColor(){return this.getContextTool().color;}
+  addInv(id,q){for(const s of this.inv){if(s.id===id){s.qty+=q;return;}}this.inv.push({id,qty:q});}
+  remInv(id,q){for(let i=0;i<this.inv.length;i++){if(this.inv[i].id===id){this.inv[i].qty-=q;if(this.inv[i].qty<=0)this.inv.splice(i,1);return;}}}
+  hasInv(id,q=1){for(const s of this.inv){if(s.id===id&&s.qty>=q)return true;}return false;}
+  cntInv(id){for(const s of this.inv){if(s.id===id)return s.qty;}return 0;}
+  iName(id){
+    if(CROPS[id])return CROPS[id].name;
+    if(id.endsWith('_seed')){const c=CROPS[id.replace('_seed','')];if(c)return c.name+' Seed';}
+    if(ORE_NAMES[id])return ORE_NAMES[id];
+    if(RECIPES[id])return RECIPES[id].name;
+    if(FISH[id])return FISH[id].name;
+    if(id==='milk')return 'Milk';
+    if(id==='egg')return 'Egg';
+    if(id==='blue_feather')return 'Blue Feather';
+    return id;
+  }
+  useSt(c){if(this.stamina<c){this.dlg(["Too tired!"]);return false;}this.stamina-=c;if(this.stamina<=0){this.stamina=0;this.collapse();return false;}return true;}
+  collapse(){this.didCollapse=true;sfx.collapse();this.dlg(["Collapsed from\nexhaustion..."],()=>this.sleep());}
+
+  // Tool stamina cost: base cost reduced by level
+  tCost(ti){
+    const base=[3,2,4,4,2]; // Hoe,Water,Axe,Hammer,Sickle
+    return Math.max(1,base[ti]-this.toolLevels[ti]);
+  }
+
+  // Drop ore when breaking rocks
+  dropOre(){
+    const r=Math.random();
+    if(r<0.35){this.addInv('copper_ore',1);sfx.ore();}
+    else if(r<0.55){this.addInv('silver_ore',1);sfx.ore();}
+    else if(r<0.65){this.addInv('gold_ore',1);sfx.ore();}
+    else if(r<0.70){this.addInv('mystrile_ore',1);sfx.ore();}
+  }
+
+  // Blacksmith upgrade system
+  openBlacksmith(){
+    if(this.upgrading){
+      this.dlg(["I'm still working on\nyour "+TOOL_NAMES[this.upgrading.toolIdx]+".\n"+this.upgrading.daysLeft+" day"+(this.upgrading.daysLeft>1?'s':'')+" left."]);
+      return;
+    }
+    // Build list of upgradeable tools
+    const opts=[];const indices=[];
+    for(let i=0;i<5;i++){
+      const lvl=this.toolLevels[i];
+      if(lvl>=4)continue; // max level
+      const up=TOOL_UPGRADES[lvl];
+      const oreName=ORE_NAMES[up.ore];
+      opts.push(TOOL_NAMES[i]+' > '+TOOL_LVLS[lvl+1]+' ('+up.oreQty+' '+oreName.replace(' Ore','')+', '+up.gold+'G)');
+      indices.push(i);
+    }
+    if(opts.length===0){this.dlg(["All your tools are\nat maximum level!","Nothing left for me\nto upgrade. Ha!"]);return;}
+    opts.push('Cancel');
+    this.prompt("Upgrade which tool?",opts,(sel)=>{
+      if(sel>=indices.length)return;
+      const ti=indices[sel],lvl=this.toolLevels[ti],up=TOOL_UPGRADES[lvl];
+      if(this.gold<up.gold){this.dlg(["Not enough gold.\nNeed "+up.gold+"G."]);return;}
+      if(!this.hasInv(up.ore,up.oreQty)){this.dlg(["Not enough ore.\nNeed "+up.oreQty+"x "+ORE_NAMES[up.ore]+"."]);return;}
+      this.gold-=up.gold;this.remInv(up.ore,up.oreQty);
+      this.upgrading={toolIdx:ti,daysLeft:3};
+      this.dlg(["I'll upgrade your\n"+TOOL_NAMES[ti]+" to\n"+TOOL_LVLS[lvl+1]+"!","Come back in 3 days."]);
+    });
+  }
+
+  // ── Fishing ──
+  startFishing(spot){
+    if(!this.useSt(2))return;
+    this.fishSpot=spot;
+    this.fishState='cast';
+    this.fishTimer=800;
+    this.fishCaughtId=null;
+    this.ui='fishing';sfx.fishCast();
+  }
+
+  updateFishing(dt){
+    if(this.fishState==='cast'){
+      this.fishTimer-=dt;
+      if(this.fishTimer<=0){
+        this.fishState='wait';
+        this.fishTimer=1500+Math.random()*3000;
+        this.fishBobTimer=0;
+      }
+    }else if(this.fishState==='wait'){
+      this.fishTimer-=dt;
+      this.fishBobTimer=(this.fishBobTimer||0)+dt;
+      if(this.fishTimer<=0){
+        this.fishState='bite';
+        this.fishTimer=800;
+        this.fishBiteWindow=800;
+        sfx.fishBite();
+      }
+      if(inp.just('a')){
+        this.fishState=null;this.ui='play';sfx.fishMiss();
+        this.dlg(['Pulled too early!\nThe fish got away.']);
+        return;
+      }
+      if(inp.just('b')){this.fishState=null;this.ui='play';return;}
+    }else if(this.fishState==='bite'){
+      this.fishTimer-=dt;
+      if(inp.just('a')){
+        const fish=this.rollFish();
+        if(fish){
+          this.fishCaughtId=fish;
+          this.fishState='caught';
+          this.fishTimer=1500;
+          this.addInv(fish,1);sfx.fishCatch();
+        }else{
+          this.fishState=null;this.ui='play';sfx.fishMiss();
+          this.dlg(["The line snapped!\nNothing caught."]);
+        }
+        return;
+      }
+      if(this.fishTimer<=0){
+        this.fishState=null;this.ui='play';sfx.fishMiss();
+        this.dlg(["Too slow!\nThe fish escaped."]);
+        return;
+      }
+      if(inp.just('b')){this.fishState=null;this.ui='play';return;}
+    }else if(this.fishState==='caught'){
+      this.fishTimer-=dt;
+      if(this.fishTimer<=0||inp.just('a')){
+        this.fishState=null;this.ui='play';
+      }
+    }
+  }
+
+  rollFish(){
+    // Build pool of fish available this season
+    const pool=[];
+    for(const[id,f] of Object.entries(FISH)){
+      if(!f.seasons.includes(this.season))continue;
+      // Well only catches small/medium
+      if(this.fishSpot==='well'&&f.sell>150)continue;
+      pool.push({id,rarity:f.rarity});
+    }
+    if(pool.length===0)return 'sm_fish';
+    // Weather bonus: stormy = rare fish more likely
+    const stormBonus=this.weather==='stormy'?1.5:(this.weather==='rainy'?1.2:1.0);
+    // Roll weighted random
+    let total=0;
+    for(const p of pool)total+=p.rarity*stormBonus;
+    let r=Math.random()*total;
+    for(const p of pool){
+      r-=p.rarity*stormBonus;
+      if(r<=0)return p.id;
+    }
+    return pool[pool.length-1].id;
+  }
+
+  // ── Cooking ──
+  openCooking(){
+    if(this.married&&this.spouse){
+      // Spouse bonus: stamina recovery
+    }
+    const available=[];
+    for(const[id,r] of Object.entries(RECIPES)){
+      let canMake=true;
+      for(const ing of r.ing){if(!this.hasInv(ing)){canMake=false;break;}}
+      if(canMake)available.push(id);
+    }
+    if(available.length===0){this.dlg(['No recipes you can\nmake right now.\n\nNeed 2 ingredients\nper dish.']);return;}
+    const opts=[];
+    for(const id of available){
+      const r=RECIPES[id];
+      opts.push(r.name+' ('+r.ing.map(i=>this.iName(i)).join('+')+')');
+    }
+    opts.push('Cancel');
+    this.prompt('Cook what?',opts,(i)=>{
+      if(i>=available.length)return;
+      const id=available[i],r=RECIPES[id];
+      if(!this.useSt(2))return;
+      for(const ing of r.ing)this.remInv(ing,1);
+      this.addInv(id,1);sfx.cook();
+      this.dlg(['Cooked '+r.name+'!']);
+    });
+  }
+
+  // ── Heart Events ──
+  checkHeartEvent(n){
+    if(!HEART_EVENTS[n.name])return false;
+    const events=HEART_EVENTS[n.name];
+    for(const lvl of [2,4,6,8]){
+      if(n.hearts>=lvl&&!n.eventsSeen[lvl]&&events[lvl]){
+        n.eventsSeen[lvl]=true;
+        this.dlg(events[lvl]);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ── Marriage ──
+  proposeToNpc(n){
+    if(!MARRIAGE_DATA[n.name]){this.dlg([n.name+' is flattered but\ncannot marry you.']);return;}
+    if(n.hearts<8){this.dlg([n.name+' isn\'t ready\nfor that yet.\n(Need 8+ hearts)']);return;}
+    this.prompt('Offer Blue Feather\nto '+n.name+'?',['Yes','No'],(i)=>{
+      if(i!==0)return;
+      this.remInv('blue_feather',1);
+      if(n.hearts>=10){
+        // Instant accept at 10
+        this.doWedding(n);
+      }else if(n.hearts>=8){
+        // Accept at 8-9
+        this.dlg([n.name+' blushes deeply.',n.name+': "Yes! I will!"'],()=>this.doWedding(n));
+      }
+    });
+  }
+
+  doWedding(n){
+    this.married=n.name;
+    this.spouse=n;sfx.wed();
+    // Remove rival pair
+    for(const key of Object.keys(this.rivalHearts)){
+      if(key.startsWith(n.name+'-')||key.endsWith('-'+n.name))delete this.rivalHearts[key];
+    }
+    this.dlg([
+      '♥ WEDDING DAY! ♥',
+      'The whole town gathers\nat the church.',
+      n.name+' walks down\nthe aisle...',
+      'You exchange vows\nand rings.',
+      n.name+' now lives\nwith you on the farm!',
+      'Congratulations!'
+    ],()=>{
+      // Spouse moves into house
+      n.sched=[{zone:'house',x:5,y:3},{zone:'farm',x:4,y:9},{zone:'house',x:3,y:5}];
+      const s=n.sched[0];n.zone=s.zone;n.x=s.x;n.y=s.y;
+    });
+  }
+
+  // ── NPC Relationships ──
+  interactNpc(n){
+    // Check heart event first
+    if(this.checkHeartEvent(n))return;
+    const heartStr='♥'.repeat(Math.min(10,n.hearts));
+    const giftable=this.getGiftableItems();
+    const opts=['Talk'];
+    if(giftable.length>0&&!n.giftedToday)opts.push('Gift');
+    // Blue feather propose option
+    if(this.hasInv('blue_feather')&&!this.married&&MARRIAGE_DATA[n.name]&&n.hearts>=8)opts.push('Propose');
+    opts.push('Cancel');
+    this.prompt(n.name+' ('+heartStr+')\n'+n.hearts+'/10 hearts',opts,(i)=>{
+      const choice=opts[i];
+      if(choice==='Talk')this.talkToNpc(n);
+      else if(choice==='Gift')this.giftToNpc(n);
+      else if(choice==='Propose')this.proposeToNpc(n);
+    });
+  }
+
+  talkToNpc(n){
+    // Heart tier: 0-2=0, 3-5=1, 6-8=2, 9-10=3
+    const tier=n.hearts<3?0:(n.hearts<6?1:(n.hearts<9?2:3));
+    const lines=n.dlg[tier];
+    const line=lines[Math.floor(Math.random()*lines.length)];
+    if(!n.talkedToday){n.hearts=Math.min(10,n.hearts+1);n.talkedToday=true;sfx.heart();}
+    this.dlg([line]);
+  }
+
+  getGiftableItems(){
+    const items=[];
+    for(const s of this.inv){
+      if(s.id.endsWith('_seed'))continue;
+      if(s.id==='blue_feather')continue;
+      items.push(s.id);
+    }
+    return items;
+  }
+
+  giftToNpc(n){
+    const giftable=this.getGiftableItems();
+    if(giftable.length===0){this.dlg(["No items to gift."]);return;}
+    if(n.giftedToday){this.dlg([n.name+" already received\na gift today."]);return;}
+    const opts=[];
+    for(const id of giftable)opts.push(this.iName(id)+' ('+this.cntInv(id)+')');
+    opts.push('Cancel');
+    this.prompt('Gift what to '+n.name+'?',opts,(i)=>{
+      if(i<giftable.length)this.doGift(n,giftable[i]);
+    });
+  }
+
+  doGift(n,itemId){
+    this.remInv(itemId,1);
+    n.giftedToday=true;
+    let reaction,delta;
+    if(n.loved&&n.loved.includes(itemId)){reaction='loves';delta=GIFT_CATS.loved;}
+    else if(n.liked&&n.liked.includes(itemId)){reaction='likes';delta=GIFT_CATS.liked;}
+    else if(n.disliked&&n.disliked.includes(itemId)){reaction='dislikes';delta=GIFT_CATS.disliked;}
+    else{reaction='neutral';delta=GIFT_CATS.neutral;}
+    // Cooked dishes are always at least 'liked'
+    if(RECIPES[itemId]&&delta<1){reaction='likes';delta=1;}
+    // Birthday bonus: double positive gains
+    const bd=NPC_BDAYS[n.name];
+    let bday=false;
+    if(bd&&bd.season===this.season&&bd.day===this.day){
+      if(delta>0)delta*=2;
+      bday=true;
+    }
+    n.hearts=Math.max(0,Math.min(10,n.hearts+delta));
+    if(delta>0)sfx.heart();else if(delta<0)sfx.heartDown();
+    let msg='';
+    if(reaction==='loves')msg=n.name+': "I LOVE this!\nThank you so much!"';
+    else if(reaction==='likes')msg=n.name+': "Oh, nice!\nThank you!"';
+    else if(reaction==='neutral')msg=n.name+': "Oh... thanks."';
+    else msg=n.name+': "This isn\'t\nreally my thing..."';
+    if(bday)msg+='\n(BIRTHDAY! x2 bonus!)';
+    msg+='\n('+(delta>=0?'+':'')+delta+' hearts)';
+    this.dlg([msg]);
+  }
+
+  // ── Shipping/Shop ──
+  shipAll(){
+    const items=[];
+    for(const s of this.inv){
+      if(s.id.endsWith('_seed'))continue;
+      if(s.id.endsWith('_ore'))continue;
+      if(s.id==='blue_feather')continue;
+      let price=0;
+      if(CROPS[s.id])price=CROPS[s.id].sell;
+      else if(RECIPES[s.id])price=RECIPES[s.id].sell;
+      else if(FISH[s.id])price=FISH[s.id].sell;
+      else if(ANIMAL_DEFS[s.id])continue; // can't ship animals
+      else if(s.id==='milk')price=300;
+      else if(s.id==='egg')price=50;
+      if(price>0)items.push({...s,price,name:this.iName(s.id)});
+    }
+    if(items.length===0){this.dlg(['Nothing to ship.']);return;}
+    let msg='Shipped:\n';
+    for(const s of items){this.shipBin.push({id:s.id,qty:s.qty,price:s.price,name:s.name});msg+='  '+s.name+' x'+s.qty+'\n';this.remInv(s.id,s.qty);}
+    sfx.ship();this.dlg([msg.trim()]);
+  }
+
+  openShop(){
+    this.shopList=[];
+    for(const[id,d]of Object.entries(CROPS)){if(d.season===this.season)this.shopList.push({id:id+'_seed',name:d.name+' Seed',price:d.cost});}
+    // Animal purchases
+    const numCows=this.animals.filter(a=>a.type==='cow').length;
+    const numChicks=this.animals.filter(a=>a.type==='chicken').length;
+    if(numCows<COW_STALLS.length)this.shopList.push({id:'buy_cow',name:'Cow'+(numCows===0?' (FREE!)':''),price:numCows===0?0:ANIMAL_DEFS.cow.cost,animal:'cow'});
+    if(numChicks<CHICK_STALLS.length)this.shopList.push({id:'buy_chicken',name:'Chicken'+(numChicks===0?' (FREE!)':''),price:numChicks===0?0:ANIMAL_DEFS.chicken.cost,animal:'chicken'});
+    // Blue Feather: sell if any candidate at 8+ hearts and not married
+    if(!this.married&&!this.hasInv('blue_feather')){
+      let canPropose=false;
+      for(const n of this.npcs){if(MARRIAGE_DATA[n.name]&&n.hearts>=8)canPropose=true;}
+      if(canPropose)this.shopList.push({id:'blue_feather',name:'Blue Feather',price:10000});
+    }
+    if(this.shopList.length===0){this.dlg(['Nothing available.']);return;}
+    this.shopIdx=0;this.ui='shop';
+  }
+
+  // ── Day cycle ──
+  sleep(){
+    this.ui='transition';
+    this.cameras.main.fadeOut(400,0,0,0);
+    this.cameras.main.once('camerafadeoutcomplete',()=>{
+      this.endDay();this.startDay();
+      if(this.lastShip.length>0){sfx.coin();this.ui='ship';}
+      else{this.splashT=2000;this.ui='splash';}
+      this.zone='house';this.indoor=true;this.px=4;this.py=3;
+      this.player.setPosition(this.px*T+T/2,this.py*T+T/2);this.camSet();
+      this.cameras.main.fadeIn(300,0,0,0);
+    });
+  }
+  endDay(){
+    this.lastShip=[];let earned=0;
+    for(const s of this.shipBin){this.lastShip.push({...s});earned+=s.price*s.qty;}
+    this.gold+=earned;this.shipBin=[];
+    // Crop growth
+    for(let y=0;y<FARM_H;y++){for(let x=0;x<FARM_W;x++){
+      const t=this.farm[y][x];if(!t.crop)continue;
+      if(t.watered){t.crop.days++;const d=CROPS[t.crop.id];const ps=Math.ceil(d.days/3);
+        const ns=Math.min(3,Math.floor(t.crop.days/ps)+(t.crop.days>0?1:0));
+        if(ns>t.crop.stg)t.crop.stg=ns;}
+      t.watered=false;}}
+    // Animal heart loss if not fed
+    for(const a of this.animals){
+      if(!a.fed&&a.hearts>0)a.hearts=Math.max(0,a.hearts-1);
+      a.fed=false;a.collected=false;
+    }
+    // Tool upgrade countdown
+    if(this.upgrading){
+      this.upgrading.daysLeft--;
+      if(this.upgrading.daysLeft<=0){
+        this.toolLevels[this.upgrading.toolIdx]++;
+        this.upgradeMsg=TOOL_NAMES[this.upgrading.toolIdx]+' upgraded to\n'+TOOL_LVLS[this.toolLevels[this.upgrading.toolIdx]]+'!';
+        this.upgrading=null;
+      }
+    }
+    // Rival pair advancement (every 7 days, small chance if player hasn't pursued them)
+    if(!this.married&&this.day%7===0){
+      for(const key of Object.keys(this.rivalHearts)){
+        const[fname,mname]=key.split('-');
+        const fn=this.npcs.find(n=>n.name===fname);
+        const mn=this.npcs.find(n=>n.name===mname);
+        if(!fn||!mn)continue;
+        // Only advance if player has low hearts with both
+        if(fn.hearts<5&&mn.hearts<5){
+          this.rivalHearts[key]=Math.min(10,this.rivalHearts[key]+1);
+          // Rival wedding at 8
+          if(this.rivalHearts[key]>=8){
+            this.rivalMsg=fname+' and '+mname+'\nhave gotten married!';
+            delete this.rivalHearts[key];
+            // Mark both as unavailable
+            delete MARRIAGE_DATA[fname];
+            delete MARRIAGE_DATA[mname];
+          }
+        }
+      }
+    }
+  }
+  startDay(){
+    this.day++;
+    if(this.day>30){this.day=1;const si=SEASONS.indexOf(this.season);
+      if(si===3){this.season=SEASONS[0];this.year++;}else this.season=SEASONS[si+1];
+      for(let y=0;y<FARM_H;y++)for(let x=0;x<FARM_W;x++){const t=this.farm[y][x];t.crop=null;t.tilled=false;t.watered=false;}}
+    this.hour=6;this.minute=0;this.timeAcc=0;
+    this.stamina=this.didCollapse?75:100;this.maxSt=this.didCollapse?75:100;this.didCollapse=false;
+    this.weather=this.tmrwWeather;this.tmrwWeather=this._genWeather();
+    if(this.weather==='rainy'||this.weather==='stormy'){
+      for(let y=0;y<FARM_H;y++)for(let x=0;x<FARM_W;x++)if(this.farm[y][x].crop)this.farm[y][x].watered=true;}
+    for(const n of this.npcs){const s=n.sched[0];n.zone=s.zone;n.x=s.x;n.y=s.y;n.talkedToday=false;n.giftedToday=false;}
+  }
+  _genWeather(){const r=Math.random();if(this.season==='winter')return r<0.65?'sunny':'snowy';return r<0.7?'sunny':(r<0.9?'rainy':'stormy');}
+  rollWeather(){this.weather=this._genWeather();}
+  sName(){return this.season[0].toUpperCase()+this.season.slice(1);}
+  fmtTime(){let h=this.hour,p='AM';if(h>=24)h-=24;if(h>=12){p='PM';if(h>12)h-=12;}if(h===0)h=12;return h+':'+(this.minute<10?'0':'')+this.minute+p;}
+
+  // ── UI helpers ──
+  dlg(lines,cb){this.dlgLines=lines;this.dlgIdx=0;this.dlgCb=cb||null;this.ui='dialog';}
+  prompt(txt,opts,cb){this.prmTxt=txt;this.prmOpts=opts;this.prmIdx=0;this.prmCb=cb;this.ui='prompt';}
+  tileInfo(){
+    const fx=this.px+DIR_VEC[this.pdir].x,fy=this.py+DIR_VEC[this.pdir].y;
+    for(const n of this.npcs){if(n.zone===this.zone&&n.x===fx&&n.y===fy){this.dlg([n.name+'\n'+'♥'.repeat(n.hearts)+(n.hearts<10?'·'.repeat(10-n.hearts):'')]);return;}}
+    if(this.zone==='barn'){
+      for(const a of this.animals){if(a.x===fx&&a.y===fy){this.dlg([a.name+'\n'+a.hearts+' hearts\n'+(a.fed?'Fed':'Hungry')]);return;}}
+    }
+    if(this.zone==='farm'){
+      if(fx<0||fx>=FARM_W||fy<0||fy>=FARM_H)return;
+      const t=this.farm[fy][fx];let info='';
+      if(t.crop){const d=CROPS[t.crop.id];info=d.name+'\nGrowth: '+t.crop.stg+'/3\n'+(t.watered?'Watered':'Dry');}
+      else if(t.type===TT.EMPTY)info=t.tilled?'Tilled soil':'Empty ground';
+      else if(t.type===TT.STUMP)info='Stump ('+t.hp+' hits)';
+      else if(t.type===TT.ROCK)info='Rock ('+t.hp+' hits)';
+      else if(t.type===TT.WEEDS)info='Weeds';
+      else if(t.type===TT.BRANCH)info='Branch ('+t.hp+' hits)';
+      else if(t.type===TT.BIN)info='Shipping Bin [A]';
+      else if(t.type===TT.WELL)info='Well [A]';
+      else if(t.type===TT.FARMEXIT)info='Path to Town';
+      else info='---';
+      this.dlg([info]);
+    }else if(this.zone==='town'){
+      if(fx<0||fx>=TOWN_W||fy<0||fy>=TOWN_H)return;
+      const tt=this.town[fy][fx].type;
+      const names={[TT.STDOOR]:'General Store',[TT.CHDOOR]:'Church',[TT.INDOOR]:'Inn',
+        [TT.BKDOOR]:'Blacksmith',[TT.NHDOOR]:'House',[TT.POND]:'Pond',[TT.SIGN]:'Sign',[TT.TOWNEXIT]:'Path to Farm'};
+      this.dlg([names[tt]||'---']);
+    }else if(INTERIOR_ZONES.includes(this.zone)){
+      this.dlg([this.zone[0].toUpperCase()+this.zone.slice(1)]);
+    }
+  }
+
+  // ════════════════════════════════════════
+  // RENDERING
+  // ════════════════════════════════════════
+  drawMap(){
+    const g=this.gMap;g.clear();const p=PAL[this.season];
+
+    if(this.zone==='farm'){
+      for(let y=0;y<FARM_H;y++){for(let x=0;x<FARM_W;x++){
+        const tile=this.farm[y][x],px=x*T,py=y*T,chk=(x+y)%2===0;
+        g.fillStyle(chk?p.g1:p.g2);g.fillRect(px,py,T,T);
+        if(tile.tilled&&tile.type===TT.EMPTY){
+          g.fillStyle(tile.watered?p.wet:p.till);g.fillRect(px+2,py+2,T-4,T-4);
+          g.fillStyle(tile.watered?0x3a2a10:0x8b6b3a);for(let i=0;i<4;i++)g.fillRect(px+4,py+5+i*6,T-8,1);}
+        if(tile.crop){
+          const def=CROPS[tile.crop.id],cx=px+T/2,cy=py+T/2;
+          if(tile.crop.stg===0){g.fillStyle(0x448833);g.fillRect(cx-2,cy+4,4,4);}
+          else if(tile.crop.stg===1){g.fillStyle(0x55aa44);g.fillRect(cx-1,cy-2,3,10);g.fillRect(cx-4,cy-2,9,4);}
+          else if(tile.crop.stg===2){g.fillStyle(0x44aa33);g.fillRect(cx-2,cy-6,4,14);g.fillRect(cx-6,cy-6,12,6);g.fillStyle(def.color);g.fillRect(cx-3,cy-4,6,3);}
+          else{g.fillStyle(0x338822);g.fillRect(cx-6,cy-6,12,14);g.fillStyle(def.color);g.fillRect(cx-6,cy-8,12,8);g.fillRect(cx-4,cy,8,5);}}
+        const tt=tile.type;
+        if(tt===TT.STUMP){g.fillStyle(0x6b4226);g.fillRect(px+5,py+6,22,20);g.fillStyle(0x8b6b42);g.fillRect(px+7,py+8,18,16);}
+        if(tt===TT.ROCK){g.fillStyle(0x888888);g.fillRect(px+4,py+6,24,20);g.fillStyle(0xaaaaaa);g.fillRect(px+6,py+8,20,14);}
+        if(tt===TT.WEEDS){g.fillStyle(0x337722);g.fillRect(px+5,py+10,4,12);g.fillRect(px+14,py+8,4,14);g.fillRect(px+22,py+12,4,10);}
+        if(tt===TT.BRANCH){g.fillStyle(0x6b5030);g.fillRect(px+4,py+16,24,4);g.fillRect(px+12,py+8,4,12);}
+        if(tt===TT.FENCE){g.fillStyle(0x997755);g.fillRect(px+2,py+4,T-4,5);g.fillRect(px+2,py+18,T-4,5);g.fillRect(px+6,py+2,4,26);g.fillRect(px+22,py+2,4,26);}
+        if(tt===TT.HROOF){g.fillStyle(0xcc4444);g.fillRect(px,py,T,T);g.fillStyle(0xaa3333);g.fillRect(px,py+T-4,T,4);}
+        if(tt===TT.HWALL){g.fillStyle(0xddbb88);g.fillRect(px,py,T,T);g.fillStyle(0x88ccee);g.fillRect(px+6,py+6,10,12);}
+        if(tt===TT.HDOOR){g.fillStyle(0xddbb88);g.fillRect(px,py,T,T);g.fillStyle(0x884422);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+        if(tt===TT.BROOF){g.fillStyle(0xbb3333);g.fillRect(px,py,T,T);g.fillStyle(0x992222);g.fillRect(px,py+T-4,T,4);}
+        if(tt===TT.BWALL){g.fillStyle(0xcc6633);g.fillRect(px,py,T,T);g.fillStyle(0xaa5522);g.fillRect(px+4,py+4,T-8,T-8);}
+        if(tt===TT.BDOOR){g.fillStyle(0xcc6633);g.fillRect(px,py,T,T);g.fillStyle(0x663311);g.fillRect(px+4,py+2,24,28);g.fillStyle(0xffcc00);g.fillRect(px+24,py+14,3,3);}
+        if(tt===TT.COOP){g.fillStyle(0xddddaa);g.fillRect(px,py,T,T);g.fillStyle(0xcccc99);g.fillRect(px+4,py+4,T-8,T-8);}
+        if(tt===TT.BIN){g.fillStyle(chk?p.g1:p.g2);g.fillRect(px,py,T,T);g.fillStyle(0x885522);g.fillRect(px+4,py+8,24,20);g.fillStyle(0xaa7744);g.fillRect(px+6,py+10,20,16);g.fillStyle(0x664411);g.fillRect(px+4,py+6,24,4);}
+        if(tt===TT.WELL){g.fillStyle(chk?p.g1:p.g2);g.fillRect(px,py,T,T);g.fillStyle(0x888888);g.fillRect(px+4,py+6,24,20);g.fillStyle(p.water);g.fillRect(px+7,py+9,18,14);g.fillStyle(0x666666);g.fillRect(px+6,py+4,20,4);}
+        if(tt===TT.FARMEXIT){g.fillStyle(0xc8b888);g.fillRect(px,py,T,T);g.fillStyle(0xb8a878);g.fillRect(px+4,py,T-8,T);}
+      }}
+      if(this.weather==='rainy'||this.weather==='stormy'){g.fillStyle(0x334466,0.15);g.fillRect(0,0,FARM_W*T,FARM_H*T);}
+    }
+
+    if(this.zone==='house'){this.drawInteriorTiles(g,this.house,HOUSE_W,HOUSE_H);}
+
+    if(this.zone==='barn'){this.drawBarnTiles(g);}
+
+    if(this.zone==='town'){
+      for(let y=0;y<TOWN_H;y++){for(let x=0;x<TOWN_W;x++){
+        const tile=this.town[y][x],px=x*T,py=y*T,chk=(x+y)%2===0;
+        const tt=tile.type;
+        if(tt===TT.PATH||tt===TT.SIGN||tt===TT.BENCH||tt===TT.LAMP||tt===TT.TOWNEXIT||tt===TT.CHDOOR||tt===TT.STDOOR||tt===TT.INDOOR||tt===TT.BKDOOR||tt===TT.NHDOOR){
+          g.fillStyle(chk?0xc8b888:0xb8a878);g.fillRect(px,py,T,T);
+        }else if(tt===TT.POND){
+          g.fillStyle(p.water);g.fillRect(px,py,T,T);g.fillStyle(0xffffff,0.15);g.fillRect(px+6,py+4,8,4);
+        }else if(tt===TT.FLOWER){
+          g.fillStyle(chk?p.g1:p.g2);g.fillRect(px,py,T,T);
+          const fc=[0xff6688,0xffaa44,0xffff66,0xaa88ff];g.fillStyle(0x44aa33);g.fillRect(px+14,py+16,4,10);
+          g.fillStyle(fc[(x*3+y*7)%4]);g.fillRect(px+10,py+8,12,10);g.fillStyle(0xffff88);g.fillRect(px+14,py+11,4,4);
+        }else{g.fillStyle(chk?p.g1:p.g2);g.fillRect(px,py,T,T);}
+        if(tt===TT.TREE){g.fillStyle(0x553311);g.fillRect(px+12,py+18,8,14);
+          g.fillStyle(this.season==='fall'?0xcc6622:(this.season==='winter'?0x889999:0x227711));g.fillRect(px+2,py+2,28,20);
+          g.fillStyle(this.season==='fall'?0xee8833:(this.season==='winter'?0x99aabb:0x33aa22));g.fillRect(px+6,py+4,20,14);}
+        if(tt===TT.SIGN){g.fillStyle(0x885522);g.fillRect(px+12,py+16,8,14);g.fillStyle(0xccaa66);g.fillRect(px+6,py+6,20,14);g.fillStyle(0x664411);g.fillRect(px+8,py+9,16,2);g.fillRect(px+8,py+13,12,2);}
+        if(tt===TT.BENCH){g.fillStyle(0x885522);g.fillRect(px+4,py+22,6,8);g.fillRect(px+22,py+22,6,8);g.fillStyle(0xaa7744);g.fillRect(px+2,py+14,28,10);}
+        if(tt===TT.LAMP){g.fillStyle(0x555555);g.fillRect(px+14,py+10,4,20);g.fillStyle(0x444444);g.fillRect(px+12,py+28,8,2);g.fillStyle(0xffdd44);g.fillRect(px+10,py+4,12,8);g.fillStyle(0xffee88);g.fillRect(px+12,py+6,8,4);}
+        // Building exteriors
+        if(tt===TT.CHROOF){g.fillStyle(0x775533);g.fillRect(px,py,T,T);g.fillStyle(0xffcc00);g.fillRect(px+12,py+2,8,8);}
+        if(tt===TT.CHWALL){g.fillStyle(0xddddcc);g.fillRect(px,py,T,T);g.fillStyle(0x88ccee);g.fillRect(px+8,py+4,8,14);}
+        if(tt===TT.CHDOOR){g.fillStyle(0xddddcc);g.fillRect(px,py,T,T);g.fillStyle(0x664422);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+        if(tt===TT.STROOF){g.fillStyle(0x4488aa);g.fillRect(px,py,T,T);g.fillStyle(0x55aacc);g.fillRect(px+2,py+2,T-4,4);}
+        if(tt===TT.STWALL){g.fillStyle(0xeedd99);g.fillRect(px,py,T,T);g.fillStyle(0x88ccee);g.fillRect(px+6,py+6,10,12);}
+        if(tt===TT.STDOOR){g.fillStyle(0xeedd99);g.fillRect(px,py,T,T);g.fillStyle(0x884422);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+        if(tt===TT.INROOF){g.fillStyle(0xcc6633);g.fillRect(px,py,T,T);g.fillStyle(0xdd7744);g.fillRect(px+2,py+2,T-4,4);}
+        if(tt===TT.INWALL){g.fillStyle(0xddcc99);g.fillRect(px,py,T,T);g.fillStyle(0x88ccee);g.fillRect(px+6,py+6,10,12);}
+        if(tt===TT.INDOOR){g.fillStyle(0xddcc99);g.fillRect(px,py,T,T);g.fillStyle(0x884422);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+        if(tt===TT.BKROOF){g.fillStyle(0x555555);g.fillRect(px,py,T,T);g.fillStyle(0x666666);g.fillRect(px+2,py+2,T-4,4);}
+        if(tt===TT.BKWALL){g.fillStyle(0x998877);g.fillRect(px,py,T,T);g.fillStyle(0xff6622);g.fillRect(px+8,py+8,8,10);}
+        if(tt===TT.BKDOOR){g.fillStyle(0x998877);g.fillRect(px,py,T,T);g.fillStyle(0x553322);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+        if(tt===TT.NHROOF){g.fillStyle(0x44aa66);g.fillRect(px,py,T,T);g.fillStyle(0x55bb77);g.fillRect(px+2,py+2,T-4,4);}
+        if(tt===TT.NHWALL){g.fillStyle(0xddccaa);g.fillRect(px,py,T,T);g.fillStyle(0x88ccee);g.fillRect(px+6,py+6,10,12);}
+        if(tt===TT.NHDOOR){g.fillStyle(0xddccaa);g.fillRect(px,py,T,T);g.fillStyle(0x884422);g.fillRect(px+8,py+4,16,24);g.fillStyle(0xffcc00);g.fillRect(px+20,py+16,3,3);}
+      }}
+      if(this.weather==='rainy'||this.weather==='stormy'){g.fillStyle(0x334466,0.15);g.fillRect(0,0,TOWN_W*T,TOWN_H*T);}
+    }
+
+    if(INTERIOR_ZONES.includes(this.zone)){this.drawInteriorTiles(g,this.interiors[this.zone],INT_W,INT_H);}
+
+    this.drawNpcs();
+    this.drawAnimals();
+  }
+
+  drawBarnTiles(g){
+    for(let y=0;y<BARN_H;y++){for(let x=0;x<BARN_W;x++){
+      const t=this.barn[y][x],px=x*T,py=y*T,chk=(x+y)%2===0;
+      // Barn floor
+      g.fillStyle(chk?0xbbaa77:0xaa9966);g.fillRect(px,py,T,T);
+      if(t===TT.WALL){g.fillStyle(0x884422);g.fillRect(px,py,T,T);g.fillStyle(0x773311);g.fillRect(px,py+T-2,T,2);}
+      if(t===TT.IDOOR){g.fillStyle(0x663311);g.fillRect(px+6,py+2,20,28);g.fillStyle(0xffcc00);g.fillRect(px+22,py+14,3,3);}
+      if(t===TT.HAY){g.fillStyle(0xddcc44);g.fillRect(px+2,py+4,28,24);g.fillStyle(0xccbb33);g.fillRect(px+4,py+6,24,18);g.fillStyle(0xeedd55);g.fillRect(px+8,py+10,8,4);g.fillRect(px+18,py+14,6,4);}
+      if(t===TT.TROUGH){g.fillStyle(0x886633);g.fillRect(px+2,py+8,28,18);g.fillStyle(0xddcc88);g.fillRect(px+4,py+10,24,14);g.fillStyle(0x88aa44);g.fillRect(px+6,py+12,20,8);}
+      if(t===TT.STALL){g.fillStyle(0x997755);g.fillRect(px,py+26,T,6);g.fillRect(px,py,2,T);g.fillRect(px+T-2,py,2,T);}
+      if(t===TT.FODBIN){g.fillStyle(0x885522);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xddcc44);g.fillRect(px+4,py+4,24,24);g.fillStyle(0xccbb33);g.fillRect(px+8,py+8,16,16);}
+    }}
+  }
+
+  drawInteriorTiles(g,grid,w,h){
+    for(let y=0;y<h;y++){for(let x=0;x<w;x++){
+      const t=(grid[y]||[])[x],px=x*T,py=y*T,chk=(x+y)%2===0;
+      if(t===undefined)continue;
+      g.fillStyle(chk?0xccbb99:0xbbaa88);g.fillRect(px,py,T,T);
+      if(t===TT.WALL){g.fillStyle(0x886644);g.fillRect(px,py,T,T);g.fillStyle(0x775533);g.fillRect(px,py+T-2,T,2);}
+      if(t===TT.BED){g.fillStyle(0x4466aa);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xeeeedd);g.fillRect(px+4,py+4,24,10);}
+      if(t===TT.TABLE){g.fillStyle(0x885522);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xaa7744);g.fillRect(px+4,py+4,24,24);}
+      if(t===TT.TV){g.fillStyle(0x333333);g.fillRect(px+4,py+4,24,20);g.fillStyle(0x4488aa);g.fillRect(px+6,py+6,20,16);}
+      if(t===TT.KITCHEN){g.fillStyle(0x999999);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xaaaaaa);g.fillRect(px+6,py+6,8,8);g.fillRect(px+18,py+6,8,8);}
+      if(t===TT.CAL){g.fillStyle(0xffffff);g.fillRect(px+6,py+2,20,26);g.fillStyle(0xcc3333);g.fillRect(px+6,py+2,20,6);}
+      if(t===TT.IDOOR){g.fillStyle(0x884422);g.fillRect(px+6,py+2,20,28);g.fillStyle(0xffcc00);g.fillRect(px+22,py+14,3,3);}
+      if(t===TT.COUNTER){g.fillStyle(0x996633);g.fillRect(px+1,py+4,30,24);g.fillStyle(0xbb8844);g.fillRect(px+3,py+6,26,20);}
+      if(t===TT.SHELF){g.fillStyle(0x775533);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xaa8855);g.fillRect(px+4,py+4,24,5);g.fillRect(px+4,py+12,24,5);g.fillRect(px+4,py+20,24,5);
+        g.fillStyle(0xdd4444);g.fillRect(px+6,py+5,6,4);g.fillStyle(0x44bb44);g.fillRect(px+16,py+13,6,4);g.fillStyle(0x4488dd);g.fillRect(px+8,py+21,8,4);}
+      if(t===TT.PEW){g.fillStyle(0x885533);g.fillRect(px+4,py+6,24,20);g.fillStyle(0xaa7744);g.fillRect(px+6,py+4,20,4);}
+      if(t===TT.ALTAR){g.fillStyle(0xeeeedd);g.fillRect(px+2,py+4,28,24);g.fillStyle(0xffcc00);g.fillRect(px+12,py+6,8,8);}
+      if(t===TT.ANVIL){g.fillStyle(0x555555);g.fillRect(px+6,py+10,20,16);g.fillStyle(0x666666);g.fillRect(px+4,py+8,24,6);}
+      if(t===TT.FORGE){g.fillStyle(0x554433);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xff4411);g.fillRect(px+6,py+8,20,14);g.fillStyle(0xffaa22);g.fillRect(px+10,py+10,12,8);}
+      if(t===TT.BAR){g.fillStyle(0x664422);g.fillRect(px+1,py+6,30,22);g.fillStyle(0x886644);g.fillRect(px+3,py+4,26,4);}
+      if(t===TT.STOOL){g.fillStyle(0x775533);g.fillRect(px+10,py+16,12,12);g.fillRect(px+8,py+12,16,6);}
+      if(t===TT.BOOKCASE){g.fillStyle(0x664422);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xcc4444);g.fillRect(px+4,py+4,8,6);g.fillStyle(0x44aa44);g.fillRect(px+14,py+4,6,6);g.fillStyle(0x4444cc);g.fillRect(px+22,py+4,6,6);g.fillStyle(0xccaa44);g.fillRect(px+4,py+14,10,6);g.fillStyle(0x8844aa);g.fillRect(px+16,py+14,10,6);}
+      if(t===TT.FIREPLC){g.fillStyle(0x886644);g.fillRect(px+2,py+2,28,28);g.fillStyle(0x333333);g.fillRect(px+6,py+8,20,20);g.fillStyle(0xff4411);g.fillRect(px+8,py+14,16,12);g.fillStyle(0xffaa22);g.fillRect(px+10,py+16,12,8);}
+      if(t===TT.RUG){g.fillStyle(0xaa4444);g.fillRect(px+2,py+2,28,28);g.fillStyle(0xcc6644);g.fillRect(px+6,py+6,20,20);}
+      if(t===TT.PLANT){g.fillStyle(0x885522);g.fillRect(px+10,py+18,12,12);g.fillStyle(0x44aa33);g.fillRect(px+8,py+6,16,16);g.fillStyle(0x55cc44);g.fillRect(px+12,py+8,8,10);}
+      if(t===TT.STAIRS){g.fillStyle(0x775533);g.fillRect(px+2,py+2,28,28);for(let i=0;i<5;i++){g.fillStyle(i%2===0?0x886644:0x997755);g.fillRect(px+2,py+2+i*6,28,5);}}
+      if(t===TT.BARREL){g.fillStyle(0x885522);g.fillRect(px+6,py+4,20,26);g.fillStyle(0xaa7744);g.fillRect(px+8,py+6,16,22);g.fillStyle(0x664411);g.fillRect(px+6,py+10,20,3);g.fillRect(px+6,py+20,20,3);}
+    }}
+  }
+
+  drawNpcs(){
+    const g=this.gNpc;g.clear();
+    for(const n of this.npcs){
+      if(n.zone!==this.zone)continue;
+      const px=n.x*T,py=n.y*T;
+      g.fillStyle(n.hair);g.fillRect(px+8,py+0,16,6);g.fillRect(px+6,py+4,20,3);
+      g.fillStyle(0xffcc88);g.fillRect(px+9,py+5,14,10);
+      g.fillStyle(0x222222);g.fillRect(px+10,py+7,3,3);g.fillRect(px+18,py+7,3,3);
+      g.fillStyle(n.shirt);g.fillRect(px+7,py+15,18,10);
+      g.fillStyle(0x444488);g.fillRect(px+8,py+25,6,7);g.fillRect(px+18,py+25,6,7);
+    }
+  }
+
+  drawAnimals(){
+    if(this.zone!=='barn')return;
+    const g=this.gNpc;
+    for(const a of this.animals){
+      const def=ANIMAL_DEFS[a.type],px=a.x*T,py=a.y*T;
+      if(a.type==='cow'){
+        // Body
+        g.fillStyle(def.color);g.fillRect(px+4,py+10,24,16);
+        // Head
+        g.fillStyle(def.color);g.fillRect(px+2,py+6,12,12);
+        // Spots
+        g.fillStyle(def.spots);g.fillRect(px+14,py+12,6,6);g.fillRect(px+22,py+14,4,4);
+        // Eyes + nose
+        g.fillStyle(0x222222);g.fillRect(px+4,py+8,3,3);
+        g.fillStyle(0xffaaaa);g.fillRect(px+3,py+13,6,4);
+        // Legs
+        g.fillStyle(def.color);g.fillRect(px+6,py+26,4,6);g.fillRect(px+22,py+26,4,6);
+        // Fed indicator
+        if(a.fed){g.fillStyle(0x44ff44);g.fillRect(px+26,py+2,4,4);}
+      }else{
+        // Chicken body
+        g.fillStyle(def.color);g.fillRect(px+8,py+10,16,14);
+        // Head
+        g.fillStyle(def.color);g.fillRect(px+6,py+4,12,10);
+        // Comb
+        g.fillStyle(def.comb);g.fillRect(px+8,py+1,6,5);
+        // Eye + beak
+        g.fillStyle(0x222222);g.fillRect(px+7,py+6,3,3);
+        g.fillStyle(0xffaa22);g.fillRect(px+4,py+9,4,3);
+        // Legs
+        g.fillStyle(0xffaa22);g.fillRect(px+12,py+24,3,6);g.fillRect(px+18,py+24,3,6);
+        // Tail
+        g.fillStyle(def.color);g.fillRect(px+22,py+8,6,6);
+        // Fed indicator
+        if(a.fed){g.fillStyle(0x44ff44);g.fillRect(px+26,py+2,4,4);}
+      }
+    }
+  }
+
+  drawPlayer(){
+    this.player.setTexture('p-'+this.pdir);
+    const g=this.gOver;g.clear();
+    if(this.ui==='play'&&!this.moving){
+      const fx=this.px+DIR_VEC[this.pdir].x,fy=this.py+DIR_VEC[this.pdir].y;
+      g.fillStyle(0xffffff,0.08);g.fillRect(fx*T+1,fy*T+1,T-2,T-2);
+      g.lineStyle(2,0xffffff,0.5);g.strokeRect(fx*T+2,fy*T+2,T-4,T-4);
+    }
+    // Rain particles
+    if(!this.indoor&&(this.weather==='rainy'||this.weather==='stormy')){
+      const dt=this.game.loop.delta/1000;
+      const cam=this.cameras.main;
+      const cx=cam.scrollX*2, cy=cam.scrollY*2;
+      const vw=GW, vh=GH;
+      const isStormy=this.weather==='stormy';
+      const maxW=this.zone==='farm'?FARM_W*T:TOWN_W*T;
+      const maxH=this.zone==='farm'?FARM_H*T:TOWN_H*T;
+      for(const d of this.rainDrops){
+        d.y+=d.speed*dt;
+        d.x+=d.drift*dt;
+        if(d.y>maxH){d.y=-d.len;d.x=Math.random()*maxW;}
+        if(d.x<0)d.x+=maxW;
+        if(d.x>maxW)d.x-=maxW;
+        const alpha=isStormy?0.5:0.4;
+        const col=isStormy?0x99aacc:0xaabbdd;
+        g.lineStyle(2,col,alpha);
+        g.lineBetween(d.x,d.y,d.x+d.drift*0.04,d.y+d.len);
+      }
+      // Splash effects on ground
+      if(isStormy&&Math.random()<0.3){
+        const sx=Math.random()*maxW, sy=Math.random()*maxH;
+        g.lineStyle(1,0xaabbdd,0.25);
+        g.lineBetween(sx-3,sy,sx+3,sy);
+        g.lineBetween(sx,sy-2,sx,sy+2);
+      }
+    }
+    // Snow particles
+    if(!this.indoor&&this.weather==='snowy'){
+      const dt=this.game.loop.delta/1000;
+      const maxW=this.zone==='farm'?FARM_W*T:TOWN_W*T;
+      const maxH=this.zone==='farm'?FARM_H*T:TOWN_H*T;
+      for(const d of this.rainDrops){
+        d.y+=d.speed*0.3*dt;
+        d.x+=Math.sin(d.y*0.02+d.drift)*20*dt;
+        if(d.y>maxH){d.y=-4;d.x=Math.random()*maxW;}
+        if(d.x<0)d.x+=maxW;
+        if(d.x>maxW)d.x-=maxW;
+        g.fillStyle(0xffffff,0.5);
+        g.fillRect(d.x,d.y,3,3);
+      }
+    }
+  }
+
+  drawHud(){
+    const g=this.gHud;g.clear();
+    g.fillStyle(0x111111,0.88);g.fillRect(0,0,GW,HUD_H);
+    g.fillStyle(0x333333,0.5);g.fillRect(0,HUD_H-1,GW,1);
+    // Tool icon (left)
+    const tc=this.tColor();
+    g.fillStyle(tc);g.fillRect(8,8,36,36);g.fillStyle(0x222222);g.fillRect(12,12,28,28);g.fillStyle(tc);g.fillRect(16,16,20,20);
+    // Tool name + date/time
+    this.th1.setPosition(52,4).setFontSize(22).setText(this.tName());
+    const tc2=this.hour>=24?'#ff4444':(this.hour>=18?'#ffaa44':'#cccccc');
+    this.th2.setPosition(52,30).setColor(tc2).setFontSize(18).setText(this.sName().substring(0,3)+' '+this.day+'  '+this.fmtTime());
+    // Gold (left of hearts)
+    this.th3.setPosition(310,12).setFontSize(24).setOrigin(0,0).setText(this.gold+'G');
+    // Stamina hearts (far right)
+    const hearts=8,per=this.maxSt/hearts;
+    for(let i=0;i<hearts;i++){
+      const hx=410+i*28,hy=12;
+      const fill=this.stamina>=(i+1)*per,partial=!fill&&this.stamina>i*per;
+      g.fillStyle(fill?0xff3344:(partial?0xff8855:0x442222));
+      g.fillRect(hx,hy+3,8,12);g.fillRect(hx+8,hy+3,8,12);g.fillRect(hx+2,hy,12,6);
+      g.fillRect(hx+2,hy+15,4,2);g.fillRect(hx+10,hy+15,4,2);g.fillRect(hx+5,hy+17,6,3);
+    }
+  }
+
+  drawUI(){
+    const g=this.gUI;g.clear();
+    this.tu1.setText('').setOrigin(0,0);this.tu2.setText('').setOrigin(0,0);this.tu3.setText('').setOrigin(0,0);
+    if(this.ui==='splash'){
+      const p=PAL[this.season];g.fillStyle(p.g1);g.fillRect(0,0,GW,GH);g.fillStyle(0x000000,0.2);g.fillRect(0,0,GW,GH);
+      g.lineStyle(4,0xffffff,0.4);g.strokeRect(20,20,GW-40,GH-40);
+      const w=this.weather[0].toUpperCase()+this.weather.slice(1);
+      this.tu1.setPosition(GW/2,GH/2-80).setOrigin(0.5).setFontSize(34).setColor('#fff').setText(this.sName()+'  Day '+this.day);
+      this.tu2.setPosition(GW/2,GH/2-10).setOrigin(0.5).setFontSize(26).setColor('#ffffffcc').setText('Year '+this.year+'   '+w);
+      this.tu3.setPosition(GW/2,GH/2+80).setOrigin(0.5).setFontSize(22).setText('Press A to start');
+      return;
+    }
+    if(this.ui==='dialog'){
+      g.fillStyle(0x111133,0.92);g.fillRect(16,GH-150,GW-32,134);g.lineStyle(2,0xffffff,0.6);g.strokeRect(16,GH-150,GW-32,134);
+      this.tu1.setPosition(32,GH-140).setFontSize(26).setColor('#fff').setText(this.dlgLines[this.dlgIdx]||'');
+      this.tu3.setPosition(GW-64,GH-32).setFontSize(20).setText('[A]');
+    }
+    if(this.ui==='prompt'){
+      g.fillStyle(0x111133,0.92);g.fillRect(16,GH-220,GW-32,204);g.lineStyle(2,0xffffff,0.6);g.strokeRect(16,GH-220,GW-32,204);
+      this.tu1.setPosition(32,GH-212).setFontSize(26).setColor('#fff').setText(this.prmTxt);
+      let o='';for(let i=0;i<this.prmOpts.length;i++)o+=(i===this.prmIdx?'> ':'  ')+this.prmOpts[i]+'\n';
+      this.tu2.setPosition(32,GH-170).setFontSize(22).setColor('#ffff88').setText(o);
+    }
+    if(this.ui==='shop'){
+      g.fillStyle(0x111133,0.96);g.fillRect(0,0,GW,GH);g.lineStyle(3,0xffffff,0.4);g.strokeRect(8,8,GW-16,GH-16);
+      this.tu1.setPosition(24,18).setFontSize(26).setColor('#ffdd44').setText('SHOP              '+this.gold+'G');
+      let it='';for(let i=0;i<this.shopList.length;i++){
+        const s=this.shopList[i],cur=i===this.shopIdx?'> ':'  ',af=this.gold>=s.price?'':' [!]';
+        let extra='';
+        if(s.animal){const cnt=this.animals.filter(a=>a.type===s.animal).length;extra='  (own:'+cnt+')';}
+        else{const h=this.cntInv(s.id);if(h>0)extra='  (own:'+h+')';}
+        it+=cur+s.name+'\n    '+s.price+'G'+extra+af+'\n\n';}
+      this.tu2.setPosition(24,64).setFontSize(24).setColor('#fff').setText(it);
+      this.tu3.setPosition(24,GH-40).setFontSize(20).setText('[A] Buy   [B] Close');
+    }
+    if(this.ui==='ship'){
+      g.fillStyle(0x111133,0.96);g.fillRect(0,0,GW,GH);
+      this.tu1.setPosition(24,24).setFontSize(26).setColor('#ffdd44').setText("TODAY'S SHIPMENTS");
+      let t='',tot=0;for(const s of this.lastShip){const e=s.price*s.qty;tot+=e;t+=s.name+' x'+s.qty+'  ='+e+'G\n';}
+      t+='\nTotal: '+tot+'G';
+      this.tu2.setPosition(24,72).setFontSize(22).setColor('#fff').setText(t);
+      this.tu3.setPosition(24,GH-40).setFontSize(20).setText('[A] Continue');
+    }
+    if(this.ui==='status'){
+      g.fillStyle(0x111133,0.96);g.fillRect(0,0,GW,GH);g.lineStyle(3,0xffffff,0.4);g.strokeRect(8,8,GW-16,GH-16);
+      this.tu1.setPosition(24,18).setFontSize(26).setColor('#ffdd44').setText('STATUS');
+      let info=this.sName()+' Day '+this.day+', Year '+this.year+'\nWeather: '+this.weather+'\nGold: '+this.gold+'G\nStamina: '+this.stamina+'/'+this.maxSt+'\n\nTOOLS:\n';
+      for(let i=0;i<5;i++)info+='  '+TOOL_NAMES[i]+': '+TOOL_LVLS[this.toolLevels[i]]+'\n';
+      if(this.upgrading)info+='  (Upgrading '+TOOL_NAMES[this.upgrading.toolIdx]+': '+this.upgrading.daysLeft+'d left)\n';
+      info+='\nINVENTORY:\n';
+      if(this.inv.length===0)info+='  (empty)\n';
+      for(const s of this.inv)info+='  '+this.iName(s.id)+' x'+s.qty+'\n';
+      if(this.animals.length>0){
+        info+='\nANIMALS:\n';
+        for(const a of this.animals)info+='  '+a.name+' ('+a.hearts+'h)\n';
+      }
+      info+='\nRELATIONSHIPS:\n';
+      for(const n of this.npcs){
+        let tag='';
+        if(this.married===n.name)tag=' [SPOUSE]';
+        else if(MARRIAGE_DATA[n.name])tag=' *';
+        const bd=NPC_BDAYS[n.name];
+        if(bd&&bd.season===this.season&&bd.day===this.day)tag+=' BDAY!';
+        info+='  '+n.name+': '+'♥'.repeat(n.hearts)+(n.hearts<10?'·'.repeat(10-n.hearts):'')+tag+'\n';
+      }
+      if(Object.keys(this.rivalHearts).length>0){
+        info+='\nRIVAL PAIRS:\n';
+        for(const[key,val] of Object.entries(this.rivalHearts))info+='  '+key.replace('-',' & ')+': '+val+'/8\n';
+      }
+      this.tu2.setFontSize(24).setColor('#fff');
+      // Line-based scrolling: split into lines, show only what fits
+      const allLines=info.split('\n');
+      const lineH=28; // approx line height at size 24
+      const topY=48,botY=GH-36;
+      const visibleLines=Math.floor((botY-topY)/lineH);
+      const maxScroll=Math.max(0,allLines.length-visibleLines);
+      this.statusScroll=Math.min(this.statusScroll,maxScroll);
+      const showLines=allLines.slice(this.statusScroll,this.statusScroll+visibleLines);
+      this.tu2.setText(showLines.join('\n'));
+      this.tu2.setPosition(24,topY);
+      // Scrollbar
+      if(maxScroll>0){
+        const barX=GW-22,barTop=topY,barH=botY-topY;
+        g.fillStyle(0xffffff,0.12);g.fillRect(barX,barTop,6,barH);
+        const thumbH=Math.max(20,barH*(visibleLines/allLines.length));
+        const thumbY=barTop+(barH-thumbH)*(this.statusScroll/maxScroll);
+        g.fillStyle(0xffffff,0.5);g.fillRoundedRect(barX,thumbY,6,thumbH,3);
+      }
+      const scrollHint=maxScroll>0?' [Up/Down] Scroll':'';
+      this.tu3.setPosition(24,GH-26).setFontSize(18).setText('[A/B/Start] Close'+scrollHint);
+    }
+    if(this.ui==='fishing'){
+      // Water backdrop
+      const wy=GH-140;
+      g.fillStyle(0x224466,0.85);g.fillRect(16,wy,GW-32,124);
+      g.lineStyle(2,0x4488cc,0.6);g.strokeRect(16,wy,GW-32,124);
+      // Waves
+      for(let i=0;i<8;i++){
+        const wx=40+i*72,wyt=wy+60+Math.sin(Date.now()*0.003+i*1.5)*6;
+        g.lineStyle(2,0x5599cc,0.4);
+        g.lineBetween(wx,wyt,wx+30,wyt);
+      }
+      // Bobber
+      const bx=GW/2, bobBase=wy+55;
+      if(this.fishState==='cast'){
+        this.tu1.setPosition(GW/2,wy+12).setOrigin(0.5,0).setFontSize(24).setColor('#aaddff').setText('Casting...');
+        // Line going out
+        const prog=1-(this.fishTimer/800);
+        g.lineStyle(2,0xcccccc,0.6);
+        g.lineBetween(bx-40,wy+20,bx-40+prog*40,wy+20+prog*35);
+      }else if(this.fishState==='wait'){
+        this.tu1.setPosition(GW/2,wy+12).setOrigin(0.5,0).setFontSize(24).setColor('#88bbdd').setText('Waiting for a bite...');
+        // Bobber floating
+        const bob=Math.sin((this.fishBobTimer||0)*0.004)*4;
+        g.fillStyle(0xff4444);g.fillCircle(bx,bobBase+bob,5);
+        g.fillStyle(0xffffff);g.fillCircle(bx,bobBase+bob-6,3);
+        // Line
+        g.lineStyle(1,0xcccccc,0.5);g.lineBetween(bx-40,wy+20,bx,bobBase+bob-8);
+        this.tu3.setPosition(GW/2,wy+100).setOrigin(0.5,0).setFontSize(18).setColor('#88aacc').setText('[B] Cancel');
+      }else if(this.fishState==='bite'){
+        // Flashing exclamation - urgent!
+        const flash=Math.floor(Date.now()/100)%2===0;
+        this.tu1.setPosition(GW/2,wy+10).setOrigin(0.5,0).setFontSize(28).setColor(flash?'#ffff44':'#ff4444').setText('!! HIT !!');
+        // Bobber dunking
+        const dunk=Math.sin(Date.now()*0.02)*6;
+        g.fillStyle(0xff4444);g.fillCircle(bx,bobBase+8+dunk,5);
+        g.lineStyle(1,0xcccccc,0.5);g.lineBetween(bx-40,wy+20,bx,bobBase+dunk);
+        // Timer bar
+        const pct=this.fishTimer/this.fishBiteWindow;
+        g.fillStyle(0x333333,0.8);g.fillRect(60,wy+80,GW-120,12);
+        g.fillStyle(pct>0.3?0x44cc44:0xff4444);g.fillRect(60,wy+80,Math.max(0,(GW-120)*pct),12);
+        this.tu3.setPosition(GW/2,wy+100).setOrigin(0.5,0).setFontSize(20).setColor('#ffff88').setText('Press [A] NOW!');
+      }else if(this.fishState==='caught'){
+        const f=FISH[this.fishCaughtId];
+        this.tu1.setPosition(GW/2,wy+10).setOrigin(0.5,0).setFontSize(22).setColor('#44ff88').setText('Caught!');
+        // Draw fish
+        const fc=f?f.color:0x88aacc;
+        g.fillStyle(fc);
+        g.fillRect(bx-16,bobBase-8,32,16); // body
+        g.fillTriangle(bx+16,bobBase-8,bx+16,bobBase+8,bx+26,bobBase); // tail
+        g.fillStyle(0x222222);g.fillCircle(bx-8,bobBase-2,2); // eye
+        const fname=f?f.name:'Fish';
+        const fprice=f?f.sell:50;
+        this.tu2.setPosition(GW/2,wy+55).setOrigin(0.5,0).setFontSize(18).setColor('#ffffff').setText(fname+' ('+fprice+'G)');
+        this.tu3.setPosition(GW/2,wy+100).setOrigin(0.5,0).setFontSize(18).setColor('#aaa').setText('[A] Continue');
+      }
+    }
+  }
+}
+
+new Phaser.Game({
+  type:Phaser.CANVAS,width:GW,height:GH,parent:'screen-wrap',
+  pixelArt:true,backgroundColor:'#2a3a1a',
+  scene:[BootScene,GameScene],scale:{mode:Phaser.Scale.NONE},
+  input:{touch:false},render:{antialias:false,pixelArt:true,roundPixels:true},banner:false
+});
+
+</script>
+</body>
+</html> 
