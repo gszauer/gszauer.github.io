@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meal List (Days 1–28)</title>
+  <style>
+    :root {
+      --border:#d9d9d9;
+      --text:#111;
+      --muted:#666;
+      --shadow:0 1px 10px rgba(0,0,0,.06);
+      --radius:14px;
+      --font:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0; padding:24px; color:var(--text); font-family:var(--font); background:#fff;}
+    .wrap{max-width:900px; margin:0 auto;}
+    ol{list-style:none; padding:0; margin:0; display:grid; gap:10px;}
+    .item{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:12px 14px;
+      box-shadow:var(--shadow);
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:16px;
+      background:#fff;
+    }
+    .day{font-weight:800; min-width:88px;}
+    .meal{font-weight:600; flex:1; text-align:left;}
+    .badge{
+      display:inline-block;
+      margin-left:8px;
+      font-size:12px;
+      font-weight:800;
+      color:#a14900;
+      border:1px solid #ff922b;
+      border-radius:999px;
+      padding:2px 8px;
+      vertical-align:middle;
+    }
+    .skyline{
+      outline:3px solid #ff922b;
+      outline-offset:-3px;
+      background:#fff7ed;
+    }
+
+    /* Two-column list on wider screens */
+    @media (min-width: 880px){
+      ol{grid-template-columns:1fr 1fr;}
+      .item{min-height:54px;}
+    }
+    @media (max-width: 520px){
+      body{padding:16px}
+      .item{flex-direction:column; align-items:flex-start; gap:6px;}
+      .day{min-width:auto;}
+    }
+
+    @media print {
+      body{padding:0}
+      .item{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <ol>
+
+      <li class="item">
+        <div class="day">Day 1</div>
+        <div class="meal">Spaghetti &amp; Meatballs</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 2</div>
+        <div class="meal">Salmon &amp; Rice</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 3</div>
+        <div class="meal">Pizza</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 4</div>
+        <div class="meal">Sandwich &amp; soup</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 5</div>
+        <div class="meal">Chicken Alfredo</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 6</div>
+        <div class="meal">Pirogies / Pot Stickers</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 7</div>
+        <div class="meal">Ravioli</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 8</div>
+        <div class="meal">Burgers &amp; fries</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 9</div>
+        <div class="meal">Sliders</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 10</div>
+        <div class="meal">Meatloaf &amp; Mash Potatoes</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 11</div>
+        <div class="meal">Jamaican Beef Patties</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 12</div>
+        <div class="meal">Shepards Pie</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 13</div>
+        <div class="meal">Pot Roast &amp; Mash Potatoes</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 14</div>
+        <div class="meal">Corned / Ground beef hash</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 15</div>
+        <div class="meal">Beef Tacos / Meximelt</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 16</div>
+        <div class="meal">Baked Potatoes</div>
+      </li>
+    
+
+      <li class="item skyline">
+        <div class="day">Day 17</div>
+        <div class="meal">Skyline <span class="badge">Skyline</span></div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 18</div>
+        <div class="meal">Chicken &amp; Rice Bake</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 19</div>
+        <div class="meal">Beef and rice</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 20</div>
+        <div class="meal">Beef Mac &amp; Cheese</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 21</div>
+        <div class="meal">Hotdog / Corndog / Chillidog</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 22</div>
+        <div class="meal">Pulled pork BBQ (sandwich?)</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 23</div>
+        <div class="meal">Pot Pie</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 24</div>
+        <div class="meal">BLT Sandwich</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 25</div>
+        <div class="meal">BBQ Ribs</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 26</div>
+        <div class="meal">Sourdough Sandwich &amp; Soup</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 27</div>
+        <div class="meal">French Bread Pizza / Garlic</div>
+      </li>
+    
+
+      <li class="item">
+        <div class="day">Day 28</div>
+        <div class="meal">Fast Food (Panda / Burger King)</div>
+      </li>
+    
+    </ol>
+  </div>
+</body>
+</html>
