@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Cade</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #1a1a2e;
+    --surface: #25253e;
+    --border-hi: #4a4a6a;
+    --border-lo: #111122;
+    --accent: #e94560;
+    --accent2: #0f3460;
+    --text: #eaeaea;
+    --text-dim: #8888aa;
+    --card-bg: #2d2d4a;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* Scanline overlay */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+}
+
+header {
+    background: linear-gradient(180deg, #16213e 0%, var(--bg) 100%);
+    border-bottom: 2px solid var(--border-hi);
+    padding: 24px 16px 20px;
+    text-align: center;
+}
+
+.logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(18px, 5vw, 32px);
+    color: var(--accent);
+    text-shadow:
+        2px 2px 0 #0f3460,
+        0 0 20px rgba(233, 69, 96, 0.3);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.tagline {
+    font-size: clamp(11px, 2.5vw, 13px);
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.game-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 2px solid var(--border-hi);
+    border-top-color: #5a5a7a;
+    border-left-color: #5a5a7a;
+    border-right-color: var(--border-lo);
+    border-bottom-color: var(--border-lo);
+    padding: 20px 8px 16px;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent2), #533483, var(--accent));
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.game-card:hover::before,
+.game-card:focus::before {
+    opacity: 1;
+}
+
+.game-card:hover {
+    background: #353558;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.game-card:active {
+    transform: translateY(1px);
+    border-top-color: var(--border-lo);
+    border-left-color: var(--border-lo);
+    border-right-color: #5a5a7a;
+    border-bottom-color: #5a5a7a;
+    box-shadow: none;
+}
+
+.card-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.card-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.6;
+    word-break: break-word;
+    max-width: 140px;
+}
+
+/* Color variety for cards */
+.game-card:nth-child(4n+1) { border-bottom-color: #e94560; border-right-color: #e94560; }
+.game-card:nth-child(4n+2) { border-bottom-color: #0f3460; border-right-color: #0f3460; }
+.game-card:nth-child(4n+3) { border-bottom-color: #533483; border-right-color: #533483; }
+.game-card:nth-child(4n+4) { border-bottom-color: #16a085; border-right-color: #16a085; }
+
+footer {
+    padding: 24px;
+}
+
+/* Tablet: 3 columns */
+@media (min-width: 520px) {
+    .game-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    main { padding: 24px; }
+    .card-icon { font-size: 56px; }
+    .card-title { font-size: 10px; }
+}
+
+/* Desktop: 4 columns */
+@media (min-width: 760px) {
+    .game-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .game-card { padding: 24px 12px 20px; }
+    .card-icon { font-size: 64px; }
+}
+
+/* Small phones */
+@media (max-width: 360px) {
+    .game-grid { gap: 8px; }
+    .game-card { padding: 16px 6px 12px; }
+    .card-icon { font-size: 40px; }
+    .card-title { font-size: 8px; }
+}
+</style>
+</head>
+<body>
+<header>
+    <div class="logo">CLAUDE CADE</div>
+    <div class="tagline">Games made with Claude</div>
+</header>
+<main>
+    <div class="game-grid">
+        <!-- GAMES_START -->
+        <a class="game-card" href="harvest_moon.html"><div class="card-icon">&#9876;&#65039;</div><div class="card-title">Harvest Moon</div></a>
+        <a class="game-card" href="shining_force.html"><div class="card-icon">&#128163;</div><div class="card-title">Shining Force</div></a>
+        <a class="game-card" href="titan.html"><div class="card-icon">&#127918;</div><div class="card-title">Attack on Titan: SNES Edition</div></a>
+        <!-- GAMES_END -->
+    </div>
+</main>
+<footer></footer>
+</body>
+</html>

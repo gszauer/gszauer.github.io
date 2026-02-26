@@ -1,0 +1,4322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Attack on Titan: SNES Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: #000;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior: none;
+        }
+
+        /* Game canvas container — fills entire viewport */
+        #game-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            width: 100dvw; height: 100dvh;
+            z-index: 1;
+        }
+        #game-container canvas {
+            display: block;
+            width: 100vw !important;
+            height: 100vh !important;
+            width: 100dvw !important;
+            height: 100dvh !important;
+            touch-action: none;
+        }
+
+        /* ---- VIRTUAL CONTROLLER ---- */
+        #vcontroller {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #vcontroller.active {
+            display: block;
+        }
+
+        /* D-Pad */
+        .dpad-zone {
+            position: absolute;
+            bottom: 16px;
+            left: 10px;
+            width: 150px;
+            height: 150px;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        .dpad-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(30,30,40,0.5);
+            border: 2px solid rgba(100,100,120,0.3);
+        }
+        .dpad-btn {
+            position: absolute;
+            background: rgba(160,160,180,0.28);
+            border: 1.5px solid rgba(160,160,180,0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.55);
+            font-size: 16px;
+            font-family: monospace;
+            transition: background 0.05s;
+            touch-action: none;
+            pointer-events: auto;
+        }
+        .dpad-btn.pressed {
+            background: rgba(255,255,255,0.38);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .dpad-up {
+            width: 46px; height: 46px;
+            top: 2px; left: 50%;
+            transform: translateX(-50%);
+            border-radius: 10px 10px 4px 4px;
+        }
+        .dpad-down {
+            width: 46px; height: 46px;
+            bottom: 2px; left: 50%;
+            transform: translateX(-50%);
+            border-radius: 4px 4px 10px 10px;
+        }
+        .dpad-left {
+            width: 46px; height: 46px;
+            top: 50%; left: 2px;
+            transform: translateY(-50%);
+            border-radius: 10px 4px 4px 10px;
+        }
+        .dpad-right {
+            width: 46px; height: 46px;
+            top: 50%; right: 2px;
+            transform: translateY(-50%);
+            border-radius: 4px 10px 10px 4px;
+        }
+        .dpad-center {
+            width: 36px; height: 36px;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 6px;
+            background: rgba(50,50,60,0.35);
+            border: 1px solid rgba(80,80,90,0.25);
+            pointer-events: none;
+        }
+
+        /* Face Buttons */
+        .face-zone {
+            position: absolute;
+            bottom: 16px;
+            right: 10px;
+            width: 150px;
+            height: 150px;
+            pointer-events: none;
+        }
+        .face-btn {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(160,160,180,0.22);
+            border: 2px solid rgba(160,160,180,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            pointer-events: auto;
+            touch-action: none;
+            transition: background 0.05s;
+        }
+        .face-btn.pressed {
+            background: rgba(255,255,255,0.4);
+            border-color: rgba(255,255,255,0.55);
+        }
+        .face-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            font-weight: bold;
+            font-family: monospace;
+            line-height: 1;
+        }
+        .face-sub {
+            color: rgba(255,255,255,0.35);
+            font-size: 7px;
+            font-family: monospace;
+            line-height: 1;
+            margin-top: 1px;
+        }
+        /* SNES diamond: X top, Y left, A right, B bottom */
+        .face-x { top: 0; left: 50%; transform: translateX(-50%);
+            background: rgba(50,90,170,0.3); border-color: rgba(70,120,210,0.3); }
+        .face-y { top: 50%; left: 0; transform: translateY(-50%);
+            background: rgba(50,170,70,0.3); border-color: rgba(70,210,90,0.3); }
+        .face-a { top: 50%; right: 0; transform: translateY(-50%);
+            background: rgba(170,40,50,0.3); border-color: rgba(210,60,70,0.3); }
+        .face-b { bottom: 0; left: 50%; transform: translateX(-50%);
+            background: rgba(190,170,40,0.3); border-color: rgba(230,210,60,0.3); }
+
+        /* Shoulder Buttons */
+        .shoulder-zone {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 52px;
+            pointer-events: none;
+            padding: 0 8px;
+            padding-top: env(safe-area-inset-top, 4px);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .shoulder-btn {
+            width: 64px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(100,100,120,0.3);
+            border: 1.5px solid rgba(130,130,150,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            pointer-events: auto;
+            touch-action: none;
+            transition: background 0.05s;
+            margin-top: 4px;
+        }
+        .shoulder-btn.pressed {
+            background: rgba(255,255,255,0.35);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .shoulder-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            font-weight: bold;
+            font-family: monospace;
+            line-height: 1;
+        }
+        .shoulder-sub {
+            color: rgba(255,255,255,0.3);
+            font-size: 6px;
+            font-family: monospace;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        /* Center Buttons (Start/Select) */
+        .center-zone {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .center-btn {
+            width: 48px;
+            height: 22px;
+            border-radius: 11px;
+            background: rgba(80,80,90,0.35);
+            border: 1px solid rgba(120,120,130,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            touch-action: none;
+            transition: background 0.05s;
+        }
+        .center-btn.pressed {
+            background: rgba(255,255,255,0.3);
+        }
+        .center-label {
+            color: rgba(255,255,255,0.45);
+            font-size: 7px;
+            font-family: monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* safe area padding for bottom */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            .dpad-zone, .face-zone {
+                bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+            .center-zone {
+                bottom: calc(2px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Portrait orientation hint */
+        #orient-hint {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #AAA;
+            font-family: monospace;
+        }
+        #orient-hint .icon {
+            font-size: 48px;
+            animation: rotate-hint 1.5s ease-in-out infinite;
+        }
+        @keyframes rotate-hint {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+        #orient-hint .msg {
+            font-size: 14px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        #orient-hint .dismiss {
+            font-size: 11px;
+            color: #666;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+        /* Only show on mobile in portrait */
+        @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+            #orient-hint { display: flex; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+</head>
+<body>
+
+<!-- Game canvas container - full screen -->
+<div id="game-container"></div>
+
+<!-- Portrait mode hint -->
+<div id="orient-hint">
+    <div class="icon">📱</div>
+    <div class="msg">Rotate your device to landscape<br>for the best experience</div>
+    <div class="dismiss" onclick="document.getElementById('orient-hint').style.display='none'">Tap to dismiss</div>
+</div>
+
+<!-- Virtual Controller Overlay -->
+<div id="vcontroller">
+    <!-- D-Pad -->
+    <div class="dpad-zone" id="dpadZone">
+        <div class="dpad-bg"></div>
+        <div class="dpad-btn dpad-up"    data-key="up">▲</div>
+        <div class="dpad-btn dpad-down"  data-key="down">▼</div>
+        <div class="dpad-btn dpad-left"  data-key="left">◄</div>
+        <div class="dpad-btn dpad-right" data-key="right">►</div>
+        <div class="dpad-center"></div>
+    </div>
+
+    <!-- Face Buttons (SNES diamond) -->
+    <div class="face-zone">
+        <div class="face-btn face-x" data-key="grapple">
+            <span class="face-label">X</span>
+            <span class="face-sub">GRPL</span>
+        </div>
+        <div class="face-btn face-y" data-key="attack">
+            <span class="face-label">Y</span>
+            <span class="face-sub">ATK</span>
+        </div>
+        <div class="face-btn face-a" data-key="special">
+            <span class="face-label">A</span>
+            <span class="face-sub">SPCL</span>
+        </div>
+        <div class="face-btn face-b" data-key="jump">
+            <span class="face-label">B</span>
+            <span class="face-sub">JUMP</span>
+        </div>
+    </div>
+
+    <!-- Shoulder Buttons -->
+    <div class="shoulder-zone">
+        <div class="shoulder-btn" data-key="dodge">
+            <span class="shoulder-label">L</span>
+            <span class="shoulder-sub">DODGE</span>
+        </div>
+        <div class="shoulder-btn" data-key="lockOn">
+            <span class="shoulder-label">R</span>
+            <span class="shoulder-sub">LOCK</span>
+        </div>
+    </div>
+
+    <!-- Start / Select -->
+    <div class="center-zone">
+        <div class="center-btn" data-key="select">
+            <span class="center-label">SELECT</span>
+        </div>
+        <div class="center-btn" data-key="start">
+            <span class="center-label">START</span>
+        </div>
+    </div>
+</div>
+<script>
+// ============================================================
+// ATTACK ON TITAN: WINGS OF FREEDOM — SNES-Style Phaser 3 Game
+// ============================================================
+
+// ---- CONSTANTS ----
+const DPR = window.devicePixelRatio || 1;
+const GAME_WIDTH = Math.floor(window.innerWidth * DPR);
+const GAME_HEIGHT = Math.floor(window.innerHeight * DPR);
+// Scale factor for UI — keeps elements proportionally sized
+const S = Math.min(GAME_WIDTH / 400, GAME_HEIGHT / 300);
+function fs(px) { return Math.max(8, Math.round(px * S)) + 'px'; }
+function sz(px) { return Math.round(px * S); }
+const TILE_SIZE = Math.round(32 * DPR);
+const GRAVITY = 0.45 * DPR;
+const TERMINAL_VELOCITY = 10 * DPR;
+const GRAPPLE_DAMPING = 0.997;
+const MAX_GRAPPLE_RANGE = 500 * DPR;
+const HIT_STOP_FRAMES = 5;
+
+const COLORS = {
+    SURVEY_GREEN: 0x55783B,
+    TITAN_FLESH: 0xD2AF96,
+    TITAN_FLESH_DARK: 0xB08A6E,
+    BLADE_STEEL: 0xC3CDD7,
+    DANGER_RED: 0x8C1E1E,
+    NAPE_RED: 0xFF3333,
+    WALL_STONE: 0xB4A58C,
+    WALL_STONE_DARK: 0x8A7A64,
+    SKY_BLUE: 0x7AB8D4,
+    SKY_TOP: 0x4A90B8,
+    BUILDING_TAN: 0xC4A882,
+    BUILDING_DARK: 0x8B7355,
+    BUILDING_ROOF: 0x7A4A3A,
+    WOOD_BROWN: 0x6B4226,
+    GAS_GREEN: 0x44CC44,
+    GAS_YELLOW: 0xCCCC44,
+    GAS_RED: 0xCC4444,
+    BLOOD_RED: 0xCC2222,
+    STEAM_WHITE: 0xEBE6DC,
+    NIGHT_BLUE: 0x1A1A3E,
+    COBBLE_GRAY: 0x888888,
+    COBBLE_DARK: 0x666666,
+    SCARF_RED: 0xCC2244,
+    UI_BG: 0x111111,
+    UI_BORDER: 0x888888,
+    WHITE: 0xFFFFFF,
+    BLACK: 0x000000,
+    YELLOW: 0xFFCC00,
+    CRYSTAL_BLUE: 0xAADDFF,
+};
+
+const CHAR_DEFS = {
+    eren: {
+        id: 'eren',
+        name: 'Eren Jaeger',
+        bladeStrength: 3,
+        speed: 3,
+        gasEfficiency: 3,
+        maxHealth: 5,
+        color: 0x5B3A1A, // hair
+        eyeColor: 0x22AA44,
+        specialName: 'Titan Shift',
+        specialCharges: 1,
+    },
+    mikasa: {
+        id: 'mikasa',
+        name: 'Mikasa Ackerman',
+        bladeStrength: 4,
+        speed: 5,
+        gasEfficiency: 2,
+        maxHealth: 5,
+        color: 0x1A1A2E, // hair
+        eyeColor: 0x222222,
+        specialName: 'Ackerman Instinct',
+        specialCharges: 3,
+    },
+    levi: {
+        id: 'levi',
+        name: 'Levi Ackerman',
+        bladeStrength: 5,
+        speed: 5,
+        gasEfficiency: 4,
+        maxHealth: 5,
+        color: 0x1A1A1A,
+        eyeColor: 0x444466,
+        specialName: 'Spin Slash',
+        specialCharges: 99,
+    },
+};
+
+const TITAN_DEFS = {
+    '3m': { className: '3m', width: 56 * DPR, height: 80 * DPR, napeHealth: 1, speed: 0.4 * DPR, detectRadius: 180 * DPR, grabRange: 40 * DPR, damage: 1, score: 100 },
+    '7m': { className: '7m', width: 72 * DPR, height: 128 * DPR, napeHealth: 2, speed: 0.6 * DPR, detectRadius: 240 * DPR, grabRange: 55 * DPR, damage: 1, score: 250 },
+    '10m': { className: '10m', width: 96 * DPR, height: 180 * DPR, napeHealth: 3, speed: 0.7 * DPR, detectRadius: 300 * DPR, grabRange: 70 * DPR, damage: 2, score: 500 },
+    '15m': { className: '15m', width: 128 * DPR, height: 260 * DPR, napeHealth: 5, speed: 0.5 * DPR, detectRadius: 350 * DPR, grabRange: 90 * DPR, damage: 2, score: 1000 },
+};
+
+// ---- UTILITY FUNCTIONS ----
+function rectOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function pointInRect(px, py, rx, ry, rw, rh) {
+    return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
+}
+
+function dist(x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function angleBetween(x1, y1, x2, y2) {
+    return Math.atan2(y2 - y1, x2 - x1);
+}
+
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randFloat(min, max) {
+    return Math.random() * (max - min) + min;
+}
+// ---- PROCEDURAL TEXTURE GENERATION ----
+class TextureGenerator {
+    constructor(scene) {
+        this.scene = scene;
+    }
+
+    generateAll() {
+        this.generatePlayerTextures();
+        this.generateTitanTextures();
+        this.generateEnvironmentTextures();
+        this.generateUITextures();
+        this.generateEffectTextures();
+    }
+
+    generatePlayerTextures() {
+        for (let charId in CHAR_DEFS) {
+            const def = CHAR_DEFS[charId];
+            this._drawPlayer(charId, def);
+        }
+    }
+
+    _drawPlayer(id, def) {
+        const w = 20;
+        const h = 32;
+        const g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+
+        // Boots
+        g.fillStyle(0x333333);
+        g.fillRect(4, 27, 5, 5);
+        g.fillRect(11, 27, 5, 5);
+
+        // Pants (white uniform)
+        g.fillStyle(0xDDDDCC);
+        g.fillRect(5, 20, 4, 8);
+        g.fillRect(11, 20, 4, 8);
+
+        // ODM harness on legs
+        g.fillStyle(0x554433);
+        g.fillRect(4, 22, 2, 5);
+        g.fillRect(14, 22, 2, 5);
+
+        // Torso (jacket)
+        g.fillStyle(0xAA9977);
+        g.fillRect(5, 12, 10, 9);
+
+        // Survey Corps cloak
+        g.fillStyle(COLORS.SURVEY_GREEN);
+        g.fillRect(3, 12, 3, 10);
+        g.fillRect(14, 12, 3, 10);
+
+        // Belt
+        g.fillStyle(0x554433);
+        g.fillRect(5, 19, 10, 2);
+
+        // ODM gear on hips
+        g.fillStyle(COLORS.BLADE_STEEL);
+        g.fillRect(2, 18, 3, 4);
+        g.fillRect(15, 18, 3, 4);
+
+        // Neck
+        g.fillStyle(0xDDB896);
+        g.fillRect(8, 10, 4, 3);
+
+        // Head
+        g.fillStyle(0xDDB896);
+        g.fillRect(6, 2, 8, 9);
+
+        // Hair
+        g.fillStyle(def.color);
+        g.fillRect(6, 1, 8, 4);
+        g.fillRect(5, 2, 2, 5);
+        g.fillRect(13, 2, 2, 5);
+
+        // Eyes
+        g.fillStyle(def.eyeColor);
+        g.fillRect(7, 5, 2, 2);
+        g.fillRect(11, 5, 2, 2);
+
+        // Mouth
+        g.fillStyle(0xBB8866);
+        g.fillRect(9, 8, 2, 1);
+
+        // Mikasa scarf
+        if (id === 'mikasa') {
+            g.fillStyle(COLORS.SCARF_RED);
+            g.fillRect(6, 10, 8, 2);
+        }
+
+        // Blades in hands
+        g.fillStyle(COLORS.BLADE_STEEL);
+        g.fillRect(1, 14, 2, 8);
+        g.fillRect(17, 14, 2, 8);
+
+        g.generateTexture('player_' + id, w, h);
+        g.destroy();
+
+        // Slash frame
+        const gs = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        gs.fillStyle(COLORS.BLADE_STEEL);
+        gs.fillRect(5, 12, 10, 9);
+        gs.fillStyle(0xDDB896);
+        gs.fillRect(6, 2, 8, 9);
+        gs.fillStyle(def.color);
+        gs.fillRect(6, 1, 8, 4);
+        gs.fillRect(5, 2, 2, 5);
+        gs.fillRect(13, 2, 2, 5);
+        gs.fillStyle(def.eyeColor);
+        gs.fillRect(7, 5, 2, 2);
+        gs.fillRect(11, 5, 2, 2);
+        gs.fillStyle(0xDDDDCC);
+        gs.fillRect(5, 20, 4, 8);
+        gs.fillRect(11, 20, 4, 8);
+        gs.fillStyle(0x333333);
+        gs.fillRect(4, 27, 5, 5);
+        gs.fillRect(11, 27, 5, 5);
+        if (id === 'mikasa') {
+            gs.fillStyle(COLORS.SCARF_RED);
+            gs.fillRect(6, 10, 8, 2);
+        }
+        // Extended blade swing
+        gs.fillStyle(0xFFFFFF);
+        gs.fillRect(0, 8, 20, 2);
+        gs.fillRect(17, 6, 3, 6);
+        gs.generateTexture('player_' + id + '_slash', w, h);
+        gs.destroy();
+    }
+
+    generateTitanTextures() {
+        for (let cls in TITAN_DEFS) {
+            const def = TITAN_DEFS[cls];
+            this._drawTitan(cls, def);
+        }
+    }
+
+    _drawTitan(cls, def) {
+        const w = def.width;
+        const h = def.height;
+        const g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+
+        const skin = COLORS.TITAN_FLESH;
+        const skinDark = COLORS.TITAN_FLESH_DARK;
+
+        // Body proportions based on class
+        const headH = Math.floor(h * 0.2);
+        const torsoH = Math.floor(h * 0.35);
+        const legH = h - headH - torsoH;
+        const torsoW = Math.floor(w * 0.6);
+        const headW = Math.floor(w * 0.4);
+        const legW = Math.floor(w * 0.2);
+        const cx = Math.floor(w / 2);
+
+        // Legs
+        g.fillStyle(skinDark);
+        g.fillRect(cx - torsoW / 2, headH + torsoH, legW, legH);
+        g.fillRect(cx + torsoW / 2 - legW, headH + torsoH, legW, legH);
+
+        // Torso
+        g.fillStyle(skin);
+        g.fillRect(cx - torsoW / 2, headH, torsoW, torsoH);
+
+        // Muscle lines on torso
+        g.fillStyle(skinDark);
+        g.fillRect(cx - 1, headH + 4, 2, torsoH - 8);
+
+        // Arms
+        const armW = Math.floor(w * 0.15);
+        g.fillStyle(skin);
+        g.fillRect(cx - torsoW / 2 - armW, headH + 2, armW, torsoH - 4);
+        g.fillRect(cx + torsoW / 2, headH + 2, armW, torsoH - 4);
+
+        // Head
+        g.fillStyle(skin);
+        g.fillRect(cx - headW / 2, 0, headW, headH);
+
+        // Face - creepy grin
+        g.fillStyle(0x000000);
+        // Eyes (wide, unsettling)
+        const eyeY = Math.floor(headH * 0.35);
+        const eyeSize = Math.max(2, Math.floor(headW * 0.15));
+        g.fillRect(cx - headW / 4 - eyeSize / 2, eyeY, eyeSize, eyeSize);
+        g.fillRect(cx + headW / 4 - eyeSize / 2, eyeY, eyeSize, eyeSize);
+
+        // Mouth (wide grin)
+        const mouthY = Math.floor(headH * 0.65);
+        const mouthW = Math.floor(headW * 0.6);
+        g.fillRect(cx - mouthW / 2, mouthY, mouthW, Math.max(2, Math.floor(headH * 0.15)));
+
+        // Nape target zone (back of neck - shown as a slight highlight)
+        g.fillStyle(COLORS.NAPE_RED);
+        const napeW = Math.max(4, Math.floor(headW * 0.5));
+        const napeH = Math.max(3, Math.floor(headH * 0.3));
+        g.fillRect(cx - napeW / 2, headH - napeH, napeW, napeH);
+
+        g.generateTexture('titan_' + cls, w, h);
+        g.destroy();
+    }
+
+    generateEnvironmentTextures() {
+        // Building tile
+        let g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.BUILDING_TAN);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(COLORS.BUILDING_DARK);
+        g.fillRect(0, 0, TILE_SIZE, 1);
+        g.fillRect(0, 0, 1, TILE_SIZE);
+        // Window
+        g.fillStyle(0x444455);
+        g.fillRect(8, 8, 16, 16);
+        g.fillStyle(0x6688AA);
+        g.fillRect(9, 9, 14, 14);
+        g.fillStyle(0x444455);
+        g.fillRect(15, 9, 2, 14);
+        g.fillRect(9, 15, 14, 2);
+        g.generateTexture('building', TILE_SIZE, TILE_SIZE);
+        g.destroy();
+
+        // Building solid (no window)
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.BUILDING_TAN);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(COLORS.BUILDING_DARK);
+        g.fillRect(0, 0, TILE_SIZE, 1);
+        g.fillRect(0, 0, 1, TILE_SIZE);
+        g.fillRect(TILE_SIZE - 1, 0, 1, TILE_SIZE);
+        // Brick lines
+        g.fillStyle(COLORS.BUILDING_DARK);
+        for (let row = 0; row < 4; row++) {
+            g.fillRect(0, row * 8, TILE_SIZE, 1);
+            const offset = (row % 2) * 16;
+            g.fillRect(offset, row * 8, 1, 8);
+            g.fillRect(offset + 16, row * 8, 1, 8);
+        }
+        g.generateTexture('building_solid', TILE_SIZE, TILE_SIZE);
+        g.destroy();
+
+        // Roof tile
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.BUILDING_ROOF);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(0x5A3A2A);
+        for (let i = 0; i < 4; i++) {
+            g.fillRect(0, i * 8, TILE_SIZE, 1);
+        }
+        g.fillStyle(0x6A4A3A);
+        g.fillRect(0, 0, TILE_SIZE, 4);
+        g.generateTexture('roof', TILE_SIZE, TILE_SIZE);
+        g.destroy();
+
+        // Ground tile
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.COBBLE_GRAY);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(COLORS.COBBLE_DARK);
+        for (let row = 0; row < 4; row++) {
+            g.fillRect(0, row * 8, TILE_SIZE, 1);
+            const offset = (row % 2) * 10;
+            for (let col = 0; col < 4; col++) {
+                g.fillRect(offset + col * 10, row * 8, 1, 8);
+            }
+        }
+        g.generateTexture('ground', TILE_SIZE, TILE_SIZE);
+        g.destroy();
+
+        // Wall segment
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.WALL_STONE);
+        g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+        g.fillStyle(COLORS.WALL_STONE_DARK);
+        g.fillRect(0, 15, TILE_SIZE, 2);
+        g.fillRect(10, 0, 2, TILE_SIZE);
+        g.fillRect(22, 0, 2, TILE_SIZE);
+        g.generateTexture('wall', TILE_SIZE, TILE_SIZE);
+        g.destroy();
+
+        // Supply station
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.WOOD_BROWN);
+        g.fillRect(0, 4, 24, 20);
+        g.fillStyle(0x886644);
+        g.fillRect(2, 6, 20, 16);
+        // Cross symbol
+        g.fillStyle(COLORS.GAS_GREEN);
+        g.fillRect(9, 8, 6, 2);
+        g.fillRect(11, 6, 2, 6);
+        // Gas canister
+        g.fillStyle(COLORS.BLADE_STEEL);
+        g.fillRect(3, 0, 6, 6);
+        g.fillRect(15, 0, 6, 6);
+        g.generateTexture('supply', 24, 24);
+        g.destroy();
+    }
+
+    generateUITextures() {
+        // Heart
+        let g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.DANGER_RED);
+        g.fillCircle(4, 4, 4);
+        g.fillCircle(10, 4, 4);
+        g.fillTriangle(0, 5, 14, 5, 7, 14);
+        g.generateTexture('heart', 14, 14);
+        g.destroy();
+
+        // Heart empty
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(0x444444);
+        g.fillCircle(4, 4, 4);
+        g.fillCircle(10, 4, 4);
+        g.fillTriangle(0, 5, 14, 5, 7, 14);
+        g.generateTexture('heart_empty', 14, 14);
+        g.destroy();
+
+        // Anchor point indicator
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(0xFFFF00);
+        g.fillCircle(4, 4, 4);
+        g.fillStyle(0x000000);
+        g.fillCircle(4, 4, 2);
+        g.generateTexture('anchor_indicator', 8, 8);
+        g.destroy();
+    }
+
+    generateEffectTextures() {
+        // Slash arc
+        let g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.lineStyle(3, 0xFFFFFF, 1);
+        g.beginPath();
+        g.arc(16, 16, 14, -1.2, 1.2, false);
+        g.strokePath();
+        g.generateTexture('slash_arc', 32, 32);
+        g.destroy();
+
+        // Blood slash arc
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.lineStyle(3, COLORS.BLOOD_RED, 1);
+        g.beginPath();
+        g.arc(16, 16, 14, -1.2, 1.2, false);
+        g.strokePath();
+        g.generateTexture('slash_arc_red', 32, 32);
+        g.destroy();
+
+        // Steam particle
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.STEAM_WHITE, 0.6);
+        g.fillCircle(4, 4, 4);
+        g.generateTexture('steam', 8, 8);
+        g.destroy();
+
+        // Gas particle
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(0xFFFFFF, 0.5);
+        g.fillCircle(3, 3, 3);
+        g.generateTexture('gas_particle', 6, 6);
+        g.destroy();
+
+        // Blood particle
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.BLOOD_RED);
+        g.fillCircle(2, 2, 2);
+        g.generateTexture('blood', 4, 4);
+        g.destroy();
+
+        // Lightning bolt segment
+        g = this.scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(COLORS.YELLOW);
+        g.fillRect(0, 0, 4, 16);
+        g.fillStyle(COLORS.WHITE);
+        g.fillRect(1, 0, 2, 16);
+        g.generateTexture('lightning', 4, 16);
+        g.destroy();
+    }
+}
+// ---- STATE MACHINE ----
+class StateMachine {
+    constructor(owner) {
+        this.owner = owner;
+        this.currentState = null;
+        this.previousState = null;
+        this.states = {};
+    }
+
+    addState(name, stateObj) {
+        stateObj.name = name;
+        stateObj.machine = this;
+        stateObj.owner = this.owner;
+        this.states[name] = stateObj;
+    }
+
+    changeState(name) {
+        if (this.currentState) {
+            this.currentState.exit();
+            this.previousState = this.currentState;
+        }
+        this.currentState = this.states[name];
+        if (this.currentState) {
+            this.currentState.elapsed = 0;
+            this.currentState.enter();
+        }
+    }
+
+    update(dt) {
+        if (this.currentState) {
+            this.currentState.elapsed += dt;
+            this.currentState.execute(dt);
+        }
+    }
+
+    isInState(name) {
+        return this.currentState && this.currentState.name === name;
+    }
+}
+
+// ---- PLAYER CLASS ----
+class Player {
+    constructor(scene, x, y, charId) {
+        this.scene = scene;
+        this.charDef = CHAR_DEFS[charId];
+        this.charId = charId;
+
+        // Position and physics
+        this.x = x;
+        this.y = y;
+        this.prevX = x;
+        this.prevY = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.width = 20 * DPR;
+        this.height = 32 * DPR;
+        this.facing = 1; // 1=right, -1=left
+        this.isGrounded = false;
+
+        // Stats
+        this.maxHealth = this.charDef.maxHealth;
+        this.health = this.maxHealth;
+        this.gas = 100;
+        this.bladeDurability = 100;
+        this.bladeSets = 8;
+        this.specialCharges = this.charDef.specialCharges;
+
+        // Combat
+        this.comboCount = 0;
+        this.hitStopFrames = 0;
+        this.isInvulnerable = false;
+        this.invulnerableTimer = 0;
+        this.flashTimer = 0;
+        this.lockedTarget = null;
+        this.killCount = 0;
+        this.score = 0;
+        this.damageTaken = 0;
+
+        // Grapple
+        this.grappleTarget = null;
+        this.grappleLength = 0;
+        this.grappleAngle = 0;
+        this.grappleAngularVel = 0;
+        this.isGrappled = false;
+        this.grappleStartedGrounded = false;
+        this.dt = 1;
+
+        // Special
+        this.specialActive = false;
+        this.specialTimer = 0;
+        this.titanFormActive = false;
+
+        // Alive
+        this.isDead = false;
+
+        // Sprite
+        this.sprite = scene.add.image(x, y, 'player_' + charId);
+        this.sprite.setOrigin(0.5, 1);
+        this.sprite.setDepth(50);
+        this.sprite.setScale(DPR);
+
+        // Grapple line graphics
+        this.grappleLine = scene.add.graphics();
+        this.grappleLine.setDepth(45);
+
+        // Gas trail emitter - manual particles
+        this.gasParticles = [];
+
+        // State machine
+        this.sm = new StateMachine(this);
+        this._initStates();
+        this.sm.changeState('IDLE');
+
+        // Input
+        this.keys = scene.input.keyboard.addKeys({
+            left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            up: Phaser.Input.Keyboard.KeyCodes.UP,
+            down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            jump: Phaser.Input.Keyboard.KeyCodes.Z,
+            attack: Phaser.Input.Keyboard.KeyCodes.X,
+            grapple: Phaser.Input.Keyboard.KeyCodes.C,
+            special: Phaser.Input.Keyboard.KeyCodes.A,
+            dodge: Phaser.Input.Keyboard.KeyCodes.S,
+            lockOn: Phaser.Input.Keyboard.KeyCodes.D,
+        });
+    }
+
+    _initStates() {
+        const self = this;
+
+        this.sm.addState('IDLE', {
+            enter() {
+                self.comboCount = 0;
+                self.vx = 0;
+                self.sprite.setTexture('player_' + self.charId);
+            },
+            execute(dt) {
+                self._applyGravity();
+                self._checkGrounded();
+
+                if (self.keys.left.isDown || self.keys.right.isDown) {
+                    self.sm.changeState('RUN');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) {
+                    self.sm.changeState('JUMP');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) {
+                    self.sm.changeState('GROUND_SLASH');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) {
+                    self._tryFireGrapple();
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.dodge)) {
+                    self.sm.changeState('DODGE_ROLL');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.special)) {
+                    self._trySpecial();
+                    return;
+                }
+                if (!self.isGrounded) {
+                    self.sm.changeState('FALL');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('RUN', {
+            enter() {
+                self.sprite.setTexture('player_' + self.charId);
+            },
+            execute(dt) {
+                const spd = (2.0 + self.charDef.speed * 0.3) * DPR;
+                if (self.keys.left.isDown) {
+                    self.vx = -spd;
+                    self.facing = -1;
+                } else if (self.keys.right.isDown) {
+                    self.vx = spd;
+                    self.facing = 1;
+                } else {
+                    self.sm.changeState('IDLE');
+                    return;
+                }
+                self._applyGravity();
+                self._checkGrounded();
+
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) { self.sm.changeState('JUMP'); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) { self.sm.changeState('GROUND_SLASH'); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.dodge)) { self.sm.changeState('DODGE_ROLL'); return; }
+                if (!self.isGrounded) { self.sm.changeState('FALL'); }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('JUMP', {
+            enter() {
+                self.vy = -9 * DPR;
+                self.isGrounded = false;
+            },
+            execute(dt) {
+                self._applyGravity();
+                self._handleAirMovement();
+
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) { self.sm.changeState('AIR_SLASH'); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) { self._tryGasBoost(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.dodge)) { self.sm.changeState('AIR_DODGE'); return; }
+
+                if (self.vy >= 0) {
+                    self.sm.changeState('FALL');
+                    return;
+                }
+                if (self.isGrounded) { self.sm.changeState('IDLE'); }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('FALL', {
+            enter() {},
+            execute(dt) {
+                self._applyGravity();
+                self._handleAirMovement();
+                self._checkGrounded();
+
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) { self.sm.changeState('AIR_SLASH'); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) { self._tryGasBoost(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.dodge)) { self.sm.changeState('AIR_DODGE'); return; }
+
+                if (self.isGrounded) { self.sm.changeState('IDLE'); }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('GRAPPLE_FIRE', {
+            enter() {
+                // Grapple target already set by _tryFireGrapple
+                self._consumeGas(1);
+                self.grappleStartedGrounded = self.isGrounded;
+                self.isGrounded = false;
+            },
+            execute(dt) {
+                if (this.elapsed > 3) {
+                    self.sm.changeState('SWINGING');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('SWINGING', {
+            enter() {
+                self.isGrappled = true;
+            },
+            execute(dt) {
+                const tx = self.grappleTarget.x;
+                const ty = self.grappleTarget.y;
+                const dx = tx - self.x;
+                const dy = ty - self.y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+
+                if (d < 1) {
+                    // Arrived at anchor — slingshot launch
+                    self._releaseGrapple();
+                    self.sm.changeState('LAUNCH');
+                    return;
+                }
+
+                // Normalize direction
+                const nx = dx / d;
+                const ny = dy / d;
+
+                // Pull speed — slower, more controlled
+                const pullAccel = 0.4 * DPR;
+                const maxPull = 4.5 * DPR;
+
+                // Accelerate toward target
+                self.vx += nx * pullAccel * dt;
+                self.vy += ny * pullAccel * dt;
+
+                // Clamp speed
+                const speed = Math.sqrt(self.vx * self.vx + self.vy * self.vy);
+                if (speed > maxPull) {
+                    self.vx = (self.vx / speed) * maxPull;
+                    self.vy = (self.vy / speed) * maxPull;
+                }
+
+                // Move
+                self.x += self.vx * dt;
+                self.y += self.vy * dt;
+
+                // Close enough to anchor — slingshot
+                const arrivalDist = 20 * DPR;
+                if (d < arrivalDist) {
+                    self._releaseGrapple();
+                    // Overshoot: give extra velocity in the pull direction
+                    const launchBoost = self.grappleStartedGrounded ? 1.15 : 1.0;
+                    self.vx = nx * speed * launchBoost;
+                    self.vy = ny * speed * launchBoost;
+                    // Ensure upward component if target was above
+                    if (self.vy > -2 * DPR) self.vy = -2 * DPR;
+                    self.sm.changeState('LAUNCH');
+                    return;
+                }
+
+                // Update facing
+                if (self.vx > 0.5 * DPR) self.facing = 1;
+                else if (self.vx < -0.5 * DPR) self.facing = -1;
+
+                // Gas trail
+                if (this.elapsed % 2 < 1) self._spawnGasParticle();
+
+                // Transitions — can cancel with grapple, jump, or attack
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) {
+                    self._releaseGrapple();
+                    self._tryFireGrapple();
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) {
+                    self._releaseGrapple();
+                    self.sm.changeState('LAUNCH');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) {
+                    self.sm.changeState('AIR_SLASH');
+                    return;
+                }
+            },
+            exit() {
+                self.isGrappled = false;
+            }
+        });
+
+        this.sm.addState('LAUNCH', {
+            enter() {
+                self.isGrappled = false;
+                self._spawnGasParticle();
+                self._spawnGasParticle();
+                self._spawnGasParticle();
+            },
+            execute(dt) {
+                // Reduced gravity for first 10 elapsed (heroic arc)
+                if (this.elapsed < 10) {
+                    self.vy += GRAVITY * 0.4 * dt;
+                } else {
+                    self._applyGravity();
+                }
+
+                // Air control
+                const ctrl = 0.15 * DPR;
+                if (self.keys.left.isDown) { self.vx -= ctrl * dt; self.facing = -1; }
+                if (self.keys.right.isDown) { self.vx += ctrl * dt; self.facing = 1; }
+
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) { self.sm.changeState('AIR_SLASH'); return; }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.jump)) { self._tryGasBoost(); return; }
+
+                if (self.vy > 2 * DPR && this.elapsed > 15) {
+                    self.sm.changeState('FALL');
+                    return;
+                }
+
+                self._checkGrounded();
+                if (self.isGrounded) { self.sm.changeState('IDLE'); }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('GROUND_SLASH', {
+            enter() {
+                self.comboCount = Math.min(self.comboCount + 1, 3);
+                self.vx = self.facing * 1.5 * DPR;
+                self.sprite.setTexture('player_' + self.charId + '_slash');
+                self._performSlash();
+            },
+            execute(dt) {
+                self._applyGravity();
+                self.vx *= Math.pow(0.9, dt);
+
+                if (this.elapsed > 12) {
+                    if (Phaser.Input.Keyboard.JustDown(self.keys.attack) && self.comboCount < 3) {
+                        self.sm.changeState('GROUND_SLASH');
+                        return;
+                    }
+                    self.sm.changeState('IDLE');
+                }
+            },
+            exit() {
+                self.sprite.setTexture('player_' + self.charId);
+            }
+        });
+
+        this.sm.addState('AIR_SLASH', {
+            enter() {
+                self.comboCount = Math.min(self.comboCount + 1, 3);
+                self.sprite.setTexture('player_' + self.charId + '_slash');
+
+                // Small forward burst toward target
+                if (self.lockedTarget) {
+                    const ang = angleBetween(self.x, self.y, self.lockedTarget.x, self.lockedTarget.y - self.lockedTarget.height * 0.15);
+                    self.vx += Math.cos(ang) * 3;
+                    self.vy += Math.sin(ang) * 3;
+                } else {
+                    self.vx += self.facing * 2;
+                }
+
+                if (self.isGrappled) self._releaseGrapple();
+                self._performSlash();
+            },
+            execute(dt) {
+                self.vy += GRAVITY * 0.5; // Reduced gravity during slash
+
+                if (self.hitStopFrames > 0) {
+                    self.hitStopFrames--;
+                    return; // freeze during hit stop
+                }
+
+                if (this.elapsed > 10) {
+                    if (Phaser.Input.Keyboard.JustDown(self.keys.attack) && self.comboCount < 3) {
+                        this.elapsed = 0;
+                        self._performSlash();
+                        return;
+                    }
+                    self.sm.changeState('FALL');
+                }
+
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                self._checkGrounded();
+                if (self.isGrounded) { self.sm.changeState('IDLE'); }
+            },
+            exit() {
+                self.sprite.setTexture('player_' + self.charId);
+            }
+        });
+
+        this.sm.addState('GAS_BOOST', {
+            enter() {
+                // Reset velocity before applying boost (no compounding)
+                let bx = 0;
+                let by = -5 * DPR;
+                if (self.keys.left.isDown) { bx = -5 * DPR; by = -3 * DPR; }
+                else if (self.keys.right.isDown) { bx = 5 * DPR; by = -3 * DPR; }
+                else if (self.keys.down.isDown) { bx = 0; by = 4 * DPR; }
+                self.vx = bx;
+                self.vy = by;
+                self._consumeGas(5);
+                for (let i = 0; i < 5; i++) self._spawnGasParticle();
+            },
+            execute(dt) {
+                if (this.elapsed > 6) {
+                    self.sm.changeState('FALL');
+                    return;
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('DODGE_ROLL', {
+            enter() {
+                self.vx = self.facing * 3.5 * DPR;
+                self.isInvulnerable = true;
+                self.invulnerableTimer = 10;
+            },
+            execute(dt) {
+                self._applyGravity();
+                self.vx *= Math.pow(0.92, dt);
+                if (this.elapsed > 14) {
+                    self.sm.changeState('IDLE');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('AIR_DODGE', {
+            enter() {
+                let dx = self.facing * 3 * DPR;
+                if (self.keys.left.isDown) dx = -3 * DPR;
+                if (self.keys.right.isDown) dx = 3 * DPR;
+                self.vx = dx;
+                self.vy = -1 * DPR;
+                self.isInvulnerable = true;
+                self.invulnerableTimer = 8;
+                self._consumeGas(2);
+            },
+            execute(dt) {
+                self.vy += GRAVITY * 0.3 * dt;
+                if (this.elapsed > 12) {
+                    self.sm.changeState('FALL');
+                }
+                if (Phaser.Input.Keyboard.JustDown(self.keys.grapple)) { self._tryFireGrapple(); return; }
+                self._checkGrounded();
+                if (self.isGrounded) { self.sm.changeState('IDLE'); }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('HIT_STUN', {
+            enter() {
+                self.vx = -self.facing * 3 * DPR;
+                self.vy = -3 * DPR;
+                self.isInvulnerable = true;
+                self.invulnerableTimer = 45;
+                if (self.isGrappled) self._releaseGrapple();
+            },
+            execute(dt) {
+                self._applyGravity();
+                self.vx *= Math.pow(0.95, dt);
+                if (this.elapsed > 20) {
+                    if (self.isGrounded) self.sm.changeState('IDLE');
+                    else self.sm.changeState('FALL');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('GRABBED', {
+            enter() {
+                self.mashCount = 0;
+                self.grabTimer = 0;
+                if (self.isGrappled) self._releaseGrapple();
+            },
+            execute(dt) {
+                self.grabTimer++;
+                // Track any key mashing
+                for (let key in self.keys) {
+                    if (Phaser.Input.Keyboard.JustDown(self.keys[key])) {
+                        self.mashCount++;
+                    }
+                }
+                // Escape
+                if (self.mashCount >= 15) {
+                    self.sm.changeState('HIT_STUN');
+                    return;
+                }
+                // Fail to escape
+                if (self.grabTimer > 60) {
+                    self.takeDamage(2);
+                    self.sm.changeState('HIT_STUN');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('DEAD', {
+            enter() {
+                self.isDead = true;
+                self.vx = 0;
+                self.vy = 0;
+                if (self.isGrappled) self._releaseGrapple();
+            },
+            execute(dt) {},
+            exit() {}
+        });
+
+        this.sm.addState('SPECIAL', {
+            enter() {
+                self.specialActive = true;
+                self.specialTimer = 0;
+
+                if (self.charId === 'mikasa') {
+                    // Ackerman Instinct - slow time
+                    self.scene.timeScale = 0.4;
+                } else if (self.charId === 'levi') {
+                    // Spin slash
+                    self._performSpinSlash();
+                } else if (self.charId === 'eren') {
+                    // Titan shift visual
+                    self.scene.cameras.main.flash(300, 255, 255, 200);
+                    self.scene.cameras.main.shake(300, 0.02);
+                }
+            },
+            execute(dt) {
+                self.specialTimer++;
+                if (self.charId === 'mikasa') {
+                    self._applyGravity();
+                    self._handleAirMovement();
+                    if (Phaser.Input.Keyboard.JustDown(self.keys.attack)) {
+                        self.sm.changeState('AIR_SLASH');
+                        return;
+                    }
+                    if (self.specialTimer > 120) {
+                        self.sm.changeState('FALL');
+                        return;
+                    }
+                } else if (self.charId === 'levi') {
+                    if (self.specialTimer > 20) {
+                        self.sm.changeState('FALL');
+                        return;
+                    }
+                } else {
+                    // Eren titan form - brief power boost
+                    self._applyGravity();
+                    self._handleAirMovement();
+                    if (self.specialTimer > 180) {
+                        self.sm.changeState('FALL');
+                        return;
+                    }
+                }
+                self._checkGrounded();
+                if (self.isGrounded && self.specialTimer > 30) {
+                    self.sm.changeState('IDLE');
+                }
+            },
+            exit() {
+                self.specialActive = false;
+                if (self.charId === 'mikasa') {
+                    self.scene.timeScale = 1.0;
+                }
+            }
+        });
+    }
+
+    // ---- HELPER METHODS ----
+
+    _applyGravity() {
+        const dt = this.dt || 1;
+        this.vy += GRAVITY * dt;
+        if (this.vy > TERMINAL_VELOCITY) this.vy = TERMINAL_VELOCITY;
+    }
+
+    _handleAirMovement() {
+        const dt = this.dt || 1;
+        const airControl = 0.2 * DPR;
+        if (this.keys.left.isDown) { this.vx -= airControl * dt; this.facing = -1; }
+        if (this.keys.right.isDown) { this.vx += airControl * dt; this.facing = 1; }
+        this.vx *= Math.pow(0.99, dt); // Air friction
+    }
+
+    _checkGrounded() {
+        // Check against stage tiles
+        if (this.scene.stage) {
+            this.isGrounded = this.scene.stage.checkGrounded(this);
+        }
+    }
+
+    _tryFireGrapple() {
+        if (this.gas <= 0) return;
+
+        const anchor = this._findBestAnchor();
+        if (anchor) {
+            this.grappleTarget = anchor;
+            this.sm.changeState('GRAPPLE_FIRE');
+        }
+    }
+
+    _findBestAnchor() {
+        if (!this.scene.stage) return null;
+
+        // Get direction bias
+        let dirX = this.facing;
+        let dirY = -1; // Bias upward
+        if (this.keys.up.isDown) dirY = -1.5;
+        if (this.keys.left.isDown) dirX = -1;
+        if (this.keys.right.isDown) dirX = 1;
+
+        // If locked on, bias toward target
+        if (this.lockedTarget && !this.lockedTarget.isDead) {
+            dirX = this.lockedTarget.x > this.x ? 1 : -1;
+            dirY = this.lockedTarget.y < this.y ? -1 : 0;
+        }
+
+        // Check building anchors
+        let best = this.scene.stage.findAnchor(this.x, this.y, dirX, dirY, MAX_GRAPPLE_RANGE);
+        let bestScore = best ? this._scoreAnchor(best, dirX, dirY) : -Infinity;
+
+        // Also consider living Titans as grapple targets (aim for nape area)
+        if (this.scene.titans) {
+            for (let i = 0; i < this.scene.titans.length; i++) {
+                const t = this.scene.titans[i];
+                if (t.isDead) continue;
+                // Target mouth area of titan (head is top 20%, mouth at ~65% down head)
+                const tx = t.x;
+                const ty = t.y - t.height * 0.87;
+                const d = dist(this.x, this.y, tx, ty);
+                if (d > MAX_GRAPPLE_RANGE || d < 20 * DPR) continue;
+
+                const score = this._scoreAnchor({ x: tx, y: ty }, dirX, dirY);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = { x: tx, y: ty, titan: t };
+                }
+            }
+        }
+
+        return best;
+    }
+
+    _scoreAnchor(anchor, dirX, dirY) {
+        const dx = anchor.x - this.x;
+        const dy = anchor.y - this.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 1) return -Infinity;
+        const nx = dx / d;
+        const ny = dy / d;
+        const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
+        const dot = (nx * dirX + ny * dirY) / dirLen;
+        return dot * 100 - d * 0.2;
+    }
+
+    _releaseGrapple() {
+        this.isGrappled = false;
+        this.grappleTarget = null;
+    }
+
+    _tryGasBoost() {
+        if (this._consumeGas(5)) {
+            this.sm.changeState('GAS_BOOST');
+        }
+    }
+
+    _consumeGas(amount) {
+        if (this.gas <= 0) return false;
+        this.gas = Math.max(0, this.gas - amount * 0.5);
+        return true;
+    }
+
+    _refillGas(dt) {
+        // Fast refill while grounded — full tank in ~2 seconds at 60fps
+        if (this.isGrounded && this.gas < 100) {
+            this.gas = Math.min(100, this.gas + 1.0 * dt);
+        }
+    }
+
+    _consumeBlade(amount) {
+        this.bladeDurability -= amount;
+        if (this.bladeDurability <= 0) {
+            this.bladeDurability = 0;
+            if (this.bladeSets > 0) {
+                this.bladeSets--;
+                this.bladeDurability = 100;
+            }
+        }
+    }
+
+    _performSlash() {
+        this._consumeBlade(5 + this.comboCount * 2);
+
+        // Spawn slash arc visual
+        const slashX = this.x + this.facing * 16 * DPR;
+        const slashY = this.y - this.height / 2;
+        this.scene.spawnEffect('slash', slashX, slashY, this.facing);
+
+        // Check for titan hits (full body is hittable, nape is critical)
+        if (this.scene.titans) {
+            let hit = false;
+            for (let i = 0; i < this.scene.titans.length; i++) {
+                const titan = this.scene.titans[i];
+                if (titan.isDead) continue;
+
+                const bodyBounds = titan.getBodyBounds();
+                const napeBounds = titan.getNapeBounds();
+                const slashBounds = {
+                    x: this.x + this.facing * 4 * DPR - 24 * DPR,
+                    y: this.y - this.height - 16 * DPR,
+                    w: 48 * DPR,
+                    h: 40 * DPR
+                };
+
+                if (rectOverlap(slashBounds, bodyBounds)) {
+                    const isNapeHit = rectOverlap(slashBounds, napeBounds);
+                    const angle = this._calculateApproachAngle(titan);
+                    let dmg = this.charDef.bladeStrength;
+                    dmg *= angle.multiplier;
+                    if (this.comboCount >= 3) dmg *= 1.5;
+                    if (this.bladeDurability <= 0 && this.bladeSets <= 0) dmg *= 0.1;
+                    if (this.specialActive && this.charId === 'mikasa') dmg *= 2;
+                    if (this.specialActive && this.charId === 'eren') dmg *= 2;
+
+                    // Body hits do less damage than nape hits
+                    if (!isNapeHit) dmg *= 0.4;
+
+                    titan.takeNapeDamage(dmg);
+                    this.hitStopFrames = HIT_STOP_FRAMES;
+                    hit = true;
+
+                    // Blood burst and slash effect
+                    const effectX = isNapeHit ? napeBounds.x + napeBounds.w / 2 : slashX;
+                    const effectY = isNapeHit ? napeBounds.y + napeBounds.h / 2 : slashY;
+                    this.scene.spawnEffect('blood_burst', effectX, effectY);
+                    if (isNapeHit) {
+                        this.scene.spawnEffect('nape_slash', slashX, slashY, this.facing);
+                    }
+                    this.scene.cameras.main.shake(80, isNapeHit ? 0.008 : 0.004);
+
+                    if (titan.isDead) {
+                        this.killCount++;
+                        this.score += titan.def.score;
+                        if (titan.isAberrant) this.score = Math.floor(this.score * 1.5);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    _performSpinSlash() {
+        // Levi spin slash — hit all nearby titans
+        this._consumeBlade(25);
+        const range = 80 * DPR;
+        if (this.scene.titans) {
+            for (let i = 0; i < this.scene.titans.length; i++) {
+                const titan = this.scene.titans[i];
+                if (titan.isDead) continue;
+                const d = dist(this.x, this.y, titan.x, titan.y);
+                if (d < range) {
+                    titan.takeNapeDamage(this.charDef.bladeStrength * 3);
+                    this.scene.spawnEffect('blood_burst', titan.x, titan.y - titan.height * 0.8);
+                    if (titan.isDead) {
+                        this.killCount++;
+                        this.score += titan.def.score;
+                    }
+                }
+            }
+        }
+        this.scene.cameras.main.shake(150, 0.015);
+        // Spawn multiple slash arcs
+        for (let a = 0; a < 4; a++) {
+            this.scene.spawnEffect('slash', this.x + Math.cos(a * 1.57) * 20 * DPR, this.y - 16 * DPR + Math.sin(a * 1.57) * 20 * DPR, 1);
+        }
+    }
+
+    _calculateApproachAngle(titan) {
+        const dx = this.x - titan.x;
+        const behindSide = (titan.facing > 0 && dx < 0) || (titan.facing < 0 && dx > 0);
+        if (behindSide) return { name: 'behind', multiplier: 1.0 };
+
+        const absDx = Math.abs(dx);
+        if (absDx > titan.width * 0.3) return { name: 'side', multiplier: 0.75 };
+        return { name: 'front', multiplier: 0.1 };
+    }
+
+    _trySpecial() {
+        if (this.specialCharges <= 0) return;
+        if (this.charId === 'levi' && (this.bladeDurability <= 0 && this.bladeSets <= 0)) return;
+        this.specialCharges--;
+        this.sm.changeState('SPECIAL');
+    }
+
+    _spawnGasParticle() {
+        this.gasParticles.push({
+            x: this.x - this.facing * 4 * DPR + randFloat(-3, 3) * DPR,
+            y: this.y - 10 * DPR + randFloat(-3, 3) * DPR,
+            vx: -this.vx * 0.3 + randFloat(-0.5, 0.5) * DPR,
+            vy: randFloat(-0.5, 0.5) * DPR,
+            life: randInt(8, 14),
+            maxLife: 14,
+        });
+    }
+
+    takeDamage(amount) {
+        if (this.isInvulnerable || this.isDead) return;
+        this.health -= amount;
+        this.damageTaken += amount;
+        this.scene.cameras.main.shake(100, 0.01);
+
+        if (this.health <= 0) {
+            this.health = 0;
+            this.sm.changeState('DEAD');
+        } else {
+            this.sm.changeState('HIT_STUN');
+        }
+    }
+
+    resupply(gasAmt, bladeAmt) {
+        this.gas = Math.min(100, this.gas + gasAmt);
+        this.bladeDurability = Math.min(100, this.bladeDurability + bladeAmt);
+        if (this.bladeSets < 8) this.bladeSets = Math.min(8, this.bladeSets + 4);
+    }
+
+    updateLockOn() {
+        if (this.keys.lockOn.isDown && this.scene.titans) {
+            let nearest = null;
+            let nearDist = 999999;
+            for (let i = 0; i < this.scene.titans.length; i++) {
+                const t = this.scene.titans[i];
+                if (t.isDead) continue;
+                const d = dist(this.x, this.y, t.x, t.y);
+                if (d < nearDist) {
+                    nearDist = d;
+                    nearest = t;
+                }
+            }
+            this.lockedTarget = nearest;
+        } else {
+            this.lockedTarget = null;
+        }
+    }
+
+    update(dt) {
+        if (this.isDead) return;
+        this.dt = dt; // store for helper methods
+
+        if (this.hitStopFrames > 0) {
+            this.hitStopFrames -= dt;
+            return;
+        }
+
+        // Lock-on
+        this.updateLockOn();
+
+        // Save previous position
+        this.prevX = this.x;
+        this.prevY = this.y;
+
+        // State machine
+        this.sm.update(dt);
+
+        // Auto-refill gas while grounded
+        this._refillGas(dt);
+        // Apply velocity with dt (grapple sets position directly)
+        if (!this.isGrappled) {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+        }
+
+        // Tilemap collision
+        if (this.scene.stage) {
+            this.scene.stage.resolveCollision(this);
+        }
+
+        // Invulnerability timer
+        if (this.invulnerableTimer > 0) {
+            this.invulnerableTimer -= dt;
+            this.flashTimer += dt;
+            if (this.invulnerableTimer <= 0) {
+                this.isInvulnerable = false;
+                this.sprite.setAlpha(1);
+            }
+        }
+
+        // Supply station check
+        if (this.scene.stage) {
+            this.scene.stage.checkSupplyStations(this);
+        }
+
+        // Update gas particles
+        for (let i = this.gasParticles.length - 1; i >= 0; i--) {
+            const p = this.gasParticles[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt;
+            if (p.life <= 0) {
+                this.gasParticles.splice(i, 1);
+            }
+        }
+
+        // Update sprite
+        this.sprite.x = this.x;
+        this.sprite.y = this.y;
+        this.sprite.setFlipX(this.facing < 0);
+
+        // Invulnerability flash
+        if (this.isInvulnerable) {
+            this.sprite.setAlpha(this.flashTimer % 4 < 2 ? 0.3 : 1);
+        }
+    }
+
+    render() {
+        // Draw grapple line
+        this.grappleLine.clear();
+        if (this.grappleTarget && (this.isGrappled || this.sm.isInState('GRAPPLE_FIRE'))) {
+            this.grappleLine.lineStyle(2 * DPR, COLORS.BLADE_STEEL, 1);
+            this.grappleLine.beginPath();
+            this.grappleLine.moveTo(this.x, this.y - this.height / 2);
+            this.grappleLine.lineTo(this.grappleTarget.x, this.grappleTarget.y);
+            this.grappleLine.strokePath();
+
+            // Glint effect
+            const t = (Date.now() % 500) / 500;
+            const gx = lerp(this.x, this.grappleTarget.x, t);
+            const gy = lerp(this.y - this.height / 2, this.grappleTarget.y, t);
+            this.grappleLine.fillStyle(0xFFFFFF, 0.9);
+            this.grappleLine.fillCircle(gx, gy, 2 * DPR);
+        }
+
+        // Draw gas particles
+        for (let i = 0; i < this.gasParticles.length; i++) {
+            const p = this.gasParticles[i];
+            const alpha = p.life / p.maxLife;
+            this.grappleLine.fillStyle(0xFFFFFF, alpha * 0.5);
+            this.grappleLine.fillCircle(p.x, p.y, (2 + alpha) * DPR);
+        }
+
+        // Draw lock-on reticle
+        if (this.lockedTarget && !this.lockedTarget.isDead) {
+            const nape = this.lockedTarget.getNapeBounds();
+            const cx = nape.x + nape.w / 2;
+            const cy = nape.y + nape.h / 2;
+            const pulse = Math.sin(Date.now() * 0.01) * 3 * DPR;
+            this.grappleLine.lineStyle(2 * DPR, COLORS.NAPE_RED, 0.8);
+            this.grappleLine.strokeRect(cx - 8 * DPR - pulse, cy - 8 * DPR - pulse, 16 * DPR + pulse * 2, 16 * DPR + pulse * 2);
+        }
+    }
+
+    destroy() {
+        this.sprite.destroy();
+        this.grappleLine.destroy();
+    }
+}
+// ---- TITAN CLASS ----
+class Titan {
+    constructor(scene, x, y, className, isAberrant) {
+        this.scene = scene;
+        this.def = TITAN_DEFS[className];
+        this.className = className;
+        this.isAberrant = isAberrant || false;
+
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.width = this.def.width;
+        this.height = this.def.height;
+        this.facing = Math.random() > 0.5 ? 1 : -1;
+
+        this.napeHealth = this.def.napeHealth;
+        this.napeMaxHealth = this.def.napeHealth;
+        this.isDead = false;
+        this.deathTimer = 0;
+        this.isGrounded = true;
+
+        this.targetEntity = null;
+        this.wanderDir = this.facing;
+        this.wanderTimer = randInt(60, 180);
+        this.attackCooldown = 0;
+        this.grabbing = null; // player being held
+        this.grabTimer = 0;
+        this.staggerTimer = 0;
+
+        // Aberrant speed modifier
+        this.speedMul = isAberrant ? 1.6 : 1.0;
+
+        // Sprite (texture already generated at DPR-scaled dimensions)
+        this.sprite = scene.add.image(x, y, 'titan_' + className);
+        this.sprite.setOrigin(0.5, 1);
+        this.sprite.setDepth(40);
+        if (isAberrant) {
+            this.sprite.setTint(0xFFBBBB);
+        }
+
+        // Nape flash
+        this.napeFlash = scene.add.rectangle(0, 0, 0, 0, COLORS.NAPE_RED);
+        this.napeFlash.setDepth(41);
+        this.napeFlash.setAlpha(0);
+
+        // Steam particles for death
+        this.steamParticles = [];
+
+        // State machine
+        this.sm = new StateMachine(this);
+        this._initStates();
+        this.sm.changeState('WANDER');
+    }
+
+    _initStates() {
+        const self = this;
+
+        this.sm.addState('WANDER', {
+            enter() {
+                self.wanderDir = Math.random() > 0.5 ? 1 : -1;
+                self.wanderTimer = randInt(90, 240);
+            },
+            execute(dt) {
+                self.wanderTimer--;
+                self.vx = self.wanderDir * self.def.speed * 0.5 * self.speedMul;
+                self.facing = self.wanderDir;
+
+                if (self.wanderTimer <= 0) {
+                    self.wanderDir *= -1;
+                    self.wanderTimer = randInt(90, 240);
+                }
+
+                // Check for player in detection radius
+                const player = self._findNearestPlayer();
+                if (player) {
+                    const d = dist(self.x, self.y, player.x, player.y);
+                    if (d < self.def.detectRadius) {
+                        self.targetEntity = player;
+                        self.sm.changeState('PURSUE');
+                    }
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('PURSUE', {
+            enter() {},
+            execute(dt) {
+                if (!self.targetEntity || self.targetEntity.isDead) {
+                    self.sm.changeState('WANDER');
+                    return;
+                }
+
+                const player = self.targetEntity;
+                const d = dist(self.x, self.y, player.x, player.y);
+
+                // Lost interest
+                if (d > self.def.detectRadius * 1.5) {
+                    self.targetEntity = null;
+                    self.sm.changeState('WANDER');
+                    return;
+                }
+
+                // Move toward player
+                if (player.x < self.x - 5) {
+                    self.vx = -self.def.speed * self.speedMul;
+                    self.facing = -1;
+                } else if (player.x > self.x + 5) {
+                    self.vx = self.def.speed * self.speedMul;
+                    self.facing = 1;
+                } else {
+                    self.vx = 0;
+                }
+
+                // Attempt grab if player is close and low enough
+                if (d < self.def.grabRange && self.attackCooldown <= 0) {
+                    if (player.y > self.y - self.height * 0.9) {
+                        self.sm.changeState('GRAB_ATTEMPT');
+                        return;
+                    }
+                }
+
+                // Swipe if player is in mid-range and airborne (10m+ only)
+                if (self.className !== '3m' && d < self.def.grabRange * 1.5 && self.attackCooldown <= 0) {
+                    if (player.y < self.y - self.height * 0.5) {
+                        self.sm.changeState('SWIPE');
+                        return;
+                    }
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('GRAB_ATTEMPT', {
+            enter() {
+                self.vx = 0;
+                self.attackCooldown = 60;
+            },
+            execute(dt) {
+                // Wind-up (10 frames)
+                if (this.elapsed < 10) return;
+
+                // Active grab window (frame 10-16)
+                if (this.elapsed >= 10 && this.elapsed <= 16) {
+                    const player = self.targetEntity;
+                    if (player && !player.isDead && !player.isInvulnerable) {
+                        const d = dist(self.x, self.y, player.x, player.y);
+                        if (d < self.def.grabRange * 1.2 && player.y > self.y - self.height * 0.9) {
+                            // Grabbed!
+                            self.grabbing = player;
+                            self.sm.changeState('HOLDING');
+                            return;
+                        }
+                    }
+                }
+
+                // Recovery
+                if (this.elapsed > 24) {
+                    self.sm.changeState('PURSUE');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('HOLDING', {
+            enter() {
+                self.grabTimer = 0;
+                if (self.grabbing) {
+                    self.grabbing.sm.changeState('GRABBED');
+                }
+            },
+            execute(dt) {
+                self.grabTimer++;
+
+                if (self.grabbing) {
+                    // Hold player at hand position
+                    self.grabbing.x = self.x + self.facing * self.width * 0.4;
+                    self.grabbing.y = self.y - self.height * 0.5;
+                }
+
+                // Player escaped?
+                if (self.grabbing && !self.grabbing.sm.isInState('GRABBED')) {
+                    self.grabbing = null;
+                    self.sm.changeState('PURSUE');
+                    return;
+                }
+
+                // Bite / crush after holding too long
+                if (self.grabTimer > 60) {
+                    if (self.grabbing) {
+                        self.grabbing.takeDamage(self.def.damage);
+                    }
+                    self.grabbing = null;
+                    self.sm.changeState('PURSUE');
+                }
+            },
+            exit() {
+                self.grabbing = null;
+            }
+        });
+
+        this.sm.addState('SWIPE', {
+            enter() {
+                self.vx = 0;
+                self.attackCooldown = 45;
+            },
+            execute(dt) {
+                // Wind-up
+                if (this.elapsed < 12) return;
+
+                // Active hitbox (frame 12-18)
+                if (this.elapsed >= 12 && this.elapsed <= 18) {
+                    const player = self.targetEntity;
+                    if (player && !player.isDead && !player.isInvulnerable) {
+                        const swipeBounds = {
+                            x: self.x - self.width,
+                            y: self.y - self.height,
+                            w: self.width * 2,
+                            h: self.height * 0.6
+                        };
+                        const playerBounds = {
+                            x: player.x - player.width / 2,
+                            y: player.y - player.height,
+                            w: player.width,
+                            h: player.height
+                        };
+                        if (rectOverlap(swipeBounds, playerBounds)) {
+                            player.takeDamage(self.def.damage);
+                        }
+                    }
+                }
+
+                if (this.elapsed > 30) {
+                    self.sm.changeState('PURSUE');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('STAGGER', {
+            enter() {
+                self.vx = -self.facing * 1;
+                self.staggerTimer = 30;
+            },
+            execute(dt) {
+                self.staggerTimer--;
+                self.vx *= Math.pow(0.95, dt);
+                if (self.staggerTimer <= 0) {
+                    self.sm.changeState('PURSUE');
+                }
+            },
+            exit() {}
+        });
+
+        this.sm.addState('DYING', {
+            enter() {
+                self.isDead = true;
+                self.vx = 0;
+                self.deathTimer = 0;
+                self.sprite.setTint(0xFFDDDD);
+            },
+            execute(dt) {
+                self.deathTimer++;
+
+                // Steam particles
+                if (self.deathTimer % 3 === 0) {
+                    self.steamParticles.push({
+                        x: self.x + randFloat(-self.width / 2, self.width / 2),
+                        y: self.y - randFloat(0, self.height),
+                        vy: randFloat(-1.5, -0.5) * DPR,
+                        vx: randFloat(-0.3, 0.3) * DPR,
+                        life: randInt(20, 40),
+                        maxLife: 40,
+                        size: randFloat(4, 10) * DPR,
+                    });
+                }
+
+                // Fade out
+                const alpha = 1 - (self.deathTimer / 90);
+                self.sprite.setAlpha(Math.max(0, alpha));
+
+                if (self.deathTimer > 90) {
+                    self._destroy();
+                }
+            },
+            exit() {}
+        });
+    }
+
+    _findNearestPlayer() {
+        if (!this.scene.player) return null;
+        if (this.scene.player.isDead) return null;
+        return this.scene.player;
+    }
+
+    getNapeBounds() {
+        const napeW = Math.max(12, this.width * 0.45);
+        const napeH = Math.max(10, this.height * 0.15);
+        return {
+            x: this.x - napeW / 2,
+            y: this.y - this.height + this.height * 0.03,
+            w: napeW,
+            h: napeH,
+        };
+    }
+
+    getBodyBounds() {
+        return {
+            x: this.x - this.width / 2,
+            y: this.y - this.height,
+            w: this.width,
+            h: this.height,
+        };
+    }
+
+    takeNapeDamage(amount) {
+        if (this.isDead) return;
+        this.napeHealth -= amount;
+        this.scene.cameras.main.shake(50, 0.005);
+
+        if (this.napeHealth <= 0) {
+            this.sm.changeState('DYING');
+        } else {
+            // Flash red
+            this.sprite.setTint(0xFF8888);
+            this.scene.time.delayedCall(100, () => {
+                if (!this.isDead) {
+                    this.sprite.clearTint();
+                    if (this.isAberrant) this.sprite.setTint(0xFFBBBB);
+                }
+            });
+        }
+    }
+
+    update(dt) {
+        if (this.attackCooldown > 0) this.attackCooldown -= dt;
+
+        this.sm.update(dt);
+
+        // Apply gravity
+        if (!this.isGrounded) {
+            this.vy += GRAVITY * dt;
+            if (this.vy > TERMINAL_VELOCITY) this.vy = TERMINAL_VELOCITY;
+        }
+
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        // Ground check
+        if (this.scene.stage) {
+            this.scene.stage.resolveTitanCollision(this);
+        }
+
+        // Update sprite
+        this.sprite.x = this.x;
+        this.sprite.y = this.y;
+        this.sprite.setFlipX(this.facing < 0);
+
+        // Nape flash indicator
+        if (!this.isDead) {
+            const nape = this.getNapeBounds();
+            this.napeFlash.x = nape.x + nape.w / 2;
+            this.napeFlash.y = nape.y + nape.h / 2;
+            this.napeFlash.width = nape.w;
+            this.napeFlash.height = nape.h;
+            const flashCycle = Math.sin(Date.now() * 0.008);
+            this.napeFlash.setAlpha(flashCycle > 0 ? 0.6 : 0.2);
+        } else {
+            this.napeFlash.setAlpha(0);
+        }
+
+        // Update steam particles
+        for (let i = this.steamParticles.length - 1; i >= 0; i--) {
+            const p = this.steamParticles[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt;
+            if (p.life <= 0) {
+                this.steamParticles.splice(i, 1);
+            }
+        }
+
+        // Contact damage to player (if player walks into titan body)
+        if (!this.isDead && this.scene.player && !this.scene.player.isDead && !this.scene.player.isInvulnerable) {
+            const p = this.scene.player;
+            const bodyBounds = {
+                x: this.x - this.width * 0.4,
+                y: this.y - this.height,
+                w: this.width * 0.8,
+                h: this.height
+            };
+            const playerBounds = {
+                x: p.x - p.width / 2,
+                y: p.y - p.height,
+                w: p.width,
+                h: p.height
+            };
+            if (rectOverlap(bodyBounds, playerBounds) && p.isGrounded && !p.sm.isInState('GRABBED')) {
+                // Only grab, don't damage on contact
+                if (this.sm.isInState('PURSUE') && this.attackCooldown <= 0) {
+                    this.targetEntity = p;
+                    this.sm.changeState('GRAB_ATTEMPT');
+                }
+            }
+        }
+    }
+
+    render(graphics) {
+        // Draw steam particles
+        for (let i = 0; i < this.steamParticles.length; i++) {
+            const p = this.steamParticles[i];
+            const alpha = (p.life / p.maxLife) * 0.5;
+            graphics.fillStyle(COLORS.STEAM_WHITE, alpha);
+            graphics.fillCircle(p.x, p.y, p.size * (p.life / p.maxLife));
+        }
+
+        // Draw grab indicator
+        if (this.sm.isInState('GRAB_ATTEMPT')) {
+            const progress = this.sm.currentState.elapsed / 10;
+            if (progress < 1) {
+                graphics.lineStyle(2, 0xFF0000, 0.5);
+                graphics.strokeCircle(this.x, this.y - this.height * 0.5, this.def.grabRange * progress);
+            }
+        }
+    }
+
+    _destroy() {
+        this.sprite.destroy();
+        this.napeFlash.destroy();
+    }
+}
+// ---- STAGE / LEVEL CLASS ----
+class Stage {
+    constructor(scene, stageConfig) {
+        this.scene = scene;
+        this.config = stageConfig;
+        this.worldWidth = stageConfig.worldWidth || 3200;
+        this.worldHeight = stageConfig.worldHeight || 800;
+        this.tilesX = Math.ceil(this.worldWidth / TILE_SIZE);
+        this.tilesY = Math.ceil(this.worldHeight / TILE_SIZE);
+
+        // Tile grid: 0=empty, 1=ground, 2=building, 3=roof, 4=wall
+        this.tiles = [];
+        for (let i = 0; i < this.tilesX * this.tilesY; i++) {
+            this.tiles.push(0);
+        }
+
+        // Anchor points (grapple targets) - computed from building tops and roof edges
+        this.anchors = [];
+
+        // Supply stations
+        this.supplyStations = [];
+
+        // Tile sprites container
+        this.tileContainer = scene.add.container(0, 0);
+        this.tileContainer.setDepth(10);
+
+        // Background layers
+        this.bgContainer = scene.add.container(0, 0);
+        this.bgContainer.setDepth(1);
+
+        // Generate the level
+        this._generate();
+    }
+
+    _setTile(tx, ty, val) {
+        if (tx < 0 || tx >= this.tilesX || ty < 0 || ty >= this.tilesY) return;
+        this.tiles[ty * this.tilesX + tx] = val;
+    }
+
+    _getTile(tx, ty) {
+        if (tx < 0 || tx >= this.tilesX || ty < 0 || ty >= this.tilesY) return 0;
+        return this.tiles[ty * this.tilesX + tx];
+    }
+
+    _generate() {
+        const groundY = this.tilesY - 2; // 2 tiles of ground at bottom
+
+        // Ground layer
+        for (let x = 0; x < this.tilesX; x++) {
+            this._setTile(x, groundY, 1);
+            this._setTile(x, groundY + 1, 1);
+        }
+
+        // Generate buildings — short near spawn, taller further in
+        const buildings = [];
+        let bx = 10; // Leave clear spawn zone (tiles 0-9 are open ground)
+        let buildingIndex = 0;
+        while (bx < this.tilesX - 5) {
+            const bWidth = randInt(3, 5);
+            const gap = randInt(4, 7);
+
+            // Progressive height: first few buildings are very short (easy to reach)
+            let minH, maxH;
+            if (buildingIndex < 3) {
+                minH = 2; maxH = 3;  // Very short starter buildings
+            } else if (buildingIndex < 8) {
+                minH = 3; maxH = 5;  // Medium
+            } else {
+                minH = 3; maxH = 7;  // Taller further in
+            }
+            const bHeight = randInt(minH, maxH);
+
+            // Don't build beyond world
+            if (bx + bWidth >= this.tilesX - 2) break;
+
+            buildings.push({
+                x: bx,
+                y: groundY - bHeight,
+                w: bWidth,
+                h: bHeight,
+            });
+
+            // Fill building tiles
+            for (let by = groundY - bHeight; by < groundY; by++) {
+                for (let bxx = bx; bxx < bx + bWidth; bxx++) {
+                    this._setTile(bxx, by, 2);
+                }
+            }
+
+            // Roof
+            for (let bxx = bx; bxx < bx + bWidth; bxx++) {
+                this._setTile(bxx, groundY - bHeight - 1, 3);
+            }
+
+            // Anchor points at roof center and both edges
+            this.anchors.push({
+                x: (bx + bWidth / 2) * TILE_SIZE,
+                y: (groundY - bHeight - 1) * TILE_SIZE,
+            });
+            this.anchors.push({
+                x: bx * TILE_SIZE,
+                y: (groundY - bHeight) * TILE_SIZE,
+            });
+            this.anchors.push({
+                x: (bx + bWidth) * TILE_SIZE,
+                y: (groundY - bHeight) * TILE_SIZE,
+            });
+
+            // No floating anchors — grapple only attaches to structures
+
+            bx += bWidth + gap;
+            buildingIndex++;
+        }
+
+        // Add wall segments at the start and end
+        const wallHeight = 8;
+        // Left wall (shorter, climbable)
+        for (let wy = groundY - wallHeight; wy < groundY; wy++) {
+            this._setTile(0, wy, 4);
+            this._setTile(1, wy, 4);
+        }
+        this.anchors.push({ x: TILE_SIZE, y: (groundY - wallHeight) * TILE_SIZE });
+
+        // Right wall
+        for (let wy = groundY - wallHeight; wy < groundY; wy++) {
+            this._setTile(this.tilesX - 1, wy, 4);
+            this._setTile(this.tilesX - 2, wy, 4);
+        }
+        this.anchors.push({ x: (this.tilesX - 1) * TILE_SIZE, y: (groundY - wallHeight) * TILE_SIZE });
+
+        // No floating sky anchors — grapple only works on structures
+
+        // Place supply stations — one on every 3rd building
+        const supplyInterval = 3;
+        for (let i = 0; i < buildings.length; i++) {
+            if (i % supplyInterval === 1) {
+                const bld = buildings[i];
+                this.supplyStations.push({
+                    x: (bld.x + bld.w / 2) * TILE_SIZE,
+                    y: bld.y * TILE_SIZE,
+                    usesLeft: 2,
+                    sprite: null,
+                });
+            }
+        }
+
+        // Render tiles
+        this._renderTiles();
+        this._renderBackground();
+        this._renderSupplyStations();
+    }
+
+    _renderTiles() {
+        for (let ty = 0; ty < this.tilesY; ty++) {
+            for (let tx = 0; tx < this.tilesX; tx++) {
+                const tile = this._getTile(tx, ty);
+                if (tile === 0) continue;
+
+                let textureKey = 'ground';
+                if (tile === 2) {
+                    // Alternate between windowed and solid building tiles
+                    textureKey = ((tx + ty) % 3 === 0) ? 'building' : 'building_solid';
+                }
+                else if (tile === 3) textureKey = 'roof';
+                else if (tile === 4) textureKey = 'wall';
+
+                const img = this.scene.add.image(
+                    tx * TILE_SIZE + TILE_SIZE / 2,
+                    ty * TILE_SIZE + TILE_SIZE / 2,
+                    textureKey
+                );
+                this.tileContainer.add(img);
+            }
+        }
+    }
+
+    _renderBackground() {
+        // Sky gradient
+        const skyGfx = this.scene.add.graphics();
+        skyGfx.fillGradientStyle(COLORS.SKY_TOP, COLORS.SKY_TOP, COLORS.SKY_BLUE, COLORS.SKY_BLUE);
+        skyGfx.fillRect(0, 0, this.worldWidth, this.worldHeight);
+        this.bgContainer.add(skyGfx);
+
+        // Distant buildings (parallax layer - drawn as simple shapes)
+        const distGfx = this.scene.add.graphics();
+        distGfx.setAlpha(0.3);
+        for (let i = 0; i < 30; i++) {
+            const dx = i * 120 + randInt(-20, 20);
+            const dh = randInt(60, 180);
+            const dw = randInt(30, 60);
+            distGfx.fillStyle(0x6A5A4A);
+            distGfx.fillRect(dx, this.worldHeight - 64 - dh, dw, dh);
+        }
+        this.bgContainer.add(distGfx);
+
+        // Clouds
+        const cloudGfx = this.scene.add.graphics();
+        cloudGfx.setAlpha(0.5);
+        for (let i = 0; i < 10; i++) {
+            const cx = randInt(0, this.worldWidth);
+            const cy = randInt(20, 120);
+            cloudGfx.fillStyle(0xFFFFFF);
+            cloudGfx.fillEllipse(cx, cy, randInt(60, 150), randInt(20, 40));
+        }
+        this.bgContainer.add(cloudGfx);
+    }
+
+    _renderSupplyStations() {
+        for (let i = 0; i < this.supplyStations.length; i++) {
+            const ss = this.supplyStations[i];
+            ss.sprite = this.scene.add.image(ss.x, ss.y, 'supply').setScale(DPR);
+            ss.sprite.setOrigin(0.5, 1);
+            ss.sprite.setDepth(35);
+        }
+    }
+
+    isSolid(tx, ty) {
+        const tile = this._getTile(tx, ty);
+        return tile === 1 || tile === 2 || tile === 3 || tile === 4;
+    }
+
+    checkGrounded(entity) {
+        const footTileX = Math.floor(entity.x / TILE_SIZE);
+        const footTileY = Math.floor(entity.y / TILE_SIZE);
+
+        // Check the tile just below the feet
+        if (this.isSolid(footTileX, footTileY)) {
+            entity.y = footTileY * TILE_SIZE;
+            entity.vy = 0;
+            entity.isGrounded = true;
+            return true;
+        }
+
+        // Also check slightly to the left and right for edge cases
+        const leftTileX = Math.floor((entity.x - entity.width * 0.3) / TILE_SIZE);
+        const rightTileX = Math.floor((entity.x + entity.width * 0.3) / TILE_SIZE);
+
+        if (this.isSolid(leftTileX, footTileY) || this.isSolid(rightTileX, footTileY)) {
+            entity.y = footTileY * TILE_SIZE;
+            entity.vy = 0;
+            entity.isGrounded = true;
+            return true;
+        }
+
+        entity.isGrounded = false;
+        return false;
+    }
+
+    resolveCollision(entity) {
+        // X-axis collision
+        const headTileY = Math.floor((entity.y - entity.height) / TILE_SIZE);
+        const midTileY = Math.floor((entity.y - entity.height / 2) / TILE_SIZE);
+        const leftEdge = Math.floor((entity.x - entity.width / 2) / TILE_SIZE);
+        const rightEdge = Math.floor((entity.x + entity.width / 2) / TILE_SIZE);
+
+        // Left wall
+        if (this.isSolid(leftEdge, midTileY) || this.isSolid(leftEdge, headTileY)) {
+            entity.x = (leftEdge + 1) * TILE_SIZE + entity.width / 2;
+            entity.vx = 0;
+        }
+
+        // Right wall
+        if (this.isSolid(rightEdge, midTileY) || this.isSolid(rightEdge, headTileY)) {
+            entity.x = rightEdge * TILE_SIZE - entity.width / 2;
+            entity.vx = 0;
+        }
+
+        // Ceiling
+        const headTileX = Math.floor(entity.x / TILE_SIZE);
+        const headTileYAbove = Math.floor((entity.y - entity.height - 2) / TILE_SIZE);
+        if (this.isSolid(headTileX, headTileYAbove) && entity.vy < 0) {
+            entity.y = (headTileYAbove + 1) * TILE_SIZE + entity.height;
+            entity.vy = 0;
+        }
+
+        // Ground
+        this.checkGrounded(entity);
+
+        // World bounds
+        entity.x = clamp(entity.x, entity.width / 2, this.worldWidth - entity.width / 2);
+    }
+
+    resolveTitanCollision(titan) {
+        // Simple ground check for titans
+        const footTileY = Math.floor(titan.y / TILE_SIZE);
+        const footTileX = Math.floor(titan.x / TILE_SIZE);
+
+        if (this.isSolid(footTileX, footTileY)) {
+            titan.y = footTileY * TILE_SIZE;
+            titan.vy = 0;
+            titan.isGrounded = true;
+        } else {
+            titan.isGrounded = false;
+        }
+
+        // World bounds
+        titan.x = clamp(titan.x, titan.width, this.worldWidth - titan.width);
+
+        // Don't walk through buildings (simple version - just block at edges)
+        const bodyTileY = Math.floor((titan.y - titan.height * 0.5) / TILE_SIZE);
+        const leftTileX = Math.floor((titan.x - titan.width * 0.5) / TILE_SIZE);
+        const rightTileX = Math.floor((titan.x + titan.width * 0.5) / TILE_SIZE);
+
+        if (this.isSolid(leftTileX, bodyTileY) && this._getTile(leftTileX, bodyTileY) === 2) {
+            titan.x = (leftTileX + 1) * TILE_SIZE + titan.width * 0.5;
+            titan.vx *= -1;
+            titan.facing *= -1;
+        }
+        if (this.isSolid(rightTileX, bodyTileY) && this._getTile(rightTileX, bodyTileY) === 2) {
+            titan.x = rightTileX * TILE_SIZE - titan.width * 0.5;
+            titan.vx *= -1;
+            titan.facing *= -1;
+        }
+    }
+
+    findAnchor(fromX, fromY, dirX, dirY, maxRange) {
+        let bestAnchor = null;
+        let bestScore = -Infinity;
+
+        for (let i = 0; i < this.anchors.length; i++) {
+            const a = this.anchors[i];
+            const d = dist(fromX, fromY, a.x, a.y);
+            if (d > maxRange || d < 20) continue;
+
+            // Anchor must be above or at same height (can't grapple downward much)
+            if (a.y > fromY + 30) continue;
+
+            // Direction score: how well does this anchor match the desired direction?
+            const toX = a.x - fromX;
+            const toY = a.y - fromY;
+            const toLen = Math.sqrt(toX * toX + toY * toY);
+            const normToX = toX / toLen;
+            const normToY = toY / toLen;
+
+            const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
+            const normDirX = dirX / dirLen;
+            const normDirY = dirY / dirLen;
+
+            const dotProduct = normToX * normDirX + normToY * normDirY;
+
+            // Score: direction alignment - distance penalty
+            const score = dotProduct * 100 - d * 0.2;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestAnchor = { x: a.x, y: a.y };
+            }
+        }
+
+        return bestAnchor;
+    }
+
+    checkSupplyStations(player) {
+        for (let i = 0; i < this.supplyStations.length; i++) {
+            const ss = this.supplyStations[i];
+            if (ss.usesLeft <= 0) continue;
+
+            const d = dist(player.x, player.y, ss.x, ss.y);
+            if (d < 40 * DPR && player.isGrounded) {
+                if (player.gas < 100 || player.bladeDurability < 100) {
+                    player.resupply(50, 50);
+                    ss.usesLeft--;
+                    if (ss.usesLeft <= 0 && ss.sprite) {
+                        ss.sprite.setTint(0x666666);
+                    }
+                    // Visual feedback
+                    this.scene.cameras.main.flash(100, 100, 255, 100);
+                }
+            }
+        }
+    }
+
+    getTitanSpawnPoints(count) {
+        const points = [];
+        const groundY = (this.tilesY - 2) * TILE_SIZE;
+        const spacing = this.worldWidth / (count + 1);
+
+        for (let i = 0; i < count; i++) {
+            const sx = spacing * (i + 1) + randFloat(-50, 50);
+            points.push({ x: sx, y: groundY });
+        }
+        return points;
+    }
+
+    destroy() {
+        this.tileContainer.destroy(true);
+        this.bgContainer.destroy(true);
+        for (let i = 0; i < this.supplyStations.length; i++) {
+            if (this.supplyStations[i].sprite) {
+                this.supplyStations[i].sprite.destroy();
+            }
+        }
+    }
+}
+// ---- CUTSCENE SYSTEM ----
+class Cutscene {
+    constructor(scene) {
+        this.scene = scene;
+        this.active = false;
+        this.beats = [];
+        this.currentBeat = 0;
+        this.beatTimer = 0;
+        this.barHeight = 0;
+        this.targetBarHeight = GAME_HEIGHT * 0.12;
+        this.onComplete = null;
+        this.container = scene.add.container(0, 0);
+        this.container.setDepth(200);
+        this.container.setScrollFactor(0);
+        this.container.setVisible(false);
+
+        // Top & bottom letterbox bars
+        this.topBar = scene.add.rectangle(GAME_WIDTH / 2, 0, GAME_WIDTH, 1, 0x000000);
+        this.topBar.setOrigin(0.5, 0);
+        this.container.add(this.topBar);
+
+        this.botBar = scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT, GAME_WIDTH, 1, 0x000000);
+        this.botBar.setOrigin(0.5, 1);
+        this.container.add(this.botBar);
+
+        // Speaker name
+        this.speakerText = scene.add.text(sz(30), GAME_HEIGHT - 1, '', {
+            fontSize: fs(11), fontFamily: 'monospace', color: '#FFCC00', fontStyle: 'bold',
+        }).setOrigin(0, 1);
+        this.container.add(this.speakerText);
+
+        // Dialogue text
+        this.dialogText = scene.add.text(sz(30), GAME_HEIGHT - 1, '', {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#FFFFFF',
+            wordWrap: { width: GAME_WIDTH - sz(60) },
+        }).setOrigin(0, 1);
+        this.container.add(this.dialogText);
+
+        // Text reveal state
+        this.fullText = '';
+        this.revealedChars = 0;
+        this.revealSpeed = 0.8; // chars per frame-tick
+    }
+
+    play(beats, onComplete) {
+        this.beats = beats;
+        this.currentBeat = -1;
+        this.onComplete = onComplete;
+        this.active = true;
+        this.barHeight = 0;
+        this.phase = 'bars_in'; // bars_in → playing → bars_out
+        this.container.setVisible(true);
+        this.scene.cameras.main.stopFollow();
+    }
+
+    _startBeat(index) {
+        this.currentBeat = index;
+        const beat = this.beats[index];
+        this.beatTimer = 0;
+
+        // Camera pan
+        if (beat.camX !== undefined && beat.camY !== undefined) {
+            this.scene.tweens.add({
+                targets: this.scene.cameras.main,
+                scrollX: beat.camX - GAME_WIDTH / 2,
+                scrollY: beat.camY - GAME_HEIGHT / 2,
+                duration: beat.panDuration || 1500,
+                ease: 'Sine.easeInOut',
+            });
+        }
+
+        // Text
+        this.speakerText.setText(beat.speaker || '');
+        this.fullText = beat.text || '';
+        this.revealedChars = 0;
+        this.dialogText.setText('');
+    }
+
+    update(dt) {
+        if (!this.active) return;
+
+        if (this.phase === 'bars_in') {
+            this.barHeight = Math.min(this.barHeight + 2 * S * dt, this.targetBarHeight);
+            this._updateBars();
+            if (this.barHeight >= this.targetBarHeight) {
+                this.phase = 'playing';
+                this._startBeat(0);
+            }
+            return;
+        }
+
+        if (this.phase === 'bars_out') {
+            this.barHeight = Math.max(this.barHeight - 2 * S * dt, 0);
+            this._updateBars();
+            if (this.barHeight <= 0) {
+                this.active = false;
+                this.container.setVisible(false);
+                if (this.onComplete) this.onComplete();
+            }
+            return;
+        }
+
+        // Playing beats
+        const beat = this.beats[this.currentBeat];
+        this.beatTimer += dt;
+
+        // Text reveal
+        if (this.revealedChars < this.fullText.length) {
+            this.revealedChars = Math.min(this.revealedChars + this.revealSpeed * dt, this.fullText.length);
+            this.dialogText.setText(this.fullText.substring(0, Math.floor(this.revealedChars)));
+        }
+
+        // Beat duration (in dt-ticks, ~60 = 1 second)
+        const duration = beat.duration || 180;
+        if (this.beatTimer >= duration) {
+            if (this.currentBeat < this.beats.length - 1) {
+                this._startBeat(this.currentBeat + 1);
+            } else {
+                this.phase = 'bars_out';
+            }
+        }
+    }
+
+    _updateBars() {
+        this.topBar.setSize(GAME_WIDTH, this.barHeight);
+        this.botBar.setSize(GAME_WIDTH, this.barHeight);
+        this.botBar.setPosition(GAME_WIDTH / 2, GAME_HEIGHT);
+
+        // Position text inside bottom bar
+        const textY = GAME_HEIGHT - this.barHeight * 0.15;
+        this.speakerText.setPosition(sz(30), textY - sz(14));
+        this.dialogText.setPosition(sz(30), textY);
+    }
+
+    skip() {
+        if (!this.active) return;
+        // If text is still revealing, finish it instantly
+        if (this.revealedChars < this.fullText.length) {
+            this.revealedChars = this.fullText.length;
+            this.dialogText.setText(this.fullText);
+            return;
+        }
+        // Otherwise skip to next beat or end
+        if (this.currentBeat < this.beats.length - 1) {
+            this._startBeat(this.currentBeat + 1);
+        } else {
+            this.phase = 'bars_out';
+        }
+    }
+}
+
+// ---- HUD CLASS ----
+class HUD {
+    constructor(scene) {
+        this.scene = scene;
+        this.container = scene.add.container(0, 0);
+        this.container.setDepth(100);
+        this.container.setScrollFactor(0);
+
+        this.hearts = [];
+        this.displayGas = 100;
+        this.displayBlade = 100;
+
+        this._build();
+    }
+
+    _build() {
+        // Background strip at top
+        const topBg = this.scene.add.rectangle(GAME_WIDTH / 2, sz(16), GAME_WIDTH, sz(32), COLORS.UI_BG, 0.6);
+        this.container.add(topBg);
+
+        // Background strip at bottom
+        const botBg = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - sz(20), GAME_WIDTH, sz(40), COLORS.UI_BG, 0.6);
+        this.container.add(botBg);
+
+        // --- TOP LEFT: Health ---
+        const portraitFrame = this.scene.add.rectangle(sz(24), sz(16), sz(28), sz(28), COLORS.UI_BG, 0.8);
+        portraitFrame.setStrokeStyle(sz(1), COLORS.UI_BORDER);
+        this.container.add(portraitFrame);
+
+        this.portraitText = this.scene.add.text(sz(24), sz(16), 'E', {
+            fontSize: fs(14), fontFamily: 'monospace', color: '#FFFFFF', fontStyle: 'bold',
+        }).setOrigin(0.5);
+        this.container.add(this.portraitText);
+
+        // Hearts
+        for (let i = 0; i < 5; i++) {
+            const hx = sz(48) + i * sz(18);
+            const heartEmpty = this.scene.add.image(hx, sz(10), 'heart_empty').setScale(0.9 * S);
+            const heartFull = this.scene.add.image(hx, sz(10), 'heart').setScale(0.9 * S);
+            this.container.add(heartEmpty);
+            this.container.add(heartFull);
+            this.hearts.push({ empty: heartEmpty, full: heartFull });
+        }
+
+        // --- TOP RIGHT: Score and Kill Counter ---
+        this.scoreText = this.scene.add.text(GAME_WIDTH - sz(10), sz(4), 'SCORE: 0', {
+            fontSize: fs(11), fontFamily: 'monospace', color: '#FFFFFF',
+        }).setOrigin(1, 0);
+        this.container.add(this.scoreText);
+
+        this.killText = this.scene.add.text(GAME_WIDTH - sz(10), sz(18), 'KILLS: 0', {
+            fontSize: fs(11), fontFamily: 'monospace', color: '#FFCC00',
+        }).setOrigin(1, 0);
+        this.container.add(this.killText);
+
+        // --- BOTTOM LEFT: Gas Meter ---
+        const gasLabel = this.scene.add.text(sz(10), GAME_HEIGHT - sz(35), 'GAS', {
+            fontSize: fs(9), fontFamily: 'monospace', color: '#AAAAAA',
+        });
+        this.container.add(gasLabel);
+
+        this.gasBarBg = this.scene.add.rectangle(sz(50), GAME_HEIGHT - sz(18), sz(100), sz(10), 0x333333);
+        this.gasBarBg.setOrigin(0, 0.5);
+        this.gasBarBg.setStrokeStyle(sz(1), COLORS.UI_BORDER);
+        this.container.add(this.gasBarBg);
+
+        this.gasBarFill = this.scene.add.rectangle(sz(51), GAME_HEIGHT - sz(18), sz(98), sz(8), COLORS.GAS_GREEN);
+        this.gasBarFill.setOrigin(0, 0.5);
+        this.container.add(this.gasBarFill);
+
+        this.gasText = this.scene.add.text(sz(155), GAME_HEIGHT - sz(18), '100%', {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#AAAAAA',
+        }).setOrigin(0, 0.5);
+        this.container.add(this.gasText);
+
+        // --- BOTTOM RIGHT: Blade Meter ---
+        const bladeLabel = this.scene.add.text(GAME_WIDTH - sz(195), GAME_HEIGHT - sz(35), 'BLADE', {
+            fontSize: fs(9), fontFamily: 'monospace', color: '#AAAAAA',
+        });
+        this.container.add(bladeLabel);
+
+        this.bladeBarBg = this.scene.add.rectangle(GAME_WIDTH - sz(155), GAME_HEIGHT - sz(18), sz(100), sz(10), 0x333333);
+        this.bladeBarBg.setOrigin(0, 0.5);
+        this.bladeBarBg.setStrokeStyle(sz(1), COLORS.UI_BORDER);
+        this.container.add(this.bladeBarBg);
+
+        this.bladeBarFill = this.scene.add.rectangle(GAME_WIDTH - sz(154), GAME_HEIGHT - sz(18), sz(98), sz(8), COLORS.BLADE_STEEL);
+        this.bladeBarFill.setOrigin(0, 0.5);
+        this.container.add(this.bladeBarFill);
+
+        this.bladeSetText = this.scene.add.text(GAME_WIDTH - sz(48), GAME_HEIGHT - sz(18), 'x8', {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#AAAAAA',
+        }).setOrigin(0, 0.5);
+        this.container.add(this.bladeSetText);
+
+        // --- BOTTOM CENTER: Special Ability ---
+        this.specialBg = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - sz(20), sz(80), sz(24), COLORS.UI_BG, 0.8);
+        this.specialBg.setStrokeStyle(sz(1), COLORS.UI_BORDER);
+        this.container.add(this.specialBg);
+
+        this.specialText = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT - sz(20), '[A] SPECIAL', {
+            fontSize: fs(9), fontFamily: 'monospace', color: '#FFCC00',
+        }).setOrigin(0.5);
+        this.container.add(this.specialText);
+
+        // --- STATE INDICATOR ---
+        this.stateText = this.scene.add.text(GAME_WIDTH / 2, sz(30), '', {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#FFFFFF',
+        }).setOrigin(0.5).setAlpha(0.6);
+        this.container.add(this.stateText);
+
+        // --- CONTROLS HINT ---
+        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const controlsMsg = isMobile
+            ? 'D-PAD: Move  |  B: Jump  |  Y: Attack  |  X: Grapple  |  L: Dodge  |  R: Lock-On  |  A: Special'
+            : 'ARROWS: Move  |  Z: Jump  |  X: Attack  |  C: Grapple  |  S: Dodge  |  D: Lock-On  |  A: Special';
+        this.controlsText = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + sz(100), 
+            controlsMsg, {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#FFFFFF', backgroundColor: '#000000AA',
+            padding: { x: sz(8), y: sz(4) },
+        }).setOrigin(0.5).setAlpha(1);
+        this.container.add(this.controlsText);
+
+        // Fade out controls after 5 seconds
+        this.scene.time.delayedCall(5000, () => {
+            this.scene.tweens.add({
+                targets: this.controlsText,
+                alpha: 0,
+                duration: 1000,
+            });
+        });
+
+        // Message text
+        this.messageText = this.scene.add.text(GAME_WIDTH / 2, sz(50), '', {
+            fontSize: fs(12), fontFamily: 'monospace', color: '#FFFFFF',
+            backgroundColor: '#000000BB', padding: { x: sz(10), y: sz(4) },
+            wordWrap: { width: GAME_WIDTH * 0.8 },
+        }).setOrigin(0.5, 0).setAlpha(0);
+        this.container.add(this.messageText);
+    }
+
+    showMessage(speaker, text, duration) {
+        const fullText = speaker ? `${speaker}: "${text}"` : text;
+        this.messageText.setText(fullText);
+        this.messageText.setAlpha(1);
+        this.scene.time.delayedCall(duration || 3000, () => {
+            this.scene.tweens.add({
+                targets: this.messageText,
+                alpha: 0,
+                duration: 500,
+            });
+        });
+    }
+
+    update(player) {
+        if (!player) return;
+
+        // Health hearts
+        for (let i = 0; i < 5; i++) {
+            this.hearts[i].full.setVisible(i < player.health);
+            // Pulse last heart when low
+            if (i === player.health - 1 && player.health <= 2) {
+                this.hearts[i].full.setScale(0.9 + Math.sin(Date.now() * 0.01) * 0.15);
+            }
+        }
+
+        // Portrait letter
+        this.portraitText.setText(player.charId.charAt(0).toUpperCase());
+
+        // Score
+        this.scoreText.setText('SCORE: ' + player.score);
+        this.killText.setText('KILLS: ' + player.killCount);
+
+        // Gas meter (smooth interpolation)
+        this.displayGas = lerp(this.displayGas, player.gas, 0.15);
+        const gasPercent = this.displayGas / 100;
+        this.gasBarFill.width = Math.max(0, sz(98) * gasPercent);
+
+        let gasColor = COLORS.GAS_GREEN;
+        if (this.displayGas < 30) gasColor = COLORS.GAS_RED;
+        else if (this.displayGas < 60) gasColor = COLORS.GAS_YELLOW;
+        this.gasBarFill.fillColor = gasColor;
+        this.gasText.setText(Math.floor(this.displayGas) + '%');
+
+        // Flash gas bar when empty
+        if (player.gas <= 0) {
+            this.gasBarBg.setStrokeStyle(1, Math.sin(Date.now() * 0.01) > 0 ? 0xFF0000 : COLORS.UI_BORDER);
+        }
+
+        // Blade meter
+        this.displayBlade = lerp(this.displayBlade, player.bladeDurability, 0.15);
+        const bladePercent = this.displayBlade / 100;
+        this.bladeBarFill.width = Math.max(0, sz(98) * bladePercent);
+
+        let bladeColor = COLORS.BLADE_STEEL;
+        if (this.displayBlade < 30) bladeColor = COLORS.GAS_RED;
+        this.bladeBarFill.fillColor = bladeColor;
+        this.bladeSetText.setText('x' + player.bladeSets);
+
+        // Special charges
+        if (player.specialCharges > 0 && player.specialCharges < 90) {
+            this.specialText.setText('[A] ' + player.charDef.specialName + ' x' + player.specialCharges);
+            this.specialText.setColor('#FFCC00');
+        } else if (player.specialCharges >= 90) {
+            this.specialText.setText('[A] ' + player.charDef.specialName);
+            this.specialText.setColor('#FFCC00');
+        } else {
+            this.specialText.setText(player.charDef.specialName + ' ---');
+            this.specialText.setColor('#666666');
+        }
+    }
+
+    destroy() {
+        this.container.destroy(true);
+    }
+}
+// ---- BOOT SCENE ----
+class BootScene extends Phaser.Scene {
+    constructor() {
+        super('Boot');
+    }
+
+    create() {
+        // Generate all textures
+        const gen = new TextureGenerator(this);
+        gen.generateAll();
+
+        this.scene.start('Title');
+    }
+}
+
+// ---- TITLE SCENE ----
+class TitleScene extends Phaser.Scene {
+    constructor() {
+        super('Title');
+    }
+
+    create() {
+        // Background
+        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0A0A1A);
+
+        // Parallax wall layer — height proportional to canvas
+        const wallGfx = this.add.graphics();
+        const wallH = GAME_HEIGHT * 0.4;
+        wallGfx.fillStyle(COLORS.WALL_STONE, 0.3);
+        const wallTile = Math.max(16, sz(32));
+        for (let i = 0; i < Math.ceil(GAME_WIDTH / wallTile) + 1; i++) {
+            wallGfx.fillRect(i * wallTile, GAME_HEIGHT - wallH, wallTile, wallH);
+            wallGfx.fillStyle(COLORS.WALL_STONE_DARK, 0.2);
+            wallGfx.fillRect(i * wallTile, GAME_HEIGHT - wallH, wallTile, 2);
+            wallGfx.fillRect(i * wallTile, GAME_HEIGHT - wallH + 16, wallTile, 1);
+            wallGfx.fillStyle(COLORS.WALL_STONE, 0.3);
+        }
+
+        // Titan silhouettes — proportional to canvas height
+        const silGfx = this.add.graphics();
+        silGfx.fillStyle(0x1A1A2E, 0.8);
+        const silH1 = GAME_HEIGHT * 0.45;
+        silGfx.fillRect(GAME_WIDTH * 0.15, GAME_HEIGHT - silH1, sz(40), silH1 * 0.7);
+        silGfx.fillCircle(GAME_WIDTH * 0.15 + sz(20), GAME_HEIGHT - silH1, sz(22));
+        const silH2 = GAME_HEIGHT * 0.35;
+        silGfx.fillRect(GAME_WIDTH * 0.65, GAME_HEIGHT - silH2, sz(35), silH2 * 0.7);
+        silGfx.fillCircle(GAME_WIDTH * 0.65 + sz(17), GAME_HEIGHT - silH2, sz(18));
+        const silH3 = GAME_HEIGHT * 0.55;
+        silGfx.fillRect(GAME_WIDTH * 0.8, GAME_HEIGHT - silH3, sz(50), silH3 * 0.7);
+        silGfx.fillCircle(GAME_WIDTH * 0.8 + sz(25), GAME_HEIGHT - silH3, sz(26));
+
+        // Wings of Freedom emblem — proportional
+        const emblemGfx = this.add.graphics();
+        const ex = GAME_WIDTH / 2;
+        const ey = GAME_HEIGHT * 0.25;
+        const eS = Math.min(sz(1), GAME_HEIGHT / 300); // emblem scale
+        const eW = 50 * eS, eH = 55 * eS;
+        emblemGfx.fillStyle(COLORS.UI_BG, 0.8);
+        emblemGfx.fillRoundedRect(ex - eW, ey - eH, eW * 2, eH * 2, 8 * eS);
+        emblemGfx.lineStyle(2 * eS, COLORS.UI_BORDER);
+        emblemGfx.strokeRoundedRect(ex - eW, ey - eH, eW * 2, eH * 2, 8 * eS);
+        emblemGfx.fillStyle(0x4488CC);
+        emblemGfx.fillTriangle(ex - 35 * eS, ey + 30 * eS, ex - 5 * eS, ey - 35 * eS, ex - 5 * eS, ey + 30 * eS);
+        emblemGfx.fillStyle(0xDDDDDD);
+        emblemGfx.fillTriangle(ex + 35 * eS, ey + 30 * eS, ex + 5 * eS, ey - 35 * eS, ex + 5 * eS, ey + 30 * eS);
+
+        // Title
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.47, 'ATTACK ON TITAN', {
+            fontSize: fs(36), fontFamily: 'monospace', color: '#D4A44C',
+            fontStyle: 'bold', stroke: '#000000', strokeThickness: sz(4),
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.56, 'WINGS OF FREEDOM', {
+            fontSize: fs(16), fontFamily: 'monospace', color: '#FFFFFF',
+            stroke: '#000000', strokeThickness: sz(2),
+        }).setOrigin(0.5);
+
+        // Menu options
+        this.menuItems = ['START GAME', 'CONTROLS'];
+        this.selectedIndex = 0;
+        this.menuTexts = [];
+
+        const menuStartY = GAME_HEIGHT * 0.72;
+        const menuGap = GAME_HEIGHT * 0.1;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            const txt = this.add.text(GAME_WIDTH / 2, menuStartY + i * menuGap, this.menuItems[i], {
+                fontSize: fs(14), fontFamily: 'monospace', color: i === 0 ? '#FFCC00' : '#888888',
+            }).setOrigin(0.5);
+            this.menuTexts.push(txt);
+        }
+
+        // Cursor
+        this.cursor = this.add.text(GAME_WIDTH / 2 - sz(90), menuStartY, '►', {
+            fontSize: fs(14), fontFamily: 'monospace', color: '#FFCC00',
+        }).setOrigin(0.5);
+        this._menuStartY = menuStartY;
+        this._menuGap = menuGap;
+
+        // Copyright
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - sz(8), 'A HYPOTHETICAL KONAMI/CAPCOM PRODUCTION', {
+            fontSize: fs(7), fontFamily: 'monospace', color: '#555555',
+        }).setOrigin(0.5);
+
+        // Input
+        this.upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+
+        this.controlsShowing = false;
+        this.controlsOverlay = null;
+    }
+
+    update() {
+        if (this.controlsShowing) {
+            if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.zKey)) {
+                this.controlsOverlay.destroy(true);
+                this.controlsShowing = false;
+            }
+            return;
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.upKey)) {
+            this.selectedIndex = (this.selectedIndex - 1 + this.menuItems.length) % this.menuItems.length;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.downKey)) {
+            this.selectedIndex = (this.selectedIndex + 1) % this.menuItems.length;
+        }
+
+        for (let i = 0; i < this.menuTexts.length; i++) {
+            this.menuTexts[i].setColor(i === this.selectedIndex ? '#FFCC00' : '#888888');
+        }
+        this.cursor.y = this._menuStartY + this.selectedIndex * this._menuGap;
+
+        if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.zKey)) {
+            if (this.selectedIndex === 0) {
+                this.cameras.main.fadeOut(500, 0, 0, 0);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                    this.scene.start('CharSelect');
+                });
+            } else if (this.selectedIndex === 1) {
+                this._showControls();
+            }
+        }
+    }
+
+    _showControls() {
+        this.controlsShowing = true;
+        this.controlsOverlay = this.add.container(0, 0);
+
+        const panelW = GAME_WIDTH * 0.85;
+        const panelH = GAME_HEIGHT * 0.85;
+        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, panelW, panelH, 0x000000, 0.9);
+        bg.setStrokeStyle(Math.max(1, sz(2)), COLORS.UI_BORDER);
+        this.controlsOverlay.add(bg);
+
+        const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - panelH * 0.42, 'CONTROLS', {
+            fontSize: fs(14), fontFamily: 'monospace', color: '#FFCC00', fontStyle: 'bold',
+        }).setOrigin(0.5);
+        this.controlsOverlay.add(title);
+
+        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const controls = isMobile ? [
+            'D-PAD: Move     B: Jump     Y: Attack',
+            'X: Grapple      L: Dodge    R: Lock-On',
+            'A: Special       START: Pause',
+            '',
+            'TIPS: Grapple rooftops, swing for speed.',
+            'Strike the red NAPE from behind!',
+            'Resupply at green crate stations.',
+        ] : [
+            'ARROWS: Move    Z: Jump    X: Attack',
+            'C: Grapple      S: Dodge   D: Lock-On',
+            'A: Special       ESC: Pause',
+            '',
+            'TIPS: Grapple rooftops, swing for speed.',
+            'Strike the red NAPE from behind!',
+            'Resupply at green crate stations.',
+        ];
+
+        const lineH = panelH * 0.1;
+        const startY = GAME_HEIGHT / 2 - panelH * 0.28;
+        for (let i = 0; i < controls.length; i++) {
+            const line = this.add.text(GAME_WIDTH / 2 - panelW * 0.4, startY + i * lineH, controls[i], {
+                fontSize: fs(8), fontFamily: 'monospace', color: '#CCCCCC',
+            });
+            this.controlsOverlay.add(line);
+        }
+
+        const back = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + panelH * 0.42, 'Press ENTER to close', {
+            fontSize: fs(9), fontFamily: 'monospace', color: '#888888',
+        }).setOrigin(0.5);
+        this.controlsOverlay.add(back);
+    }
+}
+
+// ---- CHARACTER SELECT SCENE ----
+class CharSelectScene extends Phaser.Scene {
+    constructor() {
+        super('CharSelect');
+    }
+
+    create() {
+        this.cameras.main.fadeIn(500);
+        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0A0A1A);
+
+        // Title — top 10% of screen
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.06, 'SELECT YOUR SOLDIER', {
+            fontSize: fs(16), fontFamily: 'monospace', color: '#FFCC00', fontStyle: 'bold',
+        }).setOrigin(0.5);
+
+        this.characters = ['eren', 'mikasa', 'levi'];
+        this.selectedIndex = 0;
+        this.charCards = [];
+
+        // Card dimensions — derived from available space
+        const cardH = GAME_HEIGHT * 0.72;
+        const cardW = Math.min(cardH * 0.55, GAME_WIDTH * 0.28);
+        const cardSpacing = Math.min(GAME_WIDTH * 0.32, cardW + sz(30));
+        const cardCY = GAME_HEIGHT * 0.50;
+
+        // Sprite scale — fit within top portion of card
+        const spriteScale = Math.max(1, Math.min(4 * S, cardH * 0.2 / 16));
+
+        for (let i = 0; i < this.characters.length; i++) {
+            const charId = this.characters[i];
+            const def = CHAR_DEFS[charId];
+            const cx = GAME_WIDTH / 2 + (i - 1) * cardSpacing;
+
+            const card = this.add.container(cx, cardCY);
+
+            // Card background
+            const cardBg = this.add.rectangle(0, 0, cardW, cardH, COLORS.UI_BG, 0.8);
+            cardBg.setStrokeStyle(Math.max(1, sz(2)), COLORS.UI_BORDER);
+            card.add(cardBg);
+
+            // Character sprite — top 30% of card
+            const charSprite = this.add.image(0, -cardH * 0.28, 'player_' + charId).setScale(spriteScale);
+            card.add(charSprite);
+
+            // Name — below sprite
+            const nameText = this.add.text(0, -cardH * 0.06, def.name, {
+                fontSize: fs(10), fontFamily: 'monospace', color: '#FFFFFF', fontStyle: 'bold',
+            }).setOrigin(0.5);
+            card.add(nameText);
+
+            // Stats — middle of card
+            const stats = [
+                { label: 'BLADE', value: def.bladeStrength, color: '#CC4444' },
+                { label: 'SPEED', value: def.speed, color: '#44CC44' },
+                { label: 'GAS  ', value: def.gasEfficiency, color: '#4488CC' },
+            ];
+
+            const statStartY = cardH * 0.04;
+            const statGap = cardH * 0.14;
+            const barBlockW = Math.min(sz(16), cardW * 0.1);
+            const barBlockH = Math.min(sz(8), cardH * 0.04);
+            const barGap = barBlockW + 2;
+
+            for (let s = 0; s < stats.length; s++) {
+                const sy = statStartY + s * statGap;
+                const label = this.add.text(-cardW * 0.42, sy, stats[s].label, {
+                    fontSize: fs(8), fontFamily: 'monospace', color: '#AAAAAA',
+                });
+                card.add(label);
+
+                for (let b = 0; b < 5; b++) {
+                    const filled = b < stats[s].value;
+                    const block = this.add.rectangle(-cardW * 0.05 + b * barGap, sy + barBlockH * 0.5, barBlockW, barBlockH,
+                        filled ? Phaser.Display.Color.HexStringToColor(stats[s].color).color : 0x333333);
+                    card.add(block);
+                }
+            }
+
+            // Special ability name — near bottom of card
+            const specText = this.add.text(0, cardH * 0.38, def.specialName, {
+                fontSize: fs(7), fontFamily: 'monospace', color: '#FFCC00',
+            }).setOrigin(0.5);
+            card.add(specText);
+
+            this.charCards.push(card);
+        }
+
+        // Selection frame
+        this._cardSpacing = cardSpacing;
+        this._cardCY = cardCY;
+        this.selectFrame = this.add.rectangle(GAME_WIDTH / 2 - cardSpacing, cardCY, cardW + sz(6), cardH + sz(6), 0x000000, 0);
+        this.selectFrame.setStrokeStyle(Math.max(1, sz(2)), COLORS.YELLOW);
+
+        // Instructions — bottom
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.94, '← → select    START confirm', {
+            fontSize: fs(9), fontFamily: 'monospace', color: '#888888',
+        }).setOrigin(0.5);
+
+        // Input
+        this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        this.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.leftKey)) {
+            this.selectedIndex = (this.selectedIndex - 1 + this.characters.length) % this.characters.length;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.rightKey)) {
+            this.selectedIndex = (this.selectedIndex + 1) % this.characters.length;
+        }
+
+        // Update selection frame position
+        const targetX = GAME_WIDTH / 2 + (this.selectedIndex - 1) * this._cardSpacing;
+        this.selectFrame.x = lerp(this.selectFrame.x, targetX, 0.2);
+
+        if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.zKey)) {
+            this.cameras.main.fadeOut(500, 0, 0, 0);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+                this.scene.start('Game', { charId: this.characters[this.selectedIndex] });
+            });
+        }
+    }
+}
+
+// ---- GAME SCENE ----
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super('Game');
+    }
+
+    init(data) {
+        this.charId = data.charId || 'eren';
+        this.timeScale = 1.0;
+        this.stageTimer = 0;
+        this.effects = [];
+        this.titans = [];
+        this.titanGraphics = null;
+        this.totalTitansToKill = 0;
+        this.titansSpawned = 0;
+        this.waveTimer = 0;
+        this.currentWave = 0;
+        this.maxWaves = 5;
+        this.isPaused = false;
+        this.transitioning = false;
+    }
+
+    create() {
+        this.cameras.main.fadeIn(500);
+
+        // Create stage — world height adapts to viewport
+        const worldW = 4000 * DPR;
+        const worldH = Math.max(800 * DPR, GAME_HEIGHT + 300 * DPR);
+        this.stage = new Stage(this, {
+            worldWidth: worldW,
+            worldHeight: worldH,
+        });
+
+        // Set world bounds and camera
+        this.cameras.main.setBounds(0, 0, worldW, worldH);
+
+        // Create player
+        const groundY = (this.stage.tilesY - 2) * TILE_SIZE;
+        this.player = new Player(this, 128 * DPR, groundY, this.charId);
+
+        // Camera follow (will be overridden during cutscenes)
+        this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
+
+        // Titan container graphics
+        this.titanGraphics = this.add.graphics();
+        this.titanGraphics.setDepth(42);
+
+        // Effects graphics
+        this.effectsGraphics = this.add.graphics();
+        this.effectsGraphics.setDepth(60);
+
+        // HUD
+        this.hud = new HUD(this);
+
+        // Cutscene system
+        this.cutscene = new Cutscene(this);
+        this.inCutscene = true;
+
+        // Spawn titans early so they're visible during cutscene
+        this._spawnWave();
+
+        // Skip cutscene on any key or tap
+        this._cutsceneSkipKey = this.input.keyboard.on('keydown', () => {
+            if (this.cutscene.active) this.cutscene.skip();
+        });
+        this.input.on('pointerdown', () => {
+            if (this.cutscene.active) this.cutscene.skip();
+        });
+
+        // Build intro cutscene beats — pan to show titans
+        const charName = CHAR_DEFS[this.charId].name;
+        const groundLevel = groundY;
+        // Find where titans actually are for cinematic panning
+        const firstTitan = this.titans.length > 0 ? this.titans[0] : null;
+        const midTitan = this.titans.length > 2 ? this.titans[Math.floor(this.titans.length / 2)] : firstTitan;
+        const introBeats = [
+            {
+                camX: this.player.x, camY: groundLevel - 100 * DPR,
+                speaker: '', text: 'Trost District — Year 850',
+                panDuration: 1000, duration: 120,
+            },
+            {
+                camX: midTitan ? midTitan.x : worldW * 0.4,
+                camY: groundLevel - 200 * DPR,
+                speaker: '', text: 'The wall has been breached. Titans are pouring in.',
+                panDuration: 2500, duration: 150,
+            },
+            {
+                camX: firstTitan ? firstTitan.x : worldW * 0.3,
+                camY: groundLevel - 150 * DPR,
+                speaker: 'Shadis', text: 'All squads — engage ODM gear and eliminate every Titan within the district!',
+                panDuration: 2000, duration: 180,
+            },
+            {
+                camX: this.player.x, camY: this.player.y - 60 * DPR,
+                speaker: charName, text: 'Understood. Blades ready... let\'s move!',
+                panDuration: 1200, duration: 140,
+            },
+        ];
+
+        this.cutscene.play(introBeats, () => {
+            this.inCutscene = false;
+            this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
+            this.hud.showMessage('Shadis', 'Eliminate all Titans!', 2000);
+        });
+
+        // Pause handling
+        this.pauseKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        this.pauseOverlay = null;
+    }
+
+    _spawnWave() {
+        this.currentWave++;
+        let count = 3 + this.currentWave;
+        if (count > 10) count = 10;
+
+        const spawnPoints = this.stage.getTitanSpawnPoints(count);
+
+        for (let i = 0; i < spawnPoints.length; i++) {
+            const sp = spawnPoints[i];
+
+            // Choose titan class based on wave
+            let cls = '3m';
+            const roll = Math.random();
+            if (this.currentWave >= 3 && roll > 0.7) cls = '10m';
+            else if (this.currentWave >= 2 && roll > 0.5) cls = '7m';
+            else if (roll > 0.8) cls = '7m';
+
+            // Aberrant chance
+            const isAberrant = this.currentWave >= 2 && Math.random() > 0.8;
+
+            const titan = new Titan(this, sp.x, sp.y, cls, isAberrant);
+            this.titans.push(titan);
+        }
+
+        this.totalTitansToKill += count;
+
+        if (this.currentWave > 1 && this.hud) {
+            this.hud.showMessage(null, `Wave ${this.currentWave}! ${count} Titans incoming!`, 2500);
+        }
+    }
+
+    spawnEffect(type, x, y, dir) {
+        if (type === 'slash') {
+            this.effects.push({
+                type: 'slash',
+                x: x, y: y,
+                dir: dir || 1,
+                life: 6,
+                maxLife: 6,
+            });
+        } else if (type === 'nape_slash') {
+            this.effects.push({
+                type: 'nape_slash',
+                x: x, y: y,
+                dir: dir || 1,
+                life: 8,
+                maxLife: 8,
+            });
+        } else if (type === 'blood_burst') {
+            for (let i = 0; i < 6; i++) {
+                this.effects.push({
+                    type: 'blood',
+                    x: x + randFloat(-5, 5) * DPR,
+                    y: y + randFloat(-5, 5) * DPR,
+                    vx: randFloat(-3, 3) * DPR,
+                    vy: randFloat(-4, -1) * DPR,
+                    life: randInt(10, 20),
+                    maxLife: 20,
+                    size: randFloat(2, 4) * DPR,
+                });
+            }
+        }
+    }
+
+    update(time, delta) {
+        // Pause toggle
+        if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
+            this.isPaused = !this.isPaused;
+            if (this.isPaused) {
+                this._showPause();
+            } else {
+                this._hidePause();
+            }
+        }
+
+        if (this.isPaused) return;
+
+        // Real delta time normalized to 60fps (dt=1.0 at 60fps)
+        const dt = (delta / 16.667) * this.timeScale;
+
+        // Cutscene update
+        if (this.cutscene.active) {
+            this.cutscene.update(dt);
+            return;
+        }
+        if (this.inCutscene) return;
+
+        this.stageTimer++;
+
+        // Update player
+        this.player.update(dt);
+        this.player.render();
+
+        // Update titans
+        this.titanGraphics.clear();
+        for (let i = this.titans.length - 1; i >= 0; i--) {
+            const titan = this.titans[i];
+            titan.update(dt);
+            titan.render(this.titanGraphics);
+
+            // Remove fully dead titans
+            if (titan.isDead && titan.deathTimer > 90) {
+                this.titans.splice(i, 1);
+            }
+        }
+
+        // Update effects
+        this.effectsGraphics.clear();
+        for (let i = this.effects.length - 1; i >= 0; i--) {
+            const e = this.effects[i];
+            e.life -= dt;
+
+            if (e.type === 'blood') {
+                e.x += e.vx * dt;
+                e.y += e.vy * dt;
+                e.vy += 0.2 * DPR * dt;
+                const alpha = e.life / e.maxLife;
+                this.effectsGraphics.fillStyle(COLORS.BLOOD_RED, alpha);
+                this.effectsGraphics.fillCircle(e.x, e.y, e.size);
+            } else if (e.type === 'slash') {
+                const alpha = e.life / e.maxLife;
+                this.effectsGraphics.lineStyle(3 * DPR, 0xFFFFFF, alpha);
+                this.effectsGraphics.beginPath();
+                this.effectsGraphics.arc(e.x, e.y, 16 * DPR, -1.2 * e.dir, 1.2 * e.dir, e.dir < 0);
+                this.effectsGraphics.strokePath();
+            } else if (e.type === 'nape_slash') {
+                const alpha = e.life / e.maxLife;
+                this.effectsGraphics.lineStyle(4 * DPR, COLORS.NAPE_RED, alpha);
+                this.effectsGraphics.beginPath();
+                this.effectsGraphics.arc(e.x, e.y, 18 * DPR, -1.2 * e.dir, 1.2 * e.dir, e.dir < 0);
+                this.effectsGraphics.strokePath();
+            }
+
+            if (e.life <= 0) {
+                this.effects.splice(i, 1);
+            }
+        }
+
+        // HUD
+        this.hud.update(this.player);
+
+        // Wave management
+        let aliveTitans = 0;
+        for (let i = 0; i < this.titans.length; i++) {
+            if (!this.titans[i].isDead) aliveTitans++;
+        }
+
+        if (aliveTitans === 0 && this.currentWave < this.maxWaves) {
+            this.waveTimer++;
+            if (this.waveTimer > 120) {
+                this.waveTimer = 0;
+                this._spawnWave();
+            }
+        }
+
+        // Victory condition
+        if (aliveTitans === 0 && this.currentWave >= this.maxWaves && !this.transitioning) {
+            this.transitioning = true;
+            this.inCutscene = true;
+
+            const charName = CHAR_DEFS[this.charId].name;
+            const px = this.player.x;
+            const py = this.player.y;
+            const worldW = this.stage.worldWidth;
+            const groundY = (this.stage.tilesY - 2) * TILE_SIZE;
+
+            const victoryBeats = [
+                {
+                    camX: px, camY: py - 30 * DPR,
+                    speaker: '', text: 'The last Titan falls...',
+                    panDuration: 800, duration: 120,
+                },
+                {
+                    camX: px, camY: py - 120 * DPR,
+                    speaker: charName, text: 'It\'s over... we held the district.',
+                    panDuration: 2000, duration: 150,
+                },
+                {
+                    camX: worldW * 0.5, camY: groundY - 300 * DPR,
+                    speaker: 'Shadis', text: 'All Titans within Trost have been eliminated. Well done, soldiers.',
+                    panDuration: 2500, duration: 180,
+                },
+                {
+                    camX: worldW * 0.5, camY: groundY - 400 * DPR,
+                    speaker: '', text: 'Humanity\'s first victory... but the fight is far from over.',
+                    panDuration: 2000, duration: 160,
+                },
+            ];
+
+            this.cutscene.play(victoryBeats, () => {
+                this._victory();
+            });
+        }
+
+        // Death condition
+        if (this.player.isDead && !this.transitioning) {
+            this.transitioning = true;
+            this.time.delayedCall(2000, () => {
+                this.scene.start('GameOver', {
+                    charId: this.charId,
+                    score: this.player.score,
+                    kills: this.player.killCount,
+                });
+            });
+        }
+    }
+
+    _victory() {
+        this.cameras.main.fadeOut(1500, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('Results', {
+                charId: this.charId,
+                score: this.player.score,
+                kills: this.player.killCount,
+                time: this.stageTimer,
+                damageTaken: this.player.damageTaken,
+                gasRemaining: this.player.gas,
+                bladeRemaining: this.player.bladeDurability,
+            });
+        });
+    }
+
+    _showPause() {
+        this.pauseOverlay = this.add.container(0, 0).setDepth(200).setScrollFactor(0);
+        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7);
+        this.pauseOverlay.add(bg);
+        const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - sz(20), 'PAUSED', {
+            fontSize: fs(32), fontFamily: 'monospace', color: '#FFFFFF',
+        }).setOrigin(0.5);
+        this.pauseOverlay.add(txt);
+        const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + sz(30), 'Press ESC to resume', {
+            fontSize: fs(12), fontFamily: 'monospace', color: '#888888',
+        }).setOrigin(0.5);
+        this.pauseOverlay.add(hint);
+    }
+
+    _hidePause() {
+        if (this.pauseOverlay) {
+            this.pauseOverlay.destroy(true);
+            this.pauseOverlay = null;
+        }
+    }
+
+    shutdown() {
+        if (this.stage) this.stage.destroy();
+        if (this.player) this.player.destroy();
+        if (this.hud) this.hud.destroy();
+        for (let i = 0; i < this.titans.length; i++) {
+            this.titans[i]._destroy();
+        }
+    }
+}
+
+// ---- RESULTS SCENE ----
+class ResultsScene extends Phaser.Scene {
+    constructor() {
+        super('Results');
+    }
+
+    init(data) {
+        this.resultData = data;
+    }
+
+    create() {
+        this.cameras.main.fadeIn(500);
+        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0A0A2A);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.08, 'MISSION COMPLETE', {
+            fontSize: fs(24), fontFamily: 'monospace', color: '#FFCC00', fontStyle: 'bold',
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.15, 'Battle of Trost', {
+            fontSize: fs(14), fontFamily: 'monospace', color: '#AAAAAA',
+        }).setOrigin(0.5);
+
+        // Stats
+        const d = this.resultData;
+        const timeSeconds = Math.floor(d.time / 60);
+        const stats = [
+            { label: 'TIME', value: Math.floor(timeSeconds / 60) + ':' + String(timeSeconds % 60).padStart(2, '0') },
+            { label: 'TITANS KILLED', value: '' + d.kills },
+            { label: 'DAMAGE TAKEN', value: d.damageTaken + ' hits' },
+            { label: 'GAS REMAINING', value: Math.floor(d.gasRemaining) + '%' },
+            { label: 'BLADES REMAINING', value: Math.floor(d.bladeRemaining) + '%' },
+            { label: 'SCORE', value: '' + d.score },
+        ];
+
+        // Animate stats appearing
+        const statsStartY = GAME_HEIGHT * 0.22;
+        const statsSpacing = (GAME_HEIGHT * 0.38) / stats.length;
+        const colOff = GAME_WIDTH * 0.3;
+        for (let i = 0; i < stats.length; i++) {
+            this.time.delayedCall(i * 300 + 500, () => {
+                this.add.text(GAME_WIDTH / 2 - colOff, statsStartY + i * statsSpacing, stats[i].label, {
+                    fontSize: fs(11), fontFamily: 'monospace', color: '#AAAAAA',
+                });
+                this.add.text(GAME_WIDTH / 2 + colOff, statsStartY + i * statsSpacing, stats[i].value, {
+                    fontSize: fs(11), fontFamily: 'monospace', color: '#FFFFFF',
+                }).setOrigin(1, 0);
+            });
+        }
+
+        // Calculate rank
+        let points = 0;
+        const parTime = 180 * 60;
+        points += Math.min(40, (parTime / Math.max(1, d.time)) * 40);
+        points += Math.min(25, (d.kills / 20) * 25);
+        points += Math.max(0, 20 - d.damageTaken * 4);
+        points += ((d.gasRemaining + d.bladeRemaining) / 200) * 10;
+
+        let rank = 'D';
+        let rankColor = '#666666';
+        if (points >= 80) { rank = 'S'; rankColor = '#FFD700'; }
+        else if (points >= 60) { rank = 'A'; rankColor = '#DDDDDD'; }
+        else if (points >= 40) { rank = 'B'; rankColor = '#CD7F32'; }
+        else if (points >= 20) { rank = 'C'; rankColor = '#888888'; }
+
+        const rankMessages = {
+            S: 'A performance worthy of Captain Levi himself.',
+            A: 'The Wings of Freedom fly proudly today.',
+            B: 'Acceptable. But acceptable isn\'t enough to save humanity.',
+            C: 'The Titans are still out there. Train harder.',
+            D: 'Commander Shadis is disappointed. Again.',
+        };
+
+        // Show rank with dramatic delay
+        this.time.delayedCall(stats.length * 300 + 800, () => {
+            const rankText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.7, rank, {
+                fontSize: fs(48), fontFamily: 'monospace', color: rankColor,
+                fontStyle: 'bold', stroke: '#000000', strokeThickness: sz(4),
+            }).setOrigin(0.5).setScale(2);
+
+            this.tweens.add({
+                targets: rankText,
+                scale: 1,
+                duration: 500,
+                ease: 'Back.easeOut',
+            });
+
+            this.cameras.main.shake(200, 0.01);
+
+            this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.8, rankMessages[rank], {
+                fontSize: fs(11), fontFamily: 'monospace', color: '#AAAAAA',
+                fontStyle: 'italic',
+            }).setOrigin(0.5);
+        });
+
+        // Continue prompt
+        this.time.delayedCall(stats.length * 300 + 2000, () => {
+            const contText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.92, 'Press ENTER to continue', {
+                fontSize: fs(12), fontFamily: 'monospace', color: '#888888',
+            }).setOrigin(0.5);
+
+            this.tweens.add({
+                targets: contText,
+                alpha: 0.3,
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+            });
+
+            this.canContinue = true;
+        });
+
+        this.canContinue = false;
+        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    }
+
+    update() {
+        if (this.canContinue) {
+            if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.zKey)) {
+                this.cameras.main.fadeOut(500);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                    this.scene.start('Title');
+                });
+            }
+        }
+    }
+}
+
+// ---- GAME OVER SCENE ----
+class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super('GameOver');
+    }
+
+    init(data) {
+        this.resultData = data;
+    }
+
+    create() {
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+        this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0A0000);
+
+        // Wings of freedom (cracked) — proportional
+        const emblemGfx = this.add.graphics();
+        const ex = GAME_WIDTH / 2;
+        const ey = GAME_HEIGHT * 0.25;
+        const eS = Math.min(S, GAME_HEIGHT / 300);
+        const eW = 50 * eS, eH = 55 * eS;
+        emblemGfx.fillStyle(COLORS.UI_BG, 0.6);
+        emblemGfx.fillRoundedRect(ex - eW, ey - eH, eW * 2, eH * 2, 8 * eS);
+        emblemGfx.lineStyle(2 * eS, 0x555555);
+        emblemGfx.strokeRoundedRect(ex - eW, ey - eH, eW * 2, eH * 2, 8 * eS);
+        emblemGfx.fillStyle(0x334466);
+        emblemGfx.fillTriangle(ex - 35 * eS, ey + 30 * eS, ex - 5 * eS, ey - 25 * eS, ex - 5 * eS, ey + 30 * eS);
+        emblemGfx.fillStyle(0x888888);
+        emblemGfx.fillTriangle(ex + 35 * eS, ey + 30 * eS, ex + 5 * eS, ey - 25 * eS, ex + 5 * eS, ey + 30 * eS);
+        emblemGfx.lineStyle(2 * eS, 0x442222);
+        emblemGfx.beginPath();
+        emblemGfx.moveTo(ex - 10 * eS, ey - 50 * eS);
+        emblemGfx.lineTo(ex + 5 * eS, ey - 20 * eS);
+        emblemGfx.lineTo(ex - 3 * eS, ey + 10 * eS);
+        emblemGfx.lineTo(ex + 8 * eS, ey + 50 * eS);
+        emblemGfx.strokePath();
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.50, 'On that day, humanity received', {
+            fontSize: fs(12), fontFamily: 'monospace', color: '#AA4444',
+        }).setOrigin(0.5);
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.57, 'another grim reminder.', {
+            fontSize: fs(12), fontFamily: 'monospace', color: '#AA4444',
+        }).setOrigin(0.5);
+
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.68, 'Score: ' + (this.resultData.score || 0), {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#888888',
+        }).setOrigin(0.5);
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.74, 'Kills: ' + (this.resultData.kills || 0), {
+            fontSize: fs(10), fontFamily: 'monospace', color: '#888888',
+        }).setOrigin(0.5);
+
+        // Menu options
+        this.menuItems = ['RETRY', 'TITLE SCREEN'];
+        this.selectedIndex = 0;
+        this.menuTexts = [];
+
+        const goMenuY = GAME_HEIGHT * 0.84;
+        const goMenuGap = GAME_HEIGHT * 0.08;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            const txt = this.add.text(GAME_WIDTH / 2, goMenuY + i * goMenuGap, this.menuItems[i], {
+                fontSize: fs(12), fontFamily: 'monospace', color: '#888888',
+            }).setOrigin(0.5);
+            this.menuTexts.push(txt);
+        }
+
+        this.cursor = this.add.text(GAME_WIDTH / 2 - sz(80), goMenuY, '►', {
+            fontSize: fs(12), fontFamily: 'monospace', color: '#FFCC00',
+        }).setOrigin(0.5);
+        this._goMenuY = goMenuY;
+        this._goMenuGap = goMenuGap;
+
+        this.upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+    }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.upKey)) {
+            this.selectedIndex = (this.selectedIndex - 1 + this.menuItems.length) % this.menuItems.length;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.downKey)) {
+            this.selectedIndex = (this.selectedIndex + 1) % this.menuItems.length;
+        }
+
+        for (let i = 0; i < this.menuTexts.length; i++) {
+            this.menuTexts[i].setColor(i === this.selectedIndex ? '#FFCC00' : '#888888');
+        }
+        this.cursor.y = this._goMenuY + this.selectedIndex * this._goMenuGap;
+
+        if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.zKey)) {
+            this.cameras.main.fadeOut(500);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+                if (this.selectedIndex === 0) {
+                    this.scene.start('Game', { charId: this.resultData.charId || 'eren' });
+                } else {
+                    this.scene.start('Title');
+                }
+            });
+        }
+    }
+}
+
+// ===========================================================
+// VIRTUAL CONTROLLER — Touch input for mobile/iOS
+// ===========================================================
+const VController = {
+    // Key name → keyCode mapping (matches Phaser keyboard codes)
+    KEY_MAP: {
+        up:      { keyCode: 38, code: 'ArrowUp',    key: 'ArrowUp' },
+        down:    { keyCode: 40, code: 'ArrowDown',  key: 'ArrowDown' },
+        left:    { keyCode: 37, code: 'ArrowLeft',  key: 'ArrowLeft' },
+        right:   { keyCode: 39, code: 'ArrowRight', key: 'ArrowRight' },
+        jump:    { keyCode: 90, code: 'KeyZ',       key: 'z' },
+        attack:  { keyCode: 88, code: 'KeyX',       key: 'x' },
+        grapple: { keyCode: 67, code: 'KeyC',       key: 'c' },
+        special: { keyCode: 65, code: 'KeyA',       key: 'a' },
+        dodge:   { keyCode: 83, code: 'KeyS',       key: 's' },
+        lockOn:  { keyCode: 68, code: 'KeyD',       key: 'd' },
+        start:   { keyCode: 13, code: 'Enter',      key: 'Enter' },
+        select:  { keyCode: 27, code: 'Escape',     key: 'Escape' },
+    },
+
+    // Currently pressed virtual keys (to avoid duplicate events)
+    pressed: {},
+
+    // Touch → button tracking for multi-touch
+    touchMap: {},
+
+    // D-pad active directions per touch
+    dpadTouches: {},
+
+    isTouchDevice: false,
+    el: null,
+
+    init() {
+        this.isTouchDevice = ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            (navigator.msMaxTouchPoints > 0);
+
+        this.el = document.getElementById('vcontroller');
+        if (!this.el) return;
+
+        if (this.isTouchDevice) {
+            this.el.classList.add('active');
+        }
+
+        // Also show on first touch if we missed detection
+        window.addEventListener('touchstart', () => {
+            if (!this.el.classList.contains('active')) {
+                this.el.classList.add('active');
+            }
+        }, { once: true, passive: true });
+
+        this._bindFaceButtons();
+        this._bindDpad();
+        this._preventDefaults();
+    },
+
+    _fireKey(keyName, isDown) {
+        const mapping = this.KEY_MAP[keyName];
+        if (!mapping) return;
+
+        // Avoid duplicate downs
+        if (isDown && this.pressed[keyName]) return;
+        if (!isDown && !this.pressed[keyName]) return;
+
+        this.pressed[keyName] = isDown;
+
+        const eventType = isDown ? 'keydown' : 'keyup';
+        const evt = new KeyboardEvent(eventType, {
+            keyCode: mapping.keyCode,
+            which: mapping.keyCode,
+            code: mapping.code,
+            key: mapping.key,
+            bubbles: true,
+            cancelable: true,
+        });
+        document.dispatchEvent(evt);
+        window.dispatchEvent(evt);
+    },
+
+    _bindFaceButtons() {
+        // All buttons except dpad directions
+        const buttons = this.el.querySelectorAll('.face-btn, .shoulder-btn, .center-btn');
+
+        for (let i = 0; i < buttons.length; i++) {
+            const btn = buttons[i];
+            const keyName = btn.getAttribute('data-key');
+            if (!keyName) continue;
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                for (let t = 0; t < e.changedTouches.length; t++) {
+                    const touchId = e.changedTouches[t].identifier;
+                    this.touchMap[touchId] = { type: 'button', key: keyName, el: btn };
+                }
+                btn.classList.add('pressed');
+                this._fireKey(keyName, true);
+            }, { passive: false });
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                for (let t = 0; t < e.changedTouches.length; t++) {
+                    const touchId = e.changedTouches[t].identifier;
+                    delete this.touchMap[touchId];
+                }
+                // Only release if no other touch is still on this button
+                let stillHeld = false;
+                for (let tid in this.touchMap) {
+                    if (this.touchMap[tid].key === keyName) { stillHeld = true; break; }
+                }
+                if (!stillHeld) {
+                    btn.classList.remove('pressed');
+                    this._fireKey(keyName, false);
+                }
+            }, { passive: false });
+
+            btn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                for (let t = 0; t < e.changedTouches.length; t++) {
+                    delete this.touchMap[e.changedTouches[t].identifier];
+                }
+                btn.classList.remove('pressed');
+                this._fireKey(keyName, false);
+            }, { passive: false });
+        }
+    },
+
+    _bindDpad() {
+        const zone = document.getElementById('dpadZone');
+        if (!zone) return;
+
+        const dpadBtns = {
+            up: zone.querySelector('.dpad-up'),
+            down: zone.querySelector('.dpad-down'),
+            left: zone.querySelector('.dpad-left'),
+            right: zone.querySelector('.dpad-right'),
+        };
+
+        const resolveDirection = (touchX, touchY) => {
+            const rect = zone.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = touchX - cx;
+            const dy = touchY - cy;
+            const deadZone = 12;
+            const dirs = { up: false, down: false, left: false, right: false };
+
+            if (Math.abs(dx) > deadZone || Math.abs(dy) > deadZone) {
+                const angle = Math.atan2(dy, dx);
+                // Support diagonals by checking angular sectors
+                // Right: -45° to 45°, Down: 45° to 135°, Left: 135° to -135°, Up: -135° to -45°
+                if (angle > -0.9 && angle < 0.9) dirs.right = true;
+                if (angle > 0.4 && angle < 2.7) dirs.down = true;
+                if (angle > 2.2 || angle < -2.2) dirs.left = true;
+                if (angle > -2.7 && angle < -0.4) dirs.up = true;
+            }
+            return dirs;
+        };
+
+        const updateDpad = (touchId, dirs) => {
+            const prev = this.dpadTouches[touchId] || { up: false, down: false, left: false, right: false };
+            this.dpadTouches[touchId] = dirs;
+
+            // Compute combined state across all active dpad touches
+            const combined = { up: false, down: false, left: false, right: false };
+            for (let tid in this.dpadTouches) {
+                const d = this.dpadTouches[tid];
+                if (d.up) combined.up = true;
+                if (d.down) combined.down = true;
+                if (d.left) combined.left = true;
+                if (d.right) combined.right = true;
+            }
+
+            for (let dir in combined) {
+                const wasDown = this.pressed[dir];
+                if (combined[dir] && !wasDown) {
+                    this._fireKey(dir, true);
+                    if (dpadBtns[dir]) dpadBtns[dir].classList.add('pressed');
+                } else if (!combined[dir] && wasDown) {
+                    this._fireKey(dir, false);
+                    if (dpadBtns[dir]) dpadBtns[dir].classList.remove('pressed');
+                }
+            }
+        };
+
+        const releaseDpad = (touchId) => {
+            delete this.dpadTouches[touchId];
+            // Recompute combined
+            const combined = { up: false, down: false, left: false, right: false };
+            for (let tid in this.dpadTouches) {
+                const d = this.dpadTouches[tid];
+                if (d.up) combined.up = true;
+                if (d.down) combined.down = true;
+                if (d.left) combined.left = true;
+                if (d.right) combined.right = true;
+            }
+            for (let dir in combined) {
+                if (!combined[dir] && this.pressed[dir]) {
+                    this._fireKey(dir, false);
+                    if (dpadBtns[dir]) dpadBtns[dir].classList.remove('pressed');
+                }
+            }
+        };
+
+        zone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            for (let t = 0; t < e.changedTouches.length; t++) {
+                const touch = e.changedTouches[t];
+                const dirs = resolveDirection(touch.clientX, touch.clientY);
+                updateDpad(touch.identifier, dirs);
+            }
+        }, { passive: false });
+
+        zone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            for (let t = 0; t < e.changedTouches.length; t++) {
+                const touch = e.changedTouches[t];
+                if (this.dpadTouches[touch.identifier] !== undefined) {
+                    const dirs = resolveDirection(touch.clientX, touch.clientY);
+                    updateDpad(touch.identifier, dirs);
+                }
+            }
+        }, { passive: false });
+
+        zone.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            for (let t = 0; t < e.changedTouches.length; t++) {
+                releaseDpad(e.changedTouches[t].identifier);
+            }
+        }, { passive: false });
+
+        zone.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            for (let t = 0; t < e.changedTouches.length; t++) {
+                releaseDpad(e.changedTouches[t].identifier);
+            }
+        }, { passive: false });
+    },
+
+    _preventDefaults() {
+        // Prevent iOS rubber-banding, zoom, and context menus on the whole page
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('#vcontroller')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', (e) => { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gesturechange', (e) => { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gestureend', (e) => { e.preventDefault(); }, { passive: false });
+
+        // Prevent context menu on long-press
+        document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+
+        // Prevent double-tap zoom
+        let lastTap = 0;
+        document.addEventListener('touchstart', (e) => {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                e.preventDefault();
+            }
+            lastTap = now;
+        }, { passive: false });
+    },
+};
+
+// Initialize after DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => VController.init());
+} else {
+    VController.init();
+}
+
+// ---- PHASER CONFIG ----
+const config = {
+    type: Phaser.AUTO,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
+    backgroundColor: '#000000',
+    parent: 'game-container',
+    scene: [BootScene, TitleScene, CharSelectScene, GameScene, ResultsScene, GameOverScene],
+    render: {
+        pixelArt: true,
+        antialias: false,
+    },
+    scale: {
+        mode: Phaser.Scale.NONE,
+        parent: 'game-container',
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
+    },
+    input: {
+        keyboard: {
+            target: window,
+        },
+        touch: {
+            target: null,
+        },
+    },
+};
+
+const game = new Phaser.Game(config);
+
+// Reload on orientation change so canvas resizes properly
+let _initialW = window.innerWidth;
+let _initialH = window.innerHeight;
+function _checkResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    // Detect orientation flip (width/height swapped significantly)
+    const wasLandscape = _initialW > _initialH;
+    const isLandscape = w > h;
+    if (wasLandscape !== isLandscape) {
+        window.location.reload();
+    }
+}
+window.addEventListener('orientationchange', () => {
+    setTimeout(_checkResize, 200);
+});
+window.addEventListener('resize', () => {
+    // Debounced check — only reload on actual orientation flip
+    clearTimeout(window._resizeTimer);
+    window._resizeTimer = setTimeout(_checkResize, 300);
+});
+</script>
+</body>
+</html> 
