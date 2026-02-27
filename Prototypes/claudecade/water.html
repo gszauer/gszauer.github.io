@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Where's My Water</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #topBar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #infoBtn {
+            pointer-events: auto;
+            width: 36px;
+            height: 36px;
+            background: #FFB300;
+            color: #fff;
+            border: 3px solid #fff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #FF8F00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        #infoBtn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0px 0px 0 #FF8F00;
+        }
+
+        #scoreDisplay {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+            white-space: nowrap;
+            line-height: 36px;
+        }
+
+        #debugLabel {
+            pointer-events: auto;
+            height: 36px;
+            background: #455A64;
+            color: white;
+            padding: 0 10px;
+            border: 3px solid white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #263238;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        #debugLabel:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0px 0px 0 #263238;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 20;
+        }
+        #overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        button {
+            margin-top: 24px;
+            padding: 16px 32px;
+            font-size: 22px;
+            background: #03A9F4;
+            color: white;
+            border: 4px solid white;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 6px 6px 0 #0288D1;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        button:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0 #0288D1;
+        }
+        #infoBtn { margin-top: 0; }
+
+        #infoModal {
+            position: absolute;
+            top: 5%; left: 5%;
+            width: 90%; height: 90%;
+            background: rgba(17, 17, 17, 0.95);
+            border: 4px solid #03A9F4;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            z-index: 30;
+            display: none;
+            flex-direction: column;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        #infoModal.visible { display: flex; }
+        #infoModal h2 { margin-top: 0; color: #03A9F4; text-transform: uppercase; }
+        #infoModal h3 { color: #FFB300; margin-bottom: 5px; }
+        #infoModal p, #infoModal ul { margin-top: 5px; }
+        #closeModalBtn { margin-top: auto; align-self: flex-end; padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="topBar">
+        <button id="infoBtn">?</button>
+        <div id="scoreDisplay">Water: <span id="scoreVal">0</span> / <span id="reqVal">0</span></div>
+        <label id="debugLabel">
+            <input type="checkbox" id="debugToggle"> DEBUG
+        </label>
+    </div>
+
+    <div id="overlay">
+        <div id="message">LEVEL CLEAR</div>
+        <button id="restartBtn">REPLAY</button>
+    </div>
+
+    <div id="infoModal">
+        <h2>Physics Architecture Guide</h2>
+        <p>Spout-based level with dual water emitters.</p>
+        <h3>1. Spout System</h3>
+        <ul>
+            <li><strong>Emitters:</strong> Left and right wall spouts continuously spawn particles with directional velocity.</li>
+            <li><strong>Flow Rate:</strong> Configurable emission rate, capped by max particle count.</li>
+            <li><strong>Visuals:</strong> Pipe nozzles with valve wheels on the terrain layer.</li>
+        </ul>
+        <h3>2. Fluid Dynamics (SPH)</h3>
+        <ul>
+            <li><strong>Spatial Hashing:</strong> O(n) neighbor lookup for pressure/viscosity.</li>
+            <li><strong>Anti-Stacking Shear:</strong> Micro jitter prevents rigid vertical lattices.</li>
+        </ul>
+        <h3>3. Destructible Terrain</h3>
+        <ul>
+            <li><strong>Grid State:</strong> 2D Byte Array (0=Empty, 1=Dirt, 2=Rock).</li>
+            <li><strong>Carving:</strong> Interpolated circle stamps remove dirt on drag.</li>
+        </ul>
+        <button id="closeModalBtn">Close</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<script>
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const CANVAS_W = 360;
+const CANVAS_H = 640;
+const CELL_SIZE = 4;
+const COLS = Math.floor(CANVAS_W / CELL_SIZE); // 90
+const ROWS = Math.floor(CANVAS_H / CELL_SIZE); // 160
+
+const SUBSTEPS = 2;
+const GRAVITY = 0.4;
+const MAX_SPEED = 16;
+const MAX_PARTICLES = 700;
+
+const INTERACTION_RADIUS = 11;
+const INTERACTION_RADIUS_SQ = INTERACTION_RADIUS * INTERACTION_RADIUS;
+const PRESSURE_MULT = 1.2;
+const VISCOSITY_MULT = 0.15;
+const DAMPING = 0.999;
+const COLLISION_RADIUS = 3.0;
+
+const WATER_GRID = 2;
+const WATER_BLOCK_SIZE = 12;
+
+const EMPTY = 0;
+const DIRT = 1;
+const ROCK = 2;
+const CARVE_RADIUS = 22;
+
+const H_SIZE = INTERACTION_RADIUS;
+const H_COLS = Math.ceil(CANVAS_W / H_SIZE);
+const H_ROWS = Math.ceil(CANVAS_H / H_SIZE);
+
+// Intake pipe (bucket) at bottom center
+const PIPE = {
+    x: Math.floor((CANVAS_W / 2 - 30) / CELL_SIZE) * CELL_SIZE,
+    y: Math.floor((CANVAS_H - 72) / CELL_SIZE) * CELL_SIZE,
+    w: 60,
+    h: 56
+};
+
+// ============================================================
+// SPOUT CLASS
+// ============================================================
+class Spout {
+    constructor(x, y, vx, vy, rate) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.rate = rate;
+        this.accumulator = 0;
+        this.active = false; // Only emits when pressed
+        this.valveX = x - (vx > 0 ? 1 : -1) * 12; // Valve wheel center
+        this.valveY = y;
+        this.valveRadius = 18; // Hit area radius (generous for touch)
+    }
+
+    emit(particles) {
+        if (!this.active) return;
+        this.accumulator += this.rate;
+        while (this.accumulator >= 1 && particles.length < MAX_PARTICLES) {
+            this.accumulator -= 1;
+            particles.push({
+                x: this.x + (Math.random() - 0.5) * 2,
+                y: this.y + (Math.random() - 0.5) * 2,
+                vx: this.vx + (Math.random() - 0.5) * 0.3,
+                vy: this.vy + (Math.random() - 0.5) * 0.3,
+                inGoal: false,
+                hx: 0,
+                hy: 0
+            });
+        }
+    }
+
+    isValveHit(px, py) {
+        let dx = px - this.valveX;
+        let dy = py - this.valveY;
+        return (dx * dx + dy * dy) <= this.valveRadius * this.valveRadius;
+    }
+}
+
+// ============================================================
+// GAME SCENE
+// ============================================================
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super('GameScene');
+    }
+
+    init() {
+        this.particles = [];
+        this.debrisParticles = [];
+        this.grid = [];
+        this.spouts = [];
+        this.score = 0;
+        this.targetScore = 250;
+        this.gameState = 'PLAYING';
+        this.debugMode = false;
+        this.terrainDirty = true;
+        this.isDrawing = false;
+        this.lastMouse = { x: 0, y: 0 };
+        this.currentMouse = { x: -100, y: -100 };
+        this.spatialHash = [];
+        this.frameCount = 0;
+        this.fps = 0;
+        this.lastFpsTime = 0;
+        this.activeSpout = null;
+    }
+
+    create() {
+        for (let i = 0; i < H_COLS * H_ROWS; i++) {
+            this.spatialHash.push([]);
+        }
+
+        this.terrainGfx = this.add.graphics().setDepth(0);
+        this.waterGfx = this.add.graphics().setDepth(1);
+
+        this.fpsText = this.add.text(CANVAS_W - 8, CANVAS_H - 8, '0 FPS', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            fontStyle: 'bold',
+            color: '#00ff00',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            padding: { x: 4, y: 2 }
+        }).setOrigin(1, 1).setDepth(10);
+
+        this.buildLevel();
+
+        document.getElementById('scoreVal').innerText = this.score;
+        document.getElementById('reqVal').innerText = this.targetScore;
+        document.getElementById('overlay').classList.remove('visible');
+
+        document.getElementById('restartBtn').onclick = () => { this.scene.restart(); };
+        document.getElementById('infoBtn').onclick = () => { document.getElementById('infoModal').classList.add('visible'); };
+        document.getElementById('closeModalBtn').onclick = () => { document.getElementById('infoModal').classList.remove('visible'); };
+        document.getElementById('debugToggle').onchange = (e) => { this.debugMode = e.target.checked; };
+
+        let uiElements = document.querySelectorAll('#topBar, #overlay, #infoModal');
+        for (let i = 0; i < uiElements.length; i++) {
+            uiElements[i].addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: false });
+            uiElements[i].addEventListener('touchmove', (e) => { e.stopPropagation(); }, { passive: false });
+        }
+
+        this.input.on('pointerdown', this.onPointerDown, this);
+        this.input.on('pointermove', this.onPointerMove, this);
+        this.input.on('pointerup', this.onPointerUp, this);
+        this.input.on('pointerupoutside', this.onPointerUp, this);
+
+        this.drawTerrain();
+    }
+
+    // ----------------------------------------------------------
+    // LEVEL BUILDING — Matches the "Where's My Water?" screenshot
+    // ----------------------------------------------------------
+    buildLevel() {
+        // Initialize empty grid
+        for (let r = 0; r < ROWS; r++) {
+            this.grid[r] = new Uint8Array(COLS);
+        }
+
+        // Helper to fill a rect of cells
+        let fillRect = (r1, c1, r2, c2, type) => {
+            for (let r = r1; r < r2; r++) {
+                for (let c = c1; c < c2; c++) {
+                    if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                        this.grid[r][c] = type;
+                    }
+                }
+            }
+        };
+
+        // --- BORDER WALLS ---
+        fillRect(0, 0, 1, COLS, ROCK);           // Top
+        fillRect(0, 0, ROWS, 1, ROCK);           // Left
+        fillRect(0, COLS - 1, ROWS, COLS, ROCK);  // Right
+        fillRect(ROWS - 1, 0, ROWS, COLS, ROCK);  // Bottom
+
+        // === SPOUT POSITIONS ===
+        // Spouts sit at y ~185px (row 46) on pipes from the walls
+        let spoutRowCenter = 46;
+
+        // --- LEFT PIPE + LEDGE ---
+        // Horizontal pipe from left wall to spout
+        fillRect(spoutRowCenter - 1, 1, spoutRowCenter + 2, 18, ROCK);
+        // Ledge platform below spout
+        fillRect(spoutRowCenter + 2, 1, spoutRowCenter + 7, 22, ROCK);
+        // Small wall above pipe
+        fillRect(spoutRowCenter - 8, 1, spoutRowCenter - 1, 5, ROCK);
+
+        // --- RIGHT PIPE + LEDGE ---
+        fillRect(spoutRowCenter - 1, COLS - 18, spoutRowCenter + 2, COLS - 1, ROCK);
+        fillRect(spoutRowCenter + 2, COLS - 22, spoutRowCenter + 7, COLS - 1, ROCK);
+        fillRect(spoutRowCenter - 8, COLS - 5, spoutRowCenter - 1, COLS - 1, ROCK);
+
+        // === UPPER DIRT FORMATION (main arch to carve through) ===
+        let dirtTop = spoutRowCenter + 7;
+        let dirtMid = dirtTop + 28;
+
+        // Fill full dirt block
+        fillRect(dirtTop, 6, dirtMid, COLS - 6, DIRT);
+
+        // Carve arch shape out of top of dirt (V-shaped opening)
+        for (let r = dirtTop; r < dirtTop + 14; r++) {
+            let rowIdx = r - dirtTop;
+            let halfWidth = rowIdx * 2.5;
+            let center = COLS / 2;
+            for (let c = Math.floor(center - halfWidth); c <= Math.floor(center + halfWidth); c++) {
+                if (c >= 6 && c < COLS - 6) {
+                    this.grid[r][c] = EMPTY;
+                }
+            }
+        }
+
+        // === MIDDLE ROCK PLATFORMS (stepped ledges) ===
+        let midRow = dirtMid + 2;
+
+        // Left platform with step
+        fillRect(midRow, 1, midRow + 5, 28, ROCK);
+        fillRect(midRow - 5, 26, midRow, 28, ROCK); // riser
+
+        // Right platform with step
+        fillRect(midRow, COLS - 28, midRow + 5, COLS - 1, ROCK);
+        fillRect(midRow - 5, COLS - 28, midRow, COLS - 26, ROCK); // riser
+
+        // === LOWER DIRT MASS (fills from mid platforms down to pipe floor) ===
+        let floorRow = Math.floor(PIPE.y / CELL_SIZE) - 2;
+        let lowerDirtTop = midRow + 5;
+        let lowerDirtBottom = floorRow;
+        fillRect(lowerDirtTop, 2, lowerDirtBottom, COLS - 2, DIRT);
+
+        // === BOTTOM FLOOR (rock frame around pipe) ===
+        let pipeLeft = Math.floor(PIPE.x / CELL_SIZE) - 1;
+        let pipeRight = Math.floor((PIPE.x + PIPE.w) / CELL_SIZE) + 1;
+
+        for (let r = floorRow; r < ROWS - 1; r++) {
+            for (let c = 1; c < COLS - 1; c++) {
+                if (c >= pipeLeft && c <= pipeRight) continue;
+                this.grid[r][c] = ROCK;
+            }
+        }
+
+        // === CREATE SPOUT EMITTERS ===
+        let leftSpoutX = 18 * CELL_SIZE + 2;
+        let leftSpoutY = spoutRowCenter * CELL_SIZE;
+        this.spouts.push(new Spout(leftSpoutX, leftSpoutY, 5.5, -5.0, 1.5));
+
+        let rightSpoutX = (COLS - 18) * CELL_SIZE - 2;
+        let rightSpoutY = spoutRowCenter * CELL_SIZE;
+        this.spouts.push(new Spout(rightSpoutX, rightSpoutY, -5.5, -5.0, 1.5));
+
+        // === PRE-SPAWN WATER in the arch cutout ===
+        // Fill the triangular opening with water particles
+        for (let r = dirtTop; r < dirtTop + 14; r++) {
+            let rowIdx = r - dirtTop;
+            let halfWidth = rowIdx * 2.5;
+            let center = COLS / 2;
+            let cMin = Math.floor(center - halfWidth);
+            let cMax = Math.floor(center + halfWidth);
+            // Spawn particles in a grid pattern within the arch
+            for (let c = cMin; c <= cMax; c++) {
+                if (c >= 6 && c < COLS - 6) {
+                    let px = c * CELL_SIZE + CELL_SIZE / 2;
+                    let py = r * CELL_SIZE + CELL_SIZE / 2;
+                    // Space particles out to avoid oversaturation
+                    if (c % 2 === 0 && r % 2 === 0) {
+                        this.particles.push({
+                            x: px + (Math.random() - 0.5) * 2,
+                            y: py + (Math.random() - 0.5) * 2,
+                            vx: 0, vy: 0,
+                            inGoal: false, hx: 0, hy: 0
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // ----------------------------------------------------------
+    // INPUT
+    // ----------------------------------------------------------
+    onPointerDown(pointer) {
+        if (pointer.y < 55) return;
+
+        // Check if pressing a spout valve
+        for (let i = 0; i < this.spouts.length; i++) {
+            if (this.spouts[i].isValveHit(pointer.x, pointer.y)) {
+                this.spouts[i].active = true;
+                this.activeSpout = this.spouts[i];
+                return; // Don't carve when pressing a valve
+            }
+        }
+
+        this.isDrawing = true;
+        let pos = { x: pointer.x, y: pointer.y };
+        this.lastMouse = pos;
+        this.currentMouse = pos;
+        this.carveCircle(pos.x, pos.y);
+    }
+
+    onPointerMove(pointer) {
+        // If holding a spout valve, don't carve
+        if (this.activeSpout) return;
+
+        if (!this.isDrawing) return;
+        let pos = { x: pointer.x, y: pointer.y };
+        this.currentMouse = pos;
+
+        let dx = pos.x - this.lastMouse.x;
+        let dy = pos.y - this.lastMouse.y;
+        let dist = Math.hypot(dx, dy);
+        let steps = Math.max(1, Math.ceil(dist / (CELL_SIZE / 2)));
+
+        for (let i = 1; i <= steps; i++) {
+            this.carveCircle(
+                this.lastMouse.x + dx * (i / steps),
+                this.lastMouse.y + dy * (i / steps)
+            );
+        }
+        this.lastMouse = pos;
+    }
+
+    onPointerUp() {
+        this.isDrawing = false;
+        this.currentMouse = { x: -100, y: -100 };
+
+        // Release any active spout
+        if (this.activeSpout) {
+            this.activeSpout.active = false;
+            this.activeSpout = null;
+        }
+    }
+
+    // ----------------------------------------------------------
+    // CARVING
+    // ----------------------------------------------------------
+    carveCircle(cx, cy) {
+        let rSq = CARVE_RADIUS * CARVE_RADIUS;
+        let gxMin = Math.max(0, Math.floor((cx - CARVE_RADIUS) / CELL_SIZE));
+        let gxMax = Math.min(COLS - 1, Math.floor((cx + CARVE_RADIUS) / CELL_SIZE));
+        let gyMin = Math.max(0, Math.floor((cy - CARVE_RADIUS) / CELL_SIZE));
+        let gyMax = Math.min(ROWS - 1, Math.floor((cy + CARVE_RADIUS) / CELL_SIZE));
+
+        for (let y = gyMin; y <= gyMax; y++) {
+            for (let x = gxMin; x <= gxMax; x++) {
+                if (this.grid[y][x] === DIRT) {
+                    let cellCX = x * CELL_SIZE + CELL_SIZE / 2;
+                    let cellCY = y * CELL_SIZE + CELL_SIZE / 2;
+                    let distSq = (cellCX - cx) * (cellCX - cx) + (cellCY - cy) * (cellCY - cy);
+
+                    if (distSq <= rSq) {
+                        this.grid[y][x] = EMPTY;
+                        this.terrainDirty = true;
+
+                        if (Math.random() < 0.15) {
+                            this.debrisParticles.push({
+                                x: cellCX, y: cellCY,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 1.0) * 4,
+                                size: 3, life: 1.0
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ----------------------------------------------------------
+    // PHYSICS
+    // ----------------------------------------------------------
+    collideGrid(p) {
+        let gx = (p.x / CELL_SIZE) | 0;
+        let gy = (p.y / CELL_SIZE) | 0;
+
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                let cx = gx + dx;
+                let cy = gy + dy;
+                if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) continue;
+                if (this.grid[cy][cx] === EMPTY) continue;
+
+                let boxL = cx * CELL_SIZE;
+                let boxR = boxL + CELL_SIZE;
+                let boxT = cy * CELL_SIZE;
+                let boxB = boxT + CELL_SIZE;
+
+                let closeX = Math.max(boxL, Math.min(p.x, boxR));
+                let closeY = Math.max(boxT, Math.min(p.y, boxB));
+                let distX = p.x - closeX;
+                let distY = p.y - closeY;
+                let distSq = distX * distX + distY * distY;
+
+                if (distSq < COLLISION_RADIUS * COLLISION_RADIUS) {
+                    let nx, ny, push;
+
+                    if (distSq === 0) {
+                        let dL = Math.abs(p.x - boxL);
+                        let dR = Math.abs(p.x - boxR);
+                        let dT = Math.abs(p.y - boxT);
+                        let dB = Math.abs(p.y - boxB);
+                        let minD = Math.min(dL, dR, dT, dB);
+                        if (minD === dL) { nx = -1; ny = 0; push = COLLISION_RADIUS + minD; }
+                        else if (minD === dR) { nx = 1; ny = 0; push = COLLISION_RADIUS + minD; }
+                        else if (minD === dT) { nx = 0; ny = -1; push = COLLISION_RADIUS + minD; }
+                        else { nx = 0; ny = 1; push = COLLISION_RADIUS + minD; }
+                    } else {
+                        let dist = Math.sqrt(distSq);
+                        push = COLLISION_RADIUS - dist;
+                        nx = distX / dist;
+                        ny = distY / dist;
+                    }
+
+                    p.x += nx * push;
+                    p.y += ny * push;
+                    let dot = p.vx * nx + p.vy * ny;
+                    if (dot < 0) {
+                        p.vx -= nx * dot;
+                        p.vy -= ny * dot;
+                    }
+                }
+            }
+        }
+    }
+
+    updatePhysics(dt) {
+        for (let i = 0; i < this.spatialHash.length; i++) {
+            this.spatialHash[i].length = 0;
+        }
+
+        for (let i = 0; i < this.particles.length; i++) {
+            let p = this.particles[i];
+            if (p.inGoal) continue;
+            let hx = Math.max(0, Math.min(H_COLS - 1, (p.x / H_SIZE) | 0));
+            let hy = Math.max(0, Math.min(H_ROWS - 1, (p.y / H_SIZE) | 0));
+            this.spatialHash[hy * H_COLS + hx].push(i);
+            p.hx = hx;
+            p.hy = hy;
+        }
+
+        for (let i = 0; i < this.particles.length; i++) {
+            let p1 = this.particles[i];
+            if (p1.inGoal) continue;
+
+            for (let oy = -1; oy <= 1; oy++) {
+                for (let ox = -1; ox <= 1; ox++) {
+                    let hx = p1.hx + ox;
+                    let hy = p1.hy + oy;
+                    if (hx < 0 || hx >= H_COLS || hy < 0 || hy >= H_ROWS) continue;
+
+                    let cell = this.spatialHash[hy * H_COLS + hx];
+                    for (let j = 0; j < cell.length; j++) {
+                        let idx2 = cell[j];
+                        if (i >= idx2) continue;
+
+                        let p2 = this.particles[idx2];
+                        let dx = p1.x - p2.x;
+                        let dy = p1.y - p2.y;
+
+                        if (Math.abs(dx) < 0.1 && dy > 0 && Math.abs(dy) < INTERACTION_RADIUS) {
+                            dx += (Math.random() - 0.5) * 0.5;
+                        }
+
+                        let distSq = dx * dx + dy * dy;
+                        if (distSq < INTERACTION_RADIUS_SQ && distSq > 0.0001) {
+                            let dist = Math.sqrt(distSq);
+                            let nx = dx / dist;
+                            let ny = dy / dist;
+                            let overlap = 1 - (dist / INTERACTION_RADIUS);
+
+                            let pressure = overlap * overlap * PRESSURE_MULT;
+                            let visc = overlap * VISCOSITY_MULT;
+                            let rVx = p1.vx - p2.vx;
+                            let rVy = p1.vy - p2.vy;
+
+                            let fx = (nx * pressure) - (rVx * visc);
+                            let fy = (ny * pressure) - (rVy * visc);
+
+                            p1.vx += fx; p1.vy += fy;
+                            p2.vx -= fx; p2.vy -= fy;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < this.particles.length; i++) {
+            let p = this.particles[i];
+            if (p.inGoal) continue;
+
+            p.vy += GRAVITY * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vx *= Math.pow(DAMPING, dt);
+            p.vy *= Math.pow(DAMPING, dt);
+
+            let speedSq = p.vx * p.vx + p.vy * p.vy;
+            if (speedSq > MAX_SPEED * MAX_SPEED) {
+                let speed = Math.sqrt(speedSq);
+                p.vx = (p.vx / speed) * MAX_SPEED;
+                p.vy = (p.vy / speed) * MAX_SPEED;
+            }
+
+            this.collideGrid(p);
+
+            if (p.x > PIPE.x + 6 && p.x < PIPE.x + PIPE.w - 6 &&
+                p.y > PIPE.y && p.y < PIPE.y + 20) {
+                p.inGoal = true;
+                this.score++;
+                document.getElementById('scoreVal').innerText = this.score;
+
+                if (this.score >= this.targetScore && this.gameState === 'PLAYING') {
+                    this.gameState = 'WON';
+                    this.terrainDirty = true;
+                    document.getElementById('overlay').classList.add('visible');
+                }
+            }
+        }
+
+        for (let i = this.debrisParticles.length - 1; i >= 0; i--) {
+            let p = this.debrisParticles[i];
+            p.vy += GRAVITY * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt * 0.04;
+            if (p.life <= 0) this.debrisParticles.splice(i, 1);
+        }
+    }
+
+    // ----------------------------------------------------------
+    // RENDERING
+    // ----------------------------------------------------------
+    drawTerrain() {
+        let gfx = this.terrainGfx;
+        gfx.clear();
+
+        // Background — dark teal sewer
+        gfx.fillStyle(0x1a2a2a);
+        gfx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+        // Subtle brick pattern
+        gfx.fillStyle(0x1e3030);
+        for (let by = 0; by < CANVAS_H; by += 16) {
+            let offset = ((by / 16) % 2 === 0) ? 0 : 8;
+            for (let bx = offset; bx < CANVAS_W; bx += 16) {
+                gfx.fillRect(bx, by, 15, 15);
+            }
+        }
+
+        // Dirt
+        gfx.fillStyle(0x8D6E4C);
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c] === DIRT) {
+                    gfx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+        // Dirt surface highlight
+        gfx.fillStyle(0xA0826A);
+        for (let r = 1; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c] === DIRT && this.grid[r - 1][c] === EMPTY) {
+                    gfx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+
+        // Rock — purple-gray sewer stone
+        gfx.fillStyle(0x5C4A6B);
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c] === ROCK) {
+                    gfx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+        // Rock top-edge highlight
+        gfx.fillStyle(0x7A6A8A);
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c] === ROCK && (r === 0 || this.grid[r - 1][c] !== ROCK)) {
+                    gfx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+
+        // Pipe/bucket
+        let pipeColor = this.gameState === 'WON' ? 0x76FF03 : 0x4CAF50;
+        gfx.fillStyle(pipeColor);
+        gfx.fillRect(PIPE.x, PIPE.y, PIPE.w, PIPE.h);
+        gfx.fillStyle(0x2E7D32);
+        gfx.fillRect(PIPE.x + 6, PIPE.y + 6, PIPE.w - 12, PIPE.h);
+
+        // Pipe rim
+        gfx.fillStyle(0x66BB6A);
+        gfx.fillRect(PIPE.x - 4, PIPE.y, PIPE.w + 8, 6);
+
+        // Drain pipe below
+        gfx.fillStyle(0x5C4A6B);
+        gfx.fillRect(PIPE.x + PIPE.w / 2 - 3, PIPE.y + PIPE.h, 6, 16);
+
+        this.terrainDirty = false;
+    }
+
+    drawWater() {
+        let gfx = this.waterGfx;
+        gfx.clear();
+
+        // Spout nozzles and valve wheels (drawn on water layer for per-frame active state)
+        for (let s = 0; s < this.spouts.length; s++) {
+            let sp = this.spouts[s];
+
+            // Compute stream angle in screen coords (Y-down)
+            let angle = Math.atan2(sp.vy, sp.vx);
+            let cosA = Math.cos(angle);
+            let sinA = Math.sin(angle);
+
+            // Nozzle anchored at valve, extending toward emission point
+            let nozLen = 16;
+            let nozHalf = 3;
+            let ox = sp.valveX;
+            let oy = sp.valveY;
+
+            // Standard 2D rotation: x' = dx*cos - dy*sin, y' = dx*sin + dy*cos
+            // Rectangle from (0, -half) to (len, +half), rotated around origin then translated
+            let corners = [
+                [0, -nozHalf],
+                [nozLen, -nozHalf],
+                [nozLen, nozHalf],
+                [0, nozHalf]
+            ];
+            let points = [];
+            for (let i = 0; i < 4; i++) {
+                let dx = corners[i][0];
+                let dy = corners[i][1];
+                points.push({
+                    x: ox + dx * cosA - dy * sinA,
+                    y: oy + dx * sinA + dy * cosA
+                });
+            }
+
+            gfx.fillStyle(sp.active ? 0x80DEEA : 0x4DB6AC);
+            gfx.beginPath();
+            gfx.moveTo(points[0].x, points[0].y);
+            gfx.lineTo(points[1].x, points[1].y);
+            gfx.lineTo(points[2].x, points[2].y);
+            gfx.lineTo(points[3].x, points[3].y);
+            gfx.closePath();
+            gfx.fillPath();
+
+            // Pipe connector (horizontal behind valve)
+            gfx.fillStyle(0x455A64);
+            gfx.fillRect(sp.valveX - 5, sp.valveY - 2, 10, 4);
+
+            // Valve wheel — brighter when active
+            gfx.fillStyle(sp.active ? 0xE0F7FA : 0x80CBC4);
+            gfx.fillCircle(sp.valveX, sp.valveY, sp.active ? 9 : 7);
+            gfx.fillStyle(sp.active ? 0x00BCD4 : 0x5C4A6B);
+            gfx.fillCircle(sp.valveX, sp.valveY, 3);
+
+            // Active glow ring
+            if (sp.active) {
+                gfx.lineStyle(2, 0x00E5FF, 0.6);
+                gfx.strokeCircle(sp.valveX, sp.valveY, 14);
+            }
+        }
+
+        // Carving cursor
+        if (this.currentMouse.x !== -100 && !this.debugMode) {
+            gfx.fillStyle(0xffffff, 0.2);
+            for (let y = -CARVE_RADIUS; y <= CARVE_RADIUS; y += CELL_SIZE) {
+                for (let x = -CARVE_RADIUS; x <= CARVE_RADIUS; x += CELL_SIZE) {
+                    if (x * x + y * y <= CARVE_RADIUS * CARVE_RADIUS) {
+                        let drawX = Math.floor((this.currentMouse.x + x) / CELL_SIZE) * CELL_SIZE;
+                        let drawY = Math.floor((this.currentMouse.y + y) / CELL_SIZE) * CELL_SIZE;
+                        gfx.fillRect(drawX, drawY, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+        }
+
+        // Water particles
+        if (this.debugMode) {
+            gfx.fillStyle(0xFF1744);
+            for (let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+                if (!p.inGoal) {
+                    gfx.fillCircle(p.x, p.y, COLLISION_RADIUS);
+                }
+            }
+        } else {
+            gfx.fillStyle(0x29B6F6);
+            for (let i = 0; i < this.particles.length; i++) {
+                let p = this.particles[i];
+                if (!p.inGoal) {
+                    let px = (p.x / WATER_GRID | 0) * WATER_GRID;
+                    let py = (p.y / WATER_GRID | 0) * WATER_GRID;
+                    gfx.fillRect(
+                        px - WATER_BLOCK_SIZE / 2,
+                        py - WATER_BLOCK_SIZE / 2,
+                        WATER_BLOCK_SIZE,
+                        WATER_BLOCK_SIZE
+                    );
+                }
+            }
+        }
+
+        // Pipe fill
+        if (this.score > 0) {
+            let fillPct = Math.min(1.0, this.score / this.targetScore);
+            let rawHeight = fillPct * (PIPE.h - 6);
+            let fillHeight = Math.floor(rawHeight / WATER_GRID) * WATER_GRID;
+            gfx.fillStyle(0x29B6F6);
+            gfx.fillRect(PIPE.x + 6, PIPE.y + PIPE.h - fillHeight, PIPE.w - 12, fillHeight);
+        }
+
+        // Debris
+        for (let i = 0; i < this.debrisParticles.length; i++) {
+            let p = this.debrisParticles[i];
+            gfx.fillStyle(0x8D6E4C, p.life);
+            let px = (p.x / WATER_GRID | 0) * WATER_GRID;
+            let py = (p.y / WATER_GRID | 0) * WATER_GRID;
+            gfx.fillRect(px, py, p.size, p.size);
+        }
+    }
+
+    // ----------------------------------------------------------
+    // MAIN UPDATE LOOP
+    // ----------------------------------------------------------
+    update(time, delta) {
+        this.frameCount++;
+        if (time - this.lastFpsTime >= 1000) {
+            this.fps = this.frameCount;
+            this.frameCount = 0;
+            this.lastFpsTime = time;
+            this.fpsText.setText(this.fps + ' FPS');
+        }
+
+        // Emit from spouts while playing
+        if (this.gameState === 'PLAYING') {
+            for (let i = 0; i < this.spouts.length; i++) {
+                this.spouts[i].emit(this.particles);
+            }
+        }
+
+        for (let step = 0; step < SUBSTEPS; step++) {
+            this.updatePhysics(1.0 / SUBSTEPS);
+        }
+
+        if (this.terrainDirty) {
+            this.drawTerrain();
+        }
+        this.drawWater();
+    }
+}
+
+// ============================================================
+// PHASER CONFIG
+// ============================================================
+const config = {
+    type: Phaser.AUTO,
+    width: CANVAS_W,
+    height: CANVAS_H,
+    parent: 'gameContainer',
+    backgroundColor: '#1a2a2a',
+    pixelArt: true,
+    input: {
+        touch: true,
+        activePointers: 1
+    },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    scene: [GameScene]
+};
+
+const game = new Phaser.Game(config);
+
+</script>
+</body>
+</html> 
