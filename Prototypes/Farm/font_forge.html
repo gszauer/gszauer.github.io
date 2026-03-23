@@ -1,0 +1,2639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Font Forge</title>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0a0c;
+    --surface: #141418;
+    --surface2: #1c1c22;
+    --surface3: #24242c;
+    --border: #2a2a34;
+    --border-hi: #3a3a48;
+    --text: #e8e8ef;
+    --text-dim: #8888a0;
+    --accent: #e04030;
+    --accent-glow: #ff5040;
+    --accent2: #30a8e0;
+    --accent2-glow: #40c0ff;
+    --pixel-on: #e8e8ef;
+    --pixel-off: #18181e;
+    --grid-line: #2a2a34;
+    --baseline: #e0403080;
+    --canvas-bg: #0e0e12;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .header-actions { display: flex; gap: 8px; }
+
+  .btn {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn:hover {
+    background: var(--surface3);
+    border-color: var(--border-hi);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .btn-accent:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent-glow);
+  }
+
+  .btn-blue {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .btn-blue:hover {
+    background: var(--accent2-glow);
+    border-color: var(--accent2-glow);
+  }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  .panel-section-title {
+    padding: 10px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ascii-grid-wrap {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ascii-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 2px;
+  }
+
+  .ascii-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: 1px solid transparent;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: relative;
+  }
+
+  .ascii-cell:hover {
+    background: var(--surface3);
+    border-color: var(--border-hi);
+  }
+
+  .ascii-cell.selected {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent-glow);
+    font-weight: 700;
+  }
+
+  .ascii-cell.has-glyph::after {
+    content: '';
+    position: absolute;
+    bottom: 1px; right: 1px;
+    width: 4px; height: 4px;
+    background: var(--accent2);
+    border-radius: 50%;
+  }
+
+  .ascii-cell.selected.has-glyph::after { background: #fff; }
+
+  .panel-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .toolbar-group { display: flex; align-items: center; gap: 6px; }
+
+  .toolbar-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .toolbar-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 8px;
+    width: 50px;
+    text-align: center;
+  }
+
+  .toolbar-input:focus { outline: none; border-color: var(--accent); }
+
+  .char-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 100px;
+  }
+
+  .editor-canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--canvas-bg);
+    overflow: hidden;
+    position: relative;
+  }
+
+  #editorCanvas { image-rendering: pixelated; cursor: crosshair; }
+
+  .panel-right {
+    width: 340px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .settings-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .settings-row:last-child { margin-bottom: 0; }
+
+  .settings-label { font-size: 11px; color: var(--text-dim); }
+
+  .settings-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 8px;
+    width: 80px;
+    text-align: center;
+  }
+
+  .settings-input.wide { width: 160px; text-align: left; }
+  .settings-input:focus { outline: none; border-color: var(--accent); }
+
+  .settings-row-with-btn { display: flex; align-items: center; gap: 6px; }
+
+  .preview-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .preview-input-wrap {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .preview-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px;
+    resize: none;
+    height: 60px;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .preview-textarea:focus { outline: none; border-color: var(--accent); }
+
+  .preview-canvas-wrap {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    background: var(--canvas-bg);
+  }
+
+  #previewCanvas { image-rendering: pixelated; }
+
+  .preview-size-wrap {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .preview-size-wrap .toolbar-label { flex-shrink: 0; }
+  .preview-size-range { flex: 1; accent-color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+  .glyph-nav-buttons { display: flex; gap: 4px; }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+  .editor-hint {
+    position: absolute;
+    bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--text-dim);
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+
+  /* Small confirm modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.visible { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+
+  .modal-body {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Sprite Sheet Importer Modal */
+  .ss-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    z-index: 900;
+    flex-direction: column;
+  }
+
+  .ss-overlay.visible { display: flex; }
+
+  .ss-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .ss-header-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    flex-shrink: 0;
+  }
+
+  .ss-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  .ss-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .ss-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .ss-canvas-wrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: var(--canvas-bg);
+    cursor: grab;
+  }
+
+  .ss-canvas-wrap.drawing { cursor: crosshair; }
+  .ss-canvas-wrap.panning { cursor: grabbing; }
+
+  #ssCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    image-rendering: pixelated;
+  }
+
+  .ss-sidebar {
+    width: 300px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .ss-selections-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .ss-sel-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: var(--surface2);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.1s;
+  }
+
+  .ss-sel-item:hover {
+    background: var(--surface3);
+    border-color: var(--border-hi);
+  }
+
+  .ss-sel-item.active {
+    border-color: var(--accent2);
+    background: var(--surface3);
+  }
+
+  .ss-sel-color {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .ss-sel-info { flex: 1; color: var(--text-dim); }
+
+  .ss-sel-char {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .ss-sel-actions { display: flex; gap: 4px; }
+
+  .ss-sel-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 10px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+
+  .ss-sel-btn:hover { color: var(--text); border-color: var(--border-hi); }
+  .ss-sel-btn.delete:hover { color: var(--accent); border-color: var(--accent); }
+
+  .ss-ascii-section {
+    border-top: 1px solid var(--border);
+    max-height: 180px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .ss-ascii-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 1px;
+    padding: 6px;
+  }
+
+  .ss-ascii-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: 1px solid transparent;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .ss-ascii-cell:hover {
+    background: var(--surface3);
+    border-color: var(--border-hi);
+  }
+
+  .ss-ascii-cell.assigned {
+    background: var(--accent2);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .ss-hint {
+    padding: 8px 14px;
+    font-size: 10px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    letter-spacing: 0.3px;
+    line-height: 1.5;
+  }
+
+  .ss-mode-btn.active {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+  }
+
+  input[type="text"], input[type="number"], textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+</style>
+</head>
+<body>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Are you sure?</div>
+    <div class="modal-body" id="modalBody">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn" id="modalCancel">Cancel</button>
+      <button class="btn btn-accent" id="modalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Mode Choice Modal -->
+<div class="modal-overlay" id="importModeOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Import Mode</div>
+    <div class="modal-body">How should the selections be applied to glyphs?</div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+      <button class="btn btn-blue" id="importModeResize" style="text-align:left; padding:10px 14px;">
+        <div style="font-weight:700; margin-bottom:2px;">Use selection size</div>
+        <div style="font-size:10px; color:rgba(255,255,255,0.7);">Each glyph is resized to match its selection's width and height</div>
+      </button>
+      <button class="btn" id="importModeStamp" style="text-align:left; padding:10px 14px;">
+        <div style="font-weight:700; margin-bottom:2px;">Stamp into existing</div>
+        <div style="font-size:10px; color:var(--text-dim);">Each selection is stamped into the glyph's current size (top-left aligned, clipped)</div>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="importModeCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sprite Sheet Importer Modal -->
+<div class="ss-overlay" id="ssOverlay">
+  <div class="ss-header">
+    <div class="ss-header-title">Sprite Sheet Import</div>
+    <div class="ss-toolbar">
+      <div class="toolbar-group">
+        <button class="btn btn-sm ss-mode-btn active" id="ssModeSelect" data-mode="select">Select</button>
+        <button class="btn btn-sm ss-mode-btn" id="ssModeDraw" data-mode="draw">Draw</button>
+      </div>
+      <div class="toolbar-group">
+        <span class="toolbar-label">Slice W</span>
+        <input type="number" class="toolbar-input" id="ssSliceW" min="1" max="256" value="8">
+      </div>
+      <div class="toolbar-group">
+        <span class="toolbar-label">H</span>
+        <input type="number" class="toolbar-input" id="ssSliceH" min="1" max="256" value="16">
+      </div>
+      <button class="btn btn-sm btn-blue" id="ssBtnSlice">Slice</button>
+      <button class="btn btn-sm" id="ssBtnClearAll">Clear All</button>
+    </div>
+    <div class="ss-header-actions">
+      <button class="btn" id="ssBtnCancel">Cancel</button>
+      <button class="btn btn-accent" id="ssBtnAccept">Accept</button>
+    </div>
+  </div>
+  <div class="ss-body">
+    <div class="ss-canvas-wrap" id="ssCanvasWrap">
+      <canvas id="ssCanvas"></canvas>
+    </div>
+    <div class="ss-sidebar">
+      <div class="panel-section-title">Selections</div>
+      <div class="ss-selections-list" id="ssSelectionsList"></div>
+      <div class="ss-hint">Select a selection, then click an ASCII cell below to assign it</div>
+      <div class="panel-section-title">Assign to Character</div>
+      <div class="ss-ascii-section">
+        <div class="ss-ascii-grid" id="ssAsciiGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">Pixel Font Forge</div>
+  <div class="header-actions">
+    <button class="btn" id="btnSpriteSheet">Sprite Sheet</button>
+    <input type="file" id="fileSpriteSheet" accept="image/png,image/*" style="display:none">
+    <button class="btn" id="btnSaveJson">Save JSON</button>
+    <button class="btn" id="btnLoadJson">Load JSON</button>
+    <button class="btn btn-accent" id="btnExportOtf">Export OTF</button>
+    <button class="btn btn-accent" id="btnExportTtf">Export TTF</button>
+    <input type="file" id="fileLoadJson" accept=".json" style="display:none">
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel-center">
+    <div class="editor-toolbar">
+      <div class="char-label" id="charLabel">A (65)</div>
+      <div class="toolbar-group">
+        <span class="toolbar-label">Width</span>
+        <input type="number" class="toolbar-input" id="glyphWidth" min="1" max="64" value="8">
+      </div>
+      <div class="toolbar-group">
+        <button class="btn btn-sm" id="btnImportPng">Import PNG</button>
+        <input type="file" id="fileImportPng" accept="image/png,image/*" style="display:none">
+      </div>
+      <div class="toolbar-group">
+        <button class="btn btn-sm" id="btnClearGlyph">Clear</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="btn btn-sm" id="btnShiftL">←</button>
+        <button class="btn btn-sm" id="btnShiftR">→</button>
+        <button class="btn btn-sm" id="btnShiftU">↑</button>
+        <button class="btn btn-sm" id="btnShiftD">↓</button>
+      </div>
+      <div class="glyph-nav-buttons" style="margin-left:auto;">
+        <button class="btn btn-sm" id="btnPrevGlyph">◀ Prev</button>
+        <button class="btn btn-sm" id="btnNextGlyph">Next ▶</button>
+      </div>
+    </div>
+    <div class="editor-canvas-wrap">
+      <canvas id="editorCanvas"></canvas>
+      <div class="editor-hint">Left-click to draw · Right-click to erase</div>
+    </div>
+  </div>
+
+  <div class="panel-right">
+    <div class="panel-section-title">Font Settings</div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">Font Name</span>
+        <input type="text" class="settings-input wide" id="fontName" value="MyPixelFont">
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Grid Height</span>
+        <input type="number" class="settings-input" id="gridHeight" min="4" max="64" value="16">
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Baseline Row</span>
+        <input type="number" class="settings-input" id="baselineRow" min="1" max="63" value="12">
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Line Gap</span>
+        <input type="number" class="settings-input" id="lineGap" min="0" max="32" value="2">
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">All Widths</span>
+        <div class="settings-row-with-btn">
+          <button class="btn btn-sm" id="btnSetAllWidths">Set</button>
+          <input type="number" class="settings-input" id="setAllWidths" min="1" max="64" value="8">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-title">ASCII Characters</div>
+    <div class="ascii-grid-wrap">
+      <div class="ascii-grid" id="asciiGrid"></div>
+    </div>
+
+    <div class="panel-section-title">Preview</div>
+    <div class="preview-section">
+      <div class="preview-input-wrap">
+        <textarea class="preview-textarea" id="previewText">The quick brown fox jumps over the lazy dog. 0123456789</textarea>
+      </div>
+      <div class="preview-canvas-wrap">
+        <canvas id="previewCanvas"></canvas>
+      </div>
+      <div class="preview-size-wrap">
+        <span class="toolbar-label">Scale</span>
+        <input type="range" class="preview-size-range" id="previewScale" min="1" max="8" value="3">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+class GlyphData {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.pixels = [];
+    for (let y = 0; y < height; y++) {
+      this.pixels.push(new Uint8Array(width));
+    }
+  }
+
+  getPixel(x, y) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
+    return this.pixels[y][x];
+  }
+
+  setPixel(x, y, val) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
+    this.pixels[y][x] = val ? 1 : 0;
+  }
+
+  clear() {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.pixels[y][x] = 0;
+      }
+    }
+  }
+
+  resize(newWidth, newHeight) {
+    const newPixels = [];
+    for (let y = 0; y < newHeight; y++) {
+      const row = new Uint8Array(newWidth);
+      for (let x = 0; x < Math.min(newWidth, this.width); x++) {
+        if (y < this.height) {
+          row[x] = this.pixels[y][x];
+        }
+      }
+      newPixels.push(row);
+    }
+    this.width = newWidth;
+    this.height = newHeight;
+    this.pixels = newPixels;
+  }
+
+  shift(dx, dy) {
+    const copy = [];
+    for (let y = 0; y < this.height; y++) {
+      copy.push(new Uint8Array(this.width));
+      for (let x = 0; x < this.width; x++) {
+        copy[y][x] = this.getPixel(x - dx, y - dy);
+      }
+    }
+    this.pixels = copy;
+  }
+
+  hasAnyPixel() {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (this.pixels[y][x]) return true;
+      }
+    }
+    return false;
+  }
+
+  toJSON() {
+    const rows = [];
+    for (let y = 0; y < this.height; y++) {
+      rows.push(Array.from(this.pixels[y]));
+    }
+    return { width: this.width, height: this.height, pixels: rows };
+  }
+
+  static fromJSON(obj) {
+    const g = new GlyphData(obj.width, obj.height);
+    for (let y = 0; y < obj.height; y++) {
+      for (let x = 0; x < obj.width; x++) {
+        g.pixels[y][x] = obj.pixels[y][x];
+      }
+    }
+    return g;
+  }
+}
+
+
+class ModalDialog {
+  constructor() {
+    this.overlay = document.getElementById('modalOverlay');
+    this.titleEl = document.getElementById('modalTitle');
+    this.bodyEl = document.getElementById('modalBody');
+    this.confirmBtn = document.getElementById('modalConfirm');
+    this.cancelBtn = document.getElementById('modalCancel');
+    this.resolveCallback = null;
+
+    this.cancelBtn.addEventListener('click', () => this.close(false));
+    this.confirmBtn.addEventListener('click', () => this.close(true));
+    this.overlay.addEventListener('click', (e) => {
+      if (e.target === this.overlay) this.close(false);
+    });
+  }
+
+  show(title, body) {
+    this.titleEl.textContent = title;
+    this.bodyEl.textContent = body;
+    this.overlay.classList.add('visible');
+    return new Promise((resolve) => {
+      this.resolveCallback = resolve;
+    });
+  }
+
+  close(result) {
+    this.overlay.classList.remove('visible');
+    if (this.resolveCallback) {
+      this.resolveCallback(result);
+      this.resolveCallback = null;
+    }
+  }
+}
+
+
+// ─── Sprite Sheet Importer ───────────────────────────────────────────
+
+class SpriteSheetImporter {
+  constructor(onAccept) {
+    this.onAccept = onAccept;
+    this.image = null;
+    this.imageData = null;
+
+    // Pan / zoom state
+    this.panX = 0;
+    this.panY = 0;
+    this.zoomLevel = 4;
+
+    // Interaction mode
+    this.mode = 'select'; // 'select' or 'draw'
+
+    // Selections: array of { x, y, w, h, charCode, color }
+    this.selections = [];
+    this.activeSelIdx = -1;
+
+    // Drawing state
+    this.drawing = false;
+    this.drawStart = null;
+    this.drawCurrent = null;
+
+    // Panning state
+    this.panning = false;
+    this.panStart = null;
+
+    // Color palette for selections
+    this.colors = [
+      '#ff6b6b','#ffa94d','#ffd43b','#69db7c','#38d9a9',
+      '#4dabf7','#748ffc','#da77f2','#f783ac','#a9e34b',
+      '#66d9e8','#e599f7','#ff8787','#74c0fc','#8ce99a',
+    ];
+    this.colorIdx = 0;
+
+    this.cacheElements();
+    this.buildAsciiGrid();
+    this.bindEvents();
+  }
+
+  cacheElements() {
+    this.overlay = document.getElementById('ssOverlay');
+    this.canvas = document.getElementById('ssCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.canvasWrap = document.getElementById('ssCanvasWrap');
+    this.selectionsList = document.getElementById('ssSelectionsList');
+    this.asciiGrid = document.getElementById('ssAsciiGrid');
+    this.sliceWInput = document.getElementById('ssSliceW');
+    this.sliceHInput = document.getElementById('ssSliceH');
+  }
+
+  buildAsciiGrid() {
+    this.ssAsciiCells = [];
+    for (let i = 0; i < 256; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'ss-ascii-cell';
+      cell.dataset.code = i;
+      if (i >= 32 && i <= 126) {
+        cell.textContent = String.fromCharCode(i);
+      } else {
+        cell.textContent = i.toString(16).toUpperCase().padStart(2, '0');
+        cell.style.fontSize = '8px';
+        cell.style.color = 'var(--text-dim)';
+      }
+      this.asciiGrid.appendChild(cell);
+      this.ssAsciiCells.push(cell);
+    }
+  }
+
+  nextColor() {
+    const c = this.colors[this.colorIdx % this.colors.length];
+    this.colorIdx++;
+    return c;
+  }
+
+  open(imageFile) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        this.image = img;
+        this.selections = [];
+        this.activeSelIdx = -1;
+        this.colorIdx = 0;
+
+        // Read image pixel data
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = img.width;
+        offCanvas.height = img.height;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(img, 0, 0);
+        this.imageData = offCtx.getImageData(0, 0, img.width, img.height);
+
+        // Fit image in view
+        const wrapRect = this.canvasWrap.getBoundingClientRect();
+        const fitZoom = Math.min(wrapRect.width / img.width, wrapRect.height / img.height);
+        this.zoomLevel = Math.max(1, Math.floor(fitZoom));
+        this.panX = 0;
+        this.panY = 0;
+
+        this.overlay.classList.add('visible');
+        this.setMode('select');
+        this.render();
+        this.updateSelectionsList();
+        this.updateAsciiIndicators();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(imageFile);
+  }
+
+  close() {
+    this.overlay.classList.remove('visible');
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+    const selectBtn = document.getElementById('ssModeSelect');
+    const drawBtn = document.getElementById('ssModeDraw');
+    selectBtn.classList.toggle('active', mode === 'select');
+    drawBtn.classList.toggle('active', mode === 'draw');
+    this.canvasWrap.classList.toggle('drawing', mode === 'draw');
+  }
+
+  // Convert screen coords to image pixel coords
+  screenToImage(clientX, clientY) {
+    const rect = this.canvasWrap.getBoundingClientRect();
+    const sx = clientX - rect.left;
+    const sy = clientY - rect.top;
+    const ix = Math.floor((sx - this.panX) / this.zoomLevel);
+    const iy = Math.floor((sy - this.panY) / this.zoomLevel);
+    return { x: ix, y: iy };
+  }
+
+  render() {
+    if (!this.image) return;
+
+    const wrapRect = this.canvasWrap.getBoundingClientRect();
+    this.canvas.width = wrapRect.width;
+    this.canvas.height = wrapRect.height;
+
+    const ctx = this.ctx;
+    ctx.imageSmoothingEnabled = false;
+
+    // Clear
+    ctx.fillStyle = '#0e0e12';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Draw checkerboard background for transparency
+    const imgW = this.image.width * this.zoomLevel;
+    const imgH = this.image.height * this.zoomLevel;
+    const checkSize = Math.max(8, this.zoomLevel * 2);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(this.panX, this.panY, imgW, imgH);
+    ctx.clip();
+    for (let cy = this.panY; cy < this.panY + imgH; cy += checkSize) {
+      for (let cx = this.panX; cx < this.panX + imgW; cx += checkSize) {
+        const isLight = ((Math.floor((cx - this.panX) / checkSize) + Math.floor((cy - this.panY) / checkSize)) % 2) === 0;
+        ctx.fillStyle = isLight ? '#2a2a34' : '#1c1c22';
+        ctx.fillRect(cx, cy, checkSize, checkSize);
+      }
+    }
+    ctx.restore();
+
+    // Draw image
+    ctx.drawImage(this.image, this.panX, this.panY, imgW, imgH);
+
+    // Draw selections
+    for (let i = 0; i < this.selections.length; i++) {
+      const sel = this.selections[i];
+      const sx = this.panX + sel.x * this.zoomLevel;
+      const sy = this.panY + sel.y * this.zoomLevel;
+      const sw = sel.w * this.zoomLevel;
+      const sh = sel.h * this.zoomLevel;
+
+      // Fill with semi-transparent color
+      ctx.fillStyle = sel.color + '30';
+      ctx.fillRect(sx, sy, sw, sh);
+
+      // Border
+      ctx.strokeStyle = sel.color;
+      ctx.lineWidth = i === this.activeSelIdx ? 3 : 1.5;
+      ctx.setLineDash(i === this.activeSelIdx ? [] : [4, 3]);
+      ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+      ctx.setLineDash([]);
+
+      // Label
+      let label = `#${i}`;
+      if (sel.charCode >= 0) {
+        if (sel.charCode >= 32 && sel.charCode <= 126) {
+          label = String.fromCharCode(sel.charCode);
+        } else {
+          label = `0x${sel.charCode.toString(16).toUpperCase().padStart(2, '0')}`;
+        }
+      }
+      ctx.font = 'bold 11px "JetBrains Mono"';
+      const textW = ctx.measureText(label).width;
+      ctx.fillStyle = sel.color;
+      ctx.fillRect(sx, sy - 15, textW + 6, 15);
+      ctx.fillStyle = '#000';
+      ctx.fillText(label, sx + 3, sy - 4);
+    }
+
+    // Draw current selection being drawn
+    if (this.drawing && this.drawStart && this.drawCurrent) {
+      const rx = Math.min(this.drawStart.x, this.drawCurrent.x);
+      const ry = Math.min(this.drawStart.y, this.drawCurrent.y);
+      const rw = Math.abs(this.drawCurrent.x - this.drawStart.x);
+      const rh = Math.abs(this.drawCurrent.y - this.drawStart.y);
+
+      const sx = this.panX + rx * this.zoomLevel;
+      const sy = this.panY + ry * this.zoomLevel;
+      const sw = rw * this.zoomLevel;
+      const sh = rh * this.zoomLevel;
+
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(sx, sy, sw, sh);
+      ctx.setLineDash([]);
+
+      // Size label
+      ctx.font = '10px "JetBrains Mono"';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(`${rw}×${rh}`, sx + 4, sy + sh + 13);
+    }
+  }
+
+  hitTestSelection(imgX, imgY) {
+    // Test in reverse order (top-most first)
+    for (let i = this.selections.length - 1; i >= 0; i--) {
+      const sel = this.selections[i];
+      if (imgX >= sel.x && imgX < sel.x + sel.w &&
+          imgY >= sel.y && imgY < sel.y + sel.h) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  selectSelection(idx) {
+    this.activeSelIdx = idx;
+    this.render();
+    this.updateSelectionsList();
+  }
+
+  deleteSelection(idx) {
+    this.selections.splice(idx, 1);
+    if (this.activeSelIdx >= this.selections.length) {
+      this.activeSelIdx = this.selections.length - 1;
+    }
+    if (this.activeSelIdx === idx) {
+      this.activeSelIdx = -1;
+    } else if (this.activeSelIdx > idx) {
+      this.activeSelIdx--;
+    }
+    this.render();
+    this.updateSelectionsList();
+    this.updateAsciiIndicators();
+  }
+
+  assignCharToSelection(selIdx, charCode) {
+    if (selIdx < 0 || selIdx >= this.selections.length) return;
+
+    // Unassign any other selection that has this charCode
+    for (let i = 0; i < this.selections.length; i++) {
+      if (this.selections[i].charCode === charCode) {
+        this.selections[i].charCode = -1;
+      }
+    }
+
+    this.selections[selIdx].charCode = charCode;
+    this.render();
+    this.updateSelectionsList();
+    this.updateAsciiIndicators();
+  }
+
+  unassignSelection(selIdx) {
+    if (selIdx < 0 || selIdx >= this.selections.length) return;
+    this.selections[selIdx].charCode = -1;
+    this.render();
+    this.updateSelectionsList();
+    this.updateAsciiIndicators();
+  }
+
+  sliceGrid() {
+    const sliceW = parseInt(this.sliceWInput.value) || 8;
+    const sliceH = parseInt(this.sliceHInput.value) || 16;
+    if (!this.image) return;
+
+    this.selections = [];
+    this.activeSelIdx = -1;
+    this.colorIdx = 0;
+
+    const cols = Math.floor(this.image.width / sliceW);
+    const rows = Math.floor(this.image.height / sliceH);
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        this.selections.push({
+          x: col * sliceW,
+          y: row * sliceH,
+          w: sliceW,
+          h: sliceH,
+          charCode: -1,
+          color: this.nextColor()
+        });
+      }
+    }
+
+    this.render();
+    this.updateSelectionsList();
+    this.updateAsciiIndicators();
+  }
+
+  clearAllSelections() {
+    this.selections = [];
+    this.activeSelIdx = -1;
+    this.colorIdx = 0;
+    this.render();
+    this.updateSelectionsList();
+    this.updateAsciiIndicators();
+  }
+
+  updateSelectionsList() {
+    this.selectionsList.innerHTML = '';
+
+    for (let i = 0; i < this.selections.length; i++) {
+      const sel = this.selections[i];
+      const item = document.createElement('div');
+      item.className = 'ss-sel-item' + (i === this.activeSelIdx ? ' active' : '');
+
+      const colorDot = document.createElement('div');
+      colorDot.className = 'ss-sel-color';
+      colorDot.style.background = sel.color;
+
+      const info = document.createElement('div');
+      info.className = 'ss-sel-info';
+      info.textContent = `${sel.x},${sel.y} ${sel.w}×${sel.h}`;
+
+      const charLabel = document.createElement('div');
+      charLabel.className = 'ss-sel-char';
+      if (sel.charCode >= 0) {
+        if (sel.charCode >= 32 && sel.charCode <= 126) {
+          charLabel.textContent = `'${String.fromCharCode(sel.charCode)}'`;
+        } else {
+          charLabel.textContent = `0x${sel.charCode.toString(16).toUpperCase().padStart(2, '0')}`;
+        }
+      } else {
+        charLabel.textContent = '—';
+        charLabel.style.color = 'var(--text-dim)';
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'ss-sel-actions';
+
+      if (sel.charCode >= 0) {
+        const unassignBtn = document.createElement('button');
+        unassignBtn.className = 'ss-sel-btn';
+        unassignBtn.textContent = '✕';
+        unassignBtn.title = 'Unassign character';
+        unassignBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.unassignSelection(i);
+        });
+        actions.appendChild(unassignBtn);
+      }
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'ss-sel-btn delete';
+      delBtn.textContent = '🗑';
+      delBtn.title = 'Delete selection';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteSelection(i);
+      });
+      actions.appendChild(delBtn);
+
+      item.appendChild(colorDot);
+      item.appendChild(info);
+      item.appendChild(charLabel);
+      item.appendChild(actions);
+
+      item.addEventListener('click', () => {
+        this.selectSelection(i);
+      });
+
+      this.selectionsList.appendChild(item);
+    }
+
+    // Auto-scroll to active
+    if (this.activeSelIdx >= 0) {
+      const activeItem = this.selectionsList.children[this.activeSelIdx];
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
+  updateAsciiIndicators() {
+    // Build map of assigned char codes
+    const assignedCodes = new Set();
+    for (let i = 0; i < this.selections.length; i++) {
+      if (this.selections[i].charCode >= 0) {
+        assignedCodes.add(this.selections[i].charCode);
+      }
+    }
+
+    for (let i = 0; i < 256; i++) {
+      this.ssAsciiCells[i].classList.toggle('assigned', assignedCodes.has(i));
+    }
+  }
+
+  // Extract pixel data from a selection region, return a GlyphData
+  extractGlyph(sel, gridHeight) {
+    if (!this.imageData) return null;
+
+    const glyph = new GlyphData(sel.w, sel.h);
+    const imgW = this.imageData.width;
+    const data = this.imageData.data;
+
+    for (let y = 0; y < sel.h; y++) {
+      for (let x = 0; x < sel.w; x++) {
+        const srcX = sel.x + x;
+        const srcY = sel.y + y;
+        if (srcX < 0 || srcX >= imgW || srcY < 0 || srcY >= this.imageData.height) continue;
+        const idx = (srcY * imgW + srcX) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+        const brightness = (r + g + b) / 3;
+        glyph.setPixel(x, y, (a > 127 && brightness < 128) ? 1 : 0);
+      }
+    }
+
+    // Resize height to match grid if needed
+    if (sel.h !== gridHeight) {
+      glyph.resize(sel.w, gridHeight);
+    }
+
+    return glyph;
+  }
+
+  getAssignments() {
+    // Return array of { charCode, selection } for all assigned selections
+    const results = [];
+    for (let i = 0; i < this.selections.length; i++) {
+      if (this.selections[i].charCode >= 0) {
+        results.push({
+          charCode: this.selections[i].charCode,
+          selection: this.selections[i]
+        });
+      }
+    }
+    return results;
+  }
+
+  bindEvents() {
+    // Mode buttons
+    document.getElementById('ssModeSelect').addEventListener('click', () => this.setMode('select'));
+    document.getElementById('ssModeDraw').addEventListener('click', () => this.setMode('draw'));
+
+    // Slice / Clear
+    document.getElementById('ssBtnSlice').addEventListener('click', () => this.sliceGrid());
+    document.getElementById('ssBtnClearAll').addEventListener('click', () => this.clearAllSelections());
+
+    // Cancel / Accept
+    document.getElementById('ssBtnCancel').addEventListener('click', () => this.close());
+    document.getElementById('ssBtnAccept').addEventListener('click', () => {
+      const assignments = this.getAssignments();
+      this.onAccept(assignments, this);
+      this.close();
+    });
+
+    // ASCII grid clicks
+    this.asciiGrid.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const cell = e.target.closest('.ss-ascii-cell');
+      if (!cell) return;
+      const code = parseInt(cell.dataset.code);
+
+      if (this.activeSelIdx >= 0) {
+        this.assignCharToSelection(this.activeSelIdx, code);
+      }
+    });
+
+    // Canvas mouse events
+    this.canvasWrap.addEventListener('mousedown', (e) => this.onCanvasMouseDown(e));
+    this.canvasWrap.addEventListener('mousemove', (e) => this.onCanvasMouseMove(e));
+    window.addEventListener('mouseup', (e) => this.onCanvasMouseUp(e));
+    this.canvasWrap.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Zoom
+    this.canvasWrap.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = this.canvasWrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      // Zoom toward mouse position
+      const imgXBefore = (mx - this.panX) / this.zoomLevel;
+      const imgYBefore = (my - this.panY) / this.zoomLevel;
+
+      if (e.deltaY < 0) {
+        this.zoomLevel = Math.min(64, this.zoomLevel + Math.max(1, Math.floor(this.zoomLevel * 0.2)));
+      } else {
+        this.zoomLevel = Math.max(1, this.zoomLevel - Math.max(1, Math.floor(this.zoomLevel * 0.2)));
+      }
+
+      this.panX = mx - imgXBefore * this.zoomLevel;
+      this.panY = my - imgYBefore * this.zoomLevel;
+
+      this.render();
+    }, { passive: false });
+  }
+
+  onCanvasMouseDown(e) {
+    e.preventDefault();
+
+    // Right click or middle click = pan
+    if (e.button === 1 || e.button === 2) {
+      this.panning = true;
+      this.panStart = { x: e.clientX - this.panX, y: e.clientY - this.panY };
+      this.canvasWrap.classList.add('panning');
+      return;
+    }
+
+    if (this.mode === 'draw') {
+      const pos = this.screenToImage(e.clientX, e.clientY);
+      this.drawing = true;
+      this.drawStart = pos;
+      this.drawCurrent = pos;
+      this.render();
+    } else if (this.mode === 'select') {
+      const pos = this.screenToImage(e.clientX, e.clientY);
+      const hitIdx = this.hitTestSelection(pos.x, pos.y);
+      this.selectSelection(hitIdx);
+
+      // If nothing hit, start panning
+      if (hitIdx < 0) {
+        this.panning = true;
+        this.panStart = { x: e.clientX - this.panX, y: e.clientY - this.panY };
+        this.canvasWrap.classList.add('panning');
+      }
+    }
+  }
+
+  onCanvasMouseMove(e) {
+    if (this.panning && this.panStart) {
+      this.panX = e.clientX - this.panStart.x;
+      this.panY = e.clientY - this.panStart.y;
+      this.render();
+      return;
+    }
+
+    if (this.drawing) {
+      this.drawCurrent = this.screenToImage(e.clientX, e.clientY);
+      this.render();
+    }
+  }
+
+  onCanvasMouseUp(e) {
+    if (this.panning) {
+      this.panning = false;
+      this.panStart = null;
+      this.canvasWrap.classList.remove('panning');
+      return;
+    }
+
+    if (this.drawing && this.drawStart && this.drawCurrent) {
+      const rx = Math.min(this.drawStart.x, this.drawCurrent.x);
+      const ry = Math.min(this.drawStart.y, this.drawCurrent.y);
+      const rw = Math.abs(this.drawCurrent.x - this.drawStart.x);
+      const rh = Math.abs(this.drawCurrent.y - this.drawStart.y);
+
+      if (rw > 0 && rh > 0) {
+        // Clamp to image bounds
+        const cx = Math.max(0, rx);
+        const cy = Math.max(0, ry);
+        const cw = Math.min(rw, this.image.width - cx);
+        const ch = Math.min(rh, this.image.height - cy);
+
+        if (cw > 0 && ch > 0) {
+          const newSel = {
+            x: cx, y: cy, w: cw, h: ch,
+            charCode: -1,
+            color: this.nextColor()
+          };
+          this.selections.push(newSel);
+          this.activeSelIdx = this.selections.length - 1;
+          this.updateSelectionsList();
+        }
+      }
+
+      this.drawing = false;
+      this.drawStart = null;
+      this.drawCurrent = null;
+      this.render();
+    }
+  }
+}
+
+
+// ─── Main Editor ─────────────────────────────────────────────────────
+
+class PixelFontEditor {
+  constructor() {
+    this.gridHeight = 16;
+    this.baselineRow = 12;
+    this.lineGap = 2;
+    this.fontName = 'MyPixelFont';
+    this.defaultGlyphWidth = 8;
+    this.selectedChar = 65;
+    this.glyphs = {};
+    this.zoom = 24;
+
+    this.painting = false;
+    this.paintMode = 1;
+    this.lastPaintCoord = null;
+
+    this.modal = new ModalDialog();
+    this.spriteImporter = new SpriteSheetImporter((assignments, importer) => {
+      this.applySpriteSheetAssignments(assignments, importer);
+    });
+
+    this.cacheElements();
+    this.buildAsciiGrid();
+    this.bindEvents();
+    this.selectChar(65);
+    this.renderPreview();
+  }
+
+  applySpriteSheetAssignments(assignments, importer) {
+    // Show import mode choice modal
+    const overlay = document.getElementById('importModeOverlay');
+    overlay.classList.add('visible');
+
+    const cleanup = () => {
+      overlay.classList.remove('visible');
+      document.getElementById('importModeResize').removeEventListener('click', onResize);
+      document.getElementById('importModeStamp').removeEventListener('click', onStamp);
+      document.getElementById('importModeCancel').removeEventListener('click', onCancel);
+    };
+
+    const applyGlyphs = (useSelectionSize) => {
+      for (let i = 0; i < assignments.length; i++) {
+        const { charCode, selection } = assignments[i];
+
+        if (useSelectionSize) {
+          // Mode 1: glyph takes selection's dimensions
+          const glyph = importer.extractGlyph(selection, this.gridHeight);
+          if (glyph) {
+            this.glyphs[charCode] = glyph;
+          }
+        } else {
+          // Mode 2: stamp into existing glyph size
+          const existing = this.getGlyph(charCode);
+          existing.clear();
+          this.stampSelectionIntoGlyph(existing, selection, importer);
+        }
+      }
+      this.updateAsciiCellIndicators();
+      this.selectChar(this.selectedChar);
+      this.renderPreview();
+    };
+
+    const onResize = () => { cleanup(); applyGlyphs(true); };
+    const onStamp = () => { cleanup(); applyGlyphs(false); };
+    const onCancel = () => { cleanup(); };
+
+    document.getElementById('importModeResize').addEventListener('click', onResize);
+    document.getElementById('importModeStamp').addEventListener('click', onStamp);
+    document.getElementById('importModeCancel').addEventListener('click', onCancel);
+  }
+
+  stampSelectionIntoGlyph(glyph, selection, importer) {
+    if (!importer.imageData) return;
+    const imgW = importer.imageData.width;
+    const data = importer.imageData.data;
+
+    const stampW = Math.min(selection.w, glyph.width);
+    const stampH = Math.min(selection.h, glyph.height);
+
+    for (let y = 0; y < stampH; y++) {
+      for (let x = 0; x < stampW; x++) {
+        const srcX = selection.x + x;
+        const srcY = selection.y + y;
+        if (srcX < 0 || srcX >= imgW || srcY < 0 || srcY >= importer.imageData.height) continue;
+        const idx = (srcY * imgW + srcX) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+        const brightness = (r + g + b) / 3;
+        glyph.setPixel(x, y, (a > 127 && brightness < 128) ? 1 : 0);
+      }
+    }
+  }
+
+  cacheElements() {
+    this.elAsciiGrid = document.getElementById('asciiGrid');
+    this.elCharLabel = document.getElementById('charLabel');
+    this.elGlyphWidth = document.getElementById('glyphWidth');
+    this.elEditorCanvas = document.getElementById('editorCanvas');
+    this.elEditorWrap = this.elEditorCanvas.parentElement;
+    this.elPreviewCanvas = document.getElementById('previewCanvas');
+    this.elPreviewText = document.getElementById('previewText');
+    this.elPreviewScale = document.getElementById('previewScale');
+    this.elFontName = document.getElementById('fontName');
+    this.elGridHeight = document.getElementById('gridHeight');
+    this.elBaselineRow = document.getElementById('baselineRow');
+    this.elLineGap = document.getElementById('lineGap');
+    this.elSetAllWidths = document.getElementById('setAllWidths');
+    this.editorCtx = this.elEditorCanvas.getContext('2d');
+    this.previewCtx = this.elPreviewCanvas.getContext('2d');
+  }
+
+  buildAsciiGrid() {
+    this.asciiCells = [];
+    for (let i = 0; i < 256; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'ascii-cell';
+      cell.dataset.code = i;
+      if (i >= 32 && i <= 126) {
+        cell.textContent = String.fromCharCode(i);
+      } else {
+        cell.textContent = i.toString(16).toUpperCase().padStart(2, '0');
+        cell.style.fontSize = '9px';
+        cell.style.color = 'var(--text-dim)';
+      }
+      cell.title = `${i} (0x${i.toString(16).toUpperCase().padStart(2,'0')})` +
+                    (i >= 32 && i <= 126 ? ` '${String.fromCharCode(i)}'` : '');
+      this.elAsciiGrid.appendChild(cell);
+      this.asciiCells.push(cell);
+    }
+  }
+
+  getGlyph(code) {
+    if (!this.glyphs[code]) {
+      this.glyphs[code] = new GlyphData(this.defaultGlyphWidth, this.gridHeight);
+    }
+    return this.glyphs[code];
+  }
+
+  selectChar(code) {
+    this.selectedChar = code;
+    for (let i = 0; i < this.asciiCells.length; i++) {
+      this.asciiCells[i].classList.toggle('selected', i === code);
+    }
+    const glyph = this.getGlyph(code);
+    this.elGlyphWidth.value = glyph.width;
+
+    let label = `#${code} (0x${code.toString(16).toUpperCase().padStart(2,'0')})`;
+    if (code >= 32 && code <= 126) {
+      label = `'${String.fromCharCode(code)}' — ${label}`;
+    }
+    this.elCharLabel.textContent = label;
+    this.renderEditor();
+  }
+
+  updateAsciiCellIndicators() {
+    for (let i = 0; i < 256; i++) {
+      const hasGlyph = this.glyphs[i] && this.glyphs[i].hasAnyPixel();
+      this.asciiCells[i].classList.toggle('has-glyph', hasGlyph);
+    }
+  }
+
+  renderEditor() {
+    const glyph = this.getGlyph(this.selectedChar);
+    const w = glyph.width;
+    const h = glyph.height;
+
+    const wrapRect = this.elEditorWrap.getBoundingClientRect();
+    const maxW = wrapRect.width - 40;
+    const maxH = wrapRect.height - 40;
+    this.zoom = Math.max(4, Math.min(Math.floor(maxW / w), Math.floor(maxH / h)));
+
+    const canvasW = w * this.zoom;
+    const canvasH = h * this.zoom;
+    this.elEditorCanvas.width = canvasW;
+    this.elEditorCanvas.height = canvasH;
+
+    const ctx = this.editorCtx;
+    const styles = getComputedStyle(document.documentElement);
+
+    ctx.fillStyle = styles.getPropertyValue('--pixel-off').trim();
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const onColor = styles.getPropertyValue('--pixel-on').trim();
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (glyph.getPixel(x, y)) {
+          ctx.fillStyle = onColor;
+          ctx.fillRect(x * this.zoom, y * this.zoom, this.zoom, this.zoom);
+        }
+      }
+    }
+
+    ctx.strokeStyle = styles.getPropertyValue('--grid-line').trim();
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * this.zoom + 0.5, 0);
+      ctx.lineTo(x * this.zoom + 0.5, canvasH);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= h; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * this.zoom + 0.5);
+      ctx.lineTo(canvasW, y * this.zoom + 0.5);
+      ctx.stroke();
+    }
+
+    const baseY = this.baselineRow * this.zoom;
+    ctx.strokeStyle = styles.getPropertyValue('--baseline').trim();
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, baseY);
+    ctx.lineTo(canvasW, baseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  canvasToPixel(e) {
+    const rect = this.elEditorCanvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / this.zoom);
+    const y = Math.floor((e.clientY - rect.top) / this.zoom);
+    return { x, y };
+  }
+
+  onEditorMouseDown(e) {
+    e.preventDefault();
+    const { x, y } = this.canvasToPixel(e);
+    const glyph = this.getGlyph(this.selectedChar);
+
+    this.painting = true;
+    this.paintMode = (e.button === 2) ? 0 : 1;
+
+    glyph.setPixel(x, y, this.paintMode);
+    this.lastPaintCoord = { x, y };
+    this.renderEditor();
+    this.renderPreview();
+    this.updateAsciiCellIndicators();
+  }
+
+  onEditorMouseMove(e) {
+    if (!this.painting) return;
+    const { x, y } = this.canvasToPixel(e);
+    if (this.lastPaintCoord && x === this.lastPaintCoord.x && y === this.lastPaintCoord.y) return;
+
+    const glyph = this.getGlyph(this.selectedChar);
+
+    if (this.lastPaintCoord) {
+      const coords = this.bresenham(this.lastPaintCoord.x, this.lastPaintCoord.y, x, y);
+      for (let i = 0; i < coords.length; i++) {
+        glyph.setPixel(coords[i].x, coords[i].y, this.paintMode);
+      }
+    } else {
+      glyph.setPixel(x, y, this.paintMode);
+    }
+
+    this.lastPaintCoord = { x, y };
+    this.renderEditor();
+    this.renderPreview();
+    this.updateAsciiCellIndicators();
+  }
+
+  onEditorMouseUp() {
+    this.painting = false;
+    this.lastPaintCoord = null;
+  }
+
+  bresenham(x0, y0, x1, y1) {
+    const points = [];
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+      points.push({ x: x0, y: y0 });
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x0 += sx; }
+      if (e2 < dx) { err += dx; y0 += sy; }
+    }
+    return points;
+  }
+
+  importPngForGlyph(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = img.width;
+        offCanvas.height = img.height;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(img, 0, 0);
+
+        const imgData = offCtx.getImageData(0, 0, img.width, img.height);
+        const data = imgData.data;
+
+        const gw = Math.min(img.width, 64);
+        const gh = Math.min(img.height, 64);
+        const glyph = new GlyphData(gw, gh);
+
+        for (let y = 0; y < gh; y++) {
+          for (let x = 0; x < gw; x++) {
+            const idx = (y * img.width + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+            const a = data[idx + 3];
+            const brightness = (r + g + b) / 3;
+            glyph.setPixel(x, y, (a > 127 && brightness < 128) ? 1 : 0);
+          }
+        }
+
+        if (gh !== this.gridHeight) {
+          this.gridHeight = gh;
+          this.elGridHeight.value = gh;
+          if (this.baselineRow >= gh) {
+            this.baselineRow = Math.floor(gh * 0.75);
+            this.elBaselineRow.value = this.baselineRow;
+          }
+          for (const code in this.glyphs) {
+            if (parseInt(code) !== this.selectedChar) {
+              this.glyphs[code].resize(this.glyphs[code].width, this.gridHeight);
+            }
+          }
+        }
+
+        this.glyphs[this.selectedChar] = glyph;
+        this.elGlyphWidth.value = gw;
+        this.renderEditor();
+        this.renderPreview();
+        this.updateAsciiCellIndicators();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async setAllWidths(newWidth) {
+    const confirmed = await this.modal.show(
+      'Resize All Glyphs',
+      `This will set every glyph to width ${newWidth}, overwriting all custom widths. This cannot be undone. Are you sure?`
+    );
+    if (!confirmed) return;
+
+    this.defaultGlyphWidth = newWidth;
+    for (const code in this.glyphs) {
+      this.glyphs[code].resize(newWidth, this.gridHeight);
+    }
+    this.elGlyphWidth.value = newWidth;
+    this.renderEditor();
+    this.renderPreview();
+  }
+
+  renderPreview() {
+    const text = this.elPreviewText.value;
+    const scale = parseInt(this.elPreviewScale.value);
+    const lineH = this.gridHeight + this.lineGap;
+
+    const lines = text.split('\n');
+    let maxLineW = 0;
+    for (let l = 0; l < lines.length; l++) {
+      let lineW = 0;
+      for (let c = 0; c < lines[l].length; c++) {
+        const code = lines[l].charCodeAt(c);
+        const glyph = this.glyphs[code];
+        lineW += glyph ? glyph.width : this.defaultGlyphWidth;
+      }
+      if (lineW > maxLineW) maxLineW = lineW;
+    }
+
+    const canvasW = Math.max(1, maxLineW * scale);
+    const canvasH = Math.max(1, lines.length * lineH * scale);
+    this.elPreviewCanvas.width = canvasW;
+    this.elPreviewCanvas.height = canvasH;
+
+    const ctx = this.previewCtx;
+    ctx.clearRect(0, 0, canvasW, canvasH);
+    ctx.fillStyle = '#e8e8ef';
+
+    for (let l = 0; l < lines.length; l++) {
+      let cursorX = 0;
+      const baseY = l * lineH;
+
+      for (let c = 0; c < lines[l].length; c++) {
+        const code = lines[l].charCodeAt(c);
+        const glyph = this.glyphs[code];
+
+        if (glyph) {
+          for (let py = 0; py < glyph.height; py++) {
+            for (let px = 0; px < glyph.width; px++) {
+              if (glyph.getPixel(px, py)) {
+                ctx.fillRect(
+                  (cursorX + px) * scale,
+                  (baseY + py) * scale,
+                  scale, scale
+                );
+              }
+            }
+          }
+          cursorX += glyph.width;
+        } else {
+          cursorX += this.defaultGlyphWidth;
+        }
+      }
+    }
+  }
+
+  buildFont() {
+    const unitsPerEm = 1024;
+    const pixelUnit = Math.floor(unitsPerEm / this.gridHeight);
+    const ascent = this.baselineRow * pixelUnit;
+    const descent = -(this.gridHeight - this.baselineRow) * pixelUnit;
+
+    const notdefGlyph = new opentype.Glyph({
+      name: '.notdef',
+      unicode: 0,
+      advanceWidth: this.defaultGlyphWidth * pixelUnit,
+      path: new opentype.Path()
+    });
+
+    const glyphList = [notdefGlyph];
+
+    for (let code = 1; code < 256; code++) {
+      const glyph = this.glyphs[code];
+      const path = new opentype.Path();
+      const glyphW = glyph ? glyph.width : this.defaultGlyphWidth;
+
+      if (glyph) {
+        for (let y = 0; y < glyph.height; y++) {
+          for (let x = 0; x < glyph.width; x++) {
+            if (glyph.getPixel(x, y)) {
+              const fx = x * pixelUnit;
+              const fy = (this.baselineRow - y) * pixelUnit;
+              path.moveTo(fx, fy);
+              path.lineTo(fx + pixelUnit, fy);
+              path.lineTo(fx + pixelUnit, fy - pixelUnit);
+              path.lineTo(fx, fy - pixelUnit);
+              path.close();
+            }
+          }
+        }
+      }
+
+      glyphList.push(new opentype.Glyph({
+        name: code === 32 ? 'space' : `char${code}`,
+        unicode: code,
+        advanceWidth: glyphW * pixelUnit,
+        path: path
+      }));
+    }
+
+    return new opentype.Font({
+      familyName: this.fontName,
+      styleName: 'Regular',
+      unitsPerEm: unitsPerEm,
+      ascender: ascent,
+      descender: descent,
+      glyphs: glyphList
+    });
+  }
+
+  exportOTF() {
+    try {
+      const font = this.buildFont();
+      font.download();
+    } catch (err) {
+      alert('Export error: ' + err.message);
+    }
+  }
+
+  exportTTF() {
+    try {
+      const buffer = this.buildTrueTTF();
+      const blob = new Blob([buffer], { type: 'font/ttf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = this.fontName + '.ttf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('TTF Export error: ' + err.message);
+    }
+  }
+
+  // ─── True TTF binary builder ─────────────────────────────────────
+
+  buildTrueTTF() {
+    const unitsPerEm = 1024;
+    const pixelUnit = Math.floor(unitsPerEm / this.gridHeight);
+    const ascent = this.baselineRow * pixelUnit;
+    const descent = -(this.gridHeight - this.baselineRow) * pixelUnit;
+
+    // Build glyph data: array of { unicode, advanceWidth, contours }
+    // contours = array of arrays of {x,y} points (clockwise = filled)
+    const glyphEntries = [];
+
+    // .notdef glyph (index 0) — empty
+    glyphEntries.push({
+      unicode: -1,
+      advanceWidth: this.defaultGlyphWidth * pixelUnit,
+      contours: []
+    });
+
+    // Build char→glyph map for cmap
+    const charToGlyph = {};
+
+    for (let code = 1; code < 256; code++) {
+      const glyph = this.glyphs[code];
+      const glyphW = glyph ? glyph.width : this.defaultGlyphWidth;
+      const contours = [];
+
+      if (glyph) {
+        for (let y = 0; y < glyph.height; y++) {
+          for (let x = 0; x < glyph.width; x++) {
+            if (glyph.getPixel(x, y)) {
+              const fx = x * pixelUnit;
+              const fy = (this.baselineRow - y) * pixelUnit;
+              // TrueType: clockwise = outer contour (on-screen)
+              // Y-axis: up is positive in font coords
+              contours.push([
+                { x: fx, y: fy },
+                { x: fx + pixelUnit, y: fy },
+                { x: fx + pixelUnit, y: fy - pixelUnit },
+                { x: fx, y: fy - pixelUnit }
+              ]);
+            }
+          }
+        }
+      }
+
+      const glyphIdx = glyphEntries.length;
+      charToGlyph[code] = glyphIdx;
+      glyphEntries.push({
+        unicode: code,
+        advanceWidth: glyphW * pixelUnit,
+        contours: contours
+      });
+    }
+
+    // ── Binary writer helpers ──
+
+    class BinaryWriter {
+      constructor() {
+        this.buffers = [];
+        this.length = 0;
+      }
+
+      writeUint8(v) {
+        const b = new Uint8Array(1);
+        b[0] = v & 0xff;
+        this.buffers.push(b);
+        this.length += 1;
+      }
+
+      writeInt16(v) {
+        const b = new DataView(new ArrayBuffer(2));
+        b.setInt16(0, v);
+        this.buffers.push(new Uint8Array(b.buffer));
+        this.length += 2;
+      }
+
+      writeUint16(v) {
+        const b = new DataView(new ArrayBuffer(2));
+        b.setUint16(0, v);
+        this.buffers.push(new Uint8Array(b.buffer));
+        this.length += 2;
+      }
+
+      writeInt32(v) {
+        const b = new DataView(new ArrayBuffer(4));
+        b.setInt32(0, v);
+        this.buffers.push(new Uint8Array(b.buffer));
+        this.length += 4;
+      }
+
+      writeUint32(v) {
+        const b = new DataView(new ArrayBuffer(4));
+        b.setUint32(0, v);
+        this.buffers.push(new Uint8Array(b.buffer));
+        this.length += 4;
+      }
+
+      writeBytes(arr) {
+        const b = new Uint8Array(arr);
+        this.buffers.push(b);
+        this.length += b.length;
+      }
+
+      writeString(s) {
+        const b = new Uint8Array(s.length);
+        for (let i = 0; i < s.length; i++) {
+          b[i] = s.charCodeAt(i);
+        }
+        this.buffers.push(b);
+        this.length += s.length;
+      }
+
+      pad(alignment) {
+        const rem = this.length % alignment;
+        if (rem > 0) {
+          const pad = alignment - rem;
+          this.buffers.push(new Uint8Array(pad));
+          this.length += pad;
+        }
+      }
+
+      toArrayBuffer() {
+        const result = new Uint8Array(this.length);
+        let offset = 0;
+        for (let i = 0; i < this.buffers.length; i++) {
+          result.set(this.buffers[i], offset);
+          offset += this.buffers[i].length;
+        }
+        return result.buffer;
+      }
+    }
+
+    const numGlyphs = glyphEntries.length;
+
+    // ── Build glyf table ──
+    const glyfWriter = new BinaryWriter();
+    const glyphOffsets = [];
+
+    for (let i = 0; i < numGlyphs; i++) {
+      glyphOffsets.push(glyfWriter.length);
+      const entry = glyphEntries[i];
+
+      if (entry.contours.length === 0) {
+        // Empty glyph — zero length
+        continue;
+      }
+
+      // Calculate bounding box
+      let xMin = 32767, yMin = 32767, xMax = -32768, yMax = -32768;
+      for (let c = 0; c < entry.contours.length; c++) {
+        for (let p = 0; p < entry.contours[c].length; p++) {
+          const pt = entry.contours[c][p];
+          if (pt.x < xMin) xMin = pt.x;
+          if (pt.y < yMin) yMin = pt.y;
+          if (pt.x > xMax) xMax = pt.x;
+          if (pt.y > yMax) yMax = pt.y;
+        }
+      }
+
+      const numContours = entry.contours.length;
+
+      // numberOfContours
+      glyfWriter.writeInt16(numContours);
+      // xMin, yMin, xMax, yMax
+      glyfWriter.writeInt16(xMin);
+      glyfWriter.writeInt16(yMin);
+      glyfWriter.writeInt16(xMax);
+      glyfWriter.writeInt16(yMax);
+
+      // endPtsOfContours
+      let ptIdx = -1;
+      for (let c = 0; c < numContours; c++) {
+        ptIdx += entry.contours[c].length;
+        glyfWriter.writeUint16(ptIdx);
+      }
+
+      // instructionLength = 0
+      glyfWriter.writeUint16(0);
+
+      // Flatten all points
+      const allPoints = [];
+      for (let c = 0; c < numContours; c++) {
+        for (let p = 0; p < entry.contours[c].length; p++) {
+          allPoints.push(entry.contours[c][p]);
+        }
+      }
+
+      // Flags: all points are on-curve (bit 0 = 1)
+      for (let p = 0; p < allPoints.length; p++) {
+        glyfWriter.writeUint8(1); // on-curve, no repeat, no short
+      }
+
+      // X coordinates (deltas)
+      let lastX = 0;
+      for (let p = 0; p < allPoints.length; p++) {
+        const dx = allPoints[p].x - lastX;
+        glyfWriter.writeInt16(dx);
+        lastX = allPoints[p].x;
+      }
+
+      // Y coordinates (deltas)
+      let lastY = 0;
+      for (let p = 0; p < allPoints.length; p++) {
+        const dy = allPoints[p].y - lastY;
+        glyfWriter.writeInt16(dy);
+        lastY = allPoints[p].y;
+      }
+
+      // Pad glyph to 2-byte boundary
+      glyfWriter.pad(2);
+    }
+
+    // Final offset (end of last glyph)
+    glyphOffsets.push(glyfWriter.length);
+
+    // ── Build loca table (long format) ──
+    const locaWriter = new BinaryWriter();
+    for (let i = 0; i <= numGlyphs; i++) {
+      locaWriter.writeUint32(glyphOffsets[i]);
+    }
+
+    // ── Build cmap table (format 0 for ASCII) ──
+    const cmapWriter = new BinaryWriter();
+    // Table header
+    cmapWriter.writeUint16(0); // version
+    cmapWriter.writeUint16(1); // numTables
+    // Encoding record: platform 1 (Mac), encoding 0 (Roman)
+    cmapWriter.writeUint16(1); // platformID
+    cmapWriter.writeUint16(0); // encodingID
+    cmapWriter.writeUint32(12); // offset to subtable
+
+    // Format 0 subtable
+    cmapWriter.writeUint16(0); // format
+    cmapWriter.writeUint16(262); // length (6 + 256)
+    cmapWriter.writeUint16(0); // language
+    // glyphIdArray: 256 bytes
+    for (let i = 0; i < 256; i++) {
+      const gIdx = charToGlyph[i] || 0;
+      cmapWriter.writeUint8(gIdx < 256 ? gIdx : 0);
+    }
+
+    // ── Build head table ──
+    const headWriter = new BinaryWriter();
+    headWriter.writeUint32(0x00010000); // majorVersion.minorVersion
+    headWriter.writeUint32(0x00010000); // fontRevision
+    headWriter.writeUint32(0); // checksumAdjustment (fix later)
+    headWriter.writeUint32(0x5F0F3CF5); // magicNumber
+    headWriter.writeUint16(0x000B); // flags
+    headWriter.writeUint16(unitsPerEm);
+    // created/modified timestamps (8 bytes each, zeroed)
+    headWriter.writeUint32(0); headWriter.writeUint32(0);
+    headWriter.writeUint32(0); headWriter.writeUint32(0);
+    headWriter.writeInt16(0); // xMin
+    headWriter.writeInt16(descent); // yMin
+    headWriter.writeInt16(unitsPerEm); // xMax
+    headWriter.writeInt16(ascent); // yMax
+    headWriter.writeUint16(0); // macStyle
+    headWriter.writeUint16(8); // lowestRecPPEM
+    headWriter.writeInt16(2); // fontDirectionHint
+    headWriter.writeInt16(1); // indexToLocFormat (long)
+    headWriter.writeInt16(0); // glyphDataFormat
+
+    // ── Build hhea table ──
+    const hheaWriter = new BinaryWriter();
+    hheaWriter.writeUint32(0x00010000); // version
+    hheaWriter.writeInt16(ascent);
+    hheaWriter.writeInt16(descent);
+    hheaWriter.writeInt16(0); // lineGap
+    hheaWriter.writeUint16(unitsPerEm); // advanceWidthMax
+    hheaWriter.writeInt16(0); // minLeftSideBearing
+    hheaWriter.writeInt16(0); // minRightSideBearing
+    hheaWriter.writeInt16(unitsPerEm); // xMaxExtent
+    hheaWriter.writeInt16(1); // caretSlopeRise
+    hheaWriter.writeInt16(0); // caretSlopeRun
+    hheaWriter.writeInt16(0); // caretOffset
+    hheaWriter.writeInt16(0); // reserved
+    hheaWriter.writeInt16(0);
+    hheaWriter.writeInt16(0);
+    hheaWriter.writeInt16(0);
+    hheaWriter.writeInt16(0); // metricDataFormat
+    hheaWriter.writeUint16(numGlyphs); // numberOfHMetrics
+
+    // ── Build hmtx table ──
+    const hmtxWriter = new BinaryWriter();
+    for (let i = 0; i < numGlyphs; i++) {
+      hmtxWriter.writeUint16(glyphEntries[i].advanceWidth);
+      hmtxWriter.writeInt16(0); // lsb
+    }
+
+    // ── Build maxp table ──
+    const maxpWriter = new BinaryWriter();
+    maxpWriter.writeUint32(0x00010000); // version
+    maxpWriter.writeUint16(numGlyphs);
+    // Find max points/contours
+    let maxPts = 0, maxContours = 0;
+    for (let i = 0; i < numGlyphs; i++) {
+      let pts = 0;
+      for (let c = 0; c < glyphEntries[i].contours.length; c++) {
+        pts += glyphEntries[i].contours[c].length;
+      }
+      if (pts > maxPts) maxPts = pts;
+      if (glyphEntries[i].contours.length > maxContours) maxContours = glyphEntries[i].contours.length;
+    }
+    maxpWriter.writeUint16(maxPts); // maxPoints
+    maxpWriter.writeUint16(maxContours); // maxContours
+    maxpWriter.writeUint16(0); // maxCompositePoints
+    maxpWriter.writeUint16(0); // maxCompositeContours
+    maxpWriter.writeUint16(1); // maxZones
+    maxpWriter.writeUint16(0); // maxTwilightPoints
+    maxpWriter.writeUint16(0); // maxStorage
+    maxpWriter.writeUint16(0); // maxFunctionDefs
+    maxpWriter.writeUint16(0); // maxInstructionDefs
+    maxpWriter.writeUint16(0); // maxStackElements
+    maxpWriter.writeUint16(0); // maxSizeOfInstructions
+    maxpWriter.writeUint16(0); // maxComponentElements
+    maxpWriter.writeUint16(0); // maxComponentDepth
+
+    // ── Build name table ──
+    const nameStrings = [
+      /* 0 */ this.fontName,              // copyright
+      /* 1 */ this.fontName,              // fontFamily
+      /* 2 */ 'Regular',                  // fontSubfamily
+      /* 3 */ this.fontName + '-Regular', // uniqueID
+      /* 4 */ this.fontName,              // fullName
+      /* 5 */ 'Version 1.0',             // version
+      /* 6 */ this.fontName + '-Regular', // postScriptName
+    ];
+
+    const nameWriter = new BinaryWriter();
+    nameWriter.writeUint16(0); // format
+    nameWriter.writeUint16(nameStrings.length); // count
+    const nameStorageOffset = 6 + nameStrings.length * 12;
+    nameWriter.writeUint16(nameStorageOffset); // stringOffset
+
+    let strOffset = 0;
+    for (let i = 0; i < nameStrings.length; i++) {
+      nameWriter.writeUint16(1); // platformID (Mac)
+      nameWriter.writeUint16(0); // encodingID
+      nameWriter.writeUint16(0); // languageID
+      nameWriter.writeUint16(i); // nameID
+      nameWriter.writeUint16(nameStrings[i].length); // length
+      nameWriter.writeUint16(strOffset); // offset
+      strOffset += nameStrings[i].length;
+    }
+
+    for (let i = 0; i < nameStrings.length; i++) {
+      nameWriter.writeString(nameStrings[i]);
+    }
+
+    // ── Build post table (format 3 — no glyph names) ──
+    const postWriter = new BinaryWriter();
+    postWriter.writeUint32(0x00030000); // format 3.0
+    postWriter.writeUint32(0); // italicAngle
+    postWriter.writeInt16(-100); // underlinePosition
+    postWriter.writeInt16(50); // underlineThickness
+    postWriter.writeUint32(0); // isFixedPitch
+    postWriter.writeUint32(0); // minMemType42
+    postWriter.writeUint32(0); // maxMemType42
+    postWriter.writeUint32(0); // minMemType1
+    postWriter.writeUint32(0); // maxMemType1
+
+    // ── Build OS/2 table ──
+    const os2Writer = new BinaryWriter();
+    os2Writer.writeUint16(4); // version
+    os2Writer.writeInt16(Math.round(unitsPerEm * 0.5)); // xAvgCharWidth
+    os2Writer.writeUint16(400); // usWeightClass (normal)
+    os2Writer.writeUint16(5); // usWidthClass (medium)
+    os2Writer.writeUint16(0); // fsType
+    os2Writer.writeInt16(pixelUnit); // ySubscriptXSize
+    os2Writer.writeInt16(pixelUnit); // ySubscriptYSize
+    os2Writer.writeInt16(0); // ySubscriptXOffset
+    os2Writer.writeInt16(pixelUnit); // ySubscriptYOffset
+    os2Writer.writeInt16(pixelUnit); // ySuperscriptXSize
+    os2Writer.writeInt16(pixelUnit); // ySuperscriptYSize
+    os2Writer.writeInt16(0); // ySuperscriptXOffset
+    os2Writer.writeInt16(pixelUnit); // ySuperscriptYOffset
+    os2Writer.writeInt16(pixelUnit); // yStrikeoutSize
+    os2Writer.writeInt16(Math.round(ascent * 0.4)); // yStrikeoutPosition
+    os2Writer.writeInt16(0); // sFamilyClass
+    // panose (10 bytes)
+    for (let i = 0; i < 10; i++) os2Writer.writeUint8(0);
+    // ulUnicodeRange1-4
+    os2Writer.writeUint32(1); // Basic Latin
+    os2Writer.writeUint32(0);
+    os2Writer.writeUint32(0);
+    os2Writer.writeUint32(0);
+    // achVendID
+    os2Writer.writeString('PXFF');
+    os2Writer.writeUint16(0x0040); // fsSelection (regular)
+    os2Writer.writeUint16(1); // usFirstCharIndex
+    os2Writer.writeUint16(255); // usLastCharIndex
+    os2Writer.writeInt16(ascent); // sTypoAscender
+    os2Writer.writeInt16(descent); // sTypoDescender
+    os2Writer.writeInt16(this.lineGap * pixelUnit); // sTypoLineGap
+    os2Writer.writeUint16(ascent); // usWinAscent
+    os2Writer.writeUint16(Math.abs(descent)); // usWinDescent
+    os2Writer.writeUint32(1); // ulCodePageRange1
+    os2Writer.writeUint32(0); // ulCodePageRange2
+    os2Writer.writeInt16(Math.round(ascent * 0.7)); // sxHeight
+    os2Writer.writeInt16(ascent); // sCapHeight
+    os2Writer.writeUint16(0); // usDefaultChar
+    os2Writer.writeUint16(32); // usBreakChar
+    os2Writer.writeUint16(1); // usMaxContext
+
+    // ── Assemble font file ──
+    const tables = {
+      'cmap': cmapWriter,
+      'glyf': glyfWriter,
+      'head': headWriter,
+      'hhea': hheaWriter,
+      'hmtx': hmtxWriter,
+      'loca': locaWriter,
+      'maxp': maxpWriter,
+      'name': nameWriter,
+      'post': postWriter,
+      'OS/2': os2Writer
+    };
+
+    const tableNames = Object.keys(tables).sort();
+    const numTables = tableNames.length;
+
+    // Calculate offset table size
+    const offsetTableSize = 12 + numTables * 16;
+
+    // searchRange, entrySelector, rangeShift
+    let entrySelector = 0;
+    let searchRange = 1;
+    while (searchRange * 2 <= numTables) {
+      searchRange *= 2;
+      entrySelector++;
+    }
+    searchRange *= 16;
+    const rangeShift = numTables * 16 - searchRange;
+
+    const fontWriter = new BinaryWriter();
+
+    // Offset table
+    fontWriter.writeUint32(0x00010000); // sfVersion = TrueType
+    fontWriter.writeUint16(numTables);
+    fontWriter.writeUint16(searchRange);
+    fontWriter.writeUint16(entrySelector);
+    fontWriter.writeUint16(rangeShift);
+
+    // Calculate table offsets
+    let tableOffset = offsetTableSize;
+    const tableRecords = [];
+    for (let i = 0; i < tableNames.length; i++) {
+      const name = tableNames[i];
+      const writer = tables[name];
+      const len = writer.length;
+      const padded = len + ((4 - (len % 4)) % 4);
+      tableRecords.push({ name, offset: tableOffset, length: len });
+      tableOffset += padded;
+    }
+
+    // Write table records
+    for (let i = 0; i < tableRecords.length; i++) {
+      const rec = tableRecords[i];
+      // Tag
+      fontWriter.writeString(rec.name.padEnd(4, ' ').substring(0, 4));
+      fontWriter.writeUint32(0); // checksum (skip for simplicity)
+      fontWriter.writeUint32(rec.offset);
+      fontWriter.writeUint32(rec.length);
+    }
+
+    // Write table data
+    for (let i = 0; i < tableNames.length; i++) {
+      const writer = tables[tableNames[i]];
+      const buf = new Uint8Array(writer.toArrayBuffer());
+      fontWriter.writeBytes(buf);
+      fontWriter.pad(4);
+    }
+
+    return fontWriter.toArrayBuffer();
+  }
+
+  saveJSON() {
+    const data = {
+      fontName: this.fontName,
+      gridHeight: this.gridHeight,
+      baselineRow: this.baselineRow,
+      lineGap: this.lineGap,
+      defaultGlyphWidth: this.defaultGlyphWidth,
+      glyphs: {}
+    };
+
+    for (const code in this.glyphs) {
+      if (this.glyphs[code].hasAnyPixel() || this.glyphs[code].width !== this.defaultGlyphWidth) {
+        data.glyphs[code] = this.glyphs[code].toJSON();
+      }
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = this.fontName + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  loadJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        this.fontName = data.fontName || 'MyPixelFont';
+        this.gridHeight = data.gridHeight || 16;
+        this.baselineRow = data.baselineRow || 12;
+        this.lineGap = data.lineGap || 2;
+        this.defaultGlyphWidth = data.defaultGlyphWidth || 8;
+
+        this.elFontName.value = this.fontName;
+        this.elGridHeight.value = this.gridHeight;
+        this.elBaselineRow.value = this.baselineRow;
+        this.elLineGap.value = this.lineGap;
+        this.elSetAllWidths.value = this.defaultGlyphWidth;
+
+        this.glyphs = {};
+        for (const code in data.glyphs) {
+          this.glyphs[parseInt(code)] = GlyphData.fromJSON(data.glyphs[code]);
+        }
+
+        this.updateAsciiCellIndicators();
+        this.selectChar(this.selectedChar);
+        this.renderPreview();
+      } catch (err) {
+        alert('Failed to load JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  bindEvents() {
+    // ASCII grid
+    this.elAsciiGrid.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const cell = e.target.closest('.ascii-cell');
+      if (cell) {
+        this.selectChar(parseInt(cell.dataset.code));
+      }
+    });
+
+    // Editor canvas
+    this.elEditorCanvas.addEventListener('mousedown', (e) => this.onEditorMouseDown(e));
+    this.elEditorCanvas.addEventListener('mousemove', (e) => this.onEditorMouseMove(e));
+    window.addEventListener('mouseup', () => this.onEditorMouseUp());
+    this.elEditorCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Glyph width
+    this.elGlyphWidth.addEventListener('change', () => {
+      const val = parseInt(this.elGlyphWidth.value);
+      if (val >= 1 && val <= 64) {
+        const glyph = this.getGlyph(this.selectedChar);
+        glyph.resize(val, this.gridHeight);
+        this.renderEditor();
+        this.renderPreview();
+      }
+    });
+
+    // Import PNG
+    document.getElementById('btnImportPng').addEventListener('click', () => {
+      document.getElementById('fileImportPng').click();
+    });
+    document.getElementById('fileImportPng').addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        this.importPngForGlyph(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+
+    // Sprite sheet
+    document.getElementById('btnSpriteSheet').addEventListener('click', () => {
+      document.getElementById('fileSpriteSheet').click();
+    });
+    document.getElementById('fileSpriteSheet').addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        this.spriteImporter.open(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+
+    // Toolbar buttons
+    document.getElementById('btnClearGlyph').addEventListener('click', () => {
+      this.getGlyph(this.selectedChar).clear();
+      this.renderEditor();
+      this.renderPreview();
+      this.updateAsciiCellIndicators();
+    });
+
+    document.getElementById('btnShiftL').addEventListener('click', () => {
+      this.getGlyph(this.selectedChar).shift(-1, 0);
+      this.renderEditor(); this.renderPreview();
+    });
+    document.getElementById('btnShiftR').addEventListener('click', () => {
+      this.getGlyph(this.selectedChar).shift(1, 0);
+      this.renderEditor(); this.renderPreview();
+    });
+    document.getElementById('btnShiftU').addEventListener('click', () => {
+      this.getGlyph(this.selectedChar).shift(0, -1);
+      this.renderEditor(); this.renderPreview();
+    });
+    document.getElementById('btnShiftD').addEventListener('click', () => {
+      this.getGlyph(this.selectedChar).shift(0, 1);
+      this.renderEditor(); this.renderPreview();
+    });
+
+    document.getElementById('btnPrevGlyph').addEventListener('click', () => {
+      this.selectChar(Math.max(0, this.selectedChar - 1));
+      this.scrollAsciiCellIntoView();
+    });
+    document.getElementById('btnNextGlyph').addEventListener('click', () => {
+      this.selectChar(Math.min(255, this.selectedChar + 1));
+      this.scrollAsciiCellIntoView();
+    });
+
+    // Settings
+    this.elFontName.addEventListener('change', () => {
+      this.fontName = this.elFontName.value || 'MyPixelFont';
+    });
+
+    this.elGridHeight.addEventListener('change', () => {
+      const val = parseInt(this.elGridHeight.value);
+      if (val >= 4 && val <= 64) {
+        this.gridHeight = val;
+        for (const code in this.glyphs) {
+          this.glyphs[code].resize(this.glyphs[code].width, this.gridHeight);
+        }
+        this.renderEditor();
+        this.renderPreview();
+      }
+    });
+
+    this.elBaselineRow.addEventListener('change', () => {
+      const val = parseInt(this.elBaselineRow.value);
+      if (val >= 1 && val < this.gridHeight) {
+        this.baselineRow = val;
+        this.renderEditor();
+        this.renderPreview();
+      }
+    });
+
+    this.elLineGap.addEventListener('change', () => {
+      this.lineGap = parseInt(this.elLineGap.value) || 0;
+      this.renderPreview();
+    });
+
+    document.getElementById('btnSetAllWidths').addEventListener('click', () => {
+      const val = parseInt(this.elSetAllWidths.value);
+      if (val >= 1 && val <= 64) {
+        this.setAllWidths(val);
+      }
+    });
+
+    // Preview
+    this.elPreviewText.addEventListener('input', () => this.renderPreview());
+    this.elPreviewScale.addEventListener('input', () => this.renderPreview());
+
+    // Save / Load / Export
+    document.getElementById('btnSaveJson').addEventListener('click', () => this.saveJSON());
+    document.getElementById('btnLoadJson').addEventListener('click', () => {
+      document.getElementById('fileLoadJson').click();
+    });
+    document.getElementById('fileLoadJson').addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        this.loadJSON(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+    document.getElementById('btnExportOtf').addEventListener('click', () => this.exportOTF());
+    document.getElementById('btnExportTtf').addEventListener('click', () => this.exportTTF());
+
+    window.addEventListener('resize', () => this.renderEditor());
+  }
+
+  scrollAsciiCellIntoView() {
+    const cell = this.asciiCells[this.selectedChar];
+    if (cell) {
+      cell.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new PixelFontEditor();
+});
+</script>
+
+</body>
+</html>
