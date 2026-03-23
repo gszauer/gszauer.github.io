@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIX - Sprite Organizer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#e6edf3;
+  --dim:#8b949e;--faint:#484f58;--accent:#58a6ff;--accent-bg:#1f6feb33;
+  --green:#3fb950;--yellow:#d29922;--red:#f85149;--hover:#1c2128;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;overflow:hidden;user-select:none}
+
+/* Drop Zone */
+#dropzone{display:flex;align-items:center;justify-content:center;height:100vh;transition:background .2s}
+#dropzone.dragover{background:var(--accent-bg)}
+.drop-content{text-align:center}
+.drop-content h1{font-size:48px;font-weight:300;letter-spacing:8px;margin-bottom:8px;color:var(--accent)}
+.drop-content .sub{color:var(--dim);font-size:14px;margin-bottom:32px}
+.drop-content p{color:var(--dim);margin:8px 0}
+.drop-content button{margin-top:8px;padding:8px 24px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+.drop-content button:hover{opacity:.9}
+#loading-msg{margin-top:16px;color:var(--yellow);display:none}
+#error-msg{margin-top:16px;color:var(--red);display:none;max-width:400px;word-wrap:break-word}
+
+/* Workspace */
+#workspace{display:none;flex-direction:column;height:100vh}
+#workspace.visible{display:flex}
+
+/* Toolbar */
+#toolbar{display:flex;align-items:center;gap:12px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--border);min-height:36px}
+#toolbar .file-name{font-weight:600;color:var(--accent)}
+#toolbar label{color:var(--dim);display:flex;align-items:center;gap:4px}
+#toolbar input[type="number"]{width:50px;padding:2px 4px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:3px;text-align:center}
+.toolbar-spacer{flex:1}
+.tbtn{padding:4px 12px;background:var(--border);color:var(--text);border:none;border-radius:3px;cursor:pointer;font-size:12px}
+.tbtn:hover{background:var(--faint)}
+.tbtn.primary{background:var(--accent);color:#fff}
+
+/* Main Layout */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* Panels */
+.panel{display:flex;flex-direction:column;background:var(--panel)}
+.panel-header{padding:8px 10px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-header button{padding:2px 8px;background:var(--accent);color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px}
+
+/* Layers Panel */
+#layers-panel{width:260px;min-width:260px;border-right:1px solid var(--border)}
+#layer-list{flex:1;overflow-y:auto}
+.layer-item{display:flex;align-items:center;gap:6px;padding:4px 8px;cursor:pointer;border-bottom:1px solid var(--border)}
+.layer-item:hover{background:var(--hover)}
+.layer-item.selected{background:var(--accent-bg);border-left:2px solid var(--accent)}
+.layer-thumb{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(#333 0% 25%,#222 0% 50%) 50%/4px 4px;flex-shrink:0}
+.layer-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.layer-name.invisible{font-style:italic;color:var(--faint)}
+.layer-cell-count{margin-left:auto;font-size:10px;color:var(--faint);flex-shrink:0}
+.layer-folder{display:flex;align-items:center;gap:4px;padding:4px 8px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;color:var(--dim);font-weight:600}
+.layer-folder:hover{background:var(--hover)}
+.folder-toggle{font-size:10px;color:var(--faint);width:10px;flex-shrink:0}
+.folder-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-count{margin-left:auto;font-size:10px;color:var(--faint);flex-shrink:0}
+
+/* Canvas Panel */
+#canvas-panel{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+#grid-canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair}
+#canvas-status{position:absolute;bottom:8px;left:8px;font-size:11px;color:var(--dim);pointer-events:none}
+#assign-bar{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:6px 16px;border-radius:4px;font-size:12px;display:none;cursor:pointer;z-index:10;white-space:nowrap}
+#assign-bar.visible{display:block}
+#canvas-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--faint);font-size:14px;pointer-events:none}
+
+/* Groups Panel */
+#groups-panel{width:300px;min-width:300px;border-left:1px solid var(--border);overflow-y:auto}
+.group-item{border-bottom:1px solid var(--border);padding:8px}
+.group-header{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.group-color{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.group-header input[type="text"]{flex:1;background:transparent;border:none;border-bottom:1px solid transparent;color:var(--text);font-size:12px;font-weight:600;padding:1px 2px;min-width:0}
+.group-header input[type="text"]:focus{border-bottom-color:var(--accent);outline:none}
+.group-header select{background:var(--bg);border:1px solid var(--border);color:var(--dim);font-size:10px;padding:1px 2px;border-radius:2px}
+.btn-sm{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
+.btn-sm:hover{color:var(--text)}
+.btn-sm.danger:hover{color:var(--red)}
+
+.option-item{margin-left:12px;padding:2px 0}
+.option-header{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);margin-bottom:2px}
+.option-header input{background:transparent;border:none;border-bottom:1px solid transparent;color:var(--text);font-size:11px;padding:1px 2px;width:80px}
+.option-header input:focus{border-bottom-color:var(--accent);outline:none}
+
+.anim-item{margin-left:8px;padding:4px 6px;border-radius:3px;cursor:pointer;margin-bottom:2px}
+.anim-item:hover{background:var(--hover)}
+.anim-item.active-target{background:var(--accent-bg);outline:1px solid var(--accent)}
+.anim-header{display:flex;align-items:center;gap:4px}
+.anim-name{font-size:11px;color:var(--text);font-weight:500}
+.anim-frames{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap}
+.frame-thumb{image-rendering:pixelated;background:repeating-conic-gradient(#333 0% 25%,#222 0% 50%) 50%/4px 4px;border:1px solid var(--border);cursor:pointer}
+.frame-thumb:hover{border-color:var(--red)}
+
+.add-row{display:flex;gap:4px;margin-top:4px;margin-left:8px}
+.add-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;padding:2px 6px;border-radius:2px}
+.add-row input:focus{outline:1px solid var(--accent)}
+.add-row button,.add-btn{background:var(--border);border:none;color:var(--text);cursor:pointer;padding:2px 8px;border-radius:2px;font-size:11px}
+.add-btn{margin:4px 0 4px 12px}
+
+/* Preview Panel (footer inside layers panel) */
+#preview-panel{border-top:1px solid var(--border);flex-shrink:0}
+#preview-body{display:flex;gap:10px;padding:8px;align-items:flex-start}
+#preview-canvas{image-rendering:pixelated;background:repeating-conic-gradient(#333 0% 25%,#222 0% 50%) 50%/8px 8px;border:1px solid var(--border);flex-shrink:0}
+#preview-controls{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+#preview-controls label{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:4px}
+#preview-controls select,#preview-controls input[type="number"]{background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;padding:2px 4px;border-radius:2px;min-width:0}
+#preview-controls select{max-width:100px}
+#preview-controls input[type="number"]{width:40px}
+#play-btn{background:var(--accent);color:#fff;border:none;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;align-self:flex-start}
+#equip-selectors{display:flex;flex-direction:column;gap:4px}
+#equip-selectors label{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:4px}
+#equip-selectors select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;padding:2px 4px;border-radius:2px}
+
+/* Preview Modal */
+#preview-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center}
+#preview-modal.open{display:flex}
+#preview-modal-content{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:0;min-width:300px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column}
+#preview-modal-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;color:var(--dim)}
+#preview-modal-header .btn-sm{font-size:20px;color:var(--text)}
+#preview-modal-canvas{image-rendering:pixelated;background:repeating-conic-gradient(#333 0% 25%,#222 0% 50%) 50%/12px 12px;border-bottom:1px solid var(--border);display:block;margin:16px auto}
+#preview-modal-controls{padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+#preview-modal-controls label{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px}
+#preview-modal-controls select,#preview-modal-controls input[type="number"]{background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:12px;padding:3px 6px;border-radius:3px}
+#preview-modal-controls button{background:var(--accent);color:#fff;border:none;padding:4px 14px;border-radius:3px;cursor:pointer;font-size:12px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--faint)}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Drop Zone -->
+  <div id="dropzone">
+    <div class="drop-content">
+      <h1>PIX</h1>
+      <div class="sub">Character Sprite Organizer</div>
+      <p>Drop a .psd or .png file here</p>
+      <p style="color:var(--faint);font-size:12px">or</p>
+      <button onclick="document.getElementById('file-input').click()">Browse</button>
+      <input type="file" id="file-input" accept=".psd,.png" hidden>
+      <div id="loading-msg">Loading...</div>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div id="workspace">
+    <div id="toolbar">
+      <span class="file-name" id="file-name"></span>
+      <div class="toolbar-spacer"></div>
+      <label>Grid:
+        <input type="number" id="grid-w" value="32" min="1" max="1024">
+        &times;
+        <input type="number" id="grid-h" value="64" min="1" max="1024">
+      </label>
+      <button class="tbtn" id="reslice-btn">Re-slice</button>
+      <button class="tbtn" id="save-btn">Save</button>
+      <button class="tbtn" id="load-btn">Load</button>
+      <input type="file" id="load-input" accept=".json" hidden>
+      <button class="tbtn primary" id="export-btn">Publish</button>
+    </div>
+
+    <div id="main">
+      <div class="panel" id="layers-panel">
+        <div class="panel-header">Layers</div>
+        <div id="layer-list"></div>
+        <div id="preview-panel">
+          <div class="panel-header">Preview <button class="btn-sm" onclick="openPreviewModal()" title="Maximize preview">&#x26F6;</button></div>
+          <div id="preview-body">
+            <canvas id="preview-canvas" width="64" height="128"></canvas>
+            <div id="preview-controls">
+              <button id="play-btn" onclick="togglePlay()">&#9654; Play</button>
+              <label>Anim: <select id="anim-select" onchange="selectAnimation(this.value)"></select></label>
+              <label>FPS: <input type="number" id="fps-input" value="8" min="1" max="60" onchange="state.preview.fps=+this.value"></label>
+              <div id="equip-selectors"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="canvas-panel">
+        <canvas id="grid-canvas"></canvas>
+        <div id="canvas-status"></div>
+        <div id="assign-bar"></div>
+        <div id="canvas-hint">Select a layer to view</div>
+      </div>
+
+      <div class="panel" id="groups-panel">
+        <div class="panel-header">
+          Groups
+          <button onclick="addGroup()">+ Group</button>
+        </div>
+        <div id="group-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="preview-modal" onclick="if(event.target===this)closePreviewModal()">
+    <div id="preview-modal-content">
+      <div id="preview-modal-header">
+        <span>Preview</span>
+        <button class="btn-sm" onclick="closePreviewModal()" title="Close">&times;</button>
+      </div>
+      <canvas id="preview-modal-canvas"></canvas>
+      <div id="preview-modal-controls"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PSD.js library - if this fails to load, update the URL or place psd.min.js next to this file -->
+<script src="psd.min.js" onerror="window._psdJsFailed=true"></script>
+<script>
+// ================================================================
+//  PIX - Character Sprite Organizer
+// ================================================================
+
+const GROUP_COLORS = [
+  '#58a6ff','#3fb950','#d29922','#f85149','#bc8cff',
+  '#39d2c0','#79c0ff','#d2a8ff','#f778ba','#ffa657'
+];
+
+// -------------------- State --------------------
+const state = {
+  fileName: '',
+  psdWidth: 0,
+  psdHeight: 0,
+  gridW: 32,
+  gridH: 64,
+  layers: [],          // {name, visible, canvas, cells:[], thumbnail}
+  selectedLayerIdx: -1,
+  selectedCells: [],   // [{layerIdx, gridX, gridY}] in selection order
+  groups: [],          // {id, name, type, zOrder, color, options:[{name, animations:{name:[{layerIdx,gridX,gridY}]}}]}
+  nextGroupId: 1,
+  activeTarget: null,  // {groupIdx, optionIdx, animName}
+  preview: { playing: false, animName: '', frameIdx: 0, fps: 8, timer: null, equip: {} },
+  canvasView: { zoom: 1, panX: 0, panY: 0 },
+  collapsedFolders: new Set()
+};
+
+// -------------------- Utilities --------------------
+function cellKey(li, gx, gy) { return `${li},${gx},${gy}`; }
+function groupBaseName(name) { return name.split('@')[0].trim(); }
+
+function getCellCanvas(layerIdx, gridX, gridY) {
+  const layer = state.layers[layerIdx];
+  if (!layer) return null;
+  const cell = layer.cells.find(c => c.gridX === gridX && c.gridY === gridY);
+  return cell ? cell.canvas : null;
+}
+
+function getCellAssignment(layerIdx, gridX, gridY) {
+  for (let gi = 0; gi < state.groups.length; gi++) {
+    const g = state.groups[gi];
+    for (let oi = 0; oi < g.options.length; oi++) {
+      for (const [animName, frames] of Object.entries(g.options[oi].animations)) {
+        for (let fi = 0; fi < frames.length; fi++) {
+          const f = frames[fi];
+          if (f.layerIdx === layerIdx && f.gridX === gridX && f.gridY === gridY) {
+            return { groupIdx: gi, optionIdx: oi, animName, frameIdx: fi };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// -------------------- File Loading --------------------
+async function loadFile(file) {
+  const loading = document.getElementById('loading-msg');
+  const error = document.getElementById('error-msg');
+  loading.style.display = 'block';
+  error.style.display = 'none';
+
+  try {
+    state.fileName = file.name;
+    state.gridW = parseInt(document.getElementById('grid-w').value) || 32;
+    state.gridH = parseInt(document.getElementById('grid-h').value) || 64;
+
+    if (file.name.toLowerCase().endsWith('.psd')) {
+      await loadPSD(file);
+    } else if (file.name.toLowerCase().endsWith('.png')) {
+      await loadPNG(file);
+    } else {
+      throw new Error('Unsupported file type. Use .psd or .png');
+    }
+
+    autoSliceAll();
+
+    document.getElementById('dropzone').style.display = 'none';
+    document.getElementById('workspace').classList.add('visible');
+    document.getElementById('file-name').textContent = state.fileName +
+      ` (${state.psdWidth}x${state.psdHeight}, ${state.layers.length} layers)`;
+
+    if (state.layers.length > 0) selectLayer(0);
+    renderLayerList();
+    renderGroupsPanel();
+    updatePreview();
+  } catch (e) {
+    error.textContent = e.message;
+    error.style.display = 'block';
+    console.error('Load error:', e);
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+async function loadPSD(file) {
+  const PSDClass = window.PSD;
+  if (!PSDClass) {
+    throw new Error(
+      'PSD.js library failed to load.' +
+      (window._psdJsFailed ? ' Check that psd.min.js is next to this file.' : '')
+    );
+  }
+
+  // PSD.fromFile uses FileReader internally, returns PSD via callback
+  const psd = await new Promise((resolve, reject) => {
+    try {
+      PSDClass.fromFile(file, psd => resolve(psd));
+    } catch (e) { reject(e); }
+  });
+
+  psd.setOptions({ layerImages: true });
+  psd.parse();
+
+  state.psdWidth = psd.header.cols || 0;
+  state.psdHeight = psd.header.rows || 0;
+  if (!state.psdWidth || !state.psdHeight) throw new Error('Could not read PSD dimensions');
+
+  state.layers = [];
+
+  for (const layer of psd.layers) {
+    // Skip folder markers and hidden end-of-folder markers
+    if (layer.isFolder || layer.isHidden) continue;
+
+    const lW = layer.cols || 0;
+    const lH = layer.rows || 0;
+    if (lW <= 0 || lH <= 0) continue;
+    if (!layer.image) continue;
+
+    // Render layer image onto a full-PSD-sized canvas
+    const fullCanvas = document.createElement('canvas');
+    fullCanvas.width = state.psdWidth;
+    fullCanvas.height = state.psdHeight;
+    const ctx = fullCanvas.getContext('2d');
+    let ok = false;
+
+    // Method 1: toCanvas (renders layer pixels onto a canvas sized to layer bounds)
+    try {
+      const layerCanvas = document.createElement('canvas');
+      layer.image.toCanvas(layerCanvas);
+      ctx.drawImage(layerCanvas, layer.left, layer.top);
+      ok = true;
+    } catch (e) {
+      console.warn('toCanvas failed for layer:', layer.name, e);
+    }
+
+    // Method 2: raw pixelData fallback
+    if (!ok && layer.image.pixelData && layer.image.pixelData.length >= lW * lH * 4) {
+      try {
+        const lc = document.createElement('canvas');
+        lc.width = lW; lc.height = lH;
+        const lctx = lc.getContext('2d');
+        const id = lctx.createImageData(lW, lH);
+        id.data.set(layer.image.pixelData.subarray(0, lW * lH * 4));
+        lctx.putImageData(id, 0, 0);
+        ctx.drawImage(lc, layer.left, layer.top);
+        ok = true;
+      } catch (e) {
+        console.warn('pixelData fallback failed for layer:', layer.name, e);
+      }
+    }
+
+    if (!ok) continue;
+
+    // Build group path from groupLayer chain
+    let parts = [];
+    let g = layer.groupLayer;
+    while (g) { parts.unshift(g.name); g = g.groupLayer; }
+    parts.push(layer.name || 'Unnamed');
+
+    state.layers.push({
+      name: parts.join('/'),
+      visible: layer.visible === 1,
+      canvas: fullCanvas, cells: [], thumbnail: null
+    });
+  }
+
+  if (state.layers.length === 0) throw new Error('No layers with image data found');
+}
+
+async function loadPNG(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+  state.psdWidth = img.width;
+  state.psdHeight = img.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width; canvas.height = img.height;
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  state.layers = [{ name: file.name.replace(/\.png$/i, ''), visible: true, canvas, cells: [], thumbnail: null }];
+  URL.revokeObjectURL(url);
+}
+
+// -------------------- Auto-Slice --------------------
+function autoSliceAll() {
+  state.gridW = parseInt(document.getElementById('grid-w')?.value) || state.gridW;
+  state.gridH = parseInt(document.getElementById('grid-h')?.value) || state.gridH;
+  for (const layer of state.layers) {
+    sliceLayer(layer);
+    makeThumbnail(layer);
+  }
+}
+
+function sliceLayer(layer) {
+  layer.cells = [];
+  const ctx = layer.canvas.getContext('2d');
+  const cols = Math.floor(state.psdWidth / state.gridW);
+  const rows = Math.floor(state.psdHeight / state.gridH);
+
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const imgData = ctx.getImageData(gx * state.gridW, gy * state.gridH, state.gridW, state.gridH);
+      let hasContent = false;
+      for (let i = 3; i < imgData.data.length; i += 4) {
+        if (imgData.data[i] > 0) { hasContent = true; break; }
+      }
+      if (hasContent) {
+        const c = document.createElement('canvas');
+        c.width = state.gridW; c.height = state.gridH;
+        c.getContext('2d').putImageData(imgData, 0, 0);
+        layer.cells.push({ gridX: gx, gridY: gy, canvas: c });
+      }
+    }
+  }
+}
+
+function makeThumbnail(layer) {
+  const ctx = layer.canvas.getContext('2d');
+  const w = layer.canvas.width, h = layer.canvas.height;
+  const id = ctx.getImageData(0, 0, w, h);
+  const d = id.data;
+
+  // Find content bounding box
+  let minX = w, minY = h, maxX = 0, maxY = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (d[(y * w + x) * 4 + 3] > 0) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  const t = document.createElement('canvas');
+  const s = 24;
+  if (maxX < minX) {
+    // Empty layer
+    t.width = s; t.height = s;
+  } else {
+    const cw = maxX - minX + 1, ch = maxY - minY + 1;
+    const a = cw / ch;
+    t.width = a >= 1 ? s : Math.max(1, Math.round(s * a));
+    t.height = a >= 1 ? Math.max(1, Math.round(s / a)) : s;
+    const tc = t.getContext('2d');
+    tc.imageSmoothingEnabled = false;
+    tc.drawImage(layer.canvas, minX, minY, cw, ch, 0, 0, t.width, t.height);
+  }
+  layer.thumbnail = t.toDataURL();
+}
+
+// -------------------- Layer List --------------------
+function buildLayerTree() {
+  const root = [];
+  state.layers.forEach((layer, idx) => {
+    const parts = layer.name.split('/');
+    const leafName = parts.pop();
+    let children = root;
+    let path = '';
+    for (const part of parts) {
+      path += (path ? '/' : '') + part;
+      let folder = children.find(c => c.type === 'folder' && c.name === part);
+      if (!folder) {
+        folder = { type: 'folder', name: part, path, children: [] };
+        children.push(folder);
+      }
+      children = folder.children;
+    }
+    children.push({ type: 'layer', name: leafName, layerIdx: idx });
+  });
+  return root;
+}
+
+function countTreeLayers(node) {
+  if (node.type === 'layer') return 1;
+  let n = 0;
+  for (const c of node.children) n += countTreeLayers(c);
+  return n;
+}
+
+function renderLayerList() {
+  const el = document.getElementById('layer-list');
+  el.innerHTML = '';
+  const tree = buildLayerTree();
+  renderTreeLevel(el, tree, 0);
+}
+
+function renderTreeLevel(container, items, depth) {
+  for (const item of items) {
+    if (item.type === 'folder') {
+      const collapsed = state.collapsedFolders.has(item.path);
+      const div = document.createElement('div');
+      div.className = 'layer-folder';
+      div.style.paddingLeft = (6 + depth * 14) + 'px';
+      div.onclick = () => {
+        if (collapsed) state.collapsedFolders.delete(item.path);
+        else state.collapsedFolders.add(item.path);
+        renderLayerList();
+      };
+
+      const toggle = document.createElement('span');
+      toggle.className = 'folder-toggle';
+      toggle.textContent = collapsed ? '\u25B8' : '\u25BE';
+      div.appendChild(toggle);
+
+      const nm = document.createElement('span');
+      nm.className = 'folder-name';
+      nm.textContent = item.name;
+      nm.title = item.path;
+      div.appendChild(nm);
+
+      const cnt = document.createElement('span');
+      cnt.className = 'folder-count';
+      cnt.textContent = countTreeLayers(item);
+      div.appendChild(cnt);
+
+      container.appendChild(div);
+
+      if (!collapsed) {
+        renderTreeLevel(container, item.children, depth + 1);
+      }
+    } else {
+      const layer = state.layers[item.layerIdx];
+      const div = document.createElement('div');
+      div.className = 'layer-item' + (item.layerIdx === state.selectedLayerIdx ? ' selected' : '');
+      div.style.paddingLeft = (6 + depth * 14) + 'px';
+      div.onclick = () => selectLayer(item.layerIdx);
+
+      if (layer.thumbnail) {
+        const th = document.createElement('img');
+        th.src = layer.thumbnail;
+        th.className = 'layer-thumb';
+        div.appendChild(th);
+      }
+
+      const nm = document.createElement('span');
+      nm.className = 'layer-name' + (layer.visible ? '' : ' invisible');
+      nm.textContent = item.name;
+      nm.title = layer.name;
+      div.appendChild(nm);
+
+      const cnt = document.createElement('span');
+      cnt.className = 'layer-cell-count';
+      cnt.textContent = layer.cells.length;
+      div.appendChild(cnt);
+
+      container.appendChild(div);
+    }
+  }
+}
+
+function selectLayer(idx) {
+  state.selectedLayerIdx = idx;
+  state.selectedCells = [];
+  document.getElementById('canvas-hint').style.display = idx < 0 ? 'block' : 'none';
+  renderLayerList();
+  autoFitCanvas();
+  renderGridCanvas();
+}
+
+// -------------------- Grid Canvas --------------------
+let canvasEl, canvasCtx;
+
+function initCanvas() {
+  canvasEl = document.getElementById('grid-canvas');
+  canvasCtx = canvasEl.getContext('2d');
+  const panel = document.getElementById('canvas-panel');
+
+  const ro = new ResizeObserver(() => {
+    canvasEl.width = panel.clientWidth;
+    canvasEl.height = panel.clientHeight;
+    renderGridCanvas();
+  });
+  ro.observe(panel);
+
+  let panning = false, lx, ly;
+
+  canvasEl.addEventListener('mousedown', e => {
+    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      panning = true; lx = e.clientX; ly = e.clientY;
+      canvasEl.style.cursor = 'grabbing';
+      e.preventDefault();
+    } else if (e.button === 0 && state.selectedLayerIdx >= 0) {
+      const c = screenToGrid(e.clientX, e.clientY);
+      if (c) toggleCell(state.selectedLayerIdx, c.gridX, c.gridY);
+    }
+  });
+
+  canvasEl.addEventListener('mousemove', e => {
+    if (panning) {
+      state.canvasView.panX += e.clientX - lx;
+      state.canvasView.panY += e.clientY - ly;
+      lx = e.clientX; ly = e.clientY;
+      renderGridCanvas();
+    } else {
+      const c = screenToGrid(e.clientX, e.clientY);
+      document.getElementById('canvas-status').textContent = c ? `Cell: ${c.gridX}, ${c.gridY}` : '';
+    }
+  });
+
+  canvasEl.addEventListener('mouseup', () => { panning = false; canvasEl.style.cursor = 'crosshair'; });
+  canvasEl.addEventListener('mouseleave', () => { panning = false; canvasEl.style.cursor = 'crosshair'; });
+
+  canvasEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = canvasEl.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const old = state.canvasView.zoom;
+    state.canvasView.zoom = Math.max(0.1, Math.min(80, old * (e.deltaY > 0 ? 0.9 : 1.1)));
+    const ratio = state.canvasView.zoom / old;
+    state.canvasView.panX = mx - (mx - state.canvasView.panX) * ratio;
+    state.canvasView.panY = my - (my - state.canvasView.panY) * ratio;
+    renderGridCanvas();
+  }, { passive: false });
+}
+
+function screenToGrid(sx, sy) {
+  const r = canvasEl.getBoundingClientRect();
+  const x = (sx - r.left - state.canvasView.panX) / state.canvasView.zoom;
+  const y = (sy - r.top - state.canvasView.panY) / state.canvasView.zoom;
+  const gx = Math.floor(x / state.gridW), gy = Math.floor(y / state.gridH);
+  const cols = Math.floor(state.psdWidth / state.gridW);
+  const rows = Math.floor(state.psdHeight / state.gridH);
+  if (gx < 0 || gx >= cols || gy < 0 || gy >= rows) return null;
+  return { gridX: gx, gridY: gy };
+}
+
+function autoFitCanvas() {
+  if (!canvasEl || !state.psdWidth) return;
+  const p = document.getElementById('canvas-panel');
+  const sx = p.clientWidth / state.psdWidth, sy = p.clientHeight / state.psdHeight;
+  state.canvasView.zoom = Math.min(sx, sy) * 0.9;
+  state.canvasView.panX = (p.clientWidth - state.psdWidth * state.canvasView.zoom) / 2;
+  state.canvasView.panY = (p.clientHeight - state.psdHeight * state.canvasView.zoom) / 2;
+}
+
+function renderGridCanvas() {
+  if (!canvasEl || !canvasCtx) return;
+  const ctx = canvasCtx;
+  const w = canvasEl.width, h = canvasEl.height;
+  ctx.clearRect(0, 0, w, h);
+
+  if (state.selectedLayerIdx < 0 || !state.layers[state.selectedLayerIdx]) return;
+
+  const layer = state.layers[state.selectedLayerIdx];
+  const { zoom, panX, panY } = state.canvasView;
+  const cols = Math.floor(state.psdWidth / state.gridW);
+  const rows = Math.floor(state.psdHeight / state.gridH);
+
+  ctx.save();
+  ctx.translate(panX, panY);
+  ctx.scale(zoom, zoom);
+  ctx.imageSmoothingEnabled = false;
+
+  // Layer image
+  ctx.drawImage(layer.canvas, 0, 0);
+
+  // Non-empty cells with assignment info
+  for (const cell of layer.cells) {
+    const x = cell.gridX * state.gridW, y = cell.gridY * state.gridH;
+    const asn = getCellAssignment(state.selectedLayerIdx, cell.gridX, cell.gridY);
+    if (asn) {
+      const col = state.groups[asn.groupIdx]?.color || GROUP_COLORS[0];
+      ctx.fillStyle = col + '33';
+      ctx.fillRect(x, y, state.gridW, state.gridH);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2 / zoom;
+      ctx.strokeRect(x + 1 / zoom, y + 1 / zoom, state.gridW - 2 / zoom, state.gridH - 2 / zoom);
+    } else {
+      ctx.fillStyle = 'rgba(88,166,255,0.08)';
+      ctx.fillRect(x, y, state.gridW, state.gridH);
+    }
+  }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1 / zoom;
+  for (let gx = 0; gx <= cols; gx++) {
+    ctx.beginPath(); ctx.moveTo(gx * state.gridW, 0); ctx.lineTo(gx * state.gridW, rows * state.gridH); ctx.stroke();
+  }
+  for (let gy = 0; gy <= rows; gy++) {
+    ctx.beginPath(); ctx.moveTo(0, gy * state.gridH); ctx.lineTo(cols * state.gridW, gy * state.gridH); ctx.stroke();
+  }
+
+  // Selected cells
+  state.selectedCells.forEach((sel, idx) => {
+    if (sel.layerIdx !== state.selectedLayerIdx) return;
+    const x = sel.gridX * state.gridW, y = sel.gridY * state.gridH;
+    ctx.strokeStyle = '#ffd54f';
+    ctx.lineWidth = 2 / zoom;
+    ctx.strokeRect(x + 1 / zoom, y + 1 / zoom, state.gridW - 2 / zoom, state.gridH - 2 / zoom);
+    ctx.fillStyle = '#ffd54f';
+    const fs = Math.min(state.gridW * 0.4, Math.max(10, 14 / zoom));
+    ctx.font = `bold ${fs}px sans-serif`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`${idx + 1}`, x + 2 / zoom, y + 1 / zoom);
+  });
+
+  ctx.restore();
+  updateAssignBar();
+}
+
+function updateAssignBar() {
+  const bar = document.getElementById('assign-bar');
+  const n = state.selectedCells.length;
+  if (n > 0 && state.activeTarget) {
+    const t = state.activeTarget, g = state.groups[t.groupIdx];
+    const optName = g.type === 'equippable' ? g.options[t.optionIdx].name + ' / ' : '';
+    bar.textContent = `Assign ${n} sprite${n > 1 ? 's' : ''} \u2192 ${g.name} / ${optName}${t.animName}  [click or Enter]`;
+    bar.classList.add('visible');
+    bar.onclick = assignSelectedCells;
+  } else if (n > 0) {
+    bar.textContent = `${n} sprite${n > 1 ? 's' : ''} selected \u2014 pick a target animation in Groups`;
+    bar.classList.add('visible');
+    bar.onclick = null;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+// -------------------- Cell Selection --------------------
+function toggleCell(layerIdx, gridX, gridY) {
+  const layer = state.layers[layerIdx];
+  if (!layer.cells.some(c => c.gridX === gridX && c.gridY === gridY)) return;
+
+  const i = state.selectedCells.findIndex(c => c.layerIdx === layerIdx && c.gridX === gridX && c.gridY === gridY);
+  if (i >= 0) state.selectedCells.splice(i, 1);
+  else state.selectedCells.push({ layerIdx, gridX, gridY });
+  renderGridCanvas();
+}
+
+function clearSelection() { state.selectedCells = []; renderGridCanvas(); }
+
+function selectAllCells() {
+  if (state.selectedLayerIdx < 0) return;
+  const layer = state.layers[state.selectedLayerIdx];
+  state.selectedCells = layer.cells.map(c => ({ layerIdx: state.selectedLayerIdx, gridX: c.gridX, gridY: c.gridY }));
+  renderGridCanvas();
+}
+
+// -------------------- Group Management --------------------
+function addGroup() {
+  const id = state.nextGroupId++;
+  state.groups.push({
+    id, name: `Group ${id}`, type: 'permanent',
+    zOrder: state.groups.length,
+    color: GROUP_COLORS[(state.groups.length) % GROUP_COLORS.length],
+    options: [{ name: 'default', animations: {} }]
+  });
+  renderGroupsPanel();
+  updatePreview();
+}
+
+function deleteGroup(gi) {
+  state.groups.splice(gi, 1);
+  state.groups.forEach((g, i) => g.zOrder = i);
+  if (state.activeTarget?.groupIdx === gi) state.activeTarget = null;
+  else if (state.activeTarget && state.activeTarget.groupIdx > gi) state.activeTarget.groupIdx--;
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function moveGroup(gi, dir) {
+  const ni = gi + dir;
+  if (ni < 0 || ni >= state.groups.length) return;
+  [state.groups[gi], state.groups[ni]] = [state.groups[ni], state.groups[gi]];
+  state.groups.forEach((g, i) => g.zOrder = i);
+  // update activeTarget index if needed
+  if (state.activeTarget) {
+    if (state.activeTarget.groupIdx === gi) state.activeTarget.groupIdx = ni;
+    else if (state.activeTarget.groupIdx === ni) state.activeTarget.groupIdx = gi;
+  }
+  renderGroupsPanel(); updatePreview();
+}
+
+function changeGroupType(gi, type) {
+  state.groups[gi].type = type;
+  renderGroupsPanel(); updatePreview();
+}
+
+function addOption(gi) {
+  const g = state.groups[gi];
+  const anims = {};
+  if (g.options.length > 0) {
+    for (const name of Object.keys(g.options[0].animations)) anims[name] = [];
+  }
+  g.options.push({ name: `option ${g.options.length + 1}`, animations: anims });
+  renderGroupsPanel();
+}
+
+function deleteOption(gi, oi) {
+  if (state.groups[gi].options.length <= 1) return;
+  state.groups[gi].options.splice(oi, 1);
+  if (state.activeTarget?.groupIdx === gi && state.activeTarget?.optionIdx === oi) state.activeTarget = null;
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function addAnimation(gi, oi, name) {
+  if (!name?.trim()) return;
+  name = name.trim();
+  for (const opt of state.groups[gi].options) {
+    if (!opt.animations[name]) opt.animations[name] = [];
+  }
+  renderGroupsPanel(); updatePreview();
+}
+
+function deleteAnimation(gi, animName) {
+  for (const opt of state.groups[gi].options) delete opt.animations[animName];
+  if (state.activeTarget?.groupIdx === gi && state.activeTarget?.animName === animName) state.activeTarget = null;
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function renameAnimation(gi, oldName, newName) {
+  for (const opt of state.groups[gi].options) {
+    if (opt.animations[oldName] !== undefined) {
+      opt.animations[newName] = opt.animations[oldName];
+      delete opt.animations[oldName];
+    }
+  }
+  if (state.activeTarget?.groupIdx === gi && state.activeTarget?.animName === oldName) {
+    state.activeTarget.animName = newName;
+  }
+  if (state.preview.animName === oldName) state.preview.animName = newName;
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function setActiveTarget(gi, oi, animName) {
+  const t = state.activeTarget;
+  if (t && t.groupIdx === gi && t.optionIdx === oi && t.animName === animName) {
+    state.activeTarget = null;
+  } else {
+    state.activeTarget = { groupIdx: gi, optionIdx: oi, animName };
+  }
+  renderGroupsPanel(); renderGridCanvas();
+}
+
+function assignSelectedCells() {
+  if (!state.activeTarget || state.selectedCells.length === 0) return;
+  const { groupIdx, optionIdx, animName } = state.activeTarget;
+  const frames = state.groups[groupIdx].options[optionIdx].animations[animName];
+  for (const sel of state.selectedCells) {
+    frames.push({ layerIdx: sel.layerIdx, gridX: sel.gridX, gridY: sel.gridY });
+  }
+  state.selectedCells = [];
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function removeFrame(gi, oi, animName, fi) {
+  state.groups[gi].options[oi].animations[animName].splice(fi, 1);
+  renderGroupsPanel(); renderGridCanvas(); updatePreview();
+}
+
+function renderGroupsPanel() {
+  const el = document.getElementById('group-list');
+  el.innerHTML = '';
+
+  state.groups.forEach((group, gi) => {
+    const div = document.createElement('div');
+    div.className = 'group-item';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'group-header';
+    hdr.innerHTML = `
+      <span class="group-color" style="background:${group.color}"></span>
+      <input type="text" value="${esc(group.name)}" data-gi="${gi}">
+      <select data-gi="${gi}">
+        <option value="permanent"${group.type === 'permanent' ? ' selected' : ''}>perm</option>
+        <option value="equippable"${group.type === 'equippable' ? ' selected' : ''}>equip</option>
+      </select>
+      <button class="btn-sm" title="Move up">\u2191</button>
+      <button class="btn-sm" title="Move down">\u2193</button>
+      <button class="btn-sm danger" title="Delete">\u00d7</button>
+    `;
+    const input = hdr.querySelector('input');
+    input.onchange = () => { state.groups[gi].name = input.value; updatePreview(); };
+    const sel = hdr.querySelector('select');
+    sel.onchange = () => changeGroupType(gi, sel.value);
+    const btns = hdr.querySelectorAll('.btn-sm');
+    btns[0].onclick = () => moveGroup(gi, -1);
+    btns[1].onclick = () => moveGroup(gi, 1);
+    btns[2].onclick = () => deleteGroup(gi);
+    div.appendChild(hdr);
+
+    // Options
+    const showOpt = group.type === 'equippable';
+    group.options.forEach((opt, oi) => {
+      const od = document.createElement('div');
+      od.className = 'option-item';
+
+      if (showOpt) {
+        const oh = document.createElement('div');
+        oh.className = 'option-header';
+        oh.innerHTML = `<span style="color:var(--faint)">\u25b8</span>`;
+        const oinp = document.createElement('input');
+        oinp.type = 'text'; oinp.value = opt.name;
+        oinp.onchange = () => { state.groups[gi].options[oi].name = oinp.value; updatePreview(); };
+        oh.appendChild(oinp);
+        if (group.options.length > 1) {
+          const db = document.createElement('button');
+          db.className = 'btn-sm danger'; db.textContent = '\u00d7';
+          db.onclick = () => deleteOption(gi, oi);
+          oh.appendChild(db);
+        }
+        od.appendChild(oh);
+      }
+
+      // Animations
+      for (const [animName, frames] of Object.entries(opt.animations)) {
+        const ad = document.createElement('div');
+        ad.className = 'anim-item';
+        ad.style.cursor = 'pointer';
+        ad.onclick = () => setActiveTarget(gi, oi, animName);
+        const isTarget = state.activeTarget?.groupIdx === gi &&
+                         state.activeTarget?.optionIdx === oi &&
+                         state.activeTarget?.animName === animName;
+        if (isTarget) ad.classList.add('active-target');
+
+        const ah = document.createElement('div');
+        ah.className = 'anim-header';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'anim-name';
+        nameSpan.textContent = animName;
+        ah.appendChild(nameSpan);
+
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText = 'font-size:10px;color:var(--faint);margin-left:4px';
+        countSpan.textContent = `(${frames.length}f)`;
+        ah.appendChild(countSpan);
+
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'btn-sm';
+        renameBtn.style.cssText = 'margin-left:auto;font-size:11px;padding:0 3px';
+        renameBtn.textContent = '\u270E';
+        renameBtn.title = 'Rename animation';
+        renameBtn.onclick = (e) => {
+          e.stopPropagation();
+          const inp = document.createElement('input');
+          inp.type = 'text'; inp.value = animName;
+          inp.style.cssText = 'width:80px;font-size:11px;background:var(--bg);border:1px solid var(--accent);color:var(--text);padding:1px 4px;border-radius:2px';
+          nameSpan.replaceWith(inp);
+          renameBtn.style.display = 'none';
+          inp.focus(); inp.select();
+          const commit = () => {
+            const nv = inp.value.trim();
+            if (nv && nv !== animName) renameAnimation(gi, animName, nv);
+            else renderGroupsPanel();
+          };
+          inp.onblur = commit;
+          inp.onkeydown = (ke) => { if (ke.key === 'Enter') inp.blur(); if (ke.key === 'Escape') { inp.value = animName; inp.blur(); } };
+        };
+        ah.appendChild(renameBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-sm danger';
+        delBtn.style.cssText = 'font-size:16px;padding:0 4px;color:var(--red);opacity:0.7';
+        delBtn.textContent = '\u00d7';
+        delBtn.title = 'Delete animation "' + animName + '"';
+        delBtn.onmouseenter = () => delBtn.style.opacity = '1';
+        delBtn.onmouseleave = () => delBtn.style.opacity = '0.7';
+        delBtn.onclick = (e) => { e.stopPropagation(); deleteAnimation(gi, animName); };
+        ah.appendChild(delBtn);
+        ad.appendChild(ah);
+
+        // Frame thumbs
+        if (frames.length > 0) {
+          const fd = document.createElement('div');
+          fd.className = 'anim-frames';
+          frames.forEach((frame, fi) => {
+            const cc = getCellCanvas(frame.layerIdx, frame.gridX, frame.gridY);
+            if (!cc) return;
+            const tw = Math.max(16, Math.min(24, state.gridW));
+            const th = Math.round(tw * (state.gridH / state.gridW));
+            const tc = document.createElement('canvas');
+            tc.width = tw; tc.height = th; tc.className = 'frame-thumb';
+            tc.title = `Frame ${fi + 1} (${state.layers[frame.layerIdx]?.name || '?'} @ ${frame.gridX},${frame.gridY})\nClick to remove`;
+            const tctx = tc.getContext('2d');
+            tctx.imageSmoothingEnabled = false;
+            tctx.drawImage(cc, 0, 0, tw, th);
+            tc.onclick = (e) => { e.stopPropagation(); removeFrame(gi, oi, animName, fi); };
+            fd.appendChild(tc);
+          });
+          ad.appendChild(fd);
+        }
+
+        od.appendChild(ad);
+      }
+
+      // Add animation row
+      const ar = document.createElement('div');
+      ar.className = 'add-row';
+      const ainp = document.createElement('input');
+      ainp.placeholder = 'animation name';
+      ainp.onkeydown = e => { if (e.key === 'Enter') { addAnimation(gi, oi, ainp.value); ainp.value = ''; } };
+      const abtn = document.createElement('button');
+      abtn.textContent = '+';
+      abtn.onclick = () => { addAnimation(gi, oi, ainp.value); ainp.value = ''; };
+      ar.appendChild(ainp); ar.appendChild(abtn);
+      od.appendChild(ar);
+
+      div.appendChild(od);
+    });
+
+    if (group.type === 'equippable') {
+      const aob = document.createElement('button');
+      aob.className = 'add-btn'; aob.textContent = '+ Option';
+      aob.onclick = () => addOption(gi);
+      div.appendChild(aob);
+    }
+
+    el.appendChild(div);
+  });
+}
+
+function esc(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// -------------------- Preview --------------------
+function updateAnimSelect() {
+  const sel = document.getElementById('anim-select');
+  const names = new Set();
+  for (const g of state.groups) for (const o of g.options) for (const n of Object.keys(o.animations)) names.add(n);
+  const cur = sel.value;
+  sel.innerHTML = '';
+  for (const n of names) {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    if (n === cur) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  // Always keep animName in sync — set to first available if current is gone or empty
+  if (sel.options.length > 0) {
+    const validNames = [...names];
+    if (!state.preview.animName || !validNames.includes(state.preview.animName)) {
+      state.preview.animName = sel.value;
+    }
+    sel.value = state.preview.animName;
+  } else {
+    state.preview.animName = '';
+  }
+}
+
+function updateEquipSelectors() {
+  const el = document.getElementById('equip-selectors');
+  el.innerHTML = '';
+  // Merge equippable groups by base name
+  const seen = new Set();
+  for (const g of state.groups) {
+    if (g.type !== 'equippable') continue;
+    const base = groupBaseName(g.name);
+    if (seen.has(base)) continue;
+    seen.add(base);
+    // Use options from the first group with this base name
+    const label = document.createElement('label');
+    label.textContent = base + ': ';
+    const sel = document.createElement('select');
+    const none = document.createElement('option');
+    none.value = '-1'; none.textContent = '(none)';
+    sel.appendChild(none);
+    g.options.forEach((o, oi) => {
+      const opt = document.createElement('option');
+      opt.value = oi; opt.textContent = o.name;
+      if (state.preview.equip[base] === oi) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => { state.preview.equip[base] = parseInt(sel.value); renderPreviewFrame(); };
+    label.appendChild(sel);
+    el.appendChild(label);
+  }
+}
+
+function updatePreview() { updateAnimSelect(); updateEquipSelectors(); renderPreviewFrame(); }
+
+function selectAnimation(name) {
+  state.preview.animName = name;
+  state.preview.frameIdx = 0;
+  renderPreviewFrame();
+}
+
+function togglePlay() {
+  state.preview.playing = !state.preview.playing;
+  document.getElementById('play-btn').innerHTML = state.preview.playing ? '&#9646;&#9646; Pause' : '&#9654; Play';
+  if (state.preview.playing) { lastFrameTime = performance.now(); playLoop(); }
+  else if (state.preview.timer) { cancelAnimationFrame(state.preview.timer); state.preview.timer = null; }
+}
+
+let lastFrameTime = 0;
+function playLoop() {
+  if (!state.preview.playing) return;
+  const now = performance.now();
+  if (now - lastFrameTime >= 1000 / state.preview.fps) {
+    lastFrameTime = now;
+    let maxF = 0;
+    for (const g of state.groups) {
+      const oi = activeOptIdx(g);
+      if (oi < 0) continue;
+      const fr = g.options[oi]?.animations[state.preview.animName];
+      if (fr) maxF = Math.max(maxF, fr.length);
+    }
+    if (maxF > 0) state.preview.frameIdx = (state.preview.frameIdx + 1) % maxF;
+    renderPreviewFrame();
+  }
+  state.preview.timer = requestAnimationFrame(playLoop);
+}
+
+function activeOptIdx(g) {
+  if (g.type === 'permanent') return 0;
+  const base = groupBaseName(g.name);
+  const v = state.preview.equip[base];
+  return v !== undefined ? v : 0;
+}
+
+function renderPreviewFrame() {
+  // Render to both inline and modal canvases
+  const targets = [{ id: 'preview-canvas', maxPx: 200 }];
+  if (state.preview.modal) targets.push({ id: 'preview-modal-canvas', maxPx: 400 });
+
+  const sorted = [...state.groups].sort((a, b) => a.zOrder - b.zOrder);
+
+  for (const t of targets) {
+    const canvas = document.getElementById(t.id);
+    if (!canvas) continue;
+    const ctx = canvas.getContext('2d');
+    const scale = Math.max(1, Math.floor(Math.min(t.maxPx / state.gridW, t.maxPx / state.gridH)));
+    canvas.width = state.gridW * scale;
+    canvas.height = state.gridH * scale;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (const g of sorted) {
+      const oi = activeOptIdx(g);
+      if (oi < 0 || !g.options[oi]) continue;
+      const frames = g.options[oi].animations[state.preview.animName];
+      if (!frames || frames.length === 0) continue;
+      const fi = state.preview.frameIdx % frames.length;
+      const cc = getCellCanvas(frames[fi].layerIdx, frames[fi].gridX, frames[fi].gridY);
+      if (cc) ctx.drawImage(cc, 0, 0, canvas.width, canvas.height);
+    }
+  }
+}
+
+// -------------------- Preview Modal --------------------
+function openPreviewModal() {
+  state.preview.modal = true;
+  const modal = document.getElementById('preview-modal');
+  modal.classList.add('open');
+
+  // Build modal controls (mirrors the inline ones)
+  const ctrl = document.getElementById('preview-modal-controls');
+  ctrl.innerHTML = '';
+
+  const playBtn = document.createElement('button');
+  playBtn.textContent = state.preview.playing ? '\u23F8 Pause' : '\u25B6 Play';
+  playBtn.onclick = () => { togglePlay(); playBtn.textContent = state.preview.playing ? '\u23F8 Pause' : '\u25B6 Play'; };
+  ctrl.appendChild(playBtn);
+
+  const animNames = new Set();
+  for (const g of state.groups) for (const o of g.options) for (const n of Object.keys(o.animations)) animNames.add(n);
+
+  const animLabel = document.createElement('label');
+  animLabel.textContent = 'Animation: ';
+  const animSel = document.createElement('select');
+  for (const n of animNames) {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    if (n === state.preview.animName) opt.selected = true;
+    animSel.appendChild(opt);
+  }
+  animSel.onchange = () => selectAnimation(animSel.value);
+  animLabel.appendChild(animSel);
+  ctrl.appendChild(animLabel);
+
+  const fpsLabel = document.createElement('label');
+  fpsLabel.textContent = 'FPS: ';
+  const fpsInp = document.createElement('input');
+  fpsInp.type = 'number'; fpsInp.value = state.preview.fps; fpsInp.min = 1; fpsInp.max = 60;
+  fpsInp.onchange = () => { state.preview.fps = +fpsInp.value; };
+  fpsLabel.appendChild(fpsInp);
+  ctrl.appendChild(fpsLabel);
+
+  // Equip selectors (merged by base name)
+  const modalSeen = new Set();
+  for (const g of state.groups) {
+    if (g.type !== 'equippable') continue;
+    const base = groupBaseName(g.name);
+    if (modalSeen.has(base)) continue;
+    modalSeen.add(base);
+    const label = document.createElement('label');
+    label.textContent = base + ': ';
+    const sel = document.createElement('select');
+    const none = document.createElement('option');
+    none.value = '-1'; none.textContent = '(none)'; sel.appendChild(none);
+    g.options.forEach((o, oi) => {
+      const opt = document.createElement('option');
+      opt.value = oi; opt.textContent = o.name;
+      if (state.preview.equip[base] === oi) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => { state.preview.equip[base] = parseInt(sel.value); renderPreviewFrame(); };
+    label.appendChild(sel);
+    ctrl.appendChild(label);
+  }
+
+  renderPreviewFrame();
+}
+
+function closePreviewModal() {
+  state.preview.modal = false;
+  document.getElementById('preview-modal').classList.remove('open');
+  renderPreviewFrame();
+}
+
+// -------------------- Export --------------------
+function exportProject() {
+  // Build atlas
+  const sprites = [];
+  const seen = new Set();
+  for (const g of state.groups) for (const o of g.options) for (const frames of Object.values(o.animations)) {
+    for (const f of frames) {
+      const k = cellKey(f.layerIdx, f.gridX, f.gridY);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const c = getCellCanvas(f.layerIdx, f.gridX, f.gridY);
+      if (c) sprites.push({ ...f, canvas: c, key: k });
+    }
+  }
+
+  if (sprites.length === 0) { alert('No sprites assigned to any group.'); return; }
+
+  const cols = Math.ceil(Math.sqrt(sprites.length));
+  const rows = Math.ceil(sprites.length / cols);
+  const atlasW = cols * state.gridW, atlasH = rows * state.gridH;
+  const atlas = document.createElement('canvas');
+  atlas.width = atlasW; atlas.height = atlasH;
+  const actx = atlas.getContext('2d');
+  actx.imageSmoothingEnabled = false;
+
+  const spriteMap = {};
+  sprites.forEach((s, i) => {
+    const ax = (i % cols) * state.gridW, ay = Math.floor(i / cols) * state.gridH;
+    actx.drawImage(s.canvas, ax, ay);
+    spriteMap[s.key] = { x: ax, y: ay };
+  });
+
+  const manifest = {
+    spriteWidth: state.gridW,
+    spriteHeight: state.gridH,
+    atlasWidth: atlasW,
+    atlasHeight: atlasH,
+    groups: state.groups.map(g => ({
+      name: g.name, baseName: groupBaseName(g.name), type: g.type, zOrder: g.zOrder,
+      options: g.options.map(o => ({
+        name: o.name,
+        animations: Object.fromEntries(
+          Object.entries(o.animations).map(([an, frames]) => [
+            an, frames.map(f => spriteMap[cellKey(f.layerIdx, f.gridX, f.gridY)] || { x: 0, y: 0 })
+          ])
+        )
+      }))
+    }))
+  };
+
+  const atlasDataURL = atlas.toDataURL('image/png');
+
+  // Download atlas
+  downloadDataURL('atlas.png', atlasDataURL);
+
+  // Generate and download customizer
+  const custHTML = generateCustomizer(atlasDataURL, manifest);
+  downloadBlob('customizer.html', custHTML, 'text/html');
+}
+
+function generateCustomizer(atlasDataURL, manifest) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Customizer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#e6e6e6;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;padding:40px;gap:20px}
+h1{font-weight:300;letter-spacing:4px;color:#58a6ff}
+canvas{image-rendering:pixelated;border:2px solid #333;background:repeating-conic-gradient(#2a2a3e 0% 25%,#1a1a2e 0% 50%) 50%/16px 16px}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+select,button{background:#16213e;color:#e6e6e6;border:1px solid #444;padding:6px 12px;border-radius:4px;font-size:13px;cursor:pointer}
+button:hover{background:#1f3460}
+label{font-size:13px;display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<h1>Character Customizer</h1>
+<canvas id="c"></canvas>
+<div class="controls" id="ctrl"></div>
+<script>
+const M=${JSON.stringify(manifest)};
+const A=new Image();
+A.src="${atlasDataURL}";
+A.onload=init;
+let anim='',fi=0,playing=true,fps=8,equip={};
+function init(){
+  const c=document.getElementById('c');
+  const scale=Math.max(2,Math.floor(Math.min(300/M.spriteWidth,300/M.spriteHeight)));
+  c.width=M.spriteWidth*scale;c.height=M.spriteHeight*scale;
+  const ctrl=document.getElementById('ctrl');
+  // anim select
+  const anims=new Set();
+  M.groups.forEach(g=>g.options.forEach(o=>Object.keys(o.animations).forEach(a=>anims.add(a))));
+  const asel=document.createElement('select');
+  anims.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;asel.appendChild(o)});
+  asel.onchange=()=>{anim=asel.value;fi=0};
+  anim=asel.value||'';
+  ctrl.appendChild(mk('Animation:',asel));
+  // play/pause
+  const pbtn=document.createElement('button');
+  pbtn.textContent='Pause';
+  pbtn.onclick=()=>{playing=!playing;pbtn.textContent=playing?'Pause':'Play'};
+  ctrl.appendChild(pbtn);
+  // equip selects
+  const seenBase={};
+  M.groups.filter(g=>g.type==='equippable').forEach(g=>{
+    const bn=g.baseName||g.name;
+    if(seenBase[bn])return;
+    seenBase[bn]=true;
+    const s=document.createElement('select');
+    const none=document.createElement('option');none.value='-1';none.textContent='(none)';s.appendChild(none);
+    g.options.forEach((o,oi)=>{const op=document.createElement('option');op.value=oi;op.textContent=o.name;op.selected=oi===0;s.appendChild(op)});
+    equip[bn]=0;
+    s.onchange=()=>{equip[bn]=parseInt(s.value)};
+    ctrl.appendChild(mk(bn+':',s));
+  });
+  let last=0;
+  (function loop(t){
+    requestAnimationFrame(loop);
+    if(!playing)return;
+    if(t-last<1000/fps)return;
+    last=t;
+    const ctx=c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.imageSmoothingEnabled=false;
+    let maxF=0;
+    const sorted=[...M.groups].sort((a,b)=>a.zOrder-b.zOrder);
+    sorted.forEach(g=>{
+      let oi=g.type==='permanent'?0:(equip[g.baseName||g.name]??0);
+      if(oi<0||!g.options[oi])return;
+      const fr=g.options[oi].animations[anim];
+      if(!fr||!fr.length)return;
+      maxF=Math.max(maxF,fr.length);
+      const f=fr[fi%fr.length];
+      ctx.drawImage(A,f.x,f.y,M.spriteWidth,M.spriteHeight,0,0,c.width,c.height);
+    });
+    if(maxF>0)fi=(fi+1)%maxF;
+  })(0);
+}
+function mk(lbl,el){const l=document.createElement('label');l.textContent=lbl;l.appendChild(el);return l}
+</${'script'}>
+</body>
+</html>`;
+}
+
+function downloadDataURL(name, dataURL) {
+  const a = document.createElement('a');
+  a.href = dataURL; a.download = name; a.click();
+}
+
+function downloadBlob(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// -------------------- Save / Load --------------------
+function saveProject() {
+  const data = {
+    gridW: state.gridW,
+    gridH: state.gridH,
+    groups: state.groups,
+    nextGroupId: state.nextGroupId
+  };
+  downloadBlob(
+    state.fileName.replace(/\.\w+$/, '') + '.pix.json',
+    JSON.stringify(data, null, 2),
+    'application/json'
+  );
+}
+
+function loadProject(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      state.gridW = data.gridW ?? state.gridW;
+      state.gridH = data.gridH ?? state.gridH;
+      state.groups = data.groups ?? [];
+      state.nextGroupId = data.nextGroupId ?? (state.groups.length + 1);
+      state.activeTarget = null;
+      state.selectedCells = [];
+      document.getElementById('grid-w').value = state.gridW;
+      document.getElementById('grid-h').value = state.gridH;
+      // Re-slice with loaded grid size if layers exist
+      if (state.layers.length > 0) {
+        autoSliceAll();
+        renderLayerList();
+      }
+      renderGroupsPanel();
+      renderGridCanvas();
+      updatePreview();
+    } catch (e) {
+      alert('Failed to load project: ' + e.message);
+      console.error(e);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// -------------------- Init --------------------
+document.addEventListener('DOMContentLoaded', () => {
+  initCanvas();
+
+  // File input
+  document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
+
+  // Drag & drop
+  const dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+
+  // Re-slice
+  document.getElementById('reslice-btn').addEventListener('click', () => {
+    if (!confirm('Re-slicing will clear all sprite assignments. Continue?')) return;
+    state.groups.forEach(g => g.options.forEach(o => {
+      for (const k of Object.keys(o.animations)) o.animations[k] = [];
+    }));
+    state.selectedCells = [];
+    state.activeTarget = null;
+    autoSliceAll();
+    renderLayerList();
+    renderGroupsPanel();
+    if (state.selectedLayerIdx >= 0) { autoFitCanvas(); renderGridCanvas(); }
+    updatePreview();
+  });
+
+  // Save / Load
+  document.getElementById('save-btn').addEventListener('click', saveProject);
+  document.getElementById('load-btn').addEventListener('click', () => document.getElementById('load-input').click());
+  document.getElementById('load-input').addEventListener('change', e => {
+    if (e.target.files[0]) loadProject(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // Export
+  document.getElementById('export-btn').addEventListener('click', exportProject);
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'Escape') { if (state.preview.modal) closePreviewModal(); else clearSelection(); }
+    if (e.key === 'a' && !e.ctrlKey && !e.metaKey) selectAllCells();
+    if (e.key === 'Enter') assignSelectedCells();
+  });
+});
+</script>
+</body>
+</html>
