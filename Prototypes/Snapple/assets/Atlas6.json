@@ -1,0 +1,397 @@
+{
+	"textures": [
+		{
+			"image": "Atlas6",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1024,
+				"h": 1024
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "location_frame_bottom.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 415,
+						"h": 83
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 415,
+						"h": 83
+					},
+					"frame": {
+						"x": 0,
+						"y": 0,
+						"w": 415,
+						"h": 83
+					}
+				},
+				{
+					"filename": "location_frame_top.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 409,
+						"h": 76
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 409,
+						"h": 76
+					},
+					"frame": {
+						"x": 415,
+						"y": 0,
+						"w": 409,
+						"h": 76
+					}
+				},
+				{
+					"filename": "location_frame_player_green.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 133,
+						"h": 101
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 133,
+						"h": 101
+					},
+					"frame": {
+						"x": 824,
+						"y": 0,
+						"w": 133,
+						"h": 101
+					}
+				},
+				{
+					"filename": "card_frame_right.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 53,
+						"h": 300
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 53,
+						"h": 300
+					},
+					"frame": {
+						"x": 957,
+						"y": 0,
+						"w": 53,
+						"h": 300
+					}
+				},
+				{
+					"filename": "location_shadow.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 340,
+						"h": 114
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 340,
+						"h": 114
+					},
+					"frame": {
+						"x": 415,
+						"y": 76,
+						"w": 340,
+						"h": 114
+					}
+				},
+				{
+					"filename": "card_frame_left.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 300
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 300
+					},
+					"frame": {
+						"x": 755,
+						"y": 76,
+						"w": 48,
+						"h": 300
+					}
+				},
+				{
+					"filename": "location_frame_player_red.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 133,
+						"h": 101
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 133,
+						"h": 101
+					},
+					"frame": {
+						"x": 803,
+						"y": 101,
+						"w": 133,
+						"h": 101
+					}
+				},
+				{
+					"filename": "location_frame_player_yellow.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 133,
+						"h": 101
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 133,
+						"h": 101
+					},
+					"frame": {
+						"x": 803,
+						"y": 202,
+						"w": 133,
+						"h": 101
+					}
+				},
+				{
+					"filename": "location_frame_left.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 272
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 272
+					},
+					"frame": {
+						"x": 936,
+						"y": 300,
+						"w": 45,
+						"h": 272
+					}
+				},
+				{
+					"filename": "location_frame_right.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 43,
+						"h": 272
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 43,
+						"h": 272
+					},
+					"frame": {
+						"x": 981,
+						"y": 300,
+						"w": 43,
+						"h": 272
+					}
+				},
+				{
+					"filename": "location_frame_enemy_green.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 132,
+						"h": 99
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 132,
+						"h": 99
+					},
+					"frame": {
+						"x": 803,
+						"y": 303,
+						"w": 132,
+						"h": 99
+					}
+				},
+				{
+					"filename": "card_frame_bottom.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 302,
+						"h": 59
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 302,
+						"h": 59
+					},
+					"frame": {
+						"x": 0,
+						"y": 83,
+						"w": 302,
+						"h": 59
+					}
+				},
+				{
+					"filename": "card_energy.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 100,
+						"h": 115
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 100,
+						"h": 115
+					},
+					"frame": {
+						"x": 302,
+						"y": 83,
+						"w": 100,
+						"h": 115
+					}
+				},
+				{
+					"filename": "card_frame_top.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 302,
+						"h": 51
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 302,
+						"h": 51
+					},
+					"frame": {
+						"x": 0,
+						"y": 142,
+						"w": 302,
+						"h": 51
+					}
+				},
+				{
+					"filename": "card_shadow.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 256,
+						"h": 138
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 256,
+						"h": 138
+					},
+					"frame": {
+						"x": 0,
+						"y": 193,
+						"w": 256,
+						"h": 138
+					}
+				},
+				{
+					"filename": "location_frame_enemy_red.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 132,
+						"h": 99
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 132,
+						"h": 99
+					},
+					"frame": {
+						"x": 402,
+						"y": 190,
+						"w": 132,
+						"h": 99
+					}
+				},
+				{
+					"filename": "location_frame_enemy_yellow.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 132,
+						"h": 99
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 132,
+						"h": 99
+					},
+					"frame": {
+						"x": 256,
+						"y": 198,
+						"w": 132,
+						"h": 99
+					}
+				},
+				{
+					"filename": "card_power.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 100,
+						"h": 115
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 100,
+						"h": 115
+					},
+					"frame": {
+						"x": 256,
+						"y": 297,
+						"w": 100,
+						"h": 115
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7"
+	}
+}

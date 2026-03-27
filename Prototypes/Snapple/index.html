@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>SnapShot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #1a1a2e;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    #game-container {
+      width: 100%; height: 100%;
+      position: fixed; top: 0; left: 0;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script src="phaser.min.js"></script>
+  <script src="game.js"></script>
+  <script>
+    // Phaser game config - portrait mode for mobile
+    const gameWidth = 860;
+    const gameHeight = 1520;
+
+    const config = {
+      type: Phaser.AUTO,
+      width: gameWidth,
+      height: gameHeight,
+      parent: 'game-container',
+      backgroundColor: '#1a1a2e',
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      render: {
+        pixelArt: false,
+        antialias: true,
+        antialiasGL: true,
+        roundPixels: true
+      },
+      input: {
+        activePointers: 1,
+        touch: { capture: true }
+      },
+      scene: [BootScene, MenuScene, DebugScene, GameScene],
+      physics: { default: null },
+      dom: { createContainer: false },
+      fps: { target: 60, forceSetTimeOut: false }
+    };
+
+    const game = new Phaser.Game(config);
+  </script>
+</body>
+</html>
