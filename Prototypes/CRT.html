@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRT Phosphor Renderer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0a0a0a;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: crosshair;
+    user-select: none;
+  }
+
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #drop-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  #drop-overlay.has-image {
+    opacity: 0;
+  }
+
+  #drop-overlay.dragging {
+    opacity: 1 !important;
+    background: rgba(10, 10, 10, 0.85);
+  }
+
+  .drop-ring {
+    width: 180px;
+    height: 180px;
+    border: 2px solid rgba(80, 220, 120, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+
+  .drop-ring-inner {
+    width: 140px;
+    height: 140px;
+    border: 1px solid rgba(80, 220, 120, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .drop-icon {
+    font-size: 36px;
+    color: rgba(80, 220, 120, 0.7);
+    font-weight: 300;
+  }
+
+  .drop-text {
+    margin-top: 24px;
+    color: rgba(80, 220, 120, 0.6);
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .drop-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(80, 220, 120, 0.25);
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 2px;
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+
+  #error-msg {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(220, 50, 50, 0.15);
+    border: 1px solid rgba(220, 50, 50, 0.4);
+    color: #dc5050;
+    padding: 10px 20px;
+    font-size: 12px;
+    border-radius: 4px;
+    z-index: 200;
+    display: none;
+    letter-spacing: 1px;
+  }
+
+  #info-bar {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    color: rgba(80, 220, 120, 0.3);
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    z-index: 50;
+    text-align: right;
+    line-height: 1.6;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gpu-canvas"></canvas>
+
+<div id="drop-overlay">
+  <div class="drop-ring">
+    <div class="drop-ring-inner">
+      <div class="drop-icon">&#9681;</div>
+    </div>
+  </div>
+  <div class="drop-text">Drop PNG here</div>
+  <div class="drop-hint">R reset &middot; F fit &middot; scroll zoom &middot; drag to pan</div>
+</div>
+
+<div id="error-msg"></div>
+<div id="info-bar"></div>
+
+<script>
+"use strict";
+
+// ─── Application State ───
+class ViewState {
+  constructor() {
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.zoom = 1;
+    this.imageWidth = 0;
+    this.imageHeight = 0;
+  }
+
+  reset() {
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.zoom = 1;
+  }
+
+  fitToView(canvasWidth, canvasHeight) {
+    if (this.imageWidth === 0 || this.imageHeight === 0) return;
+    const scaleX = canvasWidth / this.imageWidth;
+    const scaleY = canvasHeight / this.imageHeight;
+    this.zoom = Math.min(scaleX, scaleY) * 0.85;
+    this.offsetX = 0;
+    this.offsetY = 0;
+  }
+}
+
+// ─── CRT Shader (WGSL) ───
+const SHADER_CODE = `
+struct Uniforms {
+  resolution: vec2f,
+  imageSize: vec2f,
+  offset: vec2f,
+  zoom: f32,
+  time: f32,
+};
+
+@group(0) @binding(0) var<uniform> u: Uniforms;
+@group(0) @binding(1) var srcTexture: texture_2d<f32>;
+@group(0) @binding(2) var srcSampler: sampler;
+
+struct VertexOutput {
+  @builtin(position) pos: vec4f,
+  @location(0) uv: vec2f,
+};
+
+@vertex
+fn vs(@builtin(vertex_index) vi: u32) -> VertexOutput {
+  // Fullscreen triangle
+  var positions = array<vec2f, 3>(
+    vec2f(-1.0, -1.0),
+    vec2f( 3.0, -1.0),
+    vec2f(-1.0,  3.0),
+  );
+  var out: VertexOutput;
+  out.pos = vec4f(positions[vi], 0.0, 1.0);
+  out.uv = positions[vi] * 0.5 + 0.5;
+  out.uv.y = 1.0 - out.uv.y;
+  return out;
+}
+
+// Simulate the Gaussian beam spot profile
+fn beamProfile(dist: f32, sigma: f32) -> f32 {
+  return exp(-0.5 * (dist * dist) / (sigma * sigma));
+}
+
+// Shadow mask / aperture grille pattern
+// Simulates RGB phosphor triads
+// Operates in image-pixel space so the mask scales with the image (in-game zoom)
+fn shadowMask(imagePixelPos: vec2f) -> vec3f {
+  // Phosphor triads per source pixel - fixed property of the simulated CRT
+  let triadsPerPixel = 3.0;
+  let x = imagePixelPos.x * triadsPerPixel;
+  let phase = fract(x / 3.0) * 3.0;
+
+  var mask = vec3f(0.0);
+
+  // Smooth phosphor shapes using Gaussian-like profiles
+  let r_center = 0.5;
+  let g_center = 1.5;
+  let b_center = 2.5;
+  let phosphor_width = 0.55;
+
+  mask.r = beamProfile(phase - r_center, phosphor_width)
+         + beamProfile(phase - r_center + 3.0, phosphor_width)
+         + beamProfile(phase - r_center - 3.0, phosphor_width);
+
+  mask.g = beamProfile(phase - g_center, phosphor_width)
+         + beamProfile(phase - g_center + 3.0, phosphor_width)
+         + beamProfile(phase - g_center - 3.0, phosphor_width);
+
+  mask.b = beamProfile(phase - b_center, phosphor_width)
+         + beamProfile(phase - b_center + 3.0, phosphor_width)
+         + beamProfile(phase - b_center - 3.0, phosphor_width);
+
+  // Normalize so white stays white-ish
+  // Fade mask out when triads are too small to resolve (prevents aliasing / green tint)
+  let pixelScreenSize = u.zoom * (u.resolution.y / u.imageSize.y);
+  let maskStrength = 0.55 * smoothstep(2.0, 5.0, pixelScreenSize);
+  return mix(vec3f(1.0), mask, maskStrength);
+}
+
+// Scanline darkening with beam width dependent on brightness
+// imageY is in source-image pixel coordinates so scanlines are a fixed
+// property of the simulated CRT and scale with the image
+fn scanlineWeight(imageY: f32, brightness: f32) -> f32 {
+  let line = fract(imageY);
+  // Brighter pixels = wider beam = less visible scanline gap
+  let beamWidth = 0.55 + brightness * 0.3;
+  let weight = smoothstep(0.0, beamWidth * 0.5, line)
+             * smoothstep(1.0, 1.0 - beamWidth * 0.5, line);
+  // Fade scanlines out when source pixels are smaller than ~2 screen pixels
+  let pixelScreenSize = u.zoom * (u.resolution.y / u.imageSize.y);
+  return mix(1.0, 0.15 + weight * 0.85, smoothstep(1.5, 4.0, pixelScreenSize));
+}
+
+// Per-channel beam convolution: sample the source with slight offsets per channel
+// This simulates the fact that R/G/B phosphors are at different physical positions
+fn sampleWithPhosphorBleed(uv: vec2f, texelSize: vec2f) -> vec3f {
+  let spread = texelSize.x * 0.4;
+
+  // Sample with horizontal offset per channel (aperture grille style)
+  let r = textureSampleLevel(srcTexture, srcSampler, uv + vec2f(-spread, 0.0), 0.0).r;
+  let g = textureSampleLevel(srcTexture, srcSampler, uv, 0.0).g;
+  let b = textureSampleLevel(srcTexture, srcSampler, uv + vec2f(spread, 0.0), 0.0).b;
+
+  return vec3f(r, g, b);
+}
+
+// Horizontal blur to simulate beam softness
+fn beamBlur(uv: vec2f, texelSize: vec2f) -> vec3f {
+  var color = vec3f(0.0);
+  let sigma = 0.6;
+  var totalWeight = 0.0;
+
+  for (var i = -2; i <= 2; i++) {
+    let offset = vec2f(f32(i) * texelSize.x * 0.5, 0.0);
+    let w = beamProfile(f32(i), sigma);
+    color += sampleWithPhosphorBleed(uv + offset, texelSize) * w;
+    totalWeight += w;
+  }
+
+  return color / totalWeight;
+}
+
+// Simple barrel distortion for CRT curvature
+fn barrelDistort(uv: vec2f) -> vec2f {
+  let centered = uv * 2.0 - 1.0;
+  let r2 = dot(centered, centered);
+  let distortion = 0.04;
+  let distorted = centered * (1.0 + distortion * r2);
+  return distorted * 0.5 + 0.5;
+}
+
+// Vignette / brightness falloff from center to edges
+fn vignette(uv: vec2f) -> f32 {
+  let centered = uv * 2.0 - 1.0;
+  let dist = length(centered);
+  return 1.0 - 0.25 * dist * dist;
+}
+
+@fragment
+fn fs(in: VertexOutput) -> @location(0) vec4f {
+  let screenPos = in.uv * u.resolution;
+
+  // Transform screen position to image UV
+  let centered = screenPos - u.resolution * 0.5;
+  let imagePixel = (centered - u.offset) / u.zoom + u.imageSize * 0.5;
+  var imageUV = imagePixel / u.imageSize;
+
+  // Apply subtle barrel distortion relative to image center
+  let imageUVCentered = imageUV;
+  let c = imageUVCentered * 2.0 - 1.0;
+  let r2 = dot(c, c);
+  let distorted = c * (1.0 + 0.02 * r2);
+  imageUV = distorted * 0.5 + 0.5;
+
+  // Bounds check
+  if (imageUV.x < 0.0 || imageUV.x > 1.0 || imageUV.y < 0.0 || imageUV.y > 1.0) {
+    // Dark background with subtle noise
+    let noise = fract(sin(dot(screenPos, vec2f(12.9898, 78.233))) * 43758.5453);
+    return vec4f(vec3f(0.008 + noise * 0.006), 1.0);
+  }
+
+  let texelSize = 1.0 / u.imageSize;
+
+  // Main color with beam blur and phosphor bleed
+  var color = beamBlur(imageUV, texelSize);
+
+  // Apply phosphor color response curve
+  // Real phosphors have non-linear response; approximate with a power curve
+  color = pow(color, vec3f(0.95, 0.97, 1.05));
+
+  // Brightness for scanline beam width calculation
+  let brightness = dot(color, vec3f(0.299, 0.587, 0.114));
+
+  // Scanlines - intensity varies with brightness (bright pixels = wider beam)
+  let scanline = scanlineWeight(imagePixel.y, brightness);
+  color *= scanline;
+
+  // Shadow mask / phosphor triad simulation (image space - scales with image)
+  let mask = shadowMask(imagePixel);
+  color *= mask;
+
+  // Bloom / glow - add back some of the original color as diffuse glow
+  let bloomSource = beamBlur(imageUV, texelSize * 3.0);
+  let bloom = bloomSource * 0.08;
+  color += bloom;
+
+  // Per-channel phosphor persistence / decay
+  // Green phosphors persist longer, blue decays fastest
+  color *= vec3f(0.97, 1.0, 0.94);
+
+  // Vignette
+  let vig = vignette(imageUVCentered);
+  color *= vig;
+
+  // Glass reflection simulation - subtle specular highlight
+  let glassReflect = pow(max(0.0, 1.0 - length(c) * 0.7), 8.0) * 0.015;
+  color += vec3f(glassReflect);
+
+  // Final gamma correction (CRT gamma is ~2.4, LCD is ~2.2)
+  // We encode as if viewed on CRT then decoded for LCD
+  color = pow(max(color, vec3f(0.0)), vec3f(1.0 / 2.2));
+
+  // Clamp
+  color = clamp(color, vec3f(0.0), vec3f(1.0));
+
+  return vec4f(color, 1.0);
+}
+`;
+
+// ─── WebGPU Renderer ───
+class CRTRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.device = null;
+    this.context = null;
+    this.pipeline = null;
+    this.uniformBuffer = null;
+    this.bindGroup = null;
+    this.texture = null;
+    this.sampler = null;
+    this.view = new ViewState();
+    this.animFrameId = null;
+    this.startTime = performance.now();
+  }
+
+  async init() {
+    if (!navigator.gpu) {
+      throw new Error("WebGPU is not supported in this browser.");
+    }
+
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+    if (!adapter) {
+      throw new Error("Could not get WebGPU adapter.");
+    }
+
+    this.device = await adapter.requestDevice();
+    this.context = this.canvas.getContext("webgpu");
+
+    const format = navigator.gpu.getPreferredCanvasFormat();
+    this.context.configure({
+      device: this.device,
+      format: format,
+      alphaMode: "opaque",
+    });
+
+    this.canvasFormat = format;
+    this._createPipelineAndResources();
+  }
+
+  _createPipelineAndResources() {
+    const shaderModule = this.device.createShaderModule({ code: SHADER_CODE });
+
+    // Uniform buffer: resolution(2f) + imageSize(2f) + offset(2f) + zoom(1f) + time(1f) = 32 bytes
+    this.uniformBuffer = this.device.createBuffer({
+      size: 32,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+
+    // Sampler with linear filtering for beam simulation
+    this.sampler = this.device.createSampler({
+      magFilter: "linear",
+      minFilter: "linear",
+      mipmapFilter: "linear",
+      addressModeU: "clamp-to-edge",
+      addressModeV: "clamp-to-edge",
+    });
+
+    // Create a 1x1 placeholder texture
+    this._createPlaceholderTexture();
+
+    // Bind group layout
+    this.bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        { binding: 0, visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
+        { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float" } },
+        { binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: "filtering" } },
+      ],
+    });
+
+    const pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [this.bindGroupLayout],
+    });
+
+    this.pipeline = this.device.createRenderPipeline({
+      layout: pipelineLayout,
+      vertex: {
+        module: shaderModule,
+        entryPoint: "vs",
+      },
+      fragment: {
+        module: shaderModule,
+        entryPoint: "fs",
+        targets: [{ format: this.canvasFormat }],
+      },
+      primitive: { topology: "triangle-list" },
+    });
+
+    this._rebuildBindGroup();
+  }
+
+  _createPlaceholderTexture() {
+    this.texture = this.device.createTexture({
+      size: [1, 1],
+      format: "rgba8unorm",
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    this.device.queue.writeTexture(
+      { texture: this.texture },
+      new Uint8Array([0, 0, 0, 255]),
+      { bytesPerRow: 4 },
+      { width: 1, height: 1 }
+    );
+    this.view.imageWidth = 1;
+    this.view.imageHeight = 1;
+  }
+
+  _rebuildBindGroup() {
+    this.bindGroup = this.device.createBindGroup({
+      layout: this.bindGroupLayout,
+      entries: [
+        { binding: 0, resource: { buffer: this.uniformBuffer } },
+        { binding: 1, resource: this.texture.createView() },
+        { binding: 2, resource: this.sampler },
+      ],
+    });
+  }
+
+  loadImage(imageBitmap) {
+    if (this.texture) {
+      this.texture.destroy();
+    }
+
+    const w = imageBitmap.width;
+    const h = imageBitmap.height;
+
+    this.texture = this.device.createTexture({
+      size: [w, h],
+      format: "rgba8unorm",
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    this.device.queue.copyExternalImageToTexture(
+      { source: imageBitmap },
+      { texture: this.texture },
+      [w, h]
+    );
+
+    this.view.imageWidth = w;
+    this.view.imageHeight = h;
+    this.view.fitToView(this.canvas.width, this.canvas.height);
+
+    this._rebuildBindGroup();
+  }
+
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width = Math.floor(window.innerWidth * dpr);
+    this.canvas.height = Math.floor(window.innerHeight * dpr);
+  }
+
+  render() {
+    const now = (performance.now() - this.startTime) / 1000;
+
+    // Write uniforms
+    const data = new Float32Array([
+      this.canvas.width, this.canvas.height,
+      this.view.imageWidth, this.view.imageHeight,
+      this.view.offsetX, this.view.offsetY,
+      this.view.zoom,
+      now,
+    ]);
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, data);
+
+    const commandEncoder = this.device.createCommandEncoder();
+    const textureView = this.context.getCurrentTexture().createView();
+
+    const renderPass = commandEncoder.beginRenderPass({
+      colorAttachments: [{
+        view: textureView,
+        clearValue: { r: 0.01, g: 0.01, b: 0.01, a: 1 },
+        loadOp: "clear",
+        storeOp: "store",
+      }],
+    });
+
+    renderPass.setPipeline(this.pipeline);
+    renderPass.setBindGroup(0, this.bindGroup);
+    renderPass.draw(3);
+    renderPass.end();
+
+    this.device.queue.submit([commandEncoder.finish()]);
+  }
+
+  startLoop() {
+    const loop = () => {
+      this.render();
+      this.animFrameId = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  stop() {
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+    }
+  }
+}
+
+// ─── Input Handler ───
+class InputHandler {
+  constructor(canvas, viewState, renderer) {
+    this.canvas = canvas;
+    this.view = viewState;
+    this.renderer = renderer;
+    this.isPanning = false;
+    this.lastX = 0;
+    this.lastY = 0;
+    this._bind();
+  }
+
+  _bind() {
+    const c = this.canvas;
+    const dpr = window.devicePixelRatio || 1;
+
+    c.addEventListener("mousedown", (e) => {
+      if (e.button === 0) {
+        this.isPanning = true;
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
+        this.canvas.style.cursor = "grabbing";
+      }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!this.isPanning) return;
+      const dx = (e.clientX - this.lastX) * dpr;
+      const dy = (e.clientY - this.lastY) * dpr;
+      this.view.offsetX += dx;
+      this.view.offsetY += dy;
+      this.lastX = e.clientX;
+      this.lastY = e.clientY;
+    });
+
+    window.addEventListener("mouseup", (e) => {
+      if (e.button === 0 && this.isPanning) {
+        this.isPanning = false;
+        this.canvas.style.cursor = "crosshair";
+      }
+    });
+
+    c.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const oldZoom = this.view.zoom;
+      this.view.zoom *= zoomFactor;
+      this.view.zoom = Math.max(0.05, Math.min(100, this.view.zoom));
+
+      // Zoom towards mouse position
+      const rect = c.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * dpr - c.width * 0.5;
+      const my = (e.clientY - rect.top) * dpr - c.height * 0.5;
+      const ratio = this.view.zoom / oldZoom;
+      this.view.offsetX = mx - (mx - this.view.offsetX) * ratio;
+      this.view.offsetY = my - (my - this.view.offsetY) * ratio;
+
+      updateInfoBar();
+    }, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "r" || e.key === "R") {
+        this.view.reset();
+        updateInfoBar();
+      }
+      if (e.key === "f" || e.key === "F") {
+        this.view.fitToView(c.width, c.height);
+        updateInfoBar();
+      }
+    });
+  }
+}
+
+// ─── Drag & Drop Handler ───
+class DropHandler {
+  constructor(renderer, overlay) {
+    this.renderer = renderer;
+    this.overlay = overlay;
+    this._bind();
+  }
+
+  _bind() {
+    const body = document.body;
+
+    body.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      this.overlay.classList.add("dragging");
+      this.overlay.classList.remove("has-image");
+    });
+
+    body.addEventListener("dragover", (e) => {
+      e.preventDefault();
+    });
+
+    body.addEventListener("dragleave", (e) => {
+      if (e.relatedTarget === null || !body.contains(e.relatedTarget)) {
+        this.overlay.classList.remove("dragging");
+        if (this.renderer.view.imageWidth > 1) {
+          this.overlay.classList.add("has-image");
+        }
+      }
+    });
+
+    body.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      this.overlay.classList.remove("dragging");
+
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith("image/")) {
+        showError("Please drop a PNG or image file.");
+        return;
+      }
+
+      try {
+        const bitmap = await createImageBitmap(file);
+        this.renderer.loadImage(bitmap);
+        this.overlay.classList.add("has-image");
+        updateInfoBar();
+      } catch (err) {
+        showError("Failed to load image: " + err.message);
+      }
+    });
+  }
+}
+
+// ─── UI Helpers ───
+function showError(msg) {
+  const el = document.getElementById("error-msg");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 4000);
+}
+
+let rendererRef = null;
+
+function updateInfoBar() {
+  if (!rendererRef) return;
+  const v = rendererRef.view;
+  if (v.imageWidth <= 1) return;
+  const bar = document.getElementById("info-bar");
+  bar.textContent = `${v.imageWidth}×${v.imageHeight}  ·  ${(v.zoom * 100).toFixed(0)}%`;
+}
+
+// ─── Bootstrap ───
+async function main() {
+  const canvas = document.getElementById("gpu-canvas");
+  const overlay = document.getElementById("drop-overlay");
+
+  const renderer = new CRTRenderer(canvas);
+  rendererRef = renderer;
+
+  try {
+    await renderer.init();
+  } catch (err) {
+    showError(err.message);
+    return;
+  }
+
+  renderer.resize();
+
+  const input = new InputHandler(canvas, renderer.view, renderer);
+  const drop = new DropHandler(renderer, overlay);
+
+  window.addEventListener("resize", () => {
+    renderer.resize();
+  });
+
+  renderer.startLoop();
+}
+
+main();
+</script>
+</body>
+</html>
