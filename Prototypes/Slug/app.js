@@ -79,7 +79,7 @@ var ChatHarness = class {
     {
       id: uid("msg"),
       role: "system",
-      text: "Chat is running locally by default. Configure an OpenAI key in localStorage as slug.openaiKey to use Responses API transport.",
+      text: "Chat is running locally by default. Choose OpenAI in Settings and configure slug.openaiKey in localStorage to use Responses API transport.",
       at: Date.now()
     }
   ];
@@ -100,8 +100,9 @@ var ChatHarness = class {
     this.messages.push({ id: uid("msg"), role: "user", text: input, at: Date.now() });
     const assistant = { id: uid("msg"), role: "assistant", text: "", at: Date.now() };
     this.messages.push(assistant);
+    const provider = localStorage.getItem("slug.aiProvider") === "openai" ? "openai" : "local";
     const key = localStorage.getItem("slug.openaiKey")?.trim();
-    const transport = key ? new OpenAIResponsesTransport(key) : new LocalAssistantTransport();
+    const transport = provider === "openai" && key ? new OpenAIResponsesTransport(key) : new LocalAssistantTransport();
     const controller = new AbortController();
     this.abortController = controller;
     try {
@@ -543,6 +544,10 @@ var DocumentStore = class {
   all() {
     return [...this.docsById.values()];
   }
+  clear() {
+    this.docsById.clear();
+    this.docsByPath.clear();
+  }
   get(id) {
     return this.docsById.get(id);
   }
@@ -864,7 +869,7 @@ var InputBridge = class {
         break;
       case "insertLineBreak":
       case "insertParagraph":
-        if (target.kind === "chat" || target.kind === "search") {
+        if (target.kind !== "editor") {
           target.runShortcut("Enter");
         } else {
           target.replaceSelection("\n");
@@ -988,6 +993,7 @@ var ViewportService = class {
   listeners = /* @__PURE__ */ new Set();
   current = null;
   resizeObserver = null;
+  visualViewportCanvasResizeEnabled = true;
   start() {
     this.resizeObserver = new ResizeObserver(() => this.update());
     this.resizeObserver.observe(this.canvas);
@@ -1022,6 +1028,11 @@ var ViewportService = class {
     this.current = info;
     return changed;
   }
+  setVisualViewportCanvasResizeEnabled(enabled) {
+    if (this.visualViewportCanvasResizeEnabled === enabled) return;
+    this.visualViewportCanvasResizeEnabled = enabled;
+    this.update();
+  }
   pointerToCanvasCss(e) {
     const rect = this.canvas.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -1036,6 +1047,7 @@ var ViewportService = class {
     for (const listener of this.listeners) listener(this.current);
   };
   applyVisualViewportSize() {
+    if (!this.visualViewportCanvasResizeEnabled) return;
     const vv = window.visualViewport;
     if (!vv) {
       this.canvas.style.width = "";
@@ -1445,6 +1457,11 @@ var CURVE_TEXTURE_WIDTH = 4096;
 var BAND_TEXTURE_WIDTH = 4096;
 var MAX_BAND_CURVES = 768;
 var UI_SHAPE_MARGIN_PX = 1;
+var BASE_UI_FONT_SIZE = 13;
+var BASE_UI_SMALL_FONT_SIZE = BASE_UI_FONT_SIZE - 2;
+var BASE_CODE_FONT_SIZE = 14;
+var BASE_TITLE_FONT_SIZE = 18;
+var BASE_MINI_FONT_SIZE = 8;
 var WebglRenderer = class {
   constructor(canvas, initialViewport, fontSources) {
     this.canvas = canvas;
@@ -1456,9 +1473,11 @@ var WebglRenderer = class {
     this.fonts = fontSources.map((source) => ({ name: source.name, font: new TrueTypeFont(source.buffer) }));
     this.primaryFont = this.fonts[0].font;
     this.fontMetrics = {
-      ui: this.makeFontMetrics(13),
-      code: this.makeFontMetrics(14),
-      title: this.makeFontMetrics(18)
+      ui: this.makeFontMetrics(BASE_UI_FONT_SIZE),
+      uiSmall: this.makeFontMetrics(BASE_UI_SMALL_FONT_SIZE),
+      code: this.makeFontMetrics(BASE_CODE_FONT_SIZE),
+      title: this.makeFontMetrics(BASE_TITLE_FONT_SIZE),
+      mini: this.makeFontMetrics(BASE_MINI_FONT_SIZE)
     };
     this.slugProgram = createProgram(gl, SLUG_VS, SLUG_FS);
     this.floatBuffer = mustBuffer(gl);
@@ -1500,6 +1519,15 @@ var WebglRenderer = class {
   }
   setViewport(viewport) {
     this.viewport = viewport;
+  }
+  configureText(codeFontSizePx, uiScalePercent) {
+    const uiScale = Math.max(0.01, uiScalePercent / 100);
+    this.fontMetrics.ui = this.makeFontMetrics(BASE_UI_FONT_SIZE * uiScale);
+    this.fontMetrics.uiSmall = this.makeFontMetrics(BASE_UI_SMALL_FONT_SIZE * uiScale);
+    this.fontMetrics.title = this.makeFontMetrics(BASE_TITLE_FONT_SIZE * uiScale);
+    this.fontMetrics.mini = this.makeFontMetrics(BASE_MINI_FONT_SIZE * uiScale);
+    this.fontMetrics.code = this.makeFontMetrics(Math.max(1, codeFontSizePx));
+    this.glyphMetrics.clear();
   }
   beginFrame() {
     this.commands.length = 0;
@@ -1554,6 +1582,26 @@ var WebglRenderer = class {
     let width = 0;
     for (const char of text) width += this.advanceForCodePoint(char.codePointAt(0) ?? 0, font);
     return width;
+  }
+  visualTextBounds(text, font = "ui") {
+    const metrics = this.fontMetrics[font];
+    let penX = 0;
+    let xMin = Number.POSITIVE_INFINITY;
+    let yMin = Number.POSITIVE_INFINITY;
+    let xMax = Number.NEGATIVE_INFINITY;
+    let yMax = Number.NEGATIVE_INFINITY;
+    for (const char of text) {
+      const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0);
+      if (glyph.curves.length > 0) {
+        xMin = Math.min(xMin, penX + glyph.xMin * metrics.sizePx);
+        xMax = Math.max(xMax, penX + glyph.xMax * metrics.sizePx);
+        yMin = Math.min(yMin, metrics.ascentPx - glyph.yMax * metrics.sizePx);
+        yMax = Math.max(yMax, metrics.ascentPx - glyph.yMin * metrics.sizePx);
+      }
+      penX += this.advanceForGlyph(glyph, font);
+    }
+    if (!Number.isFinite(xMin)) return { x: 0, y: 0, w: this.measureText(text, font), h: this.lineHeight(font) };
+    return { x: xMin, y: yMin, w: Math.max(0, xMax - xMin), h: Math.max(0, yMax - yMin) };
   }
   lineHeight(font = "ui") {
     return this.fontMetrics[font].lineHeightPx;
@@ -1801,8 +1849,10 @@ var WebglRenderer = class {
       yMax: outline.yMax / units,
       advancePxByFont: /* @__PURE__ */ new Map([
         ["ui", advanceWidth * this.fontMetrics.ui.sizePx],
+        ["uiSmall", advanceWidth * this.fontMetrics.uiSmall.sizePx],
         ["code", advanceWidth * this.fontMetrics.code.sizePx],
-        ["title", advanceWidth * this.fontMetrics.title.sizePx]
+        ["title", advanceWidth * this.fontMetrics.title.sizePx],
+        ["mini", advanceWidth * this.fontMetrics.mini.sizePx]
       ])
     };
   }
@@ -2099,7 +2149,7 @@ void main() {
 }`;
 
 // src/renderer/theme.ts
-var theme = {
+var darkTheme = {
   background: [0.12, 0.13, 0.15, 1],
   panel: [0.15, 0.16, 0.18, 1],
   panel2: [0.18, 0.19, 0.22, 1],
@@ -2123,6 +2173,38 @@ var theme = {
   function: [0.53, 0.72, 0.95, 1],
   type: [0.48, 0.83, 0.75, 1]
 };
+var lightTheme = {
+  background: [0.82, 0.84, 0.87, 1],
+  panel: [0.73, 0.76, 0.8, 1],
+  panel2: [0.86, 0.88, 0.91, 1],
+  activity: [0.66, 0.7, 0.75, 1],
+  activityActive: [0.55, 0.64, 0.74, 1],
+  divider: [0.48, 0.53, 0.6, 1],
+  text: [0.08, 0.1, 0.13, 1],
+  textDim: [0.28, 0.32, 0.38, 1],
+  accent: [0.08, 0.34, 0.68, 1],
+  accent2: [0.13, 0.43, 0.19, 1],
+  warning: [0.58, 0.32, 0.04, 1],
+  error: [0.64, 0.1, 0.13, 1],
+  selection: [0.38, 0.58, 0.82, 0.66],
+  caret: [0.08, 0.1, 0.14, 1],
+  lineHighlight: [0.75, 0.79, 0.84, 1],
+  keyword: [0.35, 0.12, 0.62, 1],
+  string: [0.18, 0.36, 0.06, 1],
+  number: [0.52, 0.25, 0.04, 1],
+  comment: [0.34, 0.38, 0.44, 1],
+  operator: [0.18, 0.21, 0.27, 1],
+  function: [0.03, 0.28, 0.58, 1],
+  type: [0.02, 0.38, 0.35, 1]
+};
+var themes = {
+  dark: darkTheme,
+  light: lightTheme
+};
+var theme = { ...darkTheme };
+function applyTheme(name) {
+  Object.assign(theme, themes[name]);
+}
 
 // src/app/mini_buffer.ts
 var MiniBuffer = class {
@@ -2220,6 +2302,17 @@ var TAB_DRAG_THRESHOLD = 6;
 var TOUCH_DOUBLE_TAP_MS = 420;
 var TOUCH_DOUBLE_TAP_DISTANCE = 28;
 var CARET_BLINK_HALF_MS = 530;
+var SETTINGS_TAB_ID = "settings";
+var SETTINGS_TAB_LABEL = "Settings";
+var SETTINGS_STORAGE_KEY = "slug.settings";
+var DEFAULT_SETTINGS = {
+  theme: "dark",
+  fontSize: 14,
+  uiScale: 100,
+  renameOnDoubleClick: true,
+  showLineNumbers: true,
+  aiProvider: "local"
+};
 var EditorApp = class {
   constructor(canvas, vfs, fontSources) {
     this.canvas = canvas;
@@ -2229,6 +2322,7 @@ var EditorApp = class {
     const gl = canvas.getContext("webgl2");
     if (!gl) throw new Error("WebGL2 is required");
     this.renderer = new WebglRenderer(canvas, this.viewport.get(), fontSources);
+    this.applySettings();
     this.docs = new DocumentStore(vfs);
     this.input = new InputBridge(document.body);
     this.chat = new ChatHarness(vfs);
@@ -2243,6 +2337,7 @@ var EditorApp = class {
   highlighter = new Highlighter();
   chat;
   searchBuffer = new MiniBuffer();
+  projectReplaceBuffer = new MiniBuffer();
   chatBuffer = new MiniBuffer();
   renameBuffer = new MiniBuffer();
   sidebarMode = "files";
@@ -2274,6 +2369,11 @@ var EditorApp = class {
   renamePath = null;
   renameSelecting = false;
   searchSelecting = false;
+  textFieldSelecting = null;
+  searchReplaceExpanded = false;
+  findStates = /* @__PURE__ */ new Map();
+  inactiveFindBuffer = new MiniBuffer();
+  inactiveFindReplaceBuffer = new MiniBuffer();
   caretBlinkEpoch = performance.now();
   caretBlinkTimer = 0;
   pendingTabDrag = null;
@@ -2281,8 +2381,15 @@ var EditorApp = class {
   dockPreview = null;
   lastTouchTap = null;
   editorRect = { x: 0, y: 0, w: 0, h: 0 };
+  settingsExpanded = /* @__PURE__ */ new Set(["visual", "interface", "ai", "danger"]);
+  settings = loadSettings();
+  activeSettingsNumber = null;
+  settingsNumberBuffer = new MiniBuffer();
+  settingsNumberSelecting = false;
   localClipboard = "";
   systemClipboardOverlay = null;
+  systemClipboardViewportCleanup = null;
+  pendingCloseQueue = [];
   async start() {
     await this.refreshFiles();
     const first = this.files.find((file) => file.path === "/README.md") ?? this.files[0];
@@ -2291,7 +2398,27 @@ var EditorApp = class {
     this.scheduleDraw();
   }
   activeDoc() {
-    return this.activeDocId ? this.docs.get(this.activeDocId) : void 0;
+    return this.activeDocId && !this.isSettingsTab(this.activeDocId) ? this.docs.get(this.activeDocId) : void 0;
+  }
+  activeFindState(create = true) {
+    const doc = this.activeDoc();
+    return doc ? this.findStateForDoc(doc.id, create) : null;
+  }
+  findStateForDoc(docId, create = true) {
+    if (!docId || this.isSettingsTab(docId)) return null;
+    let state = this.findStates.get(docId);
+    if (!state && create) {
+      state = { open: false, replaceExpanded: false, findBuffer: new MiniBuffer(), replaceBuffer: new MiniBuffer() };
+      this.findStates.set(docId, state);
+    }
+    return state ?? null;
+  }
+  isSettingsTab(id) {
+    return id === SETTINGS_TAB_ID;
+  }
+  tabLabel(id) {
+    if (this.isSettingsTab(id)) return SETTINGS_TAB_LABEL;
+    return this.docs.get(id)?.path ?? "(untitled)";
   }
   async refreshFiles() {
     this.treeNodes = await this.listTreeNodes("/");
@@ -2320,6 +2447,18 @@ var EditorApp = class {
     if (!this.renamePath) this.focusEditor();
     this.scheduleDraw();
   }
+  openSettingsTab() {
+    const existing = this.groupContaining(SETTINGS_TAB_ID);
+    const group = existing ?? this.activeGroup();
+    if (!group.tabs.includes(SETTINGS_TAB_ID)) group.tabs.push(SETTINGS_TAB_ID);
+    group.activeDocId = SETTINGS_TAB_ID;
+    this.activeGroupId = group.id;
+    this.activeDocId = SETTINGS_TAB_ID;
+    this.syncOpenTabs();
+    this.statusText = "Settings";
+    this.input.blur();
+    this.scheduleDraw();
+  }
   scheduleDraw() {
     if (this.raf) return;
     this.raf = requestAnimationFrame(() => {
@@ -2341,6 +2480,20 @@ var EditorApp = class {
     if (!target || this.input.composing) return;
     this.input.syncSelectionForClipboard(target.getSelectedText());
   }
+  saveAndApplySettings() {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(this.settings));
+    localStorage.setItem("slug.aiProvider", this.settings.aiProvider);
+    this.applySettings();
+    this.scheduleDraw();
+  }
+  applySettings() {
+    applyTheme(this.settings.theme);
+    localStorage.setItem("slug.aiProvider", this.settings.aiProvider);
+    this.renderer.configureText(this.settings.fontSize, this.settings.uiScale);
+  }
+  ui(value) {
+    return value * this.settings.uiScale / 100;
+  }
   isCaretBlinkOn() {
     return Math.floor((performance.now() - this.caretBlinkEpoch) / CARET_BLINK_HALF_MS) % 2 === 0;
   }
@@ -2354,18 +2507,38 @@ var EditorApp = class {
     }, Math.max(16, wait + 1));
   }
   getStateForTests() {
+    const activeLabel = this.activeDocId ? this.tabLabel(this.activeDocId) : void 0;
+    const findState = this.activeFindState(false);
     return {
-      activePath: this.activeDoc()?.path,
+      activePath: this.activeDoc()?.path ?? (this.isSettingsTab(this.activeDocId) ? SETTINGS_TAB_LABEL : void 0),
       activeText: this.activeDoc()?.getText(),
       selectedText: this.activeDoc()?.selectedText() ?? "",
-      openTabs: this.openTabs.map((id) => this.docs.get(id)?.path ?? "(untitled)"),
+      openTabs: this.openTabs.map((id) => this.tabLabel(id)),
+      activeTab: activeLabel,
       sidebarMode: this.sidebarMode,
       sidebarVisible: this.sidebarWidth > 0,
+      settings: { ...this.settings },
+      settingsActivityTarget: this.hits.find((hit) => hit.type === "settingsActivity")?.rect ?? null,
+      settingsNumberText: this.settingsNumberBuffer.text,
+      settingsNumberSelectedText: this.settingsNumberBuffer.selectedText(),
+      activeSettingsNumber: this.activeSettingsNumber,
+      settingsTargets: this.hits.filter((hit) => hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "settingsNumber" || hit.type === "settingsButton").map((hit) => ({ type: hit.type, key: "key" in hit ? hit.key : "id" in hit ? hit.id : hit.action, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       searchQuery: this.searchBuffer.text,
+      projectReplaceText: this.projectReplaceBuffer.text,
+      searchReplaceExpanded: this.searchReplaceExpanded,
       searchSelectedText: this.searchBuffer.selectedText(),
       searchInputRect: this.searchInputRect(),
+      projectReplaceInputRect: this.textFieldRect("projectReplace"),
+      searchTargets: this.hits.filter((hit) => hit.type === "textField" || hit.type === "searchReplaceToggle" || hit.type === "searchRefresh" || hit.type === "searchReplaceAll").filter((hit) => hit.type !== "textField" || hit.field === "search" || hit.field === "projectReplace").map((hit) => ({ type: hit.type, key: "field" in hit ? hit.field : hit.type, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       searchCaretVisible: this.isSearchCaretVisible(),
       searchResults: this.searchResults,
+      findOpen: Boolean(findState?.open),
+      findReplaceExpanded: Boolean(findState?.replaceExpanded),
+      findQuery: findState?.findBuffer.text ?? "",
+      findReplaceText: findState?.replaceBuffer.text ?? "",
+      findSelectedText: findState?.findBuffer.selectedText() ?? "",
+      findReplaceSelectedText: findState?.replaceBuffer.selectedText() ?? "",
+      findTargets: this.hits.filter((hit) => hit.type === "textField" || hit.type === "findToggle" || hit.type === "findPrevious" || hit.type === "findNext" || hit.type === "findClose" || hit.type === "findReplace" || hit.type === "findReplaceAll").filter((hit) => hit.type !== "textField" || hit.field === "find" || hit.field === "findReplace").map((hit) => ({ type: hit.type, key: "field" in hit ? hit.field : hit.type, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       chatMessages: this.chat.messages,
       activeInputKind: this.input.activeTarget?.kind ?? null,
       chatDraft: this.chatBuffer.text,
@@ -2385,8 +2558,8 @@ var EditorApp = class {
         const doc = group.activeDocId ? this.docs.get(group.activeDocId) : void 0;
         return {
           id: group.id,
-          activePath: doc?.path ?? null,
-          tabs: group.tabs.map((id) => this.docs.get(id)?.path ?? "(untitled)"),
+          activePath: doc?.path ?? (this.isSettingsTab(group.activeDocId) ? SETTINGS_TAB_LABEL : null),
+          tabs: group.tabs.map((id) => this.tabLabel(id)),
           cursor: doc?.selection.head ?? null,
           caretVisible: doc ? this.isDocumentCaretVisible(group, doc.id) : false,
           scrollX: doc ? this.scrollForDoc(doc.id).x : 0,
@@ -2486,6 +2659,8 @@ var EditorApp = class {
   onPointerDown(event) {
     const point = this.viewport.pointerToCanvasCss(event);
     const hit = this.hitAt(point.x, point.y);
+    if (this.activeSettingsNumber && event.pointerType === "touch" && hit?.type !== "settingsNumber" && this.handleActiveSettingsNumberTouchDoubleTap(event, point)) return;
+    if (this.activeSettingsNumber && hit?.type !== "settingsNumber") this.commitSettingsNumberInput();
     if (this.modal) {
       event.preventDefault();
       if (hit?.type === "modalButton" && hit.enabled) void this.runModalAction(hit.action);
@@ -2513,6 +2688,8 @@ var EditorApp = class {
     if (hit.type === "activity") {
       this.toggleActivityMode(hit.mode);
       this.draw();
+    } else if (hit.type === "settingsActivity") {
+      this.openSettingsTab();
     } else if (hit.type === "sidebarResize") {
       this.resizingSidebar = true;
       this.canvas.style.cursor = "col-resize";
@@ -2525,7 +2702,7 @@ var EditorApp = class {
     } else if (hit.type === "filesRoot") {
       this.focusEditor();
     } else if (hit.type === "file") {
-      if (event.detail >= 2) this.startRename(hit.path, hit.rect);
+      if (event.detail >= 2 && this.settings.renameOnDoubleClick) this.startRename(hit.path, hit.rect);
       else void this.openFile(hit.path);
     } else if (hit.type === "fileRenameInput") {
       this.focusRename(hit.rect);
@@ -2542,8 +2719,13 @@ var EditorApp = class {
       this.activeDocId = hit.docId;
       this.groupById(hit.groupId).activeDocId = hit.docId;
       this.pendingTabDrag = { docId: hit.docId, groupId: hit.groupId, startPoint: { ...point } };
-      this.focusEditor();
+      if (this.activeDoc()) this.focusEditor();
+      else this.input.blur();
       this.scheduleDraw();
+    } else if (hit.type === "textField") {
+      this.focusTextField(hit.field, hit.rect);
+      this.setTextFieldCursorFromPoint(hit.field, point.x, hit.rect, false);
+      this.textFieldSelecting = hit.field;
     } else if (hit.type === "searchInput") {
       this.focusMiniTarget("search", hit.rect);
       this.setSearchCursorFromPoint(point.x, hit.rect, false);
@@ -2552,10 +2734,43 @@ var EditorApp = class {
       void this.openFile(hit.path).then(() => {
         const doc = this.activeDoc();
         if (doc) doc.setSelection({ line: hit.line, col: 0 });
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       });
     } else if (hit.type === "chatInput") {
       this.focusMiniTarget("chat", hit.rect);
+    } else if (hit.type === "settingsHeader") {
+      this.toggleSettingsHeader(hit.id);
+    } else if (hit.type === "settingsCheckbox") {
+      this.toggleSettingsCheckbox(hit.key);
+    } else if (hit.type === "settingsDropdown") {
+      this.openSettingsDropdown(hit.rect, hit.key);
+    } else if (hit.type === "settingsNumber") {
+      this.focusSettingsNumber(hit.key, hit.rect);
+      this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
+      this.settingsNumberSelecting = true;
+    } else if (hit.type === "settingsButton") {
+      if (hit.enabled) void this.runSettingsButton(hit.action);
+    } else if (hit.type === "searchReplaceToggle") {
+      this.searchReplaceExpanded = !this.searchReplaceExpanded;
+      this.scheduleDraw();
+    } else if (hit.type === "searchRefresh") {
+      void this.runSearch();
+    } else if (hit.type === "searchReplaceAll") {
+      if (hit.enabled) void this.replaceAllInWorkspace();
+    } else if (hit.type === "findToggle") {
+      const state = this.activeFindState(false);
+      if (state) state.replaceExpanded = !state.replaceExpanded;
+      this.scheduleDraw();
+    } else if (hit.type === "findPrevious") {
+      if (hit.enabled) this.selectDocumentFindMatch(-1);
+    } else if (hit.type === "findNext") {
+      if (hit.enabled) this.selectDocumentFindMatch(1);
+    } else if (hit.type === "findClose") {
+      this.closeFindWidget();
+    } else if (hit.type === "findReplace") {
+      if (hit.enabled) this.replaceCurrentFindMatch();
+    } else if (hit.type === "findReplaceAll") {
+      if (hit.enabled) this.replaceAllInActiveDocument();
     } else if (hit.type === "editor") {
       this.activeGroupId = hit.groupId;
       this.activeDocId = this.groupById(hit.groupId).activeDocId;
@@ -2590,11 +2805,25 @@ var EditorApp = class {
       if (rect) this.setRenameCursorFromPoint(point.x, rect, true);
       return;
     }
+    if (this.textFieldSelecting) {
+      event.preventDefault();
+      const hit = this.hitAt(point.x, point.y);
+      const rect = hit?.type === "textField" && hit.field === this.textFieldSelecting ? hit.rect : this.textFieldRect(this.textFieldSelecting);
+      if (rect) this.setTextFieldCursorFromPoint(this.textFieldSelecting, point.x, rect, true);
+      return;
+    }
     if (this.searchSelecting) {
       event.preventDefault();
       const hit = this.hitAt(point.x, point.y);
       const rect = hit?.type === "searchInput" ? hit.rect : this.searchInputRect();
       if (rect) this.setSearchCursorFromPoint(point.x, rect, true);
+      return;
+    }
+    if (this.settingsNumberSelecting) {
+      event.preventDefault();
+      const hit = this.hitAt(point.x, point.y);
+      const rect = hit?.type === "settingsNumber" ? hit.rect : this.settingsNumberInputRect();
+      if (rect) this.setSettingsNumberCursorFromPoint(point.x, rect, true);
       return;
     }
     if (this.pendingTabDrag) {
@@ -2612,7 +2841,7 @@ var EditorApp = class {
     }
     if (this.resizingSidebar) {
       event.preventDefault();
-      this.sidebarWidth = this.clampSidebarWidth(point.x - 48);
+      this.sidebarWidth = this.clampSidebarWidth(point.x - this.ui(48));
       this.statusText = `Sidebar ${Math.round(this.sidebarWidth)}px`;
       this.scheduleDraw();
       return;
@@ -2664,6 +2893,8 @@ var EditorApp = class {
     this.scrollbarDrag = null;
     this.renameSelecting = false;
     this.searchSelecting = false;
+    this.textFieldSelecting = null;
+    this.settingsNumberSelecting = false;
     this.pendingTabDrag = null;
     this.tabDrag = null;
     this.dockPreview = null;
@@ -2679,6 +2910,10 @@ var EditorApp = class {
     const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     const hit = this.hitAt(point.x, point.y);
     if (hit?.type === "contextMenu") return;
+    if (hit?.type === "tab" || hit?.type === "tabClose") {
+      this.openTabContextMenu(point, hit.groupId, hit.docId);
+      return;
+    }
     if (hit?.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
@@ -2689,6 +2924,18 @@ var EditorApp = class {
       this.focusMiniTarget("search", hit.rect);
       if (!this.pointHitsSearchSelection(point.x, hit.rect)) this.setSearchCursorFromPoint(point.x, hit.rect, false);
       this.openSearchTextContextMenu(point);
+      return;
+    }
+    if (hit?.type === "textField") {
+      this.focusTextField(hit.field, hit.rect);
+      if (!this.pointHitsTextFieldSelection(hit.field, point.x, hit.rect)) this.setTextFieldCursorFromPoint(hit.field, point.x, hit.rect, false);
+      this.openTextFieldContextMenu(point, hit.field);
+      return;
+    }
+    if (hit?.type === "settingsNumber") {
+      this.focusSettingsNumber(hit.key, hit.rect);
+      if (!this.pointHitsSettingsNumberSelection(point.x, hit.rect)) this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
+      this.openSettingsNumberTextContextMenu(point, hit.key);
       return;
     }
     if (hit?.type === "file") {
@@ -2746,6 +2993,22 @@ var EditorApp = class {
       this.resetCaretBlink();
       return;
     }
+    if (hit?.type === "textField") {
+      event.preventDefault();
+      this.focusTextField(hit.field, hit.rect);
+      this.bufferForTextField(hit.field).selectAll();
+      this.textFieldSelecting = null;
+      this.resetCaretBlink();
+      return;
+    }
+    if (hit?.type === "settingsNumber") {
+      event.preventDefault();
+      this.focusSettingsNumber(hit.key, hit.rect);
+      this.settingsNumberBuffer.selectAll();
+      this.settingsNumberSelecting = false;
+      this.resetCaretBlink();
+      return;
+    }
     if (hit?.type !== "editor") return;
     event.preventDefault();
     const group = this.groupById(hit.groupId);
@@ -2775,8 +3038,14 @@ var EditorApp = class {
     } else if (hit?.type === "searchInput") {
       this.focusMiniTarget("search", hit.rect);
       this.selectSearchWordFromPoint(point.x, hit.rect);
+    } else if (hit?.type === "textField") {
+      this.focusTextField(hit.field, hit.rect);
+      this.selectTextFieldWordFromPoint(hit.field, point.x, hit.rect);
+    } else if (hit?.type === "settingsNumber") {
+      this.focusSettingsNumber(hit.key, hit.rect);
+      this.selectSettingsNumberWordFromPoint(point.x, hit.rect);
     } else if (hit?.type === "file") {
-      this.startRename(hit.path, hit.rect);
+      if (this.settings.renameOnDoubleClick) this.startRename(hit.path, hit.rect);
     } else if (hit?.type === "editor") {
       const group = this.groupById(hit.groupId);
       const docId = group.activeDocId;
@@ -2794,17 +3063,27 @@ var EditorApp = class {
     this.input.focusEditor(this.editorTarget(), this.caretRect(doc));
     this.resetCaretBlink();
   }
+  revealEditorCaret() {
+    const doc = this.activeDoc();
+    if (!doc) return;
+    this.ensureCaretVisible(doc, this.activeEditorRect());
+    this.focusEditor();
+  }
   focusMiniTarget(kind, rect) {
     this.input.focusEditor(this.miniTarget(kind), rect);
     this.resetCaretBlink();
   }
+  focusTextField(field, rect) {
+    this.input.focusEditor(this.textFieldTarget(field), rect);
+    this.resetCaretBlink();
+  }
   focusActivityMode(mode) {
     const vp = this.viewport.get();
-    const sidebarX = 48;
+    const sidebarX = this.ui(48);
     if (mode === "search") {
-      this.focusMiniTarget("search", { x: sidebarX + 10, y: 40, w: this.sidebarWidth - 20, h: 28 });
+      this.focusMiniTarget("search", { x: sidebarX + this.ui(10), y: this.ui(40), w: this.sidebarWidth - this.ui(20), h: this.ui(28) });
     } else if (mode === "chat") {
-      this.focusMiniTarget("chat", { x: sidebarX + 10, y: vp.cssHeight - 70, w: this.sidebarWidth - 20, h: 38 });
+      this.focusMiniTarget("chat", { x: sidebarX + this.ui(10), y: vp.cssHeight - this.ui(70), w: this.sidebarWidth - this.ui(20), h: this.ui(38) });
     } else {
       this.focusEditor();
     }
@@ -2872,13 +3151,29 @@ var EditorApp = class {
     this.openContextMenuForHit(point, hit, true);
     return true;
   }
+  handleActiveSettingsNumberTouchDoubleTap(event, point) {
+    const key = this.activeSettingsNumber;
+    const last = this.lastTouchTap;
+    if (!key || !last || last.key !== `settingsNumber:${key}`) return false;
+    const now = performance.now();
+    if (now - last.time > TOUCH_DOUBLE_TAP_MS) return false;
+    this.lastTouchTap = null;
+    event.preventDefault();
+    this.focusSettingsNumber(key, this.settingsNumberInputRect(key) ?? { x: point.x, y: point.y, w: this.ui(72), h: this.ui(24) });
+    this.settingsNumberBuffer.selectAll();
+    this.openSettingsNumberTextContextMenu(point, key);
+    return true;
+  }
   doubleTapKey(hit) {
     if (hit.type === "file") return `file:${hit.path}`;
     if (hit.type === "folder") return `folder:${hit.path}`;
     if (hit.type === "filesRoot") return "filesRoot";
     if (hit.type === "fileRenameInput") return `rename:${hit.path}`;
     if (hit.type === "searchInput") return "searchInput";
+    if (hit.type === "textField") return `textField:${hit.field}`;
+    if (hit.type === "settingsNumber") return `settingsNumber:${hit.key}`;
     if (hit.type === "editor") return `editor:${hit.groupId}`;
+    if (hit.type === "tab" || hit.type === "tabClose") return `tab:${hit.groupId}:${hit.docId}`;
     return null;
   }
   openContextMenuForHit(point, hit, selectTextFirst = false) {
@@ -2896,6 +3191,20 @@ var EditorApp = class {
       this.openSearchTextContextMenu(point);
       return true;
     }
+    if (hit.type === "textField") {
+      this.focusTextField(hit.field, hit.rect);
+      if (selectTextFirst) this.selectTextFieldWordFromPoint(hit.field, point.x, hit.rect);
+      else if (!this.pointHitsTextFieldSelection(hit.field, point.x, hit.rect)) this.setTextFieldCursorFromPoint(hit.field, point.x, hit.rect, false);
+      this.openTextFieldContextMenu(point, hit.field);
+      return true;
+    }
+    if (hit.type === "settingsNumber") {
+      this.focusSettingsNumber(hit.key, hit.rect);
+      if (selectTextFirst) this.selectSettingsNumberWordFromPoint(point.x, hit.rect);
+      else if (!this.pointHitsSettingsNumberSelection(point.x, hit.rect)) this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
+      this.openSettingsNumberTextContextMenu(point, hit.key);
+      return true;
+    }
     if (hit.type === "file") {
       if (this.renamePath && this.renamePath !== hit.path) void this.commitRename();
       this.openFileContextMenu(point, hit.path);
@@ -2909,6 +3218,10 @@ var EditorApp = class {
     if (hit.type === "filesRoot") {
       if (this.renamePath) void this.commitRename();
       this.openRootContextMenu(point);
+      return true;
+    }
+    if (hit.type === "tab" || hit.type === "tabClose") {
+      this.openTabContextMenu(point, hit.groupId, hit.docId);
       return true;
     }
     if (hit.type === "editor") {
@@ -2955,6 +3268,17 @@ var EditorApp = class {
       { command: "copy", label: "Copy", enabled: selected },
       { command: "paste", label: "Paste", enabled: true },
       ...this.mobileSystemClipboardEntries(selected)
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openTabContextMenu(point, groupId, docId) {
+    const group = this.groupById(groupId);
+    this.contextMenu = this.makeContextMenu(point, { type: "tab", groupId, docId }, [
+      { command: "close", label: "Close", enabled: true },
+      { command: "closeOthers", label: "Close Others", enabled: group.tabs.some((id) => id !== docId) },
+      { separator: true },
+      { command: "findInFile", label: "Find in File", enabled: !this.isSettingsTab(docId) }
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -3008,6 +3332,29 @@ var EditorApp = class {
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
+  openTextFieldContextMenu(point, field) {
+    const selected = this.bufferForTextField(field).hasSelection();
+    const scope = field === "search" ? { type: "search" } : { type: "textField", field };
+    this.contextMenu = this.makeContextMenu(point, scope, [
+      { command: "cut", label: "Cut", enabled: selected },
+      { command: "copy", label: "Copy", enabled: selected },
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openSettingsNumberTextContextMenu(point, key) {
+    const selected = this.settingsNumberBuffer.hasSelection();
+    this.contextMenu = this.makeContextMenu(point, { type: "settingsNumber", key }, [
+      { command: "cut", label: "Cut", enabled: selected },
+      { command: "copy", label: "Copy", enabled: selected },
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
   mobileSystemClipboardEntries(selected) {
     return isMobileWebKit() ? [
       { separator: true },
@@ -3015,25 +3362,29 @@ var EditorApp = class {
       { command: "systemPaste", label: "System Paste", enabled: true }
     ] : [];
   }
-  makeContextMenu(point, scope, entries) {
+  makeContextMenu(point, scope, entries, layout = {}) {
     const vp = this.viewport.get();
-    const menuH = CONTEXT_MENU_PAD * 2 + entries.reduce((sum, entry) => sum + ("separator" in entry ? CONTEXT_MENU_SEPARATOR_H : CONTEXT_MENU_ROW_H), 0);
-    const x = clamp(point.x, 0, Math.max(0, vp.cssWidth - CONTEXT_MENU_WIDTH - 1));
-    const y = clamp(point.y, 0, Math.max(0, vp.cssHeight - menuH - 1));
-    const rect = { x, y, w: CONTEXT_MENU_WIDTH, h: menuH };
+    const pad = this.ui(CONTEXT_MENU_PAD);
+    const width = layout.w ?? this.ui(CONTEXT_MENU_WIDTH);
+    const rowH = this.ui(CONTEXT_MENU_ROW_H);
+    const separatorH = this.ui(CONTEXT_MENU_SEPARATOR_H);
+    const menuH = pad * 2 + entries.reduce((sum, entry) => sum + ("separator" in entry ? separatorH : rowH), 0);
+    const x = clamp(layout.x ?? point.x, 0, Math.max(0, vp.cssWidth - width - 1));
+    const y = clamp(layout.y ?? point.y, 0, Math.max(0, vp.cssHeight - menuH - 1));
+    const rect = { x, y, w: width, h: menuH };
     const items = [];
-    let rowY = y + CONTEXT_MENU_PAD;
+    let rowY = y + pad;
     for (const entry of entries) {
       if ("separator" in entry) {
-        items.push({ kind: "separator", rect: { x: x + CONTEXT_MENU_PAD + 8, y: rowY + Math.floor(CONTEXT_MENU_SEPARATOR_H / 2), w: CONTEXT_MENU_WIDTH - CONTEXT_MENU_PAD * 2 - 16, h: 1 } });
-        rowY += CONTEXT_MENU_SEPARATOR_H;
+        items.push({ kind: "separator", rect: { x: x + pad + this.ui(8), y: rowY + Math.floor(separatorH / 2), w: width - pad * 2 - this.ui(16), h: 1 } });
+        rowY += separatorH;
       } else {
         items.push({
           kind: "item",
           ...entry,
-          rect: { x: x + CONTEXT_MENU_PAD, y: rowY, w: CONTEXT_MENU_WIDTH - CONTEXT_MENU_PAD * 2, h: CONTEXT_MENU_ROW_H }
+          rect: { x: x + pad, y: rowY, w: width - pad * 2, h: rowH }
         });
-        rowY += CONTEXT_MENU_ROW_H;
+        rowY += rowH;
       }
     }
     return { scope, rect, items };
@@ -3050,7 +3401,7 @@ var EditorApp = class {
     if (!this.modal) return;
     this.modal = null;
     this.modalHover = null;
-    if (this.activeDocId) this.focusEditor();
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
   }
@@ -3093,6 +3444,7 @@ var EditorApp = class {
     const button = modal?.buttons.find((candidate) => candidate.action === action);
     if (!modal || !button?.enabled || modal.pending) return;
     if (action === "cancel") {
+      this.pendingCloseQueue = [];
       this.statusText = "Canceled";
       this.closeModal();
       return;
@@ -3123,7 +3475,11 @@ var EditorApp = class {
     this.closeTab(doc.id);
     if (action === "discard" && path) this.docs.removePath(path);
     this.statusText = action === "save" ? `Saved and closed ${path ?? "tab"}` : `Closed ${path ?? "tab"} without saving`;
-    if (this.activeDocId) this.focusEditor();
+    if (this.pendingCloseQueue.length > 0) {
+      await this.closeNextPendingTab();
+      return;
+    }
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
   }
@@ -3133,7 +3489,7 @@ var EditorApp = class {
     if (this.modal === modal) {
       this.modal = null;
       this.modalHover = null;
-      if (this.activeDocId) this.focusEditor();
+      if (this.activeDoc()) this.focusEditor();
       else this.input.blur();
       this.scheduleDraw();
     }
@@ -3211,7 +3567,7 @@ var EditorApp = class {
   }
   setRenameCursorFromPoint(x, rect, extend) {
     const offset = x - (rect.x + 5);
-    const col = this.columnFromTextOffset(this.renameBuffer.text, offset);
+    const col = this.columnFromTextOffset(this.renameBuffer.text, offset, "ui");
     this.renameBuffer.cursor = col;
     if (!extend) this.renameBuffer.anchor = col;
     this.resetCaretBlink();
@@ -3220,7 +3576,7 @@ var EditorApp = class {
     const offset = x - (rect.x + 5);
     const text = this.renameBuffer.text;
     if (!text) return;
-    const col = this.columnFromTextOffset(text, offset);
+    const col = this.columnFromTextOffset(text, offset, "ui");
     let index = clamp(col, 0, Math.max(0, text.length - 1));
     if (!isWordChar(text.charAt(index)) && col > 0 && isWordChar(text.charAt(col - 1))) index = col - 1;
     let start = index;
@@ -3247,7 +3603,7 @@ var EditorApp = class {
   }
   setSearchCursorFromPoint(x, rect, extend) {
     const offset = x - (rect.x + 8);
-    const col = this.columnFromTextOffset(this.searchBuffer.text, offset);
+    const col = this.columnFromTextOffset(this.searchBuffer.text, offset, "ui");
     this.searchBuffer.cursor = col;
     if (!extend) this.searchBuffer.anchor = col;
     this.resetCaretBlink();
@@ -3256,7 +3612,7 @@ var EditorApp = class {
     const offset = x - (rect.x + 8);
     const text = this.searchBuffer.text;
     if (!text) return;
-    const col = this.columnFromTextOffset(text, offset);
+    const col = this.columnFromTextOffset(text, offset, "ui");
     let index = clamp(col, 0, Math.max(0, text.length - 1));
     if (!isWordChar(text.charAt(index)) && col > 0 && isWordChar(text.charAt(col - 1))) index = col - 1;
     let start = index;
@@ -3279,7 +3635,65 @@ var EditorApp = class {
     return x >= startX && x <= Math.max(startX + 2, endX);
   }
   searchInputRect() {
-    return this.hits.find((hit) => hit.type === "searchInput")?.rect ?? null;
+    return this.textFieldRect("search") ?? this.hits.find((hit) => hit.type === "searchInput")?.rect ?? null;
+  }
+  bufferForTextField(field) {
+    if (field === "search") return this.searchBuffer;
+    if (field === "projectReplace") return this.projectReplaceBuffer;
+    const findState = this.activeFindState();
+    if (field === "find") return findState?.findBuffer ?? this.inactiveFindBuffer;
+    return findState?.replaceBuffer ?? this.inactiveFindReplaceBuffer;
+  }
+  afterTextFieldChanged(field) {
+    if (field === "search") {
+      void this.runSearch();
+      return;
+    }
+    if (field === "find") {
+      this.selectDocumentFindMatch(1, true);
+    }
+  }
+  setTextFieldCursorFromPoint(field, x, rect, extend) {
+    const buffer = this.bufferForTextField(field);
+    const offset = x - (rect.x + this.ui(8));
+    const col = this.columnFromTextOffset(buffer.text, offset, "ui");
+    buffer.cursor = col;
+    if (!extend) buffer.anchor = col;
+    this.resetCaretBlink();
+  }
+  selectTextFieldWordFromPoint(field, x, rect) {
+    const buffer = this.bufferForTextField(field);
+    const offset = x - (rect.x + this.ui(8));
+    const text = buffer.text;
+    if (!text) return;
+    const col = this.columnFromTextOffset(text, offset, "ui");
+    let index = clamp(col, 0, Math.max(0, text.length - 1));
+    if (!isWordChar(text.charAt(index)) && col > 0 && isWordChar(text.charAt(col - 1))) index = col - 1;
+    let start = index;
+    let end = index + 1;
+    if (isWordChar(text.charAt(index))) {
+      while (start > 0 && isWordChar(text.charAt(start - 1))) start--;
+      while (end < text.length && isWordChar(text.charAt(end))) end++;
+    }
+    buffer.anchor = start;
+    buffer.cursor = end;
+    this.resetCaretBlink();
+  }
+  pointHitsTextFieldSelection(field, x, rect) {
+    const buffer = this.bufferForTextField(field);
+    if (!buffer.hasSelection()) return false;
+    const start = Math.min(buffer.anchor, buffer.cursor);
+    const end = Math.max(buffer.anchor, buffer.cursor);
+    const textX = rect.x + this.ui(8);
+    const startX = textX + this.renderer.measureText(buffer.text.slice(0, start), "ui");
+    const endX = textX + this.renderer.measureText(buffer.text.slice(0, end), "ui");
+    return x >= startX && x <= Math.max(startX + 2, endX);
+  }
+  textFieldRect(field) {
+    return this.hits.find((hit) => hit.type === "textField" && hit.field === field)?.rect ?? null;
+  }
+  isTextFieldCaretVisible(field) {
+    return this.input.activeTarget?.kind === field && (this.input.composing || this.isCaretBlinkOn());
   }
   toggleFolder(path) {
     if (this.expandedFolders.has(path)) this.expandedFolders.delete(path);
@@ -3342,6 +3756,10 @@ var EditorApp = class {
     return root.children;
   }
   async requestCloseTab(docId) {
+    if (this.isSettingsTab(docId)) {
+      this.closeTab(docId);
+      return;
+    }
     const doc = this.docs.get(docId);
     if (!doc) return;
     if (doc.dirty) {
@@ -3350,11 +3768,33 @@ var EditorApp = class {
     }
     this.closeTab(docId);
   }
+  async requestCloseTabs(docIds) {
+    this.pendingCloseQueue = [...new Set(docIds)];
+    await this.closeNextPendingTab();
+  }
+  async closeNextPendingTab() {
+    while (this.pendingCloseQueue.length > 0) {
+      const docId = this.pendingCloseQueue.shift();
+      if (this.isSettingsTab(docId)) {
+        if (this.groupContaining(docId)) this.closeTab(docId);
+        continue;
+      }
+      const doc = this.docs.get(docId);
+      if (!doc || !this.groupContaining(docId)) continue;
+      if (doc.dirty) {
+        this.openDirtyCloseModal(doc);
+        return;
+      }
+      this.closeTab(docId);
+    }
+  }
   closeTab(docId) {
     const group = this.groupContaining(docId);
     if (!group) return;
+    const label = this.tabLabel(docId);
     const index = group.tabs.indexOf(docId);
     group.tabs.splice(index, 1);
+    this.findStates.delete(docId);
     if (group.activeDocId === docId) {
       group.activeDocId = group.tabs[index] ?? group.tabs[index - 1] ?? null;
     }
@@ -3363,12 +3803,11 @@ var EditorApp = class {
       const nextGroup = this.groups.find((item) => item.activeDocId) ?? this.groups[0];
       this.activeGroupId = nextGroup.id;
       this.activeDocId = nextGroup.activeDocId;
-      if (this.activeDocId) this.focusEditor();
+      if (this.activeDoc()) this.focusEditor();
       else this.input.blur();
     }
     this.syncOpenTabs();
-    const doc = this.docs.get(docId);
-    this.statusText = `Closed ${doc?.path ?? "tab"}`;
+    this.statusText = `Closed ${label}`;
     this.scheduleDraw();
   }
   startTabDrag(docId, sourceGroupId, pointer) {
@@ -3388,10 +3827,10 @@ var EditorApp = class {
     const nextGroup = this.groups.find((group) => group.activeDocId) ?? this.groups[0];
     this.activeGroupId = nextGroup.id;
     this.activeDocId = nextGroup.activeDocId;
-    if (this.activeDocId) this.focusEditor();
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.syncOpenTabs();
-    this.statusText = `Moving ${this.docs.get(docId)?.path ?? "tab"}`;
+    this.statusText = `Moving ${this.tabLabel(docId)}`;
     this.draw();
   }
   reorderDraggedTab(x, groupId) {
@@ -3420,8 +3859,9 @@ var EditorApp = class {
   }
   clampSidebarWidth(width) {
     const vp = this.viewport.get();
-    const min = Math.min(220, Math.max(160, vp.cssWidth - 48 - 180));
-    const max = Math.max(min, Math.min(560, vp.cssWidth - 48 - 180));
+    const activityW = this.ui(48);
+    const min = Math.min(this.ui(220), Math.max(this.ui(160), vp.cssWidth - activityW - this.ui(180)));
+    const max = Math.max(min, Math.min(this.ui(560), vp.cssWidth - activityW - this.ui(180)));
     const next = clamp(width, min, max);
     this.lastSidebarWidth = next;
     return next;
@@ -3448,12 +3888,16 @@ var EditorApp = class {
     return this.editorContentRectForOverflow(rect, this.editorOverflow(doc, rect));
   }
   editorContentRectForOverflow(rect, overflow) {
+    const scrollbarSize = this.editorScrollbarSize();
     return {
       x: rect.x,
       y: rect.y,
-      w: Math.max(1, rect.w - (overflow.vertical ? EDITOR_SCROLLBAR_SIZE : 0)),
-      h: Math.max(1, rect.h - (overflow.horizontal ? EDITOR_SCROLLBAR_SIZE : 0))
+      w: Math.max(1, rect.w - (overflow.vertical ? scrollbarSize : 0)),
+      h: Math.max(1, rect.h - (overflow.horizontal ? scrollbarSize : 0))
     };
+  }
+  editorScrollbarSize() {
+    return this.ui(EDITOR_SCROLLBAR_SIZE);
   }
   editorOverflow(doc, rect) {
     let overflow = { vertical: false, horizontal: false };
@@ -3469,6 +3913,7 @@ var EditorApp = class {
     return overflow;
   }
   gutterWidthForDoc(doc) {
+    if (!this.settings.showLineNumbers) return 0;
     const digits = Math.max(EDITOR_GUTTER_MIN_DIGITS, String(Math.max(1, doc.lineCount())).length);
     return Math.ceil(this.renderer.measureText("9".repeat(digits), "code") + EDITOR_GUTTER_PAD_LEFT + EDITOR_GUTTER_PAD_RIGHT);
   }
@@ -3496,6 +3941,31 @@ var EditorApp = class {
     scroll.y = clamp(scroll.y, 0, this.maxScrollY(doc, rect));
     scroll.x = clamp(scroll.x, 0, this.maxScrollX(doc, rect));
     return scroll;
+  }
+  ensureCaretVisible(doc, rect) {
+    if (rect.w <= 0 || rect.h <= 0) return;
+    const scroll = this.scrollForDoc(doc.id);
+    const contentRect = this.editorContentRect(doc, rect);
+    const lineH = this.renderer.lineHeight("code");
+    const caretTop = doc.selection.head.line * lineH;
+    const caretBottom = caretTop + lineH;
+    const verticalMargin = Math.min(lineH * 2, Math.max(0, (contentRect.h - lineH) / 2));
+    if (caretTop < scroll.y + verticalMargin) {
+      scroll.y = caretTop - verticalMargin;
+    } else if (caretBottom > scroll.y + contentRect.h - verticalMargin) {
+      scroll.y = caretBottom - contentRect.h + verticalMargin;
+    }
+    const line = doc.lines[doc.selection.head.line] ?? "";
+    const caretX = this.renderer.measureText(line.slice(0, doc.selection.head.col), "code");
+    const visibleTextWidth = this.visibleTextWidth(doc, contentRect);
+    const horizontalMargin = Math.min(48, Math.max(0, (visibleTextWidth - 2) / 3));
+    if (caretX < scroll.x + horizontalMargin) {
+      scroll.x = caretX - horizontalMargin;
+    } else if (caretX + 2 > scroll.x + visibleTextWidth - horizontalMargin) {
+      scroll.x = caretX + 2 - visibleTextWidth + horizontalMargin;
+    }
+    scroll.y = clamp(scroll.y, 0, this.maxScrollY(doc, rect));
+    scroll.x = clamp(scroll.x, 0, this.maxScrollX(doc, rect));
   }
   startScrollbarDrag(hit, point) {
     const group = this.groupById(hit.groupId);
@@ -3599,10 +4069,10 @@ var EditorApp = class {
   isSourceTabStripPoint(groupId, point) {
     if (groupId !== this.tabDrag?.sourceGroupId) return false;
     const group = this.groupById(groupId);
-    return rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: 34 }, point.x, point.y);
+    return rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(34) }, point.x, point.y);
   }
   resolveDockPreview(point) {
-    const stripGroup = this.groups.find((group) => rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: 34 }, point.x, point.y));
+    const stripGroup = this.groups.find((group) => rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(34) }, point.x, point.y));
     if (stripGroup && stripGroup.id === this.tabDrag?.sourceGroupId) {
       const center = this.dockTargetShapes(stripGroup).find((target2) => target2.zone === "center");
       if (center) return { groupId: center.groupId, zone: "center", rect: center.previewRect, polygon: center.polygon };
@@ -3661,7 +4131,7 @@ var EditorApp = class {
     this.activeDocId = drag.restoreActiveDocId;
     this.syncOpenTabs();
     this.statusText = `Move canceled`;
-    if (this.activeDocId) this.focusEditor();
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
   }
   removeDocFromGroups(docId, prune = true) {
@@ -3701,25 +4171,25 @@ var EditorApp = class {
       getSelectedText: () => this.activeDoc()?.selectedText() ?? "",
       replaceSelection: (text) => {
         this.activeDoc()?.replaceSelection(text);
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       },
       deleteSelectionOrBackward: (unit = "char") => {
         this.activeDoc()?.deleteBackward(unit);
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       },
       deleteForward: (unit = "char") => {
         this.activeDoc()?.deleteForward(unit);
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       },
       moveCursor: (command, extend) => {
         this.activeDoc()?.move(command, extend);
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       },
       runShortcut: (command) => this.runEditorShortcut(command),
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
         if (text) this.activeDoc()?.replaceSelection(text, "composition");
-        this.resetCaretBlink();
+        this.revealEditorCaret();
       }
     };
   }
@@ -3768,6 +4238,59 @@ var EditorApp = class {
       onCompositionCommit: (text) => {
         buffer.replaceSelection(text);
         if (kind === "search") void this.runSearch();
+        this.resetCaretBlink();
+      }
+    };
+  }
+  textFieldTarget(field) {
+    const buffer = this.bufferForTextField(field);
+    return {
+      kind: field,
+      getSelectedText: () => buffer.selectedText(),
+      replaceSelection: (text) => {
+        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.afterTextFieldChanged(field);
+        this.resetCaretBlink();
+      },
+      deleteSelectionOrBackward: () => {
+        buffer.deleteBackward();
+        this.afterTextFieldChanged(field);
+        this.resetCaretBlink();
+      },
+      deleteForward: () => {
+        buffer.deleteForward();
+        this.afterTextFieldChanged(field);
+        this.resetCaretBlink();
+      },
+      moveCursor: (command, extend) => {
+        buffer.move(command, extend);
+        this.resetCaretBlink();
+      },
+      runShortcut: (command) => {
+        if (command === "Enter") {
+          if (field === "find") this.selectDocumentFindMatch(1);
+          else if (field === "findReplace") this.replaceCurrentFindMatch();
+          else if (field === "projectReplace") void this.replaceAllInWorkspace();
+          else void this.runSearch();
+          this.resetCaretBlink();
+          return true;
+        }
+        if (command === "Escape") {
+          if (field === "find" || field === "findReplace") this.closeFindWidget();
+          else this.focusEditor();
+          return true;
+        }
+        if (command === "Mod+A") {
+          buffer.selectAll();
+          this.resetCaretBlink();
+          return true;
+        }
+        return this.runGlobalShortcut(command);
+      },
+      onCompositionPreview: () => this.resetCaretBlink(),
+      onCompositionCommit: (text) => {
+        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.afterTextFieldChanged(field);
         this.resetCaretBlink();
       }
     };
@@ -3827,22 +4350,22 @@ var EditorApp = class {
     }
     if (command === "Tab") {
       doc.indentSelectedLines();
-      this.resetCaretBlink();
+      this.revealEditorCaret();
       return true;
     }
     if (command === "Shift+Tab") {
       doc.unindentSelectedLines();
-      this.resetCaretBlink();
+      this.revealEditorCaret();
       return true;
     }
     if (command === "Mod+Z") {
       doc.undo();
-      this.resetCaretBlink();
+      this.revealEditorCaret();
       return true;
     }
     if (command === "Mod+Shift+Z" || command === "Mod+Y") {
       doc.redo();
-      this.resetCaretBlink();
+      this.revealEditorCaret();
       return true;
     }
     if (command === "Mod+C") {
@@ -3856,7 +4379,7 @@ var EditorApp = class {
       if (!text) return false;
       this.copyTextToClipboard(text);
       doc.replaceSelection("", "cut");
-      this.resetCaretBlink();
+      this.revealEditorCaret();
       return true;
     }
     return false;
@@ -3882,12 +4405,28 @@ var EditorApp = class {
       this.scheduleDraw();
       return;
     }
+    if (menu.scope.type === "tab") {
+      await this.runTabContextMenuCommand(menu.scope.groupId, menu.scope.docId, command);
+      return;
+    }
+    if (menu.scope.type === "settingsDropdown") {
+      this.runSettingsDropdownCommand(menu.scope.key, command);
+      return;
+    }
+    if (menu.scope.type === "settingsNumber") {
+      await this.runSettingsNumberContextMenuCommand(menu.scope.key, command);
+      return;
+    }
     if (menu.scope.type === "rename") {
       await this.runRenameContextMenuCommand(command);
       return;
     }
     if (menu.scope.type === "search") {
       await this.runSearchContextMenuCommand(command);
+      return;
+    }
+    if (menu.scope.type === "textField") {
+      await this.runTextFieldContextMenuCommand(menu.scope.field, command);
       return;
     }
     if (!isEditorContextMenuCommand(command)) return;
@@ -3902,9 +4441,8 @@ var EditorApp = class {
     group.activeDocId = doc.id;
     if (command === "systemCopy") {
       const text = doc.selectedText();
-      if (text) this.openSystemCopyDialog(text);
+      if (text) this.openSystemCopyDialog(text, () => this.focusEditor());
       else this.statusText = "No selection";
-      this.focusEditor();
       this.scheduleDraw();
       return;
     }
@@ -3912,11 +4450,12 @@ var EditorApp = class {
       this.openSystemPasteDialog((text) => {
         doc.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "paste");
         this.statusText = "Pasted";
-        this.focusEditor();
+        this.revealEditorCaret();
         this.scheduleDraw();
-      });
+      }, () => this.focusEditor());
       return;
     }
+    let changedDocument = false;
     if (command === "copy" || command === "cut") {
       const text = doc.selectedText();
       if (!text) {
@@ -3926,6 +4465,7 @@ var EditorApp = class {
         if (command === "cut") {
           doc.replaceSelection("", "cut");
           this.statusText = "Cut selection";
+          changedDocument = true;
         } else {
           this.statusText = "Copied selection";
         }
@@ -3940,18 +4480,19 @@ var EditorApp = class {
       } else {
         doc.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "paste");
         this.statusText = "Pasted";
+        changedDocument = true;
       }
     }
-    this.focusEditor();
+    if (changedDocument) this.revealEditorCaret();
+    else this.focusEditor();
     this.scheduleDraw();
   }
   async runRenameContextMenuCommand(command) {
     if (!isEditorContextMenuCommand(command)) return;
     if (command === "systemCopy") {
       const text = this.renameBuffer.selectedText();
-      if (text) this.openSystemCopyDialog(text);
+      if (text) this.openSystemCopyDialog(text, () => this.focusRename(this.renameInputRect() ?? void 0));
       else this.statusText = "No selection";
-      this.focusRename(this.renameInputRect() ?? void 0);
       this.scheduleDraw();
       return;
     }
@@ -3961,7 +4502,7 @@ var EditorApp = class {
         this.statusText = "Pasted";
         this.focusRename(this.renameInputRect() ?? void 0);
         this.resetCaretBlink();
-      });
+      }, () => this.focusRename(this.renameInputRect() ?? void 0));
       return;
     }
     if (command === "copy" || command === "cut") {
@@ -3996,9 +4537,8 @@ var EditorApp = class {
     if (!isEditorContextMenuCommand(command)) return;
     if (command === "systemCopy") {
       const text = this.searchBuffer.selectedText();
-      if (text) this.openSystemCopyDialog(text);
+      if (text) this.openSystemCopyDialog(text, () => this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 }));
       else this.statusText = "No selection";
-      this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
       this.scheduleDraw();
       return;
     }
@@ -4008,7 +4548,7 @@ var EditorApp = class {
         void this.runSearch();
         this.statusText = "Pasted";
         this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
-      });
+      }, () => this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 }));
       return;
     }
     if (command === "copy" || command === "cut") {
@@ -4040,6 +4580,301 @@ var EditorApp = class {
     }
     this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
   }
+  async runTextFieldContextMenuCommand(field, command) {
+    if (field === "search") {
+      await this.runSearchContextMenuCommand(command);
+      return;
+    }
+    if (!isEditorContextMenuCommand(command)) return;
+    const buffer = this.bufferForTextField(field);
+    const fallback = { x: this.ui(56), y: this.ui(40), w: Math.max(this.ui(80), this.sidebarWidth - this.ui(20)), h: this.ui(28) };
+    const restore = () => this.focusTextField(field, this.textFieldRect(field) ?? fallback);
+    if (command === "systemCopy") {
+      const text = buffer.selectedText();
+      if (text) this.openSystemCopyDialog(text, restore);
+      else this.statusText = "No selection";
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.afterTextFieldChanged(field);
+        this.statusText = "Pasted";
+        restore();
+        this.resetCaretBlink();
+      }, restore);
+      return;
+    }
+    if (command === "copy" || command === "cut") {
+      const text = buffer.selectedText();
+      if (!text) {
+        this.statusText = "No selection";
+      } else {
+        this.copyTextToClipboard(text);
+        if (command === "cut") {
+          buffer.replaceSelection("");
+          this.afterTextFieldChanged(field);
+          this.statusText = "Cut text";
+        } else {
+          this.statusText = "Copied text";
+        }
+      }
+    } else {
+      restore();
+      const text = await this.readTextFromClipboard();
+      if (text === null) {
+        this.statusText = "Clipboard paste unavailable";
+      } else if (!text) {
+        this.statusText = "Clipboard empty";
+      } else {
+        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.afterTextFieldChanged(field);
+        this.statusText = "Pasted";
+      }
+    }
+    restore();
+    this.resetCaretBlink();
+  }
+  async runTabContextMenuCommand(groupId, docId, command) {
+    if (!isTabContextMenuCommand(command)) return;
+    const group = this.groupById(groupId);
+    if (!group.tabs.includes(docId)) return;
+    if (command === "findInFile") {
+      if (this.isSettingsTab(docId)) return;
+      group.activeDocId = docId;
+      this.activeGroupId = group.id;
+      this.activeDocId = docId;
+      this.openFindWidget();
+      return;
+    }
+    if (command === "close") {
+      await this.requestCloseTab(docId);
+      return;
+    }
+    group.activeDocId = docId;
+    this.activeGroupId = group.id;
+    this.activeDocId = docId;
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    const others = group.tabs.filter((id) => id !== docId);
+    await this.requestCloseTabs(others);
+  }
+  openSettingsDropdown(rect, key) {
+    const entries = key === "theme" ? [
+      { command: "themeDark", label: "Dark", enabled: true },
+      { command: "themeLight", label: "Light", enabled: true }
+    ] : [
+      { command: "aiProviderLocal", label: "Local", enabled: true },
+      { command: "aiProviderOpenAI", label: "OpenAI", enabled: true }
+    ];
+    this.contextMenu = this.makeContextMenu({ x: rect.x, y: rect.y + rect.h }, { type: "settingsDropdown", key }, entries, { x: rect.x, y: rect.y + rect.h, w: rect.w });
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  runSettingsDropdownCommand(key, command) {
+    if (!isSettingContextMenuCommand(command)) return;
+    if (key === "theme") {
+      if (command === "themeDark") this.settings.theme = "dark";
+      else if (command === "themeLight") this.settings.theme = "light";
+    } else if (key === "aiProvider") {
+      if (command === "aiProviderLocal") this.settings.aiProvider = "local";
+      else if (command === "aiProviderOpenAI") this.settings.aiProvider = "openai";
+    }
+    this.saveAndApplySettings();
+  }
+  async runSettingsNumberContextMenuCommand(key, command) {
+    if (!isEditorContextMenuCommand(command)) return;
+    const restore = () => this.focusSettingsNumber(key, this.settingsNumberInputRect(key) ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
+    if (command === "systemCopy") {
+      const text = this.settingsNumberBuffer.selectedText();
+      if (text) this.openSystemCopyDialog(text, restore);
+      else this.statusText = "No selection";
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
+        this.applySettingsNumberFromBuffer();
+        this.statusText = "Pasted";
+        restore();
+        this.resetCaretBlink();
+      }, restore);
+      return;
+    }
+    if (command === "copy" || command === "cut") {
+      const text = this.settingsNumberBuffer.selectedText();
+      if (!text) {
+        this.statusText = "No selection";
+      } else {
+        this.copyTextToClipboard(text);
+        if (command === "cut") {
+          this.settingsNumberBuffer.replaceSelection("");
+          this.applySettingsNumberFromBuffer();
+          this.statusText = "Cut setting value";
+        } else {
+          this.statusText = "Copied setting value";
+        }
+      }
+    } else {
+      restore();
+      const text = await this.readTextFromClipboard();
+      if (text === null) {
+        this.statusText = "Clipboard paste unavailable";
+      } else if (!text) {
+        this.statusText = "Clipboard empty";
+      } else {
+        this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
+        this.applySettingsNumberFromBuffer();
+        this.statusText = "Pasted";
+      }
+    }
+    restore();
+    this.resetCaretBlink();
+  }
+  toggleSettingsHeader(id) {
+    if (this.settingsExpanded.has(id)) this.settingsExpanded.delete(id);
+    else this.settingsExpanded.add(id);
+    this.scheduleDraw();
+  }
+  toggleSettingsCheckbox(key) {
+    this.settings[key] = !this.settings[key];
+    this.saveAndApplySettings();
+  }
+  focusSettingsNumber(key, rect) {
+    const wasActive = this.activeSettingsNumber === key;
+    this.activeSettingsNumber = key;
+    if (!wasActive) {
+      this.settingsNumberBuffer.text = String(this.settings[key]);
+      this.settingsNumberBuffer.cursor = this.settingsNumberBuffer.text.length;
+      this.settingsNumberBuffer.anchor = this.settingsNumberBuffer.cursor;
+    }
+    this.input.focusEditor(this.settingsNumberTarget(), rect);
+    this.resetCaretBlink();
+  }
+  settingsNumberTarget() {
+    return {
+      kind: "command",
+      getSelectedText: () => this.settingsNumberBuffer.selectedText(),
+      replaceSelection: (text) => {
+        this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
+        this.applySettingsNumberFromBuffer();
+        this.resetCaretBlink();
+      },
+      deleteSelectionOrBackward: () => {
+        this.settingsNumberBuffer.deleteBackward();
+        this.applySettingsNumberFromBuffer();
+        this.resetCaretBlink();
+      },
+      deleteForward: () => {
+        this.settingsNumberBuffer.deleteForward();
+        this.applySettingsNumberFromBuffer();
+        this.resetCaretBlink();
+      },
+      moveCursor: (command, extend) => {
+        this.settingsNumberBuffer.move(command, extend);
+        this.resetCaretBlink();
+      },
+      runShortcut: (command) => {
+        if (command === "Enter") {
+          this.commitSettingsNumberInput();
+          return true;
+        }
+        if (command === "Escape") {
+          this.cancelSettingsNumberInput();
+          return true;
+        }
+        if (command === "Mod+A") {
+          this.settingsNumberBuffer.selectAll();
+          this.resetCaretBlink();
+          return true;
+        }
+        return false;
+      },
+      onCompositionPreview: () => this.resetCaretBlink(),
+      onCompositionCommit: (text) => {
+        this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
+        this.applySettingsNumberFromBuffer();
+        this.resetCaretBlink();
+      }
+    };
+  }
+  applySettingsNumberFromBuffer() {
+    const key = this.activeSettingsNumber;
+    if (!key) return;
+    const value = Number.parseInt(this.settingsNumberBuffer.text, 10);
+    if (!Number.isFinite(value)) return;
+    this.settings[key] = key === "fontSize" ? Math.max(1, value) : clamp(Math.trunc(value), 1, 400);
+    this.saveAndApplySettings();
+  }
+  commitSettingsNumberInput() {
+    const key = this.activeSettingsNumber;
+    if (!key) return;
+    this.applySettingsNumberFromBuffer();
+    this.settingsNumberBuffer.text = String(this.settings[key]);
+    this.settingsNumberBuffer.cursor = this.settingsNumberBuffer.text.length;
+    this.settingsNumberBuffer.anchor = this.settingsNumberBuffer.cursor;
+    this.activeSettingsNumber = null;
+    this.settingsNumberSelecting = false;
+    this.input.blur();
+    this.scheduleDraw();
+  }
+  cancelSettingsNumberInput() {
+    this.activeSettingsNumber = null;
+    this.settingsNumberSelecting = false;
+    this.input.blur();
+    this.scheduleDraw();
+  }
+  setSettingsNumberCursorFromPoint(x, rect, extend) {
+    const offset = x - (rect.x + this.ui(8));
+    const col = this.columnFromTextOffset(this.settingsNumberBuffer.text, offset, "ui");
+    this.settingsNumberBuffer.cursor = col;
+    if (!extend) this.settingsNumberBuffer.anchor = col;
+    this.resetCaretBlink();
+  }
+  selectSettingsNumberWordFromPoint(_x, _rect) {
+    this.settingsNumberBuffer.selectAll();
+    this.resetCaretBlink();
+  }
+  pointHitsSettingsNumberSelection(x, rect) {
+    if (!this.settingsNumberBuffer.hasSelection()) return false;
+    if (x >= rect.x && x <= rect.x + rect.w) return true;
+    const start = Math.min(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
+    const end = Math.max(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
+    const textX = rect.x + this.ui(8);
+    const startX = textX + this.renderer.measureText(this.settingsNumberBuffer.text.slice(0, start), "ui");
+    const endX = textX + this.renderer.measureText(this.settingsNumberBuffer.text.slice(0, end), "ui");
+    return x >= startX && x <= Math.max(startX + 2, endX);
+  }
+  settingsNumberInputRect(key = this.activeSettingsNumber) {
+    return this.hits.find((hit) => hit.type === "settingsNumber" && hit.key === key)?.rect ?? null;
+  }
+  isSettingsNumberCaretVisible(key) {
+    return this.activeSettingsNumber === key && (this.input.composing || this.isCaretBlinkOn());
+  }
+  async runSettingsButton(action) {
+    if (action === "resetAll") {
+      this.settings = { ...DEFAULT_SETTINGS };
+      this.saveAndApplySettings();
+      this.statusText = "Settings reset";
+      return;
+    }
+    await this.clearFileSystem();
+  }
+  async clearFileSystem() {
+    await this.vfs.resetToSample();
+    this.docs.clear();
+    const group = makeGroup("group-main");
+    this.groups = [group];
+    this.dockRoot = { type: "leaf", group };
+    this.activeGroupId = group.id;
+    this.activeDocId = null;
+    this.scrollStates.clear();
+    await this.refreshFiles();
+    await this.openFile("/README.md");
+    this.statusText = "File system reset";
+  }
   copyTextToClipboard(text) {
     this.localClipboard = text;
     void copyText(text);
@@ -4051,7 +4886,7 @@ var EditorApp = class {
     if (text) this.localClipboard = text;
     return text || this.localClipboard;
   }
-  openSystemCopyDialog(text) {
+  openSystemCopyDialog(text, restoreFocus) {
     this.localClipboard = text;
     this.openSystemClipboardDialog({
       title: "System Copy",
@@ -4059,6 +4894,7 @@ var EditorApp = class {
       value: text,
       okLabel: "OK",
       selectText: true,
+      restoreFocus,
       onOk: (value) => {
         this.localClipboard = value;
         this.statusText = "System copy text shown";
@@ -4066,13 +4902,14 @@ var EditorApp = class {
       }
     });
   }
-  openSystemPasteDialog(onPaste) {
+  openSystemPasteDialog(onPaste, restoreFocus) {
     this.openSystemClipboardDialog({
       title: "System Paste",
       message: "Direct clipboard access on iOS is not available from this WebGL editor. Paste into the text field below, then tap OK.",
       value: "",
       okLabel: "OK",
       selectText: false,
+      restoreFocus,
       onOk: (value) => {
         if (!value) {
           this.statusText = "Clipboard empty";
@@ -4086,10 +4923,13 @@ var EditorApp = class {
   }
   openSystemClipboardDialog(options) {
     this.closeSystemClipboardDialog();
+    this.viewport.setVisualViewportCanvasResizeEnabled(false);
+    this.input.blur();
     const overlay = document.createElement("div");
     overlay.className = "system-clipboard-overlay";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
+    this.applySystemClipboardTheme(overlay);
     const dialog = document.createElement("div");
     dialog.className = "system-clipboard-dialog";
     const title = document.createElement("h2");
@@ -4118,10 +4958,14 @@ var EditorApp = class {
     overlay.append(dialog);
     document.body.append(overlay);
     this.systemClipboardOverlay = overlay;
+    this.systemClipboardViewportCleanup = this.installSystemClipboardViewportSync(overlay);
+    let closed = false;
     const close = () => {
+      if (closed) return;
+      closed = true;
       this.closeSystemClipboardDialog();
-      if (this.activeDocId) this.focusEditor();
-      else this.input.blur();
+      options.restoreFocus();
+      this.scheduleDraw();
     };
     cancel.addEventListener("click", close);
     ok.addEventListener("click", () => {
@@ -4142,9 +4986,47 @@ var EditorApp = class {
       if (options.selectText) textarea.select();
     });
   }
+  applySystemClipboardTheme(overlay) {
+    overlay.style.setProperty("--system-clipboard-overlay-bg", colorToCss(this.settings.theme === "light" ? theme.text : theme.background, 0.48));
+    overlay.style.setProperty("--system-clipboard-panel", colorToCss(theme.panel2, 0.99));
+    overlay.style.setProperty("--system-clipboard-field-bg", colorToCss(theme.background));
+    overlay.style.setProperty("--system-clipboard-divider", colorToCss(theme.divider));
+    overlay.style.setProperty("--system-clipboard-text", colorToCss(theme.text));
+    overlay.style.setProperty("--system-clipboard-text-dim", colorToCss(theme.textDim));
+    overlay.style.setProperty("--system-clipboard-accent", colorToCss(theme.accent));
+    overlay.style.setProperty("--system-clipboard-secondary", colorToCss(theme.activityActive));
+    overlay.style.setProperty("--system-clipboard-button-text", colorToCss(this.settings.theme === "light" ? theme.panel2 : theme.text));
+  }
+  installSystemClipboardViewportSync(overlay) {
+    const sync = () => {
+      const vv = window.visualViewport;
+      const left = vv?.offsetLeft ?? 0;
+      const top = vv?.offsetTop ?? 0;
+      const width = vv?.width ?? window.innerWidth;
+      const height = vv?.height ?? window.innerHeight;
+      overlay.style.left = `${left}px`;
+      overlay.style.top = `${top}px`;
+      overlay.style.width = `${Math.max(1, width)}px`;
+      overlay.style.height = `${Math.max(1, height)}px`;
+      overlay.style.setProperty("--system-clipboard-width", `${Math.max(1, width)}px`);
+      overlay.style.setProperty("--system-clipboard-height", `${Math.max(1, height)}px`);
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    return () => {
+      window.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      this.viewport.setVisualViewportCanvasResizeEnabled(true);
+    };
+  }
   closeSystemClipboardDialog() {
     this.systemClipboardOverlay?.remove();
     this.systemClipboardOverlay = null;
+    this.systemClipboardViewportCleanup?.();
+    this.systemClipboardViewportCleanup = null;
   }
   async runFileContextMenuCommand(path, command) {
     if (!isFileContextMenuCommand(command)) return;
@@ -4205,7 +5087,7 @@ var EditorApp = class {
     await this.refreshFiles();
     this.syncOpenTabs();
     this.statusText = `Deleted ${target}`;
-    if (this.activeDocId) this.focusEditor();
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
   }
@@ -4239,7 +5121,7 @@ var EditorApp = class {
     await this.refreshFiles();
     this.syncOpenTabs();
     this.statusText = `Deleted ${target}`;
-    if (this.activeDocId) this.focusEditor();
+    if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
   }
@@ -4285,6 +5167,10 @@ var EditorApp = class {
     return joinPath(dir, `${stem} copy ${Date.now().toString(36)}${ext}`);
   }
   runGlobalShortcut(command) {
+    if (command === "Mod+F") {
+      this.openFindWidget();
+      return true;
+    }
     if (command === "Mod+S") {
       const doc = this.activeDoc();
       if (doc) void this.docs.save(doc).then(() => {
@@ -4296,7 +5182,7 @@ var EditorApp = class {
     if (command === "Mod+Shift+F") {
       this.sidebarMode = "search";
       if (this.sidebarWidth === 0) this.sidebarWidth = this.lastSidebarWidth || 280;
-      this.focusMiniTarget("search", { x: 56, y: 48, w: 220, h: 24 });
+      this.focusMiniTarget("search", { x: this.ui(56), y: this.ui(48), w: this.ui(220), h: this.ui(24) });
       return true;
     }
     if (command === "Mod+B") {
@@ -4312,7 +5198,7 @@ var EditorApp = class {
     if (command === "Mod+`") {
       this.sidebarMode = "chat";
       if (this.sidebarWidth === 0) this.sidebarWidth = this.lastSidebarWidth || 280;
-      this.focusMiniTarget("chat", { x: 56, y: this.viewport.get().cssHeight - 70, w: 220, h: 28 });
+      this.focusMiniTarget("chat", { x: this.ui(56), y: this.viewport.get().cssHeight - this.ui(70), w: this.ui(220), h: this.ui(28) });
       return true;
     }
     return false;
@@ -4328,7 +5214,7 @@ var EditorApp = class {
     const results = [];
     for (const file of files) {
       if (file.encoding === "binary" || file.path.startsWith("/.slug-")) continue;
-      const text = await this.vfs.readText(file.path);
+      const text = this.docs.getByPath(file.path)?.getText() ?? await this.vfs.readText(file.path);
       const lines = text.split("\n");
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].toLowerCase().includes(query.toLowerCase())) {
@@ -4341,6 +5227,165 @@ var EditorApp = class {
     this.searchResults = results;
     this.statusText = `${results.length} results`;
     this.scheduleDraw();
+  }
+  async replaceAllInWorkspace() {
+    const query = this.searchBuffer.text;
+    if (!query) {
+      this.statusText = "No search query";
+      this.scheduleDraw();
+      return;
+    }
+    const replacement = this.projectReplaceBuffer.text;
+    const files = await this.vfs.listAllFiles();
+    const targetGroup = this.activeGroup();
+    let fileCount = 0;
+    let replacementCount = 0;
+    let firstChangedDocId = null;
+    for (const file of files) {
+      if (file.encoding === "binary" || file.path.startsWith("/.slug-")) continue;
+      const openDoc = this.docs.getByPath(file.path);
+      const sourceText = openDoc?.getText() ?? await this.vfs.readText(file.path);
+      const replaced = replaceAllPlainText(sourceText, query, replacement);
+      if (replaced.text === sourceText) continue;
+      const doc = openDoc ?? await this.docs.open(file.path);
+      fileCount++;
+      replacementCount += replaced.count;
+      doc.selectAll();
+      doc.replaceSelection(replaced.text, "replaceAll");
+      if (!this.groupContaining(doc.id)) {
+        targetGroup.tabs.push(doc.id);
+        if (!targetGroup.activeDocId) {
+          targetGroup.activeDocId = doc.id;
+          this.activeGroupId = targetGroup.id;
+          this.activeDocId = doc.id;
+        }
+      }
+      firstChangedDocId ??= doc.id;
+    }
+    if (!this.activeDocId && firstChangedDocId) {
+      targetGroup.activeDocId = firstChangedDocId;
+      this.activeGroupId = targetGroup.id;
+      this.activeDocId = firstChangedDocId;
+    }
+    this.syncOpenTabs();
+    await this.runSearch();
+    this.statusText = `Replaced ${replacementCount} match${replacementCount === 1 ? "" : "es"} in ${fileCount} unsaved file${fileCount === 1 ? "" : "s"}`;
+    this.scheduleDraw();
+  }
+  openFindWidget() {
+    const doc = this.activeDoc();
+    if (!doc) return;
+    const state = this.findStateForDoc(doc.id);
+    if (!state) return;
+    state.open = true;
+    const selection = doc.selectedText();
+    if (selection && !selection.includes("\n")) {
+      state.findBuffer.text = selection;
+      state.findBuffer.cursor = selection.length;
+      state.findBuffer.anchor = state.findBuffer.cursor;
+    }
+    const rect = this.textFieldRect("find") ?? this.findFieldFallbackRect();
+    this.focusTextField("find", rect);
+    if (state.findBuffer.text) this.selectDocumentFindMatch(1, true);
+    this.scheduleDraw();
+  }
+  closeFindWidget() {
+    const state = this.activeFindState(false);
+    if (state) state.open = false;
+    this.textFieldSelecting = null;
+    this.focusEditor();
+    this.scheduleDraw();
+  }
+  selectDocumentFindMatch(direction, fromCurrent = false) {
+    const doc = this.activeDoc();
+    const query = this.activeFindState(false)?.findBuffer.text ?? "";
+    const matches = doc ? this.documentFindMatches(doc, query) : [];
+    if (!doc || matches.length === 0) {
+      this.statusText = query ? "No matches" : "Find";
+      this.scheduleDraw();
+      return;
+    }
+    const head = this.offsetForPosition(doc, doc.selection.head);
+    const ordered = doc.getOrderedSelection();
+    const selectionStart = this.offsetForPosition(doc, ordered.start);
+    const selectionEnd = this.offsetForPosition(doc, ordered.end);
+    let current = matches.findIndex((match2) => match2.start === selectionStart && match2.end === selectionEnd);
+    if (current < 0) {
+      current = direction > 0 ? matches.findIndex((match2) => match2.start >= head) : findLastIndex(matches, (match2) => match2.end <= head);
+      if (current < 0) current = direction > 0 ? 0 : matches.length - 1;
+    } else if (!fromCurrent) {
+      current = (current + direction + matches.length) % matches.length;
+    }
+    const match = matches[current];
+    doc.setSelection(this.positionForOffset(doc, match.start), this.positionForOffset(doc, match.end));
+    this.ensureCaretVisible(doc, this.activeEditorRect());
+    this.statusText = `${current + 1} of ${matches.length}`;
+    this.scheduleDraw();
+  }
+  replaceCurrentFindMatch() {
+    const doc = this.activeDoc();
+    const state = this.activeFindState(false);
+    const query = state?.findBuffer.text ?? "";
+    if (!doc || !query) return;
+    const selected = doc.selectedText();
+    if (!textEqualsFindQuery(selected, query)) {
+      this.selectDocumentFindMatch(1);
+      return;
+    }
+    doc.replaceSelection(state?.replaceBuffer.text ?? "", "replace");
+    this.selectDocumentFindMatch(1, true);
+    this.revealEditorCaret();
+  }
+  replaceAllInActiveDocument() {
+    const doc = this.activeDoc();
+    const state = this.activeFindState(false);
+    const query = state?.findBuffer.text ?? "";
+    if (!doc || !query) return;
+    const replaced = replaceAllPlainText(doc.getText(), query, state?.replaceBuffer.text ?? "");
+    if (replaced.count === 0) {
+      this.statusText = "No matches";
+      this.scheduleDraw();
+      return;
+    }
+    doc.selectAll();
+    doc.replaceSelection(replaced.text, "replaceAll");
+    this.statusText = `Replaced ${replaced.count} match${replaced.count === 1 ? "" : "es"}`;
+    this.selectDocumentFindMatch(1, true);
+    this.revealEditorCaret();
+  }
+  documentFindMatches(doc, query) {
+    if (!query) return [];
+    const text = doc.getText();
+    const haystack = text.toLowerCase();
+    const needle = query.toLowerCase();
+    const matches = [];
+    let index = 0;
+    while (index <= haystack.length) {
+      const found = haystack.indexOf(needle, index);
+      if (found < 0) break;
+      matches.push({ start: found, end: found + query.length });
+      index = found + Math.max(1, query.length);
+    }
+    return matches;
+  }
+  offsetForPosition(doc, pos) {
+    let offset = 0;
+    for (let line = 0; line < pos.line; line++) offset += doc.lines[line].length + 1;
+    return offset + pos.col;
+  }
+  positionForOffset(doc, offset) {
+    let remaining = clamp(offset, 0, doc.getText().length);
+    for (let line = 0; line < doc.lines.length; line++) {
+      const text = doc.lines[line];
+      if (remaining <= text.length) return { line, col: remaining };
+      remaining -= text.length + 1;
+    }
+    const last = doc.lines.length - 1;
+    return { line: last, col: doc.lines[last].length };
+  }
+  findFieldFallbackRect() {
+    const rect = this.activeEditorRect();
+    return { x: rect.x + Math.max(12, rect.w - this.ui(380)), y: rect.y + this.ui(10), w: this.ui(170), h: this.ui(28) };
   }
   async sendChat() {
     const text = this.chatBuffer.text.trim();
@@ -4357,15 +5402,15 @@ var EditorApp = class {
     this.renderer.beginFrame();
     this.hits.length = 0;
     const vp = this.viewport.get();
-    const activityW = 48;
-    const statusH = 24;
+    const activityW = this.ui(48);
+    const statusH = this.ui(24);
     const sidebarW = this.sidebarWidth;
     const mainX = activityW + sidebarW;
     this.renderer.rect({ x: 0, y: 0, w: vp.cssWidth, h: vp.cssHeight }, theme.background);
     this.drawActivityBar({ x: 0, y: 0, w: activityW, h: vp.cssHeight - statusH });
     if (sidebarW > 0) this.drawSidebar({ x: activityW, y: 0, w: sidebarW, h: vp.cssHeight - statusH });
     this.drawEditorArea({ x: mainX, y: 0, w: vp.cssWidth - mainX, h: vp.cssHeight - statusH });
-    if (sidebarW > 0) this.drawSidebarSplitter({ x: activityW + sidebarW - 3, y: 0, w: 6, h: vp.cssHeight - statusH });
+    if (sidebarW > 0) this.drawSidebarSplitter({ x: activityW + sidebarW - this.ui(3), y: 0, w: this.ui(6), h: vp.cssHeight - statusH });
     this.drawStatus({ x: 0, y: vp.cssHeight - statusH, w: vp.cssWidth, h: statusH });
     if (this.contextMenu) this.drawContextMenu();
     if (this.modal) this.drawModal();
@@ -4375,16 +5420,20 @@ var EditorApp = class {
   drawActivityBar(rect) {
     this.renderer.rect(rect, theme.activity);
     const items = [
-      { mode: "files", label: "F", y: 20 },
-      { mode: "search", label: "S", y: 70 },
-      { mode: "chat", label: "C", y: 120 }
+      { mode: "files", label: "\u{1F4C2}", y: this.ui(20) },
+      { mode: "search", label: "\u{1F50D}", y: this.ui(70) },
+      { mode: "chat", label: "\u{1F4AC}", y: this.ui(120) }
     ];
     for (const item of items) {
-      const r = { x: rect.x + 6, y: item.y, w: rect.w - 12, h: 36 };
+      const r = { x: rect.x + this.ui(6), y: item.y, w: rect.w - this.ui(12), h: this.ui(36) };
       if (this.sidebarWidth > 0 && this.sidebarMode === item.mode) this.renderer.rect(r, theme.activityActive);
-      this.renderer.text(item.label, r.x + 13, r.y + 9, theme.text, "title");
+      this.drawCenteredText(item.label, r, theme.text, "title");
       this.hits.push({ type: "activity", mode: item.mode, rect: r });
     }
+    const settingsRect = { x: rect.x + this.ui(6), y: rect.y + rect.h - this.ui(46), w: rect.w - this.ui(12), h: this.ui(36) };
+    if (this.isSettingsTab(this.activeDocId)) this.renderer.rect(settingsRect, theme.activityActive);
+    this.drawCenteredText("\u2699\uFE0F", settingsRect, theme.text, "title");
+    this.hits.push({ type: "settingsActivity", rect: settingsRect });
   }
   drawSidebar(rect) {
     this.renderer.rect(rect, theme.panel);
@@ -4393,61 +5442,64 @@ var EditorApp = class {
     else this.drawChatPanel(rect);
   }
   drawSidebarSplitter(rect) {
-    this.renderer.rect({ x: rect.x + 2, y: rect.y, w: 1, h: rect.h }, this.resizingSidebar ? theme.accent : theme.divider);
+    this.renderer.rect({ x: rect.x + this.ui(2), y: rect.y, w: 1, h: rect.h }, this.resizingSidebar ? theme.accent : theme.divider);
     this.hits.push({ type: "sidebarResize", rect });
   }
   drawPanelHeader(rect, title) {
-    const header = { x: rect.x, y: rect.y, w: rect.w, h: PANEL_HEADER_H };
+    const headerH = this.ui(PANEL_HEADER_H);
+    const header = { x: rect.x, y: rect.y, w: rect.w, h: headerH };
     this.renderer.rect(header, theme.panel2);
     this.renderer.rect({ x: header.x, y: header.y + header.h - 1, w: header.w, h: 1 }, theme.divider);
-    this.renderer.text(title, header.x + 12, header.y + 9, theme.textDim, "ui");
-    return { x: rect.x, y: rect.y + PANEL_HEADER_H, w: rect.w, h: Math.max(0, rect.h - PANEL_HEADER_H) };
+    this.renderer.text(title, header.x + this.ui(12), header.y + this.ui(9), theme.textDim, "ui");
+    return { x: rect.x, y: rect.y + headerH, w: rect.w, h: Math.max(0, rect.h - headerH) };
   }
   drawFilesPanel(rect) {
     const body = this.drawPanelHeader(rect, "FILES");
     this.hits.push({ type: "filesRoot", rect: body });
-    this.hits.push({ type: "filesRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: PANEL_HEADER_H } });
-    this.drawFileTreeEntries(this.fileTreeEntries(), body, body.y + 8, 0);
+    this.hits.push({ type: "filesRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: this.ui(PANEL_HEADER_H) } });
+    this.drawFileTreeEntries(this.fileTreeEntries(), body, body.y + this.ui(8), 0);
   }
   drawFileTreeEntries(entries, body, y, depth) {
-    const indent = 14;
+    const indent = this.ui(14);
+    const rowH = this.ui(22);
+    const rowGap = this.ui(2);
     for (const entry of entries) {
-      if (y > body.y + body.h - 20) break;
-      const row = { x: body.x + 4, y, w: body.w - 8, h: 22 };
-      const contentX = row.x + 6 + depth * indent;
+      if (y > body.y + body.h - this.ui(20)) break;
+      const row = { x: body.x + this.ui(4), y, w: body.w - this.ui(8), h: rowH };
+      const contentX = row.x + this.ui(6) + depth * indent;
       if (entry.type === "dir") {
         const expanded = this.expandedFolders.has(entry.path);
-        this.renderer.text(expanded ? "v" : ">", contentX, row.y + 4, theme.textDim, "ui");
+        this.renderer.text(expanded ? "v" : ">", contentX, row.y + this.ui(4), theme.textDim, "ui");
         this.hits.push({ type: "folder", path: entry.path, expanded, rect: row });
         if (entry.path === this.renamePath) {
-          this.drawFileRenameRow(entry.path, { x: contentX + 14, y: row.y, w: Math.max(40, body.x + body.w - contentX - 14), h: row.h });
+          this.drawFileRenameRow(entry.path, { x: contentX + this.ui(14), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX - this.ui(14)), h: row.h });
         } else {
-          this.renderer.text(entry.name, contentX + 14, row.y + 4, theme.text, "ui");
+          this.renderer.text(entry.name, contentX + this.ui(14), row.y + this.ui(4), theme.text, "ui");
         }
-        y += 24;
+        y += rowH + rowGap;
         if (expanded) y = this.drawFileTreeEntries(entry.children, body, y, depth + 1);
         continue;
       }
       if (entry.path === this.activeDoc()?.path) this.renderer.rect(row, theme.panel2);
       this.hits.push({ type: "file", path: entry.path, rect: row });
       if (entry.path === this.renamePath) {
-        this.drawFileRenameRow(entry.path, { x: contentX - 4, y: row.y, w: Math.max(40, body.x + body.w - contentX), h: row.h });
+        this.drawFileRenameRow(entry.path, { x: contentX - this.ui(4), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX), h: row.h });
       } else {
-        this.renderer.text(entry.name, contentX, row.y + 4, theme.text, "ui");
+        this.renderer.text(entry.name, contentX, row.y + this.ui(4), theme.text, "ui");
       }
-      y += 24;
+      y += rowH + rowGap;
     }
     return y;
   }
   drawFileRenameRow(path, row) {
-    const input = { x: row.x + 4, y: row.y + 1, w: row.w - 8, h: row.h - 2 };
+    const input = { x: row.x + this.ui(4), y: row.y + 1, w: row.w - this.ui(8), h: row.h - 2 };
     this.renderer.rect(input, theme.activity);
     this.renderer.rect({ x: input.x, y: input.y, w: input.w, h: 1 }, theme.accent);
     this.renderer.rect({ x: input.x, y: input.y + input.h - 1, w: input.w, h: 1 }, theme.accent);
     this.renderer.rect({ x: input.x, y: input.y, w: 1, h: input.h }, theme.accent);
     this.renderer.rect({ x: input.x + input.w - 1, y: input.y, w: 1, h: input.h }, theme.accent);
-    const textX = input.x + 5;
-    const textY = input.y + 3;
+    const textX = input.x + this.ui(5);
+    const textY = input.y + this.ui(3);
     const selectionStart = Math.min(this.renameBuffer.anchor, this.renameBuffer.cursor);
     const selectionEnd = Math.max(this.renameBuffer.anchor, this.renameBuffer.cursor);
     const beforeSelection = this.renameBuffer.text.slice(0, selectionStart);
@@ -4455,75 +5507,102 @@ var EditorApp = class {
     if (selectionEnd > selectionStart) {
       const sx = textX + this.renderer.measureText(beforeSelection, "ui");
       const sw = Math.max(2, this.renderer.measureText(selected, "ui"));
-      this.renderer.rect({ x: sx, y: input.y + 2, w: sw, h: input.h - 4 }, theme.selection);
+      this.renderer.rect({ x: sx, y: input.y + this.ui(2), w: sw, h: input.h - this.ui(4) }, theme.selection);
     }
     this.renderer.text(this.renameBuffer.text || "file name", textX, textY, this.renameBuffer.text ? theme.text : theme.textDim, "ui");
     if (this.isRenameCaretVisible()) {
       const caretX = textX + this.renderer.measureText(this.renameBuffer.text.slice(0, this.renameBuffer.cursor), "ui");
-      this.renderer.rect({ x: caretX, y: input.y + 3, w: 1.5, h: input.h - 6 }, theme.caret);
+      this.renderer.rect({ x: caretX, y: input.y + this.ui(3), w: 1.5, h: input.h - this.ui(6) }, theme.caret);
     }
     this.hits.push({ type: "fileRenameInput", path, rect: input });
   }
   drawSearchPanel(rect) {
     const body = this.drawPanelHeader(rect, "SEARCH");
-    const input = { x: body.x + 10, y: body.y + 8, w: body.w - 20, h: 28 };
+    const toggle = { x: body.x + this.ui(10), y: body.y + this.ui(8), w: this.ui(28), h: this.ui(28) };
+    const refresh = { x: body.x + body.w - this.ui(10) - this.ui(28), y: toggle.y, w: this.ui(28), h: this.ui(28) };
+    const input = { x: toggle.x + toggle.w + this.ui(6), y: toggle.y, w: Math.max(this.ui(60), refresh.x - toggle.x - toggle.w - this.ui(12)), h: toggle.h };
+    this.drawIconButton(toggle, this.searchReplaceExpanded ? "v" : ">", true);
+    this.hits.push({ type: "searchReplaceToggle", rect: toggle });
     this.drawSearchInput(input);
-    let y = input.y + 42;
+    this.drawIconButton(refresh, "\u{1F50E}", true);
+    this.hits.push({ type: "searchRefresh", rect: refresh });
+    let y = input.y + this.ui(42);
+    if (this.searchReplaceExpanded) {
+      const buttonW = this.ui(94);
+      const replaceInput = { x: toggle.x, y, w: Math.max(this.ui(60), body.w - this.ui(20) - buttonW - this.ui(8)), h: input.h };
+      const button = { x: replaceInput.x + replaceInput.w + this.ui(8), y, w: buttonW, h: input.h };
+      this.drawTextFieldInput("projectReplace", replaceInput, "replace");
+      this.drawButton(button, "Replace All", Boolean(this.searchBuffer.text));
+      this.hits.push({ type: "searchReplaceAll", rect: button, enabled: Boolean(this.searchBuffer.text) });
+      y += this.ui(42);
+    }
     for (const result of this.searchResults) {
-      const row = { x: body.x + 8, y, w: body.w - 16, h: 38 };
-      this.renderer.text(`${result.path}:${result.line + 1}`, row.x + 4, row.y + 2, theme.accent, "ui");
-      this.renderer.text(result.text.trim().slice(0, 32), row.x + 4, row.y + 18, theme.textDim, "ui");
+      const row = { x: body.x + this.ui(8), y, w: body.w - this.ui(16), h: this.ui(38) };
+      this.renderer.text(`${result.path}:${result.line + 1}`, row.x + this.ui(4), row.y + this.ui(2), theme.accent, "ui");
+      this.renderer.text(result.text.trim().slice(0, 32), row.x + this.ui(4), row.y + this.ui(18), theme.textDim, "ui");
       this.hits.push({ type: "searchResult", path: result.path, line: result.line, rect: row });
-      y += 42;
-      if (y > body.y + body.h - 20) break;
+      y += this.ui(42);
+      if (y > body.y + body.h - this.ui(20)) break;
     }
   }
   drawSearchInput(input) {
-    const active = this.input.activeTarget?.kind === "search";
+    this.drawTextFieldInput("search", input, "type to search");
+  }
+  drawTextFieldInput(field, input, placeholder) {
+    const buffer = this.bufferForTextField(field);
+    const active = this.input.activeTarget?.kind === field;
     const border = active ? theme.accent : theme.divider;
     this.renderer.rect(input, active ? theme.activity : theme.panel2);
-    this.renderer.rect({ x: input.x, y: input.y, w: input.w, h: 1 }, border);
-    this.renderer.rect({ x: input.x, y: input.y + input.h - 1, w: input.w, h: 1 }, border);
-    this.renderer.rect({ x: input.x, y: input.y, w: 1, h: input.h }, border);
-    this.renderer.rect({ x: input.x + input.w - 1, y: input.y, w: 1, h: input.h }, border);
-    const textX = input.x + 8;
-    const textY = input.y + 7;
-    const selectionStart = Math.min(this.searchBuffer.anchor, this.searchBuffer.cursor);
-    const selectionEnd = Math.max(this.searchBuffer.anchor, this.searchBuffer.cursor);
-    const beforeSelection = this.searchBuffer.text.slice(0, selectionStart);
-    const selected = this.searchBuffer.text.slice(selectionStart, selectionEnd);
+    this.drawRectOutline(input, border);
+    const textX = input.x + this.ui(8);
+    const textY = input.y + this.ui(7);
+    const selectionStart = Math.min(buffer.anchor, buffer.cursor);
+    const selectionEnd = Math.max(buffer.anchor, buffer.cursor);
+    const beforeSelection = buffer.text.slice(0, selectionStart);
+    const selected = buffer.text.slice(selectionStart, selectionEnd);
     if (selectionEnd > selectionStart) {
       const sx = textX + this.renderer.measureText(beforeSelection, "ui");
       const sw = Math.max(2, this.renderer.measureText(selected, "ui"));
-      this.renderer.rect({ x: sx, y: input.y + 3, w: sw, h: input.h - 6 }, theme.selection);
+      this.renderer.rect({ x: sx, y: input.y + this.ui(3), w: sw, h: input.h - this.ui(6) }, theme.selection);
     }
-    this.renderer.text(this.searchBuffer.text || "type to search", textX, textY, this.searchBuffer.text ? theme.text : theme.textDim, "ui");
-    if (this.isSearchCaretVisible()) {
-      const caretX = textX + this.renderer.measureText(this.searchBuffer.text.slice(0, this.searchBuffer.cursor), "ui");
-      this.renderer.rect({ x: caretX, y: input.y + 5, w: 1.5, h: input.h - 10 }, theme.caret);
+    this.renderer.text(buffer.text || placeholder, textX, textY, buffer.text ? theme.text : theme.textDim, "ui");
+    if (this.isTextFieldCaretVisible(field)) {
+      const caretX = textX + this.renderer.measureText(buffer.text.slice(0, buffer.cursor), "ui");
+      this.renderer.rect({ x: caretX, y: input.y + this.ui(5), w: 1.5, h: input.h - this.ui(10) }, theme.caret);
     }
-    this.hits.push({ type: "searchInput", rect: input });
+    this.hits.push({ type: "textField", field, rect: input });
+  }
+  drawIconButton(rect, label, enabled, font = "ui") {
+    this.renderer.rect(rect, enabled ? theme.activityActive : theme.panel2);
+    this.drawRectOutline(rect, theme.divider);
+    this.drawCenteredText(label, rect, enabled ? theme.text : theme.textDim, font);
+  }
+  drawButton(rect, label, enabled) {
+    this.renderer.rect(rect, enabled ? theme.activityActive : theme.panel2);
+    this.drawRectOutline(rect, enabled ? theme.divider : theme.panel);
+    this.renderer.text(label, rect.x + this.ui(10), rect.y + this.ui(7), enabled ? theme.text : theme.textDim, "ui");
   }
   drawChatPanel(rect) {
     const body = this.drawPanelHeader(rect, "CHAT");
-    const inputH = 56;
-    const transcript = { x: body.x + 8, y: body.y + 8, w: body.w - 16, h: body.h - inputH - 20 };
+    const inputH = this.ui(56);
+    const lineH = this.ui(16);
+    const transcript = { x: body.x + this.ui(8), y: body.y + this.ui(8), w: body.w - this.ui(16), h: body.h - inputH - this.ui(20) };
     this.renderer.pushClip(transcript);
-    let y = transcript.y + 4;
+    let y = transcript.y + this.ui(4);
     for (const msg of this.chat.messages.slice(-12)) {
       const color = msg.role === "user" ? theme.accent : msg.role === "system" ? theme.textDim : theme.text;
-      this.renderer.text(`${msg.role}:`, transcript.x + 4, y, color, "ui");
-      y += 16;
+      this.renderer.text(`${msg.role}:`, transcript.x + this.ui(4), y, color, "ui");
+      y += lineH;
       for (const line of wrapText(msg.text, 34)) {
-        this.renderer.text(line, transcript.x + 8, y, theme.text, "ui");
-        y += 16;
+        this.renderer.text(line, transcript.x + this.ui(8), y, theme.text, "ui");
+        y += lineH;
       }
-      y += 6;
+      y += this.ui(6);
     }
     this.renderer.popClip();
-    const input = { x: body.x + 10, y: body.y + body.h - inputH + 10, w: body.w - 20, h: inputH - 18 };
+    const input = { x: body.x + this.ui(10), y: body.y + body.h - inputH + this.ui(10), w: body.w - this.ui(20), h: inputH - this.ui(18) };
     this.renderer.rect(input, theme.panel2);
-    this.renderer.text(this.chatBuffer.text || "ask about the workspace", input.x + 8, input.y + 9, this.chatBuffer.text ? theme.text : theme.textDim, "ui");
+    this.renderer.text(this.chatBuffer.text || "ask about the workspace", input.x + this.ui(8), input.y + this.ui(9), this.chatBuffer.text ? theme.text : theme.textDim, "ui");
     this.hits.push({ type: "chatInput", rect: input });
   }
   drawEditorArea(rect) {
@@ -4590,9 +5669,13 @@ var EditorApp = class {
   }
   drawEditorGroup(group, rect) {
     group.frameRect = { ...rect };
-    const tabH = 32;
+    const tabH = this.ui(32);
     this.drawTabs(group, { x: rect.x, y: rect.y, w: rect.w, h: tabH });
     group.editorRect = { x: rect.x, y: rect.y + tabH, w: rect.w, h: rect.h - tabH };
+    if (this.isSettingsTab(group.activeDocId)) {
+      this.drawSettingsView(group.editorRect);
+      return;
+    }
     this.hits.push({ type: "editor", groupId: group.id, rect: group.editorRect });
     const doc = group.activeDocId ? this.docs.get(group.activeDocId) : void 0;
     if (!doc) {
@@ -4600,20 +5683,23 @@ var EditorApp = class {
       return;
     }
     this.drawDocument(doc, group.editorRect, this.isDocumentCaretVisible(group, doc.id));
+    if (this.findStateForDoc(doc.id, false)?.open && this.isActiveDocumentInGroup(group, doc.id)) this.drawFindWidget(group.editorRect);
   }
   drawTabs(group, rect) {
     this.renderer.rect(rect, theme.panel);
     let x = rect.x;
     for (const docId of group.tabs) {
       const doc = this.docs.get(docId);
-      if (!doc) continue;
-      const w = Math.min(240, Math.max(128, this.renderer.measureText(doc.path ?? "(untitled)", "ui") + 52));
+      if (!doc && !this.isSettingsTab(docId)) continue;
+      const label = this.tabLabel(docId) + (doc?.dirty ? "*" : "");
+      const w = Math.min(this.ui(240), Math.max(this.ui(128), this.renderer.measureText(label, "ui") + this.ui(52)));
       const tab = { x, y: rect.y, w, h: rect.h };
-      if (doc.id === group.activeDocId) this.renderer.rect(tab, theme.panel2);
-      const close = { x: tab.x + tab.w - 26, y: tab.y + 7, w: 18, h: 18 };
-      this.renderer.text((doc.path ?? "(untitled)") + (doc.dirty ? "*" : ""), x + 10, rect.y + 9, theme.text, "ui");
-      this.renderer.rect(close, doc.id === group.activeDocId ? theme.activityActive : theme.activity);
-      this.renderer.text("x", close.x + 5, close.y + 2, theme.text, "ui");
+      if (docId === group.activeDocId) this.renderer.rect(tab, theme.panel2);
+      const closeSize = this.ui(18);
+      const close = { x: tab.x + tab.w - this.ui(26), y: tab.y + (tab.h - closeSize) / 2, w: closeSize, h: closeSize };
+      this.renderer.text(label, x + this.ui(10), rect.y + this.ui(9), theme.text, "ui");
+      this.renderer.rect(close, docId === group.activeDocId ? theme.activityActive : theme.activity);
+      this.drawCenteredText("\u274C", close, theme.text, "mini");
       this.hits.push({ type: "tab", docId, groupId: group.id, rect: tab });
       this.hits.push({ type: "tabClose", docId, groupId: group.id, rect: close });
       x += w + 1;
@@ -4623,27 +5709,27 @@ var EditorApp = class {
   drawDraggedTabGhost() {
     if (!this.tabDrag) return;
     const doc = this.docs.get(this.tabDrag.docId);
-    const label = (doc?.path ?? "(untitled)") + (doc?.dirty ? "*" : "");
+    const label = this.tabLabel(this.tabDrag.docId) + (doc?.dirty ? "*" : "");
     const ghost = this.dragGhostRect();
     this.renderer.rect(ghost, [theme.panel2[0], theme.panel2[1], theme.panel2[2], 0.94]);
     this.renderer.rect({ x: ghost.x, y: ghost.y, w: ghost.w, h: 1 }, theme.accent);
     this.renderer.rect({ x: ghost.x, y: ghost.y + ghost.h - 1, w: ghost.w, h: 1 }, theme.accent);
     this.renderer.rect({ x: ghost.x, y: ghost.y, w: 1, h: ghost.h }, theme.accent);
     this.renderer.rect({ x: ghost.x + ghost.w - 1, y: ghost.y, w: 1, h: ghost.h }, theme.accent);
-    this.renderer.text(label, ghost.x + 10, ghost.y + 9, theme.text, "ui");
+    this.renderer.text(label, ghost.x + this.ui(10), ghost.y + this.ui(9), theme.text, "ui");
   }
   dragGhostRect() {
     const drag = this.tabDrag;
     if (!drag) return { x: 0, y: 0, w: 0, h: 0 };
     const doc = this.docs.get(drag.docId);
-    const label = (doc?.path ?? "(untitled)") + (doc?.dirty ? "*" : "");
-    const width = Math.min(240, Math.max(128, this.renderer.measureText(label, "ui") + 52));
+    const label = this.tabLabel(drag.docId) + (doc?.dirty ? "*" : "");
+    const width = Math.min(this.ui(240), Math.max(this.ui(128), this.renderer.measureText(label, "ui") + this.ui(52)));
     const vp = this.viewport.get();
     return {
-      x: clamp(drag.pointer.x - 18, 0, Math.max(0, vp.cssWidth - width)),
-      y: clamp(drag.pointer.y - 16, 0, Math.max(0, vp.cssHeight - 56)),
+      x: clamp(drag.pointer.x - this.ui(18), 0, Math.max(0, vp.cssWidth - width)),
+      y: clamp(drag.pointer.y - this.ui(16), 0, Math.max(0, vp.cssHeight - this.ui(56))),
       w: width,
-      h: 32
+      h: this.ui(32)
     };
   }
   drawDockOverlay() {
@@ -4665,7 +5751,7 @@ var EditorApp = class {
     }
   }
   drawDockGuideLines(group, center) {
-    const outer = insetRect(group.frameRect, 10);
+    const outer = insetRect(group.frameRect, this.ui(10));
     const color = [theme.accent[0], theme.accent[1], theme.accent[2], 0.78];
     this.renderer.rect({ x: outer.x, y: outer.y, w: outer.w, h: 1 }, color);
     this.renderer.rect({ x: outer.x, y: outer.y + outer.h - 1, w: outer.w, h: 1 }, color);
@@ -4676,14 +5762,182 @@ var EditorApp = class {
     this.renderer.polygon(lineQuad({ x: outer.x + outer.w, y: outer.y + outer.h }, { x: center.x + center.w, y: center.y + center.h }, 1.5), color);
     this.renderer.polygon(lineQuad({ x: outer.x, y: outer.y + outer.h }, { x: center.x, y: center.y + center.h }, 1.5), color);
   }
+  drawSettingsView(rect) {
+    this.renderer.rect(rect, theme.background);
+    this.renderer.pushClip(rect);
+    const pad = this.ui(24);
+    const content = {
+      x: rect.x + pad,
+      y: rect.y + this.ui(18),
+      w: Math.max(this.ui(240), Math.min(this.ui(760), rect.w - pad * 2)),
+      h: Math.max(0, rect.h - this.ui(36))
+    };
+    this.renderer.text("Settings", content.x, content.y, theme.text, "title");
+    let y = content.y + this.ui(38);
+    y = this.drawSettingsHeader("visual", "Visual", content, y, 0);
+    if (this.settingsExpanded.has("visual")) {
+      y = this.drawSettingsDropdownRow(content, y, 1, "Theme", this.settings.theme === "dark" ? "Dark" : "Light", "theme");
+      y = this.drawSettingsNumberRow(content, y, 1, "Font Size", "fontSize", "px");
+      y = this.drawSettingsNumberRow(content, y, 1, "UI Scale", "uiScale", "%");
+    }
+    y += this.ui(6);
+    y = this.drawSettingsHeader("interface", "Interface", content, y, 0);
+    if (this.settingsExpanded.has("interface")) {
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Rename On Double Click", "renameOnDoubleClick");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Show Line Numbers", "showLineNumbers");
+    }
+    y += this.ui(6);
+    y = this.drawSettingsHeader("ai", "AI", content, y, 0);
+    if (this.settingsExpanded.has("ai")) {
+      y = this.drawSettingsDropdownRow(content, y, 1, "Provider", this.settings.aiProvider === "openai" ? "OpenAI" : "Local", "aiProvider");
+      y = this.drawSettingsLabelRow(content, y, 1, "Endpoint", this.settings.aiProvider === "openai" ? "OpenAI Responses API" : "Local assistant");
+    }
+    y += this.ui(6);
+    y = this.drawSettingsHeader("danger", "Danger", content, y, 0);
+    if (this.settingsExpanded.has("danger")) {
+      y = this.drawSettingsButtonRow(content, y, 1, "Reset All", "resetAll");
+      this.drawSettingsButtonRow(content, y, 1, "Clear File System", "clearFileSystem", true);
+    }
+    this.renderer.popClip();
+  }
+  drawSettingsHeader(id, label, content, y, depth) {
+    const indent = this.ui(20) * depth;
+    const row = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(30) };
+    this.renderer.rect(row, depth === 0 ? theme.panel : theme.panel2);
+    this.renderer.rect({ x: row.x, y: row.y + row.h - 1, w: row.w, h: 1 }, theme.divider);
+    this.renderer.text(this.settingsExpanded.has(id) ? "v" : ">", row.x + this.ui(8), row.y + this.ui(8), theme.textDim, "ui");
+    this.renderer.text(label, row.x + this.ui(26), row.y + this.ui(8), theme.text, "ui");
+    this.hits.push({ type: "settingsHeader", id, rect: row });
+    return y + row.h;
+  }
+  drawSettingsRow(content, y, depth, label) {
+    const indent = this.ui(20) * depth;
+    const row = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(34) };
+    const controlW = Math.min(this.ui(220), Math.max(this.ui(128), row.w * 0.36));
+    const control = { x: row.x + row.w - controlW, y: row.y + this.ui(5), w: controlW, h: row.h - this.ui(10) };
+    this.renderer.text(label, row.x + this.ui(8), row.y + this.ui(9), theme.textDim, "ui");
+    return { row, control };
+  }
+  drawSettingsLabelRow(content, y, depth, label, value) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    this.renderer.text(value, control.x + this.ui(8), row.y + this.ui(9), theme.text, "ui");
+    return y + row.h;
+  }
+  drawSettingsDropdownRow(content, y, depth, label, value, key) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    this.renderer.rect(control, theme.panel2);
+    this.drawRectOutline(control, theme.divider);
+    this.renderer.text(value, control.x + this.ui(8), control.y + this.ui(6), theme.text, "ui");
+    this.renderer.text("v", control.x + control.w - this.ui(16), control.y + this.ui(6), theme.textDim, "ui");
+    this.hits.push({ type: "settingsDropdown", key, rect: control });
+    return y + row.h;
+  }
+  drawSettingsNumberRow(content, y, depth, label, key, unit) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    const unitW = this.renderer.measureText(unit, "ui") + this.ui(14);
+    const input = { x: control.x, y: control.y, w: Math.max(this.ui(60), control.w - unitW), h: control.h };
+    const active = this.activeSettingsNumber === key;
+    this.renderer.rect(input, active ? theme.activity : theme.panel2);
+    this.drawRectOutline(input, active ? theme.accent : theme.divider);
+    const text = active ? this.settingsNumberBuffer.text : String(this.settings[key]);
+    const textX = input.x + this.ui(8);
+    const textY = input.y + this.ui(6);
+    if (active && this.settingsNumberBuffer.hasSelection()) {
+      const selectionStart = Math.min(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
+      const selectionEnd = Math.max(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
+      const beforeSelection = text.slice(0, selectionStart);
+      const selected = text.slice(selectionStart, selectionEnd);
+      const sx = textX + this.renderer.measureText(beforeSelection, "ui");
+      const sw = Math.max(2, this.renderer.measureText(selected, "ui"));
+      this.renderer.rect({ x: sx, y: input.y + this.ui(3), w: sw, h: input.h - this.ui(6) }, theme.selection);
+    }
+    this.renderer.text(text || "0", textX, textY, text ? theme.text : theme.textDim, "ui");
+    if (this.isSettingsNumberCaretVisible(key)) {
+      const caretX = textX + this.renderer.measureText(text.slice(0, this.settingsNumberBuffer.cursor), "ui");
+      this.renderer.rect({ x: caretX, y: input.y + this.ui(4), w: 1.5, h: input.h - this.ui(8) }, theme.caret);
+    }
+    this.renderer.text(unit, input.x + input.w + this.ui(8), row.y + this.ui(9), theme.textDim, "ui");
+    this.hits.push({ type: "settingsNumber", key, rect: input });
+    return y + row.h;
+  }
+  drawSettingsCheckboxRow(content, y, depth, label, key) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    const size = this.ui(16);
+    const box = { x: control.x + control.w - size, y: row.y + (row.h - size) / 2, w: size, h: size };
+    this.renderer.rect(box, this.settings[key] ? theme.activityActive : theme.panel2);
+    this.drawRectOutline(box, this.settings[key] ? theme.accent : theme.divider);
+    if (this.settings[key]) this.drawCenteredText("x", box, theme.text, "ui");
+    this.hits.push({ type: "settingsCheckbox", key, rect: row });
+    return y + row.h;
+  }
+  drawSettingsButtonRow(content, y, depth, label, action, danger = false) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    const button = { x: control.x, y: control.y, w: Math.max(this.ui(128), Math.min(this.ui(190), control.w)), h: control.h };
+    this.renderer.rect(button, danger ? theme.error : theme.activityActive);
+    this.drawRectOutline(button, danger ? theme.error : theme.divider);
+    this.renderer.text(label, button.x + this.ui(10), button.y + this.ui(6), theme.text, "ui");
+    this.hits.push({ type: "settingsButton", action, rect: button, enabled: true });
+    return y + row.h;
+  }
+  drawRectOutline(rect, color) {
+    this.renderer.rect({ x: rect.x, y: rect.y, w: rect.w, h: 1 }, color);
+    this.renderer.rect({ x: rect.x, y: rect.y + rect.h - 1, w: rect.w, h: 1 }, color);
+    this.renderer.rect({ x: rect.x, y: rect.y, w: 1, h: rect.h }, color);
+    this.renderer.rect({ x: rect.x + rect.w - 1, y: rect.y, w: 1, h: rect.h }, color);
+  }
+  drawFindWidget(editorRect) {
+    const state = this.activeFindState(false);
+    if (!state) return;
+    const expanded = state.replaceExpanded;
+    const panelW = Math.min(this.ui(560), Math.max(this.ui(360), editorRect.w - this.ui(32)));
+    const rowH = this.ui(28);
+    const panelH = expanded ? this.ui(78) : this.ui(42);
+    const panel = {
+      x: editorRect.x + editorRect.w - panelW - this.ui(12),
+      y: editorRect.y + this.ui(10),
+      w: panelW,
+      h: panelH
+    };
+    this.renderer.rect(panel, [theme.panel2[0], theme.panel2[1], theme.panel2[2], 0.98]);
+    this.drawRectOutline(panel, theme.divider);
+    const toggle = { x: panel.x + this.ui(8), y: panel.y + this.ui(7), w: rowH, h: rowH };
+    const close = { x: panel.x + panel.w - this.ui(36), y: toggle.y, w: rowH, h: rowH };
+    const next = { x: close.x - this.ui(34), y: toggle.y, w: rowH, h: rowH };
+    const previous = { x: next.x - this.ui(34), y: toggle.y, w: rowH, h: rowH };
+    const input = { x: toggle.x + toggle.w + this.ui(6), y: toggle.y, w: Math.max(this.ui(80), previous.x - toggle.x - toggle.w - this.ui(12)), h: rowH };
+    const hasQuery = Boolean(state.findBuffer.text);
+    this.drawIconButton(toggle, expanded ? "v" : ">", true);
+    this.hits.push({ type: "findToggle", rect: toggle });
+    this.drawTextFieldInput("find", input, "find");
+    this.drawIconButton(previous, "\u{1F53A}", hasQuery);
+    this.drawIconButton(next, "\u{1F53B}", hasQuery);
+    this.drawIconButton(close, "\u2716", true, "uiSmall");
+    this.hits.push({ type: "findPrevious", rect: previous, enabled: hasQuery });
+    this.hits.push({ type: "findNext", rect: next, enabled: hasQuery });
+    this.hits.push({ type: "findClose", rect: close });
+    if (!expanded) return;
+    const replaceY = panel.y + this.ui(43);
+    const replaceAllW = this.ui(34);
+    const replaceW = this.ui(68);
+    const replaceAll = { x: panel.x + panel.w - this.ui(8) - replaceAllW, y: replaceY, w: replaceAllW, h: rowH };
+    const replace = { x: replaceAll.x - this.ui(8) - replaceW, y: replaceY, w: replaceW, h: rowH };
+    const replaceInput = { x: input.x, y: replaceY, w: Math.max(this.ui(80), replace.x - input.x - this.ui(8)), h: rowH };
+    this.drawTextFieldInput("findReplace", replaceInput, "replace");
+    this.drawButton(replace, "Replace", hasQuery);
+    this.drawButton(replaceAll, "All", hasQuery);
+    this.hits.push({ type: "findReplace", rect: replace, enabled: hasQuery });
+    this.hits.push({ type: "findReplaceAll", rect: replaceAll, enabled: hasQuery });
+  }
   drawDocument(doc, rect, showCaret) {
     const scroll = this.clampScrollForDoc(doc, rect);
     const contentRect = this.editorContentRect(doc, rect);
     this.renderer.pushClip(contentRect);
     const gutterW = this.gutterWidthForDoc(doc);
+    const gutterRect = { x: contentRect.x, y: contentRect.y, w: gutterW, h: contentRect.h };
+    const textClipRect = { x: contentRect.x + gutterW, y: contentRect.y, w: Math.max(0, contentRect.w - gutterW), h: contentRect.h };
     const textX = this.editorTextX(doc, contentRect) - scroll.x;
     const lineH = this.renderer.lineHeight("code");
-    this.renderer.rect({ x: contentRect.x, y: contentRect.y, w: gutterW, h: contentRect.h }, theme.panel);
+    if (gutterW > 0) this.renderer.rect(gutterRect, theme.panel);
     const firstLine = Math.max(0, Math.floor(scroll.y / lineH));
     const lineCount = Math.ceil(contentRect.h / lineH) + 2;
     const selection = doc.getOrderedSelection();
@@ -4692,21 +5946,29 @@ var EditorApp = class {
       if (lineIndex >= doc.lineCount()) break;
       const y = contentRect.y + i * lineH - scroll.y % lineH;
       if (lineIndex === doc.selection.head.line) this.renderer.rect({ x: contentRect.x + gutterW, y, w: contentRect.w - gutterW, h: lineH }, theme.lineHighlight);
-      const lineNumber = String(lineIndex + 1);
-      this.renderer.text(lineNumber, contentRect.x + gutterW - EDITOR_GUTTER_PAD_RIGHT - this.renderer.measureText(lineNumber, "code"), y + 3, theme.textDim, "code");
+      if (gutterW > 0) {
+        const lineNumber = String(lineIndex + 1);
+        this.renderer.pushClip(gutterRect);
+        this.renderer.text(lineNumber, contentRect.x + gutterW - EDITOR_GUTTER_PAD_RIGHT - this.renderer.measureText(lineNumber, "code"), y + 3, theme.textDim, "code");
+        this.renderer.popClip();
+      }
+      this.renderer.pushClip(textClipRect);
       this.drawSelectionForLine(doc, lineIndex, textX, y, lineH, selection);
       let x = textX;
       for (const token of this.highlighter.tokenizeLine(doc.lines[lineIndex], doc.syntaxId)) {
         x += this.renderer.text(token.text, x, y + 3, tokenColor(token.type), "code");
       }
+      this.renderer.popClip();
     }
     const caret = this.caretRect(doc, rect);
     const drawCaret = showCaret && (this.input.composing || this.isCaretBlinkOn());
+    this.renderer.pushClip(textClipRect);
     if (drawCaret) this.renderer.rect(caret, theme.caret);
     if (drawCaret && this.input.composing && this.input.compositionText) {
       this.renderer.text(this.input.compositionText, caret.x + 2, caret.y, theme.warning, "code");
       this.renderer.rect({ x: caret.x + 2, y: caret.y + lineH - 3, w: this.renderer.measureText(this.input.compositionText, "code"), h: 1 }, theme.warning);
     }
+    this.renderer.popClip();
     this.renderer.popClip();
     this.drawEditorScrollbars(doc, rect);
   }
@@ -4715,13 +5977,15 @@ var EditorApp = class {
     if (overflow.vertical) this.drawEditorScrollbar(doc, rect, "vertical", overflow);
     if (overflow.horizontal) this.drawEditorScrollbar(doc, rect, "horizontal", overflow);
     if (overflow.vertical && overflow.horizontal) {
-      this.renderer.rect({ x: rect.x + rect.w - EDITOR_SCROLLBAR_SIZE, y: rect.y + rect.h - EDITOR_SCROLLBAR_SIZE, w: EDITOR_SCROLLBAR_SIZE, h: EDITOR_SCROLLBAR_SIZE }, [theme.activity[0], theme.activity[1], theme.activity[2], 0.88]);
+      const size = this.editorScrollbarSize();
+      this.renderer.rect({ x: rect.x + rect.w - size, y: rect.y + rect.h - size, w: size, h: size }, [theme.activity[0], theme.activity[1], theme.activity[2], 0.88]);
     }
   }
   drawEditorScrollbar(doc, rect, axis, overflow) {
     const groupId = this.groupContaining(doc.id)?.id ?? this.activeGroupId;
     const contentRect = this.editorContentRectForOverflow(rect, overflow);
-    const trackRect = axis === "vertical" ? { x: contentRect.x + contentRect.w, y: contentRect.y, w: EDITOR_SCROLLBAR_SIZE, h: contentRect.h } : { x: contentRect.x, y: contentRect.y + contentRect.h, w: contentRect.w, h: EDITOR_SCROLLBAR_SIZE };
+    const size = this.editorScrollbarSize();
+    const trackRect = axis === "vertical" ? { x: contentRect.x + contentRect.w, y: contentRect.y, w: size, h: contentRect.h } : { x: contentRect.x, y: contentRect.y + contentRect.h, w: contentRect.w, h: size };
     const active = this.scrollbarDrag?.axis === axis && this.scrollbarDrag.groupId === groupId && this.scrollbarDrag.docId === doc.id;
     const hovered = this.hoveredScrollbar?.axis === axis && this.hoveredScrollbar.groupId === groupId && this.hoveredScrollbar.docId === doc.id;
     this.renderer.rect(trackRect, hovered || active ? [theme.activity[0], theme.activity[1], theme.activity[2], 0.9] : [theme.activity[0], theme.activity[1], theme.activity[2], 0.82]);
@@ -4735,17 +5999,17 @@ var EditorApp = class {
   }
   verticalScrollbarThumb(doc, rect, trackRect, scrollY, maxScroll) {
     const contentHeight = this.documentContentHeight(doc);
-    const thumbH = clamp(this.editorContentRect(doc, rect).h / contentHeight * trackRect.h, Math.min(trackRect.h, EDITOR_SCROLLBAR_THUMB_MIN), trackRect.h);
+    const thumbH = clamp(this.editorContentRect(doc, rect).h / contentHeight * trackRect.h, Math.min(trackRect.h, this.ui(EDITOR_SCROLLBAR_THUMB_MIN)), trackRect.h);
     const thumbTravel = Math.max(1, trackRect.h - thumbH);
-    return { x: trackRect.x + 3, y: trackRect.y + scrollY / maxScroll * thumbTravel, w: Math.max(3, trackRect.w - 6), h: thumbH };
+    return { x: trackRect.x + this.ui(3), y: trackRect.y + scrollY / maxScroll * thumbTravel, w: Math.max(this.ui(3), trackRect.w - this.ui(6)), h: thumbH };
   }
   horizontalScrollbarThumb(doc, rect, trackRect, scrollX, maxScroll) {
     const contentRect = this.editorContentRect(doc, rect);
     const visibleTextWidth = this.visibleTextWidth(doc, contentRect);
     const contentWidth = visibleTextWidth + maxScroll;
-    const thumbW = clamp(visibleTextWidth / contentWidth * trackRect.w, Math.min(trackRect.w, EDITOR_SCROLLBAR_THUMB_MIN), trackRect.w);
+    const thumbW = clamp(visibleTextWidth / contentWidth * trackRect.w, Math.min(trackRect.w, this.ui(EDITOR_SCROLLBAR_THUMB_MIN)), trackRect.w);
     const thumbTravel = Math.max(1, trackRect.w - thumbW);
-    return { x: trackRect.x + scrollX / maxScroll * thumbTravel, y: trackRect.y + 3, w: thumbW, h: Math.max(3, trackRect.h - 6) };
+    return { x: trackRect.x + scrollX / maxScroll * thumbTravel, y: trackRect.y + this.ui(3), w: thumbW, h: Math.max(this.ui(3), trackRect.h - this.ui(6)) };
   }
   drawSelectionForLine(doc, line, x, y, lineH, selection) {
     if (!doc.hasSelection() || line < selection.start.line || line > selection.end.line) return;
@@ -4799,9 +6063,15 @@ var EditorApp = class {
   drawStatus(rect) {
     this.renderer.rect(rect, theme.activity);
     const doc = this.activeDoc();
-    const left = doc ? `${doc.path ?? "(untitled)"}  Ln ${doc.selection.head.line + 1}, Col ${doc.selection.head.col + 1}` : "No document";
-    this.renderer.text(left, rect.x + 8, rect.y + 5, theme.textDim, "ui");
-    this.renderer.text(this.statusText, rect.x + rect.w - Math.min(420, this.renderer.measureText(this.statusText, "ui") + 12), rect.y + 5, theme.textDim, "ui");
+    const left = doc ? `${doc.path ?? "(untitled)"}  Ln ${doc.selection.head.line + 1}, Col ${doc.selection.head.col + 1}` : this.isSettingsTab(this.activeDocId) ? SETTINGS_TAB_LABEL : "No document";
+    this.renderer.text(left, rect.x + this.ui(8), rect.y + this.ui(5), theme.textDim, "ui");
+    this.renderer.text(this.statusText, rect.x + rect.w - Math.min(this.ui(420), this.renderer.measureText(this.statusText, "ui") + this.ui(12)), rect.y + this.ui(5), theme.textDim, "ui");
+  }
+  drawCenteredText(text, rect, color, font) {
+    const bounds = this.renderer.visualTextBounds(text, font);
+    const x = rect.x + rect.w / 2 - (bounds.x + bounds.w / 2);
+    const y = rect.y + rect.h / 2 - (bounds.y + bounds.h / 2);
+    this.renderer.text(text, x, y, color, font);
   }
   drawContextMenu() {
     const menu = this.contextMenu;
@@ -4817,7 +6087,7 @@ var EditorApp = class {
         continue;
       }
       if (item.enabled && this.contextMenuHover === item.command) this.renderer.rect(item.rect, theme.activityActive);
-      this.renderer.text(item.label, item.rect.x + 12, item.rect.y + 7, item.enabled ? theme.text : theme.textDim, "ui");
+      this.renderer.text(item.label, item.rect.x + this.ui(12), item.rect.y + this.ui(7), item.enabled ? theme.text : theme.textDim, "ui");
       this.hits.push({ type: "contextMenu", command: item.command, rect: item.rect, enabled: item.enabled });
     }
   }
@@ -4825,15 +6095,18 @@ var EditorApp = class {
     const modal = this.modal;
     if (!modal) return;
     const vp = this.viewport.get();
-    const dialogW = Math.min(MODAL_WIDTH, Math.max(260, vp.cssWidth - 32));
-    const contentW = dialogW - 40;
+    const buttonH = this.ui(MODAL_BUTTON_H);
+    const buttonGap = this.ui(MODAL_BUTTON_GAP);
+    const dialogW = Math.min(this.ui(MODAL_WIDTH), Math.max(this.ui(260), vp.cssWidth - this.ui(32)));
+    const contentW = dialogW - this.ui(40);
     const messageLines = this.wrapTextForWidth(modal.message, contentW, "ui");
     const detailLines = this.wrapTextForWidth(modal.detail, contentW, "ui");
-    const textH = messageLines.length * 18 + detailLines.length * 18;
-    const dialogH = Math.max(168, 92 + textH + MODAL_BUTTON_H);
+    const lineH = this.ui(18);
+    const textH = messageLines.length * lineH + detailLines.length * lineH;
+    const dialogH = Math.max(this.ui(168), this.ui(92) + textH + buttonH);
     const dialog = {
-      x: Math.max(12, (vp.cssWidth - dialogW) / 2),
-      y: Math.max(12, (vp.cssHeight - dialogH) / 2),
+      x: Math.max(this.ui(12), (vp.cssWidth - dialogW) / 2),
+      y: Math.max(this.ui(12), (vp.cssHeight - dialogH) / 2),
       w: dialogW,
       h: dialogH
     };
@@ -4843,33 +6116,33 @@ var EditorApp = class {
     this.renderer.rect({ x: dialog.x, y: dialog.y + dialog.h - 1, w: dialog.w, h: 1 }, theme.divider);
     this.renderer.rect({ x: dialog.x, y: dialog.y, w: 1, h: dialog.h }, theme.divider);
     this.renderer.rect({ x: dialog.x + dialog.w - 1, y: dialog.y, w: 1, h: dialog.h }, theme.divider);
-    this.renderer.text(modal.title, dialog.x + 20, dialog.y + 18, theme.text, "title");
-    let y = dialog.y + 52;
+    this.renderer.text(modal.title, dialog.x + this.ui(20), dialog.y + this.ui(18), theme.text, "title");
+    let y = dialog.y + this.ui(52);
     for (const line of messageLines) {
-      this.renderer.text(line, dialog.x + 20, y, theme.text, "ui");
-      y += 18;
+      this.renderer.text(line, dialog.x + this.ui(20), y, theme.text, "ui");
+      y += lineH;
     }
-    y += 4;
+    y += this.ui(4);
     for (const line of detailLines) {
-      this.renderer.text(line, dialog.x + 20, y, theme.textDim, "ui");
-      y += 18;
+      this.renderer.text(line, dialog.x + this.ui(20), y, theme.textDim, "ui");
+      y += lineH;
     }
-    const buttonsW = modal.buttons.reduce((sum, button) => sum + this.modalButtonWidth(button), 0) + MODAL_BUTTON_GAP * Math.max(0, modal.buttons.length - 1);
-    let x = dialog.x + dialog.w - 20 - buttonsW;
-    const buttonY = dialog.y + dialog.h - MODAL_BUTTON_H - 20;
+    const buttonsW = modal.buttons.reduce((sum, button) => sum + this.modalButtonWidth(button), 0) + buttonGap * Math.max(0, modal.buttons.length - 1);
+    let x = dialog.x + dialog.w - this.ui(20) - buttonsW;
+    const buttonY = dialog.y + dialog.h - buttonH - this.ui(20);
     for (const button of modal.buttons) {
       const w = this.modalButtonWidth(button);
-      button.rect = { x, y: buttonY, w, h: MODAL_BUTTON_H };
+      button.rect = { x, y: buttonY, w, h: buttonH };
       const enabled = button.enabled && !modal.pending;
       const hovered = enabled && this.modalHover === button.action;
       this.renderer.rect(button.rect, this.modalButtonColor(button.variant, hovered, enabled));
-      this.renderer.text(button.label, button.rect.x + 12, button.rect.y + 8, enabled ? theme.text : theme.textDim, "ui");
+      this.renderer.text(button.label, button.rect.x + this.ui(12), button.rect.y + this.ui(8), enabled ? theme.text : theme.textDim, "ui");
       this.hits.push({ type: "modalButton", action: button.action, rect: button.rect, enabled });
-      x += w + MODAL_BUTTON_GAP;
+      x += w + buttonGap;
     }
   }
   modalButtonWidth(button) {
-    return Math.max(82, this.renderer.measureText(button.label, "ui") + 24);
+    return Math.max(this.ui(82), this.renderer.measureText(button.label, "ui") + this.ui(24));
   }
   modalButtonColor(variant, hovered, enabled) {
     const base = variant === "danger" ? theme.error : variant === "primary" ? theme.accent : theme.activityActive;
@@ -4918,12 +6191,12 @@ var EditorApp = class {
     const col = this.columnFromTextOffset(doc.lines[line], x - textX + scroll.x);
     return { line, col };
   }
-  columnFromTextOffset(text, offset) {
+  columnFromTextOffset(text, offset, font = "code") {
     if (offset <= 0) return 0;
     let x = 0;
     let col = 0;
     for (const char of text) {
-      const advance = this.renderer.measureText(char, "code");
+      const advance = this.renderer.measureText(char, font);
       if (offset < x + advance / 2) return col;
       x += advance;
       col += char.length;
@@ -4931,7 +6204,7 @@ var EditorApp = class {
     return text.length;
   }
   tabHitState(type) {
-    return this.hits.filter((hit) => hit.type === type).map((hit) => ({ path: this.docs.get(hit.docId)?.path ?? "(untitled)", rect: hit.rect }));
+    return this.hits.filter((hit) => hit.type === type).map((hit) => ({ path: this.tabLabel(hit.docId), rect: hit.rect }));
   }
   activeEditorRect() {
     return this.activeGroup().editorRect;
@@ -4944,7 +6217,7 @@ var EditorApp = class {
   }
   hasBlinkingCaretOwner() {
     const kind = this.input.activeTarget?.kind;
-    return Boolean(this.renamePath || kind === "search" || kind === "editor" && this.activeDocId);
+    return Boolean(this.renamePath || this.activeSettingsNumber || kind === "search" || kind === "projectReplace" || kind === "find" || kind === "findReplace" || kind === "editor" && this.activeDocId);
   }
   isRenameCaretVisible() {
     return Boolean(this.renamePath && (this.input.composing || this.isCaretBlinkOn()));
@@ -4956,9 +6229,9 @@ var EditorApp = class {
     return this.groups.flatMap((group) => this.dockTargetShapes(group));
   }
   dockTargetShapes(group) {
-    const outer = insetRect(group.frameRect, 10);
+    const outer = insetRect(group.frameRect, this.ui(10));
     if (outer.w <= 20 || outer.h <= 20) return [];
-    const centerSize = Math.min(150, Math.max(78, Math.min(outer.w, outer.h) * 0.34));
+    const centerSize = Math.min(this.ui(150), Math.max(this.ui(78), Math.min(outer.w, outer.h) * 0.34));
     const center = {
       x: outer.x + (outer.w - centerSize) / 2,
       y: outer.y + (outer.h - centerSize) / 2,
@@ -4992,8 +6265,20 @@ function tokenColor(type) {
   if (type === "function") return theme.function;
   return theme.type;
 }
+function colorToCss(color, alpha = color[3]) {
+  const r = Math.round(clamp(color[0], 0, 1) * 255);
+  const g = Math.round(clamp(color[1], 0, 1) * 255);
+  const b = Math.round(clamp(color[2], 0, 1) * 255);
+  return `rgb(${r} ${g} ${b} / ${Math.round(clamp(alpha, 0, 1) * 1e3) / 10}%)`;
+}
 function isEditorContextMenuCommand(command) {
   return command === "cut" || command === "copy" || command === "paste" || command === "systemCopy" || command === "systemPaste";
+}
+function isTabContextMenuCommand(command) {
+  return command === "findInFile" || command === "close" || command === "closeOthers";
+}
+function isSettingContextMenuCommand(command) {
+  return command === "themeDark" || command === "themeLight" || command === "aiProviderLocal" || command === "aiProviderOpenAI";
 }
 function isContextMenuItem(entry) {
   return entry.kind === "item";
@@ -5006,6 +6291,27 @@ function isFileContextMenuCommand(command) {
 }
 function isFolderContextMenuCommand(command) {
   return command === "rename" || command === "delete" || command === "createFile" || command === "createFolder";
+}
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    return normalizeSettings(JSON.parse(raw));
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+function normalizeSettings(value) {
+  const fontSize = Number(value?.fontSize);
+  const uiScale = Number(value?.uiScale);
+  return {
+    theme: value?.theme === "light" ? "light" : "dark",
+    fontSize: Number.isFinite(fontSize) ? Math.max(1, fontSize) : DEFAULT_SETTINGS.fontSize,
+    uiScale: Number.isFinite(uiScale) ? clamp(Math.trunc(uiScale), 1, 400) : DEFAULT_SETTINGS.uiScale,
+    renameOnDoubleClick: typeof value?.renameOnDoubleClick === "boolean" ? value.renameOnDoubleClick : DEFAULT_SETTINGS.renameOnDoubleClick,
+    showLineNumbers: typeof value?.showLineNumbers === "boolean" ? value.showLineNumbers : DEFAULT_SETTINGS.showLineNumbers,
+    aiProvider: value?.aiProvider === "openai" ? "openai" : "local"
+  };
 }
 function modalButton(action, label, variant) {
   return { action, label, variant, rect: { x: 0, y: 0, w: 0, h: 0 }, enabled: true };
@@ -5027,6 +6333,33 @@ function wordRangeAt(text, col) {
     while (end < text.length && isWordChar(text.charAt(end))) end++;
   }
   return { start, end };
+}
+function findLastIndex(items, predicate) {
+  for (let index = items.length - 1; index >= 0; index--) {
+    if (predicate(items[index])) return index;
+  }
+  return -1;
+}
+function textEqualsFindQuery(text, query) {
+  return text.length === query.length && text.toLowerCase() === query.toLowerCase();
+}
+function replaceAllPlainText(text, query, replacement) {
+  if (!query) return { text, count: 0 };
+  const haystack = text.toLowerCase();
+  const needle = query.toLowerCase();
+  const parts = [];
+  let count = 0;
+  let cursor = 0;
+  while (cursor <= text.length) {
+    const found = haystack.indexOf(needle, cursor);
+    if (found < 0) break;
+    parts.push(text.slice(cursor, found), replacement);
+    cursor = found + query.length;
+    count++;
+  }
+  if (count === 0) return { text, count };
+  parts.push(text.slice(cursor));
+  return { text: parts.join(""), count };
 }
 function sanitizeSingleLineInput(text) {
   return text.replaceAll("\r\n", " ").replaceAll("\r", " ").replaceAll("\n", " ");
@@ -5200,6 +6533,7 @@ async function copyText(text) {
   area.style.opacity = "0.01";
   area.style.zIndex = "10000";
   area.style.pointerEvents = "none";
+  area.style.fontSize = "16px";
   document.body.appendChild(area);
   area.focus({ preventScroll: true });
   area.select();
@@ -5311,6 +6645,12 @@ function cursorToArray(request) {
 // src/platform/indexed_vfs.ts
 var textEncoder = new TextEncoder();
 var textDecoder = new TextDecoder("utf-8", { fatal: false });
+var DEFAULT_WORKSPACE_ID = "default";
+var SAMPLE_FILES = /* @__PURE__ */ new Map([
+  ["/README.md", "# Slug Editor\n\nThis workspace is stored in IndexedDB.\n\n- Open files from the left sidebar.\n- Edit text in the WebGL2 editor.\n- Use Search to scan files.\n- Use Chat for local assistant turns.\n"],
+  ["/src/main.ts", "export function greet(name: string): string {\n  return `hello ${name}`;\n}\n\nconsole.log(greet('Slug'));\n"],
+  ["/notes/shortcuts.txt", "Ctrl/Cmd+C copy\nCtrl/Cmd+X cut\nCtrl/Cmd+V paste\nCtrl/Cmd+S save\nCtrl/Cmd+Shift+F project search\n"]
+]);
 var IndexedVfs = class _IndexedVfs {
   constructor(db, workspaceId) {
     this.db = db;
@@ -5322,11 +6662,11 @@ var IndexedVfs = class _IndexedVfs {
   static async openDefault(db = new IndexedDbConnection()) {
     const workspaceId = await db.tx(["workspaces", "nodes", "contents"], "readwrite", async (tx) => {
       const workspaces = tx.objectStore("workspaces");
-      const existing = await requestToPromise(workspaces.get("default"));
+      const existing = await requestToPromise(workspaces.get(DEFAULT_WORKSPACE_ID));
       if (existing) return existing.id;
       const now = Date.now();
       const workspace = {
-        id: "default",
+        id: DEFAULT_WORKSPACE_ID,
         name: "Browser Workspace",
         createdAt: now,
         updatedAt: now,
@@ -5338,7 +6678,7 @@ var IndexedVfs = class _IndexedVfs {
       const contents = tx.objectStore("contents");
       const root = {
         id: uid("node"),
-        workspaceId: "default",
+        workspaceId: DEFAULT_WORKSPACE_ID,
         path: "/",
         parentPath: "/",
         name: "/",
@@ -5347,13 +6687,8 @@ var IndexedVfs = class _IndexedVfs {
         mtime: now
       };
       nodes.put(root);
-      const samples = /* @__PURE__ */ new Map([
-        ["/README.md", "# Slug Editor\n\nThis workspace is stored in IndexedDB.\n\n- Open files from the left sidebar.\n- Edit text in the WebGL2 editor.\n- Use Search to scan files.\n- Use Chat for local assistant turns.\n"],
-        ["/src/main.ts", "export function greet(name: string): string {\n  return `hello ${name}`;\n}\n\nconsole.log(greet('Slug'));\n"],
-        ["/notes/shortcuts.txt", "Ctrl/Cmd+C copy\nCtrl/Cmd+X cut\nCtrl/Cmd+V paste\nCtrl/Cmd+S save\nCtrl/Cmd+Shift+F project search\n"]
-      ]);
-      for (const [path, text] of samples) {
-        await putFileRecords(nodes, contents, "default", path, text, "text/plain");
+      for (const [path, text] of SAMPLE_FILES) {
+        await putFileRecords(nodes, contents, DEFAULT_WORKSPACE_ID, path, text, "text/plain");
       }
       return workspace.id;
     });
@@ -5434,6 +6769,41 @@ var IndexedVfs = class _IndexedVfs {
       nodes.delete([this.workspaceId, p]);
     });
     this.emit({ type: "remove", path: p });
+  }
+  async resetToSample() {
+    await this.db.tx(["workspaces", "nodes", "contents"], "readwrite", async (tx) => {
+      const workspaces = tx.objectStore("workspaces");
+      const nodes = tx.objectStore("nodes");
+      const contents = tx.objectStore("contents");
+      const now = Date.now();
+      const workspace = await requestToPromise(workspaces.get(this.workspaceId));
+      workspaces.put({
+        id: this.workspaceId,
+        name: workspace?.name ?? "Browser Workspace",
+        createdAt: workspace?.createdAt ?? now,
+        updatedAt: now,
+        rootPath: "/",
+        source: "sample"
+      });
+      const workspaceNodes = await cursorToArray(nodes.index("byWorkspace").openCursor(IDBKeyRange.only(this.workspaceId)));
+      for (const node of workspaceNodes) nodes.delete([this.workspaceId, node.path]);
+      const workspaceContents = (await cursorToArray(contents.openCursor())).filter((content) => content.workspaceId === this.workspaceId);
+      for (const content of workspaceContents) contents.delete(content.contentId);
+      nodes.put({
+        id: uid("node"),
+        workspaceId: this.workspaceId,
+        path: "/",
+        parentPath: "/",
+        name: "/",
+        kind: "dir",
+        size: 0,
+        mtime: now
+      });
+      for (const [path, text] of SAMPLE_FILES) {
+        await putFileRecords(nodes, contents, this.workspaceId, path, text, "text/plain");
+      }
+    });
+    this.emit({ type: "remove", path: "/" });
   }
   async rename(oldPath, newPath) {
     const oldP = normalizePath(oldPath);
