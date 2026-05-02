@@ -2426,6 +2426,7 @@ var EditorApp = class {
     this.canvas.addEventListener("pointerdown", (event) => this.onPointerDown(event));
     this.canvas.addEventListener("pointermove", (event) => this.onPointerMove(event));
     this.canvas.addEventListener("pointerleave", () => this.clearScrollbarHover());
+    this.canvas.addEventListener("click", (event) => this.onClick(event));
     this.canvas.addEventListener("contextmenu", (event) => this.onContextMenu(event));
     this.canvas.addEventListener("dblclick", (event) => this.onDoubleClick(event));
     window.addEventListener("pointerup", (event) => this.onPointerUp(event));
@@ -2557,6 +2558,12 @@ var EditorApp = class {
       this.activeDocId = this.groupById(hit.groupId).activeDocId;
       const doc = this.activeDoc();
       if (!doc) return;
+      if (!this.isMobileContextMode() && event.detail >= 3) {
+        this.selecting = false;
+        this.selectEditorLineFromPoint(doc, hit.rect, point);
+        this.focusEditor();
+        return;
+      }
       const pos = this.positionFromPoint(point.x, point.y);
       doc.setSelection(pos);
       this.selecting = true;
@@ -2715,6 +2722,23 @@ var EditorApp = class {
     this.openEditorContextMenu(point, group, doc);
     this.focusEditor();
   }
+  onClick(event) {
+    if (event.detail < 3 || this.modal || this.contextMenu || this.isMobileContextMode()) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const hit = this.hitAt(point.x, point.y);
+    if (hit?.type !== "editor") return;
+    event.preventDefault();
+    const group = this.groupById(hit.groupId);
+    const docId = group.activeDocId;
+    const doc = docId ? this.docs.get(docId) : void 0;
+    if (!doc) return;
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    this.selecting = false;
+    this.selectEditorLineFromPoint(doc, group.editorRect, point);
+    this.focusEditor();
+  }
   onDoubleClick(event) {
     event.preventDefault();
     if (this.modal) return;
@@ -2734,6 +2758,15 @@ var EditorApp = class {
       this.selectSearchWordFromPoint(point.x, hit.rect);
     } else if (hit?.type === "file") {
       this.startRename(hit.path, hit.rect);
+    } else if (hit?.type === "editor") {
+      const group = this.groupById(hit.groupId);
+      const docId = group.activeDocId;
+      const doc = docId ? this.docs.get(docId) : void 0;
+      if (!doc) return;
+      this.activeGroupId = group.id;
+      this.activeDocId = doc.id;
+      this.selectEditorWordFromPoint(doc, group.editorRect, point);
+      this.focusEditor();
     }
   }
   focusEditor() {
@@ -4556,6 +4589,14 @@ var EditorApp = class {
     const col = this.columnFromTextOffset(doc.lines[line], point.x - textX + scroll.x);
     const range = wordRangeAt(doc.lines[line], col);
     doc.setSelection({ line, col: range.start }, { line, col: range.end });
+    this.resetCaretBlink();
+  }
+  selectEditorLineFromPoint(doc, editorRect, point) {
+    const lineH = this.renderer.lineHeight("code");
+    const contentRect = this.editorContentRect(doc, editorRect);
+    const scroll = this.scrollForDoc(doc.id);
+    const line = clamp(Math.floor((point.y - contentRect.y + scroll.y) / lineH), 0, doc.lineCount() - 1);
+    doc.setSelection({ line, col: 0 }, { line, col: doc.lines[line].length });
     this.resetCaretBlink();
   }
   drawStatus(rect) {
