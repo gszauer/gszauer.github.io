@@ -1,0 +1,128 @@
+html,
+body,
+#app {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1e1f22;
+  color: #d7dae0;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#editor-canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  outline: none;
+  touch-action: none;
+}
+
+.input-bridge {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 24px;
+  opacity: 0.01;
+  z-index: 1;
+  font-size: 16px;
+  line-height: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transform: translate3d(0, 0, 0);
+  resize: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: transparent;
+  background: transparent;
+  caret-color: transparent;
+  outline: none;
+  pointer-events: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.system-clipboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 48%);
+  box-sizing: border-box;
+}
+
+.system-clipboard-dialog {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  border: 1px solid #3a3f4b;
+  background: rgb(37 40 46 / 99%);
+  color: #d7dae0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 18px 20px 20px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 38%);
+}
+
+.system-clipboard-dialog h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.system-clipboard-dialog p {
+  margin: 0 0 14px;
+  color: #a7adba;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.system-clipboard-field {
+  width: 100%;
+  min-height: 92px;
+  box-sizing: border-box;
+  border: 1px solid #3a3f4b;
+  background: #1e1f22;
+  color: #d7dae0;
+  outline: none;
+  resize: vertical;
+  padding: 8px 9px;
+  font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.system-clipboard-field:focus {
+  border-color: #4f8cff;
+}
+
+.system-clipboard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.system-clipboard-button {
+  min-width: 82px;
+  height: 30px;
+  border: 0;
+  border-radius: 0;
+  color: #d7dae0;
+  font: 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 0 12px;
+}
+
+.system-clipboard-button.primary {
+  background: #4f8cff;
+}
+
+.system-clipboard-button.secondary {
+  background: #363a43;
+}

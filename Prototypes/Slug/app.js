@@ -790,7 +790,6 @@ var InputBridge = class {
   activeTarget = null;
   composing = false;
   compositionText = "";
-  nativeCalloutTimer = 0;
   focusEditor(target, caretRect) {
     this.activeTarget = target;
     if (caretRect) this.placeNearCaret(caretRect);
@@ -799,7 +798,6 @@ var InputBridge = class {
   }
   blur() {
     this.activeTarget = null;
-    this.hideNativeCallout();
     this.textarea.blur();
   }
   syncSelectionForClipboard(text) {
@@ -815,33 +813,6 @@ var InputBridge = class {
   resetTextareaSentinel() {
     this.textarea.value = "\n";
     this.textarea.setSelectionRange(1, 1);
-  }
-  requestNativePaste() {
-    if (!this.activeTarget) return false;
-    this.textarea.focus({ preventScroll: true });
-    this.resetTextareaSentinel();
-    try {
-      document.execCommand("paste");
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  showNativeEditCallout(text, rect) {
-    if (!this.activeTarget || this.composing) return false;
-    if (this.nativeCalloutTimer) window.clearTimeout(this.nativeCalloutTimer);
-    this.placeNativeCallout(rect);
-    this.textarea.classList.add("native-callout");
-    this.textarea.focus({ preventScroll: true });
-    if (text) {
-      this.textarea.value = text;
-      this.textarea.setSelectionRange(0, text.length);
-    } else {
-      this.resetTextareaSentinel();
-    }
-    this.textarea.focus({ preventScroll: true });
-    this.nativeCalloutTimer = window.setTimeout(() => this.hideNativeCallout(), 8e3);
-    return true;
   }
   install() {
     this.textarea.addEventListener("keydown", (event) => this.onKeyDown(event));
@@ -938,7 +909,6 @@ var InputBridge = class {
     const text = normalizePastedText(textareaInsertedText(this.textarea.value));
     if (text) target.replaceSelection(text);
     this.resetTextareaSentinel();
-    if (text) this.hideNativeCallout();
   }
   onCopy(event) {
     const text = this.activeTarget?.getSelectedText() ?? "";
@@ -948,7 +918,6 @@ var InputBridge = class {
       event.preventDefault();
     }
     this.syncSelectionForClipboard(text);
-    this.hideNativeCallout();
   }
   onCut(event) {
     const text = this.activeTarget?.getSelectedText() ?? "";
@@ -959,7 +928,6 @@ var InputBridge = class {
     }
     this.activeTarget.replaceSelection("");
     this.resetTextareaSentinel();
-    this.hideNativeCallout();
   }
   onPaste(event) {
     const text = normalizePastedText(event.clipboardData?.getData("text/plain") ?? "");
@@ -967,7 +935,6 @@ var InputBridge = class {
     this.activeTarget.replaceSelection(text);
     event.preventDefault();
     this.resetTextareaSentinel();
-    this.hideNativeCallout();
   }
   placeNearCaret(rect) {
     const vv = window.visualViewport;
@@ -975,24 +942,6 @@ var InputBridge = class {
     const offsetTop = vv?.offsetTop ?? 0;
     this.textarea.style.left = `${Math.max(0, rect.x - offsetLeft)}px`;
     this.textarea.style.top = `${Math.max(0, rect.y - offsetTop)}px`;
-  }
-  placeNativeCallout(rect) {
-    const vv = window.visualViewport;
-    const offsetLeft = vv?.offsetLeft ?? 0;
-    const offsetTop = vv?.offsetTop ?? 0;
-    this.textarea.style.left = `${Math.max(0, rect.x - offsetLeft)}px`;
-    this.textarea.style.top = `${Math.max(0, rect.y - offsetTop)}px`;
-    this.textarea.style.width = `${Math.max(44, rect.w)}px`;
-    this.textarea.style.height = `${Math.max(24, rect.h)}px`;
-  }
-  hideNativeCallout() {
-    if (this.nativeCalloutTimer) {
-      window.clearTimeout(this.nativeCalloutTimer);
-      this.nativeCalloutTimer = 0;
-    }
-    this.textarea.classList.remove("native-callout");
-    this.textarea.style.width = "";
-    this.textarea.style.height = "";
   }
 };
 function normalizePastedText(text) {
@@ -2262,6 +2211,7 @@ var EDITOR_TEXT_TRAILING_PAD_X = 20;
 var PANEL_HEADER_H = 32;
 var CONTEXT_MENU_WIDTH = 136;
 var CONTEXT_MENU_ROW_H = 28;
+var CONTEXT_MENU_SEPARATOR_H = 9;
 var CONTEXT_MENU_PAD = 4;
 var MODAL_WIDTH = 420;
 var MODAL_BUTTON_H = 30;
@@ -2331,6 +2281,8 @@ var EditorApp = class {
   dockPreview = null;
   lastTouchTap = null;
   editorRect = { x: 0, y: 0, w: 0, h: 0 };
+  localClipboard = "";
+  systemClipboardOverlay = null;
   async start() {
     await this.refreshFiles();
     const first = this.files.find((file) => file.path === "/README.md") ?? this.files[0];
@@ -2456,7 +2408,7 @@ var EditorApp = class {
       dockSplitters: this.hits.filter((hit) => hit.type === "dockResize").map((hit) => ({ splitId: hit.splitId, index: hit.index, direction: hit.direction, rect: hit.rect })),
       editorScrollbars: this.hits.filter((hit) => hit.type === "editorScrollbar").map((hit) => ({ axis: hit.axis, groupId: hit.groupId, path: this.docs.get(hit.docId)?.path ?? "(untitled)", rect: hit.rect, trackRect: hit.trackRect, thumbRect: hit.thumbRect })),
       hoveredScrollbar: this.hoveredScrollbar ? { axis: this.hoveredScrollbar.axis, groupId: this.hoveredScrollbar.groupId, path: this.docs.get(this.hoveredScrollbar.docId)?.path ?? "(untitled)", overThumb: this.hoveredScrollbar.overThumb } : null,
-      contextMenu: this.contextMenu ? { scope: this.contextMenu.scope, rect: this.contextMenu.rect, items: this.contextMenu.items.map((item) => ({ command: item.command, label: item.label, rect: item.rect, enabled: item.enabled })) } : null,
+      contextMenu: this.contextMenu ? { scope: this.contextMenu.scope, rect: this.contextMenu.rect, items: this.contextMenu.items.filter(isContextMenuItem).map((item) => ({ command: item.command, label: item.label, rect: item.rect, enabled: item.enabled })) } : null,
       modal: this.modal ? {
         kind: this.modal.kind,
         title: this.modal.title,
@@ -2727,10 +2679,6 @@ var EditorApp = class {
     const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     const hit = this.hitAt(point.x, point.y);
     if (hit?.type === "contextMenu") return;
-    if (hit && this.shouldUseNativeTextCallout(hit)) {
-      this.openNativeTextCalloutForHit(point, hit, false);
-      return;
-    }
     if (hit?.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
@@ -2782,6 +2730,22 @@ var EditorApp = class {
     const rect = this.canvas.getBoundingClientRect();
     const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     const hit = this.hitAt(point.x, point.y);
+    if (hit?.type === "fileRenameInput") {
+      event.preventDefault();
+      this.focusRename(hit.rect);
+      this.renameBuffer.selectAll();
+      this.renameSelecting = false;
+      this.resetCaretBlink();
+      return;
+    }
+    if (hit?.type === "searchInput") {
+      event.preventDefault();
+      this.focusMiniTarget("search", hit.rect);
+      this.searchBuffer.selectAll();
+      this.searchSelecting = false;
+      this.resetCaretBlink();
+      return;
+    }
     if (hit?.type !== "editor") return;
     event.preventDefault();
     const group = this.groupById(hit.groupId);
@@ -2905,10 +2869,6 @@ var EditorApp = class {
     if (Math.hypot(point.x - last.point.x, point.y - last.point.y) > TOUCH_DOUBLE_TAP_DISTANCE) return false;
     this.lastTouchTap = null;
     event.preventDefault();
-    if (this.shouldUseNativeTextCallout(hit)) {
-      this.openNativeTextCalloutForHit(point, hit, true);
-      return true;
-    }
     this.openContextMenuForHit(point, hit, true);
     return true;
   }
@@ -2922,7 +2882,6 @@ var EditorApp = class {
     return null;
   }
   openContextMenuForHit(point, hit, selectTextFirst = false) {
-    if (this.shouldUseNativeTextCallout(hit)) return this.openNativeTextCalloutForHit(point, hit, selectTextFirst);
     if (hit.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (selectTextFirst) this.selectRenameWordFromPoint(point.x, hit.rect);
@@ -2971,47 +2930,6 @@ var EditorApp = class {
     }
     return false;
   }
-  shouldUseNativeTextCallout(hit) {
-    return shouldUseNativeClipboardUi() && (hit.type === "editor" || hit.type === "fileRenameInput" || hit.type === "searchInput");
-  }
-  openNativeTextCalloutForHit(point, hit, selectTextFirst = false) {
-    if (hit.type === "fileRenameInput") {
-      this.focusRename(hit.rect);
-      if (selectTextFirst) this.selectRenameWordFromPoint(point.x, hit.rect);
-      else if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
-      this.closeContextMenu();
-      this.statusText = "Use iOS text actions";
-      this.input.showNativeEditCallout(this.renameBuffer.selectedText(), hit.rect);
-      this.scheduleDraw();
-      return true;
-    }
-    if (hit.type === "searchInput") {
-      this.focusMiniTarget("search", hit.rect);
-      if (selectTextFirst) this.selectSearchWordFromPoint(point.x, hit.rect);
-      else if (!this.pointHitsSearchSelection(point.x, hit.rect)) this.setSearchCursorFromPoint(point.x, hit.rect, false);
-      this.closeContextMenu();
-      this.statusText = "Use iOS text actions";
-      this.input.showNativeEditCallout(this.searchBuffer.selectedText(), hit.rect);
-      this.scheduleDraw();
-      return true;
-    }
-    if (hit.type !== "editor") return false;
-    const group = this.groupById(hit.groupId);
-    const docId = group.activeDocId;
-    const doc = docId ? this.docs.get(docId) : void 0;
-    if (!doc) return false;
-    this.activeGroupId = group.id;
-    this.activeDocId = doc.id;
-    group.activeDocId = doc.id;
-    if (selectTextFirst) this.selectEditorWordFromPoint(doc, group.editorRect, point);
-    else if (!this.pointHitsSelection(doc, group.editorRect, point)) doc.setSelection(this.positionFromPoint(point.x, point.y));
-    this.focusEditor();
-    this.closeContextMenu();
-    this.statusText = "Use iOS text actions";
-    this.input.showNativeEditCallout(doc.selectedText(), this.nativeTextCalloutRect(point, doc, group.editorRect));
-    this.scheduleDraw();
-    return true;
-  }
   updateContextMenuHover(hit) {
     const next = hit?.type === "contextMenu" && hit.enabled ? hit.command : null;
     if (this.contextMenuHover === next) return;
@@ -3035,7 +2953,8 @@ var EditorApp = class {
     this.contextMenu = this.makeContextMenu(point, { type: "editor", groupId: group.id, docId: doc.id }, [
       { command: "cut", label: "Cut", enabled: selected },
       { command: "copy", label: "Copy", enabled: selected },
-      { command: "paste", label: "Paste", enabled: true }
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -3072,7 +2991,8 @@ var EditorApp = class {
     this.contextMenu = this.makeContextMenu(point, { type: "rename", path }, [
       { command: "cut", label: "Cut", enabled: selected },
       { command: "copy", label: "Copy", enabled: selected },
-      { command: "paste", label: "Paste", enabled: true }
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -3082,26 +3002,40 @@ var EditorApp = class {
     this.contextMenu = this.makeContextMenu(point, { type: "search" }, [
       { command: "cut", label: "Cut", enabled: selected },
       { command: "copy", label: "Copy", enabled: selected },
-      { command: "paste", label: "Paste", enabled: true }
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
+  mobileSystemClipboardEntries(selected) {
+    return isMobileWebKit() ? [
+      { separator: true },
+      { command: "systemCopy", label: "System Copy", enabled: selected },
+      { command: "systemPaste", label: "System Paste", enabled: true }
+    ] : [];
+  }
   makeContextMenu(point, scope, entries) {
     const vp = this.viewport.get();
-    const menuH = CONTEXT_MENU_PAD * 2 + CONTEXT_MENU_ROW_H * entries.length;
+    const menuH = CONTEXT_MENU_PAD * 2 + entries.reduce((sum, entry) => sum + ("separator" in entry ? CONTEXT_MENU_SEPARATOR_H : CONTEXT_MENU_ROW_H), 0);
     const x = clamp(point.x, 0, Math.max(0, vp.cssWidth - CONTEXT_MENU_WIDTH - 1));
     const y = clamp(point.y, 0, Math.max(0, vp.cssHeight - menuH - 1));
     const rect = { x, y, w: CONTEXT_MENU_WIDTH, h: menuH };
-    const items = entries.map((entry, index) => ({
-      ...entry,
-      rect: {
-        x: x + CONTEXT_MENU_PAD,
-        y: y + CONTEXT_MENU_PAD + CONTEXT_MENU_ROW_H * index,
-        w: CONTEXT_MENU_WIDTH - CONTEXT_MENU_PAD * 2,
-        h: CONTEXT_MENU_ROW_H
+    const items = [];
+    let rowY = y + CONTEXT_MENU_PAD;
+    for (const entry of entries) {
+      if ("separator" in entry) {
+        items.push({ kind: "separator", rect: { x: x + CONTEXT_MENU_PAD + 8, y: rowY + Math.floor(CONTEXT_MENU_SEPARATOR_H / 2), w: CONTEXT_MENU_WIDTH - CONTEXT_MENU_PAD * 2 - 16, h: 1 } });
+        rowY += CONTEXT_MENU_SEPARATOR_H;
+      } else {
+        items.push({
+          kind: "item",
+          ...entry,
+          rect: { x: x + CONTEXT_MENU_PAD, y: rowY, w: CONTEXT_MENU_WIDTH - CONTEXT_MENU_PAD * 2, h: CONTEXT_MENU_ROW_H }
+        });
+        rowY += CONTEXT_MENU_ROW_H;
       }
-    }));
+    }
     return { scope, rect, items };
   }
   openModal(modal) {
@@ -3912,13 +3846,15 @@ var EditorApp = class {
       return true;
     }
     if (command === "Mod+C") {
-      void copyText(doc.selectedText());
-      return doc.hasSelection();
+      const text = doc.selectedText();
+      if (!text) return false;
+      this.copyTextToClipboard(text);
+      return true;
     }
     if (command === "Mod+X") {
       const text = doc.selectedText();
       if (!text) return false;
-      void copyText(text);
+      this.copyTextToClipboard(text);
       doc.replaceSelection("", "cut");
       this.resetCaretBlink();
       return true;
@@ -3927,7 +3863,7 @@ var EditorApp = class {
   }
   async runContextMenuCommand(command) {
     const menu = this.contextMenu;
-    const item = menu?.items.find((candidate) => candidate.command === command);
+    const item = menu?.items.find((candidate) => isContextMenuItem(candidate) && candidate.command === command);
     if (!menu || !item?.enabled) return;
     this.contextMenu = null;
     this.contextMenuHover = null;
@@ -3964,12 +3900,29 @@ var EditorApp = class {
     this.activeGroupId = group.id;
     this.activeDocId = doc.id;
     group.activeDocId = doc.id;
+    if (command === "systemCopy") {
+      const text = doc.selectedText();
+      if (text) this.openSystemCopyDialog(text);
+      else this.statusText = "No selection";
+      this.focusEditor();
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        doc.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "paste");
+        this.statusText = "Pasted";
+        this.focusEditor();
+        this.scheduleDraw();
+      });
+      return;
+    }
     if (command === "copy" || command === "cut") {
       const text = doc.selectedText();
       if (!text) {
         this.statusText = "No selection";
       } else {
-        await copyText(text);
+        this.copyTextToClipboard(text);
         if (command === "cut") {
           doc.replaceSelection("", "cut");
           this.statusText = "Cut selection";
@@ -3979,8 +3932,7 @@ var EditorApp = class {
       }
     } else {
       this.focusEditor();
-      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
-      const text = await readClipboardText();
+      const text = await this.readTextFromClipboard();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
       } else if (!text) {
@@ -3995,12 +3947,29 @@ var EditorApp = class {
   }
   async runRenameContextMenuCommand(command) {
     if (!isEditorContextMenuCommand(command)) return;
+    if (command === "systemCopy") {
+      const text = this.renameBuffer.selectedText();
+      if (text) this.openSystemCopyDialog(text);
+      else this.statusText = "No selection";
+      this.focusRename(this.renameInputRect() ?? void 0);
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        this.renameBuffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.statusText = "Pasted";
+        this.focusRename(this.renameInputRect() ?? void 0);
+        this.resetCaretBlink();
+      });
+      return;
+    }
     if (command === "copy" || command === "cut") {
       const text = this.renameBuffer.selectedText();
       if (!text) {
         this.statusText = "No selection";
       } else {
-        await copyText(text);
+        this.copyTextToClipboard(text);
         if (command === "cut") {
           this.renameBuffer.replaceSelection("");
           this.statusText = "Cut file name text";
@@ -4010,8 +3979,7 @@ var EditorApp = class {
       }
     } else {
       this.focusRename(this.renameInputRect() ?? void 0);
-      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
-      const text = await readClipboardText();
+      const text = await this.readTextFromClipboard();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
       } else if (!text) {
@@ -4026,12 +3994,29 @@ var EditorApp = class {
   }
   async runSearchContextMenuCommand(command) {
     if (!isEditorContextMenuCommand(command)) return;
+    if (command === "systemCopy") {
+      const text = this.searchBuffer.selectedText();
+      if (text) this.openSystemCopyDialog(text);
+      else this.statusText = "No selection";
+      this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        this.searchBuffer.replaceSelection(sanitizeSingleLineInput(text));
+        void this.runSearch();
+        this.statusText = "Pasted";
+        this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
+      });
+      return;
+    }
     if (command === "copy" || command === "cut") {
       const text = this.searchBuffer.selectedText();
       if (!text) {
         this.statusText = "No selection";
       } else {
-        await copyText(text);
+        this.copyTextToClipboard(text);
         if (command === "cut") {
           this.searchBuffer.replaceSelection("");
           void this.runSearch();
@@ -4042,8 +4027,7 @@ var EditorApp = class {
       }
     } else {
       this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
-      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
-      const text = await readClipboardText();
+      const text = await this.readTextFromClipboard();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
       } else if (!text) {
@@ -4056,12 +4040,111 @@ var EditorApp = class {
     }
     this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
   }
-  requestNativePastePrompt(status) {
-    if (!shouldUseNativeClipboardUi()) return false;
-    if (!this.input.requestNativePaste()) return false;
-    this.statusText = status;
-    this.scheduleDraw();
-    return true;
+  copyTextToClipboard(text) {
+    this.localClipboard = text;
+    void copyText(text);
+  }
+  async readTextFromClipboard() {
+    if (isMobileWebKit()) return this.localClipboard;
+    const text = await readClipboardText();
+    if (text === null) return this.localClipboard || null;
+    if (text) this.localClipboard = text;
+    return text || this.localClipboard;
+  }
+  openSystemCopyDialog(text) {
+    this.localClipboard = text;
+    this.openSystemClipboardDialog({
+      title: "System Copy",
+      message: "Direct clipboard access on iOS is not available from this WebGL editor. Use the text field below with the system text menu to copy.",
+      value: text,
+      okLabel: "OK",
+      selectText: true,
+      onOk: (value) => {
+        this.localClipboard = value;
+        this.statusText = "System copy text shown";
+        this.scheduleDraw();
+      }
+    });
+  }
+  openSystemPasteDialog(onPaste) {
+    this.openSystemClipboardDialog({
+      title: "System Paste",
+      message: "Direct clipboard access on iOS is not available from this WebGL editor. Paste into the text field below, then tap OK.",
+      value: "",
+      okLabel: "OK",
+      selectText: false,
+      onOk: (value) => {
+        if (!value) {
+          this.statusText = "Clipboard empty";
+          this.scheduleDraw();
+          return;
+        }
+        this.localClipboard = value;
+        onPaste(value);
+      }
+    });
+  }
+  openSystemClipboardDialog(options) {
+    this.closeSystemClipboardDialog();
+    const overlay = document.createElement("div");
+    overlay.className = "system-clipboard-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    const dialog = document.createElement("div");
+    dialog.className = "system-clipboard-dialog";
+    const title = document.createElement("h2");
+    title.textContent = options.title;
+    const message = document.createElement("p");
+    message.textContent = options.message;
+    const textarea = document.createElement("textarea");
+    textarea.className = "system-clipboard-field";
+    textarea.value = options.value;
+    textarea.autocapitalize = "off";
+    textarea.autocomplete = "off";
+    textarea.spellcheck = false;
+    textarea.setAttribute("autocorrect", "off");
+    const actions = document.createElement("div");
+    actions.className = "system-clipboard-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "system-clipboard-button secondary";
+    cancel.textContent = "Cancel";
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "system-clipboard-button primary";
+    ok.textContent = options.okLabel;
+    actions.append(cancel, ok);
+    dialog.append(title, message, textarea, actions);
+    overlay.append(dialog);
+    document.body.append(overlay);
+    this.systemClipboardOverlay = overlay;
+    const close = () => {
+      this.closeSystemClipboardDialog();
+      if (this.activeDocId) this.focusEditor();
+      else this.input.blur();
+    };
+    cancel.addEventListener("click", close);
+    ok.addEventListener("click", () => {
+      const value = textarea.value;
+      close();
+      options.onOk(value);
+    });
+    overlay.addEventListener("pointerdown", (event) => {
+      if (event.target === overlay) close();
+    });
+    overlay.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      close();
+    });
+    window.setTimeout(() => {
+      textarea.focus({ preventScroll: true });
+      if (options.selectText) textarea.select();
+    });
+  }
+  closeSystemClipboardDialog() {
+    this.systemClipboardOverlay?.remove();
+    this.systemClipboardOverlay = null;
   }
   async runFileContextMenuCommand(path, command) {
     if (!isFileContextMenuCommand(command)) return;
@@ -4713,12 +4796,6 @@ var EditorApp = class {
     doc.setSelection({ line, col: 0 }, { line, col: doc.lines[line].length });
     this.resetCaretBlink();
   }
-  nativeTextCalloutRect(point, doc, editorRect) {
-    const lineH = this.renderer.lineHeight("code");
-    const contentRect = this.editorContentRect(doc, editorRect);
-    const y = clamp(point.y - lineH / 2, contentRect.y, Math.max(contentRect.y, contentRect.y + contentRect.h - lineH));
-    return { x: Math.max(contentRect.x, point.x - 80), y, w: Math.min(180, contentRect.w), h: lineH };
-  }
   drawStatus(rect) {
     this.renderer.rect(rect, theme.activity);
     const doc = this.activeDoc();
@@ -4735,6 +4812,10 @@ var EditorApp = class {
     this.renderer.rect({ x: menu.rect.x, y: menu.rect.y, w: 1, h: menu.rect.h }, theme.divider);
     this.renderer.rect({ x: menu.rect.x + menu.rect.w - 1, y: menu.rect.y, w: 1, h: menu.rect.h }, theme.divider);
     for (const item of menu.items) {
+      if (!isContextMenuItem(item)) {
+        this.renderer.rect(item.rect, theme.divider);
+        continue;
+      }
       if (item.enabled && this.contextMenuHover === item.command) this.renderer.rect(item.rect, theme.activityActive);
       this.renderer.text(item.label, item.rect.x + 12, item.rect.y + 7, item.enabled ? theme.text : theme.textDim, "ui");
       this.hits.push({ type: "contextMenu", command: item.command, rect: item.rect, enabled: item.enabled });
@@ -4912,9 +4993,12 @@ function tokenColor(type) {
   return theme.type;
 }
 function isEditorContextMenuCommand(command) {
-  return command === "cut" || command === "copy" || command === "paste";
+  return command === "cut" || command === "copy" || command === "paste" || command === "systemCopy" || command === "systemPaste";
 }
-function shouldUseNativeClipboardUi() {
+function isContextMenuItem(entry) {
+  return entry.kind === "item";
+}
+function isMobileWebKit() {
   return (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches) && /AppleWebKit/i.test(navigator.userAgent);
 }
 function isFileContextMenuCommand(command) {
