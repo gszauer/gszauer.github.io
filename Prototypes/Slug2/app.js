@@ -814,6 +814,17 @@ var InputBridge = class {
     this.textarea.value = "\n";
     this.textarea.setSelectionRange(1, 1);
   }
+  requestNativePaste() {
+    if (!this.activeTarget) return false;
+    this.textarea.focus({ preventScroll: true });
+    this.resetTextareaSentinel();
+    try {
+      document.execCommand("paste");
+      return true;
+    } catch {
+      return false;
+    }
+  }
   install() {
     this.textarea.addEventListener("keydown", (event) => this.onKeyDown(event));
     this.textarea.addEventListener("beforeinput", (event) => this.onBeforeInput(event));
@@ -3877,6 +3888,8 @@ var EditorApp = class {
         }
       }
     } else {
+      this.focusEditor();
+      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
       const text = await readClipboardText();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
@@ -3906,6 +3919,8 @@ var EditorApp = class {
         }
       }
     } else {
+      this.focusRename(this.renameInputRect() ?? void 0);
+      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
       const text = await readClipboardText();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
@@ -3936,6 +3951,8 @@ var EditorApp = class {
         }
       }
     } else {
+      this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
+      if (this.requestNativePastePrompt("Use the iOS Paste callout to paste")) return;
       const text = await readClipboardText();
       if (text === null) {
         this.statusText = "Clipboard paste unavailable";
@@ -3948,6 +3965,13 @@ var EditorApp = class {
       }
     }
     this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
+  }
+  requestNativePastePrompt(status) {
+    if (!shouldUseNativePastePrompt()) return false;
+    if (!this.input.requestNativePaste()) return false;
+    this.statusText = status;
+    this.scheduleDraw();
+    return true;
   }
   async runFileContextMenuCommand(path, command) {
     if (!isFileContextMenuCommand(command)) return;
@@ -4793,6 +4817,9 @@ function tokenColor(type) {
 }
 function isEditorContextMenuCommand(command) {
   return command === "cut" || command === "copy" || command === "paste";
+}
+function shouldUseNativePastePrompt() {
+  return (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches) && /AppleWebKit/i.test(navigator.userAgent);
 }
 function isFileContextMenuCommand(command) {
   return command === "rename" || command === "duplicate" || command === "delete";
