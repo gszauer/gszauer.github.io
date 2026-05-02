@@ -790,6 +790,7 @@ var InputBridge = class {
   activeTarget = null;
   composing = false;
   compositionText = "";
+  nativeCalloutTimer = 0;
   focusEditor(target, caretRect) {
     this.activeTarget = target;
     if (caretRect) this.placeNearCaret(caretRect);
@@ -798,6 +799,7 @@ var InputBridge = class {
   }
   blur() {
     this.activeTarget = null;
+    this.hideNativeCallout();
     this.textarea.blur();
   }
   syncSelectionForClipboard(text) {
@@ -824,6 +826,22 @@ var InputBridge = class {
     } catch {
       return false;
     }
+  }
+  showNativeEditCallout(text, rect) {
+    if (!this.activeTarget || this.composing) return false;
+    if (this.nativeCalloutTimer) window.clearTimeout(this.nativeCalloutTimer);
+    this.placeNativeCallout(rect);
+    this.textarea.classList.add("native-callout");
+    this.textarea.focus({ preventScroll: true });
+    if (text) {
+      this.textarea.value = text;
+      this.textarea.setSelectionRange(0, text.length);
+    } else {
+      this.resetTextareaSentinel();
+    }
+    this.textarea.focus({ preventScroll: true });
+    this.nativeCalloutTimer = window.setTimeout(() => this.hideNativeCallout(), 8e3);
+    return true;
   }
   install() {
     this.textarea.addEventListener("keydown", (event) => this.onKeyDown(event));
@@ -920,6 +938,7 @@ var InputBridge = class {
     const text = normalizePastedText(textareaInsertedText(this.textarea.value));
     if (text) target.replaceSelection(text);
     this.resetTextareaSentinel();
+    if (text) this.hideNativeCallout();
   }
   onCopy(event) {
     const text = this.activeTarget?.getSelectedText() ?? "";
@@ -929,6 +948,7 @@ var InputBridge = class {
       event.preventDefault();
     }
     this.syncSelectionForClipboard(text);
+    this.hideNativeCallout();
   }
   onCut(event) {
     const text = this.activeTarget?.getSelectedText() ?? "";
@@ -939,6 +959,7 @@ var InputBridge = class {
     }
     this.activeTarget.replaceSelection("");
     this.resetTextareaSentinel();
+    this.hideNativeCallout();
   }
   onPaste(event) {
     const text = normalizePastedText(event.clipboardData?.getData("text/plain") ?? "");
@@ -946,6 +967,7 @@ var InputBridge = class {
     this.activeTarget.replaceSelection(text);
     event.preventDefault();
     this.resetTextareaSentinel();
+    this.hideNativeCallout();
   }
   placeNearCaret(rect) {
     const vv = window.visualViewport;
@@ -953,6 +975,24 @@ var InputBridge = class {
     const offsetTop = vv?.offsetTop ?? 0;
     this.textarea.style.left = `${Math.max(0, rect.x - offsetLeft)}px`;
     this.textarea.style.top = `${Math.max(0, rect.y - offsetTop)}px`;
+  }
+  placeNativeCallout(rect) {
+    const vv = window.visualViewport;
+    const offsetLeft = vv?.offsetLeft ?? 0;
+    const offsetTop = vv?.offsetTop ?? 0;
+    this.textarea.style.left = `${Math.max(0, rect.x - offsetLeft)}px`;
+    this.textarea.style.top = `${Math.max(0, rect.y - offsetTop)}px`;
+    this.textarea.style.width = `${Math.max(44, rect.w)}px`;
+    this.textarea.style.height = `${Math.max(24, rect.h)}px`;
+  }
+  hideNativeCallout() {
+    if (this.nativeCalloutTimer) {
+      window.clearTimeout(this.nativeCalloutTimer);
+      this.nativeCalloutTimer = 0;
+    }
+    this.textarea.classList.remove("native-callout");
+    this.textarea.style.width = "";
+    this.textarea.style.height = "";
   }
 };
 function normalizePastedText(text) {
@@ -2687,6 +2727,10 @@ var EditorApp = class {
     const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     const hit = this.hitAt(point.x, point.y);
     if (hit?.type === "contextMenu") return;
+    if (hit && this.shouldUseNativeTextCallout(hit)) {
+      this.openNativeTextCalloutForHit(point, hit, false);
+      return;
+    }
     if (hit?.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
@@ -2861,6 +2905,10 @@ var EditorApp = class {
     if (Math.hypot(point.x - last.point.x, point.y - last.point.y) > TOUCH_DOUBLE_TAP_DISTANCE) return false;
     this.lastTouchTap = null;
     event.preventDefault();
+    if (this.shouldUseNativeTextCallout(hit)) {
+      this.openNativeTextCalloutForHit(point, hit, true);
+      return true;
+    }
     this.openContextMenuForHit(point, hit, true);
     return true;
   }
@@ -2874,6 +2922,7 @@ var EditorApp = class {
     return null;
   }
   openContextMenuForHit(point, hit, selectTextFirst = false) {
+    if (this.shouldUseNativeTextCallout(hit)) return this.openNativeTextCalloutForHit(point, hit, selectTextFirst);
     if (hit.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (selectTextFirst) this.selectRenameWordFromPoint(point.x, hit.rect);
@@ -2921,6 +2970,47 @@ var EditorApp = class {
       return true;
     }
     return false;
+  }
+  shouldUseNativeTextCallout(hit) {
+    return shouldUseNativeClipboardUi() && (hit.type === "editor" || hit.type === "fileRenameInput" || hit.type === "searchInput");
+  }
+  openNativeTextCalloutForHit(point, hit, selectTextFirst = false) {
+    if (hit.type === "fileRenameInput") {
+      this.focusRename(hit.rect);
+      if (selectTextFirst) this.selectRenameWordFromPoint(point.x, hit.rect);
+      else if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
+      this.closeContextMenu();
+      this.statusText = "Use iOS text actions";
+      this.input.showNativeEditCallout(this.renameBuffer.selectedText(), hit.rect);
+      this.scheduleDraw();
+      return true;
+    }
+    if (hit.type === "searchInput") {
+      this.focusMiniTarget("search", hit.rect);
+      if (selectTextFirst) this.selectSearchWordFromPoint(point.x, hit.rect);
+      else if (!this.pointHitsSearchSelection(point.x, hit.rect)) this.setSearchCursorFromPoint(point.x, hit.rect, false);
+      this.closeContextMenu();
+      this.statusText = "Use iOS text actions";
+      this.input.showNativeEditCallout(this.searchBuffer.selectedText(), hit.rect);
+      this.scheduleDraw();
+      return true;
+    }
+    if (hit.type !== "editor") return false;
+    const group = this.groupById(hit.groupId);
+    const docId = group.activeDocId;
+    const doc = docId ? this.docs.get(docId) : void 0;
+    if (!doc) return false;
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    group.activeDocId = doc.id;
+    if (selectTextFirst) this.selectEditorWordFromPoint(doc, group.editorRect, point);
+    else if (!this.pointHitsSelection(doc, group.editorRect, point)) doc.setSelection(this.positionFromPoint(point.x, point.y));
+    this.focusEditor();
+    this.closeContextMenu();
+    this.statusText = "Use iOS text actions";
+    this.input.showNativeEditCallout(doc.selectedText(), this.nativeTextCalloutRect(point, doc, group.editorRect));
+    this.scheduleDraw();
+    return true;
   }
   updateContextMenuHover(hit) {
     const next = hit?.type === "contextMenu" && hit.enabled ? hit.command : null;
@@ -3967,7 +4057,7 @@ var EditorApp = class {
     this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
   }
   requestNativePastePrompt(status) {
-    if (!shouldUseNativePastePrompt()) return false;
+    if (!shouldUseNativeClipboardUi()) return false;
     if (!this.input.requestNativePaste()) return false;
     this.statusText = status;
     this.scheduleDraw();
@@ -4623,6 +4713,12 @@ var EditorApp = class {
     doc.setSelection({ line, col: 0 }, { line, col: doc.lines[line].length });
     this.resetCaretBlink();
   }
+  nativeTextCalloutRect(point, doc, editorRect) {
+    const lineH = this.renderer.lineHeight("code");
+    const contentRect = this.editorContentRect(doc, editorRect);
+    const y = clamp(point.y - lineH / 2, contentRect.y, Math.max(contentRect.y, contentRect.y + contentRect.h - lineH));
+    return { x: Math.max(contentRect.x, point.x - 80), y, w: Math.min(180, contentRect.w), h: lineH };
+  }
   drawStatus(rect) {
     this.renderer.rect(rect, theme.activity);
     const doc = this.activeDoc();
@@ -4818,7 +4914,7 @@ function tokenColor(type) {
 function isEditorContextMenuCommand(command) {
   return command === "cut" || command === "copy" || command === "paste";
 }
-function shouldUseNativePastePrompt() {
+function shouldUseNativeClipboardUi() {
   return (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches) && /AppleWebKit/i.test(navigator.userAgent);
 }
 function isFileContextMenuCommand(command) {
