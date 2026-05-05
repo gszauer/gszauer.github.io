@@ -1,147 +1,2400 @@
-// src/shared/types.ts
-function rectContains(rect, x, y) {
-  return x >= rect.x && y >= rect.y && x < rect.x + rect.w && y < rect.y + rect.h;
-}
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-function uid(prefix) {
-  const random = crypto.getRandomValues(new Uint32Array(2));
-  return `${prefix}_${Date.now().toString(36)}_${random[0].toString(36)}${random[1].toString(36)}`;
-}
-var AppError = class extends Error {
-  code;
-  constructor(code, message) {
-    super(message);
-    this.name = "AppError";
-    this.code = code;
-  }
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __commonJS = (cb, mod) => function __require2() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
-
-// src/assistant/chat.ts
-var LocalAssistantTransport = class {
-  async send(input, context, onDelta, signal) {
-    const lines = [
-      `I received: ${input.trim() || "(empty message)"}`,
-      context.activePath ? `Active file: ${context.activePath}` : "No active file.",
-      context.selectedText ? `Selection length: ${context.selectedText.length} characters.` : "No selected text.",
-      "I can inspect files, search the virtual workspace, and propose edits once you ask for a concrete change."
-    ];
-    for (const part of lines.join("\n").match(/.{1,24}|\n/g) ?? []) {
-      if (signal.aborted) return;
-      onDelta(part);
-      await new Promise((resolve) => setTimeout(resolve, 8));
-    }
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
+  return to;
 };
-var OpenAIResponsesTransport = class {
-  constructor(apiKey, model = "gpt-5.5") {
-    this.apiKey = apiKey;
-    this.model = model;
-  }
-  apiKey;
-  model;
-  async send(input, context, onDelta, signal) {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        instructions: "You are an assistant inside a browser code editor. Be concise and refer to provided context.",
-        input: [{
-          role: "user",
-          content: [{
-            type: "input_text",
-            text: `${input}
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
-Context:
-${JSON.stringify(context, null, 2)}`
-          }]
-        }],
-        stream: true,
-        store: false
-      }),
-      signal
+// node_modules/jszip/dist/jszip.min.js
+var require_jszip_min = __commonJS({
+  "node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    !(function(e) {
+      if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
+      else if ("function" == typeof define && define.amd) define([], e);
+      else {
+        ("undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof self ? self : this).JSZip = e();
+      }
+    })(function() {
+      return (function s(a, o, h) {
+        function u(r, e2) {
+          if (!o[r]) {
+            if (!a[r]) {
+              var t = "function" == typeof __require && __require;
+              if (!e2 && t) return t(r, true);
+              if (l) return l(r, true);
+              var n = new Error("Cannot find module '" + r + "'");
+              throw n.code = "MODULE_NOT_FOUND", n;
+            }
+            var i = o[r] = { exports: {} };
+            a[r][0].call(i.exports, function(e3) {
+              var t2 = a[r][1][e3];
+              return u(t2 || e3);
+            }, i, i.exports, s, a, o, h);
+          }
+          return o[r].exports;
+        }
+        for (var l = "function" == typeof __require && __require, e = 0; e < h.length; e++) u(h[e]);
+        return u;
+      })({ 1: [function(e, t, r) {
+        "use strict";
+        var d = e("./utils"), c = e("./support"), p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+        r.encode = function(e2) {
+          for (var t2, r2, n, i, s, a, o, h = [], u = 0, l = e2.length, f = l, c2 = "string" !== d.getTypeOf(e2); u < e2.length; ) f = l - u, n = c2 ? (t2 = e2[u++], r2 = u < l ? e2[u++] : 0, u < l ? e2[u++] : 0) : (t2 = e2.charCodeAt(u++), r2 = u < l ? e2.charCodeAt(u++) : 0, u < l ? e2.charCodeAt(u++) : 0), i = t2 >> 2, s = (3 & t2) << 4 | r2 >> 4, a = 1 < f ? (15 & r2) << 2 | n >> 6 : 64, o = 2 < f ? 63 & n : 64, h.push(p.charAt(i) + p.charAt(s) + p.charAt(a) + p.charAt(o));
+          return h.join("");
+        }, r.decode = function(e2) {
+          var t2, r2, n, i, s, a, o = 0, h = 0, u = "data:";
+          if (e2.substr(0, u.length) === u) throw new Error("Invalid base64 input, it looks like a data url.");
+          var l, f = 3 * (e2 = e2.replace(/[^A-Za-z0-9+/=]/g, "")).length / 4;
+          if (e2.charAt(e2.length - 1) === p.charAt(64) && f--, e2.charAt(e2.length - 2) === p.charAt(64) && f--, f % 1 != 0) throw new Error("Invalid base64 input, bad content length.");
+          for (l = c.uint8array ? new Uint8Array(0 | f) : new Array(0 | f); o < e2.length; ) t2 = p.indexOf(e2.charAt(o++)) << 2 | (i = p.indexOf(e2.charAt(o++))) >> 4, r2 = (15 & i) << 4 | (s = p.indexOf(e2.charAt(o++))) >> 2, n = (3 & s) << 6 | (a = p.indexOf(e2.charAt(o++))), l[h++] = t2, 64 !== s && (l[h++] = r2), 64 !== a && (l[h++] = n);
+          return l;
+        };
+      }, { "./support": 30, "./utils": 32 }], 2: [function(e, t, r) {
+        "use strict";
+        var n = e("./external"), i = e("./stream/DataWorker"), s = e("./stream/Crc32Probe"), a = e("./stream/DataLengthProbe");
+        function o(e2, t2, r2, n2, i2) {
+          this.compressedSize = e2, this.uncompressedSize = t2, this.crc32 = r2, this.compression = n2, this.compressedContent = i2;
+        }
+        o.prototype = { getContentWorker: function() {
+          var e2 = new i(n.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new a("data_length")), t2 = this;
+          return e2.on("end", function() {
+            if (this.streamInfo.data_length !== t2.uncompressedSize) throw new Error("Bug : uncompressed data size mismatch");
+          }), e2;
+        }, getCompressedWorker: function() {
+          return new i(n.Promise.resolve(this.compressedContent)).withStreamInfo("compressedSize", this.compressedSize).withStreamInfo("uncompressedSize", this.uncompressedSize).withStreamInfo("crc32", this.crc32).withStreamInfo("compression", this.compression);
+        } }, o.createWorkerFrom = function(e2, t2, r2) {
+          return e2.pipe(new s()).pipe(new a("uncompressedSize")).pipe(t2.compressWorker(r2)).pipe(new a("compressedSize")).withStreamInfo("compression", t2);
+        }, t.exports = o;
+      }, { "./external": 6, "./stream/Crc32Probe": 25, "./stream/DataLengthProbe": 26, "./stream/DataWorker": 27 }], 3: [function(e, t, r) {
+        "use strict";
+        var n = e("./stream/GenericWorker");
+        r.STORE = { magic: "\0\0", compressWorker: function() {
+          return new n("STORE compression");
+        }, uncompressWorker: function() {
+          return new n("STORE decompression");
+        } }, r.DEFLATE = e("./flate");
+      }, { "./flate": 7, "./stream/GenericWorker": 28 }], 4: [function(e, t, r) {
+        "use strict";
+        var n = e("./utils");
+        var o = (function() {
+          for (var e2, t2 = [], r2 = 0; r2 < 256; r2++) {
+            e2 = r2;
+            for (var n2 = 0; n2 < 8; n2++) e2 = 1 & e2 ? 3988292384 ^ e2 >>> 1 : e2 >>> 1;
+            t2[r2] = e2;
+          }
+          return t2;
+        })();
+        t.exports = function(e2, t2) {
+          return void 0 !== e2 && e2.length ? "string" !== n.getTypeOf(e2) ? (function(e3, t3, r2, n2) {
+            var i = o, s = n2 + r2;
+            e3 ^= -1;
+            for (var a = n2; a < s; a++) e3 = e3 >>> 8 ^ i[255 & (e3 ^ t3[a])];
+            return -1 ^ e3;
+          })(0 | t2, e2, e2.length, 0) : (function(e3, t3, r2, n2) {
+            var i = o, s = n2 + r2;
+            e3 ^= -1;
+            for (var a = n2; a < s; a++) e3 = e3 >>> 8 ^ i[255 & (e3 ^ t3.charCodeAt(a))];
+            return -1 ^ e3;
+          })(0 | t2, e2, e2.length, 0) : 0;
+        };
+      }, { "./utils": 32 }], 5: [function(e, t, r) {
+        "use strict";
+        r.base64 = false, r.binary = false, r.dir = false, r.createFolders = true, r.date = null, r.compression = null, r.compressionOptions = null, r.comment = null, r.unixPermissions = null, r.dosPermissions = null;
+      }, {}], 6: [function(e, t, r) {
+        "use strict";
+        var n = null;
+        n = "undefined" != typeof Promise ? Promise : e("lie"), t.exports = { Promise: n };
+      }, { lie: 37 }], 7: [function(e, t, r) {
+        "use strict";
+        var n = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Uint32Array, i = e("pako"), s = e("./utils"), a = e("./stream/GenericWorker"), o = n ? "uint8array" : "array";
+        function h(e2, t2) {
+          a.call(this, "FlateWorker/" + e2), this._pako = null, this._pakoAction = e2, this._pakoOptions = t2, this.meta = {};
+        }
+        r.magic = "\b\0", s.inherits(h, a), h.prototype.processChunk = function(e2) {
+          this.meta = e2.meta, null === this._pako && this._createPako(), this._pako.push(s.transformTo(o, e2.data), false);
+        }, h.prototype.flush = function() {
+          a.prototype.flush.call(this), null === this._pako && this._createPako(), this._pako.push([], true);
+        }, h.prototype.cleanUp = function() {
+          a.prototype.cleanUp.call(this), this._pako = null;
+        }, h.prototype._createPako = function() {
+          this._pako = new i[this._pakoAction]({ raw: true, level: this._pakoOptions.level || -1 });
+          var t2 = this;
+          this._pako.onData = function(e2) {
+            t2.push({ data: e2, meta: t2.meta });
+          };
+        }, r.compressWorker = function(e2) {
+          return new h("Deflate", e2);
+        }, r.uncompressWorker = function() {
+          return new h("Inflate", {});
+        };
+      }, { "./stream/GenericWorker": 28, "./utils": 32, pako: 38 }], 8: [function(e, t, r) {
+        "use strict";
+        function A(e2, t2) {
+          var r2, n2 = "";
+          for (r2 = 0; r2 < t2; r2++) n2 += String.fromCharCode(255 & e2), e2 >>>= 8;
+          return n2;
+        }
+        function n(e2, t2, r2, n2, i2, s2) {
+          var a, o, h = e2.file, u = e2.compression, l = s2 !== O.utf8encode, f = I.transformTo("string", s2(h.name)), c = I.transformTo("string", O.utf8encode(h.name)), d = h.comment, p = I.transformTo("string", s2(d)), m = I.transformTo("string", O.utf8encode(d)), _ = c.length !== h.name.length, g = m.length !== d.length, b = "", v = "", y = "", w = h.dir, k = h.date, x = { crc32: 0, compressedSize: 0, uncompressedSize: 0 };
+          t2 && !r2 || (x.crc32 = e2.crc32, x.compressedSize = e2.compressedSize, x.uncompressedSize = e2.uncompressedSize);
+          var S = 0;
+          t2 && (S |= 8), l || !_ && !g || (S |= 2048);
+          var z = 0, C = 0;
+          w && (z |= 16), "UNIX" === i2 ? (C = 798, z |= (function(e3, t3) {
+            var r3 = e3;
+            return e3 || (r3 = t3 ? 16893 : 33204), (65535 & r3) << 16;
+          })(h.unixPermissions, w)) : (C = 20, z |= (function(e3) {
+            return 63 & (e3 || 0);
+          })(h.dosPermissions)), a = k.getUTCHours(), a <<= 6, a |= k.getUTCMinutes(), a <<= 5, a |= k.getUTCSeconds() / 2, o = k.getUTCFullYear() - 1980, o <<= 4, o |= k.getUTCMonth() + 1, o <<= 5, o |= k.getUTCDate(), _ && (v = A(1, 1) + A(B(f), 4) + c, b += "up" + A(v.length, 2) + v), g && (y = A(1, 1) + A(B(p), 4) + m, b += "uc" + A(y.length, 2) + y);
+          var E = "";
+          return E += "\n\0", E += A(S, 2), E += u.magic, E += A(a, 2), E += A(o, 2), E += A(x.crc32, 4), E += A(x.compressedSize, 4), E += A(x.uncompressedSize, 4), E += A(f.length, 2), E += A(b.length, 2), { fileRecord: R.LOCAL_FILE_HEADER + E + f + b, dirRecord: R.CENTRAL_FILE_HEADER + A(C, 2) + E + A(p.length, 2) + "\0\0\0\0" + A(z, 4) + A(n2, 4) + f + b + p };
+        }
+        var I = e("../utils"), i = e("../stream/GenericWorker"), O = e("../utf8"), B = e("../crc32"), R = e("../signature");
+        function s(e2, t2, r2, n2) {
+          i.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = t2, this.zipPlatform = r2, this.encodeFileName = n2, this.streamFiles = e2, this.accumulate = false, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
+        }
+        I.inherits(s, i), s.prototype.push = function(e2) {
+          var t2 = e2.meta.percent || 0, r2 = this.entriesCount, n2 = this._sources.length;
+          this.accumulate ? this.contentBuffer.push(e2) : (this.bytesWritten += e2.data.length, i.prototype.push.call(this, { data: e2.data, meta: { currentFile: this.currentFile, percent: r2 ? (t2 + 100 * (r2 - n2 - 1)) / r2 : 100 } }));
+        }, s.prototype.openedSource = function(e2) {
+          this.currentSourceOffset = this.bytesWritten, this.currentFile = e2.file.name;
+          var t2 = this.streamFiles && !e2.file.dir;
+          if (t2) {
+            var r2 = n(e2, t2, false, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
+            this.push({ data: r2.fileRecord, meta: { percent: 0 } });
+          } else this.accumulate = true;
+        }, s.prototype.closedSource = function(e2) {
+          this.accumulate = false;
+          var t2 = this.streamFiles && !e2.file.dir, r2 = n(e2, t2, true, this.currentSourceOffset, this.zipPlatform, this.encodeFileName);
+          if (this.dirRecords.push(r2.dirRecord), t2) this.push({ data: (function(e3) {
+            return R.DATA_DESCRIPTOR + A(e3.crc32, 4) + A(e3.compressedSize, 4) + A(e3.uncompressedSize, 4);
+          })(e2), meta: { percent: 100 } });
+          else for (this.push({ data: r2.fileRecord, meta: { percent: 0 } }); this.contentBuffer.length; ) this.push(this.contentBuffer.shift());
+          this.currentFile = null;
+        }, s.prototype.flush = function() {
+          for (var e2 = this.bytesWritten, t2 = 0; t2 < this.dirRecords.length; t2++) this.push({ data: this.dirRecords[t2], meta: { percent: 100 } });
+          var r2 = this.bytesWritten - e2, n2 = (function(e3, t3, r3, n3, i2) {
+            var s2 = I.transformTo("string", i2(n3));
+            return R.CENTRAL_DIRECTORY_END + "\0\0\0\0" + A(e3, 2) + A(e3, 2) + A(t3, 4) + A(r3, 4) + A(s2.length, 2) + s2;
+          })(this.dirRecords.length, r2, e2, this.zipComment, this.encodeFileName);
+          this.push({ data: n2, meta: { percent: 100 } });
+        }, s.prototype.prepareNextSource = function() {
+          this.previous = this._sources.shift(), this.openedSource(this.previous.streamInfo), this.isPaused ? this.previous.pause() : this.previous.resume();
+        }, s.prototype.registerPrevious = function(e2) {
+          this._sources.push(e2);
+          var t2 = this;
+          return e2.on("data", function(e3) {
+            t2.processChunk(e3);
+          }), e2.on("end", function() {
+            t2.closedSource(t2.previous.streamInfo), t2._sources.length ? t2.prepareNextSource() : t2.end();
+          }), e2.on("error", function(e3) {
+            t2.error(e3);
+          }), this;
+        }, s.prototype.resume = function() {
+          return !!i.prototype.resume.call(this) && (!this.previous && this._sources.length ? (this.prepareNextSource(), true) : this.previous || this._sources.length || this.generatedError ? void 0 : (this.end(), true));
+        }, s.prototype.error = function(e2) {
+          var t2 = this._sources;
+          if (!i.prototype.error.call(this, e2)) return false;
+          for (var r2 = 0; r2 < t2.length; r2++) try {
+            t2[r2].error(e2);
+          } catch (e3) {
+          }
+          return true;
+        }, s.prototype.lock = function() {
+          i.prototype.lock.call(this);
+          for (var e2 = this._sources, t2 = 0; t2 < e2.length; t2++) e2[t2].lock();
+        }, t.exports = s;
+      }, { "../crc32": 4, "../signature": 23, "../stream/GenericWorker": 28, "../utf8": 31, "../utils": 32 }], 9: [function(e, t, r) {
+        "use strict";
+        var u = e("../compressions"), n = e("./ZipFileWorker");
+        r.generateWorker = function(e2, a, t2) {
+          var o = new n(a.streamFiles, t2, a.platform, a.encodeFileName), h = 0;
+          try {
+            e2.forEach(function(e3, t3) {
+              h++;
+              var r2 = (function(e4, t4) {
+                var r3 = e4 || t4, n3 = u[r3];
+                if (!n3) throw new Error(r3 + " is not a valid compression method !");
+                return n3;
+              })(t3.options.compression, a.compression), n2 = t3.options.compressionOptions || a.compressionOptions || {}, i = t3.dir, s = t3.date;
+              t3._compressWorker(r2, n2).withStreamInfo("file", { name: e3, dir: i, date: s, comment: t3.comment || "", unixPermissions: t3.unixPermissions, dosPermissions: t3.dosPermissions }).pipe(o);
+            }), o.entriesCount = h;
+          } catch (e3) {
+            o.error(e3);
+          }
+          return o;
+        };
+      }, { "../compressions": 3, "./ZipFileWorker": 8 }], 10: [function(e, t, r) {
+        "use strict";
+        function n() {
+          if (!(this instanceof n)) return new n();
+          if (arguments.length) throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
+          this.files = /* @__PURE__ */ Object.create(null), this.comment = null, this.root = "", this.clone = function() {
+            var e2 = new n();
+            for (var t2 in this) "function" != typeof this[t2] && (e2[t2] = this[t2]);
+            return e2;
+          };
+        }
+        (n.prototype = e("./object")).loadAsync = e("./load"), n.support = e("./support"), n.defaults = e("./defaults"), n.version = "3.10.1", n.loadAsync = function(e2, t2) {
+          return new n().loadAsync(e2, t2);
+        }, n.external = e("./external"), t.exports = n;
+      }, { "./defaults": 5, "./external": 6, "./load": 11, "./object": 15, "./support": 30 }], 11: [function(e, t, r) {
+        "use strict";
+        var u = e("./utils"), i = e("./external"), n = e("./utf8"), s = e("./zipEntries"), a = e("./stream/Crc32Probe"), l = e("./nodejsUtils");
+        function f(n2) {
+          return new i.Promise(function(e2, t2) {
+            var r2 = n2.decompressed.getContentWorker().pipe(new a());
+            r2.on("error", function(e3) {
+              t2(e3);
+            }).on("end", function() {
+              r2.streamInfo.crc32 !== n2.decompressed.crc32 ? t2(new Error("Corrupted zip : CRC32 mismatch")) : e2();
+            }).resume();
+          });
+        }
+        t.exports = function(e2, o) {
+          var h = this;
+          return o = u.extend(o || {}, { base64: false, checkCRC32: false, optimizedBinaryString: false, createFolders: false, decodeFileName: n.utf8decode }), l.isNode && l.isStream(e2) ? i.Promise.reject(new Error("JSZip can't accept a stream when loading a zip file.")) : u.prepareContent("the loaded zip file", e2, true, o.optimizedBinaryString, o.base64).then(function(e3) {
+            var t2 = new s(o);
+            return t2.load(e3), t2;
+          }).then(function(e3) {
+            var t2 = [i.Promise.resolve(e3)], r2 = e3.files;
+            if (o.checkCRC32) for (var n2 = 0; n2 < r2.length; n2++) t2.push(f(r2[n2]));
+            return i.Promise.all(t2);
+          }).then(function(e3) {
+            for (var t2 = e3.shift(), r2 = t2.files, n2 = 0; n2 < r2.length; n2++) {
+              var i2 = r2[n2], s2 = i2.fileNameStr, a2 = u.resolve(i2.fileNameStr);
+              h.file(a2, i2.decompressed, { binary: true, optimizedBinaryString: true, date: i2.date, dir: i2.dir, comment: i2.fileCommentStr.length ? i2.fileCommentStr : null, unixPermissions: i2.unixPermissions, dosPermissions: i2.dosPermissions, createFolders: o.createFolders }), i2.dir || (h.file(a2).unsafeOriginalName = s2);
+            }
+            return t2.zipComment.length && (h.comment = t2.zipComment), h;
+          });
+        };
+      }, { "./external": 6, "./nodejsUtils": 14, "./stream/Crc32Probe": 25, "./utf8": 31, "./utils": 32, "./zipEntries": 33 }], 12: [function(e, t, r) {
+        "use strict";
+        var n = e("../utils"), i = e("../stream/GenericWorker");
+        function s(e2, t2) {
+          i.call(this, "Nodejs stream input adapter for " + e2), this._upstreamEnded = false, this._bindStream(t2);
+        }
+        n.inherits(s, i), s.prototype._bindStream = function(e2) {
+          var t2 = this;
+          (this._stream = e2).pause(), e2.on("data", function(e3) {
+            t2.push({ data: e3, meta: { percent: 0 } });
+          }).on("error", function(e3) {
+            t2.isPaused ? this.generatedError = e3 : t2.error(e3);
+          }).on("end", function() {
+            t2.isPaused ? t2._upstreamEnded = true : t2.end();
+          });
+        }, s.prototype.pause = function() {
+          return !!i.prototype.pause.call(this) && (this._stream.pause(), true);
+        }, s.prototype.resume = function() {
+          return !!i.prototype.resume.call(this) && (this._upstreamEnded ? this.end() : this._stream.resume(), true);
+        }, t.exports = s;
+      }, { "../stream/GenericWorker": 28, "../utils": 32 }], 13: [function(e, t, r) {
+        "use strict";
+        var i = e("readable-stream").Readable;
+        function n(e2, t2, r2) {
+          i.call(this, t2), this._helper = e2;
+          var n2 = this;
+          e2.on("data", function(e3, t3) {
+            n2.push(e3) || n2._helper.pause(), r2 && r2(t3);
+          }).on("error", function(e3) {
+            n2.emit("error", e3);
+          }).on("end", function() {
+            n2.push(null);
+          });
+        }
+        e("../utils").inherits(n, i), n.prototype._read = function() {
+          this._helper.resume();
+        }, t.exports = n;
+      }, { "../utils": 32, "readable-stream": 16 }], 14: [function(e, t, r) {
+        "use strict";
+        t.exports = { isNode: "undefined" != typeof Buffer, newBufferFrom: function(e2, t2) {
+          if (Buffer.from && Buffer.from !== Uint8Array.from) return Buffer.from(e2, t2);
+          if ("number" == typeof e2) throw new Error('The "data" argument must not be a number');
+          return new Buffer(e2, t2);
+        }, allocBuffer: function(e2) {
+          if (Buffer.alloc) return Buffer.alloc(e2);
+          var t2 = new Buffer(e2);
+          return t2.fill(0), t2;
+        }, isBuffer: function(e2) {
+          return Buffer.isBuffer(e2);
+        }, isStream: function(e2) {
+          return e2 && "function" == typeof e2.on && "function" == typeof e2.pause && "function" == typeof e2.resume;
+        } };
+      }, {}], 15: [function(e, t, r) {
+        "use strict";
+        function s(e2, t2, r2) {
+          var n2, i2 = u.getTypeOf(t2), s2 = u.extend(r2 || {}, f);
+          s2.date = s2.date || /* @__PURE__ */ new Date(), null !== s2.compression && (s2.compression = s2.compression.toUpperCase()), "string" == typeof s2.unixPermissions && (s2.unixPermissions = parseInt(s2.unixPermissions, 8)), s2.unixPermissions && 16384 & s2.unixPermissions && (s2.dir = true), s2.dosPermissions && 16 & s2.dosPermissions && (s2.dir = true), s2.dir && (e2 = g(e2)), s2.createFolders && (n2 = _(e2)) && b.call(this, n2, true);
+          var a2 = "string" === i2 && false === s2.binary && false === s2.base64;
+          r2 && void 0 !== r2.binary || (s2.binary = !a2), (t2 instanceof c && 0 === t2.uncompressedSize || s2.dir || !t2 || 0 === t2.length) && (s2.base64 = false, s2.binary = true, t2 = "", s2.compression = "STORE", i2 = "string");
+          var o2 = null;
+          o2 = t2 instanceof c || t2 instanceof l ? t2 : p.isNode && p.isStream(t2) ? new m(e2, t2) : u.prepareContent(e2, t2, s2.binary, s2.optimizedBinaryString, s2.base64);
+          var h2 = new d(e2, o2, s2);
+          this.files[e2] = h2;
+        }
+        var i = e("./utf8"), u = e("./utils"), l = e("./stream/GenericWorker"), a = e("./stream/StreamHelper"), f = e("./defaults"), c = e("./compressedObject"), d = e("./zipObject"), o = e("./generate"), p = e("./nodejsUtils"), m = e("./nodejs/NodejsStreamInputAdapter"), _ = function(e2) {
+          "/" === e2.slice(-1) && (e2 = e2.substring(0, e2.length - 1));
+          var t2 = e2.lastIndexOf("/");
+          return 0 < t2 ? e2.substring(0, t2) : "";
+        }, g = function(e2) {
+          return "/" !== e2.slice(-1) && (e2 += "/"), e2;
+        }, b = function(e2, t2) {
+          return t2 = void 0 !== t2 ? t2 : f.createFolders, e2 = g(e2), this.files[e2] || s.call(this, e2, null, { dir: true, createFolders: t2 }), this.files[e2];
+        };
+        function h(e2) {
+          return "[object RegExp]" === Object.prototype.toString.call(e2);
+        }
+        var n = { load: function() {
+          throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
+        }, forEach: function(e2) {
+          var t2, r2, n2;
+          for (t2 in this.files) n2 = this.files[t2], (r2 = t2.slice(this.root.length, t2.length)) && t2.slice(0, this.root.length) === this.root && e2(r2, n2);
+        }, filter: function(r2) {
+          var n2 = [];
+          return this.forEach(function(e2, t2) {
+            r2(e2, t2) && n2.push(t2);
+          }), n2;
+        }, file: function(e2, t2, r2) {
+          if (1 !== arguments.length) return e2 = this.root + e2, s.call(this, e2, t2, r2), this;
+          if (h(e2)) {
+            var n2 = e2;
+            return this.filter(function(e3, t3) {
+              return !t3.dir && n2.test(e3);
+            });
+          }
+          var i2 = this.files[this.root + e2];
+          return i2 && !i2.dir ? i2 : null;
+        }, folder: function(r2) {
+          if (!r2) return this;
+          if (h(r2)) return this.filter(function(e3, t3) {
+            return t3.dir && r2.test(e3);
+          });
+          var e2 = this.root + r2, t2 = b.call(this, e2), n2 = this.clone();
+          return n2.root = t2.name, n2;
+        }, remove: function(r2) {
+          r2 = this.root + r2;
+          var e2 = this.files[r2];
+          if (e2 || ("/" !== r2.slice(-1) && (r2 += "/"), e2 = this.files[r2]), e2 && !e2.dir) delete this.files[r2];
+          else for (var t2 = this.filter(function(e3, t3) {
+            return t3.name.slice(0, r2.length) === r2;
+          }), n2 = 0; n2 < t2.length; n2++) delete this.files[t2[n2].name];
+          return this;
+        }, generate: function() {
+          throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
+        }, generateInternalStream: function(e2) {
+          var t2, r2 = {};
+          try {
+            if ((r2 = u.extend(e2 || {}, { streamFiles: false, compression: "STORE", compressionOptions: null, type: "", platform: "DOS", comment: null, mimeType: "application/zip", encodeFileName: i.utf8encode })).type = r2.type.toLowerCase(), r2.compression = r2.compression.toUpperCase(), "binarystring" === r2.type && (r2.type = "string"), !r2.type) throw new Error("No output type specified.");
+            u.checkSupport(r2.type), "darwin" !== r2.platform && "freebsd" !== r2.platform && "linux" !== r2.platform && "sunos" !== r2.platform || (r2.platform = "UNIX"), "win32" === r2.platform && (r2.platform = "DOS");
+            var n2 = r2.comment || this.comment || "";
+            t2 = o.generateWorker(this, r2, n2);
+          } catch (e3) {
+            (t2 = new l("error")).error(e3);
+          }
+          return new a(t2, r2.type || "string", r2.mimeType);
+        }, generateAsync: function(e2, t2) {
+          return this.generateInternalStream(e2).accumulate(t2);
+        }, generateNodeStream: function(e2, t2) {
+          return (e2 = e2 || {}).type || (e2.type = "nodebuffer"), this.generateInternalStream(e2).toNodejsStream(t2);
+        } };
+        t.exports = n;
+      }, { "./compressedObject": 2, "./defaults": 5, "./generate": 9, "./nodejs/NodejsStreamInputAdapter": 12, "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31, "./utils": 32, "./zipObject": 35 }], 16: [function(e, t, r) {
+        "use strict";
+        t.exports = e("stream");
+      }, { stream: void 0 }], 17: [function(e, t, r) {
+        "use strict";
+        var n = e("./DataReader");
+        function i(e2) {
+          n.call(this, e2);
+          for (var t2 = 0; t2 < this.data.length; t2++) e2[t2] = 255 & e2[t2];
+        }
+        e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
+          return this.data[this.zero + e2];
+        }, i.prototype.lastIndexOfSignature = function(e2) {
+          for (var t2 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.length - 4; 0 <= s; --s) if (this.data[s] === t2 && this.data[s + 1] === r2 && this.data[s + 2] === n2 && this.data[s + 3] === i2) return s - this.zero;
+          return -1;
+        }, i.prototype.readAndCheckSignature = function(e2) {
+          var t2 = e2.charCodeAt(0), r2 = e2.charCodeAt(1), n2 = e2.charCodeAt(2), i2 = e2.charCodeAt(3), s = this.readData(4);
+          return t2 === s[0] && r2 === s[1] && n2 === s[2] && i2 === s[3];
+        }, i.prototype.readData = function(e2) {
+          if (this.checkOffset(e2), 0 === e2) return [];
+          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t2;
+        }, t.exports = i;
+      }, { "../utils": 32, "./DataReader": 18 }], 18: [function(e, t, r) {
+        "use strict";
+        var n = e("../utils");
+        function i(e2) {
+          this.data = e2, this.length = e2.length, this.index = 0, this.zero = 0;
+        }
+        i.prototype = { checkOffset: function(e2) {
+          this.checkIndex(this.index + e2);
+        }, checkIndex: function(e2) {
+          if (this.length < this.zero + e2 || e2 < 0) throw new Error("End of data reached (data length = " + this.length + ", asked index = " + e2 + "). Corrupted zip ?");
+        }, setIndex: function(e2) {
+          this.checkIndex(e2), this.index = e2;
+        }, skip: function(e2) {
+          this.setIndex(this.index + e2);
+        }, byteAt: function() {
+        }, readInt: function(e2) {
+          var t2, r2 = 0;
+          for (this.checkOffset(e2), t2 = this.index + e2 - 1; t2 >= this.index; t2--) r2 = (r2 << 8) + this.byteAt(t2);
+          return this.index += e2, r2;
+        }, readString: function(e2) {
+          return n.transformTo("string", this.readData(e2));
+        }, readData: function() {
+        }, lastIndexOfSignature: function() {
+        }, readAndCheckSignature: function() {
+        }, readDate: function() {
+          var e2 = this.readInt(4);
+          return new Date(Date.UTC(1980 + (e2 >> 25 & 127), (e2 >> 21 & 15) - 1, e2 >> 16 & 31, e2 >> 11 & 31, e2 >> 5 & 63, (31 & e2) << 1));
+        } }, t.exports = i;
+      }, { "../utils": 32 }], 19: [function(e, t, r) {
+        "use strict";
+        var n = e("./Uint8ArrayReader");
+        function i(e2) {
+          n.call(this, e2);
+        }
+        e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
+          this.checkOffset(e2);
+          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t2;
+        }, t.exports = i;
+      }, { "../utils": 32, "./Uint8ArrayReader": 21 }], 20: [function(e, t, r) {
+        "use strict";
+        var n = e("./DataReader");
+        function i(e2) {
+          n.call(this, e2);
+        }
+        e("../utils").inherits(i, n), i.prototype.byteAt = function(e2) {
+          return this.data.charCodeAt(this.zero + e2);
+        }, i.prototype.lastIndexOfSignature = function(e2) {
+          return this.data.lastIndexOf(e2) - this.zero;
+        }, i.prototype.readAndCheckSignature = function(e2) {
+          return e2 === this.readData(4);
+        }, i.prototype.readData = function(e2) {
+          this.checkOffset(e2);
+          var t2 = this.data.slice(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t2;
+        }, t.exports = i;
+      }, { "../utils": 32, "./DataReader": 18 }], 21: [function(e, t, r) {
+        "use strict";
+        var n = e("./ArrayReader");
+        function i(e2) {
+          n.call(this, e2);
+        }
+        e("../utils").inherits(i, n), i.prototype.readData = function(e2) {
+          if (this.checkOffset(e2), 0 === e2) return new Uint8Array(0);
+          var t2 = this.data.subarray(this.zero + this.index, this.zero + this.index + e2);
+          return this.index += e2, t2;
+        }, t.exports = i;
+      }, { "../utils": 32, "./ArrayReader": 17 }], 22: [function(e, t, r) {
+        "use strict";
+        var n = e("../utils"), i = e("../support"), s = e("./ArrayReader"), a = e("./StringReader"), o = e("./NodeBufferReader"), h = e("./Uint8ArrayReader");
+        t.exports = function(e2) {
+          var t2 = n.getTypeOf(e2);
+          return n.checkSupport(t2), "string" !== t2 || i.uint8array ? "nodebuffer" === t2 ? new o(e2) : i.uint8array ? new h(n.transformTo("uint8array", e2)) : new s(n.transformTo("array", e2)) : new a(e2);
+        };
+      }, { "../support": 30, "../utils": 32, "./ArrayReader": 17, "./NodeBufferReader": 19, "./StringReader": 20, "./Uint8ArrayReader": 21 }], 23: [function(e, t, r) {
+        "use strict";
+        r.LOCAL_FILE_HEADER = "PK", r.CENTRAL_FILE_HEADER = "PK", r.CENTRAL_DIRECTORY_END = "PK", r.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK\x07", r.ZIP64_CENTRAL_DIRECTORY_END = "PK", r.DATA_DESCRIPTOR = "PK\x07\b";
+      }, {}], 24: [function(e, t, r) {
+        "use strict";
+        var n = e("./GenericWorker"), i = e("../utils");
+        function s(e2) {
+          n.call(this, "ConvertWorker to " + e2), this.destType = e2;
+        }
+        i.inherits(s, n), s.prototype.processChunk = function(e2) {
+          this.push({ data: i.transformTo(this.destType, e2.data), meta: e2.meta });
+        }, t.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 25: [function(e, t, r) {
+        "use strict";
+        var n = e("./GenericWorker"), i = e("../crc32");
+        function s() {
+          n.call(this, "Crc32Probe"), this.withStreamInfo("crc32", 0);
+        }
+        e("../utils").inherits(s, n), s.prototype.processChunk = function(e2) {
+          this.streamInfo.crc32 = i(e2.data, this.streamInfo.crc32 || 0), this.push(e2);
+        }, t.exports = s;
+      }, { "../crc32": 4, "../utils": 32, "./GenericWorker": 28 }], 26: [function(e, t, r) {
+        "use strict";
+        var n = e("../utils"), i = e("./GenericWorker");
+        function s(e2) {
+          i.call(this, "DataLengthProbe for " + e2), this.propName = e2, this.withStreamInfo(e2, 0);
+        }
+        n.inherits(s, i), s.prototype.processChunk = function(e2) {
+          if (e2) {
+            var t2 = this.streamInfo[this.propName] || 0;
+            this.streamInfo[this.propName] = t2 + e2.data.length;
+          }
+          i.prototype.processChunk.call(this, e2);
+        }, t.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 27: [function(e, t, r) {
+        "use strict";
+        var n = e("../utils"), i = e("./GenericWorker");
+        function s(e2) {
+          i.call(this, "DataWorker");
+          var t2 = this;
+          this.dataIsReady = false, this.index = 0, this.max = 0, this.data = null, this.type = "", this._tickScheduled = false, e2.then(function(e3) {
+            t2.dataIsReady = true, t2.data = e3, t2.max = e3 && e3.length || 0, t2.type = n.getTypeOf(e3), t2.isPaused || t2._tickAndRepeat();
+          }, function(e3) {
+            t2.error(e3);
+          });
+        }
+        n.inherits(s, i), s.prototype.cleanUp = function() {
+          i.prototype.cleanUp.call(this), this.data = null;
+        }, s.prototype.resume = function() {
+          return !!i.prototype.resume.call(this) && (!this._tickScheduled && this.dataIsReady && (this._tickScheduled = true, n.delay(this._tickAndRepeat, [], this)), true);
+        }, s.prototype._tickAndRepeat = function() {
+          this._tickScheduled = false, this.isPaused || this.isFinished || (this._tick(), this.isFinished || (n.delay(this._tickAndRepeat, [], this), this._tickScheduled = true));
+        }, s.prototype._tick = function() {
+          if (this.isPaused || this.isFinished) return false;
+          var e2 = null, t2 = Math.min(this.max, this.index + 16384);
+          if (this.index >= this.max) return this.end();
+          switch (this.type) {
+            case "string":
+              e2 = this.data.substring(this.index, t2);
+              break;
+            case "uint8array":
+              e2 = this.data.subarray(this.index, t2);
+              break;
+            case "array":
+            case "nodebuffer":
+              e2 = this.data.slice(this.index, t2);
+          }
+          return this.index = t2, this.push({ data: e2, meta: { percent: this.max ? this.index / this.max * 100 : 0 } });
+        }, t.exports = s;
+      }, { "../utils": 32, "./GenericWorker": 28 }], 28: [function(e, t, r) {
+        "use strict";
+        function n(e2) {
+          this.name = e2 || "default", this.streamInfo = {}, this.generatedError = null, this.extraStreamInfo = {}, this.isPaused = true, this.isFinished = false, this.isLocked = false, this._listeners = { data: [], end: [], error: [] }, this.previous = null;
+        }
+        n.prototype = { push: function(e2) {
+          this.emit("data", e2);
+        }, end: function() {
+          if (this.isFinished) return false;
+          this.flush();
+          try {
+            this.emit("end"), this.cleanUp(), this.isFinished = true;
+          } catch (e2) {
+            this.emit("error", e2);
+          }
+          return true;
+        }, error: function(e2) {
+          return !this.isFinished && (this.isPaused ? this.generatedError = e2 : (this.isFinished = true, this.emit("error", e2), this.previous && this.previous.error(e2), this.cleanUp()), true);
+        }, on: function(e2, t2) {
+          return this._listeners[e2].push(t2), this;
+        }, cleanUp: function() {
+          this.streamInfo = this.generatedError = this.extraStreamInfo = null, this._listeners = [];
+        }, emit: function(e2, t2) {
+          if (this._listeners[e2]) for (var r2 = 0; r2 < this._listeners[e2].length; r2++) this._listeners[e2][r2].call(this, t2);
+        }, pipe: function(e2) {
+          return e2.registerPrevious(this);
+        }, registerPrevious: function(e2) {
+          if (this.isLocked) throw new Error("The stream '" + this + "' has already been used.");
+          this.streamInfo = e2.streamInfo, this.mergeStreamInfo(), this.previous = e2;
+          var t2 = this;
+          return e2.on("data", function(e3) {
+            t2.processChunk(e3);
+          }), e2.on("end", function() {
+            t2.end();
+          }), e2.on("error", function(e3) {
+            t2.error(e3);
+          }), this;
+        }, pause: function() {
+          return !this.isPaused && !this.isFinished && (this.isPaused = true, this.previous && this.previous.pause(), true);
+        }, resume: function() {
+          if (!this.isPaused || this.isFinished) return false;
+          var e2 = this.isPaused = false;
+          return this.generatedError && (this.error(this.generatedError), e2 = true), this.previous && this.previous.resume(), !e2;
+        }, flush: function() {
+        }, processChunk: function(e2) {
+          this.push(e2);
+        }, withStreamInfo: function(e2, t2) {
+          return this.extraStreamInfo[e2] = t2, this.mergeStreamInfo(), this;
+        }, mergeStreamInfo: function() {
+          for (var e2 in this.extraStreamInfo) Object.prototype.hasOwnProperty.call(this.extraStreamInfo, e2) && (this.streamInfo[e2] = this.extraStreamInfo[e2]);
+        }, lock: function() {
+          if (this.isLocked) throw new Error("The stream '" + this + "' has already been used.");
+          this.isLocked = true, this.previous && this.previous.lock();
+        }, toString: function() {
+          var e2 = "Worker " + this.name;
+          return this.previous ? this.previous + " -> " + e2 : e2;
+        } }, t.exports = n;
+      }, {}], 29: [function(e, t, r) {
+        "use strict";
+        var h = e("../utils"), i = e("./ConvertWorker"), s = e("./GenericWorker"), u = e("../base64"), n = e("../support"), a = e("../external"), o = null;
+        if (n.nodestream) try {
+          o = e("../nodejs/NodejsStreamOutputAdapter");
+        } catch (e2) {
+        }
+        function l(e2, o2) {
+          return new a.Promise(function(t2, r2) {
+            var n2 = [], i2 = e2._internalType, s2 = e2._outputType, a2 = e2._mimeType;
+            e2.on("data", function(e3, t3) {
+              n2.push(e3), o2 && o2(t3);
+            }).on("error", function(e3) {
+              n2 = [], r2(e3);
+            }).on("end", function() {
+              try {
+                var e3 = (function(e4, t3, r3) {
+                  switch (e4) {
+                    case "blob":
+                      return h.newBlob(h.transformTo("arraybuffer", t3), r3);
+                    case "base64":
+                      return u.encode(t3);
+                    default:
+                      return h.transformTo(e4, t3);
+                  }
+                })(s2, (function(e4, t3) {
+                  var r3, n3 = 0, i3 = null, s3 = 0;
+                  for (r3 = 0; r3 < t3.length; r3++) s3 += t3[r3].length;
+                  switch (e4) {
+                    case "string":
+                      return t3.join("");
+                    case "array":
+                      return Array.prototype.concat.apply([], t3);
+                    case "uint8array":
+                      for (i3 = new Uint8Array(s3), r3 = 0; r3 < t3.length; r3++) i3.set(t3[r3], n3), n3 += t3[r3].length;
+                      return i3;
+                    case "nodebuffer":
+                      return Buffer.concat(t3);
+                    default:
+                      throw new Error("concat : unsupported type '" + e4 + "'");
+                  }
+                })(i2, n2), a2);
+                t2(e3);
+              } catch (e4) {
+                r2(e4);
+              }
+              n2 = [];
+            }).resume();
+          });
+        }
+        function f(e2, t2, r2) {
+          var n2 = t2;
+          switch (t2) {
+            case "blob":
+            case "arraybuffer":
+              n2 = "uint8array";
+              break;
+            case "base64":
+              n2 = "string";
+          }
+          try {
+            this._internalType = n2, this._outputType = t2, this._mimeType = r2, h.checkSupport(n2), this._worker = e2.pipe(new i(n2)), e2.lock();
+          } catch (e3) {
+            this._worker = new s("error"), this._worker.error(e3);
+          }
+        }
+        f.prototype = { accumulate: function(e2) {
+          return l(this, e2);
+        }, on: function(e2, t2) {
+          var r2 = this;
+          return "data" === e2 ? this._worker.on(e2, function(e3) {
+            t2.call(r2, e3.data, e3.meta);
+          }) : this._worker.on(e2, function() {
+            h.delay(t2, arguments, r2);
+          }), this;
+        }, resume: function() {
+          return h.delay(this._worker.resume, [], this._worker), this;
+        }, pause: function() {
+          return this._worker.pause(), this;
+        }, toNodejsStream: function(e2) {
+          if (h.checkSupport("nodestream"), "nodebuffer" !== this._outputType) throw new Error(this._outputType + " is not supported by this method");
+          return new o(this, { objectMode: "nodebuffer" !== this._outputType }, e2);
+        } }, t.exports = f;
+      }, { "../base64": 1, "../external": 6, "../nodejs/NodejsStreamOutputAdapter": 13, "../support": 30, "../utils": 32, "./ConvertWorker": 24, "./GenericWorker": 28 }], 30: [function(e, t, r) {
+        "use strict";
+        if (r.base64 = true, r.array = true, r.string = true, r.arraybuffer = "undefined" != typeof ArrayBuffer && "undefined" != typeof Uint8Array, r.nodebuffer = "undefined" != typeof Buffer, r.uint8array = "undefined" != typeof Uint8Array, "undefined" == typeof ArrayBuffer) r.blob = false;
+        else {
+          var n = new ArrayBuffer(0);
+          try {
+            r.blob = 0 === new Blob([n], { type: "application/zip" }).size;
+          } catch (e2) {
+            try {
+              var i = new (self.BlobBuilder || self.WebKitBlobBuilder || self.MozBlobBuilder || self.MSBlobBuilder)();
+              i.append(n), r.blob = 0 === i.getBlob("application/zip").size;
+            } catch (e3) {
+              r.blob = false;
+            }
+          }
+        }
+        try {
+          r.nodestream = !!e("readable-stream").Readable;
+        } catch (e2) {
+          r.nodestream = false;
+        }
+      }, { "readable-stream": 16 }], 31: [function(e, t, s) {
+        "use strict";
+        for (var o = e("./utils"), h = e("./support"), r = e("./nodejsUtils"), n = e("./stream/GenericWorker"), u = new Array(256), i = 0; i < 256; i++) u[i] = 252 <= i ? 6 : 248 <= i ? 5 : 240 <= i ? 4 : 224 <= i ? 3 : 192 <= i ? 2 : 1;
+        u[254] = u[254] = 1;
+        function a() {
+          n.call(this, "utf-8 decode"), this.leftOver = null;
+        }
+        function l() {
+          n.call(this, "utf-8 encode");
+        }
+        s.utf8encode = function(e2) {
+          return h.nodebuffer ? r.newBufferFrom(e2, "utf-8") : (function(e3) {
+            var t2, r2, n2, i2, s2, a2 = e3.length, o2 = 0;
+            for (i2 = 0; i2 < a2; i2++) 55296 == (64512 & (r2 = e3.charCodeAt(i2))) && i2 + 1 < a2 && 56320 == (64512 & (n2 = e3.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), o2 += r2 < 128 ? 1 : r2 < 2048 ? 2 : r2 < 65536 ? 3 : 4;
+            for (t2 = h.uint8array ? new Uint8Array(o2) : new Array(o2), i2 = s2 = 0; s2 < o2; i2++) 55296 == (64512 & (r2 = e3.charCodeAt(i2))) && i2 + 1 < a2 && 56320 == (64512 & (n2 = e3.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t2[s2++] = r2 : (r2 < 2048 ? t2[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t2[s2++] = 224 | r2 >>> 12 : (t2[s2++] = 240 | r2 >>> 18, t2[s2++] = 128 | r2 >>> 12 & 63), t2[s2++] = 128 | r2 >>> 6 & 63), t2[s2++] = 128 | 63 & r2);
+            return t2;
+          })(e2);
+        }, s.utf8decode = function(e2) {
+          return h.nodebuffer ? o.transformTo("nodebuffer", e2).toString("utf-8") : (function(e3) {
+            var t2, r2, n2, i2, s2 = e3.length, a2 = new Array(2 * s2);
+            for (t2 = r2 = 0; t2 < s2; ) if ((n2 = e3[t2++]) < 128) a2[r2++] = n2;
+            else if (4 < (i2 = u[n2])) a2[r2++] = 65533, t2 += i2 - 1;
+            else {
+              for (n2 &= 2 === i2 ? 31 : 3 === i2 ? 15 : 7; 1 < i2 && t2 < s2; ) n2 = n2 << 6 | 63 & e3[t2++], i2--;
+              1 < i2 ? a2[r2++] = 65533 : n2 < 65536 ? a2[r2++] = n2 : (n2 -= 65536, a2[r2++] = 55296 | n2 >> 10 & 1023, a2[r2++] = 56320 | 1023 & n2);
+            }
+            return a2.length !== r2 && (a2.subarray ? a2 = a2.subarray(0, r2) : a2.length = r2), o.applyFromCharCode(a2);
+          })(e2 = o.transformTo(h.uint8array ? "uint8array" : "array", e2));
+        }, o.inherits(a, n), a.prototype.processChunk = function(e2) {
+          var t2 = o.transformTo(h.uint8array ? "uint8array" : "array", e2.data);
+          if (this.leftOver && this.leftOver.length) {
+            if (h.uint8array) {
+              var r2 = t2;
+              (t2 = new Uint8Array(r2.length + this.leftOver.length)).set(this.leftOver, 0), t2.set(r2, this.leftOver.length);
+            } else t2 = this.leftOver.concat(t2);
+            this.leftOver = null;
+          }
+          var n2 = (function(e3, t3) {
+            var r3;
+            for ((t3 = t3 || e3.length) > e3.length && (t3 = e3.length), r3 = t3 - 1; 0 <= r3 && 128 == (192 & e3[r3]); ) r3--;
+            return r3 < 0 ? t3 : 0 === r3 ? t3 : r3 + u[e3[r3]] > t3 ? r3 : t3;
+          })(t2), i2 = t2;
+          n2 !== t2.length && (h.uint8array ? (i2 = t2.subarray(0, n2), this.leftOver = t2.subarray(n2, t2.length)) : (i2 = t2.slice(0, n2), this.leftOver = t2.slice(n2, t2.length))), this.push({ data: s.utf8decode(i2), meta: e2.meta });
+        }, a.prototype.flush = function() {
+          this.leftOver && this.leftOver.length && (this.push({ data: s.utf8decode(this.leftOver), meta: {} }), this.leftOver = null);
+        }, s.Utf8DecodeWorker = a, o.inherits(l, n), l.prototype.processChunk = function(e2) {
+          this.push({ data: s.utf8encode(e2.data), meta: e2.meta });
+        }, s.Utf8EncodeWorker = l;
+      }, { "./nodejsUtils": 14, "./stream/GenericWorker": 28, "./support": 30, "./utils": 32 }], 32: [function(e, t, a) {
+        "use strict";
+        var o = e("./support"), h = e("./base64"), r = e("./nodejsUtils"), u = e("./external");
+        function n(e2) {
+          return e2;
+        }
+        function l(e2, t2) {
+          for (var r2 = 0; r2 < e2.length; ++r2) t2[r2] = 255 & e2.charCodeAt(r2);
+          return t2;
+        }
+        e("setimmediate"), a.newBlob = function(t2, r2) {
+          a.checkSupport("blob");
+          try {
+            return new Blob([t2], { type: r2 });
+          } catch (e2) {
+            try {
+              var n2 = new (self.BlobBuilder || self.WebKitBlobBuilder || self.MozBlobBuilder || self.MSBlobBuilder)();
+              return n2.append(t2), n2.getBlob(r2);
+            } catch (e3) {
+              throw new Error("Bug : can't construct the Blob.");
+            }
+          }
+        };
+        var i = { stringifyByChunk: function(e2, t2, r2) {
+          var n2 = [], i2 = 0, s2 = e2.length;
+          if (s2 <= r2) return String.fromCharCode.apply(null, e2);
+          for (; i2 < s2; ) "array" === t2 || "nodebuffer" === t2 ? n2.push(String.fromCharCode.apply(null, e2.slice(i2, Math.min(i2 + r2, s2)))) : n2.push(String.fromCharCode.apply(null, e2.subarray(i2, Math.min(i2 + r2, s2)))), i2 += r2;
+          return n2.join("");
+        }, stringifyByChar: function(e2) {
+          for (var t2 = "", r2 = 0; r2 < e2.length; r2++) t2 += String.fromCharCode(e2[r2]);
+          return t2;
+        }, applyCanBeUsed: { uint8array: (function() {
+          try {
+            return o.uint8array && 1 === String.fromCharCode.apply(null, new Uint8Array(1)).length;
+          } catch (e2) {
+            return false;
+          }
+        })(), nodebuffer: (function() {
+          try {
+            return o.nodebuffer && 1 === String.fromCharCode.apply(null, r.allocBuffer(1)).length;
+          } catch (e2) {
+            return false;
+          }
+        })() } };
+        function s(e2) {
+          var t2 = 65536, r2 = a.getTypeOf(e2), n2 = true;
+          if ("uint8array" === r2 ? n2 = i.applyCanBeUsed.uint8array : "nodebuffer" === r2 && (n2 = i.applyCanBeUsed.nodebuffer), n2) for (; 1 < t2; ) try {
+            return i.stringifyByChunk(e2, r2, t2);
+          } catch (e3) {
+            t2 = Math.floor(t2 / 2);
+          }
+          return i.stringifyByChar(e2);
+        }
+        function f(e2, t2) {
+          for (var r2 = 0; r2 < e2.length; r2++) t2[r2] = e2[r2];
+          return t2;
+        }
+        a.applyFromCharCode = s;
+        var c = {};
+        c.string = { string: n, array: function(e2) {
+          return l(e2, new Array(e2.length));
+        }, arraybuffer: function(e2) {
+          return c.string.uint8array(e2).buffer;
+        }, uint8array: function(e2) {
+          return l(e2, new Uint8Array(e2.length));
+        }, nodebuffer: function(e2) {
+          return l(e2, r.allocBuffer(e2.length));
+        } }, c.array = { string: s, array: n, arraybuffer: function(e2) {
+          return new Uint8Array(e2).buffer;
+        }, uint8array: function(e2) {
+          return new Uint8Array(e2);
+        }, nodebuffer: function(e2) {
+          return r.newBufferFrom(e2);
+        } }, c.arraybuffer = { string: function(e2) {
+          return s(new Uint8Array(e2));
+        }, array: function(e2) {
+          return f(new Uint8Array(e2), new Array(e2.byteLength));
+        }, arraybuffer: n, uint8array: function(e2) {
+          return new Uint8Array(e2);
+        }, nodebuffer: function(e2) {
+          return r.newBufferFrom(new Uint8Array(e2));
+        } }, c.uint8array = { string: s, array: function(e2) {
+          return f(e2, new Array(e2.length));
+        }, arraybuffer: function(e2) {
+          return e2.buffer;
+        }, uint8array: n, nodebuffer: function(e2) {
+          return r.newBufferFrom(e2);
+        } }, c.nodebuffer = { string: s, array: function(e2) {
+          return f(e2, new Array(e2.length));
+        }, arraybuffer: function(e2) {
+          return c.nodebuffer.uint8array(e2).buffer;
+        }, uint8array: function(e2) {
+          return f(e2, new Uint8Array(e2.length));
+        }, nodebuffer: n }, a.transformTo = function(e2, t2) {
+          if (t2 = t2 || "", !e2) return t2;
+          a.checkSupport(e2);
+          var r2 = a.getTypeOf(t2);
+          return c[r2][e2](t2);
+        }, a.resolve = function(e2) {
+          for (var t2 = e2.split("/"), r2 = [], n2 = 0; n2 < t2.length; n2++) {
+            var i2 = t2[n2];
+            "." === i2 || "" === i2 && 0 !== n2 && n2 !== t2.length - 1 || (".." === i2 ? r2.pop() : r2.push(i2));
+          }
+          return r2.join("/");
+        }, a.getTypeOf = function(e2) {
+          return "string" == typeof e2 ? "string" : "[object Array]" === Object.prototype.toString.call(e2) ? "array" : o.nodebuffer && r.isBuffer(e2) ? "nodebuffer" : o.uint8array && e2 instanceof Uint8Array ? "uint8array" : o.arraybuffer && e2 instanceof ArrayBuffer ? "arraybuffer" : void 0;
+        }, a.checkSupport = function(e2) {
+          if (!o[e2.toLowerCase()]) throw new Error(e2 + " is not supported by this platform");
+        }, a.MAX_VALUE_16BITS = 65535, a.MAX_VALUE_32BITS = -1, a.pretty = function(e2) {
+          var t2, r2, n2 = "";
+          for (r2 = 0; r2 < (e2 || "").length; r2++) n2 += "\\x" + ((t2 = e2.charCodeAt(r2)) < 16 ? "0" : "") + t2.toString(16).toUpperCase();
+          return n2;
+        }, a.delay = function(e2, t2, r2) {
+          setImmediate(function() {
+            e2.apply(r2 || null, t2 || []);
+          });
+        }, a.inherits = function(e2, t2) {
+          function r2() {
+          }
+          r2.prototype = t2.prototype, e2.prototype = new r2();
+        }, a.extend = function() {
+          var e2, t2, r2 = {};
+          for (e2 = 0; e2 < arguments.length; e2++) for (t2 in arguments[e2]) Object.prototype.hasOwnProperty.call(arguments[e2], t2) && void 0 === r2[t2] && (r2[t2] = arguments[e2][t2]);
+          return r2;
+        }, a.prepareContent = function(r2, e2, n2, i2, s2) {
+          return u.Promise.resolve(e2).then(function(n3) {
+            return o.blob && (n3 instanceof Blob || -1 !== ["[object File]", "[object Blob]"].indexOf(Object.prototype.toString.call(n3))) && "undefined" != typeof FileReader ? new u.Promise(function(t2, r3) {
+              var e3 = new FileReader();
+              e3.onload = function(e4) {
+                t2(e4.target.result);
+              }, e3.onerror = function(e4) {
+                r3(e4.target.error);
+              }, e3.readAsArrayBuffer(n3);
+            }) : n3;
+          }).then(function(e3) {
+            var t2 = a.getTypeOf(e3);
+            return t2 ? ("arraybuffer" === t2 ? e3 = a.transformTo("uint8array", e3) : "string" === t2 && (s2 ? e3 = h.decode(e3) : n2 && true !== i2 && (e3 = (function(e4) {
+              return l(e4, o.uint8array ? new Uint8Array(e4.length) : new Array(e4.length));
+            })(e3))), e3) : u.Promise.reject(new Error("Can't read the data of '" + r2 + "'. Is it in a supported JavaScript type (String, Blob, ArrayBuffer, etc) ?"));
+          });
+        };
+      }, { "./base64": 1, "./external": 6, "./nodejsUtils": 14, "./support": 30, setimmediate: 54 }], 33: [function(e, t, r) {
+        "use strict";
+        var n = e("./reader/readerFor"), i = e("./utils"), s = e("./signature"), a = e("./zipEntry"), o = e("./support");
+        function h(e2) {
+          this.files = [], this.loadOptions = e2;
+        }
+        h.prototype = { checkSignature: function(e2) {
+          if (!this.reader.readAndCheckSignature(e2)) {
+            this.reader.index -= 4;
+            var t2 = this.reader.readString(4);
+            throw new Error("Corrupted zip or bug: unexpected signature (" + i.pretty(t2) + ", expected " + i.pretty(e2) + ")");
+          }
+        }, isSignature: function(e2, t2) {
+          var r2 = this.reader.index;
+          this.reader.setIndex(e2);
+          var n2 = this.reader.readString(4) === t2;
+          return this.reader.setIndex(r2), n2;
+        }, readBlockEndOfCentral: function() {
+          this.diskNumber = this.reader.readInt(2), this.diskWithCentralDirStart = this.reader.readInt(2), this.centralDirRecordsOnThisDisk = this.reader.readInt(2), this.centralDirRecords = this.reader.readInt(2), this.centralDirSize = this.reader.readInt(4), this.centralDirOffset = this.reader.readInt(4), this.zipCommentLength = this.reader.readInt(2);
+          var e2 = this.reader.readData(this.zipCommentLength), t2 = o.uint8array ? "uint8array" : "array", r2 = i.transformTo(t2, e2);
+          this.zipComment = this.loadOptions.decodeFileName(r2);
+        }, readBlockZip64EndOfCentral: function() {
+          this.zip64EndOfCentralSize = this.reader.readInt(8), this.reader.skip(4), this.diskNumber = this.reader.readInt(4), this.diskWithCentralDirStart = this.reader.readInt(4), this.centralDirRecordsOnThisDisk = this.reader.readInt(8), this.centralDirRecords = this.reader.readInt(8), this.centralDirSize = this.reader.readInt(8), this.centralDirOffset = this.reader.readInt(8), this.zip64ExtensibleData = {};
+          for (var e2, t2, r2, n2 = this.zip64EndOfCentralSize - 44; 0 < n2; ) e2 = this.reader.readInt(2), t2 = this.reader.readInt(4), r2 = this.reader.readData(t2), this.zip64ExtensibleData[e2] = { id: e2, length: t2, value: r2 };
+        }, readBlockZip64EndOfCentralLocator: function() {
+          if (this.diskWithZip64CentralDirStart = this.reader.readInt(4), this.relativeOffsetEndOfZip64CentralDir = this.reader.readInt(8), this.disksCount = this.reader.readInt(4), 1 < this.disksCount) throw new Error("Multi-volumes zip are not supported");
+        }, readLocalFiles: function() {
+          var e2, t2;
+          for (e2 = 0; e2 < this.files.length; e2++) t2 = this.files[e2], this.reader.setIndex(t2.localHeaderOffset), this.checkSignature(s.LOCAL_FILE_HEADER), t2.readLocalPart(this.reader), t2.handleUTF8(), t2.processAttributes();
+        }, readCentralDir: function() {
+          var e2;
+          for (this.reader.setIndex(this.centralDirOffset); this.reader.readAndCheckSignature(s.CENTRAL_FILE_HEADER); ) (e2 = new a({ zip64: this.zip64 }, this.loadOptions)).readCentralPart(this.reader), this.files.push(e2);
+          if (this.centralDirRecords !== this.files.length && 0 !== this.centralDirRecords && 0 === this.files.length) throw new Error("Corrupted zip or bug: expected " + this.centralDirRecords + " records in central dir, got " + this.files.length);
+        }, readEndOfCentral: function() {
+          var e2 = this.reader.lastIndexOfSignature(s.CENTRAL_DIRECTORY_END);
+          if (e2 < 0) throw !this.isSignature(0, s.LOCAL_FILE_HEADER) ? new Error("Can't find end of central directory : is this a zip file ? If it is, see https://stuk.github.io/jszip/documentation/howto/read_zip.html") : new Error("Corrupted zip: can't find end of central directory");
+          this.reader.setIndex(e2);
+          var t2 = e2;
+          if (this.checkSignature(s.CENTRAL_DIRECTORY_END), this.readBlockEndOfCentral(), this.diskNumber === i.MAX_VALUE_16BITS || this.diskWithCentralDirStart === i.MAX_VALUE_16BITS || this.centralDirRecordsOnThisDisk === i.MAX_VALUE_16BITS || this.centralDirRecords === i.MAX_VALUE_16BITS || this.centralDirSize === i.MAX_VALUE_32BITS || this.centralDirOffset === i.MAX_VALUE_32BITS) {
+            if (this.zip64 = true, (e2 = this.reader.lastIndexOfSignature(s.ZIP64_CENTRAL_DIRECTORY_LOCATOR)) < 0) throw new Error("Corrupted zip: can't find the ZIP64 end of central directory locator");
+            if (this.reader.setIndex(e2), this.checkSignature(s.ZIP64_CENTRAL_DIRECTORY_LOCATOR), this.readBlockZip64EndOfCentralLocator(), !this.isSignature(this.relativeOffsetEndOfZip64CentralDir, s.ZIP64_CENTRAL_DIRECTORY_END) && (this.relativeOffsetEndOfZip64CentralDir = this.reader.lastIndexOfSignature(s.ZIP64_CENTRAL_DIRECTORY_END), this.relativeOffsetEndOfZip64CentralDir < 0)) throw new Error("Corrupted zip: can't find the ZIP64 end of central directory");
+            this.reader.setIndex(this.relativeOffsetEndOfZip64CentralDir), this.checkSignature(s.ZIP64_CENTRAL_DIRECTORY_END), this.readBlockZip64EndOfCentral();
+          }
+          var r2 = this.centralDirOffset + this.centralDirSize;
+          this.zip64 && (r2 += 20, r2 += 12 + this.zip64EndOfCentralSize);
+          var n2 = t2 - r2;
+          if (0 < n2) this.isSignature(t2, s.CENTRAL_FILE_HEADER) || (this.reader.zero = n2);
+          else if (n2 < 0) throw new Error("Corrupted zip: missing " + Math.abs(n2) + " bytes.");
+        }, prepareReader: function(e2) {
+          this.reader = n(e2);
+        }, load: function(e2) {
+          this.prepareReader(e2), this.readEndOfCentral(), this.readCentralDir(), this.readLocalFiles();
+        } }, t.exports = h;
+      }, { "./reader/readerFor": 22, "./signature": 23, "./support": 30, "./utils": 32, "./zipEntry": 34 }], 34: [function(e, t, r) {
+        "use strict";
+        var n = e("./reader/readerFor"), s = e("./utils"), i = e("./compressedObject"), a = e("./crc32"), o = e("./utf8"), h = e("./compressions"), u = e("./support");
+        function l(e2, t2) {
+          this.options = e2, this.loadOptions = t2;
+        }
+        l.prototype = { isEncrypted: function() {
+          return 1 == (1 & this.bitFlag);
+        }, useUTF8: function() {
+          return 2048 == (2048 & this.bitFlag);
+        }, readLocalPart: function(e2) {
+          var t2, r2;
+          if (e2.skip(22), this.fileNameLength = e2.readInt(2), r2 = e2.readInt(2), this.fileName = e2.readData(this.fileNameLength), e2.skip(r2), -1 === this.compressedSize || -1 === this.uncompressedSize) throw new Error("Bug or corrupted zip : didn't get enough information from the central directory (compressedSize === -1 || uncompressedSize === -1)");
+          if (null === (t2 = (function(e3) {
+            for (var t3 in h) if (Object.prototype.hasOwnProperty.call(h, t3) && h[t3].magic === e3) return h[t3];
+            return null;
+          })(this.compressionMethod))) throw new Error("Corrupted zip : compression " + s.pretty(this.compressionMethod) + " unknown (inner file : " + s.transformTo("string", this.fileName) + ")");
+          this.decompressed = new i(this.compressedSize, this.uncompressedSize, this.crc32, t2, e2.readData(this.compressedSize));
+        }, readCentralPart: function(e2) {
+          this.versionMadeBy = e2.readInt(2), e2.skip(2), this.bitFlag = e2.readInt(2), this.compressionMethod = e2.readString(2), this.date = e2.readDate(), this.crc32 = e2.readInt(4), this.compressedSize = e2.readInt(4), this.uncompressedSize = e2.readInt(4);
+          var t2 = e2.readInt(2);
+          if (this.extraFieldsLength = e2.readInt(2), this.fileCommentLength = e2.readInt(2), this.diskNumberStart = e2.readInt(2), this.internalFileAttributes = e2.readInt(2), this.externalFileAttributes = e2.readInt(4), this.localHeaderOffset = e2.readInt(4), this.isEncrypted()) throw new Error("Encrypted zip are not supported");
+          e2.skip(t2), this.readExtraFields(e2), this.parseZIP64ExtraField(e2), this.fileComment = e2.readData(this.fileCommentLength);
+        }, processAttributes: function() {
+          this.unixPermissions = null, this.dosPermissions = null;
+          var e2 = this.versionMadeBy >> 8;
+          this.dir = !!(16 & this.externalFileAttributes), 0 == e2 && (this.dosPermissions = 63 & this.externalFileAttributes), 3 == e2 && (this.unixPermissions = this.externalFileAttributes >> 16 & 65535), this.dir || "/" !== this.fileNameStr.slice(-1) || (this.dir = true);
+        }, parseZIP64ExtraField: function() {
+          if (this.extraFields[1]) {
+            var e2 = n(this.extraFields[1].value);
+            this.uncompressedSize === s.MAX_VALUE_32BITS && (this.uncompressedSize = e2.readInt(8)), this.compressedSize === s.MAX_VALUE_32BITS && (this.compressedSize = e2.readInt(8)), this.localHeaderOffset === s.MAX_VALUE_32BITS && (this.localHeaderOffset = e2.readInt(8)), this.diskNumberStart === s.MAX_VALUE_32BITS && (this.diskNumberStart = e2.readInt(4));
+          }
+        }, readExtraFields: function(e2) {
+          var t2, r2, n2, i2 = e2.index + this.extraFieldsLength;
+          for (this.extraFields || (this.extraFields = {}); e2.index + 4 < i2; ) t2 = e2.readInt(2), r2 = e2.readInt(2), n2 = e2.readData(r2), this.extraFields[t2] = { id: t2, length: r2, value: n2 };
+          e2.setIndex(i2);
+        }, handleUTF8: function() {
+          var e2 = u.uint8array ? "uint8array" : "array";
+          if (this.useUTF8()) this.fileNameStr = o.utf8decode(this.fileName), this.fileCommentStr = o.utf8decode(this.fileComment);
+          else {
+            var t2 = this.findExtraFieldUnicodePath();
+            if (null !== t2) this.fileNameStr = t2;
+            else {
+              var r2 = s.transformTo(e2, this.fileName);
+              this.fileNameStr = this.loadOptions.decodeFileName(r2);
+            }
+            var n2 = this.findExtraFieldUnicodeComment();
+            if (null !== n2) this.fileCommentStr = n2;
+            else {
+              var i2 = s.transformTo(e2, this.fileComment);
+              this.fileCommentStr = this.loadOptions.decodeFileName(i2);
+            }
+          }
+        }, findExtraFieldUnicodePath: function() {
+          var e2 = this.extraFields[28789];
+          if (e2) {
+            var t2 = n(e2.value);
+            return 1 !== t2.readInt(1) ? null : a(this.fileName) !== t2.readInt(4) ? null : o.utf8decode(t2.readData(e2.length - 5));
+          }
+          return null;
+        }, findExtraFieldUnicodeComment: function() {
+          var e2 = this.extraFields[25461];
+          if (e2) {
+            var t2 = n(e2.value);
+            return 1 !== t2.readInt(1) ? null : a(this.fileComment) !== t2.readInt(4) ? null : o.utf8decode(t2.readData(e2.length - 5));
+          }
+          return null;
+        } }, t.exports = l;
+      }, { "./compressedObject": 2, "./compressions": 3, "./crc32": 4, "./reader/readerFor": 22, "./support": 30, "./utf8": 31, "./utils": 32 }], 35: [function(e, t, r) {
+        "use strict";
+        function n(e2, t2, r2) {
+          this.name = e2, this.dir = r2.dir, this.date = r2.date, this.comment = r2.comment, this.unixPermissions = r2.unixPermissions, this.dosPermissions = r2.dosPermissions, this._data = t2, this._dataBinary = r2.binary, this.options = { compression: r2.compression, compressionOptions: r2.compressionOptions };
+        }
+        var s = e("./stream/StreamHelper"), i = e("./stream/DataWorker"), a = e("./utf8"), o = e("./compressedObject"), h = e("./stream/GenericWorker");
+        n.prototype = { internalStream: function(e2) {
+          var t2 = null, r2 = "string";
+          try {
+            if (!e2) throw new Error("No output type specified.");
+            var n2 = "string" === (r2 = e2.toLowerCase()) || "text" === r2;
+            "binarystring" !== r2 && "text" !== r2 || (r2 = "string"), t2 = this._decompressWorker();
+            var i2 = !this._dataBinary;
+            i2 && !n2 && (t2 = t2.pipe(new a.Utf8EncodeWorker())), !i2 && n2 && (t2 = t2.pipe(new a.Utf8DecodeWorker()));
+          } catch (e3) {
+            (t2 = new h("error")).error(e3);
+          }
+          return new s(t2, r2, "");
+        }, async: function(e2, t2) {
+          return this.internalStream(e2).accumulate(t2);
+        }, nodeStream: function(e2, t2) {
+          return this.internalStream(e2 || "nodebuffer").toNodejsStream(t2);
+        }, _compressWorker: function(e2, t2) {
+          if (this._data instanceof o && this._data.compression.magic === e2.magic) return this._data.getCompressedWorker();
+          var r2 = this._decompressWorker();
+          return this._dataBinary || (r2 = r2.pipe(new a.Utf8EncodeWorker())), o.createWorkerFrom(r2, e2, t2);
+        }, _decompressWorker: function() {
+          return this._data instanceof o ? this._data.getContentWorker() : this._data instanceof h ? this._data : new i(this._data);
+        } };
+        for (var u = ["asText", "asBinary", "asNodeBuffer", "asUint8Array", "asArrayBuffer"], l = function() {
+          throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
+        }, f = 0; f < u.length; f++) n.prototype[u[f]] = l;
+        t.exports = n;
+      }, { "./compressedObject": 2, "./stream/DataWorker": 27, "./stream/GenericWorker": 28, "./stream/StreamHelper": 29, "./utf8": 31 }], 36: [function(e, l, t) {
+        (function(t2) {
+          "use strict";
+          var r, n, e2 = t2.MutationObserver || t2.WebKitMutationObserver;
+          if (e2) {
+            var i = 0, s = new e2(u), a = t2.document.createTextNode("");
+            s.observe(a, { characterData: true }), r = function() {
+              a.data = i = ++i % 2;
+            };
+          } else if (t2.setImmediate || void 0 === t2.MessageChannel) r = "document" in t2 && "onreadystatechange" in t2.document.createElement("script") ? function() {
+            var e3 = t2.document.createElement("script");
+            e3.onreadystatechange = function() {
+              u(), e3.onreadystatechange = null, e3.parentNode.removeChild(e3), e3 = null;
+            }, t2.document.documentElement.appendChild(e3);
+          } : function() {
+            setTimeout(u, 0);
+          };
+          else {
+            var o = new t2.MessageChannel();
+            o.port1.onmessage = u, r = function() {
+              o.port2.postMessage(0);
+            };
+          }
+          var h = [];
+          function u() {
+            var e3, t3;
+            n = true;
+            for (var r2 = h.length; r2; ) {
+              for (t3 = h, h = [], e3 = -1; ++e3 < r2; ) t3[e3]();
+              r2 = h.length;
+            }
+            n = false;
+          }
+          l.exports = function(e3) {
+            1 !== h.push(e3) || n || r();
+          };
+        }).call(this, "undefined" != typeof global ? global : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
+      }, {}], 37: [function(e, t, r) {
+        "use strict";
+        var i = e("immediate");
+        function u() {
+        }
+        var l = {}, s = ["REJECTED"], a = ["FULFILLED"], n = ["PENDING"];
+        function o(e2) {
+          if ("function" != typeof e2) throw new TypeError("resolver must be a function");
+          this.state = n, this.queue = [], this.outcome = void 0, e2 !== u && d(this, e2);
+        }
+        function h(e2, t2, r2) {
+          this.promise = e2, "function" == typeof t2 && (this.onFulfilled = t2, this.callFulfilled = this.otherCallFulfilled), "function" == typeof r2 && (this.onRejected = r2, this.callRejected = this.otherCallRejected);
+        }
+        function f(t2, r2, n2) {
+          i(function() {
+            var e2;
+            try {
+              e2 = r2(n2);
+            } catch (e3) {
+              return l.reject(t2, e3);
+            }
+            e2 === t2 ? l.reject(t2, new TypeError("Cannot resolve promise with itself")) : l.resolve(t2, e2);
+          });
+        }
+        function c(e2) {
+          var t2 = e2 && e2.then;
+          if (e2 && ("object" == typeof e2 || "function" == typeof e2) && "function" == typeof t2) return function() {
+            t2.apply(e2, arguments);
+          };
+        }
+        function d(t2, e2) {
+          var r2 = false;
+          function n2(e3) {
+            r2 || (r2 = true, l.reject(t2, e3));
+          }
+          function i2(e3) {
+            r2 || (r2 = true, l.resolve(t2, e3));
+          }
+          var s2 = p(function() {
+            e2(i2, n2);
+          });
+          "error" === s2.status && n2(s2.value);
+        }
+        function p(e2, t2) {
+          var r2 = {};
+          try {
+            r2.value = e2(t2), r2.status = "success";
+          } catch (e3) {
+            r2.status = "error", r2.value = e3;
+          }
+          return r2;
+        }
+        (t.exports = o).prototype.finally = function(t2) {
+          if ("function" != typeof t2) return this;
+          var r2 = this.constructor;
+          return this.then(function(e2) {
+            return r2.resolve(t2()).then(function() {
+              return e2;
+            });
+          }, function(e2) {
+            return r2.resolve(t2()).then(function() {
+              throw e2;
+            });
+          });
+        }, o.prototype.catch = function(e2) {
+          return this.then(null, e2);
+        }, o.prototype.then = function(e2, t2) {
+          if ("function" != typeof e2 && this.state === a || "function" != typeof t2 && this.state === s) return this;
+          var r2 = new this.constructor(u);
+          this.state !== n ? f(r2, this.state === a ? e2 : t2, this.outcome) : this.queue.push(new h(r2, e2, t2));
+          return r2;
+        }, h.prototype.callFulfilled = function(e2) {
+          l.resolve(this.promise, e2);
+        }, h.prototype.otherCallFulfilled = function(e2) {
+          f(this.promise, this.onFulfilled, e2);
+        }, h.prototype.callRejected = function(e2) {
+          l.reject(this.promise, e2);
+        }, h.prototype.otherCallRejected = function(e2) {
+          f(this.promise, this.onRejected, e2);
+        }, l.resolve = function(e2, t2) {
+          var r2 = p(c, t2);
+          if ("error" === r2.status) return l.reject(e2, r2.value);
+          var n2 = r2.value;
+          if (n2) d(e2, n2);
+          else {
+            e2.state = a, e2.outcome = t2;
+            for (var i2 = -1, s2 = e2.queue.length; ++i2 < s2; ) e2.queue[i2].callFulfilled(t2);
+          }
+          return e2;
+        }, l.reject = function(e2, t2) {
+          e2.state = s, e2.outcome = t2;
+          for (var r2 = -1, n2 = e2.queue.length; ++r2 < n2; ) e2.queue[r2].callRejected(t2);
+          return e2;
+        }, o.resolve = function(e2) {
+          if (e2 instanceof this) return e2;
+          return l.resolve(new this(u), e2);
+        }, o.reject = function(e2) {
+          var t2 = new this(u);
+          return l.reject(t2, e2);
+        }, o.all = function(e2) {
+          var r2 = this;
+          if ("[object Array]" !== Object.prototype.toString.call(e2)) return this.reject(new TypeError("must be an array"));
+          var n2 = e2.length, i2 = false;
+          if (!n2) return this.resolve([]);
+          var s2 = new Array(n2), a2 = 0, t2 = -1, o2 = new this(u);
+          for (; ++t2 < n2; ) h2(e2[t2], t2);
+          return o2;
+          function h2(e3, t3) {
+            r2.resolve(e3).then(function(e4) {
+              s2[t3] = e4, ++a2 !== n2 || i2 || (i2 = true, l.resolve(o2, s2));
+            }, function(e4) {
+              i2 || (i2 = true, l.reject(o2, e4));
+            });
+          }
+        }, o.race = function(e2) {
+          var t2 = this;
+          if ("[object Array]" !== Object.prototype.toString.call(e2)) return this.reject(new TypeError("must be an array"));
+          var r2 = e2.length, n2 = false;
+          if (!r2) return this.resolve([]);
+          var i2 = -1, s2 = new this(u);
+          for (; ++i2 < r2; ) a2 = e2[i2], t2.resolve(a2).then(function(e3) {
+            n2 || (n2 = true, l.resolve(s2, e3));
+          }, function(e3) {
+            n2 || (n2 = true, l.reject(s2, e3));
+          });
+          var a2;
+          return s2;
+        };
+      }, { immediate: 36 }], 38: [function(e, t, r) {
+        "use strict";
+        var n = {};
+        (0, e("./lib/utils/common").assign)(n, e("./lib/deflate"), e("./lib/inflate"), e("./lib/zlib/constants")), t.exports = n;
+      }, { "./lib/deflate": 39, "./lib/inflate": 40, "./lib/utils/common": 41, "./lib/zlib/constants": 44 }], 39: [function(e, t, r) {
+        "use strict";
+        var a = e("./zlib/deflate"), o = e("./utils/common"), h = e("./utils/strings"), i = e("./zlib/messages"), s = e("./zlib/zstream"), u = Object.prototype.toString, l = 0, f = -1, c = 0, d = 8;
+        function p(e2) {
+          if (!(this instanceof p)) return new p(e2);
+          this.options = o.assign({ level: f, method: d, chunkSize: 16384, windowBits: 15, memLevel: 8, strategy: c, to: "" }, e2 || {});
+          var t2 = this.options;
+          t2.raw && 0 < t2.windowBits ? t2.windowBits = -t2.windowBits : t2.gzip && 0 < t2.windowBits && t2.windowBits < 16 && (t2.windowBits += 16), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new s(), this.strm.avail_out = 0;
+          var r2 = a.deflateInit2(this.strm, t2.level, t2.method, t2.windowBits, t2.memLevel, t2.strategy);
+          if (r2 !== l) throw new Error(i[r2]);
+          if (t2.header && a.deflateSetHeader(this.strm, t2.header), t2.dictionary) {
+            var n2;
+            if (n2 = "string" == typeof t2.dictionary ? h.string2buf(t2.dictionary) : "[object ArrayBuffer]" === u.call(t2.dictionary) ? new Uint8Array(t2.dictionary) : t2.dictionary, (r2 = a.deflateSetDictionary(this.strm, n2)) !== l) throw new Error(i[r2]);
+            this._dict_set = true;
+          }
+        }
+        function n(e2, t2) {
+          var r2 = new p(t2);
+          if (r2.push(e2, true), r2.err) throw r2.msg || i[r2.err];
+          return r2.result;
+        }
+        p.prototype.push = function(e2, t2) {
+          var r2, n2, i2 = this.strm, s2 = this.options.chunkSize;
+          if (this.ended) return false;
+          n2 = t2 === ~~t2 ? t2 : true === t2 ? 4 : 0, "string" == typeof e2 ? i2.input = h.string2buf(e2) : "[object ArrayBuffer]" === u.call(e2) ? i2.input = new Uint8Array(e2) : i2.input = e2, i2.next_in = 0, i2.avail_in = i2.input.length;
+          do {
+            if (0 === i2.avail_out && (i2.output = new o.Buf8(s2), i2.next_out = 0, i2.avail_out = s2), 1 !== (r2 = a.deflate(i2, n2)) && r2 !== l) return this.onEnd(r2), !(this.ended = true);
+            0 !== i2.avail_out && (0 !== i2.avail_in || 4 !== n2 && 2 !== n2) || ("string" === this.options.to ? this.onData(h.buf2binstring(o.shrinkBuf(i2.output, i2.next_out))) : this.onData(o.shrinkBuf(i2.output, i2.next_out)));
+          } while ((0 < i2.avail_in || 0 === i2.avail_out) && 1 !== r2);
+          return 4 === n2 ? (r2 = a.deflateEnd(this.strm), this.onEnd(r2), this.ended = true, r2 === l) : 2 !== n2 || (this.onEnd(l), !(i2.avail_out = 0));
+        }, p.prototype.onData = function(e2) {
+          this.chunks.push(e2);
+        }, p.prototype.onEnd = function(e2) {
+          e2 === l && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = o.flattenChunks(this.chunks)), this.chunks = [], this.err = e2, this.msg = this.strm.msg;
+        }, r.Deflate = p, r.deflate = n, r.deflateRaw = function(e2, t2) {
+          return (t2 = t2 || {}).raw = true, n(e2, t2);
+        }, r.gzip = function(e2, t2) {
+          return (t2 = t2 || {}).gzip = true, n(e2, t2);
+        };
+      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/deflate": 46, "./zlib/messages": 51, "./zlib/zstream": 53 }], 40: [function(e, t, r) {
+        "use strict";
+        var c = e("./zlib/inflate"), d = e("./utils/common"), p = e("./utils/strings"), m = e("./zlib/constants"), n = e("./zlib/messages"), i = e("./zlib/zstream"), s = e("./zlib/gzheader"), _ = Object.prototype.toString;
+        function a(e2) {
+          if (!(this instanceof a)) return new a(e2);
+          this.options = d.assign({ chunkSize: 16384, windowBits: 0, to: "" }, e2 || {});
+          var t2 = this.options;
+          t2.raw && 0 <= t2.windowBits && t2.windowBits < 16 && (t2.windowBits = -t2.windowBits, 0 === t2.windowBits && (t2.windowBits = -15)), !(0 <= t2.windowBits && t2.windowBits < 16) || e2 && e2.windowBits || (t2.windowBits += 32), 15 < t2.windowBits && t2.windowBits < 48 && 0 == (15 & t2.windowBits) && (t2.windowBits |= 15), this.err = 0, this.msg = "", this.ended = false, this.chunks = [], this.strm = new i(), this.strm.avail_out = 0;
+          var r2 = c.inflateInit2(this.strm, t2.windowBits);
+          if (r2 !== m.Z_OK) throw new Error(n[r2]);
+          this.header = new s(), c.inflateGetHeader(this.strm, this.header);
+        }
+        function o(e2, t2) {
+          var r2 = new a(t2);
+          if (r2.push(e2, true), r2.err) throw r2.msg || n[r2.err];
+          return r2.result;
+        }
+        a.prototype.push = function(e2, t2) {
+          var r2, n2, i2, s2, a2, o2, h = this.strm, u = this.options.chunkSize, l = this.options.dictionary, f = false;
+          if (this.ended) return false;
+          n2 = t2 === ~~t2 ? t2 : true === t2 ? m.Z_FINISH : m.Z_NO_FLUSH, "string" == typeof e2 ? h.input = p.binstring2buf(e2) : "[object ArrayBuffer]" === _.call(e2) ? h.input = new Uint8Array(e2) : h.input = e2, h.next_in = 0, h.avail_in = h.input.length;
+          do {
+            if (0 === h.avail_out && (h.output = new d.Buf8(u), h.next_out = 0, h.avail_out = u), (r2 = c.inflate(h, m.Z_NO_FLUSH)) === m.Z_NEED_DICT && l && (o2 = "string" == typeof l ? p.string2buf(l) : "[object ArrayBuffer]" === _.call(l) ? new Uint8Array(l) : l, r2 = c.inflateSetDictionary(this.strm, o2)), r2 === m.Z_BUF_ERROR && true === f && (r2 = m.Z_OK, f = false), r2 !== m.Z_STREAM_END && r2 !== m.Z_OK) return this.onEnd(r2), !(this.ended = true);
+            h.next_out && (0 !== h.avail_out && r2 !== m.Z_STREAM_END && (0 !== h.avail_in || n2 !== m.Z_FINISH && n2 !== m.Z_SYNC_FLUSH) || ("string" === this.options.to ? (i2 = p.utf8border(h.output, h.next_out), s2 = h.next_out - i2, a2 = p.buf2string(h.output, i2), h.next_out = s2, h.avail_out = u - s2, s2 && d.arraySet(h.output, h.output, i2, s2, 0), this.onData(a2)) : this.onData(d.shrinkBuf(h.output, h.next_out)))), 0 === h.avail_in && 0 === h.avail_out && (f = true);
+          } while ((0 < h.avail_in || 0 === h.avail_out) && r2 !== m.Z_STREAM_END);
+          return r2 === m.Z_STREAM_END && (n2 = m.Z_FINISH), n2 === m.Z_FINISH ? (r2 = c.inflateEnd(this.strm), this.onEnd(r2), this.ended = true, r2 === m.Z_OK) : n2 !== m.Z_SYNC_FLUSH || (this.onEnd(m.Z_OK), !(h.avail_out = 0));
+        }, a.prototype.onData = function(e2) {
+          this.chunks.push(e2);
+        }, a.prototype.onEnd = function(e2) {
+          e2 === m.Z_OK && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = d.flattenChunks(this.chunks)), this.chunks = [], this.err = e2, this.msg = this.strm.msg;
+        }, r.Inflate = a, r.inflate = o, r.inflateRaw = function(e2, t2) {
+          return (t2 = t2 || {}).raw = true, o(e2, t2);
+        }, r.ungzip = o;
+      }, { "./utils/common": 41, "./utils/strings": 42, "./zlib/constants": 44, "./zlib/gzheader": 47, "./zlib/inflate": 49, "./zlib/messages": 51, "./zlib/zstream": 53 }], 41: [function(e, t, r) {
+        "use strict";
+        var n = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Int32Array;
+        r.assign = function(e2) {
+          for (var t2 = Array.prototype.slice.call(arguments, 1); t2.length; ) {
+            var r2 = t2.shift();
+            if (r2) {
+              if ("object" != typeof r2) throw new TypeError(r2 + "must be non-object");
+              for (var n2 in r2) r2.hasOwnProperty(n2) && (e2[n2] = r2[n2]);
+            }
+          }
+          return e2;
+        }, r.shrinkBuf = function(e2, t2) {
+          return e2.length === t2 ? e2 : e2.subarray ? e2.subarray(0, t2) : (e2.length = t2, e2);
+        };
+        var i = { arraySet: function(e2, t2, r2, n2, i2) {
+          if (t2.subarray && e2.subarray) e2.set(t2.subarray(r2, r2 + n2), i2);
+          else for (var s2 = 0; s2 < n2; s2++) e2[i2 + s2] = t2[r2 + s2];
+        }, flattenChunks: function(e2) {
+          var t2, r2, n2, i2, s2, a;
+          for (t2 = n2 = 0, r2 = e2.length; t2 < r2; t2++) n2 += e2[t2].length;
+          for (a = new Uint8Array(n2), t2 = i2 = 0, r2 = e2.length; t2 < r2; t2++) s2 = e2[t2], a.set(s2, i2), i2 += s2.length;
+          return a;
+        } }, s = { arraySet: function(e2, t2, r2, n2, i2) {
+          for (var s2 = 0; s2 < n2; s2++) e2[i2 + s2] = t2[r2 + s2];
+        }, flattenChunks: function(e2) {
+          return [].concat.apply([], e2);
+        } };
+        r.setTyped = function(e2) {
+          e2 ? (r.Buf8 = Uint8Array, r.Buf16 = Uint16Array, r.Buf32 = Int32Array, r.assign(r, i)) : (r.Buf8 = Array, r.Buf16 = Array, r.Buf32 = Array, r.assign(r, s));
+        }, r.setTyped(n);
+      }, {}], 42: [function(e, t, r) {
+        "use strict";
+        var h = e("./common"), i = true, s = true;
+        try {
+          String.fromCharCode.apply(null, [0]);
+        } catch (e2) {
+          i = false;
+        }
+        try {
+          String.fromCharCode.apply(null, new Uint8Array(1));
+        } catch (e2) {
+          s = false;
+        }
+        for (var u = new h.Buf8(256), n = 0; n < 256; n++) u[n] = 252 <= n ? 6 : 248 <= n ? 5 : 240 <= n ? 4 : 224 <= n ? 3 : 192 <= n ? 2 : 1;
+        function l(e2, t2) {
+          if (t2 < 65537 && (e2.subarray && s || !e2.subarray && i)) return String.fromCharCode.apply(null, h.shrinkBuf(e2, t2));
+          for (var r2 = "", n2 = 0; n2 < t2; n2++) r2 += String.fromCharCode(e2[n2]);
+          return r2;
+        }
+        u[254] = u[254] = 1, r.string2buf = function(e2) {
+          var t2, r2, n2, i2, s2, a = e2.length, o = 0;
+          for (i2 = 0; i2 < a; i2++) 55296 == (64512 & (r2 = e2.charCodeAt(i2))) && i2 + 1 < a && 56320 == (64512 & (n2 = e2.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), o += r2 < 128 ? 1 : r2 < 2048 ? 2 : r2 < 65536 ? 3 : 4;
+          for (t2 = new h.Buf8(o), i2 = s2 = 0; s2 < o; i2++) 55296 == (64512 & (r2 = e2.charCodeAt(i2))) && i2 + 1 < a && 56320 == (64512 & (n2 = e2.charCodeAt(i2 + 1))) && (r2 = 65536 + (r2 - 55296 << 10) + (n2 - 56320), i2++), r2 < 128 ? t2[s2++] = r2 : (r2 < 2048 ? t2[s2++] = 192 | r2 >>> 6 : (r2 < 65536 ? t2[s2++] = 224 | r2 >>> 12 : (t2[s2++] = 240 | r2 >>> 18, t2[s2++] = 128 | r2 >>> 12 & 63), t2[s2++] = 128 | r2 >>> 6 & 63), t2[s2++] = 128 | 63 & r2);
+          return t2;
+        }, r.buf2binstring = function(e2) {
+          return l(e2, e2.length);
+        }, r.binstring2buf = function(e2) {
+          for (var t2 = new h.Buf8(e2.length), r2 = 0, n2 = t2.length; r2 < n2; r2++) t2[r2] = e2.charCodeAt(r2);
+          return t2;
+        }, r.buf2string = function(e2, t2) {
+          var r2, n2, i2, s2, a = t2 || e2.length, o = new Array(2 * a);
+          for (r2 = n2 = 0; r2 < a; ) if ((i2 = e2[r2++]) < 128) o[n2++] = i2;
+          else if (4 < (s2 = u[i2])) o[n2++] = 65533, r2 += s2 - 1;
+          else {
+            for (i2 &= 2 === s2 ? 31 : 3 === s2 ? 15 : 7; 1 < s2 && r2 < a; ) i2 = i2 << 6 | 63 & e2[r2++], s2--;
+            1 < s2 ? o[n2++] = 65533 : i2 < 65536 ? o[n2++] = i2 : (i2 -= 65536, o[n2++] = 55296 | i2 >> 10 & 1023, o[n2++] = 56320 | 1023 & i2);
+          }
+          return l(o, n2);
+        }, r.utf8border = function(e2, t2) {
+          var r2;
+          for ((t2 = t2 || e2.length) > e2.length && (t2 = e2.length), r2 = t2 - 1; 0 <= r2 && 128 == (192 & e2[r2]); ) r2--;
+          return r2 < 0 ? t2 : 0 === r2 ? t2 : r2 + u[e2[r2]] > t2 ? r2 : t2;
+        };
+      }, { "./common": 41 }], 43: [function(e, t, r) {
+        "use strict";
+        t.exports = function(e2, t2, r2, n) {
+          for (var i = 65535 & e2 | 0, s = e2 >>> 16 & 65535 | 0, a = 0; 0 !== r2; ) {
+            for (r2 -= a = 2e3 < r2 ? 2e3 : r2; s = s + (i = i + t2[n++] | 0) | 0, --a; ) ;
+            i %= 65521, s %= 65521;
+          }
+          return i | s << 16 | 0;
+        };
+      }, {}], 44: [function(e, t, r) {
+        "use strict";
+        t.exports = { Z_NO_FLUSH: 0, Z_PARTIAL_FLUSH: 1, Z_SYNC_FLUSH: 2, Z_FULL_FLUSH: 3, Z_FINISH: 4, Z_BLOCK: 5, Z_TREES: 6, Z_OK: 0, Z_STREAM_END: 1, Z_NEED_DICT: 2, Z_ERRNO: -1, Z_STREAM_ERROR: -2, Z_DATA_ERROR: -3, Z_BUF_ERROR: -5, Z_NO_COMPRESSION: 0, Z_BEST_SPEED: 1, Z_BEST_COMPRESSION: 9, Z_DEFAULT_COMPRESSION: -1, Z_FILTERED: 1, Z_HUFFMAN_ONLY: 2, Z_RLE: 3, Z_FIXED: 4, Z_DEFAULT_STRATEGY: 0, Z_BINARY: 0, Z_TEXT: 1, Z_UNKNOWN: 2, Z_DEFLATED: 8 };
+      }, {}], 45: [function(e, t, r) {
+        "use strict";
+        var o = (function() {
+          for (var e2, t2 = [], r2 = 0; r2 < 256; r2++) {
+            e2 = r2;
+            for (var n = 0; n < 8; n++) e2 = 1 & e2 ? 3988292384 ^ e2 >>> 1 : e2 >>> 1;
+            t2[r2] = e2;
+          }
+          return t2;
+        })();
+        t.exports = function(e2, t2, r2, n) {
+          var i = o, s = n + r2;
+          e2 ^= -1;
+          for (var a = n; a < s; a++) e2 = e2 >>> 8 ^ i[255 & (e2 ^ t2[a])];
+          return -1 ^ e2;
+        };
+      }, {}], 46: [function(e, t, r) {
+        "use strict";
+        var h, c = e("../utils/common"), u = e("./trees"), d = e("./adler32"), p = e("./crc32"), n = e("./messages"), l = 0, f = 4, m = 0, _ = -2, g = -1, b = 4, i = 2, v = 8, y = 9, s = 286, a = 30, o = 19, w = 2 * s + 1, k = 15, x = 3, S = 258, z = S + x + 1, C = 42, E = 113, A = 1, I = 2, O = 3, B = 4;
+        function R(e2, t2) {
+          return e2.msg = n[t2], t2;
+        }
+        function T(e2) {
+          return (e2 << 1) - (4 < e2 ? 9 : 0);
+        }
+        function D(e2) {
+          for (var t2 = e2.length; 0 <= --t2; ) e2[t2] = 0;
+        }
+        function F(e2) {
+          var t2 = e2.state, r2 = t2.pending;
+          r2 > e2.avail_out && (r2 = e2.avail_out), 0 !== r2 && (c.arraySet(e2.output, t2.pending_buf, t2.pending_out, r2, e2.next_out), e2.next_out += r2, t2.pending_out += r2, e2.total_out += r2, e2.avail_out -= r2, t2.pending -= r2, 0 === t2.pending && (t2.pending_out = 0));
+        }
+        function N(e2, t2) {
+          u._tr_flush_block(e2, 0 <= e2.block_start ? e2.block_start : -1, e2.strstart - e2.block_start, t2), e2.block_start = e2.strstart, F(e2.strm);
+        }
+        function U(e2, t2) {
+          e2.pending_buf[e2.pending++] = t2;
+        }
+        function P(e2, t2) {
+          e2.pending_buf[e2.pending++] = t2 >>> 8 & 255, e2.pending_buf[e2.pending++] = 255 & t2;
+        }
+        function L(e2, t2) {
+          var r2, n2, i2 = e2.max_chain_length, s2 = e2.strstart, a2 = e2.prev_length, o2 = e2.nice_match, h2 = e2.strstart > e2.w_size - z ? e2.strstart - (e2.w_size - z) : 0, u2 = e2.window, l2 = e2.w_mask, f2 = e2.prev, c2 = e2.strstart + S, d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
+          e2.prev_length >= e2.good_match && (i2 >>= 2), o2 > e2.lookahead && (o2 = e2.lookahead);
+          do {
+            if (u2[(r2 = t2) + a2] === p2 && u2[r2 + a2 - 1] === d2 && u2[r2] === u2[s2] && u2[++r2] === u2[s2 + 1]) {
+              s2 += 2, r2++;
+              do {
+              } while (u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && u2[++s2] === u2[++r2] && s2 < c2);
+              if (n2 = S - (c2 - s2), s2 = c2 - S, a2 < n2) {
+                if (e2.match_start = t2, o2 <= (a2 = n2)) break;
+                d2 = u2[s2 + a2 - 1], p2 = u2[s2 + a2];
+              }
+            }
+          } while ((t2 = f2[t2 & l2]) > h2 && 0 != --i2);
+          return a2 <= e2.lookahead ? a2 : e2.lookahead;
+        }
+        function j(e2) {
+          var t2, r2, n2, i2, s2, a2, o2, h2, u2, l2, f2 = e2.w_size;
+          do {
+            if (i2 = e2.window_size - e2.lookahead - e2.strstart, e2.strstart >= f2 + (f2 - z)) {
+              for (c.arraySet(e2.window, e2.window, f2, f2, 0), e2.match_start -= f2, e2.strstart -= f2, e2.block_start -= f2, t2 = r2 = e2.hash_size; n2 = e2.head[--t2], e2.head[t2] = f2 <= n2 ? n2 - f2 : 0, --r2; ) ;
+              for (t2 = r2 = f2; n2 = e2.prev[--t2], e2.prev[t2] = f2 <= n2 ? n2 - f2 : 0, --r2; ) ;
+              i2 += f2;
+            }
+            if (0 === e2.strm.avail_in) break;
+            if (a2 = e2.strm, o2 = e2.window, h2 = e2.strstart + e2.lookahead, u2 = i2, l2 = void 0, l2 = a2.avail_in, u2 < l2 && (l2 = u2), r2 = 0 === l2 ? 0 : (a2.avail_in -= l2, c.arraySet(o2, a2.input, a2.next_in, l2, h2), 1 === a2.state.wrap ? a2.adler = d(a2.adler, o2, l2, h2) : 2 === a2.state.wrap && (a2.adler = p(a2.adler, o2, l2, h2)), a2.next_in += l2, a2.total_in += l2, l2), e2.lookahead += r2, e2.lookahead + e2.insert >= x) for (s2 = e2.strstart - e2.insert, e2.ins_h = e2.window[s2], e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[s2 + 1]) & e2.hash_mask; e2.insert && (e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[s2 + x - 1]) & e2.hash_mask, e2.prev[s2 & e2.w_mask] = e2.head[e2.ins_h], e2.head[e2.ins_h] = s2, s2++, e2.insert--, !(e2.lookahead + e2.insert < x)); ) ;
+          } while (e2.lookahead < z && 0 !== e2.strm.avail_in);
+        }
+        function Z(e2, t2) {
+          for (var r2, n2; ; ) {
+            if (e2.lookahead < z) {
+              if (j(e2), e2.lookahead < z && t2 === l) return A;
+              if (0 === e2.lookahead) break;
+            }
+            if (r2 = 0, e2.lookahead >= x && (e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[e2.strstart + x - 1]) & e2.hash_mask, r2 = e2.prev[e2.strstart & e2.w_mask] = e2.head[e2.ins_h], e2.head[e2.ins_h] = e2.strstart), 0 !== r2 && e2.strstart - r2 <= e2.w_size - z && (e2.match_length = L(e2, r2)), e2.match_length >= x) if (n2 = u._tr_tally(e2, e2.strstart - e2.match_start, e2.match_length - x), e2.lookahead -= e2.match_length, e2.match_length <= e2.max_lazy_match && e2.lookahead >= x) {
+              for (e2.match_length--; e2.strstart++, e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[e2.strstart + x - 1]) & e2.hash_mask, r2 = e2.prev[e2.strstart & e2.w_mask] = e2.head[e2.ins_h], e2.head[e2.ins_h] = e2.strstart, 0 != --e2.match_length; ) ;
+              e2.strstart++;
+            } else e2.strstart += e2.match_length, e2.match_length = 0, e2.ins_h = e2.window[e2.strstart], e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[e2.strstart + 1]) & e2.hash_mask;
+            else n2 = u._tr_tally(e2, 0, e2.window[e2.strstart]), e2.lookahead--, e2.strstart++;
+            if (n2 && (N(e2, false), 0 === e2.strm.avail_out)) return A;
+          }
+          return e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
+        }
+        function W(e2, t2) {
+          for (var r2, n2, i2; ; ) {
+            if (e2.lookahead < z) {
+              if (j(e2), e2.lookahead < z && t2 === l) return A;
+              if (0 === e2.lookahead) break;
+            }
+            if (r2 = 0, e2.lookahead >= x && (e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[e2.strstart + x - 1]) & e2.hash_mask, r2 = e2.prev[e2.strstart & e2.w_mask] = e2.head[e2.ins_h], e2.head[e2.ins_h] = e2.strstart), e2.prev_length = e2.match_length, e2.prev_match = e2.match_start, e2.match_length = x - 1, 0 !== r2 && e2.prev_length < e2.max_lazy_match && e2.strstart - r2 <= e2.w_size - z && (e2.match_length = L(e2, r2), e2.match_length <= 5 && (1 === e2.strategy || e2.match_length === x && 4096 < e2.strstart - e2.match_start) && (e2.match_length = x - 1)), e2.prev_length >= x && e2.match_length <= e2.prev_length) {
+              for (i2 = e2.strstart + e2.lookahead - x, n2 = u._tr_tally(e2, e2.strstart - 1 - e2.prev_match, e2.prev_length - x), e2.lookahead -= e2.prev_length - 1, e2.prev_length -= 2; ++e2.strstart <= i2 && (e2.ins_h = (e2.ins_h << e2.hash_shift ^ e2.window[e2.strstart + x - 1]) & e2.hash_mask, r2 = e2.prev[e2.strstart & e2.w_mask] = e2.head[e2.ins_h], e2.head[e2.ins_h] = e2.strstart), 0 != --e2.prev_length; ) ;
+              if (e2.match_available = 0, e2.match_length = x - 1, e2.strstart++, n2 && (N(e2, false), 0 === e2.strm.avail_out)) return A;
+            } else if (e2.match_available) {
+              if ((n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1])) && N(e2, false), e2.strstart++, e2.lookahead--, 0 === e2.strm.avail_out) return A;
+            } else e2.match_available = 1, e2.strstart++, e2.lookahead--;
+          }
+          return e2.match_available && (n2 = u._tr_tally(e2, 0, e2.window[e2.strstart - 1]), e2.match_available = 0), e2.insert = e2.strstart < x - 1 ? e2.strstart : x - 1, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : e2.last_lit && (N(e2, false), 0 === e2.strm.avail_out) ? A : I;
+        }
+        function M(e2, t2, r2, n2, i2) {
+          this.good_length = e2, this.max_lazy = t2, this.nice_length = r2, this.max_chain = n2, this.func = i2;
+        }
+        function H() {
+          this.strm = null, this.status = 0, this.pending_buf = null, this.pending_buf_size = 0, this.pending_out = 0, this.pending = 0, this.wrap = 0, this.gzhead = null, this.gzindex = 0, this.method = v, this.last_flush = -1, this.w_size = 0, this.w_bits = 0, this.w_mask = 0, this.window = null, this.window_size = 0, this.prev = null, this.head = null, this.ins_h = 0, this.hash_size = 0, this.hash_bits = 0, this.hash_mask = 0, this.hash_shift = 0, this.block_start = 0, this.match_length = 0, this.prev_match = 0, this.match_available = 0, this.strstart = 0, this.match_start = 0, this.lookahead = 0, this.prev_length = 0, this.max_chain_length = 0, this.max_lazy_match = 0, this.level = 0, this.strategy = 0, this.good_match = 0, this.nice_match = 0, this.dyn_ltree = new c.Buf16(2 * w), this.dyn_dtree = new c.Buf16(2 * (2 * a + 1)), this.bl_tree = new c.Buf16(2 * (2 * o + 1)), D(this.dyn_ltree), D(this.dyn_dtree), D(this.bl_tree), this.l_desc = null, this.d_desc = null, this.bl_desc = null, this.bl_count = new c.Buf16(k + 1), this.heap = new c.Buf16(2 * s + 1), D(this.heap), this.heap_len = 0, this.heap_max = 0, this.depth = new c.Buf16(2 * s + 1), D(this.depth), this.l_buf = 0, this.lit_bufsize = 0, this.last_lit = 0, this.d_buf = 0, this.opt_len = 0, this.static_len = 0, this.matches = 0, this.insert = 0, this.bi_buf = 0, this.bi_valid = 0;
+        }
+        function G(e2) {
+          var t2;
+          return e2 && e2.state ? (e2.total_in = e2.total_out = 0, e2.data_type = i, (t2 = e2.state).pending = 0, t2.pending_out = 0, t2.wrap < 0 && (t2.wrap = -t2.wrap), t2.status = t2.wrap ? C : E, e2.adler = 2 === t2.wrap ? 0 : 1, t2.last_flush = l, u._tr_init(t2), m) : R(e2, _);
+        }
+        function K(e2) {
+          var t2 = G(e2);
+          return t2 === m && (function(e3) {
+            e3.window_size = 2 * e3.w_size, D(e3.head), e3.max_lazy_match = h[e3.level].max_lazy, e3.good_match = h[e3.level].good_length, e3.nice_match = h[e3.level].nice_length, e3.max_chain_length = h[e3.level].max_chain, e3.strstart = 0, e3.block_start = 0, e3.lookahead = 0, e3.insert = 0, e3.match_length = e3.prev_length = x - 1, e3.match_available = 0, e3.ins_h = 0;
+          })(e2.state), t2;
+        }
+        function Y(e2, t2, r2, n2, i2, s2) {
+          if (!e2) return _;
+          var a2 = 1;
+          if (t2 === g && (t2 = 6), n2 < 0 ? (a2 = 0, n2 = -n2) : 15 < n2 && (a2 = 2, n2 -= 16), i2 < 1 || y < i2 || r2 !== v || n2 < 8 || 15 < n2 || t2 < 0 || 9 < t2 || s2 < 0 || b < s2) return R(e2, _);
+          8 === n2 && (n2 = 9);
+          var o2 = new H();
+          return (e2.state = o2).strm = e2, o2.wrap = a2, o2.gzhead = null, o2.w_bits = n2, o2.w_size = 1 << o2.w_bits, o2.w_mask = o2.w_size - 1, o2.hash_bits = i2 + 7, o2.hash_size = 1 << o2.hash_bits, o2.hash_mask = o2.hash_size - 1, o2.hash_shift = ~~((o2.hash_bits + x - 1) / x), o2.window = new c.Buf8(2 * o2.w_size), o2.head = new c.Buf16(o2.hash_size), o2.prev = new c.Buf16(o2.w_size), o2.lit_bufsize = 1 << i2 + 6, o2.pending_buf_size = 4 * o2.lit_bufsize, o2.pending_buf = new c.Buf8(o2.pending_buf_size), o2.d_buf = 1 * o2.lit_bufsize, o2.l_buf = 3 * o2.lit_bufsize, o2.level = t2, o2.strategy = s2, o2.method = r2, K(e2);
+        }
+        h = [new M(0, 0, 0, 0, function(e2, t2) {
+          var r2 = 65535;
+          for (r2 > e2.pending_buf_size - 5 && (r2 = e2.pending_buf_size - 5); ; ) {
+            if (e2.lookahead <= 1) {
+              if (j(e2), 0 === e2.lookahead && t2 === l) return A;
+              if (0 === e2.lookahead) break;
+            }
+            e2.strstart += e2.lookahead, e2.lookahead = 0;
+            var n2 = e2.block_start + r2;
+            if ((0 === e2.strstart || e2.strstart >= n2) && (e2.lookahead = e2.strstart - n2, e2.strstart = n2, N(e2, false), 0 === e2.strm.avail_out)) return A;
+            if (e2.strstart - e2.block_start >= e2.w_size - z && (N(e2, false), 0 === e2.strm.avail_out)) return A;
+          }
+          return e2.insert = 0, t2 === f ? (N(e2, true), 0 === e2.strm.avail_out ? O : B) : (e2.strstart > e2.block_start && (N(e2, false), e2.strm.avail_out), A);
+        }), new M(4, 4, 8, 4, Z), new M(4, 5, 16, 8, Z), new M(4, 6, 32, 32, Z), new M(4, 4, 16, 16, W), new M(8, 16, 32, 32, W), new M(8, 16, 128, 128, W), new M(8, 32, 128, 256, W), new M(32, 128, 258, 1024, W), new M(32, 258, 258, 4096, W)], r.deflateInit = function(e2, t2) {
+          return Y(e2, t2, v, 15, 8, 0);
+        }, r.deflateInit2 = Y, r.deflateReset = K, r.deflateResetKeep = G, r.deflateSetHeader = function(e2, t2) {
+          return e2 && e2.state ? 2 !== e2.state.wrap ? _ : (e2.state.gzhead = t2, m) : _;
+        }, r.deflate = function(e2, t2) {
+          var r2, n2, i2, s2;
+          if (!e2 || !e2.state || 5 < t2 || t2 < 0) return e2 ? R(e2, _) : _;
+          if (n2 = e2.state, !e2.output || !e2.input && 0 !== e2.avail_in || 666 === n2.status && t2 !== f) return R(e2, 0 === e2.avail_out ? -5 : _);
+          if (n2.strm = e2, r2 = n2.last_flush, n2.last_flush = t2, n2.status === C) if (2 === n2.wrap) e2.adler = 0, U(n2, 31), U(n2, 139), U(n2, 8), n2.gzhead ? (U(n2, (n2.gzhead.text ? 1 : 0) + (n2.gzhead.hcrc ? 2 : 0) + (n2.gzhead.extra ? 4 : 0) + (n2.gzhead.name ? 8 : 0) + (n2.gzhead.comment ? 16 : 0)), U(n2, 255 & n2.gzhead.time), U(n2, n2.gzhead.time >> 8 & 255), U(n2, n2.gzhead.time >> 16 & 255), U(n2, n2.gzhead.time >> 24 & 255), U(n2, 9 === n2.level ? 2 : 2 <= n2.strategy || n2.level < 2 ? 4 : 0), U(n2, 255 & n2.gzhead.os), n2.gzhead.extra && n2.gzhead.extra.length && (U(n2, 255 & n2.gzhead.extra.length), U(n2, n2.gzhead.extra.length >> 8 & 255)), n2.gzhead.hcrc && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending, 0)), n2.gzindex = 0, n2.status = 69) : (U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 0), U(n2, 9 === n2.level ? 2 : 2 <= n2.strategy || n2.level < 2 ? 4 : 0), U(n2, 3), n2.status = E);
+          else {
+            var a2 = v + (n2.w_bits - 8 << 4) << 8;
+            a2 |= (2 <= n2.strategy || n2.level < 2 ? 0 : n2.level < 6 ? 1 : 6 === n2.level ? 2 : 3) << 6, 0 !== n2.strstart && (a2 |= 32), a2 += 31 - a2 % 31, n2.status = E, P(n2, a2), 0 !== n2.strstart && (P(n2, e2.adler >>> 16), P(n2, 65535 & e2.adler)), e2.adler = 1;
+          }
+          if (69 === n2.status) if (n2.gzhead.extra) {
+            for (i2 = n2.pending; n2.gzindex < (65535 & n2.gzhead.extra.length) && (n2.pending !== n2.pending_buf_size || (n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), F(e2), i2 = n2.pending, n2.pending !== n2.pending_buf_size)); ) U(n2, 255 & n2.gzhead.extra[n2.gzindex]), n2.gzindex++;
+            n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), n2.gzindex === n2.gzhead.extra.length && (n2.gzindex = 0, n2.status = 73);
+          } else n2.status = 73;
+          if (73 === n2.status) if (n2.gzhead.name) {
+            i2 = n2.pending;
+            do {
+              if (n2.pending === n2.pending_buf_size && (n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), F(e2), i2 = n2.pending, n2.pending === n2.pending_buf_size)) {
+                s2 = 1;
+                break;
+              }
+              s2 = n2.gzindex < n2.gzhead.name.length ? 255 & n2.gzhead.name.charCodeAt(n2.gzindex++) : 0, U(n2, s2);
+            } while (0 !== s2);
+            n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), 0 === s2 && (n2.gzindex = 0, n2.status = 91);
+          } else n2.status = 91;
+          if (91 === n2.status) if (n2.gzhead.comment) {
+            i2 = n2.pending;
+            do {
+              if (n2.pending === n2.pending_buf_size && (n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), F(e2), i2 = n2.pending, n2.pending === n2.pending_buf_size)) {
+                s2 = 1;
+                break;
+              }
+              s2 = n2.gzindex < n2.gzhead.comment.length ? 255 & n2.gzhead.comment.charCodeAt(n2.gzindex++) : 0, U(n2, s2);
+            } while (0 !== s2);
+            n2.gzhead.hcrc && n2.pending > i2 && (e2.adler = p(e2.adler, n2.pending_buf, n2.pending - i2, i2)), 0 === s2 && (n2.status = 103);
+          } else n2.status = 103;
+          if (103 === n2.status && (n2.gzhead.hcrc ? (n2.pending + 2 > n2.pending_buf_size && F(e2), n2.pending + 2 <= n2.pending_buf_size && (U(n2, 255 & e2.adler), U(n2, e2.adler >> 8 & 255), e2.adler = 0, n2.status = E)) : n2.status = E), 0 !== n2.pending) {
+            if (F(e2), 0 === e2.avail_out) return n2.last_flush = -1, m;
+          } else if (0 === e2.avail_in && T(t2) <= T(r2) && t2 !== f) return R(e2, -5);
+          if (666 === n2.status && 0 !== e2.avail_in) return R(e2, -5);
+          if (0 !== e2.avail_in || 0 !== n2.lookahead || t2 !== l && 666 !== n2.status) {
+            var o2 = 2 === n2.strategy ? (function(e3, t3) {
+              for (var r3; ; ) {
+                if (0 === e3.lookahead && (j(e3), 0 === e3.lookahead)) {
+                  if (t3 === l) return A;
+                  break;
+                }
+                if (e3.match_length = 0, r3 = u._tr_tally(e3, 0, e3.window[e3.strstart]), e3.lookahead--, e3.strstart++, r3 && (N(e3, false), 0 === e3.strm.avail_out)) return A;
+              }
+              return e3.insert = 0, t3 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
+            })(n2, t2) : 3 === n2.strategy ? (function(e3, t3) {
+              for (var r3, n3, i3, s3, a3 = e3.window; ; ) {
+                if (e3.lookahead <= S) {
+                  if (j(e3), e3.lookahead <= S && t3 === l) return A;
+                  if (0 === e3.lookahead) break;
+                }
+                if (e3.match_length = 0, e3.lookahead >= x && 0 < e3.strstart && (n3 = a3[i3 = e3.strstart - 1]) === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3]) {
+                  s3 = e3.strstart + S;
+                  do {
+                  } while (n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && n3 === a3[++i3] && i3 < s3);
+                  e3.match_length = S - (s3 - i3), e3.match_length > e3.lookahead && (e3.match_length = e3.lookahead);
+                }
+                if (e3.match_length >= x ? (r3 = u._tr_tally(e3, 1, e3.match_length - x), e3.lookahead -= e3.match_length, e3.strstart += e3.match_length, e3.match_length = 0) : (r3 = u._tr_tally(e3, 0, e3.window[e3.strstart]), e3.lookahead--, e3.strstart++), r3 && (N(e3, false), 0 === e3.strm.avail_out)) return A;
+              }
+              return e3.insert = 0, t3 === f ? (N(e3, true), 0 === e3.strm.avail_out ? O : B) : e3.last_lit && (N(e3, false), 0 === e3.strm.avail_out) ? A : I;
+            })(n2, t2) : h[n2.level].func(n2, t2);
+            if (o2 !== O && o2 !== B || (n2.status = 666), o2 === A || o2 === O) return 0 === e2.avail_out && (n2.last_flush = -1), m;
+            if (o2 === I && (1 === t2 ? u._tr_align(n2) : 5 !== t2 && (u._tr_stored_block(n2, 0, 0, false), 3 === t2 && (D(n2.head), 0 === n2.lookahead && (n2.strstart = 0, n2.block_start = 0, n2.insert = 0))), F(e2), 0 === e2.avail_out)) return n2.last_flush = -1, m;
+          }
+          return t2 !== f ? m : n2.wrap <= 0 ? 1 : (2 === n2.wrap ? (U(n2, 255 & e2.adler), U(n2, e2.adler >> 8 & 255), U(n2, e2.adler >> 16 & 255), U(n2, e2.adler >> 24 & 255), U(n2, 255 & e2.total_in), U(n2, e2.total_in >> 8 & 255), U(n2, e2.total_in >> 16 & 255), U(n2, e2.total_in >> 24 & 255)) : (P(n2, e2.adler >>> 16), P(n2, 65535 & e2.adler)), F(e2), 0 < n2.wrap && (n2.wrap = -n2.wrap), 0 !== n2.pending ? m : 1);
+        }, r.deflateEnd = function(e2) {
+          var t2;
+          return e2 && e2.state ? (t2 = e2.state.status) !== C && 69 !== t2 && 73 !== t2 && 91 !== t2 && 103 !== t2 && t2 !== E && 666 !== t2 ? R(e2, _) : (e2.state = null, t2 === E ? R(e2, -3) : m) : _;
+        }, r.deflateSetDictionary = function(e2, t2) {
+          var r2, n2, i2, s2, a2, o2, h2, u2, l2 = t2.length;
+          if (!e2 || !e2.state) return _;
+          if (2 === (s2 = (r2 = e2.state).wrap) || 1 === s2 && r2.status !== C || r2.lookahead) return _;
+          for (1 === s2 && (e2.adler = d(e2.adler, t2, l2, 0)), r2.wrap = 0, l2 >= r2.w_size && (0 === s2 && (D(r2.head), r2.strstart = 0, r2.block_start = 0, r2.insert = 0), u2 = new c.Buf8(r2.w_size), c.arraySet(u2, t2, l2 - r2.w_size, r2.w_size, 0), t2 = u2, l2 = r2.w_size), a2 = e2.avail_in, o2 = e2.next_in, h2 = e2.input, e2.avail_in = l2, e2.next_in = 0, e2.input = t2, j(r2); r2.lookahead >= x; ) {
+            for (n2 = r2.strstart, i2 = r2.lookahead - (x - 1); r2.ins_h = (r2.ins_h << r2.hash_shift ^ r2.window[n2 + x - 1]) & r2.hash_mask, r2.prev[n2 & r2.w_mask] = r2.head[r2.ins_h], r2.head[r2.ins_h] = n2, n2++, --i2; ) ;
+            r2.strstart = n2, r2.lookahead = x - 1, j(r2);
+          }
+          return r2.strstart += r2.lookahead, r2.block_start = r2.strstart, r2.insert = r2.lookahead, r2.lookahead = 0, r2.match_length = r2.prev_length = x - 1, r2.match_available = 0, e2.next_in = o2, e2.input = h2, e2.avail_in = a2, r2.wrap = s2, m;
+        }, r.deflateInfo = "pako deflate (from Nodeca project)";
+      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./messages": 51, "./trees": 52 }], 47: [function(e, t, r) {
+        "use strict";
+        t.exports = function() {
+          this.text = 0, this.time = 0, this.xflags = 0, this.os = 0, this.extra = null, this.extra_len = 0, this.name = "", this.comment = "", this.hcrc = 0, this.done = false;
+        };
+      }, {}], 48: [function(e, t, r) {
+        "use strict";
+        t.exports = function(e2, t2) {
+          var r2, n, i, s, a, o, h, u, l, f, c, d, p, m, _, g, b, v, y, w, k, x, S, z, C;
+          r2 = e2.state, n = e2.next_in, z = e2.input, i = n + (e2.avail_in - 5), s = e2.next_out, C = e2.output, a = s - (t2 - e2.avail_out), o = s + (e2.avail_out - 257), h = r2.dmax, u = r2.wsize, l = r2.whave, f = r2.wnext, c = r2.window, d = r2.hold, p = r2.bits, m = r2.lencode, _ = r2.distcode, g = (1 << r2.lenbits) - 1, b = (1 << r2.distbits) - 1;
+          e: do {
+            p < 15 && (d += z[n++] << p, p += 8, d += z[n++] << p, p += 8), v = m[d & g];
+            t: for (; ; ) {
+              if (d >>>= y = v >>> 24, p -= y, 0 === (y = v >>> 16 & 255)) C[s++] = 65535 & v;
+              else {
+                if (!(16 & y)) {
+                  if (0 == (64 & y)) {
+                    v = m[(65535 & v) + (d & (1 << y) - 1)];
+                    continue t;
+                  }
+                  if (32 & y) {
+                    r2.mode = 12;
+                    break e;
+                  }
+                  e2.msg = "invalid literal/length code", r2.mode = 30;
+                  break e;
+                }
+                w = 65535 & v, (y &= 15) && (p < y && (d += z[n++] << p, p += 8), w += d & (1 << y) - 1, d >>>= y, p -= y), p < 15 && (d += z[n++] << p, p += 8, d += z[n++] << p, p += 8), v = _[d & b];
+                r: for (; ; ) {
+                  if (d >>>= y = v >>> 24, p -= y, !(16 & (y = v >>> 16 & 255))) {
+                    if (0 == (64 & y)) {
+                      v = _[(65535 & v) + (d & (1 << y) - 1)];
+                      continue r;
+                    }
+                    e2.msg = "invalid distance code", r2.mode = 30;
+                    break e;
+                  }
+                  if (k = 65535 & v, p < (y &= 15) && (d += z[n++] << p, (p += 8) < y && (d += z[n++] << p, p += 8)), h < (k += d & (1 << y) - 1)) {
+                    e2.msg = "invalid distance too far back", r2.mode = 30;
+                    break e;
+                  }
+                  if (d >>>= y, p -= y, (y = s - a) < k) {
+                    if (l < (y = k - y) && r2.sane) {
+                      e2.msg = "invalid distance too far back", r2.mode = 30;
+                      break e;
+                    }
+                    if (S = c, (x = 0) === f) {
+                      if (x += u - y, y < w) {
+                        for (w -= y; C[s++] = c[x++], --y; ) ;
+                        x = s - k, S = C;
+                      }
+                    } else if (f < y) {
+                      if (x += u + f - y, (y -= f) < w) {
+                        for (w -= y; C[s++] = c[x++], --y; ) ;
+                        if (x = 0, f < w) {
+                          for (w -= y = f; C[s++] = c[x++], --y; ) ;
+                          x = s - k, S = C;
+                        }
+                      }
+                    } else if (x += f - y, y < w) {
+                      for (w -= y; C[s++] = c[x++], --y; ) ;
+                      x = s - k, S = C;
+                    }
+                    for (; 2 < w; ) C[s++] = S[x++], C[s++] = S[x++], C[s++] = S[x++], w -= 3;
+                    w && (C[s++] = S[x++], 1 < w && (C[s++] = S[x++]));
+                  } else {
+                    for (x = s - k; C[s++] = C[x++], C[s++] = C[x++], C[s++] = C[x++], 2 < (w -= 3); ) ;
+                    w && (C[s++] = C[x++], 1 < w && (C[s++] = C[x++]));
+                  }
+                  break;
+                }
+              }
+              break;
+            }
+          } while (n < i && s < o);
+          n -= w = p >> 3, d &= (1 << (p -= w << 3)) - 1, e2.next_in = n, e2.next_out = s, e2.avail_in = n < i ? i - n + 5 : 5 - (n - i), e2.avail_out = s < o ? o - s + 257 : 257 - (s - o), r2.hold = d, r2.bits = p;
+        };
+      }, {}], 49: [function(e, t, r) {
+        "use strict";
+        var I = e("../utils/common"), O = e("./adler32"), B = e("./crc32"), R = e("./inffast"), T = e("./inftrees"), D = 1, F = 2, N = 0, U = -2, P = 1, n = 852, i = 592;
+        function L(e2) {
+          return (e2 >>> 24 & 255) + (e2 >>> 8 & 65280) + ((65280 & e2) << 8) + ((255 & e2) << 24);
+        }
+        function s() {
+          this.mode = 0, this.last = false, this.wrap = 0, this.havedict = false, this.flags = 0, this.dmax = 0, this.check = 0, this.total = 0, this.head = null, this.wbits = 0, this.wsize = 0, this.whave = 0, this.wnext = 0, this.window = null, this.hold = 0, this.bits = 0, this.length = 0, this.offset = 0, this.extra = 0, this.lencode = null, this.distcode = null, this.lenbits = 0, this.distbits = 0, this.ncode = 0, this.nlen = 0, this.ndist = 0, this.have = 0, this.next = null, this.lens = new I.Buf16(320), this.work = new I.Buf16(288), this.lendyn = null, this.distdyn = null, this.sane = 0, this.back = 0, this.was = 0;
+        }
+        function a(e2) {
+          var t2;
+          return e2 && e2.state ? (t2 = e2.state, e2.total_in = e2.total_out = t2.total = 0, e2.msg = "", t2.wrap && (e2.adler = 1 & t2.wrap), t2.mode = P, t2.last = 0, t2.havedict = 0, t2.dmax = 32768, t2.head = null, t2.hold = 0, t2.bits = 0, t2.lencode = t2.lendyn = new I.Buf32(n), t2.distcode = t2.distdyn = new I.Buf32(i), t2.sane = 1, t2.back = -1, N) : U;
+        }
+        function o(e2) {
+          var t2;
+          return e2 && e2.state ? ((t2 = e2.state).wsize = 0, t2.whave = 0, t2.wnext = 0, a(e2)) : U;
+        }
+        function h(e2, t2) {
+          var r2, n2;
+          return e2 && e2.state ? (n2 = e2.state, t2 < 0 ? (r2 = 0, t2 = -t2) : (r2 = 1 + (t2 >> 4), t2 < 48 && (t2 &= 15)), t2 && (t2 < 8 || 15 < t2) ? U : (null !== n2.window && n2.wbits !== t2 && (n2.window = null), n2.wrap = r2, n2.wbits = t2, o(e2))) : U;
+        }
+        function u(e2, t2) {
+          var r2, n2;
+          return e2 ? (n2 = new s(), (e2.state = n2).window = null, (r2 = h(e2, t2)) !== N && (e2.state = null), r2) : U;
+        }
+        var l, f, c = true;
+        function j(e2) {
+          if (c) {
+            var t2;
+            for (l = new I.Buf32(512), f = new I.Buf32(32), t2 = 0; t2 < 144; ) e2.lens[t2++] = 8;
+            for (; t2 < 256; ) e2.lens[t2++] = 9;
+            for (; t2 < 280; ) e2.lens[t2++] = 7;
+            for (; t2 < 288; ) e2.lens[t2++] = 8;
+            for (T(D, e2.lens, 0, 288, l, 0, e2.work, { bits: 9 }), t2 = 0; t2 < 32; ) e2.lens[t2++] = 5;
+            T(F, e2.lens, 0, 32, f, 0, e2.work, { bits: 5 }), c = false;
+          }
+          e2.lencode = l, e2.lenbits = 9, e2.distcode = f, e2.distbits = 5;
+        }
+        function Z(e2, t2, r2, n2) {
+          var i2, s2 = e2.state;
+          return null === s2.window && (s2.wsize = 1 << s2.wbits, s2.wnext = 0, s2.whave = 0, s2.window = new I.Buf8(s2.wsize)), n2 >= s2.wsize ? (I.arraySet(s2.window, t2, r2 - s2.wsize, s2.wsize, 0), s2.wnext = 0, s2.whave = s2.wsize) : (n2 < (i2 = s2.wsize - s2.wnext) && (i2 = n2), I.arraySet(s2.window, t2, r2 - n2, i2, s2.wnext), (n2 -= i2) ? (I.arraySet(s2.window, t2, r2 - n2, n2, 0), s2.wnext = n2, s2.whave = s2.wsize) : (s2.wnext += i2, s2.wnext === s2.wsize && (s2.wnext = 0), s2.whave < s2.wsize && (s2.whave += i2))), 0;
+        }
+        r.inflateReset = o, r.inflateReset2 = h, r.inflateResetKeep = a, r.inflateInit = function(e2) {
+          return u(e2, 15);
+        }, r.inflateInit2 = u, r.inflate = function(e2, t2) {
+          var r2, n2, i2, s2, a2, o2, h2, u2, l2, f2, c2, d, p, m, _, g, b, v, y, w, k, x, S, z, C = 0, E = new I.Buf8(4), A = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+          if (!e2 || !e2.state || !e2.output || !e2.input && 0 !== e2.avail_in) return U;
+          12 === (r2 = e2.state).mode && (r2.mode = 13), a2 = e2.next_out, i2 = e2.output, h2 = e2.avail_out, s2 = e2.next_in, n2 = e2.input, o2 = e2.avail_in, u2 = r2.hold, l2 = r2.bits, f2 = o2, c2 = h2, x = N;
+          e: for (; ; ) switch (r2.mode) {
+            case P:
+              if (0 === r2.wrap) {
+                r2.mode = 13;
+                break;
+              }
+              for (; l2 < 16; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if (2 & r2.wrap && 35615 === u2) {
+                E[r2.check = 0] = 255 & u2, E[1] = u2 >>> 8 & 255, r2.check = B(r2.check, E, 2, 0), l2 = u2 = 0, r2.mode = 2;
+                break;
+              }
+              if (r2.flags = 0, r2.head && (r2.head.done = false), !(1 & r2.wrap) || (((255 & u2) << 8) + (u2 >> 8)) % 31) {
+                e2.msg = "incorrect header check", r2.mode = 30;
+                break;
+              }
+              if (8 != (15 & u2)) {
+                e2.msg = "unknown compression method", r2.mode = 30;
+                break;
+              }
+              if (l2 -= 4, k = 8 + (15 & (u2 >>>= 4)), 0 === r2.wbits) r2.wbits = k;
+              else if (k > r2.wbits) {
+                e2.msg = "invalid window size", r2.mode = 30;
+                break;
+              }
+              r2.dmax = 1 << k, e2.adler = r2.check = 1, r2.mode = 512 & u2 ? 10 : 12, l2 = u2 = 0;
+              break;
+            case 2:
+              for (; l2 < 16; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if (r2.flags = u2, 8 != (255 & r2.flags)) {
+                e2.msg = "unknown compression method", r2.mode = 30;
+                break;
+              }
+              if (57344 & r2.flags) {
+                e2.msg = "unknown header flags set", r2.mode = 30;
+                break;
+              }
+              r2.head && (r2.head.text = u2 >> 8 & 1), 512 & r2.flags && (E[0] = 255 & u2, E[1] = u2 >>> 8 & 255, r2.check = B(r2.check, E, 2, 0)), l2 = u2 = 0, r2.mode = 3;
+            case 3:
+              for (; l2 < 32; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              r2.head && (r2.head.time = u2), 512 & r2.flags && (E[0] = 255 & u2, E[1] = u2 >>> 8 & 255, E[2] = u2 >>> 16 & 255, E[3] = u2 >>> 24 & 255, r2.check = B(r2.check, E, 4, 0)), l2 = u2 = 0, r2.mode = 4;
+            case 4:
+              for (; l2 < 16; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              r2.head && (r2.head.xflags = 255 & u2, r2.head.os = u2 >> 8), 512 & r2.flags && (E[0] = 255 & u2, E[1] = u2 >>> 8 & 255, r2.check = B(r2.check, E, 2, 0)), l2 = u2 = 0, r2.mode = 5;
+            case 5:
+              if (1024 & r2.flags) {
+                for (; l2 < 16; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                r2.length = u2, r2.head && (r2.head.extra_len = u2), 512 & r2.flags && (E[0] = 255 & u2, E[1] = u2 >>> 8 & 255, r2.check = B(r2.check, E, 2, 0)), l2 = u2 = 0;
+              } else r2.head && (r2.head.extra = null);
+              r2.mode = 6;
+            case 6:
+              if (1024 & r2.flags && (o2 < (d = r2.length) && (d = o2), d && (r2.head && (k = r2.head.extra_len - r2.length, r2.head.extra || (r2.head.extra = new Array(r2.head.extra_len)), I.arraySet(r2.head.extra, n2, s2, d, k)), 512 & r2.flags && (r2.check = B(r2.check, n2, d, s2)), o2 -= d, s2 += d, r2.length -= d), r2.length)) break e;
+              r2.length = 0, r2.mode = 7;
+            case 7:
+              if (2048 & r2.flags) {
+                if (0 === o2) break e;
+                for (d = 0; k = n2[s2 + d++], r2.head && k && r2.length < 65536 && (r2.head.name += String.fromCharCode(k)), k && d < o2; ) ;
+                if (512 & r2.flags && (r2.check = B(r2.check, n2, d, s2)), o2 -= d, s2 += d, k) break e;
+              } else r2.head && (r2.head.name = null);
+              r2.length = 0, r2.mode = 8;
+            case 8:
+              if (4096 & r2.flags) {
+                if (0 === o2) break e;
+                for (d = 0; k = n2[s2 + d++], r2.head && k && r2.length < 65536 && (r2.head.comment += String.fromCharCode(k)), k && d < o2; ) ;
+                if (512 & r2.flags && (r2.check = B(r2.check, n2, d, s2)), o2 -= d, s2 += d, k) break e;
+              } else r2.head && (r2.head.comment = null);
+              r2.mode = 9;
+            case 9:
+              if (512 & r2.flags) {
+                for (; l2 < 16; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                if (u2 !== (65535 & r2.check)) {
+                  e2.msg = "header crc mismatch", r2.mode = 30;
+                  break;
+                }
+                l2 = u2 = 0;
+              }
+              r2.head && (r2.head.hcrc = r2.flags >> 9 & 1, r2.head.done = true), e2.adler = r2.check = 0, r2.mode = 12;
+              break;
+            case 10:
+              for (; l2 < 32; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              e2.adler = r2.check = L(u2), l2 = u2 = 0, r2.mode = 11;
+            case 11:
+              if (0 === r2.havedict) return e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, 2;
+              e2.adler = r2.check = 1, r2.mode = 12;
+            case 12:
+              if (5 === t2 || 6 === t2) break e;
+            case 13:
+              if (r2.last) {
+                u2 >>>= 7 & l2, l2 -= 7 & l2, r2.mode = 27;
+                break;
+              }
+              for (; l2 < 3; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              switch (r2.last = 1 & u2, l2 -= 1, 3 & (u2 >>>= 1)) {
+                case 0:
+                  r2.mode = 14;
+                  break;
+                case 1:
+                  if (j(r2), r2.mode = 20, 6 !== t2) break;
+                  u2 >>>= 2, l2 -= 2;
+                  break e;
+                case 2:
+                  r2.mode = 17;
+                  break;
+                case 3:
+                  e2.msg = "invalid block type", r2.mode = 30;
+              }
+              u2 >>>= 2, l2 -= 2;
+              break;
+            case 14:
+              for (u2 >>>= 7 & l2, l2 -= 7 & l2; l2 < 32; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if ((65535 & u2) != (u2 >>> 16 ^ 65535)) {
+                e2.msg = "invalid stored block lengths", r2.mode = 30;
+                break;
+              }
+              if (r2.length = 65535 & u2, l2 = u2 = 0, r2.mode = 15, 6 === t2) break e;
+            case 15:
+              r2.mode = 16;
+            case 16:
+              if (d = r2.length) {
+                if (o2 < d && (d = o2), h2 < d && (d = h2), 0 === d) break e;
+                I.arraySet(i2, n2, s2, d, a2), o2 -= d, s2 += d, h2 -= d, a2 += d, r2.length -= d;
+                break;
+              }
+              r2.mode = 12;
+              break;
+            case 17:
+              for (; l2 < 14; ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if (r2.nlen = 257 + (31 & u2), u2 >>>= 5, l2 -= 5, r2.ndist = 1 + (31 & u2), u2 >>>= 5, l2 -= 5, r2.ncode = 4 + (15 & u2), u2 >>>= 4, l2 -= 4, 286 < r2.nlen || 30 < r2.ndist) {
+                e2.msg = "too many length or distance symbols", r2.mode = 30;
+                break;
+              }
+              r2.have = 0, r2.mode = 18;
+            case 18:
+              for (; r2.have < r2.ncode; ) {
+                for (; l2 < 3; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                r2.lens[A[r2.have++]] = 7 & u2, u2 >>>= 3, l2 -= 3;
+              }
+              for (; r2.have < 19; ) r2.lens[A[r2.have++]] = 0;
+              if (r2.lencode = r2.lendyn, r2.lenbits = 7, S = { bits: r2.lenbits }, x = T(0, r2.lens, 0, 19, r2.lencode, 0, r2.work, S), r2.lenbits = S.bits, x) {
+                e2.msg = "invalid code lengths set", r2.mode = 30;
+                break;
+              }
+              r2.have = 0, r2.mode = 19;
+            case 19:
+              for (; r2.have < r2.nlen + r2.ndist; ) {
+                for (; g = (C = r2.lencode[u2 & (1 << r2.lenbits) - 1]) >>> 16 & 255, b = 65535 & C, !((_ = C >>> 24) <= l2); ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                if (b < 16) u2 >>>= _, l2 -= _, r2.lens[r2.have++] = b;
+                else {
+                  if (16 === b) {
+                    for (z = _ + 2; l2 < z; ) {
+                      if (0 === o2) break e;
+                      o2--, u2 += n2[s2++] << l2, l2 += 8;
+                    }
+                    if (u2 >>>= _, l2 -= _, 0 === r2.have) {
+                      e2.msg = "invalid bit length repeat", r2.mode = 30;
+                      break;
+                    }
+                    k = r2.lens[r2.have - 1], d = 3 + (3 & u2), u2 >>>= 2, l2 -= 2;
+                  } else if (17 === b) {
+                    for (z = _ + 3; l2 < z; ) {
+                      if (0 === o2) break e;
+                      o2--, u2 += n2[s2++] << l2, l2 += 8;
+                    }
+                    l2 -= _, k = 0, d = 3 + (7 & (u2 >>>= _)), u2 >>>= 3, l2 -= 3;
+                  } else {
+                    for (z = _ + 7; l2 < z; ) {
+                      if (0 === o2) break e;
+                      o2--, u2 += n2[s2++] << l2, l2 += 8;
+                    }
+                    l2 -= _, k = 0, d = 11 + (127 & (u2 >>>= _)), u2 >>>= 7, l2 -= 7;
+                  }
+                  if (r2.have + d > r2.nlen + r2.ndist) {
+                    e2.msg = "invalid bit length repeat", r2.mode = 30;
+                    break;
+                  }
+                  for (; d--; ) r2.lens[r2.have++] = k;
+                }
+              }
+              if (30 === r2.mode) break;
+              if (0 === r2.lens[256]) {
+                e2.msg = "invalid code -- missing end-of-block", r2.mode = 30;
+                break;
+              }
+              if (r2.lenbits = 9, S = { bits: r2.lenbits }, x = T(D, r2.lens, 0, r2.nlen, r2.lencode, 0, r2.work, S), r2.lenbits = S.bits, x) {
+                e2.msg = "invalid literal/lengths set", r2.mode = 30;
+                break;
+              }
+              if (r2.distbits = 6, r2.distcode = r2.distdyn, S = { bits: r2.distbits }, x = T(F, r2.lens, r2.nlen, r2.ndist, r2.distcode, 0, r2.work, S), r2.distbits = S.bits, x) {
+                e2.msg = "invalid distances set", r2.mode = 30;
+                break;
+              }
+              if (r2.mode = 20, 6 === t2) break e;
+            case 20:
+              r2.mode = 21;
+            case 21:
+              if (6 <= o2 && 258 <= h2) {
+                e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, R(e2, c2), a2 = e2.next_out, i2 = e2.output, h2 = e2.avail_out, s2 = e2.next_in, n2 = e2.input, o2 = e2.avail_in, u2 = r2.hold, l2 = r2.bits, 12 === r2.mode && (r2.back = -1);
+                break;
+              }
+              for (r2.back = 0; g = (C = r2.lencode[u2 & (1 << r2.lenbits) - 1]) >>> 16 & 255, b = 65535 & C, !((_ = C >>> 24) <= l2); ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if (g && 0 == (240 & g)) {
+                for (v = _, y = g, w = b; g = (C = r2.lencode[w + ((u2 & (1 << v + y) - 1) >> v)]) >>> 16 & 255, b = 65535 & C, !(v + (_ = C >>> 24) <= l2); ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                u2 >>>= v, l2 -= v, r2.back += v;
+              }
+              if (u2 >>>= _, l2 -= _, r2.back += _, r2.length = b, 0 === g) {
+                r2.mode = 26;
+                break;
+              }
+              if (32 & g) {
+                r2.back = -1, r2.mode = 12;
+                break;
+              }
+              if (64 & g) {
+                e2.msg = "invalid literal/length code", r2.mode = 30;
+                break;
+              }
+              r2.extra = 15 & g, r2.mode = 22;
+            case 22:
+              if (r2.extra) {
+                for (z = r2.extra; l2 < z; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                r2.length += u2 & (1 << r2.extra) - 1, u2 >>>= r2.extra, l2 -= r2.extra, r2.back += r2.extra;
+              }
+              r2.was = r2.length, r2.mode = 23;
+            case 23:
+              for (; g = (C = r2.distcode[u2 & (1 << r2.distbits) - 1]) >>> 16 & 255, b = 65535 & C, !((_ = C >>> 24) <= l2); ) {
+                if (0 === o2) break e;
+                o2--, u2 += n2[s2++] << l2, l2 += 8;
+              }
+              if (0 == (240 & g)) {
+                for (v = _, y = g, w = b; g = (C = r2.distcode[w + ((u2 & (1 << v + y) - 1) >> v)]) >>> 16 & 255, b = 65535 & C, !(v + (_ = C >>> 24) <= l2); ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                u2 >>>= v, l2 -= v, r2.back += v;
+              }
+              if (u2 >>>= _, l2 -= _, r2.back += _, 64 & g) {
+                e2.msg = "invalid distance code", r2.mode = 30;
+                break;
+              }
+              r2.offset = b, r2.extra = 15 & g, r2.mode = 24;
+            case 24:
+              if (r2.extra) {
+                for (z = r2.extra; l2 < z; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                r2.offset += u2 & (1 << r2.extra) - 1, u2 >>>= r2.extra, l2 -= r2.extra, r2.back += r2.extra;
+              }
+              if (r2.offset > r2.dmax) {
+                e2.msg = "invalid distance too far back", r2.mode = 30;
+                break;
+              }
+              r2.mode = 25;
+            case 25:
+              if (0 === h2) break e;
+              if (d = c2 - h2, r2.offset > d) {
+                if ((d = r2.offset - d) > r2.whave && r2.sane) {
+                  e2.msg = "invalid distance too far back", r2.mode = 30;
+                  break;
+                }
+                p = d > r2.wnext ? (d -= r2.wnext, r2.wsize - d) : r2.wnext - d, d > r2.length && (d = r2.length), m = r2.window;
+              } else m = i2, p = a2 - r2.offset, d = r2.length;
+              for (h2 < d && (d = h2), h2 -= d, r2.length -= d; i2[a2++] = m[p++], --d; ) ;
+              0 === r2.length && (r2.mode = 21);
+              break;
+            case 26:
+              if (0 === h2) break e;
+              i2[a2++] = r2.length, h2--, r2.mode = 21;
+              break;
+            case 27:
+              if (r2.wrap) {
+                for (; l2 < 32; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 |= n2[s2++] << l2, l2 += 8;
+                }
+                if (c2 -= h2, e2.total_out += c2, r2.total += c2, c2 && (e2.adler = r2.check = r2.flags ? B(r2.check, i2, c2, a2 - c2) : O(r2.check, i2, c2, a2 - c2)), c2 = h2, (r2.flags ? u2 : L(u2)) !== r2.check) {
+                  e2.msg = "incorrect data check", r2.mode = 30;
+                  break;
+                }
+                l2 = u2 = 0;
+              }
+              r2.mode = 28;
+            case 28:
+              if (r2.wrap && r2.flags) {
+                for (; l2 < 32; ) {
+                  if (0 === o2) break e;
+                  o2--, u2 += n2[s2++] << l2, l2 += 8;
+                }
+                if (u2 !== (4294967295 & r2.total)) {
+                  e2.msg = "incorrect length check", r2.mode = 30;
+                  break;
+                }
+                l2 = u2 = 0;
+              }
+              r2.mode = 29;
+            case 29:
+              x = 1;
+              break e;
+            case 30:
+              x = -3;
+              break e;
+            case 31:
+              return -4;
+            case 32:
+            default:
+              return U;
+          }
+          return e2.next_out = a2, e2.avail_out = h2, e2.next_in = s2, e2.avail_in = o2, r2.hold = u2, r2.bits = l2, (r2.wsize || c2 !== e2.avail_out && r2.mode < 30 && (r2.mode < 27 || 4 !== t2)) && Z(e2, e2.output, e2.next_out, c2 - e2.avail_out) ? (r2.mode = 31, -4) : (f2 -= e2.avail_in, c2 -= e2.avail_out, e2.total_in += f2, e2.total_out += c2, r2.total += c2, r2.wrap && c2 && (e2.adler = r2.check = r2.flags ? B(r2.check, i2, c2, e2.next_out - c2) : O(r2.check, i2, c2, e2.next_out - c2)), e2.data_type = r2.bits + (r2.last ? 64 : 0) + (12 === r2.mode ? 128 : 0) + (20 === r2.mode || 15 === r2.mode ? 256 : 0), (0 == f2 && 0 === c2 || 4 === t2) && x === N && (x = -5), x);
+        }, r.inflateEnd = function(e2) {
+          if (!e2 || !e2.state) return U;
+          var t2 = e2.state;
+          return t2.window && (t2.window = null), e2.state = null, N;
+        }, r.inflateGetHeader = function(e2, t2) {
+          var r2;
+          return e2 && e2.state ? 0 == (2 & (r2 = e2.state).wrap) ? U : ((r2.head = t2).done = false, N) : U;
+        }, r.inflateSetDictionary = function(e2, t2) {
+          var r2, n2 = t2.length;
+          return e2 && e2.state ? 0 !== (r2 = e2.state).wrap && 11 !== r2.mode ? U : 11 === r2.mode && O(1, t2, n2, 0) !== r2.check ? -3 : Z(e2, t2, n2, n2) ? (r2.mode = 31, -4) : (r2.havedict = 1, N) : U;
+        }, r.inflateInfo = "pako inflate (from Nodeca project)";
+      }, { "../utils/common": 41, "./adler32": 43, "./crc32": 45, "./inffast": 48, "./inftrees": 50 }], 50: [function(e, t, r) {
+        "use strict";
+        var D = e("../utils/common"), F = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0], N = [16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78], U = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0], P = [16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 64, 64];
+        t.exports = function(e2, t2, r2, n, i, s, a, o) {
+          var h, u, l, f, c, d, p, m, _, g = o.bits, b = 0, v = 0, y = 0, w = 0, k = 0, x = 0, S = 0, z = 0, C = 0, E = 0, A = null, I = 0, O = new D.Buf16(16), B = new D.Buf16(16), R = null, T = 0;
+          for (b = 0; b <= 15; b++) O[b] = 0;
+          for (v = 0; v < n; v++) O[t2[r2 + v]]++;
+          for (k = g, w = 15; 1 <= w && 0 === O[w]; w--) ;
+          if (w < k && (k = w), 0 === w) return i[s++] = 20971520, i[s++] = 20971520, o.bits = 1, 0;
+          for (y = 1; y < w && 0 === O[y]; y++) ;
+          for (k < y && (k = y), b = z = 1; b <= 15; b++) if (z <<= 1, (z -= O[b]) < 0) return -1;
+          if (0 < z && (0 === e2 || 1 !== w)) return -1;
+          for (B[1] = 0, b = 1; b < 15; b++) B[b + 1] = B[b] + O[b];
+          for (v = 0; v < n; v++) 0 !== t2[r2 + v] && (a[B[t2[r2 + v]]++] = v);
+          if (d = 0 === e2 ? (A = R = a, 19) : 1 === e2 ? (A = F, I -= 257, R = N, T -= 257, 256) : (A = U, R = P, -1), b = y, c = s, S = v = E = 0, l = -1, f = (C = 1 << (x = k)) - 1, 1 === e2 && 852 < C || 2 === e2 && 592 < C) return 1;
+          for (; ; ) {
+            for (p = b - S, _ = a[v] < d ? (m = 0, a[v]) : a[v] > d ? (m = R[T + a[v]], A[I + a[v]]) : (m = 96, 0), h = 1 << b - S, y = u = 1 << x; i[c + (E >> S) + (u -= h)] = p << 24 | m << 16 | _ | 0, 0 !== u; ) ;
+            for (h = 1 << b - 1; E & h; ) h >>= 1;
+            if (0 !== h ? (E &= h - 1, E += h) : E = 0, v++, 0 == --O[b]) {
+              if (b === w) break;
+              b = t2[r2 + a[v]];
+            }
+            if (k < b && (E & f) !== l) {
+              for (0 === S && (S = k), c += y, z = 1 << (x = b - S); x + S < w && !((z -= O[x + S]) <= 0); ) x++, z <<= 1;
+              if (C += 1 << x, 1 === e2 && 852 < C || 2 === e2 && 592 < C) return 1;
+              i[l = E & f] = k << 24 | x << 16 | c - s | 0;
+            }
+          }
+          return 0 !== E && (i[c + E] = b - S << 24 | 64 << 16 | 0), o.bits = k, 0;
+        };
+      }, { "../utils/common": 41 }], 51: [function(e, t, r) {
+        "use strict";
+        t.exports = { 2: "need dictionary", 1: "stream end", 0: "", "-1": "file error", "-2": "stream error", "-3": "data error", "-4": "insufficient memory", "-5": "buffer error", "-6": "incompatible version" };
+      }, {}], 52: [function(e, t, r) {
+        "use strict";
+        var i = e("../utils/common"), o = 0, h = 1;
+        function n(e2) {
+          for (var t2 = e2.length; 0 <= --t2; ) e2[t2] = 0;
+        }
+        var s = 0, a = 29, u = 256, l = u + 1 + a, f = 30, c = 19, _ = 2 * l + 1, g = 15, d = 16, p = 7, m = 256, b = 16, v = 17, y = 18, w = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0], k = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13], x = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7], S = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15], z = new Array(2 * (l + 2));
+        n(z);
+        var C = new Array(2 * f);
+        n(C);
+        var E = new Array(512);
+        n(E);
+        var A = new Array(256);
+        n(A);
+        var I = new Array(a);
+        n(I);
+        var O, B, R, T = new Array(f);
+        function D(e2, t2, r2, n2, i2) {
+          this.static_tree = e2, this.extra_bits = t2, this.extra_base = r2, this.elems = n2, this.max_length = i2, this.has_stree = e2 && e2.length;
+        }
+        function F(e2, t2) {
+          this.dyn_tree = e2, this.max_code = 0, this.stat_desc = t2;
+        }
+        function N(e2) {
+          return e2 < 256 ? E[e2] : E[256 + (e2 >>> 7)];
+        }
+        function U(e2, t2) {
+          e2.pending_buf[e2.pending++] = 255 & t2, e2.pending_buf[e2.pending++] = t2 >>> 8 & 255;
+        }
+        function P(e2, t2, r2) {
+          e2.bi_valid > d - r2 ? (e2.bi_buf |= t2 << e2.bi_valid & 65535, U(e2, e2.bi_buf), e2.bi_buf = t2 >> d - e2.bi_valid, e2.bi_valid += r2 - d) : (e2.bi_buf |= t2 << e2.bi_valid & 65535, e2.bi_valid += r2);
+        }
+        function L(e2, t2, r2) {
+          P(e2, r2[2 * t2], r2[2 * t2 + 1]);
+        }
+        function j(e2, t2) {
+          for (var r2 = 0; r2 |= 1 & e2, e2 >>>= 1, r2 <<= 1, 0 < --t2; ) ;
+          return r2 >>> 1;
+        }
+        function Z(e2, t2, r2) {
+          var n2, i2, s2 = new Array(g + 1), a2 = 0;
+          for (n2 = 1; n2 <= g; n2++) s2[n2] = a2 = a2 + r2[n2 - 1] << 1;
+          for (i2 = 0; i2 <= t2; i2++) {
+            var o2 = e2[2 * i2 + 1];
+            0 !== o2 && (e2[2 * i2] = j(s2[o2]++, o2));
+          }
+        }
+        function W(e2) {
+          var t2;
+          for (t2 = 0; t2 < l; t2++) e2.dyn_ltree[2 * t2] = 0;
+          for (t2 = 0; t2 < f; t2++) e2.dyn_dtree[2 * t2] = 0;
+          for (t2 = 0; t2 < c; t2++) e2.bl_tree[2 * t2] = 0;
+          e2.dyn_ltree[2 * m] = 1, e2.opt_len = e2.static_len = 0, e2.last_lit = e2.matches = 0;
+        }
+        function M(e2) {
+          8 < e2.bi_valid ? U(e2, e2.bi_buf) : 0 < e2.bi_valid && (e2.pending_buf[e2.pending++] = e2.bi_buf), e2.bi_buf = 0, e2.bi_valid = 0;
+        }
+        function H(e2, t2, r2, n2) {
+          var i2 = 2 * t2, s2 = 2 * r2;
+          return e2[i2] < e2[s2] || e2[i2] === e2[s2] && n2[t2] <= n2[r2];
+        }
+        function G(e2, t2, r2) {
+          for (var n2 = e2.heap[r2], i2 = r2 << 1; i2 <= e2.heap_len && (i2 < e2.heap_len && H(t2, e2.heap[i2 + 1], e2.heap[i2], e2.depth) && i2++, !H(t2, n2, e2.heap[i2], e2.depth)); ) e2.heap[r2] = e2.heap[i2], r2 = i2, i2 <<= 1;
+          e2.heap[r2] = n2;
+        }
+        function K(e2, t2, r2) {
+          var n2, i2, s2, a2, o2 = 0;
+          if (0 !== e2.last_lit) for (; n2 = e2.pending_buf[e2.d_buf + 2 * o2] << 8 | e2.pending_buf[e2.d_buf + 2 * o2 + 1], i2 = e2.pending_buf[e2.l_buf + o2], o2++, 0 === n2 ? L(e2, i2, t2) : (L(e2, (s2 = A[i2]) + u + 1, t2), 0 !== (a2 = w[s2]) && P(e2, i2 -= I[s2], a2), L(e2, s2 = N(--n2), r2), 0 !== (a2 = k[s2]) && P(e2, n2 -= T[s2], a2)), o2 < e2.last_lit; ) ;
+          L(e2, m, t2);
+        }
+        function Y(e2, t2) {
+          var r2, n2, i2, s2 = t2.dyn_tree, a2 = t2.stat_desc.static_tree, o2 = t2.stat_desc.has_stree, h2 = t2.stat_desc.elems, u2 = -1;
+          for (e2.heap_len = 0, e2.heap_max = _, r2 = 0; r2 < h2; r2++) 0 !== s2[2 * r2] ? (e2.heap[++e2.heap_len] = u2 = r2, e2.depth[r2] = 0) : s2[2 * r2 + 1] = 0;
+          for (; e2.heap_len < 2; ) s2[2 * (i2 = e2.heap[++e2.heap_len] = u2 < 2 ? ++u2 : 0)] = 1, e2.depth[i2] = 0, e2.opt_len--, o2 && (e2.static_len -= a2[2 * i2 + 1]);
+          for (t2.max_code = u2, r2 = e2.heap_len >> 1; 1 <= r2; r2--) G(e2, s2, r2);
+          for (i2 = h2; r2 = e2.heap[1], e2.heap[1] = e2.heap[e2.heap_len--], G(e2, s2, 1), n2 = e2.heap[1], e2.heap[--e2.heap_max] = r2, e2.heap[--e2.heap_max] = n2, s2[2 * i2] = s2[2 * r2] + s2[2 * n2], e2.depth[i2] = (e2.depth[r2] >= e2.depth[n2] ? e2.depth[r2] : e2.depth[n2]) + 1, s2[2 * r2 + 1] = s2[2 * n2 + 1] = i2, e2.heap[1] = i2++, G(e2, s2, 1), 2 <= e2.heap_len; ) ;
+          e2.heap[--e2.heap_max] = e2.heap[1], (function(e3, t3) {
+            var r3, n3, i3, s3, a3, o3, h3 = t3.dyn_tree, u3 = t3.max_code, l2 = t3.stat_desc.static_tree, f2 = t3.stat_desc.has_stree, c2 = t3.stat_desc.extra_bits, d2 = t3.stat_desc.extra_base, p2 = t3.stat_desc.max_length, m2 = 0;
+            for (s3 = 0; s3 <= g; s3++) e3.bl_count[s3] = 0;
+            for (h3[2 * e3.heap[e3.heap_max] + 1] = 0, r3 = e3.heap_max + 1; r3 < _; r3++) p2 < (s3 = h3[2 * h3[2 * (n3 = e3.heap[r3]) + 1] + 1] + 1) && (s3 = p2, m2++), h3[2 * n3 + 1] = s3, u3 < n3 || (e3.bl_count[s3]++, a3 = 0, d2 <= n3 && (a3 = c2[n3 - d2]), o3 = h3[2 * n3], e3.opt_len += o3 * (s3 + a3), f2 && (e3.static_len += o3 * (l2[2 * n3 + 1] + a3)));
+            if (0 !== m2) {
+              do {
+                for (s3 = p2 - 1; 0 === e3.bl_count[s3]; ) s3--;
+                e3.bl_count[s3]--, e3.bl_count[s3 + 1] += 2, e3.bl_count[p2]--, m2 -= 2;
+              } while (0 < m2);
+              for (s3 = p2; 0 !== s3; s3--) for (n3 = e3.bl_count[s3]; 0 !== n3; ) u3 < (i3 = e3.heap[--r3]) || (h3[2 * i3 + 1] !== s3 && (e3.opt_len += (s3 - h3[2 * i3 + 1]) * h3[2 * i3], h3[2 * i3 + 1] = s3), n3--);
+            }
+          })(e2, t2), Z(s2, u2, e2.bl_count);
+        }
+        function X(e2, t2, r2) {
+          var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
+          for (0 === a2 && (h2 = 138, u2 = 3), t2[2 * (r2 + 1) + 1] = 65535, n2 = 0; n2 <= r2; n2++) i2 = a2, a2 = t2[2 * (n2 + 1) + 1], ++o2 < h2 && i2 === a2 || (o2 < u2 ? e2.bl_tree[2 * i2] += o2 : 0 !== i2 ? (i2 !== s2 && e2.bl_tree[2 * i2]++, e2.bl_tree[2 * b]++) : o2 <= 10 ? e2.bl_tree[2 * v]++ : e2.bl_tree[2 * y]++, s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4));
+        }
+        function V(e2, t2, r2) {
+          var n2, i2, s2 = -1, a2 = t2[1], o2 = 0, h2 = 7, u2 = 4;
+          for (0 === a2 && (h2 = 138, u2 = 3), n2 = 0; n2 <= r2; n2++) if (i2 = a2, a2 = t2[2 * (n2 + 1) + 1], !(++o2 < h2 && i2 === a2)) {
+            if (o2 < u2) for (; L(e2, i2, e2.bl_tree), 0 != --o2; ) ;
+            else 0 !== i2 ? (i2 !== s2 && (L(e2, i2, e2.bl_tree), o2--), L(e2, b, e2.bl_tree), P(e2, o2 - 3, 2)) : o2 <= 10 ? (L(e2, v, e2.bl_tree), P(e2, o2 - 3, 3)) : (L(e2, y, e2.bl_tree), P(e2, o2 - 11, 7));
+            s2 = i2, u2 = (o2 = 0) === a2 ? (h2 = 138, 3) : i2 === a2 ? (h2 = 6, 3) : (h2 = 7, 4);
+          }
+        }
+        n(T);
+        var q = false;
+        function J(e2, t2, r2, n2) {
+          P(e2, (s << 1) + (n2 ? 1 : 0), 3), (function(e3, t3, r3, n3) {
+            M(e3), n3 && (U(e3, r3), U(e3, ~r3)), i.arraySet(e3.pending_buf, e3.window, t3, r3, e3.pending), e3.pending += r3;
+          })(e2, t2, r2, true);
+        }
+        r._tr_init = function(e2) {
+          q || ((function() {
+            var e3, t2, r2, n2, i2, s2 = new Array(g + 1);
+            for (n2 = r2 = 0; n2 < a - 1; n2++) for (I[n2] = r2, e3 = 0; e3 < 1 << w[n2]; e3++) A[r2++] = n2;
+            for (A[r2 - 1] = n2, n2 = i2 = 0; n2 < 16; n2++) for (T[n2] = i2, e3 = 0; e3 < 1 << k[n2]; e3++) E[i2++] = n2;
+            for (i2 >>= 7; n2 < f; n2++) for (T[n2] = i2 << 7, e3 = 0; e3 < 1 << k[n2] - 7; e3++) E[256 + i2++] = n2;
+            for (t2 = 0; t2 <= g; t2++) s2[t2] = 0;
+            for (e3 = 0; e3 <= 143; ) z[2 * e3 + 1] = 8, e3++, s2[8]++;
+            for (; e3 <= 255; ) z[2 * e3 + 1] = 9, e3++, s2[9]++;
+            for (; e3 <= 279; ) z[2 * e3 + 1] = 7, e3++, s2[7]++;
+            for (; e3 <= 287; ) z[2 * e3 + 1] = 8, e3++, s2[8]++;
+            for (Z(z, l + 1, s2), e3 = 0; e3 < f; e3++) C[2 * e3 + 1] = 5, C[2 * e3] = j(e3, 5);
+            O = new D(z, w, u + 1, l, g), B = new D(C, k, 0, f, g), R = new D(new Array(0), x, 0, c, p);
+          })(), q = true), e2.l_desc = new F(e2.dyn_ltree, O), e2.d_desc = new F(e2.dyn_dtree, B), e2.bl_desc = new F(e2.bl_tree, R), e2.bi_buf = 0, e2.bi_valid = 0, W(e2);
+        }, r._tr_stored_block = J, r._tr_flush_block = function(e2, t2, r2, n2) {
+          var i2, s2, a2 = 0;
+          0 < e2.level ? (2 === e2.strm.data_type && (e2.strm.data_type = (function(e3) {
+            var t3, r3 = 4093624447;
+            for (t3 = 0; t3 <= 31; t3++, r3 >>>= 1) if (1 & r3 && 0 !== e3.dyn_ltree[2 * t3]) return o;
+            if (0 !== e3.dyn_ltree[18] || 0 !== e3.dyn_ltree[20] || 0 !== e3.dyn_ltree[26]) return h;
+            for (t3 = 32; t3 < u; t3++) if (0 !== e3.dyn_ltree[2 * t3]) return h;
+            return o;
+          })(e2)), Y(e2, e2.l_desc), Y(e2, e2.d_desc), a2 = (function(e3) {
+            var t3;
+            for (X(e3, e3.dyn_ltree, e3.l_desc.max_code), X(e3, e3.dyn_dtree, e3.d_desc.max_code), Y(e3, e3.bl_desc), t3 = c - 1; 3 <= t3 && 0 === e3.bl_tree[2 * S[t3] + 1]; t3--) ;
+            return e3.opt_len += 3 * (t3 + 1) + 5 + 5 + 4, t3;
+          })(e2), i2 = e2.opt_len + 3 + 7 >>> 3, (s2 = e2.static_len + 3 + 7 >>> 3) <= i2 && (i2 = s2)) : i2 = s2 = r2 + 5, r2 + 4 <= i2 && -1 !== t2 ? J(e2, t2, r2, n2) : 4 === e2.strategy || s2 === i2 ? (P(e2, 2 + (n2 ? 1 : 0), 3), K(e2, z, C)) : (P(e2, 4 + (n2 ? 1 : 0), 3), (function(e3, t3, r3, n3) {
+            var i3;
+            for (P(e3, t3 - 257, 5), P(e3, r3 - 1, 5), P(e3, n3 - 4, 4), i3 = 0; i3 < n3; i3++) P(e3, e3.bl_tree[2 * S[i3] + 1], 3);
+            V(e3, e3.dyn_ltree, t3 - 1), V(e3, e3.dyn_dtree, r3 - 1);
+          })(e2, e2.l_desc.max_code + 1, e2.d_desc.max_code + 1, a2 + 1), K(e2, e2.dyn_ltree, e2.dyn_dtree)), W(e2), n2 && M(e2);
+        }, r._tr_tally = function(e2, t2, r2) {
+          return e2.pending_buf[e2.d_buf + 2 * e2.last_lit] = t2 >>> 8 & 255, e2.pending_buf[e2.d_buf + 2 * e2.last_lit + 1] = 255 & t2, e2.pending_buf[e2.l_buf + e2.last_lit] = 255 & r2, e2.last_lit++, 0 === t2 ? e2.dyn_ltree[2 * r2]++ : (e2.matches++, t2--, e2.dyn_ltree[2 * (A[r2] + u + 1)]++, e2.dyn_dtree[2 * N(t2)]++), e2.last_lit === e2.lit_bufsize - 1;
+        }, r._tr_align = function(e2) {
+          P(e2, 2, 3), L(e2, m, z), (function(e3) {
+            16 === e3.bi_valid ? (U(e3, e3.bi_buf), e3.bi_buf = 0, e3.bi_valid = 0) : 8 <= e3.bi_valid && (e3.pending_buf[e3.pending++] = 255 & e3.bi_buf, e3.bi_buf >>= 8, e3.bi_valid -= 8);
+          })(e2);
+        };
+      }, { "../utils/common": 41 }], 53: [function(e, t, r) {
+        "use strict";
+        t.exports = function() {
+          this.input = null, this.next_in = 0, this.avail_in = 0, this.total_in = 0, this.output = null, this.next_out = 0, this.avail_out = 0, this.total_out = 0, this.msg = "", this.state = null, this.data_type = 2, this.adler = 0;
+        };
+      }, {}], 54: [function(e, t, r) {
+        (function(e2) {
+          !(function(r2, n) {
+            "use strict";
+            if (!r2.setImmediate) {
+              var i, s, t2, a, o = 1, h = {}, u = false, l = r2.document, e3 = Object.getPrototypeOf && Object.getPrototypeOf(r2);
+              e3 = e3 && e3.setTimeout ? e3 : r2, i = "[object process]" === {}.toString.call(r2.process) ? function(e4) {
+                process.nextTick(function() {
+                  c(e4);
+                });
+              } : (function() {
+                if (r2.postMessage && !r2.importScripts) {
+                  var e4 = true, t3 = r2.onmessage;
+                  return r2.onmessage = function() {
+                    e4 = false;
+                  }, r2.postMessage("", "*"), r2.onmessage = t3, e4;
+                }
+              })() ? (a = "setImmediate$" + Math.random() + "$", r2.addEventListener ? r2.addEventListener("message", d, false) : r2.attachEvent("onmessage", d), function(e4) {
+                r2.postMessage(a + e4, "*");
+              }) : r2.MessageChannel ? ((t2 = new MessageChannel()).port1.onmessage = function(e4) {
+                c(e4.data);
+              }, function(e4) {
+                t2.port2.postMessage(e4);
+              }) : l && "onreadystatechange" in l.createElement("script") ? (s = l.documentElement, function(e4) {
+                var t3 = l.createElement("script");
+                t3.onreadystatechange = function() {
+                  c(e4), t3.onreadystatechange = null, s.removeChild(t3), t3 = null;
+                }, s.appendChild(t3);
+              }) : function(e4) {
+                setTimeout(c, 0, e4);
+              }, e3.setImmediate = function(e4) {
+                "function" != typeof e4 && (e4 = new Function("" + e4));
+                for (var t3 = new Array(arguments.length - 1), r3 = 0; r3 < t3.length; r3++) t3[r3] = arguments[r3 + 1];
+                var n2 = { callback: e4, args: t3 };
+                return h[o] = n2, i(o), o++;
+              }, e3.clearImmediate = f;
+            }
+            function f(e4) {
+              delete h[e4];
+            }
+            function c(e4) {
+              if (u) setTimeout(c, 0, e4);
+              else {
+                var t3 = h[e4];
+                if (t3) {
+                  u = true;
+                  try {
+                    !(function(e5) {
+                      var t4 = e5.callback, r3 = e5.args;
+                      switch (r3.length) {
+                        case 0:
+                          t4();
+                          break;
+                        case 1:
+                          t4(r3[0]);
+                          break;
+                        case 2:
+                          t4(r3[0], r3[1]);
+                          break;
+                        case 3:
+                          t4(r3[0], r3[1], r3[2]);
+                          break;
+                        default:
+                          t4.apply(n, r3);
+                      }
+                    })(t3);
+                  } finally {
+                    f(e4), u = false;
+                  }
+                }
+              }
+            }
+            function d(e4) {
+              e4.source === r2 && "string" == typeof e4.data && 0 === e4.data.indexOf(a) && c(+e4.data.slice(a.length));
+            }
+          })("undefined" == typeof self ? void 0 === e2 ? this : e2 : self);
+        }).call(this, "undefined" != typeof global ? global : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
+      }, {}] }, {}, [10])(10);
     });
-    if (!response.ok || !response.body) throw new Error(`OpenAI request failed: ${response.status}`);
-    await parseResponsesStream(response.body, onDelta, signal);
   }
-};
-var ChatHarness = class {
-  constructor(vfs) {
-    this.vfs = vfs;
-  }
-  vfs;
-  messages = [
-    {
-      id: uid("msg"),
-      role: "system",
-      text: "Chat is running locally by default. Choose OpenAI in Settings and configure slug.openaiKey in localStorage to use Responses API transport.",
-      at: Date.now()
-    }
-  ];
-  abortController = null;
-  get running() {
-    return this.abortController !== null;
-  }
-  cancel() {
-    this.abortController?.abort();
-  }
-  async send(input, activeDoc, openDocs) {
-    if (!input.trim() || this.running) return;
-    const context = {
-      selectedText: activeDoc?.selectedText() ?? "",
-      openPaths: openDocs.map((doc) => doc.path ?? "(untitled)")
-    };
-    if (activeDoc?.path) context.activePath = activeDoc.path;
-    this.messages.push({ id: uid("msg"), role: "user", text: input, at: Date.now() });
-    const assistant = { id: uid("msg"), role: "assistant", text: "", at: Date.now() };
-    this.messages.push(assistant);
-    const provider = localStorage.getItem("slug.aiProvider") === "openai" ? "openai" : "local";
-    const key = localStorage.getItem("slug.openaiKey")?.trim();
-    const transport = provider === "openai" && key ? new OpenAIResponsesTransport(key) : new LocalAssistantTransport();
-    const controller = new AbortController();
-    this.abortController = controller;
-    try {
-      await transport.send(input, context, (text) => {
-        assistant.text += text;
-      }, controller.signal);
-    } catch (error) {
-      assistant.text += `
-Request failed: ${error instanceof Error ? error.message : String(error)}`;
-    } finally {
-      this.abortController = null;
-      await this.persist();
-    }
-  }
-  async persist() {
-    await this.vfs.writeFile("/.slug-chat.json", JSON.stringify(this.messages, null, 2), "application/json");
-  }
-};
-async function parseResponsesStream(stream, onDelta, signal) {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  while (!signal.aborted) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buffer.indexOf("\n\n")) >= 0) {
-      const raw = buffer.slice(0, idx);
-      buffer = buffer.slice(idx + 2);
-      const data = raw.split("\n").filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trim()).join("\n");
-      if (!data || data === "[DONE]") continue;
-      const parsed = JSON.parse(data);
-      if (parsed.type === "response.output_text.delta" && typeof parsed.delta === "string") onDelta(parsed.delta);
-      else if (parsed.type === "response.completed") return;
-      else if (typeof parsed.text === "string") onDelta(parsed.text);
-    }
-  }
-}
+});
 
 // src/vfs/path.ts
 function normalizePath(input) {
@@ -175,6 +2428,856 @@ function comparePath(a, b) {
   return a.localeCompare(b, void 0, { sensitivity: "base" });
 }
 
+// src/editor/file_types.ts
+var UNSUPPORTED_FILE_TEXT = "File type not supported";
+var UNSUPPORTED_EXTENSIONS = /* @__PURE__ */ new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "avif",
+  "bmp",
+  "ico",
+  "icns",
+  "tif",
+  "tiff",
+  "psd",
+  "mp3",
+  "wav",
+  "ogg",
+  "oga",
+  "flac",
+  "aac",
+  "m4a",
+  "wma",
+  "aiff",
+  "mp4",
+  "mov",
+  "m4v",
+  "webm",
+  "mkv",
+  "avi",
+  "wmv",
+  "flv",
+  "zip",
+  "rar",
+  "7z",
+  "tar",
+  "gz",
+  "tgz",
+  "bz2",
+  "xz",
+  "br",
+  "zst",
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+  "odt",
+  "ods",
+  "odp",
+  "ttf",
+  "otf",
+  "woff",
+  "woff2",
+  "eot",
+  "exe",
+  "dll",
+  "so",
+  "dylib",
+  "app",
+  "bin",
+  "wasm",
+  "class",
+  "jar",
+  "sqlite",
+  "sqlite3",
+  "db",
+  "mdb",
+  "accdb",
+  "realm",
+  "pak",
+  "dat",
+  "asset",
+  "bundle",
+  "iso",
+  "dmg",
+  "img",
+  "vhd",
+  "vhdx"
+]);
+function isUnsupportedFilePath(path) {
+  const name = basename(path);
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0 || dot === name.length - 1) return false;
+  return UNSUPPORTED_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
+}
+
+// src/shared/types.ts
+function rectContains(rect, x, y) {
+  return x >= rect.x && y >= rect.y && x < rect.x + rect.w && y < rect.y + rect.h;
+}
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+function uid(prefix) {
+  const random = crypto.getRandomValues(new Uint32Array(2));
+  return `${prefix}_${Date.now().toString(36)}_${random[0].toString(36)}${random[1].toString(36)}`;
+}
+var AppError = class extends Error {
+  code;
+  constructor(code, message) {
+    super(message);
+    this.name = "AppError";
+    this.code = code;
+  }
+};
+
+// src/assistant/chat.ts
+var AI_CONFIG_STORAGE_KEY = "slug.aiEndpointConfig";
+var AI_SYSTEM_PROMPT_STORAGE_KEY = "slug.aiSystemPrompt";
+var AI_HELPER_PROMPTS_STORAGE_KEY = "slug.aiHelperPrompts";
+var AI_MODELS_STORAGE_KEY = "slug.aiModels";
+var AI_SETTINGS_DOC_PATH = "/.slug-ai-settings.json";
+var AI_SYSTEM_PROMPT_DOC_PATH = "/.slug-system-prompt.md";
+var AI_HELPER_PROMPTS_DOC_PATH = "/.slug-helper-prompts.md";
+var DEFAULT_AI_ENDPOINT_CONFIG = {
+  apiBaseUrl: "http://localhost:1234/v1",
+  apiKey: "",
+  model: "",
+  temperature: 0.2,
+  maxContextTokens: 0
+};
+var DEFAULT_AI_RUNTIME_SETTINGS = {
+  maxToolCallsPerTurn: 50,
+  detectDuplicateToolCalls: true,
+  toolCallFormat: "tag",
+  compactFreePercent: 10
+};
+var DEFAULT_SYSTEM_PROMPT = `You are an AI coding assistant inside a browser code editor.
+
+You can inspect and edit the virtual workspace using tool calls. Keep responses concise, use tools when you need file contents, and prefer precise edits over broad rewrites.
+
+Available tools:
+- readFile(path)
+- writeFile(path, content)
+- editFile(path, oldString, newString)
+- grep(pattern)
+- grepFile(pattern, path)
+- frepFile(pattern, path)
+- bash(command)
+- compact()
+
+Tag tool-call format:
+<tool>readFile("/README.md")</tool>
+
+Harmony-style tool-call format:
+<|channel|>commentary to=readFile <|message|>{"path":"/README.md"}<|call|>
+
+After each tool result, continue until the task is done or you need the user.`;
+function loadAiEndpointConfig() {
+  return normalizeAiEndpointConfig(readJsonLocalStorage(AI_CONFIG_STORAGE_KEY));
+}
+function saveAiEndpointConfig(config) {
+  const normalized = normalizeAiEndpointConfig(config);
+  localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(normalized, null, 2));
+  return normalized;
+}
+function loadAiSystemPrompt() {
+  return localStorage.getItem(AI_SYSTEM_PROMPT_STORAGE_KEY) ?? DEFAULT_SYSTEM_PROMPT;
+}
+function saveAiSystemPrompt(text) {
+  localStorage.setItem(AI_SYSTEM_PROMPT_STORAGE_KEY, text);
+}
+function loadAiHelperPrompts() {
+  return localStorage.getItem(AI_HELPER_PROMPTS_STORAGE_KEY) ?? "";
+}
+function saveAiHelperPrompts(text) {
+  localStorage.setItem(AI_HELPER_PROMPTS_STORAGE_KEY, text);
+}
+function loadAiModels() {
+  const raw = readJsonLocalStorage(AI_MODELS_STORAGE_KEY);
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => ({
+    id: typeof item?.id === "string" ? item.id : "",
+    contextLength: Number.isFinite(item?.contextLength) ? Math.max(0, Math.trunc(Number(item.contextLength))) : 0
+  })).filter((item) => item.id);
+}
+function saveAiModels(models) {
+  localStorage.setItem(AI_MODELS_STORAGE_KEY, JSON.stringify(models, null, 2));
+}
+async function probeOpenAICompatibleModels(config = loadAiEndpointConfig()) {
+  const normalized = normalizeAiEndpointConfig(config);
+  const headers = authHeaders(normalized);
+  try {
+    const response = await fetch(`${normalized.apiBaseUrl}/models`, { headers });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const models = (Array.isArray(data.data) ? data.data : []).map(modelInfoFromUnknown).filter((model) => Boolean(model?.id));
+    const merged = await mergeLmStudioNativeModels(normalized, headers, models);
+    saveAiModels(merged);
+    return { models: merged };
+  } catch (error) {
+    return { models: [], error: `Could not reach ${normalized.apiBaseUrl}/models: ${error instanceof Error ? error.message : String(error)}` };
+  }
+}
+var ChatHarness = class {
+  constructor(vfs) {
+    this.vfs = vfs;
+  }
+  vfs;
+  messages = [
+    {
+      id: uid("msg"),
+      role: "system",
+      text: "AI agent ready. Configure an OpenAI-compatible endpoint in Settings, or ask a question to get setup guidance.",
+      at: Date.now()
+    }
+  ];
+  abortController = null;
+  readSet = /* @__PURE__ */ new Set();
+  lastTotalTokens = 0;
+  basePromptTokens = 0;
+  get running() {
+    return this.abortController !== null;
+  }
+  cancel() {
+    this.abortController?.abort();
+  }
+  async send(input, activeDoc, openDocs, options) {
+    const userInput = input.trim();
+    if (!userInput || this.running) return;
+    const config = loadAiEndpointConfig();
+    const runtime = normalizeRuntimeSettings(options.runtime);
+    const context = {
+      selectedText: activeDoc?.selectedText() ?? "",
+      openPaths: openDocs.map((doc) => doc.path ?? "(untitled)")
+    };
+    if (activeDoc?.path) context.activePath = activeDoc.path;
+    this.push({ role: "user", text: userInput }, options.onUpdate);
+    const controller = new AbortController();
+    this.abortController = controller;
+    const openByPath = new Map(openDocs.filter((doc) => doc.path).map((doc) => [normalizePath(doc.path), doc]));
+    try {
+      if (!config.model) {
+        this.push({
+          role: "assistant",
+          text: "No model is configured yet. Use Settings > AI to edit the OpenAI-compatible endpoint settings, or scan LM Studio models."
+        }, options.onUpdate);
+        return;
+      }
+      await this.maybeCompact(config, runtime, controller.signal, options.onUpdate);
+      let toolCalls = 0;
+      let lastFingerprint = "";
+      while (!controller.signal.aborted) {
+        if (toolCalls >= runtime.maxToolCallsPerTurn) {
+          this.push({ role: "assistant", text: `Tool-call limit of ${runtime.maxToolCallsPerTurn} reached; ending turn.` }, options.onUpdate);
+          break;
+        }
+        const result = await this.complete(config, runtime, controller.signal);
+        if (result.usageTotal > 0) this.lastTotalTokens = result.usageTotal;
+        if (result.thinking) this.push({ role: "thinking", text: result.thinking }, options.onUpdate);
+        const parsedCalls = result.toolCalls.length > 0 ? result.toolCalls : parseTextToolCalls(result.text, runtime.toolCallFormat);
+        if (parsedCalls.length === 0) {
+          this.push({ role: "assistant", text: result.text || "(empty response)" }, options.onUpdate);
+          break;
+        }
+        const visibleText = result.text.trim();
+        if (visibleText) this.push({ role: "assistant", text: visibleText }, options.onUpdate);
+        for (const call of parsedCalls) {
+          const fingerprint = `${call.name}:${JSON.stringify(call.args)}`;
+          if (runtime.detectDuplicateToolCalls && fingerprint === lastFingerprint) {
+            const output = "Duplicate tool call detected; ending turn.";
+            this.push({ role: "tool_result", name: call.name, ok: false, text: output }, options.onUpdate);
+            this.push({ role: "user", text: formatToolResult(output, runtime.toolCallFormat) });
+            return;
+          }
+          lastFingerprint = fingerprint;
+          this.push({ role: "tool_call", name: call.name, text: call.raw }, options.onUpdate);
+          const toolResult = await this.runTool(call, openByPath, config, runtime, controller.signal, options.onUpdate);
+          this.push({ role: "tool_result", name: call.name, ok: toolResult.ok, text: toolResult.output }, options.onUpdate);
+          this.messages.push({ id: uid("msg"), role: "user", text: formatToolResult(toolResult.output, runtime.toolCallFormat), at: Date.now(), ok: toolResult.ok });
+          toolCalls++;
+          if (toolCalls >= runtime.maxToolCallsPerTurn) break;
+        }
+      }
+    } catch (error) {
+      if (controller.signal.aborted) {
+        this.push({ role: "system", text: "Turn canceled." }, options.onUpdate);
+      } else {
+        this.push({ role: "system", text: `Request failed: ${error instanceof Error ? error.message : String(error)}` }, options.onUpdate);
+      }
+    } finally {
+      this.abortController = null;
+      await this.persist();
+      options.onUpdate?.();
+    }
+  }
+  async persist() {
+    await this.vfs.writeFile("/.slug-chat.json", JSON.stringify(this.messages, null, 2), "application/json");
+  }
+  push(seed, onUpdate) {
+    const msg = { id: uid("msg"), at: Date.now(), ...seed };
+    this.messages.push(msg);
+    onUpdate?.();
+    return msg;
+  }
+  async complete(config, runtime, signal) {
+    const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(config)
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: this.apiMessages(runtime),
+        temperature: config.temperature,
+        stream: false
+      }),
+      signal
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const message = data.choices?.[0]?.message;
+    return {
+      text: message?.content ?? "",
+      thinking: message?.reasoning_content ?? "",
+      toolCalls: parseNativeToolCalls(message?.tool_calls),
+      usageTotal: Math.max(0, Number(data.usage?.total_tokens ?? 0)),
+      usagePrompt: Math.max(0, Number(data.usage?.prompt_tokens ?? 0))
+    };
+  }
+  apiMessages(runtime) {
+    const helperPrompts = loadAiHelperPrompts().trim();
+    const formatNote = runtime.toolCallFormat === "harmony" ? "Use harmony-style tool calls when invoking tools." : "Use <tool>name(args)</tool> tag tool calls when invoking tools.";
+    const messages = [
+      { role: "system", content: `${loadAiSystemPrompt()}
+
+${formatNote}` }
+    ];
+    if (helperPrompts) messages.push({ role: "system", content: helperPrompts });
+    for (const msg of this.messages) {
+      if (msg.role === "system") continue;
+      if (msg.role === "assistant") messages.push({ role: "assistant", content: msg.text });
+      else if (msg.role === "tool_call") messages.push({ role: "assistant", content: msg.text });
+      else if (msg.role === "thinking") messages.push({ role: "assistant", content: `[thinking]
+${msg.text}` });
+      else messages.push({ role: "user", content: msg.text });
+    }
+    return messages;
+  }
+  async maybeCompact(config, runtime, signal, onUpdate) {
+    const maxTokens = config.maxContextTokens || bestKnownContextLength(config.model);
+    if (maxTokens <= 0) return;
+    const used = this.lastTotalTokens || estimateTokens(this.apiMessages(runtime).map((msg) => msg.content).join("\n"));
+    const freePercent = Math.max(0, (maxTokens - used) / maxTokens * 100);
+    if (freePercent >= runtime.compactFreePercent) return;
+    if (this.basePromptTokens === 0) this.basePromptTokens = await this.probeBasePromptTokens(config, signal);
+    await this.compactConversation(config, runtime, signal, onUpdate);
+  }
+  async probeBasePromptTokens(config, signal) {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(config)
+        },
+        body: JSON.stringify({
+          model: config.model,
+          max_tokens: 1,
+          stream: false,
+          messages: [
+            { role: "system", content: loadAiSystemPrompt() },
+            { role: "user", content: "test" }
+          ]
+        }),
+        signal
+      });
+      if (!response.ok) return 0;
+      const data = await response.json();
+      return Math.max(0, Number(data.usage?.prompt_tokens ?? 0) - 2);
+    } catch {
+      return 0;
+    }
+  }
+  async compactConversation(config, runtime, signal, onUpdate) {
+    const transcript = this.messages.filter((msg) => msg.role !== "system").map((msg) => `[${msg.role}] ${msg.name ? `${msg.name}: ` : ""}${msg.text}`).join("\n\n");
+    if (!transcript.trim()) return { ok: true, output: "Nothing to compact." };
+    this.push({ role: "system", text: "Compacting conversation..." }, onUpdate);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(config)
+        },
+        body: JSON.stringify({
+          model: config.model,
+          temperature: 0,
+          stream: false,
+          messages: [
+            { role: "system", content: "Summarize this coding-agent transcript compactly. Preserve user goals, files changed, tool results, and unresolved tasks." },
+            { role: "user", content: transcript }
+          ]
+        }),
+        signal
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      const summary = data.choices?.[0]?.message?.content?.trim();
+      if (!summary) throw new Error("empty summary");
+      const keep = this.messages.filter((msg) => msg.role === "user").slice(-1);
+      this.messages.splice(0, this.messages.length, {
+        id: uid("msg"),
+        role: "system",
+        text: `[Conversation compacted]
+
+${summary}`,
+        at: Date.now()
+      }, ...keep);
+      this.lastTotalTokens = Math.max(0, Number(data.usage?.total_tokens ?? 0));
+      onUpdate?.();
+      return { ok: true, output: "Conversation compacted." };
+    } catch (error) {
+      const output = `Compaction failed: ${error instanceof Error ? error.message : String(error)}`;
+      this.push({ role: "system", text: output }, onUpdate);
+      return { ok: false, output };
+    }
+  }
+  async runTool(call, openByPath, config, runtime, signal, onUpdate) {
+    const name = call.name.replace(/^functions\./, "");
+    if (name === "readFile") return this.toolReadFile(call.args);
+    if (name === "writeFile") return this.toolWriteFile(call.args, openByPath);
+    if (name === "editFile") return this.toolEditFile(call.args, openByPath);
+    if (name === "grep") return this.toolGrep(call.args);
+    if (name === "grepFile" || name === "frepFile" || name === "grepIn") return this.toolGrepFile(call.args);
+    if (name === "bash") return this.toolBash(call.args, openByPath);
+    if (name === "compact") return this.compactConversation(config, runtime, signal, onUpdate);
+    return { ok: false, output: `Unknown tool: ${call.name}` };
+  }
+  async toolReadFile(args) {
+    const path = normalizeToolPath(argString(args, 0, "path"));
+    if (!path) return { ok: false, output: "readFile: missing path" };
+    if (isUnsupportedFilePath(path)) return { ok: false, output: "File type not supported" };
+    try {
+      const text = await this.vfs.readText(path);
+      this.readSet.add(path);
+      return { ok: true, output: text };
+    } catch {
+      return { ok: false, output: `readFile: not found: ${path}` };
+    }
+  }
+  async toolWriteFile(args, openByPath) {
+    const path = normalizeToolPath(argString(args, 0, "path"));
+    const content = argString(args, 1, "content");
+    if (!path) return { ok: false, output: "writeFile: missing path" };
+    if (content === void 0) return { ok: false, output: "writeFile: missing content" };
+    await this.vfs.writeFile(path, content, "text/plain");
+    syncOpenDocument(openByPath.get(path), content);
+    this.readSet.add(path);
+    return { ok: true, output: `Wrote ${path}` };
+  }
+  async toolEditFile(args, openByPath) {
+    const path = normalizeToolPath(argString(args, 0, "path"));
+    const oldString = argString(args, 1, "oldString");
+    const newString = argString(args, 2, "newString") ?? "";
+    if (!path || oldString === void 0) return { ok: false, output: "editFile: usage editFile(path, oldString, newString)" };
+    if (!this.readSet.has(path)) return { ok: false, output: `editFile: call readFile first: ${path}` };
+    let content;
+    try {
+      content = await this.vfs.readText(path);
+    } catch {
+      return { ok: false, output: `editFile: not found: ${path}` };
+    }
+    if (!oldString) return { ok: false, output: "editFile: oldString must not be empty" };
+    const first = content.indexOf(oldString);
+    if (first < 0) return { ok: false, output: "editFile: oldString not found" };
+    if (content.indexOf(oldString, first + oldString.length) >= 0) return { ok: false, output: "editFile: oldString is not unique" };
+    const updated = content.slice(0, first) + newString + content.slice(first + oldString.length);
+    await this.vfs.writeFile(path, updated, "text/plain");
+    syncOpenDocument(openByPath.get(path), updated);
+    return { ok: true, output: `Edited ${path}` };
+  }
+  async toolGrep(args) {
+    const pattern = argString(args, 0, "pattern");
+    if (!pattern) return { ok: false, output: "grep: missing pattern" };
+    return this.grepIn("/", pattern);
+  }
+  async toolGrepFile(args) {
+    let pattern = argString(args, 0, "pattern");
+    let path = argString(args, 1, "path");
+    if (pattern?.startsWith("/") && path && !path.startsWith("/")) [pattern, path] = [path, pattern];
+    if (!pattern || !path) return { ok: false, output: "grepFile: usage grepFile(pattern, path)" };
+    return this.grepIn(path, pattern);
+  }
+  async grepIn(path, pattern) {
+    let regex;
+    try {
+      regex = new RegExp(pattern);
+    } catch (error) {
+      return { ok: false, output: `grep: invalid regex: ${error instanceof Error ? error.message : String(error)}` };
+    }
+    const matches = [];
+    await this.grepPath(normalizeToolPath(path) || "/", regex, matches);
+    return { ok: true, output: matches.length ? matches.join("\n") : "(no matches)" };
+  }
+  async grepPath(path, regex, matches) {
+    if (matches.length >= 500) return;
+    const node = await this.vfs.stat(path);
+    if (!node) return;
+    if (node.kind === "dir") {
+      const children = await this.vfs.listDir(path);
+      for (const child of children) {
+        if (child.name.startsWith(".") || child.path.startsWith("/.slug-")) continue;
+        await this.grepPath(child.path, regex, matches);
+        if (matches.length >= 500) break;
+      }
+      return;
+    }
+    if (isUnsupportedFilePath(path) || node.size > 1024 * 1024) return;
+    let text = "";
+    try {
+      text = await this.vfs.readText(path);
+    } catch {
+      return;
+    }
+    const lines = text.split("\n");
+    for (let i = 0; i < lines.length && matches.length < 500; i++) {
+      regex.lastIndex = 0;
+      if (!regex.test(lines[i])) continue;
+      const line = lines[i].length > 200 ? `${lines[i].slice(0, 200)}...` : lines[i];
+      matches.push(`${path}:${i + 1}: ${line}`);
+    }
+  }
+  async toolBash(args, openByPath) {
+    const command = argString(args, 0, "command");
+    if (!command) return { ok: false, output: "bash: missing command" };
+    if (/[|;><&`]|\$\(/.test(command)) return { ok: false, output: "bash: shell operators are not supported in the browser" };
+    const argv = tokenizeShell(command);
+    if (argv.length === 0) return { ok: true, output: "" };
+    const cmd = argv[0];
+    if (cmd === "pwd") return { ok: true, output: "/\n" };
+    if (cmd === "ls") return this.bashLs(argv);
+    if (cmd === "cat") return this.bashCat(argv);
+    if (cmd === "mkdir") return this.bashMkdir(argv);
+    if (cmd === "rmdir") return this.bashRmdir(argv);
+    if (cmd === "rm") return this.bashRm(argv, openByPath);
+    if (cmd === "cp") return this.bashCp(argv, openByPath);
+    if (cmd === "mv") return this.bashMv(argv, openByPath);
+    if (cmd === "touch") return this.bashTouch(argv, openByPath);
+    if (cmd === "echo") return { ok: true, output: `${argv.slice(1).join(" ")}
+` };
+    return { ok: false, output: `bash: unsupported browser command: ${cmd}` };
+  }
+  async bashLs(argv) {
+    const target = normalizeToolPath(argv.find((arg) => !arg.startsWith("-") && arg !== "ls") ?? "/") || "/";
+    const node = await this.vfs.stat(target);
+    if (!node) return { ok: false, output: `ls: ${target}: No such file or directory` };
+    if (node.kind === "file") return { ok: true, output: `${basename(target)}
+` };
+    const rows = (await this.vfs.listDir(target)).filter((child) => !child.name.startsWith("."));
+    return { ok: true, output: rows.map((child) => `${child.name}${child.kind === "dir" ? "/" : ""}`).join("\n") + (rows.length ? "\n" : "") };
+  }
+  async bashCat(argv) {
+    const paths = argv.slice(1).map(normalizeToolPath).filter((path) => Boolean(path));
+    if (paths.length === 0) return { ok: false, output: "cat: missing file" };
+    const out = [];
+    for (const path of paths) out.push(await this.vfs.readText(path));
+    return { ok: true, output: out.join("") };
+  }
+  async bashMkdir(argv) {
+    const dirs = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    if (dirs.length === 0) return { ok: false, output: "mkdir: missing operand" };
+    for (const dir of dirs) await this.vfs.mkdir(normalizeToolPath(dir) || "/");
+    return { ok: true, output: "" };
+  }
+  async bashRmdir(argv) {
+    const dirs = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    for (const dir of dirs) await this.vfs.remove(normalizeToolPath(dir) || "/", { recursive: false });
+    return { ok: true, output: "" };
+  }
+  async bashRm(argv, openByPath) {
+    const recursive = argv.includes("-r") || argv.includes("-rf") || argv.includes("-fr");
+    const targets = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    if (targets.length === 0) return { ok: false, output: "rm: missing operand" };
+    for (const target of targets) {
+      const path = normalizeToolPath(target) || "/";
+      await this.vfs.remove(path, { recursive });
+      openByPath.delete(path);
+    }
+    return { ok: true, output: "" };
+  }
+  async bashCp(argv, openByPath) {
+    const [sourceArg, destArg] = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    const source = normalizeToolPath(sourceArg);
+    const dest = normalizeToolPath(destArg);
+    if (!source || !dest) return { ok: false, output: "cp: usage cp source dest" };
+    const node = await this.vfs.stat(source);
+    if (!node || node.kind !== "file") return { ok: false, output: `cp: not a file: ${source}` };
+    const data = await this.vfs.readFile(source);
+    await this.vfs.writeFile(dest, data, node.mime ?? "text/plain");
+    if (!isUnsupportedFilePath(dest)) syncOpenDocument(openByPath.get(dest), await this.vfs.readText(dest));
+    return { ok: true, output: "" };
+  }
+  async bashMv(argv, openByPath) {
+    const [sourceArg, destArg] = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    const source = normalizeToolPath(sourceArg);
+    const dest = normalizeToolPath(destArg);
+    if (!source || !dest) return { ok: false, output: "mv: usage mv source dest" };
+    await this.vfs.rename(source, dest);
+    const doc = openByPath.get(source);
+    if (doc) {
+      doc.path = dest;
+      openByPath.delete(source);
+      openByPath.set(dest, doc);
+    }
+    return { ok: true, output: "" };
+  }
+  async bashTouch(argv, openByPath) {
+    const targets = argv.slice(1).filter((arg) => !arg.startsWith("-"));
+    for (const target of targets) {
+      const path = normalizeToolPath(target) || "";
+      if (!path) continue;
+      const existing = await this.vfs.stat(path);
+      const text = existing?.kind === "file" ? await this.vfs.readText(path) : "";
+      await this.vfs.writeFile(path, text, "text/plain");
+      syncOpenDocument(openByPath.get(path), text);
+    }
+    return { ok: true, output: "" };
+  }
+};
+function normalizeAiEndpointConfig(value) {
+  const raw = typeof value === "object" && value ? value : {};
+  return {
+    apiBaseUrl: normalizeBaseUrl(raw.apiBaseUrl ?? DEFAULT_AI_ENDPOINT_CONFIG.apiBaseUrl),
+    apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
+    model: typeof raw.model === "string" ? raw.model : "",
+    temperature: Number.isFinite(raw.temperature) ? Number(raw.temperature) : DEFAULT_AI_ENDPOINT_CONFIG.temperature,
+    maxContextTokens: Number.isFinite(raw.maxContextTokens) ? Math.max(0, Math.trunc(Number(raw.maxContextTokens))) : 0
+  };
+}
+function normalizeRuntimeSettings(value) {
+  return {
+    maxToolCallsPerTurn: Number.isFinite(value.maxToolCallsPerTurn) ? Math.max(1, Math.trunc(Number(value.maxToolCallsPerTurn))) : DEFAULT_AI_RUNTIME_SETTINGS.maxToolCallsPerTurn,
+    detectDuplicateToolCalls: typeof value.detectDuplicateToolCalls === "boolean" ? value.detectDuplicateToolCalls : DEFAULT_AI_RUNTIME_SETTINGS.detectDuplicateToolCalls,
+    toolCallFormat: value.toolCallFormat === "harmony" ? "harmony" : "tag",
+    compactFreePercent: Number.isFinite(value.compactFreePercent) ? Math.max(1, Math.min(95, Math.trunc(Number(value.compactFreePercent)))) : DEFAULT_AI_RUNTIME_SETTINGS.compactFreePercent
+  };
+}
+function normalizeBaseUrl(raw) {
+  let url = String(raw || "").trim() || DEFAULT_AI_ENDPOINT_CONFIG.apiBaseUrl;
+  if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
+  url = url.replace(/\/+$/, "");
+  if (!/\/(?:api\/)?v\d+$/i.test(url)) url += "/v1";
+  return url;
+}
+function authHeaders(config) {
+  return config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {};
+}
+function readJsonLocalStorage(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+async function mergeLmStudioNativeModels(config, headers, models) {
+  const result = [...models];
+  const base = config.apiBaseUrl.replace(/\/v\d+$/i, "");
+  for (const nativeBase of [`${base}/api/v1`, `${base}/api/v0`]) {
+    try {
+      const response = await fetch(`${nativeBase}/models`, { headers });
+      if (!response.ok) continue;
+      const data = await response.json();
+      for (const raw of Array.isArray(data.data) ? data.data : []) {
+        const model = modelInfoFromUnknown(raw);
+        if (!model) continue;
+        const existing = result.find((item) => item.id === model.id);
+        if (existing) existing.contextLength ||= model.contextLength;
+        else result.push(model);
+      }
+    } catch {
+    }
+  }
+  return result.sort((a, b) => a.id.localeCompare(b.id));
+}
+function modelInfoFromUnknown(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw;
+  const id = typeof obj.id === "string" ? obj.id : "";
+  if (!id) return null;
+  return { id, contextLength: contextLengthFromObject(obj) };
+}
+function contextLengthFromObject(obj) {
+  for (const key of ["loaded_context_length", "max_context_length", "context_length", "max_model_len", "context_window", "n_ctx"]) {
+    const value = obj[key];
+    if (Number.isFinite(value)) return Math.max(0, Math.trunc(Number(value)));
+  }
+  return 0;
+}
+function bestKnownContextLength(model) {
+  return loadAiModels().find((item) => item.id === model)?.contextLength ?? builtinContextLength(model);
+}
+function builtinContextLength(model) {
+  if (!model) return 0;
+  if (/gpt-4o|gpt-5|gpt-4\.1/i.test(model)) return 128e3;
+  if (/llama-3\.1|qwen|deepseek|mistral-large/i.test(model)) return 131072;
+  return 0;
+}
+function parseNativeToolCalls(raw) {
+  if (!Array.isArray(raw)) return [];
+  const result = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const fn = item.function;
+    const name = typeof fn?.name === "string" ? fn.name : "";
+    if (!name) continue;
+    const args = parseJsonArgs(typeof fn?.arguments === "string" ? fn.arguments : "{}");
+    result.push({ name, args, raw: `<tool>${name}(${args.map((arg) => JSON.stringify(arg)).join(", ")})</tool>` });
+  }
+  return result;
+}
+function parseTextToolCalls(text, format) {
+  const calls = format === "harmony" ? parseHarmonyToolCalls(text) : parseTagToolCalls(text);
+  return calls.length ? calls : format === "harmony" ? parseTagToolCalls(text) : parseHarmonyToolCalls(text);
+}
+function parseTagToolCalls(text) {
+  const calls = [];
+  const regex = /<tool>([\s\S]*?)<\/tool>/g;
+  for (const match of text.matchAll(regex)) {
+    const inner = match[1]?.trim() ?? "";
+    const paren = inner.indexOf("(");
+    const close = inner.lastIndexOf(")");
+    if (paren <= 0 || close < paren) continue;
+    const name = inner.slice(0, paren).trim();
+    calls.push({ name, args: parseCallArgs(inner.slice(paren + 1, close)), raw: match[0] });
+  }
+  return calls;
+}
+function parseHarmonyToolCalls(text) {
+  const calls = [];
+  const regex = /<\|channel\|>commentary\s+to=([A-Za-z0-9_.-]+)[\s\S]*?<\|message\|>([\s\S]*?)(?:<\|call\|>|<\|end\|>)/g;
+  for (const match of text.matchAll(regex)) {
+    const name = match[1] ?? "";
+    const rawArgs = match[2]?.trim() ?? "{}";
+    calls.push({ name, args: parseJsonArgs(rawArgs), raw: match[0] });
+  }
+  return calls;
+}
+function parseJsonArgs(raw) {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === "object") return [parsed];
+    return [parsed];
+  } catch {
+    return [raw];
+  }
+}
+function parseCallArgs(src) {
+  const args = [];
+  let i = 0;
+  const skipWs = () => {
+    while (i < src.length && /\s/.test(src[i])) i++;
+  };
+  while (i < src.length) {
+    skipWs();
+    const quote = src[i];
+    if (quote === '"' || quote === "'" || quote === "`") {
+      i++;
+      let out = "";
+      while (i < src.length && src[i] !== quote) {
+        if (src[i] === "\\" && i + 1 < src.length) {
+          const next = src[++i];
+          out += next === "n" ? "\n" : next === "t" ? "	" : next === "r" ? "\r" : next;
+          i++;
+        } else {
+          out += src[i++];
+        }
+      }
+      if (src[i] === quote) i++;
+      args.push(out);
+    } else {
+      let token = "";
+      while (i < src.length && src[i] !== ",") token += src[i++];
+      const trimmed = token.trim();
+      if (trimmed === "true") args.push(true);
+      else if (trimmed === "false") args.push(false);
+      else if (trimmed === "null") args.push(null);
+      else if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) args.push(Number(trimmed));
+      else if (trimmed) args.push(trimmed);
+    }
+    skipWs();
+    if (src[i] === ",") i++;
+  }
+  return args;
+}
+function formatToolResult(output, format) {
+  if (format === "harmony") return `<|channel|>commentary <|message|>${output}<|end|>`;
+  return `<result>${output}</result>`;
+}
+function argString(args, index, key) {
+  const direct = args[index];
+  if (typeof direct === "string") return direct;
+  if (typeof direct === "number" || typeof direct === "boolean") return String(direct);
+  const first = args[0];
+  if (key && first && typeof first === "object" && !Array.isArray(first)) {
+    const value = first[key];
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+  }
+  return void 0;
+}
+function normalizeToolPath(path) {
+  if (!path) return "";
+  return normalizePath(path.startsWith("/") ? path : `/${path}`);
+}
+function syncOpenDocument(doc, text) {
+  if (!doc || doc.readOnly) return;
+  doc.selectAll();
+  doc.replaceSelection(text, "agent");
+  doc.markSaved();
+}
+function tokenizeShell(cmd) {
+  const tokens = [];
+  let cur = "";
+  let single = false;
+  let dbl = false;
+  for (let i = 0; i < cmd.length; i++) {
+    const ch = cmd[i];
+    if (ch === "'" && !dbl) {
+      single = !single;
+      continue;
+    }
+    if (ch === '"' && !single) {
+      dbl = !dbl;
+      continue;
+    }
+    if (ch === "\\" && dbl && i + 1 < cmd.length) {
+      cur += cmd[++i];
+      continue;
+    }
+    if (/\s/.test(ch) && !single && !dbl) {
+      if (cur) tokens.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur) tokens.push(cur);
+  return tokens;
+}
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
 // src/editor/document.ts
 var UNDO_MERGE_TIMEOUT_MS = 300;
 var MAX_UNDO_COMMANDS = 1e4;
@@ -185,6 +3288,7 @@ var TextDocument = class {
   revision = 0;
   savedRevision = 0;
   syntaxId = "plain";
+  readOnly = false;
   selection = { anchor: { line: 0, col: 0 }, head: { line: 0, col: 0 } };
   undoStack = [];
   redoStack = [];
@@ -558,7 +3662,8 @@ var DocumentStore = class {
     const normalized = normalizePath(path);
     const existing = this.docsByPath.get(normalized);
     if (existing) return existing;
-    const doc = new TextDocument(normalized, await this.vfs.readText(normalized));
+    const doc = isUnsupportedFilePath(normalized) ? new TextDocument(normalized, UNSUPPORTED_FILE_TEXT) : new TextDocument(normalized, await this.vfs.readText(normalized));
+    doc.readOnly = isUnsupportedFilePath(normalized);
     doc.markSaved();
     this.docsById.set(doc.id, doc);
     this.docsByPath.set(normalized, doc);
@@ -569,12 +3674,44 @@ var DocumentStore = class {
     this.docsById.set(doc.id, doc);
     return doc;
   }
+  createVirtual(path, text) {
+    const normalized = normalizePath(path);
+    const existing = this.docsByPath.get(normalized);
+    if (existing) {
+      existing.selectAll();
+      existing.replaceSelection(text, "virtual");
+      existing.path = normalized;
+      existing.syntaxId = syntaxFromPath(normalized);
+      existing.readOnly = false;
+      existing.markSaved();
+      return existing;
+    }
+    const doc = new TextDocument(normalized, text);
+    doc.markSaved();
+    this.docsById.set(doc.id, doc);
+    this.docsByPath.set(normalized, doc);
+    return doc;
+  }
   async save(doc) {
+    if (doc.readOnly) {
+      doc.markSaved();
+      return;
+    }
     if (!doc.path) {
       doc.path = `/untitled-${Date.now().toString(36)}.txt`;
       this.docsByPath.set(doc.path, doc);
     }
     await this.vfs.writeFile(doc.path, doc.getText(), "text/plain");
+    doc.markSaved();
+  }
+  async saveAs(doc, path) {
+    const normalized = normalizePath(path);
+    if (doc.path && doc.path !== normalized) this.docsByPath.delete(doc.path);
+    doc.path = normalized;
+    doc.syntaxId = syntaxFromPath(normalized);
+    doc.readOnly = isUnsupportedFilePath(normalized);
+    this.docsByPath.set(normalized, doc);
+    if (!doc.readOnly) await this.vfs.writeFile(normalized, doc.getText(), "text/plain");
     doc.markSaved();
   }
   renamePath(oldPath, newPath) {
@@ -585,6 +3722,7 @@ var DocumentStore = class {
     this.docsByPath.delete(oldNormalized);
     doc.path = newNormalized;
     doc.syntaxId = syntaxFromPath(newNormalized);
+    doc.readOnly = isUnsupportedFilePath(newNormalized);
     this.docsByPath.set(newNormalized, doc);
     return doc;
   }
@@ -594,6 +3732,13 @@ var DocumentStore = class {
     if (!doc) return void 0;
     this.docsByPath.delete(normalized);
     this.docsById.delete(doc.id);
+    return doc;
+  }
+  remove(id) {
+    const doc = this.docsById.get(id);
+    if (!doc) return void 0;
+    this.docsById.delete(id);
+    if (doc.path) this.docsByPath.delete(normalizePath(doc.path));
     return doc;
   }
 };
@@ -703,25 +3848,6 @@ function mergeTokens(tokens) {
 }
 
 // src/platform/drag_drop.ts
-async function importDataTransfer(vfs, items, onProgress) {
-  const progress = { files: 0, dirs: 0, bytes: 0, currentPath: "/" };
-  for (const item of Array.from(items)) {
-    if (item.kind !== "file") continue;
-    if (item.getAsFileSystemHandle) {
-      const handle = await item.getAsFileSystemHandle();
-      await importHandle(vfs, handle, "/", progress, onProgress);
-      continue;
-    }
-    const entry = item.webkitGetAsEntry?.();
-    if (entry) {
-      await importEntry(vfs, entry, "/", progress, onProgress);
-      continue;
-    }
-    const file = item.getAsFile();
-    if (file) await importFile(vfs, file, joinPath("/", file.name), progress, onProgress);
-  }
-  return progress;
-}
 async function importFileList(vfs, files, onProgress) {
   const progress = { files: 0, dirs: 0, bytes: 0, currentPath: "/" };
   for (const file of Array.from(files)) {
@@ -729,40 +3855,6 @@ async function importFileList(vfs, files, onProgress) {
     await importFile(vfs, file, normalizePath(`/${relative}`), progress, onProgress);
   }
   return progress;
-}
-async function importHandle(vfs, handle, base, progress, onProgress) {
-  const path = joinPath(base, handle.name);
-  if (handle.kind === "directory") {
-    await vfs.mkdir(path);
-    progress.dirs++;
-    progress.currentPath = path;
-    onProgress?.({ ...progress });
-    const directory = handle;
-    for await (const child of directory.values()) {
-      await importHandle(vfs, child, path, progress, onProgress);
-    }
-  } else {
-    const file = await handle.getFile();
-    await importFile(vfs, file, path, progress, onProgress);
-  }
-}
-async function importEntry(vfs, entry, base, progress, onProgress) {
-  const path = joinPath(base, entry.name);
-  if (entry.isDirectory && entry.createReader) {
-    await vfs.mkdir(path);
-    progress.dirs++;
-    progress.currentPath = path;
-    onProgress?.({ ...progress });
-    const reader = entry.createReader();
-    while (true) {
-      const entries = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
-      if (entries.length === 0) break;
-      for (const child of entries) await importEntry(vfs, child, path, progress, onProgress);
-    }
-  } else if (entry.isFile && entry.file) {
-    const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
-    await importFile(vfs, file, path, progress, onProgress);
-  }
 }
 async function importFile(vfs, file, path, progress, onProgress) {
   await vfs.writeFile(path, new Uint8Array(await file.arrayBuffer()), file.type || guessMime(path));
@@ -1472,16 +4564,31 @@ var WebglRenderer = class {
     this.viewport = initialViewport;
     this.fonts = fontSources.map((source) => ({ name: source.name, font: new TrueTypeFont(source.buffer) }));
     this.primaryFont = this.fonts[0].font;
+    const emojiIndex = this.fonts.findIndex((item) => item.name.includes("NotoEmoji"));
+    const monaspaceIndex = this.fonts.findIndex((item) => item.name.includes("MonaspaceNeon"));
+    this.emojiFontIndex = emojiIndex >= 0 ? emojiIndex : 0;
+    this.monaspaceFontIndex = monaspaceIndex >= 0 ? monaspaceIndex : 0;
+    this.preferredFontIndex = {
+      ui: 0,
+      uiSmall: 0,
+      code: 0,
+      title: 0,
+      mini: 0,
+      gutter: this.monaspaceFontIndex
+    };
     this.fontMetrics = {
       ui: this.makeFontMetrics(BASE_UI_FONT_SIZE),
       uiSmall: this.makeFontMetrics(BASE_UI_SMALL_FONT_SIZE),
       code: this.makeFontMetrics(BASE_CODE_FONT_SIZE),
       title: this.makeFontMetrics(BASE_TITLE_FONT_SIZE),
-      mini: this.makeFontMetrics(BASE_MINI_FONT_SIZE)
+      mini: this.makeFontMetrics(BASE_MINI_FONT_SIZE),
+      gutter: this.makeFontMetrics(BASE_CODE_FONT_SIZE, this.preferredFontIndex.gutter)
     };
     this.slugProgram = createProgram(gl, SLUG_VS, SLUG_FS);
+    this.solidProgram = createProgram(gl, SOLID_VS, SOLID_FS);
     this.floatBuffer = mustBuffer(gl);
     this.glyphBuffer = mustBuffer(gl);
+    this.solidBuffer = mustBuffer(gl);
     this.curveTexture = mustTexture(gl);
     this.bandTexture = mustTexture(gl);
     configureFloatTexture(gl, this.curveTexture);
@@ -1496,13 +4603,18 @@ var WebglRenderer = class {
   fonts;
   primaryFont;
   slugProgram;
+  solidProgram;
   floatBuffer;
   glyphBuffer;
+  solidBuffer;
   curveTexture;
   bandTexture;
   commands = [];
   clipStack = [];
   glyphMetrics = /* @__PURE__ */ new Map();
+  emojiFontIndex;
+  monaspaceFontIndex;
+  preferredFontIndex;
   fontMetrics;
   diagnostics() {
     return {
@@ -1513,20 +4625,22 @@ var WebglRenderer = class {
       fonts: this.fonts.map((item) => ({ name: item.name, unitsPerEm: item.font.unitsPerEm, glyphCount: item.font.glyphCount }))
     };
   }
-  resolveCodePoint(codePoint) {
-    const match = this.findFontGlyph(codePoint);
+  resolveCodePoint(codePoint, font = "ui") {
+    const match = this.findFontGlyph(codePoint, font);
     return { font: this.fonts[match.fontIndex].name, glyphId: match.glyphId };
   }
   setViewport(viewport) {
     this.viewport = viewport;
   }
-  configureText(codeFontSizePx, uiScalePercent) {
+  configureText(codeFontSizePx, uiScalePercent, useMonospacedCodeFont = false) {
     const uiScale = Math.max(0.01, uiScalePercent / 100);
+    this.preferredFontIndex.code = useMonospacedCodeFont ? this.monaspaceFontIndex : 0;
     this.fontMetrics.ui = this.makeFontMetrics(BASE_UI_FONT_SIZE * uiScale);
     this.fontMetrics.uiSmall = this.makeFontMetrics(BASE_UI_SMALL_FONT_SIZE * uiScale);
     this.fontMetrics.title = this.makeFontMetrics(BASE_TITLE_FONT_SIZE * uiScale);
     this.fontMetrics.mini = this.makeFontMetrics(BASE_MINI_FONT_SIZE * uiScale);
-    this.fontMetrics.code = this.makeFontMetrics(Math.max(1, codeFontSizePx));
+    this.fontMetrics.code = this.makeFontMetrics(Math.max(1, codeFontSizePx), this.preferredFontIndex.code);
+    this.fontMetrics.gutter = this.makeFontMetrics(Math.max(1, codeFontSizePx), this.preferredFontIndex.gutter);
     this.glyphMetrics.clear();
   }
   beginFrame() {
@@ -1540,10 +4654,23 @@ var WebglRenderer = class {
     gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(0.12, 0.13, 0.15, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    this.bindSlugProgram();
+    let boundProgram = null;
     for (const command of this.commands) {
       if (command.clip) this.applyScissor(command.clip);
       else gl.disable(gl.SCISSOR_TEST);
+      if (command.type === "line" || command.type === "solidPolygon") {
+        if (boundProgram !== "solid") {
+          this.bindSolidProgram();
+          boundProgram = "solid";
+        }
+        if (command.type === "line") this.drawLineCommand(command);
+        else this.drawSolidPolygonCommand(command);
+        continue;
+      }
+      if (boundProgram !== "slug") {
+        this.bindSlugProgram();
+        boundProgram = "slug";
+      }
       if (command.type === "rect") this.drawPackedShape(frame.shapes.get(rectKey(command.rect)), command.color, screenShapeTransform(command.rect));
       else if (command.type === "polygon") this.drawPackedShape(frame.shapes.get(polygonKey(command.points)), command.color, screenShapeTransform(boundsForPoints(command.points)));
       else this.drawTextCommand(command, frame);
@@ -1573,6 +4700,15 @@ var WebglRenderer = class {
     if (points.length < 3 || color[3] <= 0) return;
     this.commands.push({ type: "polygon", points: points.map((point) => ({ ...point })), color, clip: this.currentClip() });
   }
+  solidPolygon(points, color) {
+    if (points.length < 3 || color[3] <= 0) return;
+    this.commands.push({ type: "solidPolygon", points: points.map((point) => ({ ...point })), color, clip: this.currentClip() });
+  }
+  line(a, b, width, color) {
+    if (width <= 0 || color[3] <= 0) return;
+    if (a.x === b.x && a.y === b.y) return;
+    this.commands.push({ type: "line", a: { ...a }, b: { ...b }, width, color, clip: this.currentClip() });
+  }
   text(text, x, y, color, font = "ui") {
     if (!text || color[3] <= 0) return 0;
     this.commands.push({ type: "text", text, x, y, color, font, clip: this.currentClip() });
@@ -1580,7 +4716,7 @@ var WebglRenderer = class {
   }
   measureText(text, font = "ui") {
     let width = 0;
-    for (const char of text) width += this.advanceForCodePoint(char.codePointAt(0) ?? 0, font);
+    for (const char of text) width += char === "	" ? this.defaultTabAdvance(font) : this.advanceForCodePoint(char.codePointAt(0) ?? 0, font);
     return width;
   }
   visualTextBounds(text, font = "ui") {
@@ -1591,7 +4727,11 @@ var WebglRenderer = class {
     let xMax = Number.NEGATIVE_INFINITY;
     let yMax = Number.NEGATIVE_INFINITY;
     for (const char of text) {
-      const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0);
+      if (char === "	") {
+        penX += this.defaultTabAdvance(font);
+        continue;
+      }
+      const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0, font);
       if (glyph.curves.length > 0) {
         xMin = Math.min(xMin, penX + glyph.xMin * metrics.sizePx);
         xMax = Math.max(xMax, penX + glyph.xMax * metrics.sizePx);
@@ -1609,12 +4749,13 @@ var WebglRenderer = class {
   monoAdvance(font = "code") {
     return this.fontMetrics[font].monoAdvancePx;
   }
-  makeFontMetrics(sizePx) {
-    const scale = sizePx / this.primaryFont.unitsPerEm;
-    const ascentPx = this.primaryFont.ascender * scale;
-    const descentPx = -this.primaryFont.descender * scale;
-    const lineHeightPx = Math.ceil((this.primaryFont.ascender - this.primaryFont.descender + this.primaryFont.lineGap) * scale);
-    const monoAdvancePx = this.primaryFont.outlineForCodePoint("M".codePointAt(0)).advanceWidth * scale;
+  makeFontMetrics(sizePx, fontIndex = 0) {
+    const font = this.fonts[fontIndex]?.font ?? this.primaryFont;
+    const scale = sizePx / font.unitsPerEm;
+    const ascentPx = font.ascender * scale;
+    const descentPx = -font.descender * scale;
+    const lineHeightPx = Math.ceil((font.ascender - font.descender + font.lineGap) * scale);
+    const monoAdvancePx = font.outlineForCodePoint("M".codePointAt(0)).advanceWidth * scale;
     return { sizePx, ascentPx, descentPx, lineHeightPx, monoAdvancePx };
   }
   currentClip() {
@@ -1640,9 +4781,10 @@ var WebglRenderer = class {
       } else if (command.type === "polygon") {
         const shape = polygonShape(command.points);
         shapes.set(shape.key, shape);
-      } else {
+      } else if (command.type === "text") {
         for (const char of command.text) {
-          const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0);
+          if (char === "	") continue;
+          const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0, command.font);
           if (glyph.curves.length > 0) shapes.set(glyph.key, glyph);
         }
       }
@@ -1731,12 +4873,21 @@ var WebglRenderer = class {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.bandTexture);
   }
+  bindSolidProgram() {
+    const gl = this.gl;
+    gl.useProgram(this.solidProgram);
+    gl.uniform2f(gl.getUniformLocation(this.solidProgram, "uViewport"), this.viewport.cssWidth, this.viewport.cssHeight);
+  }
   drawTextCommand(command, frame) {
     const metrics = this.fontMetrics[command.font];
     const baseline = command.y + metrics.ascentPx;
     let penX = command.x;
     for (const char of command.text) {
-      const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0);
+      if (char === "	") {
+        penX += this.defaultTabAdvance(command.font);
+        continue;
+      }
+      const glyph = this.glyphForCodePoint(char.codePointAt(0) ?? 0, command.font);
       const packed = frame.shapes.get(glyph.key);
       if (packed) this.drawPackedShape(packed, command.color, fontGlyphTransform(penX, baseline, metrics.sizePx), 1 / metrics.sizePx);
       penX += this.advanceForGlyph(glyph, command.font);
@@ -1809,8 +4960,67 @@ var WebglRenderer = class {
     gl.uniform4f(gl.getUniformLocation(this.slugProgram, "uBandTransform"), shape.bandScaleX, shape.bandScaleY, shape.bandOffsetX, shape.bandOffsetY);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
-  glyphForCodePoint(codePoint) {
-    const match = this.findFontGlyph(codePoint);
+  drawLineCommand(command) {
+    const points = screenLineQuad(command.a, command.b, command.width);
+    const floatData = new Float32Array([
+      points[0].x,
+      points[0].y,
+      ...command.color,
+      points[1].x,
+      points[1].y,
+      ...command.color,
+      points[2].x,
+      points[2].y,
+      ...command.color,
+      points[0].x,
+      points[0].y,
+      ...command.color,
+      points[2].x,
+      points[2].y,
+      ...command.color,
+      points[3].x,
+      points[3].y,
+      ...command.color
+    ]);
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.solidBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, floatData, gl.STREAM_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 24, 0);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 24, 8);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+  drawSolidPolygonCommand(command) {
+    const triangleCount = command.points.length - 2;
+    if (triangleCount <= 0) return;
+    const floatData = new Float32Array(triangleCount * 3 * 6);
+    let offset = 0;
+    const pushVertex = (point) => {
+      floatData[offset++] = point.x;
+      floatData[offset++] = point.y;
+      floatData[offset++] = command.color[0];
+      floatData[offset++] = command.color[1];
+      floatData[offset++] = command.color[2];
+      floatData[offset++] = command.color[3];
+    };
+    const origin = command.points[0];
+    for (let i = 1; i < command.points.length - 1; i++) {
+      pushVertex(origin);
+      pushVertex(command.points[i]);
+      pushVertex(command.points[i + 1]);
+    }
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.solidBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, floatData, gl.STREAM_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 24, 0);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 24, 8);
+    gl.drawArrays(gl.TRIANGLES, 0, triangleCount * 3);
+  }
+  glyphForCodePoint(codePoint, font) {
+    const match = this.findFontGlyph(codePoint, font);
     const cacheKey = `${match.fontIndex}:${match.glyphId}`;
     const cached = this.glyphMetrics.get(cacheKey);
     if (cached) return cached;
@@ -1819,12 +5029,18 @@ var WebglRenderer = class {
     this.glyphMetrics.set(cacheKey, glyph);
     return glyph;
   }
-  findFontGlyph(codePoint) {
-    for (let i = 0; i < this.fonts.length; i++) {
-      const glyphId = this.fonts[i].font.glyphIdForCodePoint(codePoint);
+  findFontGlyph(codePoint, font) {
+    for (const i of this.fontOrderFor(font)) {
+      const glyphId = this.fonts[i]?.font.glyphIdForCodePoint(codePoint) ?? 0;
       if (glyphId > 0) return { fontIndex: i, glyphId };
     }
-    return { fontIndex: 0, glyphId: 0 };
+    return { fontIndex: this.preferredFontIndex[font] ?? 0, glyphId: 0 };
+  }
+  fontOrderFor(font) {
+    const preferred = this.preferredFontIndex[font] ?? 0;
+    const ordered = font === "code" && preferred === this.monaspaceFontIndex ? [preferred, this.emojiFontIndex, 0] : [preferred, 0, this.emojiFontIndex, this.monaspaceFontIndex];
+    for (let i = 0; i < this.fonts.length; i++) ordered.push(i);
+    return [...new Set(ordered.filter((index) => index >= 0 && index < this.fonts.length))];
   }
   makeGlyphMetrics(fontIndex, outline) {
     const font = this.fonts[fontIndex].font;
@@ -1852,15 +5068,19 @@ var WebglRenderer = class {
         ["uiSmall", advanceWidth * this.fontMetrics.uiSmall.sizePx],
         ["code", advanceWidth * this.fontMetrics.code.sizePx],
         ["title", advanceWidth * this.fontMetrics.title.sizePx],
-        ["mini", advanceWidth * this.fontMetrics.mini.sizePx]
+        ["mini", advanceWidth * this.fontMetrics.mini.sizePx],
+        ["gutter", advanceWidth * this.fontMetrics.gutter.sizePx]
       ])
     };
   }
   advanceForCodePoint(codePoint, font) {
-    return this.advanceForGlyph(this.glyphForCodePoint(codePoint), font);
+    return this.advanceForGlyph(this.glyphForCodePoint(codePoint, font), font);
   }
   advanceForGlyph(glyph, font) {
     return glyph.advancePxByFont.get(font) ?? this.fontMetrics[font].monoAdvancePx;
+  }
+  defaultTabAdvance(font) {
+    return this.advanceForCodePoint(" ".codePointAt(0), font) * 4;
   }
 };
 function rectShape(rect) {
@@ -1908,6 +5128,19 @@ function screenShapeTransform(_bounds) {
 }
 function fontGlyphTransform(penX, baseline, sizePx) {
   return (x, y) => ({ x: penX + x * sizePx, y: baseline - y * sizePx });
+}
+function screenLineQuad(a, b, width) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const px = -dy / length * (width / 2);
+  const py = dx / length * (width / 2);
+  return [
+    { x: a.x + px, y: a.y + py },
+    { x: b.x + px, y: b.y + py },
+    { x: b.x - px, y: b.y - py },
+    { x: a.x - px, y: a.y - py }
+  ];
 }
 function appendCurveTexel(texels, curve) {
   if (texels.length / 4 % CURVE_TEXTURE_WIDTH === CURVE_TEXTURE_WIDTH - 1) {
@@ -2147,6 +5380,23 @@ void main() {
   vec4 premul = vec4(vColor.rgb * vColor.a, vColor.a);
   outColor = premul * coverage;
 }`;
+var SOLID_VS = `#version 300 es
+layout(location = 0) in vec2 aPosition;
+layout(location = 2) in vec4 aColor;
+uniform vec2 uViewport;
+out vec4 vColor;
+void main() {
+  vec2 p = aPosition / uViewport * 2.0 - 1.0;
+  gl_Position = vec4(p.x, -p.y, 0.0, 1.0);
+  vColor = aColor;
+}`;
+var SOLID_FS = `#version 300 es
+precision mediump float;
+in vec4 vColor;
+out vec4 outColor;
+void main() {
+  outColor = vec4(vColor.rgb * vColor.a, vColor.a);
+}`;
 
 // src/renderer/theme.ts
 var darkTheme = {
@@ -2211,6 +5461,7 @@ var MiniBuffer = class {
   text = "";
   cursor = 0;
   anchor = 0;
+  scrollX = 0;
   constructor(text = "") {
     this.text = text;
     this.cursor = text.length;
@@ -2280,9 +5531,12 @@ function wordRight(text, cursor) {
 }
 
 // src/app/editor_app.ts
+var import_jszip = __toESM(require_jszip_min(), 1);
 var DOCK_SPLITTER_GAP = 1;
 var DOCK_SPLITTER_HIT_SIZE = 9;
 var DOCK_MIN_PANEL_SIZE = 140;
+var DOCK_EDGE_TARGET_RATIO = 0.33;
+var DOCK_CENTER_TARGET_RATIO = 0.34;
 var EDITOR_SCROLLBAR_SIZE = 12;
 var EDITOR_SCROLLBAR_THUMB_MIN = 24;
 var EDITOR_GUTTER_MIN_DIGITS = 3;
@@ -2291,6 +5545,11 @@ var EDITOR_GUTTER_PAD_RIGHT = 12;
 var EDITOR_TEXT_PAD_X = 8;
 var EDITOR_TEXT_TRAILING_PAD_X = 20;
 var PANEL_HEADER_H = 32;
+var TAB_MIN_W = 128;
+var TAB_MAX_W = 240;
+var TAB_GAP = 1;
+var TAB_OVERFLOW_BUTTON_W = 32;
+var TAB_AUTOSCROLL_EDGE_W = 34;
 var CONTEXT_MENU_WIDTH = 136;
 var CONTEXT_MENU_ROW_H = 28;
 var CONTEXT_MENU_SEPARATOR_H = 9;
@@ -2299,19 +5558,43 @@ var MODAL_WIDTH = 420;
 var MODAL_BUTTON_H = 30;
 var MODAL_BUTTON_GAP = 8;
 var TAB_DRAG_THRESHOLD = 6;
+var TOUCH_SCROLL_THRESHOLD = 10;
 var TOUCH_DOUBLE_TAP_MS = 420;
 var TOUCH_DOUBLE_TAP_DISTANCE = 28;
+var TOUCH_LONG_PRESS_MS = 540;
+var SELECTION_HANDLE_TOUCH_SIZE = 26;
+var SELECTION_HANDLE_AUTOSCROLL_EDGE = 42;
+var SELECTION_HANDLE_AUTOSCROLL_MAX_STEP = 18;
 var CARET_BLINK_HALF_MS = 530;
+var HIGHLIGHT_OPTIONS = [
+  { id: "plain", label: "Plain" },
+  { id: "javascript", label: "JavaScript" },
+  { id: "cpp", label: "C/C++" },
+  { id: "json", label: "JSON" },
+  { id: "markdown", label: "Markdown" },
+  { id: "lua", label: "Lua" },
+  { id: "python", label: "Python" }
+];
 var SETTINGS_TAB_ID = "settings";
 var SETTINGS_TAB_LABEL = "Settings";
 var SETTINGS_STORAGE_KEY = "slug.settings";
+var SESSION_STORAGE_KEY_PREFIX = "slug.session";
 var DEFAULT_SETTINGS = {
   theme: "dark",
   fontSize: 14,
   uiScale: 100,
+  monospacedFont: false,
+  tabSpaces: 4,
+  useTabStops: true,
+  showWhitespace: false,
   renameOnDoubleClick: true,
   showLineNumbers: true,
-  aiProvider: "local"
+  rememberOpenFiles: true,
+  aiProvider: "openai",
+  aiMaxToolCalls: DEFAULT_AI_RUNTIME_SETTINGS.maxToolCallsPerTurn,
+  aiDetectDuplicateToolCalls: DEFAULT_AI_RUNTIME_SETTINGS.detectDuplicateToolCalls,
+  aiToolCallFormat: DEFAULT_AI_RUNTIME_SETTINGS.toolCallFormat,
+  aiCompactFreePercent: DEFAULT_AI_RUNTIME_SETTINGS.compactFreePercent
 };
 var EditorApp = class {
   constructor(canvas, vfs, fontSources) {
@@ -2338,7 +5621,7 @@ var EditorApp = class {
   chat;
   searchBuffer = new MiniBuffer();
   projectReplaceBuffer = new MiniBuffer();
-  chatBuffer = new MiniBuffer();
+  chatDraft = new TextDocument(void 0, "");
   renameBuffer = new MiniBuffer();
   sidebarMode = "files";
   sidebarWidth = 280;
@@ -2354,6 +5637,11 @@ var EditorApp = class {
   groups = [makeGroup("group-main")];
   dockRoot = { type: "leaf", group: this.groups[0] };
   scrollStates = /* @__PURE__ */ new Map();
+  tabScrollStates = /* @__PURE__ */ new Map();
+  pendingTabRevealIds = /* @__PURE__ */ new Set();
+  documentWidthCache = /* @__PURE__ */ new Map();
+  lineWidthCache = /* @__PURE__ */ new Map();
+  highlightCache = /* @__PURE__ */ new Map();
   statusText = "Ready";
   hits = [];
   raf = 0;
@@ -2362,6 +5650,22 @@ var EditorApp = class {
   dockResize = null;
   scrollbarDrag = null;
   hoveredScrollbar = null;
+  settingsScrollY = 0;
+  settingsScrollbarDrag = null;
+  hoveredSettingsScrollbar = null;
+  filesScrollY = 0;
+  searchScrollY = 0;
+  chatScrollY = 0;
+  chatInputScrollY = 0;
+  aiModels = loadAiModels();
+  sidebarScrollbarDrag = null;
+  hoveredSidebarScrollbar = null;
+  chatScrollbarDrag = null;
+  hoveredChatScrollbar = null;
+  hoveredActivityButton = null;
+  hoveredButton = null;
+  selectedFileTreePath = null;
+  hoveredFileTreePath = null;
   contextMenu = null;
   contextMenuHover = null;
   modal = null;
@@ -2369,6 +5673,7 @@ var EditorApp = class {
   renamePath = null;
   renameSelecting = false;
   searchSelecting = false;
+  chatInputSelecting = false;
   textFieldSelecting = null;
   searchReplaceExpanded = false;
   findStates = /* @__PURE__ */ new Map();
@@ -2379,21 +5684,39 @@ var EditorApp = class {
   pendingTabDrag = null;
   tabDrag = null;
   dockPreview = null;
+  tabInsertionPreview = null;
+  lastTabDragPoint = null;
+  tabDragAutoscrollTimer = 0;
   lastTouchTap = null;
+  touchLongPress = null;
+  touchLongPressTimer = 0;
+  touchScroll = null;
+  deferredTouchHit = null;
+  selectionHandleDrag = null;
+  selectionHandleAutoscrollFrame = 0;
   editorRect = { x: 0, y: 0, w: 0, h: 0 };
-  settingsExpanded = /* @__PURE__ */ new Set(["visual", "interface", "ai", "danger"]);
+  settingsExpanded = /* @__PURE__ */ new Set(["visual", "interface", "ai"]);
   settings = loadSettings();
   activeSettingsNumber = null;
   settingsNumberBuffer = new MiniBuffer();
   settingsNumberSelecting = false;
+  settingsHitClip = null;
   localClipboard = "";
   systemClipboardOverlay = null;
   systemClipboardViewportCleanup = null;
   pendingCloseQueue = [];
+  pendingDownloadDirtyQueue = [];
+  downloadInProgress = false;
+  uploadInput = null;
+  uploadTargetFolder = "/";
+  untitledCounter = 1;
+  untitledLabels = /* @__PURE__ */ new Map();
+  untitledPreferredNames = /* @__PURE__ */ new Map();
+  fileDragActive = false;
+  fileDragLabel = "Drop to upload";
   async start() {
     await this.refreshFiles();
-    const first = this.files.find((file) => file.path === "/README.md") ?? this.files[0];
-    if (first) await this.openFile(first.path);
+    await this.restoreEditorSession();
     this.draw();
     this.scheduleDraw();
   }
@@ -2418,12 +5741,31 @@ var EditorApp = class {
   }
   tabLabel(id) {
     if (this.isSettingsTab(id)) return SETTINGS_TAB_LABEL;
-    return this.docs.get(id)?.path ?? "(untitled)";
+    const doc = this.docs.get(id);
+    return doc ? this.documentLabel(doc) : "(untitled)";
+  }
+  documentLabel(doc) {
+    if (doc.path && this.isAiSpecialPath(doc.path)) return this.aiSpecialLabel(doc.path);
+    return doc.path ?? this.untitledLabels.get(doc.id) ?? "Untitled";
+  }
+  isAiSpecialPath(path) {
+    const normalized = path ? normalizePath(path) : "";
+    return normalized === AI_SETTINGS_DOC_PATH || normalized === AI_SYSTEM_PROMPT_DOC_PATH || normalized === AI_HELPER_PROMPTS_DOC_PATH;
+  }
+  isAiSpecialDoc(doc) {
+    return Boolean(doc?.path && this.isAiSpecialPath(doc.path));
+  }
+  aiSpecialLabel(path) {
+    const normalized = normalizePath(path);
+    if (normalized === AI_SETTINGS_DOC_PATH) return "AI Settings";
+    if (normalized === AI_SYSTEM_PROMPT_DOC_PATH) return "System Prompt";
+    return "Helper Prompts";
   }
   async refreshFiles() {
     this.treeNodes = await this.listTreeNodes("/");
     this.files = this.treeNodes.filter((node) => node.kind === "file");
     this.syncFileTreeFolders();
+    this.syncFileTreeSelection();
   }
   async listTreeNodes(path) {
     const children = (await this.vfs.listDir(path)).filter((node) => node.path !== "/" && !node.path.startsWith("/.slug-"));
@@ -2442,21 +5784,61 @@ var EditorApp = class {
     group.activeDocId = doc.id;
     this.activeGroupId = group.id;
     this.activeDocId = doc.id;
+    this.revealTabInGroup(group, doc.id);
+    this.selectFileTreePath(doc.path ?? null);
     this.syncOpenTabs();
-    this.statusText = `Opened ${path}`;
+    this.statusText = doc.readOnly ? "File type not supported" : `Opened ${path}`;
     if (!this.renamePath) this.focusEditor();
     this.scheduleDraw();
   }
-  openSettingsTab() {
-    const existing = this.groupContaining(SETTINGS_TAB_ID);
-    const group = existing ?? this.activeGroup();
-    if (!group.tabs.includes(SETTINGS_TAB_ID)) group.tabs.push(SETTINGS_TAB_ID);
-    group.activeDocId = SETTINGS_TAB_ID;
+  openUntitledDocument(groupId = this.activeGroupId, options = {}) {
+    const group = this.groupById(groupId);
+    const doc = this.docs.createUntitled(options.text ?? "");
+    doc.readOnly = Boolean(options.readOnly);
+    this.untitledLabels.set(doc.id, options.label || `Untitled-${this.untitledCounter++}`);
+    if (options.preferredName) {
+      this.untitledPreferredNames.set(doc.id, options.preferredName);
+      doc.syntaxId = syntaxFromPath(options.preferredName);
+    }
+    if (options.dirty && !doc.readOnly) doc.revision = doc.savedRevision + 1;
+    group.tabs.push(doc.id);
+    group.activeDocId = doc.id;
     this.activeGroupId = group.id;
-    this.activeDocId = SETTINGS_TAB_ID;
+    this.activeDocId = doc.id;
+    this.revealTabInGroup(group, doc.id);
     this.syncOpenTabs();
-    this.statusText = "Settings";
+    this.statusText = doc.readOnly ? "File type not supported" : `Opened ${this.documentLabel(doc)}`;
+    this.focusEditor();
+    this.scheduleDraw();
+    return doc;
+  }
+  openSettingsTab() {
+    this.sidebarMode = "settings";
+    this.sidebarWidth = this.sidebarWidth > 0 ? this.sidebarWidth : this.lastSidebarWidth || 280;
     this.input.blur();
+    this.scheduleDraw();
+  }
+  openAiSettingsDocument() {
+    this.openVirtualAiDocument(AI_SETTINGS_DOC_PATH, JSON.stringify(loadAiEndpointConfig(), null, 2));
+  }
+  openSystemPromptDocument() {
+    this.openVirtualAiDocument(AI_SYSTEM_PROMPT_DOC_PATH, loadAiSystemPrompt());
+  }
+  openHelperPromptsDocument() {
+    this.openVirtualAiDocument(AI_HELPER_PROMPTS_DOC_PATH, loadAiHelperPrompts());
+  }
+  openVirtualAiDocument(path, text) {
+    const doc = this.docs.createVirtual(path, text);
+    const existing = this.groupContaining(doc.id);
+    const group = existing ?? this.activeGroup();
+    if (!group.tabs.includes(doc.id)) group.tabs.push(doc.id);
+    group.activeDocId = doc.id;
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    this.revealTabInGroup(group, doc.id);
+    this.syncOpenTabs();
+    this.statusText = `Opened ${this.aiSpecialLabel(path)}`;
+    this.focusEditor();
     this.scheduleDraw();
   }
   scheduleDraw() {
@@ -2484,15 +5866,24 @@ var EditorApp = class {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(this.settings));
     localStorage.setItem("slug.aiProvider", this.settings.aiProvider);
     this.applySettings();
+    if (this.settings.rememberOpenFiles) this.persistEditorSession();
+    else this.clearPersistedEditorSession();
     this.scheduleDraw();
   }
   applySettings() {
     applyTheme(this.settings.theme);
     localStorage.setItem("slug.aiProvider", this.settings.aiProvider);
-    this.renderer.configureText(this.settings.fontSize, this.settings.uiScale);
+    this.renderer.configureText(this.settings.fontSize, this.settings.uiScale, this.settings.monospacedFont);
+    this.documentWidthCache.clear();
+    this.lineWidthCache.clear();
+    this.highlightCache.clear();
   }
   ui(value) {
     return value * this.settings.uiScale / 100;
+  }
+  sessionStorageKey() {
+    const db = new URL(window.location.href).searchParams.get("db")?.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80) || "default";
+    return `${SESSION_STORAGE_KEY_PREFIX}:${db}`;
   }
   isCaretBlinkOn() {
     return Math.floor((performance.now() - this.caretBlinkEpoch) / CARET_BLINK_HALF_MS) % 2 === 0;
@@ -2510,20 +5901,29 @@ var EditorApp = class {
     const activeLabel = this.activeDocId ? this.tabLabel(this.activeDocId) : void 0;
     const findState = this.activeFindState(false);
     return {
-      activePath: this.activeDoc()?.path ?? (this.isSettingsTab(this.activeDocId) ? SETTINGS_TAB_LABEL : void 0),
+      activePath: this.activeDoc() ? this.documentLabel(this.activeDoc()) : this.isSettingsTab(this.activeDocId) ? SETTINGS_TAB_LABEL : void 0,
       activeText: this.activeDoc()?.getText(),
+      activeSyntaxId: this.activeDoc()?.syntaxId,
       selectedText: this.activeDoc()?.selectedText() ?? "",
       openTabs: this.openTabs.map((id) => this.tabLabel(id)),
       activeTab: activeLabel,
       sidebarMode: this.sidebarMode,
       sidebarVisible: this.sidebarWidth > 0,
+      statusText: this.statusText,
+      fileDragActive: this.fileDragActive,
+      fileDragLabel: this.fileDragLabel,
+      filesScrollY: this.filesScrollY,
+      searchScrollY: this.searchScrollY,
       settings: { ...this.settings },
       settingsActivityTarget: this.hits.find((hit) => hit.type === "settingsActivity")?.rect ?? null,
+      downloadActivityTarget: this.hits.find((hit) => hit.type === "downloadActivity")?.rect ?? null,
       settingsNumberText: this.settingsNumberBuffer.text,
       settingsNumberSelectedText: this.settingsNumberBuffer.selectedText(),
       activeSettingsNumber: this.activeSettingsNumber,
+      settingsScrollY: this.settingsScrollY,
       settingsTargets: this.hits.filter((hit) => hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "settingsNumber" || hit.type === "settingsButton").map((hit) => ({ type: hit.type, key: "key" in hit ? hit.key : "id" in hit ? hit.id : hit.action, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       searchQuery: this.searchBuffer.text,
+      searchScrollX: this.searchBuffer.scrollX,
       projectReplaceText: this.projectReplaceBuffer.text,
       searchReplaceExpanded: this.searchReplaceExpanded,
       searchSelectedText: this.searchBuffer.selectedText(),
@@ -2532,6 +5932,7 @@ var EditorApp = class {
       searchTargets: this.hits.filter((hit) => hit.type === "textField" || hit.type === "searchReplaceToggle" || hit.type === "searchRefresh" || hit.type === "searchReplaceAll").filter((hit) => hit.type !== "textField" || hit.field === "search" || hit.field === "projectReplace").map((hit) => ({ type: hit.type, key: "field" in hit ? hit.field : hit.type, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       searchCaretVisible: this.isSearchCaretVisible(),
       searchResults: this.searchResults,
+      searchResultTargets: this.hits.filter((hit) => hit.type === "searchResult").map((hit) => ({ path: hit.path, line: hit.line, rect: hit.rect })),
       findOpen: Boolean(findState?.open),
       findReplaceExpanded: Boolean(findState?.replaceExpanded),
       findQuery: findState?.findBuffer.text ?? "",
@@ -2541,19 +5942,34 @@ var EditorApp = class {
       findTargets: this.hits.filter((hit) => hit.type === "textField" || hit.type === "findToggle" || hit.type === "findPrevious" || hit.type === "findNext" || hit.type === "findClose" || hit.type === "findReplace" || hit.type === "findReplaceAll").filter((hit) => hit.type !== "textField" || hit.field === "find" || hit.field === "findReplace").map((hit) => ({ type: hit.type, key: "field" in hit ? hit.field : hit.type, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       chatMessages: this.chat.messages,
       activeInputKind: this.input.activeTarget?.kind ?? null,
-      chatDraft: this.chatBuffer.text,
+      chatDraft: this.chatDraft.getText(),
+      chatScrollY: this.chatScrollY,
+      chatInputScrollY: this.chatInputScrollY,
+      chatInputRect: this.hits.find((hit) => hit.type === "chatInput")?.rect ?? null,
+      chatSendTarget: this.hits.find((hit) => hit.type === "chatSend") ?? null,
+      chatScrollbars: this.hits.filter((hit) => hit.type === "chatScrollbar").map((hit) => ({ panel: hit.panel, rect: hit.rect, trackRect: hit.trackRect, thumbRect: hit.thumbRect })),
+      aiEndpointConfig: loadAiEndpointConfig(),
+      aiModels: this.aiModels,
       renamePath: this.renamePath,
       renameText: this.renameBuffer.text,
       renameSelectedText: this.renameBuffer.selectedText(),
+      renameScrollX: this.renameBuffer.scrollX,
       renameInputRect: this.renameInputRect(),
+      renameInvalid: this.renamePath ? !isValidFileName(this.renameBuffer.text.trim()) : false,
+      renameInvalidCharacters: invalidFileNameCharacterRanges(this.renameBuffer.text).map((range) => ({ ...range, text: this.renameBuffer.text.slice(range.start, range.end) })),
       caretBlinkOn: this.isCaretBlinkOn(),
       renameCaretVisible: this.isRenameCaretVisible(),
       sidebarWidth: this.sidebarWidth,
+      selectedFileTreePath: this.fileTreeSelectedPath(),
+      hoveredFileTreePath: this.hoveredFileTreePath,
       fileTargets: this.hits.filter((hit) => hit.type === "file").map((hit) => ({ path: hit.path, rect: hit.rect })),
       folderTargets: this.hits.filter((hit) => hit.type === "folder").map((hit) => ({ path: hit.path, expanded: hit.expanded, rect: hit.rect })),
       filesRootTarget: this.hits.find((hit) => hit.type === "filesRoot")?.rect ?? null,
       tabTargets: this.tabHitState("tab"),
       tabCloseTargets: this.tabHitState("tabClose"),
+      tabOverflowTargets: this.hits.filter((hit) => hit.type === "tabOverflow").map((hit) => ({ groupId: hit.groupId, rect: hit.rect })),
+      editorGutterTargets: this.hits.filter((hit) => hit.type === "editorGutter").map((hit) => ({ groupId: hit.groupId, path: this.docs.get(hit.docId)?.path ?? "(untitled)", rect: hit.rect })),
+      tabBarTargets: this.hits.filter((hit) => hit.type === "tabBar").map((hit) => ({ groupId: hit.groupId, rect: hit.rect })),
       editorGroups: this.groups.map((group) => {
         const doc = group.activeDocId ? this.docs.get(group.activeDocId) : void 0;
         return {
@@ -2574,12 +5990,19 @@ var EditorApp = class {
         if (!doc || !this.isDocumentCaretVisible(group, doc.id)) return [];
         return [{ groupId: group.id, path: doc.path ?? "(untitled)", cursor: doc.selection.head, rect: this.caretRect(doc, group.editorRect) }];
       }),
+      mobileSelectionHandles: this.hits.filter((hit) => hit.type === "selectionHandle").map((hit) => ({ edge: hit.edge, groupId: hit.groupId, path: this.docs.get(hit.docId)?.path ?? "(untitled)", rect: hit.rect })),
       dockPreview: this.dockPreview,
+      tabInsertionPreview: this.tabInsertionPreview,
       dragGhost: this.tabDrag ? this.dragGhostRect() : null,
       dockOverlayTargets: this.tabDrag ? this.allDockTargets().map((target) => ({ groupId: target.groupId, zone: target.zone, polygon: target.polygon, previewRect: target.previewRect })) : [],
+      statusWhitespaceTarget: this.hits.find((hit) => hit.type === "statusWhitespace")?.rect ?? null,
+      statusHighlightTarget: this.hits.find((hit) => hit.type === "statusHighlight")?.rect ?? null,
+      settingsRootTarget: this.hits.find((hit) => hit.type === "settingsRoot")?.rect ?? null,
       sidebarResizeTarget: this.hits.find((hit) => hit.type === "sidebarResize")?.rect ?? null,
       dockSplitters: this.hits.filter((hit) => hit.type === "dockResize").map((hit) => ({ splitId: hit.splitId, index: hit.index, direction: hit.direction, rect: hit.rect })),
       editorScrollbars: this.hits.filter((hit) => hit.type === "editorScrollbar").map((hit) => ({ axis: hit.axis, groupId: hit.groupId, path: this.docs.get(hit.docId)?.path ?? "(untitled)", rect: hit.rect, trackRect: hit.trackRect, thumbRect: hit.thumbRect })),
+      settingsScrollbar: this.hits.find((hit) => hit.type === "settingsScrollbar") ?? null,
+      sidebarScrollbars: this.hits.filter((hit) => hit.type === "sidebarScrollbar").map((hit) => ({ panel: hit.panel, rect: hit.rect, trackRect: hit.trackRect, thumbRect: hit.thumbRect })),
       hoveredScrollbar: this.hoveredScrollbar ? { axis: this.hoveredScrollbar.axis, groupId: this.hoveredScrollbar.groupId, path: this.docs.get(this.hoveredScrollbar.docId)?.path ?? "(untitled)", overThumb: this.hoveredScrollbar.overThumb } : null,
       contextMenu: this.contextMenu ? { scope: this.contextMenu.scope, rect: this.contextMenu.rect, items: this.contextMenu.items.filter(isContextMenuItem).map((item) => ({ command: item.command, label: item.label, rect: item.rect, enabled: item.enabled })) } : null,
       modal: this.modal ? {
@@ -2587,6 +6010,7 @@ var EditorApp = class {
         title: this.modal.title,
         message: this.modal.message,
         detail: this.modal.detail,
+        progress: this.modal.kind === "zipProgress" ? this.modal.progress : null,
         pending: this.modal.pending,
         buttons: this.modal.buttons.map((button) => ({ action: button.action, label: button.label, rect: button.rect, enabled: button.enabled }))
       } : null,
@@ -2606,6 +6030,7 @@ var EditorApp = class {
     this.canvas.addEventListener("contextmenu", (event) => this.onContextMenu(event));
     this.canvas.addEventListener("dblclick", (event) => this.onDoubleClick(event));
     window.addEventListener("pointerup", (event) => this.onPointerUp(event));
+    window.addEventListener("pointercancel", (event) => this.onPointerCancel(event));
     window.addEventListener("keydown", (event) => {
       if (this.modal) {
         const action = event.key === "Escape" ? this.modal.cancelAction : event.key === "Enter" ? this.modal.defaultAction : null;
@@ -2627,7 +6052,34 @@ var EditorApp = class {
       }
       const canvasRect = this.canvas.getBoundingClientRect();
       const point = { x: event.clientX - canvasRect.left, y: event.clientY - canvasRect.top };
+      const tabGroup = this.tabGroupAtPoint(point);
+      if (tabGroup && this.scrollTabGroupFromWheel(tabGroup, event, point)) {
+        event.preventDefault();
+        return;
+      }
+      const chatRegion = this.chatScrollRegionForPoint(point);
+      if (chatRegion) {
+        event.preventDefault();
+        const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, chatRegion.viewport);
+        this.setChatPanelScrollY(chatRegion.panel, this.chatPanelScrollY(chatRegion.panel) + deltaY2, chatRegion.viewport);
+        this.scheduleDraw();
+        return;
+      }
+      const sidebarRegion = this.sidebarScrollRegionForPoint(point);
+      if (sidebarRegion) {
+        event.preventDefault();
+        const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, sidebarRegion.viewport);
+        this.scrollSidebarPanel(sidebarRegion.panel, deltaY2, sidebarRegion.viewport);
+        return;
+      }
       const group = this.editorGroupAt(point.x, point.y);
+      if (group && this.isSettingsTab(group.activeDocId)) {
+        event.preventDefault();
+        const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, group.editorRect);
+        this.settingsScrollY = clamp(this.settingsScrollY + deltaY2, 0, this.maxSettingsScrollY(group.editorRect));
+        this.scheduleDraw();
+        return;
+      }
       const doc = group?.activeDocId ? this.docs.get(group.activeDocId) : void 0;
       if (!group || !doc) return;
       event.preventDefault();
@@ -2636,24 +6088,102 @@ var EditorApp = class {
       const deltaX = this.normalizedWheelDelta(event.deltaX, event.deltaMode, group.editorRect) + (event.shiftKey ? deltaY : 0);
       if (!event.shiftKey) scroll.y = clamp(scroll.y + deltaY, 0, this.maxScrollY(doc, group.editorRect));
       scroll.x = clamp(scroll.x + deltaX, 0, this.maxScrollX(doc, group.editorRect));
+      this.persistEditorSession();
       this.scheduleDraw();
     }, { passive: false });
-    this.canvas.addEventListener("dragover", (event) => {
+    this.canvas.addEventListener("dragenter", (event) => {
       event.preventDefault();
       if (this.modal) {
         if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
         return;
       }
+      this.updateFileDragState(event.dataTransfer);
       if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    });
+    this.canvas.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (this.modal) {
+        this.clearFileDragState();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
+        return;
+      }
+      this.updateFileDragState(event.dataTransfer);
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    });
+    this.canvas.addEventListener("dragleave", (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return;
+      this.clearFileDragState();
     });
     this.canvas.addEventListener("drop", (event) => {
       event.preventDefault();
+      this.clearFileDragState();
       if (this.modal) return;
       if (!event.dataTransfer) return;
-      void importDataTransfer(this.vfs, event.dataTransfer.items, (progress) => {
-        this.statusText = `Imported ${progress.files} files`;
-        this.scheduleDraw();
-      }).then(() => this.refreshFiles()).then(() => this.scheduleDraw());
+      void this.handleFileDrop(event.dataTransfer);
+    });
+  }
+  ensureUploadInput() {
+    if (this.uploadInput) return this.uploadInput;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.style.position = "fixed";
+    input.style.left = "-1000px";
+    input.style.top = "0";
+    input.style.width = "1px";
+    input.style.height = "1px";
+    input.style.opacity = "0";
+    input.style.pointerEvents = "none";
+    input.setAttribute("aria-hidden", "true");
+    input.addEventListener("change", () => {
+      const files = input.files ? Array.from(input.files) : [];
+      const target = this.uploadTargetFolder;
+      input.value = "";
+      if (files.length === 0) return;
+      void this.uploadFilesToFolder(files, target);
+    });
+    document.body.appendChild(input);
+    this.uploadInput = input;
+    return input;
+  }
+  updateFileDragState(dataTransfer) {
+    if (!dataTransfer || !dataTransferContainsFiles(dataTransfer)) return;
+    const files = Array.from(dataTransfer.files ?? []);
+    const zip = files.find(isZipFile);
+    const label = zip ? "Drop to import workspace zip" : "Drop to open in memory";
+    if (this.fileDragActive && this.fileDragLabel === label) return;
+    this.fileDragActive = true;
+    this.fileDragLabel = label;
+    this.scheduleDraw();
+  }
+  clearFileDragState() {
+    if (!this.fileDragActive) return;
+    this.fileDragActive = false;
+    this.fileDragLabel = "Drop to upload";
+    this.scheduleDraw();
+  }
+  async handleFileDrop(dataTransfer) {
+    const files = Array.from(dataTransfer.files ?? []);
+    if (files.length === 0) return;
+    const zip = files.find(isZipFile);
+    if (zip) {
+      this.openZipImportModal(zip);
+      return;
+    }
+    for (const file of files) await this.openDroppedFileInMemory(file);
+    this.statusText = files.length === 1 ? `Opened ${files[0].name} in memory` : `Opened ${files.length} files in memory`;
+    this.scheduleDraw();
+  }
+  async openDroppedFileInMemory(file) {
+    const unsupported = isUnsupportedFilePath(file.name);
+    const text = unsupported ? UNSUPPORTED_FILE_TEXT : await file.text();
+    this.openUntitledDocument(this.activeGroupId, {
+      label: file.name || void 0,
+      preferredName: file.name || void 0,
+      text,
+      dirty: !unsupported,
+      readOnly: unsupported
     });
   }
   onPointerDown(event) {
@@ -2680,16 +6210,32 @@ var EditorApp = class {
       void this.commitRename();
       return;
     }
-    if (!hit) return;
-    if (this.handleTouchDoubleTap(event, point, hit)) return;
+    if (hit?.type === "selectionHandle" && event.pointerType === "touch") {
+      event.preventDefault();
+      this.startSelectionHandleDrag(hit, event.pointerId, point);
+      return;
+    }
+    if (hit && this.handleTouchDoubleTap(event, point, hit)) return;
+    const touchScroll = this.makeTouchScrollState(event, point, hit);
+    if (!hit && !touchScroll) return;
     event.preventDefault();
     if (this.isContextMenuPointer(event)) return;
+    this.touchScroll = touchScroll;
+    if (touchScroll) this.capturePointer(event.pointerId);
+    if (event.pointerType === "touch" && hit?.type === "editor") this.startTouchLongPress(event.pointerId, point, hit);
+    if (!hit) return;
+    if (touchScroll && this.shouldDeferTouchHit(hit)) {
+      this.deferredTouchHit = { hit, point: { ...point } };
+      return;
+    }
     this.updateScrollbarHover(hit, point);
     if (hit.type === "activity") {
       this.toggleActivityMode(hit.mode);
       this.draw();
+    } else if (hit.type === "downloadActivity") {
+      void this.requestWorkspaceDownload();
     } else if (hit.type === "settingsActivity") {
-      this.openSettingsTab();
+      this.toggleActivityMode("settings");
     } else if (hit.type === "sidebarResize") {
       this.resizingSidebar = true;
       this.canvas.style.cursor = "col-resize";
@@ -2697,11 +6243,19 @@ var EditorApp = class {
       this.startDockResize(hit, point);
     } else if (hit.type === "editorScrollbar") {
       this.startScrollbarDrag(hit, point);
+    } else if (hit.type === "settingsScrollbar") {
+      this.startSettingsScrollbarDrag(hit, point);
+    } else if (hit.type === "sidebarScrollbar") {
+      this.startSidebarScrollbarDrag(hit, point);
+    } else if (hit.type === "chatScrollbar") {
+      this.startChatScrollbarDrag(hit, point);
     } else if (hit.type === "folder") {
+      this.selectFileTreePath(hit.path);
       this.toggleFolder(hit.path);
     } else if (hit.type === "filesRoot") {
       this.focusEditor();
     } else if (hit.type === "file") {
+      this.selectFileTreePath(hit.path);
       if (event.detail >= 2 && this.settings.renameOnDoubleClick) this.startRename(hit.path, hit.rect);
       else void this.openFile(hit.path);
     } else if (hit.type === "fileRenameInput") {
@@ -2710,17 +6264,15 @@ var EditorApp = class {
       this.renameSelecting = true;
     } else if (hit.type === "tabClose") {
       void this.requestCloseTab(hit.docId);
+    } else if (hit.type === "tabOverflow") {
+      this.openTabOverflowMenu(hit.groupId, hit.rect);
     } else if (hit.type === "tab") {
       if (event.button === 1) {
         void this.requestCloseTab(hit.docId);
         return;
       }
-      this.activeGroupId = hit.groupId;
-      this.activeDocId = hit.docId;
-      this.groupById(hit.groupId).activeDocId = hit.docId;
+      this.activateTabInGroup(this.groupById(hit.groupId), hit.docId);
       this.pendingTabDrag = { docId: hit.docId, groupId: hit.groupId, startPoint: { ...point } };
-      if (this.activeDoc()) this.focusEditor();
-      else this.input.blur();
       this.scheduleDraw();
     } else if (hit.type === "textField") {
       this.focusTextField(hit.field, hit.rect);
@@ -2738,12 +6290,20 @@ var EditorApp = class {
       });
     } else if (hit.type === "chatInput") {
       this.focusMiniTarget("chat", hit.rect);
+      this.setChatInputCursorFromPoint(point, hit.rect, false);
+      this.chatInputSelecting = true;
+    } else if (hit.type === "chatSend") {
+      if (hit.enabled) void this.sendChat();
     } else if (hit.type === "settingsHeader") {
       this.toggleSettingsHeader(hit.id);
     } else if (hit.type === "settingsCheckbox") {
       this.toggleSettingsCheckbox(hit.key);
     } else if (hit.type === "settingsDropdown") {
       this.openSettingsDropdown(hit.rect, hit.key);
+    } else if (hit.type === "statusWhitespace") {
+      this.toggleStatusWhitespace();
+    } else if (hit.type === "statusHighlight") {
+      this.openHighlightDropdown(hit);
     } else if (hit.type === "settingsNumber") {
       this.focusSettingsNumber(hit.key, hit.rect);
       this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
@@ -2771,11 +6331,24 @@ var EditorApp = class {
       if (hit.enabled) this.replaceCurrentFindMatch();
     } else if (hit.type === "findReplaceAll") {
       if (hit.enabled) this.replaceAllInActiveDocument();
+    } else if (hit.type === "editorGutter") {
+      const group = this.groupById(hit.groupId);
+      const doc = this.docs.get(hit.docId);
+      if (!doc) return;
+      this.activeGroupId = group.id;
+      this.activeDocId = doc.id;
+      group.activeDocId = doc.id;
+      this.selectActiveDocumentInFileTree();
+      doc.setSelection(this.positionFromPointInEditor(doc, group.editorRect, point.x, point.y));
+      this.focusEditor();
+      this.resetCaretBlink();
+      this.persistEditorSession();
     } else if (hit.type === "editor") {
       this.activeGroupId = hit.groupId;
       this.activeDocId = this.groupById(hit.groupId).activeDocId;
       const doc = this.activeDoc();
       if (!doc) return;
+      this.selectActiveDocumentInFileTree();
       if (!this.isMobileContextMode() && event.detail >= 3) {
         this.selecting = false;
         this.selectEditorLineFromPoint(doc, hit.rect, point);
@@ -2787,6 +6360,7 @@ var EditorApp = class {
       this.selecting = true;
       this.focusEditor();
       this.resetCaretBlink();
+      this.persistEditorSession();
     }
   }
   onPointerMove(event) {
@@ -2796,6 +6370,17 @@ var EditorApp = class {
       const hover2 = this.hitAt(point.x, point.y);
       this.updateModalHover(hover2);
       this.canvas.style.cursor = "";
+      return;
+    }
+    if (this.selectionHandleDrag?.pointerId === event.pointerId) {
+      event.preventDefault();
+      this.updateSelectionHandleDrag(point);
+      return;
+    }
+    this.cancelTouchLongPressIfMoved(event.pointerId, point);
+    if (this.touchScroll && this.touchScroll.pointerId === event.pointerId) {
+      event.preventDefault();
+      this.updateTouchScroll(point);
       return;
     }
     if (this.renameSelecting) {
@@ -2817,6 +6402,13 @@ var EditorApp = class {
       const hit = this.hitAt(point.x, point.y);
       const rect = hit?.type === "searchInput" ? hit.rect : this.searchInputRect();
       if (rect) this.setSearchCursorFromPoint(point.x, rect, true);
+      return;
+    }
+    if (this.chatInputSelecting) {
+      event.preventDefault();
+      const hit = this.hitAt(point.x, point.y);
+      const rect = hit?.type === "chatInput" ? hit.rect : this.chatInputRectForFocus();
+      if (rect) this.setChatInputCursorFromPoint(point, rect, true);
       return;
     }
     if (this.settingsNumberSelecting) {
@@ -2852,6 +6444,24 @@ var EditorApp = class {
       this.canvas.style.cursor = "";
       return;
     }
+    if (this.settingsScrollbarDrag) {
+      event.preventDefault();
+      this.dragSettingsScrollbar(point);
+      this.canvas.style.cursor = "";
+      return;
+    }
+    if (this.sidebarScrollbarDrag) {
+      event.preventDefault();
+      this.dragSidebarScrollbar(point);
+      this.canvas.style.cursor = "";
+      return;
+    }
+    if (this.chatScrollbarDrag) {
+      event.preventDefault();
+      this.dragChatScrollbar(point);
+      this.canvas.style.cursor = "";
+      return;
+    }
     if (this.dockResize) {
       event.preventDefault();
       this.resizeDockSplit(point);
@@ -2866,6 +6476,9 @@ var EditorApp = class {
     const hover = this.hitAt(point.x, point.y);
     this.updateContextMenuHover(hover);
     this.updateScrollbarHover(hover, point);
+    this.updateActivityButtonHover(hover);
+    this.updateButtonHover(hover);
+    this.updateFileTreeHover(hover);
     this.canvas.style.cursor = this.cursorForHit(hover);
     if (!this.selecting) return;
     const doc = this.activeDoc();
@@ -2882,6 +6495,14 @@ var EditorApp = class {
       this.canvas.style.cursor = "";
       return;
     }
+    const touchScrollWasActive = this.touchScroll?.pointerId === event.pointerId && this.touchScroll.active;
+    const deferredTouchHit = this.touchScroll?.pointerId === event.pointerId ? this.deferredTouchHit : null;
+    if (this.touchScroll?.pointerId === event.pointerId) this.touchScroll = null;
+    this.cancelTouchLongPress(event.pointerId);
+    if (this.selectionHandleDrag?.pointerId === event.pointerId) this.stopSelectionHandleDrag();
+    if (deferredTouchHit) this.deferredTouchHit = null;
+    if (touchScrollWasActive) event.preventDefault();
+    const completedDockResize = Boolean(this.dockResize);
     if (this.tabDrag) {
       this.tabDrag.pointer = point;
       this.updateDockPreview(point);
@@ -2891,17 +6512,57 @@ var EditorApp = class {
     this.resizingSidebar = false;
     this.dockResize = null;
     this.scrollbarDrag = null;
+    this.settingsScrollbarDrag = null;
+    this.sidebarScrollbarDrag = null;
+    this.chatScrollbarDrag = null;
     this.renameSelecting = false;
     this.searchSelecting = false;
+    this.chatInputSelecting = false;
     this.textFieldSelecting = null;
     this.settingsNumberSelecting = false;
     this.pendingTabDrag = null;
     this.tabDrag = null;
     this.dockPreview = null;
+    this.tabInsertionPreview = null;
+    this.lastTabDragPoint = null;
+    this.stopTabDragAutoscroll();
+    if (completedDockResize) this.persistEditorSession();
+    if (!touchScrollWasActive && deferredTouchHit) this.runDeferredTouchHit(deferredTouchHit);
     const hover = this.hitAt(point.x, point.y);
     this.updateScrollbarHover(hover, point);
+    this.updateActivityButtonHover(hover);
+    this.updateButtonHover(hover);
+    this.updateFileTreeHover(hover);
     this.canvas.style.cursor = this.cursorForHit(hover);
     this.draw();
+  }
+  onPointerCancel(event) {
+    if (this.touchScroll?.pointerId === event.pointerId) this.touchScroll = null;
+    this.cancelTouchLongPress(event.pointerId);
+    if (this.selectionHandleDrag?.pointerId === event.pointerId) this.stopSelectionHandleDrag();
+    this.deferredTouchHit = null;
+    this.selecting = false;
+    this.resizingSidebar = false;
+    this.dockResize = null;
+    this.scrollbarDrag = null;
+    this.settingsScrollbarDrag = null;
+    this.sidebarScrollbarDrag = null;
+    this.chatScrollbarDrag = null;
+    this.renameSelecting = false;
+    this.searchSelecting = false;
+    this.chatInputSelecting = false;
+    this.textFieldSelecting = null;
+    this.settingsNumberSelecting = false;
+    this.pendingTabDrag = null;
+    this.tabDrag = null;
+    this.dockPreview = null;
+    this.tabInsertionPreview = null;
+    this.lastTabDragPoint = null;
+    this.hoveredButton = null;
+    this.hoveredFileTreePath = null;
+    this.stopTabDragAutoscroll();
+    this.canvas.style.cursor = "";
+    this.scheduleDraw();
   }
   onContextMenu(event) {
     event.preventDefault();
@@ -2914,6 +6575,18 @@ var EditorApp = class {
       this.openTabContextMenu(point, hit.groupId, hit.docId);
       return;
     }
+    if (hit?.type === "tabBar") {
+      this.openTabBarContextMenu(point, hit.groupId);
+      return;
+    }
+    if (hit?.type === "tabOverflow") {
+      this.openTabOverflowMenu(hit.groupId, hit.rect);
+      return;
+    }
+    if (hit?.type === "editorGutter") {
+      this.openGutterContextMenu(point, hit.groupId, hit.docId);
+      return;
+    }
     if (hit?.type === "fileRenameInput") {
       this.focusRename(hit.rect);
       if (!this.pointHitsRenameSelection(point.x, hit.rect)) this.setRenameCursorFromPoint(point.x, hit.rect, false);
@@ -2924,6 +6597,12 @@ var EditorApp = class {
       this.focusMiniTarget("search", hit.rect);
       if (!this.pointHitsSearchSelection(point.x, hit.rect)) this.setSearchCursorFromPoint(point.x, hit.rect, false);
       this.openSearchTextContextMenu(point);
+      return;
+    }
+    if (hit?.type === "chatInput") {
+      this.focusMiniTarget("chat", hit.rect);
+      if (!this.pointHitsChatInputSelection(point, hit.rect)) this.setChatInputCursorFromPoint(point, hit.rect, false);
+      this.openChatInputContextMenu(point);
       return;
     }
     if (hit?.type === "textField") {
@@ -2940,17 +6619,23 @@ var EditorApp = class {
     }
     if (hit?.type === "file") {
       if (this.renamePath && this.renamePath !== hit.path) void this.commitRename();
+      this.selectFileTreePath(hit.path);
       this.openFileContextMenu(point, hit.path);
       return;
     }
     if (hit?.type === "folder") {
       if (this.renamePath && this.renamePath !== hit.path) void this.commitRename();
+      this.selectFileTreePath(hit.path);
       this.openFolderContextMenu(point, hit.path);
       return;
     }
     if (hit?.type === "filesRoot") {
       if (this.renamePath) void this.commitRename();
       this.openRootContextMenu(point);
+      return;
+    }
+    if (hit?.type === "settingsRoot") {
+      this.openSettingsRootContextMenu(point);
       return;
     }
     if (!hit || hit.type !== "editor") {
@@ -2966,6 +6651,7 @@ var EditorApp = class {
     }
     this.activeGroupId = group.id;
     this.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
     if (!this.pointHitsSelection(doc, group.editorRect, point)) {
       doc.setSelection(this.positionFromPoint(point.x, point.y));
     }
@@ -2993,6 +6679,14 @@ var EditorApp = class {
       this.resetCaretBlink();
       return;
     }
+    if (hit?.type === "chatInput") {
+      event.preventDefault();
+      this.focusMiniTarget("chat", hit.rect);
+      this.chatDraft.selectAll();
+      this.chatInputSelecting = false;
+      this.resetCaretBlink();
+      return;
+    }
     if (hit?.type === "textField") {
       event.preventDefault();
       this.focusTextField(hit.field, hit.rect);
@@ -3017,9 +6711,11 @@ var EditorApp = class {
     if (!doc) return;
     this.activeGroupId = group.id;
     this.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
     this.selecting = false;
     this.selectEditorLineFromPoint(doc, group.editorRect, point);
     this.focusEditor();
+    this.persistEditorSession();
   }
   onDoubleClick(event) {
     event.preventDefault();
@@ -3038,6 +6734,9 @@ var EditorApp = class {
     } else if (hit?.type === "searchInput") {
       this.focusMiniTarget("search", hit.rect);
       this.selectSearchWordFromPoint(point.x, hit.rect);
+    } else if (hit?.type === "chatInput") {
+      this.focusMiniTarget("chat", hit.rect);
+      this.selectChatInputWordFromPoint(point, hit.rect);
     } else if (hit?.type === "textField") {
       this.focusTextField(hit.field, hit.rect);
       this.selectTextFieldWordFromPoint(hit.field, point.x, hit.rect);
@@ -3046,6 +6745,8 @@ var EditorApp = class {
       this.selectSettingsNumberWordFromPoint(point.x, hit.rect);
     } else if (hit?.type === "file") {
       if (this.settings.renameOnDoubleClick) this.startRename(hit.path, hit.rect);
+    } else if (hit?.type === "tabBar") {
+      this.openUntitledDocument(hit.groupId);
     } else if (hit?.type === "editor") {
       const group = this.groupById(hit.groupId);
       const docId = group.activeDocId;
@@ -3053,8 +6754,10 @@ var EditorApp = class {
       if (!doc) return;
       this.activeGroupId = group.id;
       this.activeDocId = doc.id;
+      this.selectActiveDocumentInFileTree();
       this.selectEditorWordFromPoint(doc, group.editorRect, point);
       this.focusEditor();
+      this.persistEditorSession();
     }
   }
   focusEditor() {
@@ -3083,7 +6786,9 @@ var EditorApp = class {
     if (mode === "search") {
       this.focusMiniTarget("search", { x: sidebarX + this.ui(10), y: this.ui(40), w: this.sidebarWidth - this.ui(20), h: this.ui(28) });
     } else if (mode === "chat") {
-      this.focusMiniTarget("chat", { x: sidebarX + this.ui(10), y: vp.cssHeight - this.ui(70), w: this.sidebarWidth - this.ui(20), h: this.ui(38) });
+      this.focusMiniTarget("chat", this.chatInputRectForSidebar({ x: sidebarX, y: 0, w: this.sidebarWidth, h: vp.cssHeight - this.ui(24) }));
+    } else if (mode === "settings") {
+      this.input.blur();
     } else {
       this.focusEditor();
     }
@@ -3116,22 +6821,355 @@ var EditorApp = class {
   }
   updateScrollbarHover(hit, point) {
     const next = hit?.type === "editorScrollbar" ? { axis: hit.axis, groupId: hit.groupId, docId: hit.docId, overThumb: rectContains(hit.thumbRect, point.x, point.y) } : null;
-    const changed = this.hoveredScrollbar?.axis !== next?.axis || this.hoveredScrollbar?.groupId !== next?.groupId || this.hoveredScrollbar?.docId !== next?.docId || this.hoveredScrollbar?.overThumb !== next?.overThumb;
+    const nextSettings = hit?.type === "settingsScrollbar" ? { overThumb: rectContains(hit.thumbRect, point.x, point.y) } : null;
+    const nextSidebar = hit?.type === "sidebarScrollbar" ? { panel: hit.panel, overThumb: rectContains(hit.thumbRect, point.x, point.y) } : null;
+    const nextChat = hit?.type === "chatScrollbar" ? { panel: hit.panel, overThumb: rectContains(hit.thumbRect, point.x, point.y) } : null;
+    const changed = this.hoveredScrollbar?.axis !== next?.axis || this.hoveredScrollbar?.groupId !== next?.groupId || this.hoveredScrollbar?.docId !== next?.docId || this.hoveredScrollbar?.overThumb !== next?.overThumb || this.hoveredSettingsScrollbar?.overThumb !== nextSettings?.overThumb || this.hoveredSidebarScrollbar?.panel !== nextSidebar?.panel || this.hoveredSidebarScrollbar?.overThumb !== nextSidebar?.overThumb || this.hoveredChatScrollbar?.panel !== nextChat?.panel || this.hoveredChatScrollbar?.overThumb !== nextChat?.overThumb;
     if (!changed) return;
     this.hoveredScrollbar = next;
+    this.hoveredSettingsScrollbar = nextSettings;
+    this.hoveredSidebarScrollbar = nextSidebar;
+    this.hoveredChatScrollbar = nextChat;
     this.scheduleDraw();
   }
   clearScrollbarHover() {
-    if (!this.hoveredScrollbar || this.scrollbarDrag) return;
+    if (!this.hoveredScrollbar && !this.hoveredSettingsScrollbar && !this.hoveredSidebarScrollbar && !this.hoveredChatScrollbar && !this.hoveredActivityButton && !this.hoveredButton && !this.hoveredFileTreePath || this.scrollbarDrag || this.settingsScrollbarDrag || this.sidebarScrollbarDrag || this.chatScrollbarDrag) return;
     this.hoveredScrollbar = null;
+    this.hoveredSettingsScrollbar = null;
+    this.hoveredSidebarScrollbar = null;
+    this.hoveredChatScrollbar = null;
+    this.hoveredActivityButton = null;
+    this.hoveredButton = null;
+    this.hoveredFileTreePath = null;
     this.canvas.style.cursor = "";
     this.scheduleDraw();
+  }
+  updateActivityButtonHover(hit) {
+    const next = hit?.type === "activity" ? hit.mode : hit?.type === "downloadActivity" ? "download" : hit?.type === "settingsActivity" ? "settings" : null;
+    if (this.hoveredActivityButton === next) return;
+    this.hoveredActivityButton = next;
+    this.scheduleDraw();
+  }
+  updateButtonHover(hit) {
+    const next = this.buttonHoverKeyForHit(hit);
+    if (this.hoveredButton === next) return;
+    this.hoveredButton = next;
+    this.scheduleDraw();
+  }
+  updateFileTreeHover(hit) {
+    const next = hit?.type === "file" || hit?.type === "folder" ? normalizePath(hit.path) : null;
+    if (this.hoveredFileTreePath === next) return;
+    this.hoveredFileTreePath = next;
+    this.scheduleDraw();
+  }
+  buttonHoverKeyForHit(hit) {
+    if (!hit) return null;
+    if (hit.type === "tabClose") return this.buttonHoverKey("tabClose", hit.groupId, hit.docId);
+    if (hit.type === "tabOverflow") return this.buttonHoverKey("tabOverflow", hit.groupId);
+    if (hit.type === "statusWhitespace") return this.buttonHoverKey("statusWhitespace");
+    if (hit.type === "statusHighlight") return this.buttonHoverKey("statusHighlight", hit.groupId, hit.docId);
+    if (hit.type === "searchReplaceToggle") return this.buttonHoverKey("searchReplaceToggle");
+    if (hit.type === "searchRefresh") return this.buttonHoverKey("searchRefresh");
+    if (hit.type === "searchReplaceAll") return hit.enabled ? this.buttonHoverKey("searchReplaceAll") : null;
+    if (hit.type === "findToggle") return this.buttonHoverKey("findToggle");
+    if (hit.type === "findPrevious") return hit.enabled ? this.buttonHoverKey("findPrevious") : null;
+    if (hit.type === "findNext") return hit.enabled ? this.buttonHoverKey("findNext") : null;
+    if (hit.type === "findClose") return this.buttonHoverKey("findClose");
+    if (hit.type === "findReplace") return hit.enabled ? this.buttonHoverKey("findReplace") : null;
+    if (hit.type === "findReplaceAll") return hit.enabled ? this.buttonHoverKey("findReplaceAll") : null;
+    if (hit.type === "chatSend") return hit.enabled ? this.buttonHoverKey("chatSend") : null;
+    if (hit.type === "settingsButton") return hit.enabled ? this.buttonHoverKey("settingsButton", hit.action) : null;
+    if (hit.type === "settingsCheckbox") return this.buttonHoverKey("settingsCheckbox", hit.key);
+    if (hit.type === "settingsDropdown") return this.buttonHoverKey("settingsDropdown", hit.key);
+    return null;
+  }
+  buttonHoverKey(type, ...parts) {
+    return [type, ...parts].join(":");
+  }
+  isButtonHovered(type, ...parts) {
+    return this.hoveredButton === this.buttonHoverKey(type, ...parts);
   }
   isContextMenuPointer(event) {
     return event.button === 2 || event.button === 0 && event.ctrlKey;
   }
   isMobileContextMode() {
     return navigator.maxTouchPoints > 0 && window.matchMedia("(pointer: coarse)").matches;
+  }
+  isMobileSelectionMode() {
+    return navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+  }
+  startTouchLongPress(pointerId, point, hit) {
+    const group = this.groupById(hit.groupId);
+    const docId = group.activeDocId;
+    const doc = docId ? this.docs.get(docId) : void 0;
+    if (!doc || doc.readOnly) return;
+    this.cancelTouchLongPress();
+    this.touchLongPress = { pointerId, groupId: group.id, docId: doc.id, point: { ...point } };
+    this.touchLongPressTimer = window.setTimeout(() => this.completeTouchLongPress(pointerId), TOUCH_LONG_PRESS_MS);
+  }
+  completeTouchLongPress(pointerId) {
+    const press = this.touchLongPress;
+    if (!press || press.pointerId !== pointerId) return;
+    this.cancelTouchLongPress(pointerId);
+    const group = this.groupById(press.groupId);
+    const doc = this.docs.get(press.docId);
+    if (!doc || group.activeDocId !== doc.id || doc.readOnly) return;
+    this.touchScroll = null;
+    this.deferredTouchHit = null;
+    this.selecting = false;
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
+    this.selectEditorWordFromPoint(doc, group.editorRect, press.point);
+    this.focusEditor();
+    this.persistEditorSession();
+    this.scheduleDraw();
+  }
+  cancelTouchLongPress(pointerId) {
+    if (pointerId !== void 0 && this.touchLongPress?.pointerId !== pointerId) return;
+    if (this.touchLongPressTimer) window.clearTimeout(this.touchLongPressTimer);
+    this.touchLongPressTimer = 0;
+    this.touchLongPress = null;
+  }
+  cancelTouchLongPressIfMoved(pointerId, point) {
+    const press = this.touchLongPress;
+    if (!press || press.pointerId !== pointerId) return;
+    if (Math.hypot(point.x - press.point.x, point.y - press.point.y) >= this.ui(TOUCH_SCROLL_THRESHOLD)) this.cancelTouchLongPress(pointerId);
+  }
+  startSelectionHandleDrag(hit, pointerId, point) {
+    const group = this.groupById(hit.groupId);
+    const doc = this.docs.get(hit.docId);
+    if (!doc || !doc.hasSelection()) return;
+    const ordered = doc.getOrderedSelection();
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    group.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
+    this.selectionHandleDrag = {
+      pointerId,
+      groupId: group.id,
+      docId: doc.id,
+      edge: hit.edge,
+      fixed: hit.edge === "start" ? { ...ordered.end } : { ...ordered.start },
+      point: { ...point }
+    };
+    this.touchScroll = null;
+    this.deferredTouchHit = null;
+    this.selecting = false;
+    this.focusEditor();
+    this.capturePointer(pointerId);
+    this.startSelectionHandleAutoscroll();
+  }
+  updateSelectionHandleDrag(point) {
+    const drag = this.selectionHandleDrag;
+    if (!drag) return;
+    drag.point = { ...point };
+    const group = this.groupById(drag.groupId);
+    const doc = this.docs.get(drag.docId);
+    if (!doc) return;
+    this.applySelectionHandleAutoscroll(drag, group, doc);
+    const pos = this.positionFromPointInEditor(doc, group.editorRect, point.x, point.y);
+    doc.setSelection(drag.fixed, pos);
+    this.resetCaretBlink();
+    this.persistEditorSession();
+    this.scheduleDraw();
+  }
+  startSelectionHandleAutoscroll() {
+    if (this.selectionHandleAutoscrollFrame) return;
+    const tick = () => {
+      this.selectionHandleAutoscrollFrame = 0;
+      const drag = this.selectionHandleDrag;
+      if (!drag) return;
+      this.updateSelectionHandleDrag(drag.point);
+      this.selectionHandleAutoscrollFrame = window.requestAnimationFrame(tick);
+    };
+    this.selectionHandleAutoscrollFrame = window.requestAnimationFrame(tick);
+  }
+  stopSelectionHandleDrag() {
+    this.selectionHandleDrag = null;
+    if (this.selectionHandleAutoscrollFrame) window.cancelAnimationFrame(this.selectionHandleAutoscrollFrame);
+    this.selectionHandleAutoscrollFrame = 0;
+    this.persistEditorSession();
+  }
+  applySelectionHandleAutoscroll(drag, group, doc) {
+    const scroll = this.scrollForDoc(doc.id);
+    const rect = group.editorRect;
+    const edge = this.ui(SELECTION_HANDLE_AUTOSCROLL_EDGE);
+    const maxStep = this.ui(SELECTION_HANDLE_AUTOSCROLL_MAX_STEP);
+    let dx = 0;
+    let dy = 0;
+    if (drag.point.y < rect.y + edge) dy = -maxStep * (1 - Math.max(0, drag.point.y - rect.y) / edge);
+    else if (drag.point.y > rect.y + rect.h - edge) dy = maxStep * (1 - Math.max(0, rect.y + rect.h - drag.point.y) / edge);
+    if (drag.point.x < rect.x + edge) dx = -maxStep * (1 - Math.max(0, drag.point.x - rect.x) / edge);
+    else if (drag.point.x > rect.x + rect.w - edge) dx = maxStep * (1 - Math.max(0, rect.x + rect.w - drag.point.x) / edge);
+    if (dx === 0 && dy === 0) return;
+    scroll.x = clamp(scroll.x + dx, 0, this.maxScrollX(doc, rect));
+    scroll.y = clamp(scroll.y + dy, 0, this.maxScrollY(doc, rect));
+  }
+  makeTouchScrollState(event, point, hit) {
+    if (event.pointerType !== "touch") return null;
+    if (hit?.type === "editorScrollbar" || hit?.type === "settingsScrollbar" || hit?.type === "sidebarScrollbar" || hit?.type === "chatScrollbar") return null;
+    if (hit?.type === "chatTranscript" || hit?.type === "chatInput") {
+      const panel = hit.type === "chatInput" ? "chatInput" : "chatTranscript";
+      const maxScroll = this.maxChatScrollY(panel, hit.rect);
+      if (maxScroll > 0) {
+        return {
+          type: "chat",
+          pointerId: event.pointerId,
+          panel,
+          rect: { ...hit.rect },
+          startPoint: { ...point },
+          startScrollY: this.chatPanelScrollY(panel),
+          active: false
+        };
+      }
+    }
+    const sidebarRegion = this.sidebarScrollRegionForPoint(point);
+    if (sidebarRegion) {
+      const maxScroll = this.maxSidebarScrollY(sidebarRegion.panel, sidebarRegion.viewport);
+      if (maxScroll > 0) {
+        return {
+          type: "sidebar",
+          pointerId: event.pointerId,
+          panel: sidebarRegion.panel,
+          rect: { ...sidebarRegion.viewport },
+          startPoint: { ...point },
+          startScrollY: this.sidebarScrollY(sidebarRegion.panel),
+          active: false
+        };
+      }
+    }
+    if (hit?.type === "editor" || hit?.type === "editorGutter") {
+      const group2 = this.groupById(hit.groupId);
+      const docId = group2.activeDocId;
+      const doc = docId ? this.docs.get(docId) : void 0;
+      if (!doc) return null;
+      if (this.maxScrollX(doc, group2.editorRect) <= 0 && this.maxScrollY(doc, group2.editorRect) <= 0) return null;
+      return {
+        type: "editor",
+        pointerId: event.pointerId,
+        groupId: group2.id,
+        docId: doc.id,
+        rect: { ...group2.editorRect },
+        startPoint: { ...point },
+        startScroll: { ...this.scrollForDoc(doc.id) },
+        originalSelection: cloneSelectionState(doc.selection),
+        active: false
+      };
+    }
+    const group = this.editorGroupAt(point.x, point.y);
+    if (!group || !this.isSettingsTab(group.activeDocId)) return null;
+    if (this.maxSettingsScrollY(group.editorRect) <= 0) return null;
+    return {
+      type: "settings",
+      pointerId: event.pointerId,
+      groupId: group.id,
+      rect: { ...group.editorRect },
+      startPoint: { ...point },
+      startScrollY: this.settingsScrollY,
+      active: false
+    };
+  }
+  updateTouchScroll(point) {
+    const scroll = this.touchScroll;
+    if (!scroll) return;
+    const dx = point.x - scroll.startPoint.x;
+    const dy = point.y - scroll.startPoint.y;
+    if (!scroll.active) {
+      if (Math.hypot(dx, dy) < this.ui(TOUCH_SCROLL_THRESHOLD)) return;
+      scroll.active = true;
+      this.cancelTouchLongPress(scroll.pointerId);
+      this.lastTouchTap = null;
+      this.deferredTouchHit = null;
+      this.selecting = false;
+      this.renameSelecting = false;
+      this.searchSelecting = false;
+      this.textFieldSelecting = null;
+      this.settingsNumberSelecting = false;
+      if (scroll.type === "editor") {
+        const doc2 = this.docs.get(scroll.docId);
+        if (doc2) doc2.selection = cloneSelectionState(scroll.originalSelection);
+      }
+    }
+    if (scroll.type === "settings") {
+      const group2 = this.groupById(scroll.groupId);
+      this.settingsScrollY = clamp(scroll.startScrollY - dy, 0, this.maxSettingsScrollY(group2.editorRect));
+      this.scheduleDraw();
+      return;
+    }
+    if (scroll.type === "sidebar") {
+      this.setSidebarScrollY(scroll.panel, scroll.startScrollY - dy, scroll.rect);
+      this.scheduleDraw();
+      return;
+    }
+    if (scroll.type === "chat") {
+      this.setChatPanelScrollY(scroll.panel, scroll.startScrollY - dy, scroll.rect);
+      this.scheduleDraw();
+      return;
+    }
+    const group = this.groupById(scroll.groupId);
+    const doc = this.docs.get(scroll.docId);
+    if (!doc) return;
+    const docScroll = this.scrollForDoc(doc.id);
+    docScroll.x = clamp(scroll.startScroll.x - dx, 0, this.maxScrollX(doc, group.editorRect));
+    docScroll.y = clamp(scroll.startScroll.y - dy, 0, this.maxScrollY(doc, group.editorRect));
+    this.persistEditorSession();
+    this.scheduleDraw();
+  }
+  capturePointer(pointerId) {
+    try {
+      this.canvas.setPointerCapture(pointerId);
+    } catch {
+    }
+  }
+  shouldDeferTouchHit(hit) {
+    return hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "statusWhitespace" || hit.type === "statusHighlight" || hit.type === "settingsNumber" || hit.type === "settingsButton" || hit.type === "folder" || hit.type === "file" || hit.type === "filesRoot" || hit.type === "editorGutter" || hit.type === "searchResult";
+  }
+  runDeferredTouchHit(deferred) {
+    const { hit, point } = deferred;
+    if (hit.type === "settingsHeader") {
+      this.toggleSettingsHeader(hit.id);
+    } else if (hit.type === "settingsCheckbox") {
+      this.toggleSettingsCheckbox(hit.key);
+    } else if (hit.type === "settingsDropdown") {
+      this.openSettingsDropdown(hit.rect, hit.key);
+    } else if (hit.type === "statusWhitespace") {
+      this.toggleStatusWhitespace();
+    } else if (hit.type === "statusHighlight") {
+      this.openHighlightDropdown(hit);
+    } else if (hit.type === "editorGutter") {
+      const group = this.groupById(hit.groupId);
+      const doc = this.docs.get(hit.docId);
+      if (!doc) return;
+      this.activeGroupId = group.id;
+      this.activeDocId = doc.id;
+      group.activeDocId = doc.id;
+      this.selectActiveDocumentInFileTree();
+      doc.setSelection(this.positionFromPointInEditor(doc, group.editorRect, point.x, point.y));
+      this.selecting = true;
+      this.focusEditor();
+      this.resetCaretBlink();
+      this.persistEditorSession();
+    } else if (hit.type === "settingsNumber") {
+      this.focusSettingsNumber(hit.key, hit.rect);
+      this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
+    } else if (hit.type === "settingsButton") {
+      if (hit.enabled) void this.runSettingsButton(hit.action);
+    } else if (hit.type === "folder") {
+      this.selectFileTreePath(hit.path);
+      this.toggleFolder(hit.path);
+    } else if (hit.type === "file") {
+      this.selectFileTreePath(hit.path);
+      void this.openFile(hit.path);
+    } else if (hit.type === "filesRoot") {
+      this.focusEditor();
+    } else if (hit.type === "searchResult") {
+      void this.openFile(hit.path).then(() => {
+        const doc = this.activeDoc();
+        if (doc) doc.setSelection({ line: hit.line, col: 0 });
+        this.revealEditorCaret();
+      });
+    }
   }
   handleTouchDoubleTap(event, point, hit) {
     if (event.pointerType !== "touch") return false;
@@ -3168,12 +7206,17 @@ var EditorApp = class {
     if (hit.type === "file") return `file:${hit.path}`;
     if (hit.type === "folder") return `folder:${hit.path}`;
     if (hit.type === "filesRoot") return "filesRoot";
+    if (hit.type === "settingsRoot") return "settingsRoot";
     if (hit.type === "fileRenameInput") return `rename:${hit.path}`;
     if (hit.type === "searchInput") return "searchInput";
+    if (hit.type === "chatInput") return "chatInput";
     if (hit.type === "textField") return `textField:${hit.field}`;
     if (hit.type === "settingsNumber") return `settingsNumber:${hit.key}`;
     if (hit.type === "editor") return `editor:${hit.groupId}`;
+    if (hit.type === "editorGutter") return `editorGutter:${hit.groupId}:${hit.docId}`;
     if (hit.type === "tab" || hit.type === "tabClose") return `tab:${hit.groupId}:${hit.docId}`;
+    if (hit.type === "tabBar") return `tabBar:${hit.groupId}`;
+    if (hit.type === "tabOverflow") return `tabOverflow:${hit.groupId}`;
     return null;
   }
   openContextMenuForHit(point, hit, selectTextFirst = false) {
@@ -3189,6 +7232,13 @@ var EditorApp = class {
       if (selectTextFirst) this.selectSearchWordFromPoint(point.x, hit.rect);
       else if (!this.pointHitsSearchSelection(point.x, hit.rect)) this.setSearchCursorFromPoint(point.x, hit.rect, false);
       this.openSearchTextContextMenu(point);
+      return true;
+    }
+    if (hit.type === "chatInput") {
+      this.focusMiniTarget("chat", hit.rect);
+      if (selectTextFirst) this.selectChatInputWordFromPoint(point, hit.rect);
+      else if (!this.pointHitsChatInputSelection(point, hit.rect)) this.setChatInputCursorFromPoint(point, hit.rect, false);
+      this.openChatInputContextMenu(point);
       return true;
     }
     if (hit.type === "textField") {
@@ -3207,11 +7257,13 @@ var EditorApp = class {
     }
     if (hit.type === "file") {
       if (this.renamePath && this.renamePath !== hit.path) void this.commitRename();
+      this.selectFileTreePath(hit.path);
       this.openFileContextMenu(point, hit.path);
       return true;
     }
     if (hit.type === "folder") {
       if (this.renamePath && this.renamePath !== hit.path) void this.commitRename();
+      this.selectFileTreePath(hit.path);
       this.openFolderContextMenu(point, hit.path);
       return true;
     }
@@ -3220,8 +7272,24 @@ var EditorApp = class {
       this.openRootContextMenu(point);
       return true;
     }
+    if (hit.type === "settingsRoot") {
+      this.openSettingsRootContextMenu(point);
+      return true;
+    }
     if (hit.type === "tab" || hit.type === "tabClose") {
       this.openTabContextMenu(point, hit.groupId, hit.docId);
+      return true;
+    }
+    if (hit.type === "tabBar") {
+      this.openTabBarContextMenu(point, hit.groupId);
+      return true;
+    }
+    if (hit.type === "tabOverflow") {
+      this.openTabOverflowMenu(hit.groupId, hit.rect);
+      return true;
+    }
+    if (hit.type === "editorGutter") {
+      this.openGutterContextMenu(point, hit.groupId, hit.docId);
       return true;
     }
     if (hit.type === "editor") {
@@ -3235,6 +7303,7 @@ var EditorApp = class {
       this.activeGroupId = group.id;
       this.activeDocId = doc.id;
       group.activeDocId = doc.id;
+      this.selectActiveDocumentInFileTree();
       if (selectTextFirst) this.selectEditorWordFromPoint(doc, group.editorRect, point);
       else if (!this.pointHitsSelection(doc, group.editorRect, point)) doc.setSelection(this.positionFromPoint(point.x, point.y));
       this.openEditorContextMenu(point, group, doc);
@@ -3263,23 +7332,65 @@ var EditorApp = class {
   }
   openEditorContextMenu(point, group, doc) {
     const selected = doc.hasSelection();
+    const editable = !doc.readOnly;
     this.contextMenu = this.makeContextMenu(point, { type: "editor", groupId: group.id, docId: doc.id }, [
-      { command: "cut", label: "Cut", enabled: selected },
+      { command: "cut", label: "Cut", enabled: selected && editable },
       { command: "copy", label: "Copy", enabled: selected },
-      { command: "paste", label: "Paste", enabled: true },
-      ...this.mobileSystemClipboardEntries(selected)
+      { command: "paste", label: "Paste", enabled: editable },
+      ...this.mobileSystemClipboardEntries(selected, editable)
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openGutterContextMenu(point, groupId, docId) {
+    this.contextMenu = this.makeContextMenu(point, { type: "gutter", groupId, docId }, [
+      { command: "toggleLineNumbers", label: this.settings.showLineNumbers ? "Hide Line Numbers" : "Show Line Numbers", enabled: true }
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
   openTabContextMenu(point, groupId, docId) {
     const group = this.groupById(groupId);
-    this.contextMenu = this.makeContextMenu(point, { type: "tab", groupId, docId }, [
+    const entries = [
+      { command: "save", label: "Save", enabled: !this.isSettingsTab(docId) && !this.docs.get(docId)?.readOnly },
+      { separator: true },
       { command: "close", label: "Close", enabled: true },
       { command: "closeOthers", label: "Close Others", enabled: group.tabs.some((id) => id !== docId) },
       { separator: true },
-      { command: "findInFile", label: "Find in File", enabled: !this.isSettingsTab(docId) }
+      this.isSettingsTab(docId) ? { command: "resetSettings", label: "Reset Settings", enabled: true } : { command: "findInFile", label: "Find in File", enabled: true }
+    ];
+    this.contextMenu = this.makeContextMenu(point, { type: "tab", groupId, docId }, entries);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openTabBarContextMenu(point, groupId) {
+    const group = this.groupById(groupId);
+    this.contextMenu = this.makeContextMenu(point, { type: "tabBar", groupId }, [
+      { command: "newFile", label: "New File", enabled: true },
+      { command: "closeAll", label: "Close All", enabled: group.tabs.length > 0 }
     ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openTabOverflowMenu(groupId, buttonRect) {
+    const group = this.groupById(groupId);
+    const tabRect = { x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(32) };
+    const layout = this.tabLayoutForGroup(group, tabRect);
+    const visibleStart = layout.scroll;
+    const visibleEnd = layout.scroll + layout.stripRect.w;
+    const hidden = layout.items.filter((item) => item.start < visibleStart || item.end > visibleEnd);
+    const entries = (hidden.length ? hidden : layout.items).map((item) => ({
+      command: tabOverflowCommand(item.docId),
+      label: item.label,
+      enabled: true
+    }));
+    const width = Math.min(this.ui(320), Math.max(this.ui(190), ...entries.map((entry) => "separator" in entry ? 0 : this.renderer.measureText(entry.label, "ui") + this.ui(28))));
+    this.contextMenu = this.makeContextMenu(
+      { x: buttonRect.x, y: buttonRect.y + buttonRect.h },
+      { type: "tabOverflow", groupId },
+      entries,
+      { x: buttonRect.x + buttonRect.w - width, y: buttonRect.y + buttonRect.h, w: width }
+    );
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
@@ -3297,7 +7408,8 @@ var EditorApp = class {
       { command: "rename", label: "Rename", enabled: true },
       { command: "delete", label: "Delete", enabled: true },
       { command: "createFile", label: "Create File", enabled: true },
-      { command: "createFolder", label: "Create Folder", enabled: true }
+      { command: "createFolder", label: "Create Folder", enabled: true },
+      { command: "uploadFile", label: "Upload File", enabled: true }
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -3305,7 +7417,15 @@ var EditorApp = class {
   openRootContextMenu(point) {
     this.contextMenu = this.makeContextMenu(point, { type: "root", path: "/" }, [
       { command: "createFile", label: "Create File", enabled: true },
-      { command: "createFolder", label: "Create Folder", enabled: true }
+      { command: "createFolder", label: "Create Folder", enabled: true },
+      { command: "uploadFile", label: "Upload File", enabled: true }
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openSettingsRootContextMenu(point) {
+    this.contextMenu = this.makeContextMenu(point, { type: "settingsRoot" }, [
+      { command: "resetSettings", label: "Reset Settings", enabled: true }
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -3324,6 +7444,17 @@ var EditorApp = class {
   openSearchTextContextMenu(point) {
     const selected = this.searchBuffer.hasSelection();
     this.contextMenu = this.makeContextMenu(point, { type: "search" }, [
+      { command: "cut", label: "Cut", enabled: selected },
+      { command: "copy", label: "Copy", enabled: selected },
+      { command: "paste", label: "Paste", enabled: true },
+      ...this.mobileSystemClipboardEntries(selected)
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openChatInputContextMenu(point) {
+    const selected = this.chatDraft.hasSelection();
+    this.contextMenu = this.makeContextMenu(point, { type: "chatInput" }, [
       { command: "cut", label: "Cut", enabled: selected },
       { command: "copy", label: "Copy", enabled: selected },
       { command: "paste", label: "Paste", enabled: true },
@@ -3355,11 +7486,11 @@ var EditorApp = class {
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
-  mobileSystemClipboardEntries(selected) {
+  mobileSystemClipboardEntries(selected, pasteEnabled = true) {
     return isMobileWebKit() ? [
       { separator: true },
       { command: "systemCopy", label: "System Copy", enabled: selected },
-      { command: "systemPaste", label: "System Paste", enabled: true }
+      { command: "systemPaste", label: "System Paste", enabled: pasteEnabled }
     ] : [];
   }
   makeContextMenu(point, scope, entries, layout = {}) {
@@ -3392,6 +7523,7 @@ var EditorApp = class {
   openModal(modal) {
     this.contextMenu = null;
     this.contextMenuHover = null;
+    this.revokeDownloadReadyModal();
     this.modal = modal;
     this.modalHover = null;
     this.input.blur();
@@ -3399,26 +7531,79 @@ var EditorApp = class {
   }
   closeModal() {
     if (!this.modal) return;
+    this.revokeDownloadReadyModal();
     this.modal = null;
     this.modalHover = null;
     if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
   }
-  openDirtyCloseModal(doc) {
-    const label = doc.path ?? "(untitled)";
+  async openDirtyCloseModal(doc) {
+    const label = this.documentLabel(doc);
+    const savePath = doc.path ? void 0 : await this.savePathForUntitledDocument(doc);
     this.openModal({
       kind: "dirtyClose",
       title: "Save before closing?",
       message: `${label} has unsaved changes.`,
-      detail: "Save your changes before closing this tab?",
+      detail: savePath ? `Save will create ${savePath} in the root folder.` : "Save your changes before closing this tab?",
       docId: doc.id,
+      savePath,
       defaultAction: "save",
       cancelAction: "cancel",
       pending: false,
       buttons: [
         modalButton("save", "Save", "primary"),
         modalButton("discard", "Don't Save", "secondary"),
+        modalButton("cancel", "Cancel", "secondary")
+      ]
+    });
+  }
+  async openDirtyDownloadModal(doc) {
+    const label = this.documentLabel(doc);
+    const savePath = doc.path ? void 0 : await this.savePathForUntitledDocument(doc);
+    this.openModal({
+      kind: "dirtyDownload",
+      title: "Save before downloading?",
+      message: `${label} has unsaved changes.`,
+      detail: savePath ? `Save will create ${savePath} in the root folder. Choose Don't Save to omit this memory-only file from the zip.` : "Saved files are included in the zip. Choose Don't Save to export the last saved version.",
+      docId: doc.id,
+      savePath,
+      defaultAction: "save",
+      cancelAction: "cancel",
+      pending: false,
+      buttons: [
+        modalButton("save", "Save", "primary"),
+        modalButton("discard", "Don't Save", "secondary"),
+        modalButton("cancel", "Cancel", "secondary")
+      ]
+    });
+  }
+  openZipProgressModal(message, detail, progress) {
+    this.openModal({
+      kind: "zipProgress",
+      title: "Preparing download",
+      message,
+      detail,
+      progress,
+      defaultAction: "cancel",
+      cancelAction: "cancel",
+      pending: true,
+      buttons: []
+    });
+  }
+  openDownloadReadyModal(url, filename, fileCount, byteLength) {
+    this.openModal({
+      kind: "downloadReady",
+      title: "Download ready",
+      message: `${filename} is ready.`,
+      detail: `${fileCount} file${fileCount === 1 ? "" : "s"} \u2022 ${formatBytes(byteLength)}`,
+      url,
+      filename,
+      defaultAction: "download",
+      cancelAction: "cancel",
+      pending: false,
+      buttons: [
+        modalButton("download", "Download", "primary"),
         modalButton("cancel", "Cancel", "secondary")
       ]
     });
@@ -3439,12 +7624,63 @@ var EditorApp = class {
       ]
     });
   }
+  openClearFileSystemModal() {
+    this.openModal({
+      kind: "clearFileSystem",
+      title: "Clear file system?",
+      message: "Delete every file and folder in this workspace?",
+      detail: "This closes all open tabs and removes the IndexedDB file tree. This cannot be undone.",
+      defaultAction: "delete",
+      cancelAction: "cancel",
+      pending: false,
+      buttons: [
+        modalButton("delete", "Clear", "danger"),
+        modalButton("cancel", "Cancel", "secondary")
+      ]
+    });
+  }
+  openZipImportModal(file) {
+    this.openModal({
+      kind: "zipImport",
+      title: "Import workspace zip?",
+      message: `${file.name} is a zip file.`,
+      detail: "Replace clears the current project before importing. Append adds the zip contents to the current project.",
+      file,
+      defaultAction: "append",
+      cancelAction: "cancel",
+      pending: false,
+      buttons: [
+        modalButton("replace", "Replace", "danger"),
+        modalButton("append", "Append", "primary"),
+        modalButton("cancel", "Cancel", "secondary")
+      ]
+    });
+  }
   async runModalAction(action) {
     const modal = this.modal;
     const button = modal?.buttons.find((candidate) => candidate.action === action);
     if (!modal || !button?.enabled || modal.pending) return;
+    if (modal.kind === "downloadReady" && action === "download") {
+      this.startBrowserDownload(modal);
+      return;
+    }
+    if (modal.kind === "dirtyDownload" && action === "cancel") {
+      modal.pending = true;
+      this.scheduleDraw();
+      try {
+        await this.runDirtyDownloadModalAction(modal, "discard");
+      } catch (error) {
+        if (this.modal !== modal) throw error;
+        modal.pending = false;
+        this.statusText = error instanceof Error ? error.message : "Operation failed";
+        this.scheduleDraw();
+      }
+      return;
+    }
     if (action === "cancel") {
       this.pendingCloseQueue = [];
+      this.pendingDownloadDirtyQueue = [];
+      this.downloadInProgress = false;
       this.statusText = "Canceled";
       this.closeModal();
       return;
@@ -3453,7 +7689,10 @@ var EditorApp = class {
     this.scheduleDraw();
     try {
       if (modal.kind === "dirtyClose") await this.runDirtyCloseModalAction(modal, action);
-      else await this.runDeleteFolderModalAction(modal, action);
+      else if (modal.kind === "dirtyDownload") await this.runDirtyDownloadModalAction(modal, action);
+      else if (modal.kind === "deleteFolder") await this.runDeleteFolderModalAction(modal, action);
+      else if (modal.kind === "clearFileSystem") await this.runClearFileSystemModalAction(modal, action);
+      else if (modal.kind === "zipImport") await this.runZipImportModalAction(modal, action);
     } catch (error) {
       if (this.modal !== modal) throw error;
       modal.pending = false;
@@ -3468,13 +7707,17 @@ var EditorApp = class {
       return;
     }
     if (action !== "save" && action !== "discard") return;
-    if (action === "save") await this.docs.save(doc);
+    if (action === "save") await this.saveDocument(doc, modal.savePath);
     const path = doc.path;
+    const label = path ?? this.documentLabel(doc);
     this.modal = null;
     this.modalHover = null;
     this.closeTab(doc.id);
-    if (action === "discard" && path) this.docs.removePath(path);
-    this.statusText = action === "save" ? `Saved and closed ${path ?? "tab"}` : `Closed ${path ?? "tab"} without saving`;
+    if (action === "discard") {
+      if (path) this.docs.removePath(path);
+      else this.forgetUntitledDocument(doc.id);
+    }
+    this.statusText = action === "save" ? `Saved and closed ${path ?? label}` : `Closed ${label} without saving`;
     if (this.pendingCloseQueue.length > 0) {
       await this.closeNextPendingTab();
       return;
@@ -3482,6 +7725,21 @@ var EditorApp = class {
     if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     this.scheduleDraw();
+  }
+  async runDirtyDownloadModalAction(modal, action) {
+    const doc = this.docs.get(modal.docId);
+    if (!doc) {
+      this.modal = null;
+      this.modalHover = null;
+      await this.openNextDownloadDirtyModal();
+      return;
+    }
+    if (action !== "save" && action !== "discard") return;
+    if (action === "save") await this.saveDocument(doc, modal.savePath);
+    this.modal = null;
+    this.modalHover = null;
+    this.statusText = action === "save" ? `Saved ${doc.path ?? this.documentLabel(doc)}` : `Skipped ${doc.path ?? this.documentLabel(doc)}`;
+    await this.openNextDownloadDirtyModal();
   }
   async runDeleteFolderModalAction(modal, action) {
     if (action !== "delete") return;
@@ -3494,14 +7752,34 @@ var EditorApp = class {
       this.scheduleDraw();
     }
   }
+  async runClearFileSystemModalAction(modal, action) {
+    if (action !== "delete") return;
+    await this.clearFileSystemNow();
+    if (this.modal === modal) {
+      this.modal = null;
+      this.modalHover = null;
+      this.input.blur();
+      this.scheduleDraw();
+    }
+  }
+  async runZipImportModalAction(modal, action) {
+    if (action !== "replace" && action !== "append") return;
+    const mode = action;
+    const file = modal.file;
+    this.modal = null;
+    this.modalHover = null;
+    await this.importWorkspaceZip(file, mode);
+  }
   startRename(path, rect) {
     this.closeContextMenu();
     this.renamePath = normalizePath(path);
+    this.selectFileTreePath(this.renamePath);
     const name = basename(path);
     const selectedEnd = fileStemSelectionEnd(name);
     this.renameBuffer.text = name;
     this.renameBuffer.anchor = 0;
     this.renameBuffer.cursor = selectedEnd;
+    this.renameBuffer.scrollX = 0;
     this.statusText = `Renaming ${path}`;
     this.focusRename(rect);
     this.scheduleDraw();
@@ -3517,6 +7795,7 @@ var EditorApp = class {
     this.renameBuffer.text = "";
     this.renameBuffer.cursor = 0;
     this.renameBuffer.anchor = 0;
+    this.renameBuffer.scrollX = 0;
     this.statusText = "Rename canceled";
     this.focusEditor();
     this.scheduleDraw();
@@ -3526,7 +7805,7 @@ var EditorApp = class {
     if (!oldPath) return false;
     const name = this.renameBuffer.text.trim();
     if (!isValidFileName(name)) {
-      this.statusText = "File name is not valid";
+      this.statusText = invalidFileNameCharacterRanges(this.renameBuffer.text).length ? "File name contains invalid characters" : "File name is not valid";
       this.focusRename();
       return false;
     }
@@ -3555,6 +7834,7 @@ var EditorApp = class {
     } else {
       this.docs.renamePath(oldPath, newPath);
     }
+    this.remapFileTreeSelection(oldPath, newPath);
     this.renamePath = null;
     this.renameSelecting = false;
     await this.refreshFiles();
@@ -3566,14 +7846,15 @@ var EditorApp = class {
     return true;
   }
   setRenameCursorFromPoint(x, rect, extend) {
-    const offset = x - (rect.x + 5);
+    const offset = x - (rect.x + this.ui(5)) + this.renameBuffer.scrollX;
     const col = this.columnFromTextOffset(this.renameBuffer.text, offset, "ui");
     this.renameBuffer.cursor = col;
     if (!extend) this.renameBuffer.anchor = col;
+    this.revealMiniBufferCaret(this.renameBuffer, rect, this.ui(5));
     this.resetCaretBlink();
   }
   selectRenameWordFromPoint(x, rect) {
-    const offset = x - (rect.x + 5);
+    const offset = x - (rect.x + this.ui(5)) + this.renameBuffer.scrollX;
     const text = this.renameBuffer.text;
     if (!text) return;
     const col = this.columnFromTextOffset(text, offset, "ui");
@@ -3587,13 +7868,14 @@ var EditorApp = class {
     }
     this.renameBuffer.anchor = start;
     this.renameBuffer.cursor = end;
+    this.revealMiniBufferCaret(this.renameBuffer, rect, this.ui(5));
     this.resetCaretBlink();
   }
   pointHitsRenameSelection(x, rect) {
     if (!this.renameBuffer.hasSelection()) return false;
     const start = Math.min(this.renameBuffer.anchor, this.renameBuffer.cursor);
     const end = Math.max(this.renameBuffer.anchor, this.renameBuffer.cursor);
-    const textX = rect.x + 5;
+    const textX = rect.x + this.ui(5) - this.renameBuffer.scrollX;
     const startX = textX + this.renderer.measureText(this.renameBuffer.text.slice(0, start), "ui");
     const endX = textX + this.renderer.measureText(this.renameBuffer.text.slice(0, end), "ui");
     return x >= startX && x <= Math.max(startX + 2, endX);
@@ -3602,14 +7884,15 @@ var EditorApp = class {
     return this.hits.find((hit) => hit.type === "fileRenameInput")?.rect ?? null;
   }
   setSearchCursorFromPoint(x, rect, extend) {
-    const offset = x - (rect.x + 8);
+    const offset = x - (rect.x + this.ui(8)) + this.searchBuffer.scrollX;
     const col = this.columnFromTextOffset(this.searchBuffer.text, offset, "ui");
     this.searchBuffer.cursor = col;
     if (!extend) this.searchBuffer.anchor = col;
+    this.revealMiniBufferCaret(this.searchBuffer, rect, this.ui(8));
     this.resetCaretBlink();
   }
   selectSearchWordFromPoint(x, rect) {
-    const offset = x - (rect.x + 8);
+    const offset = x - (rect.x + this.ui(8)) + this.searchBuffer.scrollX;
     const text = this.searchBuffer.text;
     if (!text) return;
     const col = this.columnFromTextOffset(text, offset, "ui");
@@ -3623,19 +7906,89 @@ var EditorApp = class {
     }
     this.searchBuffer.anchor = start;
     this.searchBuffer.cursor = end;
+    this.revealMiniBufferCaret(this.searchBuffer, rect, this.ui(8));
     this.resetCaretBlink();
   }
   pointHitsSearchSelection(x, rect) {
     if (!this.searchBuffer.hasSelection()) return false;
     const start = Math.min(this.searchBuffer.anchor, this.searchBuffer.cursor);
     const end = Math.max(this.searchBuffer.anchor, this.searchBuffer.cursor);
-    const textX = rect.x + 8;
+    const textX = rect.x + this.ui(8) - this.searchBuffer.scrollX;
     const startX = textX + this.renderer.measureText(this.searchBuffer.text.slice(0, start), "ui");
     const endX = textX + this.renderer.measureText(this.searchBuffer.text.slice(0, end), "ui");
     return x >= startX && x <= Math.max(startX + 2, endX);
   }
   searchInputRect() {
     return this.textFieldRect("search") ?? this.hits.find((hit) => hit.type === "searchInput")?.rect ?? null;
+  }
+  setChatInputCursorFromPoint(point, rect, extend) {
+    const content = this.chatInputContentRect(rect);
+    const lineH = this.renderer.lineHeight("ui");
+    const doc = this.chatDraft;
+    const line = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
+    const col = this.columnFromTextOffset(doc.lines[line] ?? "", point.x - content.x, "ui");
+    doc.setSelection(extend ? doc.selection.anchor : { line, col }, { line, col });
+    this.ensureChatInputCaretVisible(rect);
+    this.resetCaretBlink();
+  }
+  selectChatInputWordFromPoint(point, rect) {
+    const content = this.chatInputContentRect(rect);
+    const lineH = this.renderer.lineHeight("ui");
+    const doc = this.chatDraft;
+    const lineIndex = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
+    const line = doc.lines[lineIndex] ?? "";
+    if (!line) {
+      doc.setSelection({ line: lineIndex, col: 0 });
+      this.resetCaretBlink();
+      return;
+    }
+    const col = this.columnFromTextOffset(line, point.x - content.x, "ui");
+    let index = clamp(col, 0, Math.max(0, line.length - 1));
+    if (!isWordChar(line.charAt(index)) && col > 0 && isWordChar(line.charAt(col - 1))) index = col - 1;
+    let start = index;
+    let end = index + 1;
+    if (isWordChar(line.charAt(index))) {
+      while (start > 0 && isWordChar(line.charAt(start - 1))) start--;
+      while (end < line.length && isWordChar(line.charAt(end))) end++;
+    }
+    doc.setSelection({ line: lineIndex, col: start }, { line: lineIndex, col: end });
+    this.ensureChatInputCaretVisible(rect);
+    this.resetCaretBlink();
+  }
+  pointHitsChatInputSelection(point, rect) {
+    const doc = this.chatDraft;
+    if (!doc.hasSelection()) return false;
+    const content = this.chatInputContentRect(rect);
+    const lineH = this.renderer.lineHeight("ui");
+    const line = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
+    const ordered = doc.getOrderedSelection();
+    if (line < ordered.start.line || line > ordered.end.line) return false;
+    const text = doc.lines[line] ?? "";
+    const start = ordered.start.line === line ? ordered.start.col : 0;
+    const end = ordered.end.line === line ? ordered.end.col : text.length;
+    const sx = content.x + this.renderer.measureText(text.slice(0, start), "ui");
+    const ex = content.x + this.renderer.measureText(text.slice(0, end), "ui");
+    return point.x >= sx && point.x <= Math.max(sx + 2, ex);
+  }
+  ensureChatInputCaretVisible(rect) {
+    const content = this.chatInputContentRect(rect);
+    const lineH = this.renderer.lineHeight("ui");
+    const caretTop = this.chatDraft.selection.head.line * lineH;
+    const caretBottom = caretTop + lineH;
+    const margin = Math.min(lineH, Math.max(0, content.h / 3));
+    let scroll = this.chatInputScrollY;
+    if (caretTop < scroll + margin) scroll = caretTop - margin;
+    else if (caretBottom > scroll + content.h - margin) scroll = caretBottom - content.h + margin;
+    this.chatInputScrollY = clamp(scroll, 0, Math.max(0, this.chatInputContentHeight() - content.h));
+  }
+  chatInputCaretRect(input) {
+    const content = this.chatInputContentRect(input);
+    const doc = this.chatDraft;
+    const lineH = this.renderer.lineHeight("ui");
+    const line = doc.lines[doc.selection.head.line] ?? "";
+    const x = content.x + this.renderer.measureText(line.slice(0, doc.selection.head.col), "ui");
+    const y = content.y + doc.selection.head.line * lineH - this.chatInputScrollY + this.ui(2);
+    return { x, y, w: 1.5, h: lineH };
   }
   bufferForTextField(field) {
     if (field === "search") return this.searchBuffer;
@@ -3655,15 +8008,16 @@ var EditorApp = class {
   }
   setTextFieldCursorFromPoint(field, x, rect, extend) {
     const buffer = this.bufferForTextField(field);
-    const offset = x - (rect.x + this.ui(8));
+    const offset = x - (rect.x + this.ui(8)) + buffer.scrollX;
     const col = this.columnFromTextOffset(buffer.text, offset, "ui");
     buffer.cursor = col;
     if (!extend) buffer.anchor = col;
+    this.revealMiniBufferCaret(buffer, rect, this.ui(8));
     this.resetCaretBlink();
   }
   selectTextFieldWordFromPoint(field, x, rect) {
     const buffer = this.bufferForTextField(field);
-    const offset = x - (rect.x + this.ui(8));
+    const offset = x - (rect.x + this.ui(8)) + buffer.scrollX;
     const text = buffer.text;
     if (!text) return;
     const col = this.columnFromTextOffset(text, offset, "ui");
@@ -3677,6 +8031,7 @@ var EditorApp = class {
     }
     buffer.anchor = start;
     buffer.cursor = end;
+    this.revealMiniBufferCaret(buffer, rect, this.ui(8));
     this.resetCaretBlink();
   }
   pointHitsTextFieldSelection(field, x, rect) {
@@ -3684,13 +8039,31 @@ var EditorApp = class {
     if (!buffer.hasSelection()) return false;
     const start = Math.min(buffer.anchor, buffer.cursor);
     const end = Math.max(buffer.anchor, buffer.cursor);
-    const textX = rect.x + this.ui(8);
+    const textX = rect.x + this.ui(8) - buffer.scrollX;
     const startX = textX + this.renderer.measureText(buffer.text.slice(0, start), "ui");
     const endX = textX + this.renderer.measureText(buffer.text.slice(0, end), "ui");
     return x >= startX && x <= Math.max(startX + 2, endX);
   }
   textFieldRect(field) {
     return this.hits.find((hit) => hit.type === "textField" && hit.field === field)?.rect ?? null;
+  }
+  miniBufferContentRect(input, padX) {
+    return { x: input.x + padX, y: input.y, w: Math.max(1, input.w - padX * 2), h: input.h };
+  }
+  clampMiniBufferScroll(buffer, input, padX) {
+    const content = this.miniBufferContentRect(input, padX);
+    const maxScroll = Math.max(0, this.renderer.measureText(buffer.text, "ui") - content.w);
+    buffer.scrollX = clamp(buffer.scrollX, 0, maxScroll);
+  }
+  revealMiniBufferCaret(buffer, input, padX) {
+    const content = this.miniBufferContentRect(input, padX);
+    const caretX = this.renderer.measureText(buffer.text.slice(0, buffer.cursor), "ui");
+    const maxScroll = Math.max(0, this.renderer.measureText(buffer.text, "ui") - content.w);
+    const margin = Math.min(this.ui(24), Math.max(0, content.w / 3));
+    let scroll = buffer.scrollX;
+    if (caretX < scroll + margin) scroll = caretX - margin;
+    else if (caretX > scroll + content.w - margin) scroll = caretX - content.w + margin;
+    buffer.scrollX = clamp(scroll, 0, maxScroll);
   }
   isTextFieldCaretVisible(field) {
     return this.input.activeTarget?.kind === field && (this.input.composing || this.isCaretBlinkOn());
@@ -3714,6 +8087,33 @@ var EditorApp = class {
     }
     this.knownFolders.clear();
     for (const path of next) this.knownFolders.add(path);
+  }
+  fileTreeSelectedPath() {
+    const activePath = this.activeDoc()?.path;
+    return this.selectedFileTreePath ?? (activePath && !this.isAiSpecialPath(activePath) ? activePath : null);
+  }
+  selectFileTreePath(path) {
+    const next = path ? normalizePath(path) : null;
+    if (this.selectedFileTreePath === next) return;
+    this.selectedFileTreePath = next;
+    this.scheduleDraw();
+  }
+  selectActiveDocumentInFileTree() {
+    const path = this.activeDoc()?.path;
+    if (path && !this.isAiSpecialPath(path)) this.selectFileTreePath(path);
+  }
+  syncFileTreeSelection() {
+    const paths = new Set(this.treeNodes.map((node) => normalizePath(node.path)));
+    if (this.selectedFileTreePath && !paths.has(this.selectedFileTreePath)) this.selectedFileTreePath = null;
+    if (this.hoveredFileTreePath && !paths.has(this.hoveredFileTreePath)) this.hoveredFileTreePath = null;
+  }
+  remapFileTreeSelection(oldPath, newPath) {
+    this.selectedFileTreePath = remapSelectedTreePath(this.selectedFileTreePath, oldPath, newPath);
+    this.hoveredFileTreePath = remapSelectedTreePath(this.hoveredFileTreePath, oldPath, newPath);
+  }
+  clearFileTreeSelectionUnder(path) {
+    if (this.selectedFileTreePath && isSameOrDescendant(this.selectedFileTreePath, path)) this.selectedFileTreePath = null;
+    if (this.hoveredFileTreePath && isSameOrDescendant(this.hoveredFileTreePath, path)) this.hoveredFileTreePath = null;
   }
   remapFolderExpansion(oldPath, newPath) {
     const remapped = /* @__PURE__ */ new Map();
@@ -3755,6 +8155,73 @@ var EditorApp = class {
     sortFileTree(root.children);
     return root.children;
   }
+  async saveDocument(doc, path = doc.path) {
+    if (this.isAiSpecialDoc(doc)) {
+      this.saveAiSpecialDocument(doc);
+      return doc.path ?? this.documentLabel(doc);
+    }
+    if (doc.readOnly) {
+      doc.markSaved();
+      this.statusText = "File type not supported";
+      this.scheduleDraw();
+      return doc.path ?? this.documentLabel(doc);
+    }
+    const wasUntitled = !doc.path;
+    const target = path ?? await this.savePathForUntitledDocument(doc);
+    if (doc.path) await this.docs.save(doc);
+    else await this.docs.saveAs(doc, target);
+    if (wasUntitled) {
+      this.untitledLabels.delete(doc.id);
+      this.untitledPreferredNames.delete(doc.id);
+      await this.refreshFiles();
+    }
+    this.scheduleDraw();
+    return doc.path ?? target;
+  }
+  saveAiSpecialDocument(doc) {
+    if (!doc.path) return false;
+    const path = normalizePath(doc.path);
+    const text = doc.getText();
+    try {
+      if (path === AI_SETTINGS_DOC_PATH) {
+        const parsed = JSON.parse(text);
+        saveAiEndpointConfig(parsed);
+        this.aiModels = loadAiModels();
+      } else if (path === AI_SYSTEM_PROMPT_DOC_PATH) {
+        saveAiSystemPrompt(text);
+      } else if (path === AI_HELPER_PROMPTS_DOC_PATH) {
+        saveAiHelperPrompts(text);
+      } else {
+        return false;
+      }
+      doc.markSaved();
+      this.statusText = `Saved ${this.aiSpecialLabel(path)}`;
+      this.scheduleDraw();
+      return true;
+    } catch (error) {
+      this.statusText = `AI settings JSON is invalid: ${error instanceof Error ? error.message : String(error)}`;
+      this.scheduleDraw();
+      return false;
+    }
+  }
+  afterDocumentMutated(doc) {
+    if (!doc) return;
+    if (this.isAiSpecialDoc(doc)) this.saveAiSpecialDocument(doc);
+  }
+  async savePathForUntitledDocument(doc) {
+    const preferred = this.untitledPreferredNames.get(doc.id);
+    if (preferred && isValidFileName(preferred)) {
+      const candidate = joinPath("/", preferred);
+      if (!await this.vfs.stat(candidate)) return candidate;
+    }
+    return this.nextCreatedPath("/", "file");
+  }
+  forgetUntitledDocument(docId) {
+    this.untitledLabels.delete(docId);
+    this.untitledPreferredNames.delete(docId);
+    this.clearDocumentCaches(docId);
+    this.docs.remove(docId);
+  }
   async requestCloseTab(docId) {
     if (this.isSettingsTab(docId)) {
       this.closeTab(docId);
@@ -3763,10 +8230,11 @@ var EditorApp = class {
     const doc = this.docs.get(docId);
     if (!doc) return;
     if (doc.dirty) {
-      this.openDirtyCloseModal(doc);
+      await this.openDirtyCloseModal(doc);
       return;
     }
     this.closeTab(docId);
+    if (!doc.path) this.forgetUntitledDocument(doc.id);
   }
   async requestCloseTabs(docIds) {
     this.pendingCloseQueue = [...new Set(docIds)];
@@ -3782,11 +8250,201 @@ var EditorApp = class {
       const doc = this.docs.get(docId);
       if (!doc || !this.groupContaining(docId)) continue;
       if (doc.dirty) {
-        this.openDirtyCloseModal(doc);
+        await this.openDirtyCloseModal(doc);
         return;
       }
       this.closeTab(docId);
+      if (!doc.path) this.forgetUntitledDocument(doc.id);
     }
+  }
+  async requestWorkspaceDownload() {
+    if (this.downloadInProgress || this.modal) return;
+    if (this.renamePath && !await this.commitRename()) return;
+    this.pendingDownloadDirtyQueue = this.docs.all().filter((doc) => doc.dirty && !this.isAiSpecialDoc(doc)).map((doc) => doc.id);
+    if (this.pendingDownloadDirtyQueue.length > 0) {
+      await this.openNextDownloadDirtyModal();
+      return;
+    }
+    await this.prepareWorkspaceDownload();
+  }
+  async openNextDownloadDirtyModal() {
+    while (this.pendingDownloadDirtyQueue.length > 0) {
+      const docId = this.pendingDownloadDirtyQueue.shift();
+      const doc = this.docs.get(docId);
+      if (!doc?.dirty) continue;
+      await this.openDirtyDownloadModal(doc);
+      return;
+    }
+    await this.prepareWorkspaceDownload();
+  }
+  async prepareWorkspaceDownload() {
+    if (this.downloadInProgress) return;
+    this.downloadInProgress = true;
+    this.statusText = "Preparing download";
+    this.openZipProgressModal("Reading workspace files...", "Starting", 0);
+    await nextFrame();
+    try {
+      const zip = new import_jszip.default();
+      const entries = await this.collectZipEntries("/");
+      const files = entries.filter((entry) => entry.node.kind === "file");
+      let readCount = 0;
+      for (const entry of entries) {
+        if (entry.node.kind === "dir") {
+          zip.folder(entry.zipPath);
+          continue;
+        }
+        readCount++;
+        this.updateZipProgress("Reading workspace files...", `${readCount} of ${files.length}: ${entry.zipPath}`, files.length ? readCount / files.length * 0.72 : 0.72);
+        const data = await this.vfs.readFile(entry.node.path);
+        zip.file(entry.zipPath, data, { binary: true, date: new Date(entry.node.mtime) });
+        if (readCount === files.length || readCount % 8 === 0) await nextFrame();
+      }
+      this.updateZipProgress("Compressing workspace...", "0%", 0.74);
+      let lastProgressUpdate = 0;
+      const blob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+        platform: "UNIX"
+      }, (metadata) => {
+        const now = performance.now();
+        if (metadata.percent < 100 && now - lastProgressUpdate < 80) return;
+        lastProgressUpdate = now;
+        this.updateZipProgress("Compressing workspace...", `${Math.round(metadata.percent)}%`, 0.74 + metadata.percent / 100 * 0.26);
+      });
+      const filename = `workspace-${downloadTimestamp()}.zip`;
+      const url = URL.createObjectURL(blob);
+      this.downloadInProgress = false;
+      this.statusText = "Download ready";
+      this.openDownloadReadyModal(url, filename, files.length, blob.size);
+    } catch (error) {
+      this.downloadInProgress = false;
+      this.pendingDownloadDirtyQueue = [];
+      this.closeModal();
+      this.statusText = error instanceof Error ? error.message : "Could not prepare download";
+      this.scheduleDraw();
+    }
+  }
+  async collectZipEntries(path) {
+    const entries = [];
+    const children = await this.vfs.listDir(path);
+    for (const node of children) {
+      if (node.path === "/" || node.path.startsWith("/.slug-")) continue;
+      const zipPath = node.path.slice(1);
+      entries.push({ node, zipPath: node.kind === "dir" ? `${zipPath}/` : zipPath });
+      if (node.kind === "dir") entries.push(...await this.collectZipEntries(node.path));
+    }
+    return entries;
+  }
+  updateZipProgress(message, detail, progress) {
+    const modal = this.modal;
+    if (modal?.kind === "zipProgress") {
+      modal.message = message;
+      modal.detail = detail;
+      modal.progress = clamp(progress, 0, 1);
+    }
+    this.statusText = `${message} ${Math.round(clamp(progress, 0, 1) * 100)}%`;
+    this.scheduleDraw();
+  }
+  async importWorkspaceZip(file, mode) {
+    try {
+      this.statusText = "Reading workspace zip...";
+      this.scheduleDraw();
+      await nextFrame();
+      const entries = await this.loadZipWorkspaceEntries(file);
+      if (mode === "replace") {
+        this.statusText = "Replacing workspace...";
+        this.scheduleDraw();
+        await this.clearWorkspaceContents();
+        this.resetEditorSession();
+      } else {
+        this.statusText = "Importing workspace...";
+        this.scheduleDraw();
+      }
+      const result = await this.writeZipEntriesToWorkspace(entries);
+      await this.refreshFiles();
+      if (mode === "replace") this.input.blur();
+      this.statusText = `${mode === "replace" ? "Replaced" : "Imported"} ${result.files} file${result.files === 1 ? "" : "s"} from ${file.name}`;
+      this.scheduleDraw();
+    } catch (error) {
+      this.statusText = error instanceof Error ? error.message : "Could not import zip";
+      this.scheduleDraw();
+    }
+  }
+  async clearWorkspaceContents() {
+    await this.vfs.remove("/", { recursive: true });
+    await this.vfs.mkdir("/");
+    this.expandedFolders.clear();
+    this.knownFolders.clear();
+  }
+  resetEditorSession() {
+    this.clearPersistedEditorSession();
+    this.docs.clear();
+    const group = makeGroup("group-main");
+    this.groups = [group];
+    this.dockRoot = { type: "leaf", group };
+    this.activeGroupId = group.id;
+    this.activeDocId = null;
+    this.openTabs = [];
+    this.scrollStates.clear();
+    this.tabScrollStates.clear();
+    this.pendingTabRevealIds.clear();
+    this.documentWidthCache.clear();
+    this.lineWidthCache.clear();
+    this.highlightCache.clear();
+    this.findStates.clear();
+    this.untitledLabels.clear();
+    this.untitledPreferredNames.clear();
+    this.filesScrollY = 0;
+    this.searchScrollY = 0;
+    this.pendingCloseQueue = [];
+    this.pendingDownloadDirtyQueue = [];
+  }
+  async loadZipWorkspaceEntries(file) {
+    const zip = await import_jszip.default.loadAsync(await file.arrayBuffer());
+    return Object.values(zip.files).map((entry) => ({ entry, path: pathForZipEntry(entry.name) })).filter((item) => Boolean(item.path));
+  }
+  async writeZipEntriesToWorkspace(entries) {
+    let files = 0;
+    let dirs = 0;
+    let bytes = 0;
+    for (const { entry, path } of entries) {
+      if (entry.dir) {
+        await this.vfs.mkdir(path);
+        dirs++;
+        continue;
+      }
+      const data = await entry.async("uint8array");
+      await this.vfs.writeFile(path, data, guessMime2(path));
+      files++;
+      bytes += data.byteLength;
+      if (files % 8 === 0) {
+        this.statusText = `Imported ${files} file${files === 1 ? "" : "s"}...`;
+        this.scheduleDraw();
+        await nextFrame();
+      }
+    }
+    return { files, dirs, bytes };
+  }
+  startBrowserDownload(modal) {
+    const anchor = document.createElement("a");
+    anchor.href = modal.url;
+    anchor.download = modal.filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    const url = modal.url;
+    this.modal = null;
+    this.modalHover = null;
+    this.statusText = `Downloaded ${modal.filename}`;
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1e3);
+    this.scheduleDraw();
+  }
+  revokeDownloadReadyModal() {
+    if (this.modal?.kind === "downloadReady") URL.revokeObjectURL(this.modal.url);
   }
   closeTab(docId) {
     const group = this.groupContaining(docId);
@@ -3833,30 +8491,6 @@ var EditorApp = class {
     this.statusText = `Moving ${this.tabLabel(docId)}`;
     this.draw();
   }
-  reorderDraggedTab(x, groupId) {
-    if (!this.tabDrag) return;
-    const group = this.groupById(groupId);
-    if (group.id !== this.tabDrag.sourceGroupId) return;
-    const current = group.tabs.indexOf(this.tabDrag.docId);
-    if (current < 0) return;
-    const tabs = this.hits.filter((hit) => hit.type === "tab" && hit.groupId === groupId);
-    let target = tabs.length;
-    for (let i = 0; i < tabs.length; i++) {
-      const tab = tabs[i];
-      if (x < tab.rect.x + tab.rect.w / 2) {
-        target = i;
-        break;
-      }
-    }
-    target = clamp(target, 0, group.tabs.length - 1);
-    if (target === current) return;
-    const [docId] = group.tabs.splice(current, 1);
-    if (!docId) return;
-    group.tabs.splice(target, 0, docId);
-    this.syncOpenTabs();
-    this.statusText = "Reordered tabs";
-    this.draw();
-  }
   clampSidebarWidth(width) {
     const vp = this.viewport.get();
     const activityW = this.ui(48);
@@ -3873,6 +8507,15 @@ var EditorApp = class {
       this.scrollStates.set(docId, state);
     }
     return state;
+  }
+  clearDocumentCaches(docId) {
+    this.documentWidthCache.delete(docId);
+    for (const key of [...this.lineWidthCache.keys()]) {
+      if (key.startsWith(`${docId}:`)) this.lineWidthCache.delete(key);
+    }
+    for (const key of [...this.highlightCache.keys()]) {
+      if (key.startsWith(`${docId}:`)) this.highlightCache.delete(key);
+    }
   }
   editorGroupAt(x, y) {
     return this.groups.find((group) => rectContains(group.editorRect, x, y));
@@ -3915,7 +8558,7 @@ var EditorApp = class {
   gutterWidthForDoc(doc) {
     if (!this.settings.showLineNumbers) return 0;
     const digits = Math.max(EDITOR_GUTTER_MIN_DIGITS, String(Math.max(1, doc.lineCount())).length);
-    return Math.ceil(this.renderer.measureText("9".repeat(digits), "code") + EDITOR_GUTTER_PAD_LEFT + EDITOR_GUTTER_PAD_RIGHT);
+    return Math.ceil(this.renderer.measureText("9".repeat(digits), "gutter") + EDITOR_GUTTER_PAD_LEFT + EDITOR_GUTTER_PAD_RIGHT);
   }
   editorTextX(doc, contentRect) {
     return contentRect.x + this.gutterWidthForDoc(doc) + EDITOR_TEXT_PAD_X;
@@ -3927,14 +8570,266 @@ var EditorApp = class {
     return doc.lineCount() * this.renderer.lineHeight("code");
   }
   documentContentWidth(doc) {
+    const layoutKey = this.codeLayoutKey();
+    const cached = this.documentWidthCache.get(doc.id);
+    if (cached && cached.revision === doc.revision && cached.layoutKey === layoutKey) return cached.width;
     let maxLineWidth = 0;
-    for (const line of doc.lines) maxLineWidth = Math.max(maxLineWidth, this.renderer.measureText(line, "code"));
-    return maxLineWidth + EDITOR_TEXT_TRAILING_PAD_X;
+    for (let lineIndex = 0; lineIndex < doc.lines.length; lineIndex++) {
+      maxLineWidth = Math.max(maxLineWidth, this.lineWidthForDocLine(doc, lineIndex, layoutKey));
+    }
+    const width = maxLineWidth + EDITOR_TEXT_TRAILING_PAD_X;
+    this.documentWidthCache.set(doc.id, { revision: doc.revision, layoutKey, width });
+    return width;
+  }
+  lineWidthForDocLine(doc, lineIndex, layoutKey = this.codeLayoutKey()) {
+    const text = doc.lines[lineIndex] ?? "";
+    const key = `${doc.id}:${lineIndex}`;
+    const hasNewlineMarker = this.settings.showWhitespace && lineIndex < doc.lineCount() - 1;
+    const cacheText = hasNewlineMarker ? `${text}
+` : text;
+    const cached = this.lineWidthCache.get(key);
+    if (cached && cached.layoutKey === layoutKey && cached.text === cacheText) return cached.width;
+    const newlineMarkerWidth = hasNewlineMarker ? this.renderer.measureText("\\n", "code") : 0;
+    const width = this.measureCodeText(text) + newlineMarkerWidth;
+    this.lineWidthCache.set(key, { layoutKey, text: cacheText, width });
+    if (this.lineWidthCache.size > 2e4) {
+      const first = this.lineWidthCache.keys().next().value;
+      if (first) this.lineWidthCache.delete(first);
+    }
+    return width;
+  }
+  codeLayoutKey() {
+    return `${this.settings.fontSize}:${this.settings.monospacedFont ? 1 : 0}:${this.codeTabSpaces()}:${this.settings.useTabStops ? 1 : 0}:${this.settings.showWhitespace ? 1 : 0}`;
+  }
+  codeTabSpaces() {
+    return clamp(Math.trunc(this.settings.tabSpaces), 1, 32);
+  }
+  editorIndentString() {
+    return this.settings.useTabStops ? "	" : " ".repeat(this.codeTabSpaces());
+  }
+  codeTabWidthPx() {
+    return Math.max(1, this.renderer.measureText(" ", "code") * this.codeTabSpaces());
+  }
+  codeAdvanceForText(text, startOffset = 0) {
+    let offset = startOffset;
+    for (const char of text) offset += this.codeAdvanceForChar(char, offset);
+    return offset - startOffset;
+  }
+  codeAdvanceForChar(char, currentOffset) {
+    if (char !== "	") return this.renderer.measureText(char, "code");
+    const tabWidth = this.codeTabWidthPx();
+    if (!this.settings.useTabStops) return tabWidth;
+    return Math.max(1, Math.ceil((currentOffset + 1e-4) / tabWidth) * tabWidth - currentOffset);
+  }
+  measureCodeText(text) {
+    return this.codeAdvanceForText(text, 0);
+  }
+  measureCodePrefix(text, col) {
+    return this.measureCodeText(text.slice(0, col));
+  }
+  drawVisibleCodeText(text, baseX, y, color, startOffset, visibleStart, visibleEnd) {
+    let offset = startOffset;
+    let run = "";
+    let runStartOffset = offset;
+    const flush = () => {
+      if (!run) return;
+      this.renderer.text(run, baseX + runStartOffset, y, color, "code");
+      run = "";
+    };
+    for (const char of text) {
+      const advance = this.codeAdvanceForChar(char, offset);
+      const nextOffset = offset + advance;
+      if (nextOffset > visibleStart && offset < visibleEnd && char !== "	") {
+        if (!run) runStartOffset = offset;
+        run += char;
+      } else {
+        flush();
+      }
+      offset = nextOffset;
+      if (offset > visibleEnd) {
+        flush();
+        return { endOffset: offset, clippedRight: true };
+      }
+    }
+    flush();
+    return { endOffset: offset, clippedRight: false };
+  }
+  drawWhitespaceForLine(text, lineIndex, lineCount, baseX, y, lineH, visibleStart, visibleEnd) {
+    if (!this.settings.showWhitespace) return;
+    const color = this.whitespaceMarkerColor();
+    let offset = 0;
+    for (const char of text) {
+      const advance = this.codeAdvanceForChar(char, offset);
+      const nextOffset = offset + advance;
+      if (nextOffset > visibleStart && offset < visibleEnd) {
+        if (char === " ") this.drawSpaceMarker(baseX + offset, baseX + nextOffset, y, lineH, color);
+        else if (char === "	") this.drawTabMarker(baseX + offset, baseX + nextOffset, y, lineH, color);
+      }
+      offset = nextOffset;
+      if (offset > visibleEnd) break;
+    }
+    if (lineIndex < lineCount - 1) {
+      const markerWidth = this.renderer.measureText("\\n", "code");
+      if (offset + markerWidth > visibleStart && offset < visibleEnd) this.renderer.text("\\n", baseX + offset, y + this.whitespaceNewlineYOffset(), color, "code");
+    }
+  }
+  drawSpaceMarker(startX, endX, y, lineH, color) {
+    const dotSize = Math.max(1.25, Math.min(2.25, this.renderer.lineHeight("code") * 0.11));
+    const cx = (startX + endX) * 0.5;
+    const cy = y + lineH * 0.66;
+    this.renderer.rect({ x: cx - dotSize * 0.5, y: cy - dotSize * 0.5, w: dotSize, h: dotSize }, color);
+  }
+  whitespaceNewlineYOffset() {
+    return this.ui(4);
+  }
+  drawTabMarker(startX, endX, y, lineH, color) {
+    const pad = Math.max(2, Math.min(6, this.renderer.monoAdvance("code") * 0.22));
+    const x0 = startX + pad;
+    const x1 = endX - pad;
+    if (x1 - x0 < 4) return;
+    const lineWidth = Math.max(1, Math.min(1.5, this.renderer.lineHeight("code") * 0.08));
+    const midY = y + lineH * 0.56;
+    const head = Math.min(6, Math.max(3, (x1 - x0) * 0.32));
+    this.renderer.line({ x: x0, y: midY }, { x: x1, y: midY }, lineWidth, color);
+    this.renderer.line({ x: x1, y: midY }, { x: x1 - head, y: midY - head * 0.55 }, lineWidth, color);
+    this.renderer.line({ x: x1, y: midY }, { x: x1 - head, y: midY + head * 0.55 }, lineWidth, color);
+  }
+  whitespaceMarkerColor() {
+    return [theme.textDim[0], theme.textDim[1], theme.textDim[2], this.settings.theme === "light" ? 0.56 : 0.46];
+  }
+  tokensForLine(doc, lineIndex) {
+    const text = doc.lines[lineIndex] ?? "";
+    const key = `${doc.id}:${lineIndex}`;
+    const cached = this.highlightCache.get(key);
+    if (cached && cached.syntaxId === doc.syntaxId && cached.text === text) return cached.tokens;
+    const tokens = this.highlighter.tokenizeLine(text, doc.syntaxId);
+    this.highlightCache.set(key, { syntaxId: doc.syntaxId, text, tokens });
+    if (this.highlightCache.size > 5e3) {
+      const first = this.highlightCache.keys().next().value;
+      if (first) this.highlightCache.delete(first);
+    }
+    return tokens;
   }
   normalizedWheelDelta(value, mode, rect) {
     if (mode === WheelEvent.DOM_DELTA_LINE) return value * this.renderer.lineHeight("code");
     if (mode === WheelEvent.DOM_DELTA_PAGE) return value * rect.h;
     return value;
+  }
+  tabRectForGroup(group) {
+    return { x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(32) };
+  }
+  tabGroupAtPoint(point) {
+    return this.groups.find((group) => rectContains(this.tabRectForGroup(group), point.x, point.y));
+  }
+  setTabGroupScroll(group, value, layout = this.tabLayoutForGroup(group, this.tabRectForGroup(group))) {
+    const current = this.tabScrollStates.get(group.id) ?? 0;
+    const next = clamp(value, 0, layout.maxScroll);
+    if (Math.abs(next - current) < 0.5) return false;
+    this.tabScrollStates.set(group.id, next);
+    return true;
+  }
+  scrollTabGroupFromWheel(group, event, point) {
+    const layout = this.tabLayoutForGroup(group, this.tabRectForGroup(group));
+    if (layout.maxScroll <= 0 || !rectContains(layout.stripRect, point.x, point.y)) return false;
+    const primaryDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
+    const delta = this.normalizedWheelDelta(primaryDelta, event.deltaMode, layout.stripRect);
+    this.setTabGroupScroll(group, layout.scroll + delta, layout);
+    this.scheduleDraw();
+    return true;
+  }
+  sidebarScrollRegionForPoint(point) {
+    if (this.sidebarWidth <= 0) return null;
+    const vp = this.viewport.get();
+    const sidebarRect = { x: this.ui(48), y: 0, w: this.sidebarWidth, h: Math.max(0, vp.cssHeight - this.ui(24)) };
+    if (!rectContains(sidebarRect, point.x, point.y)) return null;
+    const body = this.sidebarPanelBodyRect(sidebarRect);
+    if (this.sidebarMode === "files") return rectContains(body, point.x, point.y) ? { panel: "files", viewport: body } : null;
+    if (this.sidebarMode === "settings") return rectContains(body, point.x, point.y) ? { panel: "settings", viewport: body } : null;
+    if (this.sidebarMode !== "search") return null;
+    const viewport = this.searchResultsViewport(body);
+    return rectContains(viewport, point.x, point.y) ? { panel: "search", viewport } : null;
+  }
+  chatScrollRegionForPoint(point) {
+    if (this.sidebarWidth <= 0 || this.sidebarMode !== "chat") return null;
+    const hit = this.hitAt(point.x, point.y);
+    if (hit?.type === "chatTranscript") return { panel: "chatTranscript", viewport: hit.rect };
+    if (hit?.type === "chatInput") return { panel: "chatInput", viewport: hit.rect };
+    if (hit?.type === "chatScrollbar") return { panel: hit.panel, viewport: hit.viewportRect };
+    return null;
+  }
+  sidebarPanelBodyRect(rect) {
+    const headerH = this.ui(PANEL_HEADER_H);
+    return { x: rect.x, y: rect.y + headerH, w: rect.w, h: Math.max(0, rect.h - headerH) };
+  }
+  searchResultsViewport(body) {
+    const controlsH = this.ui(8) + this.ui(28) + this.ui(14) + (this.searchReplaceExpanded ? this.ui(42) : 0);
+    return { x: body.x, y: body.y + controlsH, w: body.w, h: Math.max(0, body.h - controlsH) };
+  }
+  chatPanelScrollY(panel) {
+    return panel === "chatInput" ? this.chatInputScrollY : this.chatScrollY;
+  }
+  setChatPanelScrollY(panel, value, viewport) {
+    const next = clamp(value, 0, this.maxChatScrollY(panel, viewport));
+    if (panel === "chatInput") this.chatInputScrollY = next;
+    else this.chatScrollY = next;
+  }
+  maxChatScrollY(panel, viewport) {
+    const contentHeight = panel === "chatInput" ? this.chatInputContentHeight() : this.chatTranscriptContentHeight(Math.max(1, viewport.w - this.ui(12)));
+    return Math.max(0, contentHeight - viewport.h);
+  }
+  fileTreeVisibleRowCount(entries = this.fileTreeEntries()) {
+    let count = 0;
+    for (const entry of entries) {
+      count++;
+      if (entry.type === "dir" && this.expandedFolders.has(entry.path)) count += this.fileTreeVisibleRowCount(entry.children);
+    }
+    return count;
+  }
+  fileTreeContentHeight() {
+    const rowH = this.ui(22);
+    const rowGap = this.ui(2);
+    return this.ui(16) + this.fileTreeVisibleRowCount() * (rowH + rowGap);
+  }
+  searchResultsContentHeight() {
+    return this.searchResults.length * this.ui(42);
+  }
+  maxSidebarScrollY(panel, viewport) {
+    const contentHeight = panel === "files" ? this.fileTreeContentHeight() : panel === "settings" ? this.settingsContentHeight() : this.searchResultsContentHeight();
+    return Math.max(0, contentHeight - viewport.h);
+  }
+  sidebarScrollY(panel) {
+    return panel === "files" ? this.filesScrollY : panel === "settings" ? this.settingsScrollY : this.searchScrollY;
+  }
+  setSidebarScrollY(panel, value, viewport) {
+    const next = clamp(value, 0, this.maxSidebarScrollY(panel, viewport));
+    if (panel === "files") this.filesScrollY = next;
+    else if (panel === "settings") this.settingsScrollY = next;
+    else this.searchScrollY = next;
+  }
+  scrollSidebarPanel(panel, deltaY, viewport) {
+    this.setSidebarScrollY(panel, this.sidebarScrollY(panel) + deltaY, viewport);
+    this.scheduleDraw();
+  }
+  settingsViewportHeight(rect) {
+    return Math.max(1, rect.h);
+  }
+  settingsContentHeight() {
+    let y = this.ui(8);
+    y += this.ui(30);
+    if (this.settingsExpanded.has("visual")) y += this.ui(34) * 6;
+    y += this.ui(6);
+    y += this.ui(30);
+    if (this.settingsExpanded.has("interface")) y += this.ui(34) * 4;
+    y += this.ui(6);
+    y += this.ui(30);
+    if (this.settingsExpanded.has("ai")) y += this.ui(34) * 10;
+    y += this.ui(6);
+    y += this.ui(30);
+    if (this.settingsExpanded.has("danger")) y += this.ui(34) * 2;
+    return y + this.ui(18);
+  }
+  maxSettingsScrollY(rect) {
+    return Math.max(0, this.settingsContentHeight() - this.settingsViewportHeight(rect));
   }
   clampScrollForDoc(doc, rect) {
     const scroll = this.scrollForDoc(doc.id);
@@ -3956,7 +8851,7 @@ var EditorApp = class {
       scroll.y = caretBottom - contentRect.h + verticalMargin;
     }
     const line = doc.lines[doc.selection.head.line] ?? "";
-    const caretX = this.renderer.measureText(line.slice(0, doc.selection.head.col), "code");
+    const caretX = this.measureCodePrefix(line, doc.selection.head.col);
     const visibleTextWidth = this.visibleTextWidth(doc, contentRect);
     const horizontalMargin = Math.min(48, Math.max(0, (visibleTextWidth - 2) / 3));
     if (caretX < scroll.x + horizontalMargin) {
@@ -3999,6 +8894,7 @@ var EditorApp = class {
     const scroll = this.scrollForDoc(doc.id);
     if (drag.axis === "vertical") scroll.y = clamp(drag.startScroll + delta, 0, maxScroll);
     else scroll.x = clamp(drag.startScroll + delta, 0, maxScroll);
+    this.persistEditorSession();
     this.scheduleDraw();
   }
   scrollDocumentFromScrollbarPoint(doc, editorRect, axis, trackRect, thumbRect, point) {
@@ -4014,6 +8910,97 @@ var EditorApp = class {
     const thumbTravel = Math.max(1, trackRect.w - thumbRect.w);
     const thumbLeft = clamp(point.x - thumbRect.w / 2, trackRect.x, trackRect.x + thumbTravel);
     scroll.x = (thumbLeft - trackRect.x) / thumbTravel * maxScroll;
+  }
+  startSettingsScrollbarDrag(hit, point) {
+    this.hoveredSettingsScrollbar = { overThumb: rectContains(hit.thumbRect, point.x, point.y) };
+    if (!rectContains(hit.thumbRect, point.x, point.y)) this.scrollSettingsFromScrollbarPoint(hit.viewportRect, hit.trackRect, hit.thumbRect, point);
+    this.settingsScrollbarDrag = {
+      startPoint: point.y,
+      startScroll: this.settingsScrollY,
+      viewportRect: { ...hit.viewportRect },
+      trackRect: { ...hit.trackRect },
+      thumbRect: { ...hit.thumbRect }
+    };
+    this.canvas.style.cursor = "";
+    this.scheduleDraw();
+  }
+  dragSettingsScrollbar(point) {
+    const drag = this.settingsScrollbarDrag;
+    if (!drag) return;
+    const maxScroll = this.maxSettingsScrollY(drag.viewportRect);
+    const thumbTravel = Math.max(1, drag.trackRect.h - drag.thumbRect.h);
+    const delta = (point.y - drag.startPoint) / thumbTravel * maxScroll;
+    this.settingsScrollY = clamp(drag.startScroll + delta, 0, maxScroll);
+    this.scheduleDraw();
+  }
+  scrollSettingsFromScrollbarPoint(editorRect, trackRect, thumbRect, point) {
+    const maxScroll = this.maxSettingsScrollY(editorRect);
+    if (maxScroll <= 0) return;
+    const thumbTravel = Math.max(1, trackRect.h - thumbRect.h);
+    const thumbTop = clamp(point.y - thumbRect.h / 2, trackRect.y, trackRect.y + thumbTravel);
+    this.settingsScrollY = (thumbTop - trackRect.y) / thumbTravel * maxScroll;
+  }
+  startSidebarScrollbarDrag(hit, point) {
+    this.hoveredSidebarScrollbar = { panel: hit.panel, overThumb: rectContains(hit.thumbRect, point.x, point.y) };
+    if (!rectContains(hit.thumbRect, point.x, point.y)) this.scrollSidebarFromScrollbarPoint(hit.panel, hit.viewportRect, hit.contentHeight, hit.trackRect, hit.thumbRect, point);
+    this.sidebarScrollbarDrag = {
+      panel: hit.panel,
+      startPoint: point.y,
+      startScroll: this.sidebarScrollY(hit.panel),
+      trackRect: { ...hit.trackRect },
+      thumbRect: { ...hit.thumbRect },
+      viewportRect: { ...hit.viewportRect },
+      contentHeight: hit.contentHeight
+    };
+    this.canvas.style.cursor = "";
+    this.scheduleDraw();
+  }
+  dragSidebarScrollbar(point) {
+    const drag = this.sidebarScrollbarDrag;
+    if (!drag) return;
+    const maxScroll = Math.max(0, drag.contentHeight - drag.viewportRect.h);
+    const thumbTravel = Math.max(1, drag.trackRect.h - drag.thumbRect.h);
+    const delta = (point.y - drag.startPoint) / thumbTravel * maxScroll;
+    this.setSidebarScrollY(drag.panel, drag.startScroll + delta, drag.viewportRect);
+    this.scheduleDraw();
+  }
+  scrollSidebarFromScrollbarPoint(panel, viewport, contentHeight, trackRect, thumbRect, point) {
+    const maxScroll = Math.max(0, contentHeight - viewport.h);
+    if (maxScroll <= 0) return;
+    const thumbTravel = Math.max(1, trackRect.h - thumbRect.h);
+    const thumbTop = clamp(point.y - thumbRect.h / 2, trackRect.y, trackRect.y + thumbTravel);
+    this.setSidebarScrollY(panel, (thumbTop - trackRect.y) / thumbTravel * maxScroll, viewport);
+  }
+  startChatScrollbarDrag(hit, point) {
+    this.hoveredChatScrollbar = { panel: hit.panel, overThumb: rectContains(hit.thumbRect, point.x, point.y) };
+    if (!rectContains(hit.thumbRect, point.x, point.y)) this.scrollChatFromScrollbarPoint(hit.panel, hit.viewportRect, hit.contentHeight, hit.trackRect, hit.thumbRect, point);
+    this.chatScrollbarDrag = {
+      panel: hit.panel,
+      startPoint: point.y,
+      startScroll: this.chatPanelScrollY(hit.panel),
+      trackRect: { ...hit.trackRect },
+      thumbRect: { ...hit.thumbRect },
+      viewportRect: { ...hit.viewportRect },
+      contentHeight: hit.contentHeight
+    };
+    this.canvas.style.cursor = "";
+    this.scheduleDraw();
+  }
+  dragChatScrollbar(point) {
+    const drag = this.chatScrollbarDrag;
+    if (!drag) return;
+    const maxScroll = Math.max(0, drag.contentHeight - drag.viewportRect.h);
+    const thumbTravel = Math.max(1, drag.trackRect.h - drag.thumbRect.h);
+    const delta = (point.y - drag.startPoint) / thumbTravel * maxScroll;
+    this.setChatPanelScrollY(drag.panel, drag.startScroll + delta, drag.viewportRect);
+    this.scheduleDraw();
+  }
+  scrollChatFromScrollbarPoint(panel, viewport, contentHeight, trackRect, thumbRect, point) {
+    const maxScroll = Math.max(0, contentHeight - viewport.h);
+    if (maxScroll <= 0) return;
+    const thumbTravel = Math.max(1, trackRect.h - thumbRect.h);
+    const thumbTop = clamp(point.y - thumbRect.h / 2, trackRect.y, trackRect.y + thumbTravel);
+    this.setChatPanelScrollY(panel, (thumbTop - trackRect.y) / thumbTravel * maxScroll, viewport);
   }
   startDockResize(hit, point) {
     const split = findDockSplitNode(this.dockRoot, hit.splitId);
@@ -4056,27 +9043,80 @@ var EditorApp = class {
   }
   updateDockPreview(point) {
     if (!this.tabDrag) return;
+    if (this.updateTabInsertionPreview(point)) {
+      this.dockPreview = null;
+      this.canvas.style.cursor = "";
+      this.scheduleDraw();
+      return;
+    }
+    this.tabInsertionPreview = null;
+    this.lastTabDragPoint = null;
+    this.stopTabDragAutoscroll();
     const preview = this.resolveDockPreview(point);
     this.dockPreview = preview;
-    if (preview?.zone === "center" && this.isSourceTabStripPoint(preview.groupId, point)) {
-      this.reorderDraggedTab(point.x, preview.groupId);
-      this.scheduleDraw();
-    } else {
-      this.scheduleDraw();
-    }
+    this.scheduleDraw();
     this.canvas.style.cursor = preview ? "" : "not-allowed";
   }
-  isSourceTabStripPoint(groupId, point) {
-    if (groupId !== this.tabDrag?.sourceGroupId) return false;
-    const group = this.groupById(groupId);
-    return rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(34) }, point.x, point.y);
+  updateTabInsertionPreview(point) {
+    const group = this.tabGroupAtPoint(point);
+    if (!group) return false;
+    this.lastTabDragPoint = { ...point };
+    let layout = this.tabLayoutForGroup(group, this.tabRectForGroup(group));
+    if (this.scrollTabGroupDuringDrag(group, layout, point)) {
+      this.scheduleTabDragAutoscroll();
+      layout = this.tabLayoutForGroup(group, this.tabRectForGroup(group));
+    } else {
+      this.stopTabDragAutoscroll();
+    }
+    const index = this.tabInsertionIndexForLayout(layout, point.x);
+    this.tabInsertionPreview = { groupId: group.id, index, rect: this.tabInsertionLineRect(layout, index) };
+    return true;
+  }
+  scheduleTabDragAutoscroll() {
+    if (this.tabDragAutoscrollTimer) return;
+    this.tabDragAutoscrollTimer = window.setTimeout(() => {
+      this.tabDragAutoscrollTimer = 0;
+      if (!this.tabDrag || !this.lastTabDragPoint) return;
+      if (this.updateTabInsertionPreview(this.lastTabDragPoint)) this.scheduleDraw();
+    }, 45);
+  }
+  stopTabDragAutoscroll() {
+    if (!this.tabDragAutoscrollTimer) return;
+    window.clearTimeout(this.tabDragAutoscrollTimer);
+    this.tabDragAutoscrollTimer = 0;
+  }
+  scrollTabGroupDuringDrag(group, layout, point) {
+    if (layout.maxScroll <= 0 || !rectContains(layout.stripRect, point.x, point.y)) return false;
+    const edge = Math.min(this.ui(TAB_AUTOSCROLL_EDGE_W), layout.stripRect.w / 3);
+    const leftAmount = layout.stripRect.x + edge - point.x;
+    const rightAmount = point.x - (layout.stripRect.x + layout.stripRect.w - edge);
+    const step = this.ui(26);
+    if (leftAmount > 0) return this.setTabGroupScroll(group, layout.scroll - step * clamp(leftAmount / edge, 0.25, 1), layout);
+    if (rightAmount > 0) return this.setTabGroupScroll(group, layout.scroll + step * clamp(rightAmount / edge, 0.25, 1), layout);
+    return false;
+  }
+  tabInsertionIndexForLayout(layout, x) {
+    const contentX = clamp(x - layout.stripRect.x + layout.scroll, 0, Math.max(0, layout.totalWidth));
+    for (let i = 0; i < layout.items.length; i++) {
+      const item = layout.items[i];
+      if (contentX < item.start + item.width / 2) return i;
+    }
+    return layout.items.length;
+  }
+  tabInsertionLineRect(layout, index) {
+    const gap = this.ui(TAB_GAP);
+    const previous = layout.items[index - 1];
+    const next = layout.items[index];
+    const contentX = next ? next.start : previous ? previous.end + gap : 0;
+    const x = clamp(layout.stripRect.x + contentX - layout.scroll, layout.stripRect.x + 1, layout.stripRect.x + layout.stripRect.w - 1);
+    return {
+      x: x - this.ui(1),
+      y: layout.stripRect.y + this.ui(3),
+      w: Math.max(2, this.ui(2)),
+      h: Math.max(4, layout.stripRect.h - this.ui(6))
+    };
   }
   resolveDockPreview(point) {
-    const stripGroup = this.groups.find((group) => rectContains({ x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(34) }, point.x, point.y));
-    if (stripGroup && stripGroup.id === this.tabDrag?.sourceGroupId) {
-      const center = this.dockTargetShapes(stripGroup).find((target2) => target2.zone === "center");
-      if (center) return { groupId: center.groupId, zone: "center", rect: center.previewRect, polygon: center.polygon };
-    }
     const targets = this.allDockTargets();
     const centerTarget = targets.find((item) => item.zone === "center" && pointInPolygon(point, item.polygon));
     const target = centerTarget ?? targets.find((item) => item.zone !== "center" && pointInPolygon(point, item.polygon));
@@ -4086,6 +9126,10 @@ var EditorApp = class {
     const drag = this.tabDrag;
     const preview = this.dockPreview;
     if (!drag) return;
+    if (this.tabInsertionPreview) {
+      this.dropDraggedTabIntoGroup(drag.docId, this.tabInsertionPreview.groupId, this.tabInsertionPreview.index);
+      return;
+    }
     if (!preview) {
       this.restoreDraggedTab();
       return;
@@ -4100,6 +9144,7 @@ var EditorApp = class {
       group2.activeDocId = drag.docId;
       this.activeGroupId = group2.id;
       this.activeDocId = drag.docId;
+      this.selectActiveDocumentInFileTree();
       this.syncOpenTabs();
       return;
     }
@@ -4119,8 +9164,29 @@ var EditorApp = class {
     this.pruneDockTree();
     this.activeGroupId = group.id;
     this.activeDocId = drag.docId;
+    this.selectActiveDocumentInFileTree();
     this.syncOpenTabs();
     this.statusText = `Docked ${preview.zone}`;
+  }
+  dropDraggedTabIntoGroup(docId, groupId, index) {
+    const group = this.groups.find((item) => item.id === groupId);
+    if (!group) {
+      this.restoreDraggedTab();
+      return;
+    }
+    const existing = group.tabs.indexOf(docId);
+    if (existing >= 0) group.tabs.splice(existing, 1);
+    const target = clamp(index, 0, group.tabs.length);
+    group.tabs.splice(target, 0, docId);
+    group.activeDocId = docId;
+    this.activeGroupId = group.id;
+    this.activeDocId = docId;
+    this.selectActiveDocumentInFileTree();
+    this.syncOpenTabs();
+    this.revealTabInGroup(group, docId);
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    this.statusText = "Moved tab";
   }
   restoreDraggedTab() {
     const drag = this.tabDrag;
@@ -4152,9 +9218,130 @@ var EditorApp = class {
   groupContaining(docId) {
     return this.groups.find((group) => group.tabs.includes(docId));
   }
-  syncOpenTabs() {
+  activateTabInGroup(group, docId) {
+    group.activeDocId = docId;
+    this.activeGroupId = group.id;
+    this.activeDocId = docId;
+    this.revealTabInGroup(group, docId);
+    this.selectActiveDocumentInFileTree();
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    this.persistEditorSession();
+  }
+  syncOpenTabs(persist = true) {
     this.groups = collectDockGroups(this.dockRoot);
     this.openTabs = this.groups.flatMap((group) => group.tabs);
+    if (persist) this.persistEditorSession();
+  }
+  persistEditorSession() {
+    try {
+      if (!this.settings.rememberOpenFiles) {
+        localStorage.removeItem(this.sessionStorageKey());
+        return;
+      }
+      const session = this.makePersistedSession();
+      if (!session) {
+        localStorage.removeItem(this.sessionStorageKey());
+        return;
+      }
+      localStorage.setItem(this.sessionStorageKey(), JSON.stringify(session));
+    } catch {
+    }
+  }
+  clearPersistedEditorSession() {
+    try {
+      localStorage.removeItem(this.sessionStorageKey());
+    } catch {
+    }
+  }
+  makePersistedSession() {
+    const dockRoot = persistDockNode(this.dockRoot, (docId) => {
+      const doc = this.docs.get(docId);
+      return doc?.path && !this.isAiSpecialPath(doc.path) ? normalizePath(doc.path) : null;
+    });
+    if (!dockRoot || persistedDockPathCount(dockRoot) === 0) return null;
+    const scrollStates = {};
+    for (const doc of this.docs.all()) {
+      if (!doc.path || this.isAiSpecialPath(doc.path) || !this.groupContaining(doc.id)) continue;
+      const scroll = this.scrollStates.get(doc.id);
+      if (scroll) scrollStates[normalizePath(doc.path)] = { x: scroll.x, y: scroll.y };
+    }
+    const activeDoc = this.activeDoc();
+    return {
+      version: 1,
+      activePath: activeDoc?.path ? normalizePath(activeDoc.path) : null,
+      activeGroupId: this.activeGroupId,
+      sidebarMode: this.sidebarMode,
+      sidebarWidth: this.sidebarWidth,
+      lastSidebarWidth: this.lastSidebarWidth,
+      dockRoot,
+      scrollStates
+    };
+  }
+  async restoreEditorSession() {
+    if (!this.settings.rememberOpenFiles) {
+      this.clearPersistedEditorSession();
+      return;
+    }
+    let session = null;
+    try {
+      const raw = localStorage.getItem(this.sessionStorageKey());
+      session = raw ? normalizePersistedSession(JSON.parse(raw)) : null;
+    } catch {
+      session = null;
+    }
+    if (!session) return;
+    const paths = [...new Set(persistedDockPaths(session.dockRoot))];
+    const pathToDocId = /* @__PURE__ */ new Map();
+    for (const path of paths) {
+      const node = await this.vfs.stat(path);
+      if (!node || node.kind !== "file") continue;
+      const doc = await this.docs.open(path);
+      pathToDocId.set(path, doc.id);
+    }
+    const restoredRoot = restorePersistedDockNode(session.dockRoot, pathToDocId);
+    if (!restoredRoot || restoredDockTabCount(restoredRoot) === 0) {
+      this.clearPersistedEditorSession();
+      return;
+    }
+    this.dockRoot = restoredRoot;
+    this.groups = collectDockGroups(this.dockRoot);
+    this.activeGroupId = this.groups.find((group) => group.id === session.activeGroupId)?.id ?? this.groups[0].id;
+    const activeDocId = session.activePath ? pathToDocId.get(session.activePath) ?? null : null;
+    if (activeDocId) {
+      const group = this.groupContaining(activeDocId);
+      if (group) {
+        group.activeDocId = activeDocId;
+        this.activeGroupId = group.id;
+        this.activeDocId = activeDocId;
+      }
+    }
+    if (!this.activeDocId) {
+      const group = this.groups.find((item) => item.activeDocId) ?? this.groups[0];
+      this.activeGroupId = group.id;
+      this.activeDocId = group.activeDocId;
+    }
+    this.sidebarMode = session.sidebarMode;
+    this.sidebarWidth = Math.max(0, session.sidebarWidth);
+    this.lastSidebarWidth = Math.max(0, session.lastSidebarWidth || this.lastSidebarWidth);
+    this.scrollStates.clear();
+    this.tabScrollStates.clear();
+    this.pendingTabRevealIds.clear();
+    for (const [path, scroll] of Object.entries(session.scrollStates ?? {})) {
+      const docId = pathToDocId.get(path);
+      if (docId) this.scrollStates.set(docId, { x: Math.max(0, scroll.x), y: Math.max(0, scroll.y) });
+    }
+    this.syncOpenTabs(false);
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    this.statusText = "Restored workspace";
+    this.persistEditorSession();
+  }
+  blockReadOnlyEdit(doc) {
+    if (!doc?.readOnly) return false;
+    this.statusText = "File type not supported";
+    this.scheduleDraw();
+    return true;
   }
   pruneDockTree() {
     this.dockRoot = pruneDockNode(this.dockRoot) ?? { type: "leaf", group: makeGroup("group-main") };
@@ -4170,15 +9357,24 @@ var EditorApp = class {
       kind: "editor",
       getSelectedText: () => this.activeDoc()?.selectedText() ?? "",
       replaceSelection: (text) => {
-        this.activeDoc()?.replaceSelection(text);
+        const doc = this.activeDoc();
+        if (this.blockReadOnlyEdit(doc)) return;
+        doc?.replaceSelection(text);
+        this.afterDocumentMutated(doc);
         this.revealEditorCaret();
       },
       deleteSelectionOrBackward: (unit = "char") => {
-        this.activeDoc()?.deleteBackward(unit);
+        const doc = this.activeDoc();
+        if (this.blockReadOnlyEdit(doc)) return;
+        doc?.deleteBackward(unit);
+        this.afterDocumentMutated(doc);
         this.revealEditorCaret();
       },
       deleteForward: (unit = "char") => {
-        this.activeDoc()?.deleteForward(unit);
+        const doc = this.activeDoc();
+        if (this.blockReadOnlyEdit(doc)) return;
+        doc?.deleteForward(unit);
+        this.afterDocumentMutated(doc);
         this.revealEditorCaret();
       },
       moveCursor: (command, extend) => {
@@ -4188,13 +9384,18 @@ var EditorApp = class {
       runShortcut: (command) => this.runEditorShortcut(command),
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
-        if (text) this.activeDoc()?.replaceSelection(text, "composition");
+        const doc = this.activeDoc();
+        if (text && !this.blockReadOnlyEdit(doc)) {
+          doc?.replaceSelection(text, "composition");
+          this.afterDocumentMutated(doc);
+        }
         this.revealEditorCaret();
       }
     };
   }
   miniTarget(kind) {
-    const buffer = kind === "search" ? this.searchBuffer : this.chatBuffer;
+    if (kind === "chat") return this.chatInputTarget();
+    const buffer = this.searchBuffer;
     return {
       kind,
       getSelectedText: () => buffer.selectedText(),
@@ -4218,10 +9419,6 @@ var EditorApp = class {
         this.resetCaretBlink();
       },
       runShortcut: (command) => {
-        if (command === "Enter" && kind === "chat") {
-          void this.sendChat();
-          return true;
-        }
         if (command === "Enter" && kind === "search") {
           void this.runSearch();
           this.resetCaretBlink();
@@ -4238,6 +9435,61 @@ var EditorApp = class {
       onCompositionCommit: (text) => {
         buffer.replaceSelection(text);
         if (kind === "search") void this.runSearch();
+        this.resetCaretBlink();
+      }
+    };
+  }
+  chatInputTarget() {
+    const doc = this.chatDraft;
+    return {
+      kind: "chat",
+      getSelectedText: () => doc.selectedText(),
+      replaceSelection: (text) => {
+        doc.replaceSelection(text);
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.resetCaretBlink();
+      },
+      deleteSelectionOrBackward: (unit) => {
+        doc.deleteBackward(unit);
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.resetCaretBlink();
+      },
+      deleteForward: (unit) => {
+        doc.deleteForward(unit);
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.resetCaretBlink();
+      },
+      moveCursor: (command, extend) => {
+        doc.move(command, extend);
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.resetCaretBlink();
+      },
+      runShortcut: (command) => {
+        if (command === "Enter") {
+          void this.sendChat();
+          return true;
+        }
+        if (command === "Shift+Enter") {
+          doc.replaceSelection("\n");
+          this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+          this.resetCaretBlink();
+          return true;
+        }
+        if (command === "Mod+Enter") {
+          void this.sendChat();
+          return true;
+        }
+        if (command === "Mod+A") {
+          doc.selectAll();
+          this.resetCaretBlink();
+          return true;
+        }
+        return this.runGlobalShortcut(command);
+      },
+      onCompositionPreview: () => this.resetCaretBlink(),
+      onCompositionCommit: (text) => {
+        doc.replaceSelection(text);
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
         this.resetCaretBlink();
       }
     };
@@ -4348,30 +9600,39 @@ var EditorApp = class {
       this.resetCaretBlink();
       return true;
     }
+    if (command === "Mod+C") {
+      const text = doc.selectedText();
+      if (!text) return false;
+      this.copyTextToClipboard(text);
+      return true;
+    }
+    if (doc.readOnly) {
+      this.statusText = "File type not supported";
+      this.scheduleDraw();
+      return true;
+    }
     if (command === "Tab") {
-      doc.indentSelectedLines();
+      doc.indentSelectedLines(this.editorIndentString());
+      this.afterDocumentMutated(doc);
       this.revealEditorCaret();
       return true;
     }
     if (command === "Shift+Tab") {
-      doc.unindentSelectedLines();
+      doc.unindentSelectedLines(this.codeTabSpaces());
+      this.afterDocumentMutated(doc);
       this.revealEditorCaret();
       return true;
     }
     if (command === "Mod+Z") {
       doc.undo();
+      this.afterDocumentMutated(doc);
       this.revealEditorCaret();
       return true;
     }
     if (command === "Mod+Shift+Z" || command === "Mod+Y") {
       doc.redo();
+      this.afterDocumentMutated(doc);
       this.revealEditorCaret();
-      return true;
-    }
-    if (command === "Mod+C") {
-      const text = doc.selectedText();
-      if (!text) return false;
-      this.copyTextToClipboard(text);
       return true;
     }
     if (command === "Mod+X") {
@@ -4379,6 +9640,7 @@ var EditorApp = class {
       if (!text) return false;
       this.copyTextToClipboard(text);
       doc.replaceSelection("", "cut");
+      this.afterDocumentMutated(doc);
       this.revealEditorCaret();
       return true;
     }
@@ -4409,6 +9671,27 @@ var EditorApp = class {
       await this.runTabContextMenuCommand(menu.scope.groupId, menu.scope.docId, command);
       return;
     }
+    if (menu.scope.type === "tabBar") {
+      await this.runTabBarContextMenuCommand(menu.scope.groupId, command);
+      return;
+    }
+    if (menu.scope.type === "tabOverflow") {
+      this.runTabOverflowContextMenuCommand(menu.scope.groupId, command);
+      return;
+    }
+    if (menu.scope.type === "highlightDropdown") {
+      this.runHighlightDropdownCommand(menu.scope.groupId, menu.scope.docId, command);
+      return;
+    }
+    if (menu.scope.type === "gutter") {
+      this.runGutterContextMenuCommand(menu.scope.groupId, menu.scope.docId, command);
+      return;
+    }
+    if (menu.scope.type === "settingsRoot") {
+      if (command === "resetSettings") this.resetSettings();
+      this.closeContextMenu();
+      return;
+    }
     if (menu.scope.type === "settingsDropdown") {
       this.runSettingsDropdownCommand(menu.scope.key, command);
       return;
@@ -4425,6 +9708,10 @@ var EditorApp = class {
       await this.runSearchContextMenuCommand(command);
       return;
     }
+    if (menu.scope.type === "chatInput") {
+      await this.runChatInputContextMenuCommand(command);
+      return;
+    }
     if (menu.scope.type === "textField") {
       await this.runTextFieldContextMenuCommand(menu.scope.field, command);
       return;
@@ -4439,6 +9726,7 @@ var EditorApp = class {
     this.activeGroupId = group.id;
     this.activeDocId = doc.id;
     group.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
     if (command === "systemCopy") {
       const text = doc.selectedText();
       if (text) this.openSystemCopyDialog(text, () => this.focusEditor());
@@ -4447,8 +9735,14 @@ var EditorApp = class {
       return;
     }
     if (command === "systemPaste") {
+      if (doc.readOnly) {
+        this.statusText = "File type not supported";
+        this.scheduleDraw();
+        return;
+      }
       this.openSystemPasteDialog((text) => {
         doc.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "paste");
+        this.afterDocumentMutated(doc);
         this.statusText = "Pasted";
         this.revealEditorCaret();
         this.scheduleDraw();
@@ -4463,7 +9757,13 @@ var EditorApp = class {
       } else {
         this.copyTextToClipboard(text);
         if (command === "cut") {
+          if (doc.readOnly) {
+            this.statusText = "File type not supported";
+            this.scheduleDraw();
+            return;
+          }
           doc.replaceSelection("", "cut");
+          this.afterDocumentMutated(doc);
           this.statusText = "Cut selection";
           changedDocument = true;
         } else {
@@ -4477,8 +9777,11 @@ var EditorApp = class {
         this.statusText = "Clipboard paste unavailable";
       } else if (!text) {
         this.statusText = "Clipboard empty";
+      } else if (doc.readOnly) {
+        this.statusText = "File type not supported";
       } else {
         doc.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"), "paste");
+        this.afterDocumentMutated(doc);
         this.statusText = "Pasted";
         changedDocument = true;
       }
@@ -4580,6 +9883,55 @@ var EditorApp = class {
     }
     this.focusMiniTarget("search", this.searchInputRect() ?? { x: 56, y: 40, w: Math.max(80, this.sidebarWidth - 20), h: 28 });
   }
+  async runChatInputContextMenuCommand(command) {
+    if (!isEditorContextMenuCommand(command)) return;
+    const restore = () => this.focusMiniTarget("chat", this.chatInputRectForFocus());
+    if (command === "systemCopy") {
+      const text = this.chatDraft.selectedText();
+      if (text) this.openSystemCopyDialog(text, restore);
+      else this.statusText = "No selection";
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "systemPaste") {
+      this.openSystemPasteDialog((text) => {
+        this.chatDraft.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"));
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.statusText = "Pasted";
+        restore();
+      }, restore);
+      return;
+    }
+    if (command === "copy" || command === "cut") {
+      const text = this.chatDraft.selectedText();
+      if (!text) {
+        this.statusText = "No selection";
+      } else {
+        this.copyTextToClipboard(text);
+        if (command === "cut") {
+          this.chatDraft.replaceSelection("");
+          this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+          this.statusText = "Cut chat text";
+        } else {
+          this.statusText = "Copied chat text";
+        }
+      }
+    } else {
+      restore();
+      const text = await this.readTextFromClipboard();
+      if (text === null) {
+        this.statusText = "Clipboard paste unavailable";
+      } else if (!text) {
+        this.statusText = "Clipboard empty";
+      } else {
+        this.chatDraft.replaceSelection(text.replaceAll("\r\n", "\n").replaceAll("\r", "\n"));
+        this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
+        this.statusText = "Pasted";
+      }
+    }
+    restore();
+    this.resetCaretBlink();
+  }
   async runTextFieldContextMenuCommand(field, command) {
     if (field === "search") {
       await this.runSearchContextMenuCommand(command);
@@ -4640,12 +9992,35 @@ var EditorApp = class {
     if (!isTabContextMenuCommand(command)) return;
     const group = this.groupById(groupId);
     if (!group.tabs.includes(docId)) return;
+    if (command === "save") {
+      if (this.isSettingsTab(docId)) return;
+      const doc = this.docs.get(docId);
+      if (!doc) return;
+      if (doc.readOnly) {
+        this.statusText = "File type not supported";
+        this.scheduleDraw();
+        return;
+      }
+      await this.saveDocument(doc);
+      this.statusText = `Saved ${doc.path}`;
+      this.scheduleDraw();
+      return;
+    }
     if (command === "findInFile") {
       if (this.isSettingsTab(docId)) return;
       group.activeDocId = docId;
       this.activeGroupId = group.id;
       this.activeDocId = docId;
+      this.selectActiveDocumentInFileTree();
       this.openFindWidget();
+      return;
+    }
+    if (command === "resetSettings") {
+      if (!this.isSettingsTab(docId)) return;
+      group.activeDocId = docId;
+      this.activeGroupId = group.id;
+      this.activeDocId = docId;
+      this.resetSettings();
       return;
     }
     if (command === "close") {
@@ -4655,19 +10030,108 @@ var EditorApp = class {
     group.activeDocId = docId;
     this.activeGroupId = group.id;
     this.activeDocId = docId;
+    this.selectActiveDocumentInFileTree();
     if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     const others = group.tabs.filter((id) => id !== docId);
     await this.requestCloseTabs(others);
   }
+  async runTabBarContextMenuCommand(groupId, command) {
+    if (!isTabBarContextMenuCommand(command)) return;
+    const group = this.groupById(groupId);
+    if (command === "newFile") {
+      this.openUntitledDocument(group.id);
+      return;
+    }
+    await this.requestCloseTabs(group.tabs);
+  }
+  runTabOverflowContextMenuCommand(groupId, command) {
+    const docId = tabOverflowCommandDocId(command);
+    if (!docId) return;
+    const group = this.groupById(groupId);
+    if (!group.tabs.includes(docId)) return;
+    this.activateTabInGroup(group, docId);
+    this.statusText = `Opened ${this.tabLabel(docId)}`;
+    this.scheduleDraw();
+  }
+  openHighlightDropdown(hit) {
+    const doc = this.docs.get(hit.docId);
+    if (!doc) return;
+    const entries = HIGHLIGHT_OPTIONS.map((option) => ({
+      command: highlightCommand(option.id),
+      label: `${doc.syntaxId === option.id ? "\u2714\uFE0F " : ""}${option.label}`,
+      enabled: true
+    }));
+    const pad = this.ui(CONTEXT_MENU_PAD);
+    const menuH = pad * 2 + entries.length * this.ui(CONTEXT_MENU_ROW_H);
+    const menuW = Math.max(this.ui(150), ...entries.map((entry) => this.renderer.measureText(entry.label, "ui") + this.ui(34)));
+    const menuX = hit.rect.x + hit.rect.w - menuW;
+    this.contextMenu = this.makeContextMenu(
+      { x: menuX, y: hit.rect.y - menuH },
+      { type: "highlightDropdown", groupId: hit.groupId, docId: hit.docId },
+      entries,
+      { x: menuX, y: hit.rect.y - menuH, w: menuW }
+    );
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  runHighlightDropdownCommand(groupId, docId, command) {
+    const syntaxId = highlightCommandSyntaxId(command);
+    if (!syntaxId) return;
+    const doc = this.docs.get(docId);
+    const group = this.groupById(groupId);
+    if (!doc || !group.tabs.includes(doc.id)) return;
+    doc.syntaxId = syntaxId;
+    group.activeDocId = doc.id;
+    this.activeGroupId = group.id;
+    this.activeDocId = doc.id;
+    this.selectActiveDocumentInFileTree();
+    this.statusText = `Highlight ${this.highlightLabel(syntaxId)}`;
+    this.contextMenu = null;
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  runGutterContextMenuCommand(groupId, docId, command) {
+    if (command !== "toggleLineNumbers") return;
+    const group = this.groupById(groupId);
+    const doc = this.docs.get(docId);
+    if (doc && group.tabs.includes(doc.id)) {
+      this.activeGroupId = group.id;
+      this.activeDocId = doc.id;
+      group.activeDocId = doc.id;
+      this.selectActiveDocumentInFileTree();
+    }
+    this.settings.showLineNumbers = !this.settings.showLineNumbers;
+    this.statusText = this.settings.showLineNumbers ? "Line numbers shown" : "Line numbers hidden";
+    this.saveAndApplySettings();
+  }
   openSettingsDropdown(rect, key) {
-    const entries = key === "theme" ? [
-      { command: "themeDark", label: "Dark", enabled: true },
-      { command: "themeLight", label: "Light", enabled: true }
-    ] : [
-      { command: "aiProviderLocal", label: "Local", enabled: true },
-      { command: "aiProviderOpenAI", label: "OpenAI", enabled: true }
-    ];
+    const currentConfig = loadAiEndpointConfig();
+    let entries;
+    if (key === "theme") {
+      entries = [
+        { command: "themeDark", label: "Dark", enabled: true },
+        { command: "themeLight", label: "Light", enabled: true }
+      ];
+    } else if (key === "aiToolCallFormat") {
+      entries = [
+        { command: "aiToolFormatTag", label: "Tag", enabled: true },
+        { command: "aiToolFormatHarmony", label: "Harmony", enabled: true }
+      ];
+    } else if (key === "aiModel") {
+      const models = [...this.aiModels];
+      if (currentConfig.model && !models.some((model) => model.id === currentConfig.model)) models.unshift({ id: currentConfig.model, contextLength: currentConfig.maxContextTokens });
+      entries = models.length ? models.map((model) => ({
+        command: aiModelCommand(model.id),
+        label: `${model.id}${model.contextLength ? ` (${Math.round(model.contextLength / 1e3)}k)` : ""}`,
+        enabled: true
+      })) : [{ command: aiModelCommand(""), label: "No models scanned", enabled: false }];
+    } else {
+      entries = [
+        { command: "aiProviderLocal", label: "Local", enabled: true },
+        { command: "aiProviderOpenAI", label: "OpenAI", enabled: true }
+      ];
+    }
     this.contextMenu = this.makeContextMenu({ x: rect.x, y: rect.y + rect.h }, { type: "settingsDropdown", key }, entries, { x: rect.x, y: rect.y + rect.h, w: rect.w });
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -4680,6 +10144,21 @@ var EditorApp = class {
     } else if (key === "aiProvider") {
       if (command === "aiProviderLocal") this.settings.aiProvider = "local";
       else if (command === "aiProviderOpenAI") this.settings.aiProvider = "openai";
+    } else if (key === "aiToolCallFormat") {
+      if (command === "aiToolFormatTag") this.settings.aiToolCallFormat = "tag";
+      else if (command === "aiToolFormatHarmony") this.settings.aiToolCallFormat = "harmony";
+    } else if (key === "aiModel") {
+      const modelId = aiModelCommandValue(command);
+      if (modelId !== null) {
+        const selected = this.aiModels.find((model) => model.id === modelId);
+        const config = loadAiEndpointConfig();
+        saveAiEndpointConfig({
+          ...config,
+          model: modelId,
+          maxContextTokens: selected?.contextLength ?? config.maxContextTokens
+        });
+        this.statusText = modelId ? `AI model ${modelId}` : "AI model unchanged";
+      }
     }
     this.saveAndApplySettings();
   }
@@ -4749,6 +10228,7 @@ var EditorApp = class {
       this.settingsNumberBuffer.text = String(this.settings[key]);
       this.settingsNumberBuffer.cursor = this.settingsNumberBuffer.text.length;
       this.settingsNumberBuffer.anchor = this.settingsNumberBuffer.cursor;
+      this.settingsNumberBuffer.scrollX = 0;
     }
     this.input.focusEditor(this.settingsNumberTarget(), rect);
     this.resetCaretBlink();
@@ -4805,7 +10285,11 @@ var EditorApp = class {
     if (!key) return;
     const value = Number.parseInt(this.settingsNumberBuffer.text, 10);
     if (!Number.isFinite(value)) return;
-    this.settings[key] = key === "fontSize" ? Math.max(1, value) : clamp(Math.trunc(value), 1, 400);
+    if (key === "fontSize") this.settings[key] = Math.max(1, value);
+    else if (key === "tabSpaces") this.settings[key] = clamp(Math.trunc(value), 1, 32);
+    else if (key === "aiMaxToolCalls") this.settings[key] = clamp(Math.trunc(value), 1, 200);
+    else if (key === "aiCompactFreePercent") this.settings[key] = clamp(Math.trunc(value), 1, 95);
+    else this.settings[key] = clamp(Math.trunc(value), 1, 400);
     this.saveAndApplySettings();
   }
   commitSettingsNumberInput() {
@@ -4815,6 +10299,7 @@ var EditorApp = class {
     this.settingsNumberBuffer.text = String(this.settings[key]);
     this.settingsNumberBuffer.cursor = this.settingsNumberBuffer.text.length;
     this.settingsNumberBuffer.anchor = this.settingsNumberBuffer.cursor;
+    this.settingsNumberBuffer.scrollX = 0;
     this.activeSettingsNumber = null;
     this.settingsNumberSelecting = false;
     this.input.blur();
@@ -4827,10 +10312,11 @@ var EditorApp = class {
     this.scheduleDraw();
   }
   setSettingsNumberCursorFromPoint(x, rect, extend) {
-    const offset = x - (rect.x + this.ui(8));
+    const offset = x - (rect.x + this.ui(8)) + this.settingsNumberBuffer.scrollX;
     const col = this.columnFromTextOffset(this.settingsNumberBuffer.text, offset, "ui");
     this.settingsNumberBuffer.cursor = col;
     if (!extend) this.settingsNumberBuffer.anchor = col;
+    this.revealMiniBufferCaret(this.settingsNumberBuffer, rect, this.ui(8));
     this.resetCaretBlink();
   }
   selectSettingsNumberWordFromPoint(_x, _rect) {
@@ -4842,7 +10328,7 @@ var EditorApp = class {
     if (x >= rect.x && x <= rect.x + rect.w) return true;
     const start = Math.min(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
     const end = Math.max(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
-    const textX = rect.x + this.ui(8);
+    const textX = rect.x + this.ui(8) - this.settingsNumberBuffer.scrollX;
     const startX = textX + this.renderer.measureText(this.settingsNumberBuffer.text.slice(0, start), "ui");
     const endX = textX + this.renderer.measureText(this.settingsNumberBuffer.text.slice(0, end), "ui");
     return x >= startX && x <= Math.max(startX + 2, endX);
@@ -4855,25 +10341,74 @@ var EditorApp = class {
   }
   async runSettingsButton(action) {
     if (action === "resetAll") {
-      this.settings = { ...DEFAULT_SETTINGS };
-      this.saveAndApplySettings();
-      this.statusText = "Settings reset";
+      this.resetSettings();
       return;
     }
-    await this.clearFileSystem();
+    if (action === "editAiSettings") {
+      this.openAiSettingsDocument();
+      return;
+    }
+    if (action === "editSystemPrompt") {
+      this.openSystemPromptDocument();
+      return;
+    }
+    if (action === "editHelperPrompts") {
+      this.openHelperPromptsDocument();
+      return;
+    }
+    if (action === "scanLmStudio") {
+      this.statusText = "Scanning LM Studio models";
+      this.scheduleDraw();
+      const result = await probeOpenAICompatibleModels(loadAiEndpointConfig());
+      this.aiModels = result.models.length ? result.models : this.aiModels;
+      this.statusText = result.error ?? `Found ${result.models.length} model${result.models.length === 1 ? "" : "s"}`;
+      this.scheduleDraw();
+      return;
+    }
+    this.openClearFileSystemModal();
   }
-  async clearFileSystem() {
-    await this.vfs.resetToSample();
+  resetSettings() {
+    this.settings = { ...DEFAULT_SETTINGS };
+    this.settingsScrollY = 0;
+    this.resetSettingsExpansion();
+    this.saveAndApplySettings();
+    this.statusText = "Settings reset";
+  }
+  resetSettingsExpansion() {
+    this.settingsExpanded.clear();
+    this.settingsExpanded.add("visual");
+    this.settingsExpanded.add("interface");
+    this.settingsExpanded.add("ai");
+  }
+  async clearFileSystemNow() {
+    await this.vfs.resetToEmpty();
+    this.clearPersistedEditorSession();
     this.docs.clear();
     const group = makeGroup("group-main");
     this.groups = [group];
     this.dockRoot = { type: "leaf", group };
     this.activeGroupId = group.id;
     this.activeDocId = null;
+    this.openTabs = [];
     this.scrollStates.clear();
+    this.tabScrollStates.clear();
+    this.pendingTabRevealIds.clear();
+    this.documentWidthCache.clear();
+    this.lineWidthCache.clear();
+    this.highlightCache.clear();
+    this.findStates.clear();
+    this.untitledLabels.clear();
+    this.untitledPreferredNames.clear();
+    this.selectedFileTreePath = null;
+    this.expandedFolders.clear();
+    this.knownFolders.clear();
+    this.filesScrollY = 0;
+    this.searchScrollY = 0;
+    this.pendingCloseQueue = [];
+    this.pendingDownloadDirtyQueue = [];
     await this.refreshFiles();
-    await this.openFile("/README.md");
-    this.statusText = "File system reset";
+    this.input.blur();
+    this.statusText = "File system cleared";
   }
   copyTextToClipboard(text) {
     this.localClipboard = text;
@@ -5054,13 +10589,19 @@ var EditorApp = class {
       await this.createFileInFolder(path);
       return;
     }
-    await this.createFolderInFolder(path);
+    if (command === "createFolder") {
+      await this.createFolderInFolder(path);
+      return;
+    }
+    this.requestFileUpload(path);
   }
   async runRootContextMenuCommand(command) {
     if (command === "createFile") {
       await this.createFileInFolder("/");
     } else if (command === "createFolder") {
       await this.createFolderInFolder("/");
+    } else if (command === "uploadFile") {
+      this.requestFileUpload("/");
     }
   }
   async duplicateFile(path) {
@@ -5080,6 +10621,7 @@ var EditorApp = class {
   async deleteFile(path) {
     const target = normalizePath(path);
     if (this.renamePath === target) this.cancelRename();
+    this.clearFileTreeSelectionUnder(target);
     const doc = this.docs.getByPath(target);
     if (doc) this.closeTab(doc.id);
     await this.vfs.remove(target);
@@ -5111,6 +10653,7 @@ var EditorApp = class {
     const target = normalizePath(path);
     if (target === "/") return;
     if (this.renamePath && isSameOrDescendant(this.renamePath, target)) this.cancelRename();
+    this.clearFileTreeSelectionUnder(target);
     const docs = this.docs.all().filter((doc) => doc.path && isSameOrDescendant(doc.path, target));
     for (const doc of docs) {
       this.closeTab(doc.id);
@@ -5132,6 +10675,7 @@ var EditorApp = class {
     this.expandedFolders.add(parent);
     await this.refreshFiles();
     this.statusText = `Created ${path}`;
+    this.selectFileTreePath(path);
     this.startRename(path);
   }
   async createFolderInFolder(folderPath) {
@@ -5142,7 +10686,42 @@ var EditorApp = class {
     this.expandedFolders.add(path);
     await this.refreshFiles();
     this.statusText = `Created ${path}`;
+    this.selectFileTreePath(path);
     this.startRename(path);
+  }
+  requestFileUpload(folderPath) {
+    this.uploadTargetFolder = normalizePath(folderPath);
+    const input = this.ensureUploadInput();
+    input.value = "";
+    input.click();
+  }
+  async uploadFilesToFolder(files, folderPath) {
+    const parent = normalizePath(folderPath);
+    const written = [];
+    for (const file of files) {
+      const target = await this.nextUploadPath(parent, file.name);
+      await this.vfs.writeFile(target, new Uint8Array(await file.arrayBuffer()), file.type || guessMime2(target));
+      written.push(target);
+    }
+    if (written.length === 0) return;
+    this.expandedFolders.add(parent);
+    await this.refreshFiles();
+    this.statusText = written.length === 1 ? `Uploaded ${written[0]}` : `Uploaded ${written.length} files`;
+    this.scheduleDraw();
+  }
+  async nextUploadPath(folderPath, fileName) {
+    const name = sanitizeUploadedFileName(fileName);
+    const candidate = joinPath(folderPath, name);
+    if (!await this.vfs.stat(candidate)) return candidate;
+    const dot = name.lastIndexOf(".");
+    const hasExtension = dot > 0;
+    const stem = hasExtension ? name.slice(0, dot) : name;
+    const ext = hasExtension ? name.slice(dot) : "";
+    for (let index = 2; index < 1e3; index++) {
+      const next = joinPath(folderPath, `${stem} ${index}${ext}`);
+      if (!await this.vfs.stat(next)) return next;
+    }
+    return joinPath(folderPath, `${stem}-${shortHexName()}${ext}`);
   }
   async nextCreatedPath(folderPath, kind) {
     for (let attempt = 0; attempt < 20; attempt++) {
@@ -5173,8 +10752,13 @@ var EditorApp = class {
     }
     if (command === "Mod+S") {
       const doc = this.activeDoc();
-      if (doc) void this.docs.save(doc).then(() => {
-        this.statusText = `Saved ${doc.path}`;
+      if (doc?.readOnly) {
+        this.statusText = "File type not supported";
+        this.scheduleDraw();
+        return true;
+      }
+      if (doc) void this.saveDocument(doc).then((path) => {
+        this.statusText = `Saved ${path}`;
         this.scheduleDraw();
       });
       return true;
@@ -5198,7 +10782,7 @@ var EditorApp = class {
     if (command === "Mod+`") {
       this.sidebarMode = "chat";
       if (this.sidebarWidth === 0) this.sidebarWidth = this.lastSidebarWidth || 280;
-      this.focusMiniTarget("chat", { x: this.ui(56), y: this.viewport.get().cssHeight - this.ui(70), w: this.ui(220), h: this.ui(28) });
+      this.focusMiniTarget("chat", this.chatInputRectForFocus());
       return true;
     }
     return false;
@@ -5207,13 +10791,14 @@ var EditorApp = class {
     const query = this.searchBuffer.text.trim();
     if (!query) {
       this.searchResults = [];
+      this.searchScrollY = 0;
       this.scheduleDraw();
       return;
     }
     const files = await this.vfs.listAllFiles();
     const results = [];
     for (const file of files) {
-      if (file.encoding === "binary" || file.path.startsWith("/.slug-")) continue;
+      if (file.encoding === "binary" || file.path.startsWith("/.slug-") || isUnsupportedFilePath(file.path)) continue;
       const text = this.docs.getByPath(file.path)?.getText() ?? await this.vfs.readText(file.path);
       const lines = text.split("\n");
       for (let i = 0; i < lines.length; i++) {
@@ -5225,6 +10810,7 @@ var EditorApp = class {
       if (results.length >= 200) break;
     }
     this.searchResults = results;
+    this.searchScrollY = 0;
     this.statusText = `${results.length} results`;
     this.scheduleDraw();
   }
@@ -5242,8 +10828,9 @@ var EditorApp = class {
     let replacementCount = 0;
     let firstChangedDocId = null;
     for (const file of files) {
-      if (file.encoding === "binary" || file.path.startsWith("/.slug-")) continue;
+      if (file.encoding === "binary" || file.path.startsWith("/.slug-") || isUnsupportedFilePath(file.path)) continue;
       const openDoc = this.docs.getByPath(file.path);
+      if (openDoc?.readOnly) continue;
       const sourceText = openDoc?.getText() ?? await this.vfs.readText(file.path);
       const replaced = replaceAllPlainText(sourceText, query, replacement);
       if (replaced.text === sourceText) continue;
@@ -5327,6 +10914,11 @@ var EditorApp = class {
     const state = this.activeFindState(false);
     const query = state?.findBuffer.text ?? "";
     if (!doc || !query) return;
+    if (doc.readOnly) {
+      this.statusText = "File type not supported";
+      this.scheduleDraw();
+      return;
+    }
     const selected = doc.selectedText();
     if (!textEqualsFindQuery(selected, query)) {
       this.selectDocumentFindMatch(1);
@@ -5341,6 +10933,11 @@ var EditorApp = class {
     const state = this.activeFindState(false);
     const query = state?.findBuffer.text ?? "";
     if (!doc || !query) return;
+    if (doc.readOnly) {
+      this.statusText = "File type not supported";
+      this.scheduleDraw();
+      return;
+    }
     const replaced = replaceAllPlainText(doc.getText(), query, state?.replaceBuffer.text ?? "");
     if (replaced.count === 0) {
       this.statusText = "No matches";
@@ -5387,13 +10984,29 @@ var EditorApp = class {
     const rect = this.activeEditorRect();
     return { x: rect.x + Math.max(12, rect.w - this.ui(380)), y: rect.y + this.ui(10), w: this.ui(170), h: this.ui(28) };
   }
+  aiRuntimeSettings() {
+    return {
+      maxToolCallsPerTurn: this.settings.aiMaxToolCalls,
+      detectDuplicateToolCalls: this.settings.aiDetectDuplicateToolCalls,
+      toolCallFormat: this.settings.aiToolCallFormat,
+      compactFreePercent: this.settings.aiCompactFreePercent
+    };
+  }
   async sendChat() {
-    const text = this.chatBuffer.text.trim();
+    const text = this.chatDraft.getText().trim();
     if (!text) return;
-    this.chatBuffer.text = "";
-    this.chatBuffer.cursor = 0;
-    this.chatBuffer.anchor = 0;
-    await this.chat.send(text, this.activeDoc(), this.docs.all());
+    this.chatDraft.selectAll();
+    this.chatDraft.replaceSelection("");
+    this.chatDraft.markSaved();
+    this.chatInputScrollY = 0;
+    this.chatScrollY = Number.MAX_SAFE_INTEGER;
+    this.statusText = "Sending chat turn";
+    await this.chat.send(text, this.activeDoc(), this.docs.all(), {
+      runtime: this.aiRuntimeSettings(),
+      onUpdate: () => this.scheduleDraw()
+    });
+    this.chatScrollY = Number.MAX_SAFE_INTEGER;
+    this.statusText = "Chat turn complete";
     this.scheduleDraw();
   }
   draw() {
@@ -5412,33 +11025,48 @@ var EditorApp = class {
     this.drawEditorArea({ x: mainX, y: 0, w: vp.cssWidth - mainX, h: vp.cssHeight - statusH });
     if (sidebarW > 0) this.drawSidebarSplitter({ x: activityW + sidebarW - this.ui(3), y: 0, w: this.ui(6), h: vp.cssHeight - statusH });
     this.drawStatus({ x: 0, y: vp.cssHeight - statusH, w: vp.cssWidth, h: statusH });
+    if (this.fileDragActive) this.drawFileDropOverlay({ x: 0, y: 0, w: vp.cssWidth, h: vp.cssHeight });
     if (this.contextMenu) this.drawContextMenu();
     if (this.modal) this.drawModal();
     this.renderer.endFrame();
     this.scheduleCaretBlinkFrame();
   }
+  drawFileDropOverlay(rect) {
+    this.renderer.rect(rect, [theme.accent[0], theme.accent[1], theme.accent[2], 0.18]);
+    const inset = this.ui(14);
+    this.drawRectOutline({ x: rect.x + inset, y: rect.y + inset, w: rect.w - inset * 2, h: rect.h - inset * 2 }, theme.accent);
+  }
   drawActivityBar(rect) {
     this.renderer.rect(rect, theme.activity);
     const items = [
-      { mode: "files", label: "\u{1F4C2}", y: this.ui(20) },
-      { mode: "search", label: "\u{1F50D}", y: this.ui(70) },
-      { mode: "chat", label: "\u{1F4AC}", y: this.ui(120) }
+      { mode: "files", label: "\u{1F4C2}", y: rect.y + this.ui(6) },
+      { mode: "search", label: "\u{1F50D}", y: rect.y + this.ui(56) },
+      { mode: "chat", label: "\u{1F4AC}", y: rect.y + this.ui(106) }
     ];
     for (const item of items) {
       const r = { x: rect.x + this.ui(6), y: item.y, w: rect.w - this.ui(12), h: this.ui(36) };
-      if (this.sidebarWidth > 0 && this.sidebarMode === item.mode) this.renderer.rect(r, theme.activityActive);
-      this.drawCenteredText(item.label, r, theme.text, "title");
+      const active = this.sidebarWidth > 0 && this.sidebarMode === item.mode;
+      if (active) this.renderer.rect(r, theme.activityActive);
+      else if (this.hoveredActivityButton === item.mode) this.renderer.rect(r, activityHoverColor());
+      this.drawCenteredText(item.label, r, this.buttonTextColor(true, this.hoveredActivityButton === item.mode), "title");
       this.hits.push({ type: "activity", mode: item.mode, rect: r });
     }
     const settingsRect = { x: rect.x + this.ui(6), y: rect.y + rect.h - this.ui(46), w: rect.w - this.ui(12), h: this.ui(36) };
-    if (this.isSettingsTab(this.activeDocId)) this.renderer.rect(settingsRect, theme.activityActive);
-    this.drawCenteredText("\u2699\uFE0F", settingsRect, theme.text, "title");
+    const downloadRect = { x: rect.x + this.ui(6), y: settingsRect.y - this.ui(46), w: rect.w - this.ui(12), h: this.ui(36) };
+    if (this.hoveredActivityButton === "download") this.renderer.rect(downloadRect, activityHoverColor());
+    this.drawCenteredText("\u{1F4E5}", downloadRect, this.buttonTextColor(!this.downloadInProgress, this.hoveredActivityButton === "download"), "title");
+    this.hits.push({ type: "downloadActivity", rect: downloadRect });
+    const settingsActive = this.sidebarWidth > 0 && this.sidebarMode === "settings";
+    if (settingsActive) this.renderer.rect(settingsRect, theme.activityActive);
+    else if (this.hoveredActivityButton === "settings") this.renderer.rect(settingsRect, activityHoverColor());
+    this.drawCenteredText("\u2699\uFE0F", settingsRect, this.buttonTextColor(true, this.hoveredActivityButton === "settings"), "title");
     this.hits.push({ type: "settingsActivity", rect: settingsRect });
   }
   drawSidebar(rect) {
     this.renderer.rect(rect, theme.panel);
     if (this.sidebarMode === "files") this.drawFilesPanel(rect);
     else if (this.sidebarMode === "search") this.drawSearchPanel(rect);
+    else if (this.sidebarMode === "settings") this.drawSettingsPanel(rect);
     else this.drawChatPanel(rect);
   }
   drawSidebarSplitter(rect) {
@@ -5451,80 +11079,131 @@ var EditorApp = class {
     this.renderer.rect(header, theme.panel2);
     this.renderer.rect({ x: header.x, y: header.y + header.h - 1, w: header.w, h: 1 }, theme.divider);
     this.renderer.text(title, header.x + this.ui(12), header.y + this.ui(9), theme.textDim, "ui");
-    return { x: rect.x, y: rect.y + headerH, w: rect.w, h: Math.max(0, rect.h - headerH) };
+    return this.sidebarPanelBodyRect(rect);
   }
   drawFilesPanel(rect) {
     const body = this.drawPanelHeader(rect, "FILES");
+    const maxScroll = this.maxSidebarScrollY("files", body);
+    this.filesScrollY = clamp(this.filesScrollY, 0, maxScroll);
+    const hasScrollbar = maxScroll > 0;
+    const contentBody = hasScrollbar ? { ...body, w: Math.max(0, body.w - this.editorScrollbarSize()) } : body;
     this.hits.push({ type: "filesRoot", rect: body });
     this.hits.push({ type: "filesRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: this.ui(PANEL_HEADER_H) } });
-    this.drawFileTreeEntries(this.fileTreeEntries(), body, body.y + this.ui(8), 0);
+    this.renderer.pushClip(body);
+    this.drawFileTreeEntries(this.fileTreeEntries(), contentBody, body.y + this.ui(8) - this.filesScrollY, 0, body);
+    this.renderer.popClip();
+    if (hasScrollbar) this.drawSidebarScrollbar("files", body, this.fileTreeContentHeight(), this.filesScrollY);
   }
-  drawFileTreeEntries(entries, body, y, depth) {
+  drawFileTreeEntries(entries, body, y, depth, clip) {
     const indent = this.ui(14);
     const rowH = this.ui(22);
     const rowGap = this.ui(2);
     for (const entry of entries) {
-      if (y > body.y + body.h - this.ui(20)) break;
+      if (y > clip.y + clip.h) break;
       const row = { x: body.x + this.ui(4), y, w: body.w - this.ui(8), h: rowH };
       const contentX = row.x + this.ui(6) + depth * indent;
+      const visibleRow = intersectRect(row, clip);
       if (entry.type === "dir") {
         const expanded = this.expandedFolders.has(entry.path);
-        this.renderer.text(expanded ? "v" : ">", contentX, row.y + this.ui(4), theme.textDim, "ui");
-        this.hits.push({ type: "folder", path: entry.path, expanded, rect: row });
-        if (entry.path === this.renamePath) {
-          this.drawFileRenameRow(entry.path, { x: contentX + this.ui(14), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX - this.ui(14)), h: row.h });
-        } else {
-          this.renderer.text(entry.name, contentX + this.ui(14), row.y + this.ui(4), theme.text, "ui");
+        if (visibleRow) {
+          const selected = entry.path === this.fileTreeSelectedPath();
+          const hovered = entry.path === this.hoveredFileTreePath;
+          if (selected) this.renderer.rect(row, theme.panel2);
+          else if (hovered) this.renderer.rect(row, this.hoverControlColor(theme.panel));
+          const textColor = selected || hovered ? this.buttonTextColor(true, hovered) : theme.text;
+          this.renderer.text(expanded ? "v" : ">", contentX, row.y + this.ui(4), selected || hovered ? textColor : theme.textDim, "ui");
+          this.hits.push({ type: "folder", path: entry.path, expanded, rect: visibleRow });
+          if (entry.path === this.renamePath) {
+            this.drawFileRenameRow(entry.path, { x: contentX + this.ui(14), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX - this.ui(14)), h: row.h }, clip);
+          } else {
+            this.drawClippedText(entry.name, { x: contentX + this.ui(14), y: row.y, w: Math.max(0, body.x + body.w - contentX - this.ui(14)), h: row.h }, row.y + this.ui(4), textColor, "ui");
+          }
         }
         y += rowH + rowGap;
-        if (expanded) y = this.drawFileTreeEntries(entry.children, body, y, depth + 1);
+        if (expanded) y = this.drawFileTreeEntries(entry.children, body, y, depth + 1, clip);
         continue;
       }
-      if (entry.path === this.activeDoc()?.path) this.renderer.rect(row, theme.panel2);
-      this.hits.push({ type: "file", path: entry.path, rect: row });
-      if (entry.path === this.renamePath) {
-        this.drawFileRenameRow(entry.path, { x: contentX - this.ui(4), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX), h: row.h });
-      } else {
-        this.renderer.text(entry.name, contentX, row.y + this.ui(4), theme.text, "ui");
+      if (visibleRow) {
+        const selected = entry.path === this.fileTreeSelectedPath();
+        const hovered = entry.path === this.hoveredFileTreePath;
+        if (selected) this.renderer.rect(row, theme.panel2);
+        else if (hovered) this.renderer.rect(row, this.hoverControlColor(theme.panel));
+        const textColor = selected || hovered ? this.buttonTextColor(true, hovered) : theme.text;
+        this.hits.push({ type: "file", path: entry.path, rect: visibleRow });
+        if (entry.path === this.renamePath) {
+          this.drawFileRenameRow(entry.path, { x: contentX - this.ui(4), y: row.y, w: Math.max(this.ui(40), body.x + body.w - contentX), h: row.h }, clip);
+        } else {
+          this.drawClippedText(entry.name, { x: contentX, y: row.y, w: Math.max(0, body.x + body.w - contentX), h: row.h }, row.y + this.ui(4), textColor, "ui");
+        }
       }
       y += rowH + rowGap;
     }
     return y;
   }
-  drawFileRenameRow(path, row) {
+  drawFileRenameRow(path, row, hitClip) {
     const input = { x: row.x + this.ui(4), y: row.y + 1, w: row.w - this.ui(8), h: row.h - 2 };
+    const invalidRanges = invalidFileNameCharacterRanges(this.renameBuffer.text);
+    const invalid = !isValidFileName(this.renameBuffer.text.trim());
+    const border = invalid ? theme.error : theme.accent;
     this.renderer.rect(input, theme.activity);
-    this.renderer.rect({ x: input.x, y: input.y, w: input.w, h: 1 }, theme.accent);
-    this.renderer.rect({ x: input.x, y: input.y + input.h - 1, w: input.w, h: 1 }, theme.accent);
-    this.renderer.rect({ x: input.x, y: input.y, w: 1, h: input.h }, theme.accent);
-    this.renderer.rect({ x: input.x + input.w - 1, y: input.y, w: 1, h: input.h }, theme.accent);
-    const textX = input.x + this.ui(5);
+    this.drawRectOutline(input, border);
+    const padX = this.ui(5);
+    this.revealMiniBufferCaret(this.renameBuffer, input, padX);
+    const content = this.miniBufferContentRect(input, padX);
+    const textX = content.x - this.renameBuffer.scrollX;
     const textY = input.y + this.ui(3);
     const selectionStart = Math.min(this.renameBuffer.anchor, this.renameBuffer.cursor);
     const selectionEnd = Math.max(this.renameBuffer.anchor, this.renameBuffer.cursor);
     const beforeSelection = this.renameBuffer.text.slice(0, selectionStart);
     const selected = this.renameBuffer.text.slice(selectionStart, selectionEnd);
+    this.renderer.pushClip(content);
     if (selectionEnd > selectionStart) {
       const sx = textX + this.renderer.measureText(beforeSelection, "ui");
       const sw = Math.max(2, this.renderer.measureText(selected, "ui"));
       this.renderer.rect({ x: sx, y: input.y + this.ui(2), w: sw, h: input.h - this.ui(4) }, theme.selection);
     }
-    this.renderer.text(this.renameBuffer.text || "file name", textX, textY, this.renameBuffer.text ? theme.text : theme.textDim, "ui");
+    if (this.renameBuffer.text) this.drawTextWithInvalidCharacterHighlights(this.renameBuffer.text, invalidRanges, textX, textY);
+    else this.renderer.text("file name", textX, textY, theme.textDim, "ui");
     if (this.isRenameCaretVisible()) {
       const caretX = textX + this.renderer.measureText(this.renameBuffer.text.slice(0, this.renameBuffer.cursor), "ui");
       this.renderer.rect({ x: caretX, y: input.y + this.ui(3), w: 1.5, h: input.h - this.ui(6) }, theme.caret);
     }
-    this.hits.push({ type: "fileRenameInput", path, rect: input });
+    this.renderer.popClip();
+    const hitRect = hitClip ? intersectRect(input, hitClip) : input;
+    if (hitRect) this.hits.push({ type: "fileRenameInput", path, rect: hitRect });
+  }
+  drawTextWithInvalidCharacterHighlights(text, invalidRanges, x, y) {
+    if (invalidRanges.length === 0) {
+      this.renderer.text(text, x, y, theme.text, "ui");
+      return;
+    }
+    let cursor = 0;
+    let drawX = x;
+    for (const range of invalidRanges) {
+      if (range.start > cursor) {
+        const chunk = text.slice(cursor, range.start);
+        drawX += this.renderer.text(chunk, drawX, y, theme.text, "ui");
+      }
+      const invalid = text.slice(range.start, range.end);
+      drawX += this.renderer.text(invalid, drawX, y, theme.error, "ui");
+      cursor = range.end;
+    }
+    if (cursor < text.length) this.renderer.text(text.slice(cursor), drawX, y, theme.text, "ui");
+  }
+  drawSettingsPanel(rect) {
+    const body = this.drawPanelHeader(rect, "SETTINGS");
+    this.hits.push({ type: "settingsRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: this.ui(PANEL_HEADER_H) } });
+    this.drawSettingsContent(body);
   }
   drawSearchPanel(rect) {
     const body = this.drawPanelHeader(rect, "SEARCH");
     const toggle = { x: body.x + this.ui(10), y: body.y + this.ui(8), w: this.ui(28), h: this.ui(28) };
     const refresh = { x: body.x + body.w - this.ui(10) - this.ui(28), y: toggle.y, w: this.ui(28), h: this.ui(28) };
     const input = { x: toggle.x + toggle.w + this.ui(6), y: toggle.y, w: Math.max(this.ui(60), refresh.x - toggle.x - toggle.w - this.ui(12)), h: toggle.h };
-    this.drawIconButton(toggle, this.searchReplaceExpanded ? "v" : ">", true);
+    this.drawIconButton(toggle, this.searchReplaceExpanded ? "v" : ">", true, "ui", this.isButtonHovered("searchReplaceToggle"));
     this.hits.push({ type: "searchReplaceToggle", rect: toggle });
     this.drawSearchInput(input);
-    this.drawIconButton(refresh, "\u{1F50E}", true);
+    this.drawIconButton(refresh, "\u{1F50E}", true, "ui", this.isButtonHovered("searchRefresh"));
     this.hits.push({ type: "searchRefresh", rect: refresh });
     let y = input.y + this.ui(42);
     if (this.searchReplaceExpanded) {
@@ -5532,18 +11211,30 @@ var EditorApp = class {
       const replaceInput = { x: toggle.x, y, w: Math.max(this.ui(60), body.w - this.ui(20) - buttonW - this.ui(8)), h: input.h };
       const button = { x: replaceInput.x + replaceInput.w + this.ui(8), y, w: buttonW, h: input.h };
       this.drawTextFieldInput("projectReplace", replaceInput, "replace");
-      this.drawButton(button, "Replace All", Boolean(this.searchBuffer.text));
+      this.drawButton(button, "Replace All", Boolean(this.searchBuffer.text), this.isButtonHovered("searchReplaceAll"));
       this.hits.push({ type: "searchReplaceAll", rect: button, enabled: Boolean(this.searchBuffer.text) });
       y += this.ui(42);
     }
+    const resultsViewport = this.searchResultsViewport(body);
+    const maxScroll = this.maxSidebarScrollY("search", resultsViewport);
+    this.searchScrollY = clamp(this.searchScrollY, 0, maxScroll);
+    const hasScrollbar = maxScroll > 0;
+    const resultsBody = hasScrollbar ? { ...resultsViewport, w: Math.max(0, resultsViewport.w - this.editorScrollbarSize()) } : resultsViewport;
+    this.renderer.pushClip(resultsViewport);
+    y = resultsViewport.y - this.searchScrollY;
     for (const result of this.searchResults) {
-      const row = { x: body.x + this.ui(8), y, w: body.w - this.ui(16), h: this.ui(38) };
-      this.renderer.text(`${result.path}:${result.line + 1}`, row.x + this.ui(4), row.y + this.ui(2), theme.accent, "ui");
-      this.renderer.text(result.text.trim().slice(0, 32), row.x + this.ui(4), row.y + this.ui(18), theme.textDim, "ui");
-      this.hits.push({ type: "searchResult", path: result.path, line: result.line, rect: row });
+      if (y > resultsViewport.y + resultsViewport.h) break;
+      const row = { x: resultsBody.x + this.ui(8), y, w: resultsBody.w - this.ui(16), h: this.ui(38) };
+      const visibleRow = intersectRect(row, resultsViewport);
+      if (visibleRow) {
+        this.drawClippedText(`${result.path}:${result.line + 1}`, { x: row.x + this.ui(4), y: row.y, w: Math.max(0, row.w - this.ui(8)), h: this.ui(18) }, row.y + this.ui(2), theme.accent, "ui");
+        this.drawClippedText(result.text.trim().slice(0, 80), { x: row.x + this.ui(4), y: row.y + this.ui(18), w: Math.max(0, row.w - this.ui(8)), h: this.ui(18) }, row.y + this.ui(18), theme.textDim, "ui");
+        this.hits.push({ type: "searchResult", path: result.path, line: result.line, rect: visibleRow });
+      }
       y += this.ui(42);
-      if (y > body.y + body.h - this.ui(20)) break;
     }
+    this.renderer.popClip();
+    if (hasScrollbar) this.drawSidebarScrollbar("search", resultsViewport, this.searchResultsContentHeight(), this.searchScrollY);
   }
   drawSearchInput(input) {
     this.drawTextFieldInput("search", input, "type to search");
@@ -5554,12 +11245,17 @@ var EditorApp = class {
     const border = active ? theme.accent : theme.divider;
     this.renderer.rect(input, active ? theme.activity : theme.panel2);
     this.drawRectOutline(input, border);
-    const textX = input.x + this.ui(8);
+    const padX = this.ui(8);
+    if (active) this.revealMiniBufferCaret(buffer, input, padX);
+    else this.clampMiniBufferScroll(buffer, input, padX);
+    const content = this.miniBufferContentRect(input, padX);
+    const textX = content.x - buffer.scrollX;
     const textY = input.y + this.ui(7);
     const selectionStart = Math.min(buffer.anchor, buffer.cursor);
     const selectionEnd = Math.max(buffer.anchor, buffer.cursor);
     const beforeSelection = buffer.text.slice(0, selectionStart);
     const selected = buffer.text.slice(selectionStart, selectionEnd);
+    this.renderer.pushClip(content);
     if (selectionEnd > selectionStart) {
       const sx = textX + this.renderer.measureText(beforeSelection, "ui");
       const sw = Math.max(2, this.renderer.measureText(selected, "ui"));
@@ -5570,40 +11266,216 @@ var EditorApp = class {
       const caretX = textX + this.renderer.measureText(buffer.text.slice(0, buffer.cursor), "ui");
       this.renderer.rect({ x: caretX, y: input.y + this.ui(5), w: 1.5, h: input.h - this.ui(10) }, theme.caret);
     }
+    this.renderer.popClip();
     this.hits.push({ type: "textField", field, rect: input });
   }
-  drawIconButton(rect, label, enabled, font = "ui") {
-    this.renderer.rect(rect, enabled ? theme.activityActive : theme.panel2);
+  drawIconButton(rect, label, enabled, font = "ui", hovered = false) {
+    this.renderer.rect(rect, this.buttonFill(enabled, hovered));
     this.drawRectOutline(rect, theme.divider);
-    this.drawCenteredText(label, rect, enabled ? theme.text : theme.textDim, font);
+    this.drawCenteredText(label, rect, this.buttonTextColor(enabled, hovered), font);
   }
-  drawButton(rect, label, enabled) {
-    this.renderer.rect(rect, enabled ? theme.activityActive : theme.panel2);
+  drawButton(rect, label, enabled, hovered = false) {
+    this.renderer.rect(rect, this.buttonFill(enabled, hovered));
     this.drawRectOutline(rect, enabled ? theme.divider : theme.panel);
-    this.renderer.text(label, rect.x + this.ui(10), rect.y + this.ui(7), enabled ? theme.text : theme.textDim, "ui");
+    this.drawCenteredText(label, rect, this.buttonTextColor(enabled, hovered), "ui");
+  }
+  buttonFill(enabled, hovered, base = theme.activityActive) {
+    if (!enabled) return theme.panel2;
+    return hovered ? this.hoverControlColor(base) : base;
+  }
+  buttonTextColor(enabled, hovered) {
+    if (!enabled) return theme.textDim;
+    if (!hovered) return theme.text;
+    return this.settings.theme === "light" ? [0.02, 0.03, 0.04, 1] : [0.98, 0.99, 1, 1];
+  }
+  hoverControlColor(base) {
+    const amount = this.settings.theme === "light" ? -0.07 : 0.08;
+    return [
+      clamp(base[0] + amount, 0, 1),
+      clamp(base[1] + amount, 0, 1),
+      clamp(base[2] + amount, 0, 1),
+      base[3]
+    ];
   }
   drawChatPanel(rect) {
     const body = this.drawPanelHeader(rect, "CHAT");
-    const inputH = this.ui(56);
-    const lineH = this.ui(16);
-    const transcript = { x: body.x + this.ui(8), y: body.y + this.ui(8), w: body.w - this.ui(16), h: body.h - inputH - this.ui(20) };
-    this.renderer.pushClip(transcript);
-    let y = transcript.y + this.ui(4);
-    for (const msg of this.chat.messages.slice(-12)) {
-      const color = msg.role === "user" ? theme.accent : msg.role === "system" ? theme.textDim : theme.text;
-      this.renderer.text(`${msg.role}:`, transcript.x + this.ui(4), y, color, "ui");
-      y += lineH;
-      for (const line of wrapText(msg.text, 34)) {
-        this.renderer.text(line, transcript.x + this.ui(8), y, theme.text, "ui");
-        y += lineH;
+    const layout = this.chatPanelLayoutFromBody(body);
+    this.drawChatTranscript(layout.transcript);
+    this.drawChatInput(layout.input);
+    const enabled = Boolean(this.chatDraft.getText().trim()) && !this.chat.running;
+    this.drawButton(layout.send, this.chat.running ? "Sending..." : "Send", enabled, this.isButtonHovered("chatSend"));
+    this.hits.push({ type: "chatSend", rect: layout.send, enabled });
+  }
+  chatPanelLayoutFromBody(body) {
+    const pad = this.ui(10);
+    const gap = this.ui(8);
+    const sendH = this.ui(30);
+    const inputH = clamp(body.h * 0.28, this.ui(72), this.ui(152));
+    const send = { x: body.x + pad, y: body.y + Math.max(pad, body.h - pad - sendH), w: Math.max(1, body.w - pad * 2), h: sendH };
+    const input = {
+      x: body.x + pad,
+      y: Math.max(body.y + pad, send.y - gap - inputH),
+      w: Math.max(1, body.w - pad * 2),
+      h: Math.max(this.ui(48), send.y - gap - Math.max(body.y + pad, send.y - gap - inputH))
+    };
+    const transcript = {
+      x: body.x + pad,
+      y: body.y + pad,
+      w: Math.max(1, body.w - pad * 2),
+      h: Math.max(1, input.y - body.y - pad - gap)
+    };
+    return { transcript, input, send };
+  }
+  chatInputRectForSidebar(sidebarRect) {
+    return this.chatPanelLayoutFromBody(this.sidebarPanelBodyRect(sidebarRect)).input;
+  }
+  chatInputRectForFocus() {
+    const hit = this.hits.find((candidate) => candidate.type === "chatInput");
+    if (hit) return hit.rect;
+    const vp = this.viewport.get();
+    return this.chatInputRectForSidebar({ x: this.ui(48), y: 0, w: Math.max(this.ui(160), this.sidebarWidth || this.lastSidebarWidth), h: vp.cssHeight - this.ui(24) });
+  }
+  drawChatTranscript(viewport) {
+    const scrollbarSize = this.editorScrollbarSize();
+    let contentWidth = viewport.w;
+    let contentHeight = this.chatTranscriptContentHeight(contentWidth);
+    const hasScrollbar = contentHeight > viewport.h;
+    if (hasScrollbar) {
+      contentWidth = Math.max(1, viewport.w - scrollbarSize);
+      contentHeight = this.chatTranscriptContentHeight(contentWidth);
+    }
+    this.chatScrollY = clamp(this.chatScrollY, 0, Math.max(0, contentHeight - viewport.h));
+    const content = { x: viewport.x, y: viewport.y, w: contentWidth, h: viewport.h };
+    this.renderer.pushClip(content);
+    let y = viewport.y + this.ui(4) - this.chatScrollY;
+    const lineH = this.renderer.lineHeight("ui");
+    const bubblePad = this.ui(8);
+    const gap = this.ui(8);
+    for (const msg of this.chat.messages) {
+      const lines = this.chatMessageLines(msg.text, Math.max(1, content.w - bubblePad * 2));
+      const bubbleH = this.ui(26) + lines.length * lineH + bubblePad;
+      const bubble = { x: content.x + this.ui(2), y, w: Math.max(1, content.w - this.ui(4)), h: bubbleH };
+      if (bubble.y + bubble.h >= viewport.y && bubble.y <= viewport.y + viewport.h) {
+        const colors = this.chatRoleColors(msg.role, msg.ok);
+        this.renderer.rect(bubble, colors.fill);
+        this.drawRectOutline(bubble, colors.outline);
+        const label = msg.name ? `${this.chatRoleLabel(msg.role)}: ${msg.name}` : this.chatRoleLabel(msg.role);
+        this.renderer.text(label, bubble.x + bubblePad, bubble.y + this.ui(7), colors.label, "ui");
+        let textY = bubble.y + this.ui(25);
+        for (const line of lines) {
+          this.renderer.text(line, bubble.x + bubblePad, textY, colors.text, "ui");
+          textY += lineH;
+        }
       }
-      y += this.ui(6);
+      y += bubbleH + gap;
     }
     this.renderer.popClip();
-    const input = { x: body.x + this.ui(10), y: body.y + body.h - inputH + this.ui(10), w: body.w - this.ui(20), h: inputH - this.ui(18) };
-    this.renderer.rect(input, theme.panel2);
-    this.renderer.text(this.chatBuffer.text || "ask about the workspace", input.x + this.ui(8), input.y + this.ui(9), this.chatBuffer.text ? theme.text : theme.textDim, "ui");
+    this.hits.push({ type: "chatTranscript", rect: viewport });
+    if (hasScrollbar) this.drawChatScrollbar("chatTranscript", viewport, contentHeight, this.chatScrollY);
+  }
+  drawChatInput(input) {
+    const active = this.input.activeTarget?.kind === "chat";
+    const contentHeight = this.chatInputContentHeight();
+    const hasScrollbar = contentHeight > input.h;
+    const scrollbarSize = this.editorScrollbarSize();
+    const viewport = hasScrollbar ? { ...input, w: Math.max(1, input.w - scrollbarSize) } : input;
+    this.chatInputScrollY = clamp(this.chatInputScrollY, 0, Math.max(0, contentHeight - viewport.h));
+    this.renderer.rect(input, active ? theme.activity : theme.panel2);
+    this.drawRectOutline(input, active ? theme.accent : theme.divider);
+    const content = this.chatInputContentRect(viewport);
+    const lineH = this.renderer.lineHeight("ui");
+    const doc = this.chatDraft;
+    const selection = doc.getOrderedSelection();
+    this.renderer.pushClip(content);
+    if (!doc.getText()) {
+      this.renderer.text("ask about the workspace", content.x, content.y + this.ui(7), theme.textDim, "ui");
+    }
+    const firstLine = Math.max(0, Math.floor(this.chatInputScrollY / lineH));
+    const visibleLines = Math.ceil(content.h / lineH) + 2;
+    for (let i = 0; i < visibleLines; i++) {
+      const lineIndex = firstLine + i;
+      if (lineIndex >= doc.lineCount()) break;
+      const line = doc.lines[lineIndex] ?? "";
+      const y = content.y + lineIndex * lineH - this.chatInputScrollY + this.ui(4);
+      this.drawChatInputSelectionForLine(line, lineIndex, content.x, y, lineH, selection);
+      this.renderer.text(line, content.x, y, theme.text, "ui");
+    }
+    if (active && (this.input.composing || this.isCaretBlinkOn())) {
+      const caret = this.chatInputCaretRect(input);
+      this.renderer.rect(caret, theme.caret);
+      if (this.input.composing && this.input.compositionText) this.renderer.text(this.input.compositionText, caret.x + 2, caret.y, theme.warning, "ui");
+    }
+    this.renderer.popClip();
     this.hits.push({ type: "chatInput", rect: input });
+    if (hasScrollbar) this.drawChatScrollbar("chatInput", input, contentHeight, this.chatInputScrollY);
+  }
+  drawChatInputSelectionForLine(line, lineIndex, x, y, lineH, selection) {
+    if (selection.start.line > lineIndex || selection.end.line < lineIndex) return;
+    const start = selection.start.line === lineIndex ? selection.start.col : 0;
+    const end = selection.end.line === lineIndex ? selection.end.col : line.length;
+    if (end <= start) return;
+    const startX = x + this.renderer.measureText(line.slice(0, start), "ui");
+    const endX = x + this.renderer.measureText(line.slice(0, end), "ui");
+    this.renderer.rect({ x: startX, y: y - this.ui(2), w: Math.max(2, endX - startX), h: lineH }, theme.selection);
+  }
+  chatInputContentRect(input) {
+    const pad = this.ui(8);
+    return { x: input.x + pad, y: input.y + this.ui(3), w: Math.max(1, input.w - pad * 2), h: Math.max(1, input.h - this.ui(6)) };
+  }
+  chatInputContentHeight() {
+    return Math.max(1, this.chatDraft.lineCount() * this.renderer.lineHeight("ui") + this.ui(8));
+  }
+  chatTranscriptContentHeight(width) {
+    const lineH = this.renderer.lineHeight("ui");
+    const bubblePad = this.ui(8);
+    const gap = this.ui(8);
+    let h = this.ui(4);
+    for (const msg of this.chat.messages) {
+      const lines = this.chatMessageLines(msg.text, Math.max(1, width - this.ui(4) - bubblePad * 2));
+      h += this.ui(26) + lines.length * lineH + bubblePad + gap;
+    }
+    return Math.max(1, h);
+  }
+  chatMessageLines(text, width) {
+    const lines = [];
+    for (const rawLine of text.split("\n")) {
+      const wrapped = this.wrapTextForWidth(rawLine || " ", width, "ui");
+      lines.push(...wrapped);
+    }
+    return lines.length ? lines : [""];
+  }
+  chatRoleLabel(role) {
+    if (role === "tool_call") return "TOOL CALL";
+    if (role === "tool_result") return "TOOL RESULT";
+    return role.toUpperCase();
+  }
+  chatRoleColors(role, ok) {
+    if (role === "user") return { fill: [theme.accent[0], theme.accent[1], theme.accent[2], 0.2], outline: [theme.accent[0], theme.accent[1], theme.accent[2], 0.45], label: theme.accent, text: theme.text };
+    if (role === "system") return { fill: [theme.activityActive[0], theme.activityActive[1], theme.activityActive[2], 0.72], outline: theme.divider, label: theme.textDim, text: theme.textDim };
+    if (role === "thinking") return { fill: [theme.warning[0], theme.warning[1], theme.warning[2], 0.14], outline: [theme.warning[0], theme.warning[1], theme.warning[2], 0.38], label: theme.warning, text: theme.textDim };
+    if (role === "tool_call") return { fill: [theme.number[0], theme.number[1], theme.number[2], 0.16], outline: [theme.number[0], theme.number[1], theme.number[2], 0.4], label: theme.number, text: theme.text };
+    if (role === "tool_result") {
+      const accent = ok === false ? theme.error : theme.string;
+      return { fill: [accent[0], accent[1], accent[2], 0.14], outline: [accent[0], accent[1], accent[2], 0.4], label: accent, text: theme.text };
+    }
+    return { fill: theme.panel2, outline: theme.divider, label: theme.textDim, text: theme.text };
+  }
+  drawChatScrollbar(panel, viewport, contentHeight, scrollY) {
+    const size = this.editorScrollbarSize();
+    const trackRect = { x: viewport.x + viewport.w - size, y: viewport.y, w: size, h: viewport.h };
+    const active = this.chatScrollbarDrag?.panel === panel;
+    const hovered = this.hoveredChatScrollbar?.panel === panel;
+    this.renderer.rect(trackRect, hovered || active ? [theme.activity[0], theme.activity[1], theme.activity[2], 0.9] : [theme.activity[0], theme.activity[1], theme.activity[2], 0.82]);
+    const maxScroll = Math.max(0, contentHeight - viewport.h);
+    const thumbRect = this.chatScrollbarThumb(viewport, trackRect, contentHeight, scrollY, maxScroll);
+    const thumbColor = active ? [0.34, 0.41, 0.5, 1] : hovered ? [0.28, 0.31, 0.36, 1] : theme.activityActive;
+    this.renderer.rect(thumbRect, thumbColor);
+    this.hits.push({ type: "chatScrollbar", panel, rect: trackRect, trackRect, thumbRect, viewportRect: viewport, contentHeight });
+  }
+  chatScrollbarThumb(viewport, trackRect, contentHeight, scrollY, maxScroll) {
+    const thumbH = clamp(viewport.h / Math.max(1, contentHeight) * trackRect.h, Math.min(trackRect.h, this.ui(EDITOR_SCROLLBAR_THUMB_MIN)), trackRect.h);
+    const thumbTravel = Math.max(1, trackRect.h - thumbH);
+    return { x: trackRect.x + this.ui(3), y: trackRect.y + (maxScroll > 0 ? scrollY / maxScroll * thumbTravel : 0), w: Math.max(this.ui(3), trackRect.w - this.ui(6)), h: thumbH };
   }
   drawEditorArea(rect) {
     this.renderer.rect(rect, theme.background);
@@ -5611,6 +11483,7 @@ var EditorApp = class {
     this.layoutDockNode(this.dockRoot, rect);
     if (this.tabDrag) {
       this.drawDockOverlay();
+      if (this.tabInsertionPreview) this.drawTabInsertionPreview();
       this.drawDraggedTabGhost();
     }
   }
@@ -5673,37 +11546,103 @@ var EditorApp = class {
     this.drawTabs(group, { x: rect.x, y: rect.y, w: rect.w, h: tabH });
     group.editorRect = { x: rect.x, y: rect.y + tabH, w: rect.w, h: rect.h - tabH };
     if (this.isSettingsTab(group.activeDocId)) {
-      this.drawSettingsView(group.editorRect);
+      this.drawSettingsView(group);
       return;
     }
     this.hits.push({ type: "editor", groupId: group.id, rect: group.editorRect });
     const doc = group.activeDocId ? this.docs.get(group.activeDocId) : void 0;
     if (!doc) {
-      this.renderer.text("Open a file from the sidebar", rect.x + 30, rect.y + 70, theme.textDim, "title");
       return;
     }
-    this.drawDocument(doc, group.editorRect, this.isDocumentCaretVisible(group, doc.id));
+    this.drawDocument(doc, group.editorRect, this.isDocumentCaretVisible(group, doc.id), group.id);
     if (this.findStateForDoc(doc.id, false)?.open && this.isActiveDocumentInGroup(group, doc.id)) this.drawFindWidget(group.editorRect);
+  }
+  validTabIds(group) {
+    return group.tabs.filter((docId) => this.isSettingsTab(docId) || Boolean(this.docs.get(docId)));
+  }
+  tabWidthForLabel(label) {
+    return Math.min(this.ui(TAB_MAX_W), Math.max(this.ui(TAB_MIN_W), this.renderer.measureText(label, "ui") + this.ui(52)));
+  }
+  tabLayoutForGroup(group, rect) {
+    const ids = this.validTabIds(group);
+    const gap = this.ui(TAB_GAP);
+    const items = [];
+    let cursor = 0;
+    for (const docId of ids) {
+      const doc = this.docs.get(docId);
+      const label = this.tabLabel(docId) + (doc?.dirty ? "*" : "");
+      const width = this.tabWidthForLabel(label);
+      items.push({ docId, label, width, start: cursor, end: cursor + width });
+      cursor += width + gap;
+    }
+    const totalWidth = items.length ? Math.max(0, cursor - gap) : 0;
+    const overflow = totalWidth > rect.w;
+    const buttonW = this.ui(TAB_OVERFLOW_BUTTON_W);
+    const overflowButtonRect = overflow ? { x: rect.x + rect.w - buttonW, y: rect.y, w: buttonW, h: rect.h } : null;
+    const stripRect = overflow ? { x: rect.x, y: rect.y, w: Math.max(0, rect.w - buttonW), h: rect.h } : { ...rect };
+    const maxScroll = Math.max(0, totalWidth - stripRect.w);
+    const scroll = clamp(this.tabScrollStates.get(group.id) ?? 0, 0, maxScroll);
+    this.tabScrollStates.set(group.id, scroll);
+    return { items, stripRect, overflowButtonRect, scroll, maxScroll, totalWidth };
+  }
+  revealTabInGroup(group, docId) {
+    if (group.frameRect.w <= 0) {
+      this.pendingTabRevealIds.add(docId);
+      return;
+    }
+    const layout = this.tabLayoutForGroup(group, { x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: this.ui(32) });
+    const item = layout.items.find((candidate) => candidate.docId === docId);
+    if (!item) return;
+    const pad = Math.min(this.ui(16), layout.stripRect.w / 4);
+    let scroll = layout.scroll;
+    if (item.start < scroll + pad) scroll = item.start - pad;
+    else if (item.end > scroll + layout.stripRect.w - pad) scroll = item.end - layout.stripRect.w + pad;
+    this.tabScrollStates.set(group.id, clamp(scroll, 0, layout.maxScroll));
+    this.pendingTabRevealIds.delete(docId);
   }
   drawTabs(group, rect) {
     this.renderer.rect(rect, theme.panel);
-    let x = rect.x;
-    for (const docId of group.tabs) {
+    let layout = this.tabLayoutForGroup(group, rect);
+    if (group.activeDocId && this.pendingTabRevealIds.has(group.activeDocId)) {
+      this.revealTabInGroup(group, group.activeDocId);
+      layout = this.tabLayoutForGroup(group, rect);
+    }
+    this.renderer.pushClip(layout.stripRect);
+    for (const item of layout.items) {
+      const docId = item.docId;
       const doc = this.docs.get(docId);
-      if (!doc && !this.isSettingsTab(docId)) continue;
-      const label = this.tabLabel(docId) + (doc?.dirty ? "*" : "");
-      const w = Math.min(this.ui(240), Math.max(this.ui(128), this.renderer.measureText(label, "ui") + this.ui(52)));
-      const tab = { x, y: rect.y, w, h: rect.h };
+      const x = layout.stripRect.x + item.start - layout.scroll;
+      const tab = { x, y: rect.y, w: item.width, h: rect.h };
+      if (tab.x + tab.w <= layout.stripRect.x || tab.x >= layout.stripRect.x + layout.stripRect.w) continue;
       if (docId === group.activeDocId) this.renderer.rect(tab, theme.panel2);
       const closeSize = this.ui(18);
       const close = { x: tab.x + tab.w - this.ui(26), y: tab.y + (tab.h - closeSize) / 2, w: closeSize, h: closeSize };
-      this.renderer.text(label, x + this.ui(10), rect.y + this.ui(9), theme.text, "ui");
-      this.renderer.rect(close, docId === group.activeDocId ? theme.activityActive : theme.activity);
-      this.drawCenteredText("\u274C", close, theme.text, "mini");
-      this.hits.push({ type: "tab", docId, groupId: group.id, rect: tab });
-      this.hits.push({ type: "tabClose", docId, groupId: group.id, rect: close });
-      x += w + 1;
-      if (x > rect.x + rect.w) break;
+      this.drawClippedText(item.label, { x: tab.x + this.ui(10), y: tab.y, w: Math.max(0, close.x - tab.x - this.ui(18)), h: tab.h }, rect.y + this.ui(9), theme.text, "ui", "right");
+      const closeHovered = this.isButtonHovered("tabClose", group.id, docId);
+      const closeBase = docId === group.activeDocId ? theme.activityActive : theme.activity;
+      this.renderer.rect(close, closeHovered ? this.hoverControlColor(closeBase) : closeBase);
+      this.drawCenteredText("\u274C", close, this.buttonTextColor(true, closeHovered), "mini");
+      const visibleTab = intersectRect(tab, layout.stripRect);
+      const visibleClose = intersectRect(close, layout.stripRect);
+      if (visibleTab) this.hits.push({ type: "tab", docId, groupId: group.id, rect: visibleTab });
+      if (visibleClose) this.hits.push({ type: "tabClose", docId, groupId: group.id, rect: visibleClose });
+    }
+    this.renderer.popClip();
+    if (layout.overflowButtonRect) {
+      const active = this.contextMenu?.scope.type === "tabOverflow" && this.contextMenu.scope.groupId === group.id;
+      const hovered = this.isButtonHovered("tabOverflow", group.id);
+      const base = active ? theme.activityActive : theme.activity;
+      this.renderer.rect(layout.overflowButtonRect, hovered ? this.hoverControlColor(base) : base);
+      this.drawRectOutline(layout.overflowButtonRect, theme.divider);
+      this.drawCenteredText("\u25BE", layout.overflowButtonRect, this.buttonTextColor(true, hovered), "title");
+      this.hits.push({ type: "tabOverflow", groupId: group.id, rect: layout.overflowButtonRect });
+    } else {
+      this.tabScrollStates.set(group.id, 0);
+    }
+    const last = layout.items.at(-1);
+    const blankX = last ? layout.stripRect.x + last.end - layout.scroll + this.ui(TAB_GAP) : layout.stripRect.x;
+    if (blankX < layout.stripRect.x + layout.stripRect.w) {
+      this.hits.push({ type: "tabBar", groupId: group.id, rect: { x: Math.max(blankX, layout.stripRect.x), y: rect.y, w: layout.stripRect.x + layout.stripRect.w - Math.max(blankX, layout.stripRect.x), h: rect.h } });
     }
   }
   drawDraggedTabGhost() {
@@ -5716,7 +11655,7 @@ var EditorApp = class {
     this.renderer.rect({ x: ghost.x, y: ghost.y + ghost.h - 1, w: ghost.w, h: 1 }, theme.accent);
     this.renderer.rect({ x: ghost.x, y: ghost.y, w: 1, h: ghost.h }, theme.accent);
     this.renderer.rect({ x: ghost.x + ghost.w - 1, y: ghost.y, w: 1, h: ghost.h }, theme.accent);
-    this.renderer.text(label, ghost.x + this.ui(10), ghost.y + this.ui(9), theme.text, "ui");
+    this.drawClippedText(label, { x: ghost.x + this.ui(10), y: ghost.y, w: Math.max(0, ghost.w - this.ui(20)), h: ghost.h }, ghost.y + this.ui(9), theme.text, "ui", "right");
   }
   dragGhostRect() {
     const drag = this.tabDrag;
@@ -5737,68 +11676,105 @@ var EditorApp = class {
     for (const target of targets) {
       const active = this.dockPreview?.groupId === target.groupId && this.dockPreview.zone === target.zone;
       const fill = active ? [theme.accent[0], theme.accent[1], theme.accent[2], 0.34] : [theme.accent[0], theme.accent[1], theme.accent[2], 0.13];
-      this.renderer.polygon(target.polygon, fill);
+      this.renderer.solidPolygon(target.polygon, fill);
     }
     for (const group of this.groups) {
       const center = this.dockTargetShapes(group).find((target) => target.zone === "center");
       if (!center) continue;
       this.renderer.rect(center.previewRect, [theme.background[0], theme.background[1], theme.background[2], 0.28]);
-      this.renderer.rect({ x: center.previewRect.x, y: center.previewRect.y, w: center.previewRect.w, h: 1 }, theme.accent);
-      this.renderer.rect({ x: center.previewRect.x, y: center.previewRect.y + center.previewRect.h - 1, w: center.previewRect.w, h: 1 }, theme.accent);
-      this.renderer.rect({ x: center.previewRect.x, y: center.previewRect.y, w: 1, h: center.previewRect.h }, theme.accent);
-      this.renderer.rect({ x: center.previewRect.x + center.previewRect.w - 1, y: center.previewRect.y, w: 1, h: center.previewRect.h }, theme.accent);
+      this.drawDockRectOutline(center.previewRect, theme.accent);
       this.drawDockGuideLines(group, center.previewRect);
     }
   }
-  drawDockGuideLines(group, center) {
-    const outer = insetRect(group.frameRect, this.ui(10));
-    const color = [theme.accent[0], theme.accent[1], theme.accent[2], 0.78];
-    this.renderer.rect({ x: outer.x, y: outer.y, w: outer.w, h: 1 }, color);
-    this.renderer.rect({ x: outer.x, y: outer.y + outer.h - 1, w: outer.w, h: 1 }, color);
-    this.renderer.rect({ x: outer.x, y: outer.y, w: 1, h: outer.h }, color);
-    this.renderer.rect({ x: outer.x + outer.w - 1, y: outer.y, w: 1, h: outer.h }, color);
-    this.renderer.polygon(lineQuad({ x: outer.x, y: outer.y }, { x: center.x, y: center.y }, 1.5), color);
-    this.renderer.polygon(lineQuad({ x: outer.x + outer.w, y: outer.y }, { x: center.x + center.w, y: center.y }, 1.5), color);
-    this.renderer.polygon(lineQuad({ x: outer.x + outer.w, y: outer.y + outer.h }, { x: center.x + center.w, y: center.y + center.h }, 1.5), color);
-    this.renderer.polygon(lineQuad({ x: outer.x, y: outer.y + outer.h }, { x: center.x, y: center.y + center.h }, 1.5), color);
+  drawTabInsertionPreview() {
+    const preview = this.tabInsertionPreview;
+    if (!preview) return;
+    this.renderer.rect(preview.rect, theme.accent);
   }
-  drawSettingsView(rect) {
+  drawDockGuideLines(group, center) {
+    const outer = group.editorRect;
+    const color = [theme.accent[0], theme.accent[1], theme.accent[2], 0.78];
+    this.drawDockRectOutline(outer, color);
+    const lineWidth = Math.max(1, this.ui(1.5));
+    this.renderer.line({ x: outer.x, y: outer.y }, { x: center.x, y: center.y }, lineWidth, color);
+    this.renderer.line({ x: outer.x + outer.w, y: outer.y }, { x: center.x + center.w, y: center.y }, lineWidth, color);
+    this.renderer.line({ x: outer.x + outer.w, y: outer.y + outer.h }, { x: center.x + center.w, y: center.y + center.h }, lineWidth, color);
+    this.renderer.line({ x: outer.x, y: outer.y + outer.h }, { x: center.x, y: center.y + center.h }, lineWidth, color);
+  }
+  drawDockRectOutline(rect, color) {
+    const width = Math.max(1, this.ui(1));
+    const half = width / 2;
+    this.renderer.line({ x: rect.x, y: rect.y + half }, { x: rect.x + rect.w, y: rect.y + half }, width, color);
+    this.renderer.line({ x: rect.x, y: rect.y + rect.h - half }, { x: rect.x + rect.w, y: rect.y + rect.h - half }, width, color);
+    this.renderer.line({ x: rect.x + half, y: rect.y }, { x: rect.x + half, y: rect.y + rect.h }, width, color);
+    this.renderer.line({ x: rect.x + rect.w - half, y: rect.y }, { x: rect.x + rect.w - half, y: rect.y + rect.h }, width, color);
+  }
+  drawSettingsView(group) {
+    const rect = group.editorRect;
     this.renderer.rect(rect, theme.background);
-    this.renderer.pushClip(rect);
-    const pad = this.ui(24);
-    const content = {
-      x: rect.x + pad,
-      y: rect.y + this.ui(18),
-      w: Math.max(this.ui(240), Math.min(this.ui(760), rect.w - pad * 2)),
-      h: Math.max(0, rect.h - this.ui(36))
+    this.drawSettingsContent(rect);
+  }
+  drawSettingsContent(rect) {
+    const maxScroll = this.maxSettingsScrollY(rect);
+    this.settingsScrollY = clamp(this.settingsScrollY, 0, maxScroll);
+    const scrollbarSize = this.editorScrollbarSize();
+    const scrollViewport = {
+      x: rect.x,
+      y: rect.y,
+      w: Math.max(1, rect.w - (maxScroll > 0 ? scrollbarSize : 0)),
+      h: rect.h
     };
-    this.renderer.text("Settings", content.x, content.y, theme.text, "title");
-    let y = content.y + this.ui(38);
+    const pad = this.ui(10);
+    const content = {
+      x: scrollViewport.x + pad,
+      y: scrollViewport.y + this.ui(8) - this.settingsScrollY,
+      w: Math.max(0, scrollViewport.w - pad * 2),
+      h: this.settingsViewportHeight(rect)
+    };
+    this.renderer.pushClip(scrollViewport);
+    this.settingsHitClip = scrollViewport;
+    let y = content.y;
     y = this.drawSettingsHeader("visual", "Visual", content, y, 0);
     if (this.settingsExpanded.has("visual")) {
       y = this.drawSettingsDropdownRow(content, y, 1, "Theme", this.settings.theme === "dark" ? "Dark" : "Light", "theme");
       y = this.drawSettingsNumberRow(content, y, 1, "Font Size", "fontSize", "px");
       y = this.drawSettingsNumberRow(content, y, 1, "UI Scale", "uiScale", "%");
+      y = this.drawSettingsNumberRow(content, y, 1, "Tab Spaces", "tabSpaces", "");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Use Tab Stops", "useTabStops");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Monospaced Font", "monospacedFont");
     }
     y += this.ui(6);
     y = this.drawSettingsHeader("interface", "Interface", content, y, 0);
     if (this.settingsExpanded.has("interface")) {
       y = this.drawSettingsCheckboxRow(content, y, 1, "Rename On Double Click", "renameOnDoubleClick");
       y = this.drawSettingsCheckboxRow(content, y, 1, "Show Line Numbers", "showLineNumbers");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Show White Space", "showWhitespace");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Remember Open Files", "rememberOpenFiles");
     }
     y += this.ui(6);
     y = this.drawSettingsHeader("ai", "AI", content, y, 0);
     if (this.settingsExpanded.has("ai")) {
-      y = this.drawSettingsDropdownRow(content, y, 1, "Provider", this.settings.aiProvider === "openai" ? "OpenAI" : "Local", "aiProvider");
-      y = this.drawSettingsLabelRow(content, y, 1, "Endpoint", this.settings.aiProvider === "openai" ? "OpenAI Responses API" : "Local assistant");
+      const endpointConfig = loadAiEndpointConfig();
+      y = this.drawSettingsLabelRow(content, y, 1, "Endpoint", endpointConfig.apiBaseUrl);
+      y = this.drawSettingsDropdownRow(content, y, 1, "Model", endpointConfig.model || "Select Model", "aiModel");
+      y = this.drawSettingsButtonRow(content, y, 1, "Endpoint Settings", "editAiSettings", { buttonLabel: "Edit" });
+      y = this.drawSettingsButtonRow(content, y, 1, "System Prompt", "editSystemPrompt", { buttonLabel: "Edit" });
+      y = this.drawSettingsButtonRow(content, y, 1, "Helper Prompts", "editHelperPrompts", { buttonLabel: "Edit" });
+      y = this.drawSettingsButtonRow(content, y, 1, "LM Studio Models", "scanLmStudio", { buttonLabel: "Scan" });
+      y = this.drawSettingsDropdownRow(content, y, 1, "Tool Call Format", this.settings.aiToolCallFormat === "harmony" ? "Harmony" : "Tag", "aiToolCallFormat");
+      y = this.drawSettingsNumberRow(content, y, 1, "Max Tool Calls", "aiMaxToolCalls", "");
+      y = this.drawSettingsNumberRow(content, y, 1, "Compact Free", "aiCompactFreePercent", "%");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Detect Duplicate Tool Calls", "aiDetectDuplicateToolCalls");
     }
     y += this.ui(6);
     y = this.drawSettingsHeader("danger", "Danger", content, y, 0);
     if (this.settingsExpanded.has("danger")) {
-      y = this.drawSettingsButtonRow(content, y, 1, "Reset All", "resetAll");
-      this.drawSettingsButtonRow(content, y, 1, "Clear File System", "clearFileSystem", true);
+      y = this.drawSettingsButtonRow(content, y, 1, "Reset Settings", "resetAll", { buttonLabel: "Reset" });
+      this.drawSettingsButtonRow(content, y, 1, "Clear File System", "clearFileSystem", { danger: true });
     }
+    this.settingsHitClip = null;
     this.renderer.popClip();
+    if (maxScroll > 0) this.drawSettingsScrollbar(rect, scrollViewport, maxScroll);
   }
   drawSettingsHeader(id, label, content, y, depth) {
     const indent = this.ui(20) * depth;
@@ -5807,7 +11783,7 @@ var EditorApp = class {
     this.renderer.rect({ x: row.x, y: row.y + row.h - 1, w: row.w, h: 1 }, theme.divider);
     this.renderer.text(this.settingsExpanded.has(id) ? "v" : ">", row.x + this.ui(8), row.y + this.ui(8), theme.textDim, "ui");
     this.renderer.text(label, row.x + this.ui(26), row.y + this.ui(8), theme.text, "ui");
-    this.hits.push({ type: "settingsHeader", id, rect: row });
+    this.pushSettingsHit({ type: "settingsHeader", id, rect: row });
     return y + row.h;
   }
   drawSettingsRow(content, y, depth, label) {
@@ -5820,28 +11796,34 @@ var EditorApp = class {
   }
   drawSettingsLabelRow(content, y, depth, label, value) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
-    this.renderer.text(value, control.x + this.ui(8), row.y + this.ui(9), theme.text, "ui");
+    this.drawClippedText(value, { x: control.x + this.ui(8), y: control.y, w: Math.max(0, control.w - this.ui(8)), h: control.h }, row.y + this.ui(9), theme.text, "ui", "right");
     return y + row.h;
   }
   drawSettingsDropdownRow(content, y, depth, label, value, key) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
-    this.renderer.rect(control, theme.panel2);
+    const hovered = this.isButtonHovered("settingsDropdown", key);
+    this.renderer.rect(control, hovered ? this.hoverControlColor(theme.panel2) : theme.panel2);
     this.drawRectOutline(control, theme.divider);
-    this.renderer.text(value, control.x + this.ui(8), control.y + this.ui(6), theme.text, "ui");
-    this.renderer.text("v", control.x + control.w - this.ui(16), control.y + this.ui(6), theme.textDim, "ui");
-    this.hits.push({ type: "settingsDropdown", key, rect: control });
+    this.drawClippedText(value, { x: control.x + this.ui(8), y: control.y, w: Math.max(0, control.w - this.ui(30)), h: control.h }, control.y + this.ui(6), this.buttonTextColor(true, hovered), "ui", "right");
+    this.renderer.text("v", control.x + control.w - this.ui(16), control.y + this.ui(6), hovered ? this.buttonTextColor(true, true) : theme.textDim, "ui");
+    this.pushSettingsHit({ type: "settingsDropdown", key, rect: control });
     return y + row.h;
   }
   drawSettingsNumberRow(content, y, depth, label, key, unit) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
-    const unitW = this.renderer.measureText(unit, "ui") + this.ui(14);
+    const unitW = unit ? this.renderer.measureText(unit, "ui") + this.ui(14) : 0;
     const input = { x: control.x, y: control.y, w: Math.max(this.ui(60), control.w - unitW), h: control.h };
     const active = this.activeSettingsNumber === key;
     this.renderer.rect(input, active ? theme.activity : theme.panel2);
     this.drawRectOutline(input, active ? theme.accent : theme.divider);
     const text = active ? this.settingsNumberBuffer.text : String(this.settings[key]);
-    const textX = input.x + this.ui(8);
+    const padX = this.ui(8);
+    if (active) this.revealMiniBufferCaret(this.settingsNumberBuffer, input, padX);
+    else this.clampMiniBufferScroll(this.settingsNumberBuffer, input, padX);
+    const inputContent = this.miniBufferContentRect(input, padX);
+    const textX = active ? inputContent.x - this.settingsNumberBuffer.scrollX : inputContent.x;
     const textY = input.y + this.ui(6);
+    this.renderer.pushClip(inputContent);
     if (active && this.settingsNumberBuffer.hasSelection()) {
       const selectionStart = Math.min(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
       const selectionEnd = Math.max(this.settingsNumberBuffer.anchor, this.settingsNumberBuffer.cursor);
@@ -5856,28 +11838,71 @@ var EditorApp = class {
       const caretX = textX + this.renderer.measureText(text.slice(0, this.settingsNumberBuffer.cursor), "ui");
       this.renderer.rect({ x: caretX, y: input.y + this.ui(4), w: 1.5, h: input.h - this.ui(8) }, theme.caret);
     }
-    this.renderer.text(unit, input.x + input.w + this.ui(8), row.y + this.ui(9), theme.textDim, "ui");
-    this.hits.push({ type: "settingsNumber", key, rect: input });
+    this.renderer.popClip();
+    if (unit) this.renderer.text(unit, input.x + input.w + this.ui(8), row.y + this.ui(9), theme.textDim, "ui");
+    this.pushSettingsHit({ type: "settingsNumber", key, rect: input });
     return y + row.h;
   }
   drawSettingsCheckboxRow(content, y, depth, label, key) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
     const size = this.ui(16);
     const box = { x: control.x + control.w - size, y: row.y + (row.h - size) / 2, w: size, h: size };
-    this.renderer.rect(box, this.settings[key] ? theme.activityActive : theme.panel2);
-    this.drawRectOutline(box, this.settings[key] ? theme.accent : theme.divider);
-    if (this.settings[key]) this.drawCenteredText("x", box, theme.text, "ui");
-    this.hits.push({ type: "settingsCheckbox", key, rect: row });
+    const hovered = this.isButtonHovered("settingsCheckbox", key);
+    const base = this.settings[key] ? theme.activityActive : theme.panel2;
+    this.renderer.rect(box, hovered ? this.hoverControlColor(base) : base);
+    this.drawRectOutline(box, theme.divider);
+    if (this.settings[key]) this.drawCenteredText("\u2714\uFE0F", box, this.buttonTextColor(true, hovered), "ui");
+    this.pushSettingsHit({ type: "settingsCheckbox", key, rect: row });
     return y + row.h;
   }
-  drawSettingsButtonRow(content, y, depth, label, action, danger = false) {
+  drawSettingsButtonRow(content, y, depth, label, action, options = {}) {
+    const buttonLabel = options.buttonLabel ?? label;
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
     const button = { x: control.x, y: control.y, w: Math.max(this.ui(128), Math.min(this.ui(190), control.w)), h: control.h };
-    this.renderer.rect(button, danger ? theme.error : theme.activityActive);
-    this.drawRectOutline(button, danger ? theme.error : theme.divider);
-    this.renderer.text(label, button.x + this.ui(10), button.y + this.ui(6), theme.text, "ui");
-    this.hits.push({ type: "settingsButton", action, rect: button, enabled: true });
+    const hovered = this.isButtonHovered("settingsButton", action);
+    const base = options.danger ? theme.error : theme.activityActive;
+    this.renderer.rect(button, hovered ? this.hoverControlColor(base) : base);
+    this.drawRectOutline(button, options.danger ? theme.error : theme.divider);
+    this.drawCenteredText(buttonLabel, button, this.buttonTextColor(true, hovered), "ui");
+    this.pushSettingsHit({ type: "settingsButton", action, rect: button, enabled: true });
     return y + row.h;
+  }
+  pushSettingsHit(hit) {
+    if (!this.settingsHitClip || rectIntersects(hit.rect, this.settingsHitClip)) this.hits.push(hit);
+  }
+  drawSettingsScrollbar(rect, viewportRect, maxScroll) {
+    const size = this.editorScrollbarSize();
+    const trackRect = { x: rect.x + rect.w - size, y: rect.y, w: size, h: rect.h };
+    const active = Boolean(this.settingsScrollbarDrag);
+    const hovered = Boolean(this.hoveredSettingsScrollbar);
+    this.renderer.rect(trackRect, hovered || active ? [theme.activity[0], theme.activity[1], theme.activity[2], 0.9] : [theme.activity[0], theme.activity[1], theme.activity[2], 0.82]);
+    const thumbRect = this.settingsScrollbarThumb(rect, trackRect, this.settingsScrollY, maxScroll);
+    const thumbColor = active ? [0.34, 0.41, 0.5, 1] : hovered ? [0.28, 0.31, 0.36, 1] : theme.activityActive;
+    this.renderer.rect(thumbRect, thumbColor);
+    this.hits.push({ type: "settingsScrollbar", rect: trackRect, trackRect, thumbRect, viewportRect });
+  }
+  settingsScrollbarThumb(rect, trackRect, scrollY, maxScroll) {
+    const contentHeight = this.settingsContentHeight();
+    const thumbH = clamp(this.settingsViewportHeight(rect) / contentHeight * trackRect.h, Math.min(trackRect.h, this.ui(EDITOR_SCROLLBAR_THUMB_MIN)), trackRect.h);
+    const thumbTravel = Math.max(1, trackRect.h - thumbH);
+    return { x: trackRect.x + this.ui(3), y: trackRect.y + scrollY / maxScroll * thumbTravel, w: Math.max(this.ui(3), trackRect.w - this.ui(6)), h: thumbH };
+  }
+  drawSidebarScrollbar(panel, viewport, contentHeight, scrollY) {
+    const size = this.editorScrollbarSize();
+    const trackRect = { x: viewport.x + viewport.w - size, y: viewport.y, w: size, h: viewport.h };
+    const active = this.sidebarScrollbarDrag?.panel === panel;
+    const hovered = this.hoveredSidebarScrollbar?.panel === panel;
+    this.renderer.rect(trackRect, hovered || active ? [theme.activity[0], theme.activity[1], theme.activity[2], 0.9] : [theme.activity[0], theme.activity[1], theme.activity[2], 0.82]);
+    const maxScroll = Math.max(0, contentHeight - viewport.h);
+    const thumbRect = this.sidebarScrollbarThumb(viewport, trackRect, contentHeight, scrollY, maxScroll);
+    const thumbColor = active ? [0.34, 0.41, 0.5, 1] : hovered ? [0.28, 0.31, 0.36, 1] : theme.activityActive;
+    this.renderer.rect(thumbRect, thumbColor);
+    this.hits.push({ type: "sidebarScrollbar", panel, rect: trackRect, trackRect, thumbRect, viewportRect: viewport, contentHeight });
+  }
+  sidebarScrollbarThumb(viewport, trackRect, contentHeight, scrollY, maxScroll) {
+    const thumbH = clamp(viewport.h / Math.max(1, contentHeight) * trackRect.h, Math.min(trackRect.h, this.ui(EDITOR_SCROLLBAR_THUMB_MIN)), trackRect.h);
+    const thumbTravel = Math.max(1, trackRect.h - thumbH);
+    return { x: trackRect.x + this.ui(3), y: trackRect.y + (maxScroll > 0 ? scrollY / maxScroll * thumbTravel : 0), w: Math.max(this.ui(3), trackRect.w - this.ui(6)), h: thumbH };
   }
   drawRectOutline(rect, color) {
     this.renderer.rect({ x: rect.x, y: rect.y, w: rect.w, h: 1 }, color);
@@ -5906,12 +11931,12 @@ var EditorApp = class {
     const previous = { x: next.x - this.ui(34), y: toggle.y, w: rowH, h: rowH };
     const input = { x: toggle.x + toggle.w + this.ui(6), y: toggle.y, w: Math.max(this.ui(80), previous.x - toggle.x - toggle.w - this.ui(12)), h: rowH };
     const hasQuery = Boolean(state.findBuffer.text);
-    this.drawIconButton(toggle, expanded ? "v" : ">", true);
+    this.drawIconButton(toggle, expanded ? "v" : ">", true, "ui", this.isButtonHovered("findToggle"));
     this.hits.push({ type: "findToggle", rect: toggle });
     this.drawTextFieldInput("find", input, "find");
-    this.drawIconButton(previous, "\u{1F53A}", hasQuery);
-    this.drawIconButton(next, "\u{1F53B}", hasQuery);
-    this.drawIconButton(close, "\u2716", true, "uiSmall");
+    this.drawIconButton(previous, "\u{1F53A}", hasQuery, "ui", this.isButtonHovered("findPrevious"));
+    this.drawIconButton(next, "\u{1F53B}", hasQuery, "ui", this.isButtonHovered("findNext"));
+    this.drawIconButton(close, "\u2716", true, "uiSmall", this.isButtonHovered("findClose"));
     this.hits.push({ type: "findPrevious", rect: previous, enabled: hasQuery });
     this.hits.push({ type: "findNext", rect: next, enabled: hasQuery });
     this.hits.push({ type: "findClose", rect: close });
@@ -5923,17 +11948,18 @@ var EditorApp = class {
     const replace = { x: replaceAll.x - this.ui(8) - replaceW, y: replaceY, w: replaceW, h: rowH };
     const replaceInput = { x: input.x, y: replaceY, w: Math.max(this.ui(80), replace.x - input.x - this.ui(8)), h: rowH };
     this.drawTextFieldInput("findReplace", replaceInput, "replace");
-    this.drawButton(replace, "Replace", hasQuery);
-    this.drawButton(replaceAll, "All", hasQuery);
+    this.drawButton(replace, "Replace", hasQuery, this.isButtonHovered("findReplace"));
+    this.drawButton(replaceAll, "All", hasQuery, this.isButtonHovered("findReplaceAll"));
     this.hits.push({ type: "findReplace", rect: replace, enabled: hasQuery });
     this.hits.push({ type: "findReplaceAll", rect: replaceAll, enabled: hasQuery });
   }
-  drawDocument(doc, rect, showCaret) {
+  drawDocument(doc, rect, showCaret, groupId) {
     const scroll = this.clampScrollForDoc(doc, rect);
     const contentRect = this.editorContentRect(doc, rect);
     this.renderer.pushClip(contentRect);
     const gutterW = this.gutterWidthForDoc(doc);
     const gutterRect = { x: contentRect.x, y: contentRect.y, w: gutterW, h: contentRect.h };
+    const gutterHitRect = { x: contentRect.x, y: contentRect.y, w: gutterW > 0 ? gutterW : Math.max(1, this.ui(EDITOR_TEXT_PAD_X)), h: contentRect.h };
     const textClipRect = { x: contentRect.x + gutterW, y: contentRect.y, w: Math.max(0, contentRect.w - gutterW), h: contentRect.h };
     const textX = this.editorTextX(doc, contentRect) - scroll.x;
     const lineH = this.renderer.lineHeight("code");
@@ -5949,15 +11975,21 @@ var EditorApp = class {
       if (gutterW > 0) {
         const lineNumber = String(lineIndex + 1);
         this.renderer.pushClip(gutterRect);
-        this.renderer.text(lineNumber, contentRect.x + gutterW - EDITOR_GUTTER_PAD_RIGHT - this.renderer.measureText(lineNumber, "code"), y + 3, theme.textDim, "code");
+        this.renderer.text(lineNumber, contentRect.x + gutterW - EDITOR_GUTTER_PAD_RIGHT - this.renderer.measureText(lineNumber, "gutter"), y + 3, theme.textDim, "gutter");
         this.renderer.popClip();
       }
       this.renderer.pushClip(textClipRect);
       this.drawSelectionForLine(doc, lineIndex, textX, y, lineH, selection);
-      let x = textX;
-      for (const token of this.highlighter.tokenizeLine(doc.lines[lineIndex], doc.syntaxId)) {
-        x += this.renderer.text(token.text, x, y + 3, tokenColor(token.type), "code");
+      let offset = 0;
+      const visibleStart = Math.max(0, textClipRect.x - textX);
+      const visibleEnd = Math.max(visibleStart, textClipRect.x + textClipRect.w - textX);
+      for (const token of this.tokensForLine(doc, lineIndex)) {
+        if (offset > visibleEnd) break;
+        const result = this.drawVisibleCodeText(token.text, textX, y + 3, tokenColor(token.type), offset, visibleStart, visibleEnd);
+        offset = result.endOffset;
+        if (result.clippedRight) break;
       }
+      this.drawWhitespaceForLine(doc.lines[lineIndex] ?? "", lineIndex, doc.lineCount(), textX, y, lineH, visibleStart, visibleEnd);
       this.renderer.popClip();
     }
     const caret = this.caretRect(doc, rect);
@@ -5966,9 +11998,11 @@ var EditorApp = class {
     if (drawCaret) this.renderer.rect(caret, theme.caret);
     if (drawCaret && this.input.composing && this.input.compositionText) {
       this.renderer.text(this.input.compositionText, caret.x + 2, caret.y, theme.warning, "code");
-      this.renderer.rect({ x: caret.x + 2, y: caret.y + lineH - 3, w: this.renderer.measureText(this.input.compositionText, "code"), h: 1 }, theme.warning);
+      this.renderer.rect({ x: caret.x + 2, y: caret.y + lineH - 3, w: this.measureCodeText(this.input.compositionText), h: 1 }, theme.warning);
     }
     this.renderer.popClip();
+    this.drawMobileSelectionHandles(doc, rect, contentRect);
+    this.hits.push({ type: "editorGutter", groupId, docId: doc.id, rect: gutterHitRect });
     this.renderer.popClip();
     this.drawEditorScrollbars(doc, rect);
   }
@@ -6017,9 +12051,33 @@ var EditorApp = class {
     const end = line === selection.end.line ? selection.end.col : doc.lines[line].length;
     if (end <= start) return;
     const text = doc.lines[line];
-    const startX = x + this.renderer.measureText(text.slice(0, start), "code");
-    const endX = x + this.renderer.measureText(text.slice(0, end), "code");
+    const startX = x + this.measureCodePrefix(text, start);
+    const endX = x + this.measureCodePrefix(text, end);
     this.renderer.rect({ x: startX, y, w: Math.max(2, endX - startX), h: lineH }, theme.selection);
+  }
+  drawMobileSelectionHandles(doc, editorRect, contentRect) {
+    if (!this.isMobileSelectionMode() || !doc.hasSelection() || doc.readOnly) return;
+    const group = this.groupContaining(doc.id);
+    if (!group || !this.isActiveDocumentInGroup(group, doc.id)) return;
+    const ordered = doc.getOrderedSelection();
+    this.drawMobileSelectionHandle("start", doc, group.id, editorRect, contentRect, ordered.start);
+    this.drawMobileSelectionHandle("end", doc, group.id, editorRect, contentRect, ordered.end);
+  }
+  drawMobileSelectionHandle(edge, doc, groupId, editorRect, contentRect, pos) {
+    const caret = this.positionRectForDoc(doc, editorRect, pos);
+    if (caret.y + caret.h < contentRect.y || caret.y > contentRect.y + contentRect.h) return;
+    const color = theme.accent;
+    const stemW = Math.max(2, this.ui(2));
+    const knob = Math.max(8, this.ui(10));
+    const x = clamp(caret.x, contentRect.x, contentRect.x + contentRect.w);
+    const visualY = clamp(caret.y, contentRect.y, contentRect.y + contentRect.h);
+    const visualH = Math.max(0, Math.min(caret.h, contentRect.y + contentRect.h - visualY));
+    this.renderer.rect({ x: x - stemW / 2, y: visualY, w: stemW, h: visualH }, color);
+    const cy = clamp(caret.y + caret.h + knob * 0.5, contentRect.y + knob / 2, contentRect.y + contentRect.h - knob / 2);
+    this.renderer.solidPolygon(octagonPoints(x, cy, knob / 2), color);
+    const hitSize = this.ui(SELECTION_HANDLE_TOUCH_SIZE);
+    const hit = { x: x - hitSize / 2, y: cy - hitSize / 2, w: hitSize, h: hitSize };
+    this.hits.push({ type: "selectionHandle", edge, groupId, docId: doc.id, rect: hit });
   }
   pointHitsSelection(doc, editorRect, point) {
     if (!doc.hasSelection()) return false;
@@ -6037,8 +12095,8 @@ var EditorApp = class {
     const end = line === selection.end.line ? selection.end.col : text.length;
     if (end <= start) return false;
     const x = this.editorTextX(doc, contentRect) - scroll.x;
-    const startX = x + this.renderer.measureText(text.slice(0, start), "code");
-    const endX = x + this.renderer.measureText(text.slice(0, end), "code");
+    const startX = x + this.measureCodePrefix(text, start);
+    const endX = x + this.measureCodePrefix(text, end);
     return point.x >= startX && point.x <= Math.max(startX + 2, endX);
   }
   selectEditorWordFromPoint(doc, editorRect, point) {
@@ -6047,7 +12105,7 @@ var EditorApp = class {
     const scroll = this.scrollForDoc(doc.id);
     const line = clamp(Math.floor((point.y - contentRect.y + scroll.y) / lineH), 0, doc.lineCount() - 1);
     const textX = this.editorTextX(doc, contentRect);
-    const col = this.columnFromTextOffset(doc.lines[line], point.x - textX + scroll.x);
+    const col = this.columnFromCodeTextOffset(doc.lines[line], point.x - textX + scroll.x);
     const range = wordRangeAt(doc.lines[line], col);
     doc.setSelection({ line, col: range.start }, { line, col: range.end });
     this.resetCaretBlink();
@@ -6063,15 +12121,74 @@ var EditorApp = class {
   drawStatus(rect) {
     this.renderer.rect(rect, theme.activity);
     const doc = this.activeDoc();
-    const left = doc ? `${doc.path ?? "(untitled)"}  Ln ${doc.selection.head.line + 1}, Col ${doc.selection.head.col + 1}` : this.isSettingsTab(this.activeDocId) ? SETTINGS_TAB_LABEL : "No document";
-    this.renderer.text(left, rect.x + this.ui(8), rect.y + this.ui(5), theme.textDim, "ui");
-    this.renderer.text(this.statusText, rect.x + rect.w - Math.min(this.ui(420), this.renderer.measureText(this.statusText, "ui") + this.ui(12)), rect.y + this.ui(5), theme.textDim, "ui");
+    const pad = this.ui(8);
+    const gap = this.ui(10);
+    const controlH = Math.min(this.ui(20), Math.max(0, rect.h - this.ui(4)));
+    const y = rect.y + (rect.h - controlH) / 2;
+    const textY = rect.y + (rect.h - this.renderer.lineHeight("ui")) / 2;
+    let x = rect.x + rect.w - pad;
+    const syntaxLabel = this.highlightLabel(doc?.syntaxId ?? "plain");
+    const highlightLabel = "Highlight";
+    const arrow = "\u25B4";
+    const arrowW = this.renderer.measureText(arrow, "ui");
+    const valueW = this.renderer.measureText(syntaxLabel, "ui") + arrowW + this.ui(18);
+    const labelW = this.renderer.measureText(highlightLabel, "ui") + this.ui(6);
+    const highlightValue = { x: x - valueW, y, w: valueW, h: controlH };
+    const highlightLabelX = highlightValue.x - labelW;
+    const highlightHovered = doc ? this.isButtonHovered("statusHighlight", this.activeGroupId, doc.id) : false;
+    const highlightActive = this.contextMenu?.scope.type === "highlightDropdown" && this.contextMenu.scope.docId === doc?.id;
+    this.renderer.text(highlightLabel, highlightLabelX, textY, doc ? theme.textDim : [theme.textDim[0], theme.textDim[1], theme.textDim[2], 0.55], "ui");
+    if (highlightHovered || highlightActive) {
+      this.renderer.rect(highlightValue, this.hoverControlColor(highlightActive ? theme.activityActive : theme.activity));
+      if (highlightActive) this.drawRectOutline(highlightValue, theme.divider);
+    }
+    const highlightTextColor = doc ? this.buttonTextColor(true, highlightHovered || highlightActive) : theme.textDim;
+    this.renderer.text(syntaxLabel, highlightValue.x + this.ui(5), textY, highlightTextColor, "ui");
+    this.renderer.text(arrow, highlightValue.x + highlightValue.w - arrowW - this.ui(5), textY, highlightTextColor, "ui");
+    if (doc) this.hits.push({ type: "statusHighlight", groupId: this.activeGroupId, docId: doc.id, rect: highlightValue });
+    x = highlightLabelX - gap;
+    const checkboxText = "Show whitespace";
+    const checkboxTextW = this.renderer.measureText(checkboxText, "ui");
+    const boxSize = this.ui(12);
+    const checkboxW = boxSize + checkboxTextW + this.ui(11);
+    const checkbox = { x: x - checkboxW, y, w: checkboxW, h: controlH };
+    const checkboxHovered = this.isButtonHovered("statusWhitespace");
+    if (checkboxHovered) this.renderer.rect(checkbox, this.hoverControlColor(theme.activity));
+    const box = { x: checkbox.x + this.ui(3), y: rect.y + (rect.h - boxSize) / 2, w: boxSize, h: boxSize };
+    this.renderer.rect(box, this.settings.showWhitespace ? theme.activityActive : theme.panel2);
+    this.drawRectOutline(box, theme.divider);
+    if (this.settings.showWhitespace) this.drawCenteredText("\u2714\uFE0F", box, this.buttonTextColor(true, checkboxHovered), "mini");
+    this.renderer.text(checkboxText, box.x + box.w + this.ui(5), textY, checkboxHovered ? this.buttonTextColor(true, true) : theme.textDim, "ui");
+    this.hits.push({ type: "statusWhitespace", rect: checkbox });
+    x = checkbox.x - gap;
+    const lineText = this.statusLineColumnText(doc);
+    const lineW = this.renderer.measureText(lineText, "ui");
+    this.renderer.text(lineText, x - lineW, textY, theme.textDim, "ui");
+  }
+  statusLineColumnText(doc) {
+    return doc ? `Ln ${doc.selection.head.line + 1}, Col ${doc.selection.head.col + 1}` : "Ln -, Col -";
+  }
+  highlightLabel(syntaxId) {
+    return HIGHLIGHT_OPTIONS.find((option) => option.id === syntaxId)?.label ?? syntaxId;
+  }
+  toggleStatusWhitespace() {
+    this.settings.showWhitespace = !this.settings.showWhitespace;
+    this.statusText = this.settings.showWhitespace ? "Show whitespace" : "Hide whitespace";
+    this.saveAndApplySettings();
   }
   drawCenteredText(text, rect, color, font) {
     const bounds = this.renderer.visualTextBounds(text, font);
     const x = rect.x + rect.w / 2 - (bounds.x + bounds.w / 2);
     const y = rect.y + rect.h / 2 - (bounds.y + bounds.h / 2);
     this.renderer.text(text, x, y, color, font);
+  }
+  drawClippedText(text, rect, y, color, font, overflowAlign = "left") {
+    if (rect.w <= 0 || rect.h <= 0 || !text) return;
+    const textW = this.renderer.measureText(text, font);
+    const x = overflowAlign === "right" && textW > rect.w ? rect.x + rect.w - textW : rect.x;
+    this.renderer.pushClip(rect);
+    this.renderer.text(text, x, y, color, font);
+    this.renderer.popClip();
   }
   drawContextMenu() {
     const menu = this.contextMenu;
@@ -6087,7 +12204,7 @@ var EditorApp = class {
         continue;
       }
       if (item.enabled && this.contextMenuHover === item.command) this.renderer.rect(item.rect, theme.activityActive);
-      this.renderer.text(item.label, item.rect.x + this.ui(12), item.rect.y + this.ui(7), item.enabled ? theme.text : theme.textDim, "ui");
+      this.drawClippedText(item.label, { x: item.rect.x + this.ui(12), y: item.rect.y, w: Math.max(0, item.rect.w - this.ui(20)), h: item.rect.h }, item.rect.y + this.ui(7), item.enabled ? theme.text : theme.textDim, "ui", "right");
       this.hits.push({ type: "contextMenu", command: item.command, rect: item.rect, enabled: item.enabled });
     }
   }
@@ -6103,7 +12220,8 @@ var EditorApp = class {
     const detailLines = this.wrapTextForWidth(modal.detail, contentW, "ui");
     const lineH = this.ui(18);
     const textH = messageLines.length * lineH + detailLines.length * lineH;
-    const dialogH = Math.max(this.ui(168), this.ui(92) + textH + buttonH);
+    const progressH = modal.kind === "zipProgress" ? this.ui(26) : 0;
+    const dialogH = Math.max(this.ui(168), this.ui(92) + textH + progressH + buttonH);
     const dialog = {
       x: Math.max(this.ui(12), (vp.cssWidth - dialogW) / 2),
       y: Math.max(this.ui(12), (vp.cssHeight - dialogH) / 2),
@@ -6127,6 +12245,14 @@ var EditorApp = class {
       this.renderer.text(line, dialog.x + this.ui(20), y, theme.textDim, "ui");
       y += lineH;
     }
+    if (modal.kind === "zipProgress") {
+      y += this.ui(6);
+      const track = { x: dialog.x + this.ui(20), y, w: contentW, h: this.ui(8) };
+      this.renderer.rect(track, theme.activity);
+      this.renderer.rect({ x: track.x, y: track.y, w: Math.max(1, track.w * clamp(modal.progress, 0, 1)), h: track.h }, theme.accent);
+      this.drawRectOutline(track, theme.divider);
+      y += this.ui(20);
+    }
     const buttonsW = modal.buttons.reduce((sum, button) => sum + this.modalButtonWidth(button), 0) + buttonGap * Math.max(0, modal.buttons.length - 1);
     let x = dialog.x + dialog.w - this.ui(20) - buttonsW;
     const buttonY = dialog.y + dialog.h - buttonH - this.ui(20);
@@ -6136,7 +12262,7 @@ var EditorApp = class {
       const enabled = button.enabled && !modal.pending;
       const hovered = enabled && this.modalHover === button.action;
       this.renderer.rect(button.rect, this.modalButtonColor(button.variant, hovered, enabled));
-      this.renderer.text(button.label, button.rect.x + this.ui(12), button.rect.y + this.ui(8), enabled ? theme.text : theme.textDim, "ui");
+      this.drawCenteredText(button.label, button.rect, enabled ? theme.text : theme.textDim, "ui");
       this.hits.push({ type: "modalButton", action: button.action, rect: button.rect, enabled });
       x += w + buttonGap;
     }
@@ -6167,14 +12293,18 @@ var EditorApp = class {
     return lines.length ? lines : [""];
   }
   caretRect(doc, editorRect = this.activeEditorRect()) {
+    return this.positionRectForDoc(doc, editorRect, doc.selection.head);
+  }
+  positionRectForDoc(doc, editorRect, pos) {
     const contentRect = this.editorContentRect(doc, editorRect);
     const lineH = this.renderer.lineHeight("code");
-    const line = doc.lines[doc.selection.head.line] ?? "";
-    const prefixWidth = this.renderer.measureText(line.slice(0, doc.selection.head.col), "code");
+    const clamped = doc.clampPosition(pos);
+    const line = doc.lines[clamped.line] ?? "";
+    const prefixWidth = this.measureCodePrefix(line, clamped.col);
     const scroll = this.scrollForDoc(doc.id);
     return {
       x: this.editorTextX(doc, contentRect) + prefixWidth - scroll.x,
-      y: contentRect.y + doc.selection.head.line * lineH - scroll.y,
+      y: contentRect.y + clamped.line * lineH - scroll.y,
       w: 2,
       h: lineH
     };
@@ -6182,13 +12312,15 @@ var EditorApp = class {
   positionFromPoint(x, y) {
     const doc = this.activeDoc();
     if (!doc) return { line: 0, col: 0 };
+    return this.positionFromPointInEditor(doc, this.activeEditorRect(), x, y);
+  }
+  positionFromPointInEditor(doc, editorRect, x, y) {
     const lineH = this.renderer.lineHeight("code");
-    const editorRect = this.activeEditorRect();
     const contentRect = this.editorContentRect(doc, editorRect);
     const scroll = this.scrollForDoc(doc.id);
     const line = clamp(Math.floor((y - contentRect.y + scroll.y) / lineH), 0, doc.lineCount() - 1);
     const textX = this.editorTextX(doc, contentRect);
-    const col = this.columnFromTextOffset(doc.lines[line], x - textX + scroll.x);
+    const col = this.columnFromCodeTextOffset(doc.lines[line], x - textX + scroll.x);
     return { line, col };
   }
   columnFromTextOffset(text, offset, font = "code") {
@@ -6197,6 +12329,18 @@ var EditorApp = class {
     let col = 0;
     for (const char of text) {
       const advance = this.renderer.measureText(char, font);
+      if (offset < x + advance / 2) return col;
+      x += advance;
+      col += char.length;
+    }
+    return text.length;
+  }
+  columnFromCodeTextOffset(text, offset) {
+    if (offset <= 0) return 0;
+    let x = 0;
+    let col = 0;
+    for (const char of text) {
+      const advance = this.codeAdvanceForChar(char, x);
       if (offset < x + advance / 2) return col;
       x += advance;
       col += char.length;
@@ -6213,11 +12357,12 @@ var EditorApp = class {
     return group.id === this.activeGroupId && group.activeDocId === docId && this.activeDocId === docId;
   }
   isDocumentCaretVisible(group, docId) {
-    return this.input.activeTarget?.kind === "editor" && !this.renamePath && this.isActiveDocumentInGroup(group, docId);
+    const doc = this.docs.get(docId);
+    return !doc?.readOnly && this.input.activeTarget?.kind === "editor" && !this.renamePath && this.isActiveDocumentInGroup(group, docId);
   }
   hasBlinkingCaretOwner() {
     const kind = this.input.activeTarget?.kind;
-    return Boolean(this.renamePath || this.activeSettingsNumber || kind === "search" || kind === "projectReplace" || kind === "find" || kind === "findReplace" || kind === "editor" && this.activeDocId);
+    return Boolean(this.renamePath || this.activeSettingsNumber || kind === "search" || kind === "chat" || kind === "projectReplace" || kind === "find" || kind === "findReplace" || kind === "editor" && this.activeDocId);
   }
   isRenameCaretVisible() {
     return Boolean(this.renamePath && (this.input.composing || this.isCaretBlinkOn()));
@@ -6229,15 +12374,22 @@ var EditorApp = class {
     return this.groups.flatMap((group) => this.dockTargetShapes(group));
   }
   dockTargetShapes(group) {
-    const outer = insetRect(group.frameRect, this.ui(10));
+    const outer = group.editorRect;
     if (outer.w <= 20 || outer.h <= 20) return [];
-    const centerSize = Math.min(this.ui(150), Math.max(this.ui(78), Math.min(outer.w, outer.h) * 0.34));
+    const centerW = outer.w * DOCK_CENTER_TARGET_RATIO;
+    const centerH = outer.h * DOCK_CENTER_TARGET_RATIO;
     const center = {
-      x: outer.x + (outer.w - centerSize) / 2,
-      y: outer.y + (outer.h - centerSize) / 2,
-      w: centerSize,
-      h: centerSize
+      x: outer.x + outer.w * DOCK_EDGE_TARGET_RATIO,
+      y: outer.y + outer.h * DOCK_EDGE_TARGET_RATIO,
+      w: centerW,
+      h: centerH
     };
+    const leftW = outer.w * DOCK_EDGE_TARGET_RATIO;
+    const rightX = outer.x + outer.w * (DOCK_EDGE_TARGET_RATIO + DOCK_CENTER_TARGET_RATIO);
+    const rightW = outer.x + outer.w - rightX;
+    const topH = outer.h * DOCK_EDGE_TARGET_RATIO;
+    const bottomY = outer.y + outer.h * (DOCK_EDGE_TARGET_RATIO + DOCK_CENTER_TARGET_RATIO);
+    const bottomH = outer.y + outer.h - bottomY;
     const outerTL = { x: outer.x, y: outer.y };
     const outerTR = { x: outer.x + outer.w, y: outer.y };
     const outerBR = { x: outer.x + outer.w, y: outer.y + outer.h };
@@ -6247,10 +12399,10 @@ var EditorApp = class {
     const centerBR = { x: center.x + center.w, y: center.y + center.h };
     const centerBL = { x: center.x, y: center.y + center.h };
     return [
-      { groupId: group.id, zone: "top", polygon: [outerTL, outerTR, centerTR, centerTL], previewRect: { x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w, h: group.frameRect.h * 0.5 } },
-      { groupId: group.id, zone: "right", polygon: [centerTR, outerTR, outerBR, centerBR], previewRect: { x: group.frameRect.x + group.frameRect.w * 0.5, y: group.frameRect.y, w: group.frameRect.w * 0.5, h: group.frameRect.h } },
-      { groupId: group.id, zone: "bottom", polygon: [centerBL, centerBR, outerBR, outerBL], previewRect: { x: group.frameRect.x, y: group.frameRect.y + group.frameRect.h * 0.5, w: group.frameRect.w, h: group.frameRect.h * 0.5 } },
-      { groupId: group.id, zone: "left", polygon: [outerTL, centerTL, centerBL, outerBL], previewRect: { x: group.frameRect.x, y: group.frameRect.y, w: group.frameRect.w * 0.5, h: group.frameRect.h } },
+      { groupId: group.id, zone: "top", polygon: [outerTL, outerTR, centerTR, centerTL], previewRect: { x: outer.x, y: outer.y, w: outer.w, h: topH } },
+      { groupId: group.id, zone: "right", polygon: [centerTR, outerTR, outerBR, centerBR], previewRect: { x: rightX, y: outer.y, w: rightW, h: outer.h } },
+      { groupId: group.id, zone: "bottom", polygon: [centerBL, centerBR, outerBR, outerBL], previewRect: { x: outer.x, y: bottomY, w: outer.w, h: bottomH } },
+      { groupId: group.id, zone: "left", polygon: [outerTL, centerTL, centerBL, outerBL], previewRect: { x: outer.x, y: outer.y, w: leftW, h: outer.h } },
       { groupId: group.id, zone: "center", polygon: rectPoints(center), previewRect: center }
     ];
   }
@@ -6275,13 +12427,47 @@ function isEditorContextMenuCommand(command) {
   return command === "cut" || command === "copy" || command === "paste" || command === "systemCopy" || command === "systemPaste";
 }
 function isTabContextMenuCommand(command) {
-  return command === "findInFile" || command === "close" || command === "closeOthers";
+  return command === "save" || command === "findInFile" || command === "close" || command === "closeOthers" || command === "resetSettings";
+}
+function isTabBarContextMenuCommand(command) {
+  return command === "newFile" || command === "closeAll";
+}
+function tabOverflowCommand(docId) {
+  return `selectTab:${docId}`;
+}
+function tabOverflowCommandDocId(command) {
+  return command.startsWith("selectTab:") ? command.slice("selectTab:".length) : null;
+}
+function highlightCommand(syntaxId) {
+  return `highlight:${syntaxId}`;
+}
+function highlightCommandSyntaxId(command) {
+  if (!command.startsWith("highlight:")) return null;
+  const syntaxId = command.slice("highlight:".length);
+  return HIGHLIGHT_OPTIONS.some((option) => option.id === syntaxId) ? syntaxId : null;
 }
 function isSettingContextMenuCommand(command) {
-  return command === "themeDark" || command === "themeLight" || command === "aiProviderLocal" || command === "aiProviderOpenAI";
+  return command === "themeDark" || command === "themeLight" || command === "aiProviderLocal" || command === "aiProviderOpenAI" || command === "aiToolFormatTag" || command === "aiToolFormatHarmony" || command.startsWith("aiModel:");
+}
+function aiModelCommand(modelId) {
+  return `aiModel:${encodeURIComponent(modelId)}`;
+}
+function aiModelCommandValue(command) {
+  if (!command.startsWith("aiModel:")) return null;
+  try {
+    return decodeURIComponent(command.slice("aiModel:".length));
+  } catch {
+    return command.slice("aiModel:".length);
+  }
 }
 function isContextMenuItem(entry) {
   return entry.kind === "item";
+}
+function cloneSelectionState(selection) {
+  return {
+    anchor: { line: selection.anchor.line, col: selection.anchor.col },
+    head: { line: selection.head.line, col: selection.head.col }
+  };
 }
 function isMobileWebKit() {
   return (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches) && /AppleWebKit/i.test(navigator.userAgent);
@@ -6290,7 +12476,7 @@ function isFileContextMenuCommand(command) {
   return command === "rename" || command === "duplicate" || command === "delete";
 }
 function isFolderContextMenuCommand(command) {
-  return command === "rename" || command === "delete" || command === "createFile" || command === "createFolder";
+  return command === "rename" || command === "delete" || command === "createFile" || command === "createFolder" || command === "uploadFile";
 }
 function loadSettings() {
   try {
@@ -6304,20 +12490,75 @@ function loadSettings() {
 function normalizeSettings(value) {
   const fontSize = Number(value?.fontSize);
   const uiScale = Number(value?.uiScale);
+  const tabSpaces = Number(value?.tabSpaces);
+  const aiMaxToolCalls = Number(value?.aiMaxToolCalls);
+  const aiCompactFreePercent = Number(value?.aiCompactFreePercent);
   return {
     theme: value?.theme === "light" ? "light" : "dark",
     fontSize: Number.isFinite(fontSize) ? Math.max(1, fontSize) : DEFAULT_SETTINGS.fontSize,
     uiScale: Number.isFinite(uiScale) ? clamp(Math.trunc(uiScale), 1, 400) : DEFAULT_SETTINGS.uiScale,
+    monospacedFont: typeof value?.monospacedFont === "boolean" ? value.monospacedFont : DEFAULT_SETTINGS.monospacedFont,
+    tabSpaces: Number.isFinite(tabSpaces) ? clamp(Math.trunc(tabSpaces), 1, 32) : DEFAULT_SETTINGS.tabSpaces,
+    useTabStops: typeof value?.useTabStops === "boolean" ? value.useTabStops : DEFAULT_SETTINGS.useTabStops,
+    showWhitespace: typeof value?.showWhitespace === "boolean" ? value.showWhitespace : DEFAULT_SETTINGS.showWhitespace,
     renameOnDoubleClick: typeof value?.renameOnDoubleClick === "boolean" ? value.renameOnDoubleClick : DEFAULT_SETTINGS.renameOnDoubleClick,
     showLineNumbers: typeof value?.showLineNumbers === "boolean" ? value.showLineNumbers : DEFAULT_SETTINGS.showLineNumbers,
-    aiProvider: value?.aiProvider === "openai" ? "openai" : "local"
+    rememberOpenFiles: typeof value?.rememberOpenFiles === "boolean" ? value.rememberOpenFiles : DEFAULT_SETTINGS.rememberOpenFiles,
+    aiProvider: value?.aiProvider === "local" ? "local" : "openai",
+    aiMaxToolCalls: Number.isFinite(aiMaxToolCalls) ? clamp(Math.trunc(aiMaxToolCalls), 1, 200) : DEFAULT_SETTINGS.aiMaxToolCalls,
+    aiDetectDuplicateToolCalls: typeof value?.aiDetectDuplicateToolCalls === "boolean" ? value.aiDetectDuplicateToolCalls : DEFAULT_SETTINGS.aiDetectDuplicateToolCalls,
+    aiToolCallFormat: value?.aiToolCallFormat === "harmony" ? "harmony" : "tag",
+    aiCompactFreePercent: Number.isFinite(aiCompactFreePercent) ? clamp(Math.trunc(aiCompactFreePercent), 1, 95) : DEFAULT_SETTINGS.aiCompactFreePercent
   };
 }
 function modalButton(action, label, variant) {
   return { action, label, variant, rect: { x: 0, y: 0, w: 0, h: 0 }, enabled: true };
 }
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 102.4) / 10} KB`;
+  return `${Math.round(bytes / 1024 / 102.4) / 10} MB`;
+}
+function downloadTimestamp(date = /* @__PURE__ */ new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+}
+function nextFrame() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+function dataTransferContainsFiles(dataTransfer) {
+  return Array.from(dataTransfer.types ?? []).includes("Files") || (dataTransfer.files?.length ?? 0) > 0;
+}
+function isZipFile(file) {
+  return /\.zip$/i.test(file.name) || file.type === "application/zip" || file.type === "application/x-zip-compressed";
+}
+function pathForZipEntry(name) {
+  const normalized = normalizePath(`/${name}`);
+  if (normalized === "/" || normalized.startsWith("/.slug-")) return null;
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.includes("__MACOSX") || parts.some((part) => part === ".DS_Store")) return null;
+  return normalized;
+}
+function guessMime2(path) {
+  return path.match(/\.(ts|tsx|js|jsx|json|md|txt|css|html|lua|cpp|c|h|hpp|rs|py|go|java|cs)$/i) ? "text/plain" : "application/octet-stream";
+}
 function isValidFileName(name) {
-  return name.length > 0 && name !== "." && name !== ".." && !/[\\/]/.test(name) && !name.includes("\0");
+  return name.length > 0 && name !== "." && name !== ".." && invalidFileNameCharacterRanges(name).length === 0;
+}
+function invalidFileNameCharacterRanges(name) {
+  const ranges = [];
+  for (let index = 0; index < name.length; ) {
+    const codePoint = name.codePointAt(index);
+    if (codePoint === void 0) break;
+    const char = String.fromCodePoint(codePoint);
+    const end = index + char.length;
+    if (isInvalidFileNameCharacter(char, codePoint)) ranges.push({ start: index, end });
+    index = end;
+  }
+  return ranges;
+}
+function isInvalidFileNameCharacter(char, codePoint) {
+  return codePoint < 32 || codePoint === 127 || /[<>:"/\\|?*]/.test(char);
 }
 function isWordChar(char) {
   return /[A-Za-z0-9_]/.test(char);
@@ -6364,6 +12605,12 @@ function replaceAllPlainText(text, query, replacement) {
 function sanitizeSingleLineInput(text) {
   return text.replaceAll("\r\n", " ").replaceAll("\r", " ").replaceAll("\n", " ");
 }
+function sanitizeUploadedFileName(name) {
+  const leaf = name.replaceAll("\\", "/").split("/").filter(Boolean).pop() ?? "";
+  let sanitized = leaf.trim().replace(new RegExp('[\\x00-\\x1f\\x7f<>:"/\\\\|?*]', "g"), "_");
+  if (!isValidFileName(sanitized)) sanitized = `upload-${shortHexName()}`;
+  return sanitized;
+}
 function fileStemSelectionEnd(name) {
   const dot = name.lastIndexOf(".");
   return dot > 0 ? dot : name.length;
@@ -6373,6 +12620,10 @@ function isSameOrDescendant(path, root) {
   const normalizedRoot = normalizePath(root);
   return normalizedPath === normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}/`);
 }
+function remapSelectedTreePath(path, oldPath, newPath) {
+  if (!path || !isSameOrDescendant(path, oldPath)) return path;
+  return path === normalizePath(oldPath) ? normalizePath(newPath) : joinPath(newPath, path.slice(normalizePath(oldPath).length + 1));
+}
 function shortHexName() {
   if (crypto.getRandomValues) {
     const bytes = new Uint8Array(4);
@@ -6380,18 +12631,6 @@ function shortHexName() {
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
   return Math.floor(Math.random() * 4294967295).toString(16).padStart(8, "0");
-}
-function wrapText(text, width) {
-  const lines = [];
-  for (const rawLine of text.split("\n")) {
-    let line = rawLine;
-    while (line.length > width) {
-      lines.push(line.slice(0, width));
-      line = line.slice(width);
-    }
-    lines.push(line);
-  }
-  return lines;
 }
 function sortFileTree(entries) {
   entries.sort((a, b) => {
@@ -6477,9 +12716,131 @@ function pruneDockNode(node) {
   if (children.length === 1) return children[0];
   return { ...node, children, weights: normalizeWeightsForCount(weights, children.length) };
 }
-function insetRect(rect, amount) {
-  const inset = Math.min(amount, rect.w / 4, rect.h / 4);
-  return { x: rect.x + inset, y: rect.y + inset, w: Math.max(1, rect.w - inset * 2), h: Math.max(1, rect.h - inset * 2) };
+function persistDockNode(node, docPathForId) {
+  if (node.type === "leaf") {
+    const paths = node.group.tabs.map(docPathForId).filter((path) => Boolean(path));
+    if (paths.length === 0) return null;
+    const activePath = node.group.activeDocId ? docPathForId(node.group.activeDocId) : null;
+    return { type: "leaf", group: { id: node.group.id, paths, activePath: activePath && paths.includes(activePath) ? activePath : paths[0] } };
+  }
+  const children = [];
+  const weights = [];
+  const sourceWeights = normalizeWeightsForCount(node.weights, node.children.length);
+  for (let i = 0; i < node.children.length; i++) {
+    const child = persistDockNode(node.children[i], docPathForId);
+    if (!child) continue;
+    children.push(child);
+    weights.push(sourceWeights[i]);
+  }
+  if (children.length === 0) return null;
+  if (children.length === 1) return children[0];
+  return { type: "split", id: node.id, direction: node.direction, children, weights: normalizeWeightsForCount(weights, children.length) };
+}
+function persistedDockPathCount(node) {
+  if (node.type === "leaf") return node.group.paths.length;
+  return node.children.reduce((sum, child) => sum + persistedDockPathCount(child), 0);
+}
+function persistedDockPaths(node) {
+  if (node.type === "leaf") return node.group.paths;
+  return node.children.flatMap((child) => persistedDockPaths(child));
+}
+function restorePersistedDockNode(node, pathToDocId) {
+  if (node.type === "leaf") {
+    const tabs = node.group.paths.map((path) => pathToDocId.get(path)).filter((id) => Boolean(id));
+    if (tabs.length === 0) return null;
+    const activeDocId = node.group.activePath ? pathToDocId.get(node.group.activePath) ?? null : null;
+    return {
+      type: "leaf",
+      group: {
+        id: node.group.id || `group-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        tabs,
+        activeDocId: activeDocId && tabs.includes(activeDocId) ? activeDocId : tabs[0],
+        frameRect: { x: 0, y: 0, w: 0, h: 0 },
+        editorRect: { x: 0, y: 32, w: 0, h: 0 }
+      }
+    };
+  }
+  const children = [];
+  const weights = [];
+  const sourceWeights = normalizeWeightsForCount(node.weights, node.children.length);
+  for (let i = 0; i < node.children.length; i++) {
+    const child = restorePersistedDockNode(node.children[i], pathToDocId);
+    if (!child) continue;
+    children.push(child);
+    weights.push(sourceWeights[i]);
+  }
+  if (children.length === 0) return null;
+  if (children.length === 1) return children[0];
+  return { type: "split", id: node.id || `split-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, direction: node.direction, children, weights: normalizeWeightsForCount(weights, children.length) };
+}
+function restoredDockTabCount(node) {
+  if (node.type === "leaf") return node.group.tabs.length;
+  return node.children.reduce((sum, child) => sum + restoredDockTabCount(child), 0);
+}
+function normalizePersistedSession(value) {
+  if (!value || typeof value !== "object") return null;
+  const raw = value;
+  const dockRoot = normalizePersistedDockNode(raw.dockRoot);
+  if (!dockRoot) return null;
+  return {
+    version: 1,
+    activePath: typeof raw.activePath === "string" ? normalizePath(raw.activePath) : null,
+    activeGroupId: typeof raw.activeGroupId === "string" ? raw.activeGroupId : null,
+    sidebarMode: raw.sidebarMode === "search" || raw.sidebarMode === "chat" || raw.sidebarMode === "settings" ? raw.sidebarMode : "files",
+    sidebarWidth: Number.isFinite(raw.sidebarWidth) ? Math.max(0, Number(raw.sidebarWidth)) : 280,
+    lastSidebarWidth: Number.isFinite(raw.lastSidebarWidth) ? Math.max(0, Number(raw.lastSidebarWidth)) : 280,
+    dockRoot,
+    scrollStates: normalizePersistedScrollStates(raw.scrollStates)
+  };
+}
+function normalizePersistedDockNode(value) {
+  if (!value || typeof value !== "object") return null;
+  const raw = value;
+  if (raw.type === "leaf") {
+    const group = raw.group;
+    if (!group || !Array.isArray(group.paths)) return null;
+    const paths = [...new Set(group.paths.filter((path) => typeof path === "string").map((path) => normalizePath(path)))];
+    if (paths.length === 0) return null;
+    const activePath = typeof group.activePath === "string" ? normalizePath(group.activePath) : null;
+    return { type: "leaf", group: { id: typeof group.id === "string" ? group.id : "", paths, activePath: activePath && paths.includes(activePath) ? activePath : paths[0] } };
+  }
+  if (raw.type !== "split" || raw.direction !== "row" && raw.direction !== "column" || !Array.isArray(raw.children)) return null;
+  const children = raw.children.map((child) => normalizePersistedDockNode(child)).filter((child) => Boolean(child));
+  if (children.length === 0) return null;
+  if (children.length === 1) return children[0];
+  return {
+    type: "split",
+    id: typeof raw.id === "string" ? raw.id : "",
+    direction: raw.direction,
+    children,
+    weights: normalizeWeightsForCount(Array.isArray(raw.weights) ? raw.weights : [], children.length)
+  };
+}
+function normalizePersistedScrollStates(value) {
+  if (!value || typeof value !== "object") return {};
+  const result = {};
+  for (const [path, scroll] of Object.entries(value)) {
+    if (!scroll || typeof scroll !== "object") continue;
+    result[normalizePath(path)] = {
+      x: Number.isFinite(scroll.x) ? Math.max(0, Number(scroll.x)) : 0,
+      y: Number.isFinite(scroll.y) ? Math.max(0, Number(scroll.y)) : 0
+    };
+  }
+  return result;
+}
+function rectIntersects(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+function intersectRect(a, b) {
+  const x = Math.max(a.x, b.x);
+  const y = Math.max(a.y, b.y);
+  const right = Math.min(a.x + a.w, b.x + b.w);
+  const bottom = Math.min(a.y + a.h, b.y + b.h);
+  if (right <= x || bottom <= y) return null;
+  return { x, y, w: right - x, h: bottom - y };
+}
+function activityHoverColor() {
+  return [theme.activityActive[0], theme.activityActive[1], theme.activityActive[2], 0.58];
 }
 function rectPoints(rect) {
   return [
@@ -6487,6 +12848,19 @@ function rectPoints(rect) {
     { x: rect.x + rect.w, y: rect.y },
     { x: rect.x + rect.w, y: rect.y + rect.h },
     { x: rect.x, y: rect.y + rect.h }
+  ];
+}
+function octagonPoints(cx, cy, radius) {
+  const inset = radius * 0.42;
+  return [
+    { x: cx - inset, y: cy - radius },
+    { x: cx + inset, y: cy - radius },
+    { x: cx + radius, y: cy - inset },
+    { x: cx + radius, y: cy + inset },
+    { x: cx + inset, y: cy + radius },
+    { x: cx - inset, y: cy + radius },
+    { x: cx - radius, y: cy + inset },
+    { x: cx - radius, y: cy - inset }
   ];
 }
 function pointInPolygon(point, polygon) {
@@ -6501,19 +12875,6 @@ function pointInPolygon(point, polygon) {
     }
   }
   return inside;
-}
-function lineQuad(a, b, width) {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const px = -dy / length * (width / 2);
-  const py = dx / length * (width / 2);
-  return [
-    { x: a.x + px, y: a.y + py },
-    { x: b.x + px, y: b.y + py },
-    { x: b.x - px, y: b.y - py },
-    { x: a.x - px, y: a.y - py }
-  ];
 }
 async function copyText(text) {
   if (!text) return;
@@ -6646,11 +13007,6 @@ function cursorToArray(request) {
 var textEncoder = new TextEncoder();
 var textDecoder = new TextDecoder("utf-8", { fatal: false });
 var DEFAULT_WORKSPACE_ID = "default";
-var SAMPLE_FILES = /* @__PURE__ */ new Map([
-  ["/README.md", "# Slug Editor\n\nThis workspace is stored in IndexedDB.\n\n- Open files from the left sidebar.\n- Edit text in the WebGL2 editor.\n- Use Search to scan files.\n- Use Chat for local assistant turns.\n"],
-  ["/src/main.ts", "export function greet(name: string): string {\n  return `hello ${name}`;\n}\n\nconsole.log(greet('Slug'));\n"],
-  ["/notes/shortcuts.txt", "Ctrl/Cmd+C copy\nCtrl/Cmd+X cut\nCtrl/Cmd+V paste\nCtrl/Cmd+S save\nCtrl/Cmd+Shift+F project search\n"]
-]);
 var IndexedVfs = class _IndexedVfs {
   constructor(db, workspaceId) {
     this.db = db;
@@ -6671,7 +13027,7 @@ var IndexedVfs = class _IndexedVfs {
         createdAt: now,
         updatedAt: now,
         rootPath: "/",
-        source: "sample"
+        source: "empty"
       };
       workspaces.put(workspace);
       const nodes = tx.objectStore("nodes");
@@ -6687,9 +13043,6 @@ var IndexedVfs = class _IndexedVfs {
         mtime: now
       };
       nodes.put(root);
-      for (const [path, text] of SAMPLE_FILES) {
-        await putFileRecords(nodes, contents, DEFAULT_WORKSPACE_ID, path, text, "text/plain");
-      }
       return workspace.id;
     });
     return new _IndexedVfs(db, workspaceId);
@@ -6770,7 +13123,7 @@ var IndexedVfs = class _IndexedVfs {
     });
     this.emit({ type: "remove", path: p });
   }
-  async resetToSample() {
+  async resetToEmpty() {
     await this.db.tx(["workspaces", "nodes", "contents"], "readwrite", async (tx) => {
       const workspaces = tx.objectStore("workspaces");
       const nodes = tx.objectStore("nodes");
@@ -6783,7 +13136,7 @@ var IndexedVfs = class _IndexedVfs {
         createdAt: workspace?.createdAt ?? now,
         updatedAt: now,
         rootPath: "/",
-        source: "sample"
+        source: "empty"
       });
       const workspaceNodes = await cursorToArray(nodes.index("byWorkspace").openCursor(IDBKeyRange.only(this.workspaceId)));
       for (const node of workspaceNodes) nodes.delete([this.workspaceId, node.path]);
@@ -6799,9 +13152,6 @@ var IndexedVfs = class _IndexedVfs {
         size: 0,
         mtime: now
       });
-      for (const [path, text] of SAMPLE_FILES) {
-        await putFileRecords(nodes, contents, this.workspaceId, path, text, "text/plain");
-      }
     });
     this.emit({ type: "remove", path: "/" });
   }
@@ -6917,7 +13267,8 @@ function workspaceDatabaseName() {
 async function loadFonts() {
   return [
     { name: "Inter-Regular.ttf", buffer: await loadFont("Inter-Regular.ttf") },
-    { name: "NotoEmoji-Regular.ttf", buffer: await loadFont("NotoEmoji-Regular.ttf") }
+    { name: "NotoEmoji-Regular.ttf", buffer: await loadFont("NotoEmoji-Regular.ttf") },
+    { name: "MonaspaceNeon-Regular.ttf", buffer: await loadFont("MonaspaceNeon-Regular.ttf") }
   ];
 }
 async function loadFont(fileName) {
@@ -6925,4 +13276,19 @@ async function loadFont(fileName) {
   if (!response.ok) throw new Error(`Could not load ${fileName}: ${response.status}`);
   return response.arrayBuffer();
 }
+/*! Bundled license information:
+
+jszip/dist/jszip.min.js:
+  (*!
+  
+  JSZip v3.10.1 - A JavaScript class for generating and reading zip files
+  <http://stuartk.com/jszip>
+  
+  (c) 2009-2016 Stuart Knightley <stuart [at] stuartk.com>
+  Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/main/LICENSE.markdown.
+  
+  JSZip uses the library pako released under the MIT license :
+  https://github.com/nodeca/pako/blob/main/LICENSE
+  *)
+*/
 //# sourceMappingURL=app.js.map
