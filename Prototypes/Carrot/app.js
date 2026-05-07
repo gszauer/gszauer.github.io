@@ -2540,11 +2540,25 @@ var AppError = class extends Error {
 // src/assistant/chat.ts
 var AI_CONFIG_STORAGE_KEY = "slug.aiEndpointConfig";
 var AI_SYSTEM_PROMPT_STORAGE_KEY = "slug.aiSystemPrompt";
-var AI_HELPER_PROMPTS_STORAGE_KEY = "slug.aiHelperPrompts";
-var AI_MODELS_STORAGE_KEY = "slug.aiModels";
+var AI_COMPACT_PROMPT_STORAGE_KEY = "slug.aiCompactPrompt";
+var AI_TAG_TOOL_PROMPT_STORAGE_KEY = "slug.aiTagToolPrompt";
+var AI_HARMONY_TOOL_PROMPT_STORAGE_KEY = "slug.aiHarmonyToolPrompt";
+var PROBE_USER_MESSAGE = "test";
+var PROBE_USER_TOKEN_COUNT = 1;
+var PROBE_COMPLETION_TOKEN_COUNT = 1;
+var DIRTY_TOKEN_REFRESH_MARGIN_PERCENT = 5;
+var ESTIMATED_CHAT_MESSAGE_OVERHEAD_TOKENS = 4;
+var COMPACTED_SUMMARY_HEADER = "Summary of compacted conversation";
+var EDITOR_CONTEXT_MAX_TREE_ENTRIES = 1e3;
+var EDITOR_CONTEXT_MAX_SELECTED_TEXT_CHARS = 4e3;
+var GREP_MAX_MATCHES = 500;
+var GREP_MAX_FILE_BYTES = 8 * 1024 * 1024;
+var REMOVED_FILE_GREP_TOOL = String.fromCharCode(102, 114, 101, 112, 70, 105, 108, 101);
 var AI_SETTINGS_DOC_PATH = "/.slug-ai-settings.json";
 var AI_SYSTEM_PROMPT_DOC_PATH = "/.slug-system-prompt.md";
-var AI_HELPER_PROMPTS_DOC_PATH = "/.slug-helper-prompts.md";
+var AI_COMPACT_PROMPT_DOC_PATH = "/.slug-compact-prompt.md";
+var AI_TAG_TOOL_PROMPT_DOC_PATH = "/.slug-tag-tool-prompt.md";
+var AI_HARMONY_TOOL_PROMPT_DOC_PATH = "/.slug-harmony-tool-prompt.md";
 var DEFAULT_AI_ENDPOINT_CONFIG = {
   apiBaseUrl: "http://localhost:1234/v1",
   apiKey: "",
@@ -2556,9 +2570,90 @@ var DEFAULT_AI_RUNTIME_SETTINGS = {
   maxToolCallsPerTurn: 50,
   detectDuplicateToolCalls: true,
   toolCallFormat: "tag",
+  thinkingFormat: "auto",
   compactFreePercent: 10
 };
-var DEFAULT_SYSTEM_PROMPT = `You are an AI coding assistant inside a browser code editor.
+var NATIVE_TOOL_DEFINITIONS = [
+  {
+    type: "function",
+    function: {
+      name: "readFile",
+      description: "Read a text file from the virtual workspace.",
+      parameters: { type: "object", properties: { path: { type: "string", description: "Workspace path, for example /README.md." } }, required: ["path"] }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "writeFile",
+      description: "Create a new text file, or overwrite an existing text file only after readFile has read its current contents.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Workspace path to write." },
+          content: { type: "string", description: "Full file contents." }
+        },
+        required: ["path", "content"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "editFile",
+      description: "Replace an exact string inside a text file. The file must have been read first with readFile.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Workspace path to edit." },
+          oldString: { type: "string", description: "Exact text to replace." },
+          newString: { type: "string", description: "Replacement text." }
+        },
+        required: ["path", "oldString", "newString"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "grep",
+      description: "Search all workspace text files for a regular expression.",
+      parameters: { type: "object", properties: { pattern: { type: "string", description: "Regular expression pattern." } }, required: ["pattern"] }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "grepFile",
+      description: "Search one workspace text file for a regular expression.",
+      parameters: {
+        type: "object",
+        properties: {
+          pattern: { type: "string", description: "Regular expression pattern." },
+          path: { type: "string", description: "Workspace path to search." }
+        },
+        required: ["pattern", "path"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "bash",
+      description: "Run a supported emulated shell command.",
+      parameters: { type: "object", properties: { command: { type: "string", description: "Shell command to run." } }, required: ["command"] }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "compact",
+      description: "Compact the current chat conversation.",
+      parameters: { type: "object", properties: {} }
+    }
+  }
+];
+var LEGACY_DEFAULT_SYSTEM_PROMPT = `You are an AI coding assistant inside a browser code editor.
 
 You can inspect and edit the virtual workspace using tool calls. Keep responses concise, use tools when you need file contents, and prefer precise edits over broad rewrites.
 
@@ -2568,7 +2663,6 @@ Available tools:
 - editFile(path, oldString, newString)
 - grep(pattern)
 - grepFile(pattern, path)
-- frepFile(pattern, path)
 - bash(command)
 - compact()
 
@@ -2579,6 +2673,73 @@ Harmony-style tool-call format:
 <|channel|>commentary to=readFile <|message|>{"path":"/README.md"}<|call|>
 
 After each tool result, continue until the task is done or you need the user.`;
+var DEFAULT_SYSTEM_PROMPT = `You are an AI coding assistant inside a browser code editor.
+
+You can inspect and edit the virtual workspace using tool calls when tools are available. Keep responses concise, use tools when you need file contents, and prefer precise edits over broad rewrites.`;
+var TOOL_LIST_PROMPT = `Available tools:
+- readFile(path)
+- writeFile(path, content)
+- editFile(path, oldString, newString)
+- grep(pattern)
+- grepFile(pattern, path)
+- bash(command)
+- compact()`;
+var DEFAULT_NATIVE_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Primary tool protocol: use the OpenAI Chat Completions native tool_calls interface. The request already provides the tool schemas, so native tool_calls are the executable tool-call form for this conversation.
+
+Do not write tool calls as plain JSON, tag syntax, Harmony text syntax, markdown, reasoning, analysis, or explanatory text.
+
+Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
+
+If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var DEFAULT_TAG_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Tool calls are executable only when they are emitted in assistant message content. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
+
+Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
+
+Use only this tag tool-call format when invoking tools:
+<tool>readFile("/README.md")</tool>
+
+If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var DEFAULT_HARMONY_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Tool calls are executable only when they are emitted in assistant message content/commentary. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
+
+Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
+
+Use only this harmony-style tool-call format when invoking tools:
+<|channel|>commentary to=writeFile <|message|>{"path":"/notes.txt","content":"hello\\n"}<|call|>
+
+The final token of every harmony tool call must be <|call|>. If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var LEGACY_DEFAULT_TAG_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Use only this tag tool-call format when invoking tools:
+<tool>readFile("/README.md")</tool>
+
+If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var LEGACY_DEFAULT_HARMONY_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Use only this harmony-style tool-call format when invoking tools:
+<|channel|>commentary to=writeFile <|message|>{"path":"/notes.txt","content":"hello\\n"}<|call|>
+
+The final token of every harmony tool call must be <|call|>. If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var DEFAULT_COMPACT_PROMPT = `Compact the provided coding-agent conversation aggressively.
+
+Preserve only the user's intent, hard constraints, important decisions, files changed or inspected, current state, errors, test results, and unresolved next steps.
+
+Omit tool-call syntax, repeated output, and low-value chatter. Write concise continuation context.`;
 function loadAiEndpointConfig() {
   return normalizeAiEndpointConfig(readJsonLocalStorage(AI_CONFIG_STORAGE_KEY));
 }
@@ -2587,42 +2748,51 @@ function saveAiEndpointConfig(config) {
   localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(normalized, null, 2));
   return normalized;
 }
+function resolveAiContextTokens(config = loadAiEndpointConfig()) {
+  const normalized = normalizeAiEndpointConfig(config);
+  return normalized.maxContextTokens || bestKnownContextLength(normalized.model);
+}
 function loadAiSystemPrompt() {
-  return localStorage.getItem(AI_SYSTEM_PROMPT_STORAGE_KEY) ?? DEFAULT_SYSTEM_PROMPT;
+  const stored = localStorage.getItem(AI_SYSTEM_PROMPT_STORAGE_KEY);
+  if (!stored || stored === LEGACY_DEFAULT_SYSTEM_PROMPT) return DEFAULT_SYSTEM_PROMPT;
+  return sanitizeSystemPrompt(stored);
 }
 function saveAiSystemPrompt(text) {
   localStorage.setItem(AI_SYSTEM_PROMPT_STORAGE_KEY, text);
 }
-function loadAiHelperPrompts() {
-  return localStorage.getItem(AI_HELPER_PROMPTS_STORAGE_KEY) ?? "";
+function loadAiCompactPrompt() {
+  return localStorage.getItem(AI_COMPACT_PROMPT_STORAGE_KEY) ?? DEFAULT_COMPACT_PROMPT;
 }
-function saveAiHelperPrompts(text) {
-  localStorage.setItem(AI_HELPER_PROMPTS_STORAGE_KEY, text);
+function saveAiCompactPrompt(text) {
+  localStorage.setItem(AI_COMPACT_PROMPT_STORAGE_KEY, text);
 }
-function loadAiModels() {
-  const raw = readJsonLocalStorage(AI_MODELS_STORAGE_KEY);
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item) => ({
-    id: typeof item?.id === "string" ? item.id : "",
-    contextLength: Number.isFinite(item?.contextLength) ? Math.max(0, Math.trunc(Number(item.contextLength))) : 0
-  })).filter((item) => item.id);
+function loadAiTagToolPrompt() {
+  const stored = localStorage.getItem(AI_TAG_TOOL_PROMPT_STORAGE_KEY);
+  return !stored || stored === LEGACY_DEFAULT_TAG_TOOL_PROMPT ? DEFAULT_TAG_TOOL_PROMPT : sanitizeToolPrompt(stored);
 }
-function saveAiModels(models) {
-  localStorage.setItem(AI_MODELS_STORAGE_KEY, JSON.stringify(models, null, 2));
+function saveAiTagToolPrompt(text) {
+  localStorage.setItem(AI_TAG_TOOL_PROMPT_STORAGE_KEY, text);
+}
+function loadAiHarmonyToolPrompt() {
+  const stored = localStorage.getItem(AI_HARMONY_TOOL_PROMPT_STORAGE_KEY);
+  return !stored || stored === LEGACY_DEFAULT_HARMONY_TOOL_PROMPT ? DEFAULT_HARMONY_TOOL_PROMPT : sanitizeToolPrompt(stored);
+}
+function saveAiHarmonyToolPrompt(text) {
+  localStorage.setItem(AI_HARMONY_TOOL_PROMPT_STORAGE_KEY, text);
 }
 async function probeOpenAICompatibleModels(config = loadAiEndpointConfig()) {
   const normalized = normalizeAiEndpointConfig(config);
+  const requestConfig = withResolvedApiBaseUrl(normalized);
   const headers = authHeaders(normalized);
   try {
-    const response = await fetch(`${normalized.apiBaseUrl}/models`, { headers });
+    const response = await fetch(`${requestConfig.apiBaseUrl}/models`, { headers });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const models = (Array.isArray(data.data) ? data.data : []).map(modelInfoFromUnknown).filter((model) => Boolean(model?.id));
-    const merged = await mergeLmStudioNativeModels(normalized, headers, models);
-    saveAiModels(merged);
+    const merged = await mergeLmStudioNativeModels(requestConfig, headers, models);
     return { models: merged };
   } catch (error) {
-    return { models: [], error: `Could not reach ${normalized.apiBaseUrl}/models: ${error instanceof Error ? error.message : String(error)}` };
+    return { models: [], error: `Could not reach ${requestConfig.apiBaseUrl}/models: ${error instanceof Error ? error.message : String(error)}` };
   }
 }
 var ChatHarness = class {
@@ -2630,23 +2800,103 @@ var ChatHarness = class {
     this.vfs = vfs;
   }
   vfs;
-  messages = [
-    {
-      id: uid("msg"),
-      role: "system",
-      text: "AI agent ready. Configure an OpenAI-compatible endpoint in Settings, or ask a question to get setup guidance.",
-      at: Date.now()
-    }
-  ];
+  messages = [];
   abortController = null;
-  readSet = /* @__PURE__ */ new Set();
-  lastTotalTokens = 0;
-  basePromptTokens = 0;
+  readVersions = /* @__PURE__ */ new Map();
+  tokenCounter = {
+    key: "",
+    calibrated: false,
+    dirty: true,
+    basePromptTokens: 0,
+    promptTokens: 0,
+    lastPromptTokens: 0,
+    lastCompletionTokens: 0,
+    lastTotalTokens: 0,
+    source: "none"
+  };
   get running() {
     return this.abortController !== null;
   }
   cancel() {
     this.abortController?.abort();
+  }
+  tokenUsage() {
+    const { key: _key, ...usage } = this.tokenCounter;
+    return { ...usage };
+  }
+  exportJsonl() {
+    const messages = this.visibleMessages();
+    if (messages.length === 0) return "";
+    return `${messages.map((msg) => JSON.stringify({
+      id: msg.id,
+      at: new Date(msg.at).toISOString(),
+      role: msg.role,
+      name: msg.name,
+      ok: msg.ok,
+      text: msg.text
+    })).join("\n")}
+`;
+  }
+  debugApiJsonl(runtime, editorContext) {
+    const normalizedRuntime = normalizeRuntimeSettings(runtime);
+    const messages = this.apiMessages(
+      normalizedRuntime,
+      [],
+      shouldUseNativeTools(loadAiEndpointConfig(), normalizedRuntime),
+      editorContext ? formatEditorContext(editorContext) : null
+    );
+    return `${messages.map((msg, index) => JSON.stringify({
+      index,
+      ...msg
+    })).join("\n")}
+`;
+  }
+  visibleMessages() {
+    const visible = [];
+    for (const msg of this.messages) {
+      if (msg.internal) continue;
+      const text = msg.displayText ?? msg.text;
+      if (msg.role === "assistant" && !text.trim()) continue;
+      visible.push(text === msg.text ? msg : { ...msg, text });
+    }
+    return visible;
+  }
+  clear() {
+    this.messages.splice(0, this.messages.length);
+    this.readVersions.clear();
+    this.resetTokenCounterState();
+  }
+  async compact(runtimeSettings, options = {}) {
+    if (this.running) return { ok: false, output: "Chat is busy." };
+    const config = loadAiEndpointConfig();
+    const runtime = normalizeRuntimeSettings(runtimeSettings);
+    if (!config.model) {
+      const output = "No model is configured yet. Use Settings > AI to edit the OpenAI-compatible endpoint settings, or probe LM Studio models.";
+      this.push({ role: "system", text: output, ok: false }, options.onUpdate);
+      await this.persist();
+      return { ok: false, output };
+    }
+    const readyConfig = await this.ensureContextTokensKnown(config, options.onUpdate);
+    if (!readyConfig) {
+      const output = "Max context tokens are unknown. Set Settings > AI > Max Context Tokens, or probe LM Studio max tokens before starting the assistant.";
+      this.push({ role: "system", text: output }, options.onUpdate);
+      await this.persist();
+      return { ok: false, output };
+    }
+    const controller = new AbortController();
+    this.abortController = controller;
+    try {
+      this.resetTokenCounterIfNeeded(readyConfig, runtime);
+      return await this.compactConversation(readyConfig, runtime, controller.signal, options);
+    } catch (error) {
+      const output = `Compaction failed: ${error instanceof Error ? error.message : String(error)}`;
+      this.push({ role: "system", text: output }, options.onUpdate);
+      return { ok: false, output };
+    } finally {
+      this.abortController = null;
+      await this.persist();
+      options.onUpdate?.();
+    }
   }
   async send(input, activeDoc, openDocs, options) {
     const userInput = input.trim();
@@ -2658,6 +2908,7 @@ var ChatHarness = class {
       openPaths: openDocs.map((doc) => doc.path ?? "(untitled)")
     };
     if (activeDoc?.path) context.activePath = activeDoc.path;
+    const editorContext = options.editorContext ? formatEditorContext({ ...context, ...options.editorContext }) : null;
     this.push({ role: "user", text: userInput }, options.onUpdate);
     const controller = new AbortController();
     this.abortController = controller;
@@ -2665,45 +2916,147 @@ var ChatHarness = class {
     try {
       if (!config.model) {
         this.push({
-          role: "assistant",
-          text: "No model is configured yet. Use Settings > AI to edit the OpenAI-compatible endpoint settings, or scan LM Studio models."
+          role: "system",
+          text: "No model is configured yet. Use Settings > AI to edit the OpenAI-compatible endpoint settings, or probe LM Studio models.",
+          ok: false
         }, options.onUpdate);
         return;
       }
-      await this.maybeCompact(config, runtime, controller.signal, options.onUpdate);
+      const readyConfig = await this.ensureContextTokensKnown(config, options.onUpdate);
+      if (!readyConfig) {
+        this.push({
+          role: "system",
+          text: "Max context tokens are unknown. Set Settings > AI > Max Context Tokens, or probe LM Studio max tokens before starting the assistant."
+        }, options.onUpdate);
+        return;
+      }
+      this.resetTokenCounterIfNeeded(readyConfig, runtime);
+      const tokenCounterWasCalibrated = this.tokenCounter.calibrated;
+      await this.ensureTokenCounterCalibrated(readyConfig, runtime, controller.signal, editorContext);
+      if (tokenCounterWasCalibrated) this.markTokenCounterDirtyForLocalMessage(userInput, runtime);
       let toolCalls = 0;
+      let allowedToolCalls = runtime.maxToolCallsPerTurn;
+      let allowUnlimitedToolCalls = false;
+      let stopToolCalls = false;
       let lastFingerprint = "";
+      let hiddenToolCallRepairs = 0;
+      let pendingRepairPrompt = null;
+      const ensureToolCallsAllowed = async () => {
+        if (allowUnlimitedToolCalls || toolCalls < allowedToolCalls) return true;
+        const decision = await options.onToolCallLimit?.(runtime.maxToolCallsPerTurn, toolCalls) ?? "stop";
+        if (decision === "allowAll") {
+          allowUnlimitedToolCalls = true;
+          this.push({ role: "system", text: "Max tool calls reached; allowing unlimited tool calls for this turn." }, options.onUpdate);
+          return true;
+        }
+        if (decision === "allowMore") {
+          allowedToolCalls += runtime.maxToolCallsPerTurn;
+          this.push({ role: "system", text: `Max tool calls reached; allowing ${runtime.maxToolCallsPerTurn} more for this turn.` }, options.onUpdate);
+          return true;
+        }
+        this.push({ role: "system", text: "Max tool calls reached; stopped tool calls for this turn." }, options.onUpdate);
+        return false;
+      };
       while (!controller.signal.aborted) {
-        if (toolCalls >= runtime.maxToolCallsPerTurn) {
-          this.push({ role: "assistant", text: `Tool-call limit of ${runtime.maxToolCallsPerTurn} reached; ending turn.` }, options.onUpdate);
-          break;
+        if (!await ensureToolCallsAllowed()) break;
+        const result = await this.complete(readyConfig, runtime, controller.signal, options.onUpdate, pendingRepairPrompt, editorContext);
+        pendingRepairPrompt = null;
+        const extractedThinking = extractThinkingFromText(result.text, runtime.thinkingFormat);
+        const thinking = [result.thinking, extractedThinking.thinking].filter(Boolean).join("\n\n");
+        const assistantText = extractedThinking.text;
+        if (thinking) {
+          if (result.streamedThinkingMessage) {
+            result.streamedThinkingMessage.text = thinking;
+            options.onUpdate?.();
+          } else {
+            this.push({ role: "thinking", text: thinking }, options.onUpdate);
+          }
         }
-        const result = await this.complete(config, runtime, controller.signal);
-        if (result.usageTotal > 0) this.lastTotalTokens = result.usageTotal;
-        if (result.thinking) this.push({ role: "thinking", text: result.thinking }, options.onUpdate);
-        const parsedCalls = result.toolCalls.length > 0 ? result.toolCalls : parseTextToolCalls(result.text, runtime.toolCallFormat);
+        const parsedCalls = runtime.toolCallFormat === "none" ? [] : result.toolCalls.length > 0 ? result.toolCalls : parseTextToolCalls(result.text, runtime.toolCallFormat);
         if (parsedCalls.length === 0) {
-          this.push({ role: "assistant", text: result.text || "(empty response)" }, options.onUpdate);
+          const hiddenToolCall = runtime.toolCallFormat !== "none" && thinkingSuggestsToolCall(thinking, runtime.toolCallFormat);
+          if (!assistantText.trim() && hiddenToolCall) {
+            this.observeCompletionUsage(result);
+            if (!completionResultHasUsage(result) && result.text) this.markTokenCounterDirtyForLocalMessage(result.text, runtime);
+            if (hiddenToolCallRepairs >= 2) {
+              this.push({ role: "system", ok: false, text: "The model kept writing tool calls inside hidden thinking. Hidden thinking is not executable, so no tool was run." }, options.onUpdate);
+              await this.maybeAutoCompactAfterModelResponse(readyConfig, runtime, controller.signal, options, editorContext);
+              break;
+            }
+            const repairPrompt = hiddenToolCallRepairPrompt(runtime.toolCallFormat);
+            this.push({ role: "system", ok: false, text: "The model wrote a tool call inside thinking. Hidden thinking is not executable, so no tool was run; asking the model to resend the call as assistant content." }, options.onUpdate);
+            pendingRepairPrompt = repairPrompt;
+            this.markTokenCounterDirtyForLocalMessage(repairPrompt, runtime);
+            hiddenToolCallRepairs++;
+            continue;
+          }
+          const stripTools = runtime.toolCallFormat !== "none";
+          if (result.streamedMessage) this.updateAssistantDisplayMessage(result.streamedMessage, assistantText, options.onUpdate, stripTools);
+          else this.pushAssistantMessageForDisplay(assistantText || "(empty response)", options.onUpdate, stripTools);
+          this.observeCompletionUsage(result);
+          if (!completionResultHasUsage(result) && result.text) this.markTokenCounterDirtyForLocalMessage(result.text, runtime);
+          if (!result.text) this.markTokenCounterDirtyForLocalMessage("(empty response)", runtime);
+          await this.maybeAutoCompactAfterModelResponse(readyConfig, runtime, controller.signal, options, editorContext);
           break;
         }
-        const visibleText = result.text.trim();
-        if (visibleText) this.push({ role: "assistant", text: visibleText }, options.onUpdate);
+        const visibleText = assistantText.trim();
+        if (visibleText && !result.streamedMessage) {
+          this.pushAssistantMessageForDisplay(visibleText, options.onUpdate, true);
+        } else if (result.streamedMessage) {
+          this.updateAssistantDisplayMessage(result.streamedMessage, visibleText, options.onUpdate, true);
+        }
+        this.observeCompletionUsage(result);
+        if (!completionResultHasUsage(result) && result.text) this.markTokenCounterDirtyForLocalMessage(result.text, runtime);
         for (const call of parsedCalls) {
+          if (!await ensureToolCallsAllowed()) {
+            stopToolCalls = true;
+            break;
+          }
           const fingerprint = `${call.name}:${JSON.stringify(call.args)}`;
           if (runtime.detectDuplicateToolCalls && fingerprint === lastFingerprint) {
-            const output = "Duplicate tool call detected; ending turn.";
-            this.push({ role: "tool_result", name: call.name, ok: false, text: output }, options.onUpdate);
-            this.push({ role: "user", text: formatToolResult(output, runtime.toolCallFormat) });
-            return;
+            const decision = await options.onDuplicateToolCall?.({ name: call.name, args: call.args, raw: call.raw }) ?? "break";
+            if (decision === "break") {
+              const output = "Duplicate tool call detected; ending turn.";
+              this.push({ role: "tool_result", name: call.name, ok: false, text: output }, options.onUpdate);
+              if (!call.nativeId) {
+                const formattedResult = formatToolResult(output, runtime.toolCallFormat);
+                this.push({ role: "user", text: formattedResult, internal: true });
+                this.markTokenCounterDirtyForLocalMessage(formattedResult, runtime);
+              }
+              return;
+            }
+            this.push({ role: "system", text: `Duplicate tool call allowed: ${call.name}` }, options.onUpdate);
+            this.markTokenCounterDirtyForLocalMessage(`Duplicate tool call allowed: ${call.name}`, runtime);
           }
           lastFingerprint = fingerprint;
-          this.push({ role: "tool_call", name: call.name, text: call.raw }, options.onUpdate);
-          const toolResult = await this.runTool(call, openByPath, config, runtime, controller.signal, options.onUpdate);
-          this.push({ role: "tool_result", name: call.name, ok: toolResult.ok, text: toolResult.output }, options.onUpdate);
-          this.messages.push({ id: uid("msg"), role: "user", text: formatToolResult(toolResult.output, runtime.toolCallFormat), at: Date.now(), ok: toolResult.ok });
+          this.push({
+            role: "tool_call",
+            name: call.name,
+            text: call.raw,
+            nativeToolCallId: call.nativeId,
+            nativeToolArguments: call.nativeArguments
+          }, options.onUpdate);
+          const toolResult = await this.runTool(call, openByPath, readyConfig, runtime, controller.signal, {
+            onUpdate: options.onUpdate,
+            onWorkspaceChange: options.onWorkspaceChange
+          });
+          this.push({
+            role: "tool_result",
+            name: call.name,
+            ok: toolResult.ok,
+            text: toolResult.output,
+            nativeToolCallId: call.nativeId
+          }, options.onUpdate);
+          if (call.nativeId) {
+            this.markTokenCounterDirtyForLocalMessage(toolResult.output, runtime);
+          } else {
+            const formattedResult = formatToolResult(toolResult.output, runtime.toolCallFormat);
+            this.messages.push({ id: uid("msg"), role: "user", text: formattedResult, at: Date.now(), ok: toolResult.ok, internal: true });
+            this.markTokenCounterDirtyForLocalMessage(formattedResult, runtime);
+          }
           toolCalls++;
-          if (toolCalls >= runtime.maxToolCallsPerTurn) break;
         }
+        if (stopToolCalls) break;
       }
     } catch (error) {
       if (controller.signal.aborted) {
@@ -2726,92 +3079,315 @@ var ChatHarness = class {
     onUpdate?.();
     return msg;
   }
-  async complete(config, runtime, signal) {
-    const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+  pushAssistantMessageForDisplay(text, onUpdate, stripTools = true) {
+    const displayText = (stripTools ? stripToolCallSyntax(text) : text).trim();
+    return this.push({
+      role: "assistant",
+      text,
+      displayText,
+      internal: !displayText
+    }, onUpdate);
+  }
+  updateAssistantDisplayMessage(message, text, onUpdate, stripTools = true) {
+    const displayText = (stripTools ? stripToolCallSyntax(text) : text).trim();
+    message.text = text;
+    message.displayText = displayText;
+    message.internal = !displayText;
+    onUpdate?.();
+  }
+  async complete(config, runtime, signal, onUpdate, extraUserMessage, editorContext) {
+    const nativeTools = shouldUseNativeTools(config, runtime);
+    const tools = nativeTools ? NATIVE_TOOL_DEFINITIONS : [];
+    const body = {
+      model: config.model,
+      messages: this.apiMessages(runtime, extraUserMessage ? [{ role: "user", content: extraUserMessage }] : [], nativeTools, editorContext),
+      temperature: config.temperature,
+      stream: true
+    };
+    if (tools.length > 0) {
+      body.tools = tools;
+      body.tool_choice = "auto";
+    }
+    const response = await fetch(`${resolvedApiBaseUrl(config)}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...authHeaders(config)
       },
-      body: JSON.stringify({
-        model: config.model,
-        messages: this.apiMessages(runtime),
-        temperature: config.temperature,
-        stream: false
-      }),
+      body: JSON.stringify(body),
       signal
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (response.body && contentType.toLowerCase().includes("text/event-stream")) {
+      return this.readStreamingCompletion(response, onUpdate);
+    }
     const data = await response.json();
-    const message = data.choices?.[0]?.message;
-    return {
-      text: message?.content ?? "",
-      thinking: message?.reasoning_content ?? "",
-      toolCalls: parseNativeToolCalls(message?.tool_calls),
-      usageTotal: Math.max(0, Number(data.usage?.total_tokens ?? 0)),
-      usagePrompt: Math.max(0, Number(data.usage?.prompt_tokens ?? 0))
-    };
+    return completionResultFromJson(data);
   }
-  apiMessages(runtime) {
-    const helperPrompts = loadAiHelperPrompts().trim();
-    const formatNote = runtime.toolCallFormat === "harmony" ? "Use harmony-style tool calls when invoking tools." : "Use <tool>name(args)</tool> tag tool calls when invoking tools.";
+  async readStreamingCompletion(response, onUpdate) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    const streamedToolCalls = /* @__PURE__ */ new Map();
+    let buffer = "";
+    let text = "";
+    let thinking = "";
+    let usage = emptyUsage();
+    let streamedMessage;
+    let streamedThinkingMessage;
+    let done = false;
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      buffer += decoder.decode(value ?? new Uint8Array(), { stream: !readerDone });
+      let event;
+      while ((event = takeSseEvent()) !== null) {
+        const payload = sseDataPayload(event);
+        if (!payload) continue;
+        if (payload === "[DONE]") {
+          done = true;
+          break;
+        }
+        const chunk = parseJsonObject(payload);
+        if (!chunk) continue;
+        const nextUsage = usageFromApi(chunk.usage);
+        if (nextUsage.totalTokens > 0 || nextUsage.promptTokens > 0 || nextUsage.completionTokens > 0) usage = nextUsage;
+        const choices = chunk.choices;
+        if (!Array.isArray(choices)) continue;
+        for (const choice of choices) {
+          if (!choice || typeof choice !== "object") continue;
+          const delta = choice.delta;
+          if (!delta || typeof delta !== "object") continue;
+          const content = streamDeltaText(delta, "content");
+          const reasoning = streamDeltaText(delta, "reasoning_content") || streamDeltaText(delta, "reasoning");
+          if (reasoning) {
+            thinking += reasoning;
+            if (!streamedThinkingMessage) {
+              streamedThinkingMessage = this.push({ role: "thinking", text: reasoning }, onUpdate);
+            } else {
+              streamedThinkingMessage.text += reasoning;
+              onUpdate?.();
+            }
+          }
+          if (content) {
+            text += content;
+            if (!streamedMessage) {
+              streamedMessage = this.push({ role: "assistant", text: content }, onUpdate);
+            } else {
+              streamedMessage.text += content;
+              onUpdate?.();
+            }
+          }
+          appendStreamToolCallDeltas(delta.tool_calls, streamedToolCalls);
+        }
+      }
+      if (readerDone) break;
+    }
+    return {
+      text,
+      thinking,
+      toolCalls: parseStreamedToolCalls(streamedToolCalls),
+      usageTotal: usage.totalTokens,
+      usagePrompt: usage.promptTokens,
+      usageCompletion: usage.completionTokens,
+      streamedMessage,
+      streamedThinkingMessage
+    };
+    function takeSseEvent() {
+      const lf = buffer.indexOf("\n\n");
+      const crlf = buffer.indexOf("\r\n\r\n");
+      const indexes = [
+        lf >= 0 ? { index: lf, length: 2 } : null,
+        crlf >= 0 ? { index: crlf, length: 4 } : null
+      ].filter((item) => Boolean(item));
+      if (indexes.length === 0) return null;
+      indexes.sort((a, b) => a.index - b.index);
+      const boundary = indexes[0];
+      const event = buffer.slice(0, boundary.index);
+      buffer = buffer.slice(boundary.index + boundary.length);
+      return event;
+    }
+  }
+  apiMessages(runtime, extraMessages = [], nativeTools = false, editorContext) {
     const messages = [
-      { role: "system", content: `${loadAiSystemPrompt()}
-
-${formatNote}` }
+      { role: "system", content: composeAiSystemPrompt(runtime.toolCallFormat, nativeTools) }
     ];
-    if (helperPrompts) messages.push({ role: "system", content: helperPrompts });
+    if (editorContext) messages.push({ role: "user", content: editorContext });
     for (const msg of this.messages) {
-      if (msg.role === "system") continue;
+      if (isHiddenToolRepairMessage(msg)) continue;
+      if (msg.role === "system") {
+        if (isCompactedSummaryMessage(msg)) messages.push({ role: "user", content: msg.text });
+        continue;
+      }
       if (msg.role === "assistant") messages.push({ role: "assistant", content: msg.text });
-      else if (msg.role === "tool_call") messages.push({ role: "assistant", content: msg.text });
-      else if (msg.role === "thinking") messages.push({ role: "assistant", content: `[thinking]
-${msg.text}` });
+      else if (msg.role === "tool_call") {
+        if (nativeTools && msg.nativeToolCallId) {
+          messages.push({
+            role: "assistant",
+            content: "",
+            tool_calls: [{
+              id: msg.nativeToolCallId,
+              type: "function",
+              function: { name: msg.name ?? "", arguments: msg.nativeToolArguments ?? "{}" }
+            }]
+          });
+        } else {
+          messages.push({ role: "assistant", content: msg.text });
+        }
+      } else if (msg.role === "tool_result") {
+        if (nativeTools && msg.nativeToolCallId) {
+          messages.push({ role: "tool", tool_call_id: msg.nativeToolCallId, content: msg.text });
+        } else if (msg.nativeToolCallId) {
+          messages.push({ role: "user", content: formatToolResult(msg.text, runtime.toolCallFormat) });
+        }
+      } else if (msg.role === "thinking") continue;
       else messages.push({ role: "user", content: msg.text });
     }
+    messages.push(...extraMessages);
     return messages;
   }
-  async maybeCompact(config, runtime, signal, onUpdate) {
-    const maxTokens = config.maxContextTokens || bestKnownContextLength(config.model);
+  async maybeAutoCompactAfterModelResponse(config, runtime, signal, options, editorContext) {
+    const maxTokens = resolveAiContextTokens(config);
     if (maxTokens <= 0) return;
-    const used = this.lastTotalTokens || estimateTokens(this.apiMessages(runtime).map((msg) => msg.content).join("\n"));
-    const freePercent = Math.max(0, (maxTokens - used) / maxTokens * 100);
+    let used = this.tokenCounter.promptTokens || this.estimateCurrentPromptTokens(runtime, editorContext);
+    let freePercent = Math.max(0, (maxTokens - used) / maxTokens * 100);
+    if (this.tokenCounter.dirty && freePercent < runtime.compactFreePercent + DIRTY_TOKEN_REFRESH_MARGIN_PERCENT) {
+      used = await this.refreshCurrentPromptTokens(config, runtime, signal, editorContext) || used;
+      freePercent = Math.max(0, (maxTokens - used) / maxTokens * 100);
+    }
     if (freePercent >= runtime.compactFreePercent) return;
-    if (this.basePromptTokens === 0) this.basePromptTokens = await this.probeBasePromptTokens(config, signal);
-    await this.compactConversation(config, runtime, signal, onUpdate);
+    await this.compactConversation(config, runtime, signal, options);
   }
-  async probeBasePromptTokens(config, signal) {
+  async ensureTokenCounterCalibrated(config, runtime, signal, editorContext) {
+    if (this.tokenCounter.calibrated) return;
+    const nativeTools = shouldUseNativeTools(config, runtime);
+    const tools = nativeTools ? NATIVE_TOOL_DEFINITIONS : [];
+    const probeMessages = this.apiMessagesWithLatestUserReplaced(runtime, PROBE_USER_MESSAGE, nativeTools, editorContext);
+    const usage = await this.probeTokenUsage(config, probeMessages, signal, tools);
+    const basePromptTokens = basePromptTokensFromProbeUsage(usage);
+    if (basePromptTokens > 0) {
+      this.tokenCounter.basePromptTokens = basePromptTokens;
+      this.tokenCounter.promptTokens = Math.max(basePromptTokens, this.estimateCurrentPromptTokens(runtime, editorContext));
+      this.tokenCounter.calibrated = true;
+      this.tokenCounter.dirty = true;
+      this.tokenCounter.lastPromptTokens = usage.promptTokens;
+      this.tokenCounter.lastCompletionTokens = usage.completionTokens || PROBE_COMPLETION_TOKEN_COUNT;
+      this.tokenCounter.lastTotalTokens = usage.totalTokens;
+      this.tokenCounter.source = "probe";
+      return;
+    }
+    this.tokenCounter.promptTokens = this.estimateCurrentPromptTokens(runtime, editorContext);
+    this.tokenCounter.dirty = true;
+    this.tokenCounter.source = "estimate";
+  }
+  async refreshCurrentPromptTokens(config, runtime, signal, editorContext) {
+    const nativeTools = shouldUseNativeTools(config, runtime);
+    const usage = await this.probeTokenUsage(config, this.apiMessages(runtime, [], nativeTools, editorContext), signal, nativeTools ? NATIVE_TOOL_DEFINITIONS : []);
+    const promptTokens = promptTokensFromRefreshUsage(usage);
+    if (promptTokens <= 0) return 0;
+    this.tokenCounter.promptTokens = promptTokens;
+    this.tokenCounter.dirty = false;
+    this.tokenCounter.lastPromptTokens = usage.promptTokens || promptTokens;
+    this.tokenCounter.lastCompletionTokens = usage.completionTokens || PROBE_COMPLETION_TOKEN_COUNT;
+    this.tokenCounter.lastTotalTokens = usage.totalTokens;
+    this.tokenCounter.source = "refresh";
+    return promptTokens;
+  }
+  async ensureContextTokensKnown(config, onUpdate) {
+    if (resolveAiContextTokens(config) > 0) return config;
+    const result = await probeOpenAICompatibleModels(config);
+    const match = result.models.find((model) => model.id === config.model);
+    if (!match?.contextLength) return null;
+    const updated = saveAiEndpointConfig({ ...config, maxContextTokens: match.contextLength });
+    this.push({ role: "system", text: `Detected ${match.contextLength} max context tokens for ${config.model}.` }, onUpdate);
+    return updated;
+  }
+  async probeTokenUsage(config, messages, signal, tools = []) {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+      const body = {
+        model: config.model,
+        max_tokens: 1,
+        stream: false,
+        messages
+      };
+      if (tools.length > 0) {
+        body.tools = tools;
+        body.tool_choice = "auto";
+      }
+      const response = await fetch(`${resolvedApiBaseUrl(config)}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...authHeaders(config)
         },
-        body: JSON.stringify({
-          model: config.model,
-          max_tokens: 1,
-          stream: false,
-          messages: [
-            { role: "system", content: loadAiSystemPrompt() },
-            { role: "user", content: "test" }
-          ]
-        }),
+        body: JSON.stringify(body),
         signal
       });
-      if (!response.ok) return 0;
+      if (!response.ok) return emptyUsage();
       const data = await response.json();
-      return Math.max(0, Number(data.usage?.prompt_tokens ?? 0) - 2);
+      return usageFromApi(data.usage);
     } catch {
-      return 0;
+      return emptyUsage();
     }
   }
-  async compactConversation(config, runtime, signal, onUpdate) {
-    const transcript = this.messages.filter((msg) => msg.role !== "system").map((msg) => `[${msg.role}] ${msg.name ? `${msg.name}: ` : ""}${msg.text}`).join("\n\n");
-    if (!transcript.trim()) return { ok: true, output: "Nothing to compact." };
-    this.push({ role: "system", text: "Compacting conversation..." }, onUpdate);
+  apiMessagesWithLatestUserReplaced(runtime, replacement, nativeTools = false, editorContext) {
+    const messages = this.apiMessages(runtime, [], nativeTools, editorContext).map((msg) => ({ ...msg }));
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        messages[i].content = replacement;
+        return messages;
+      }
+    }
+    messages.push({ role: "user", content: replacement });
+    return messages;
+  }
+  observeCompletionUsage(result) {
+    const promptTokens = result.usagePrompt;
+    const completionTokens = result.usageCompletion || Math.max(0, result.usageTotal - result.usagePrompt);
+    const currentTokens = result.usageTotal || (promptTokens > 0 && completionTokens > 0 ? promptTokens + completionTokens : promptTokens);
+    if (currentTokens <= 0) return;
+    this.tokenCounter.promptTokens = currentTokens;
+    this.tokenCounter.lastPromptTokens = promptTokens;
+    this.tokenCounter.lastCompletionTokens = completionTokens;
+    this.tokenCounter.lastTotalTokens = result.usageTotal;
+    this.tokenCounter.dirty = result.usageTotal <= 0;
+    this.tokenCounter.source = "usage";
+  }
+  markTokenCounterDirtyForLocalMessage(text, runtime) {
+    if (this.tokenCounter.promptTokens > 0) {
+      this.tokenCounter.promptTokens += estimateMessageTokens(text);
+    } else {
+      this.tokenCounter.promptTokens = this.estimateCurrentPromptTokens(runtime);
+    }
+    this.tokenCounter.dirty = true;
+    if (this.tokenCounter.source === "none") this.tokenCounter.source = "estimate";
+  }
+  estimateCurrentPromptTokens(runtime, editorContext) {
+    return estimateTokens(this.apiMessages(runtime, [], false, editorContext).map((msg) => msg.content).join("\n"));
+  }
+  resetTokenCounterIfNeeded(config, runtime) {
+    const key = tokenCounterKey(config, runtime);
+    if (this.tokenCounter.key === key) return;
+    this.resetTokenCounterState(key);
+  }
+  resetTokenCounterState(key = "") {
+    this.tokenCounter = {
+      key,
+      calibrated: false,
+      dirty: true,
+      basePromptTokens: 0,
+      promptTokens: 0,
+      lastPromptTokens: 0,
+      lastCompletionTokens: 0,
+      lastTotalTokens: 0,
+      source: "none"
+    };
+  }
+  async compactConversation(config, runtime, signal, options) {
+    const messages = this.compactionMessages();
+    if (messages.length <= 2) return { ok: true, output: "Nothing to compact." };
+    options.onCompactStart?.();
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/completions`, {
+      const response = await fetch(`${resolvedApiBaseUrl(config)}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2820,11 +3396,9 @@ ${msg.text}` });
         body: JSON.stringify({
           model: config.model,
           temperature: 0,
+          max_tokens: 700,
           stream: false,
-          messages: [
-            { role: "system", content: "Summarize this coding-agent transcript compactly. Preserve user goals, files changed, tool results, and unresolved tasks." },
-            { role: "user", content: transcript }
-          ]
+          messages
         }),
         signal
       });
@@ -2832,33 +3406,50 @@ ${msg.text}` });
       const data = await response.json();
       const summary = data.choices?.[0]?.message?.content?.trim();
       if (!summary) throw new Error("empty summary");
-      const keep = this.messages.filter((msg) => msg.role === "user").slice(-1);
       this.messages.splice(0, this.messages.length, {
         id: uid("msg"),
         role: "system",
-        text: `[Conversation compacted]
+        text: `${COMPACTED_SUMMARY_HEADER}
 
 ${summary}`,
         at: Date.now()
-      }, ...keep);
-      this.lastTotalTokens = Math.max(0, Number(data.usage?.total_tokens ?? 0));
-      onUpdate?.();
+      });
+      this.tokenCounter.promptTokens = this.estimateCurrentPromptTokens(runtime);
+      this.tokenCounter.dirty = true;
+      this.tokenCounter.source = "estimate";
+      options.onUpdate?.();
       return { ok: true, output: "Conversation compacted." };
     } catch (error) {
       const output = `Compaction failed: ${error instanceof Error ? error.message : String(error)}`;
-      this.push({ role: "system", text: output }, onUpdate);
+      this.push({ role: "system", text: output }, options.onUpdate);
       return { ok: false, output };
+    } finally {
+      options.onCompactEnd?.();
     }
   }
-  async runTool(call, openByPath, config, runtime, signal, onUpdate) {
+  compactionMessages() {
+    const messages = [
+      { role: "system", content: loadAiCompactPrompt() }
+    ];
+    for (const msg of this.messages) {
+      if (msg.internal) continue;
+      if (msg.role === "system" && !isCompactedSummaryMessage(msg)) continue;
+      if (msg.role === "thinking" || msg.role === "tool_call" || msg.role === "tool_result") continue;
+      const content = stripToolCallSyntax(msg.text).trim();
+      if (content) messages.push({ role: msg.role === "assistant" ? "assistant" : "user", content });
+    }
+    messages.push({ role: "user", content: "compact / summarize this chat" });
+    return messages;
+  }
+  async runTool(call, openByPath, config, runtime, signal, options) {
     const name = call.name.replace(/^functions\./, "");
     if (name === "readFile") return this.toolReadFile(call.args);
-    if (name === "writeFile") return this.toolWriteFile(call.args, openByPath);
-    if (name === "editFile") return this.toolEditFile(call.args, openByPath);
+    if (name === "writeFile") return this.toolWriteFile(call.args, openByPath, options.onWorkspaceChange);
+    if (name === "editFile") return this.toolEditFile(call.args, openByPath, options.onWorkspaceChange);
     if (name === "grep") return this.toolGrep(call.args);
-    if (name === "grepFile" || name === "frepFile" || name === "grepIn") return this.toolGrepFile(call.args);
-    if (name === "bash") return this.toolBash(call.args, openByPath);
-    if (name === "compact") return this.compactConversation(config, runtime, signal, onUpdate);
+    if (name === "grepFile" || name === "grepIn") return this.toolGrepFile(call.args);
+    if (name === "bash") return this.toolBash(call.args, openByPath, options.onWorkspaceChange);
+    if (name === "compact") return this.compactConversation(config, runtime, signal, { onUpdate: options.onUpdate });
     return { ok: false, output: `Unknown tool: ${call.name}` };
   }
   async toolReadFile(args) {
@@ -2867,28 +3458,32 @@ ${summary}`,
     if (isUnsupportedFilePath(path)) return { ok: false, output: "File type not supported" };
     try {
       const text = await this.vfs.readText(path);
-      this.readSet.add(path);
+      await this.markFileObserved(path);
       return { ok: true, output: text };
     } catch {
       return { ok: false, output: `readFile: not found: ${path}` };
     }
   }
-  async toolWriteFile(args, openByPath) {
+  async toolWriteFile(args, openByPath, onWorkspaceChange) {
     const path = normalizeToolPath(argString(args, 0, "path"));
     const content = argString(args, 1, "content");
     if (!path) return { ok: false, output: "writeFile: missing path" };
     if (content === void 0) return { ok: false, output: "writeFile: missing content" };
+    const guard = await this.requireFreshReadBeforeExistingWrite(path, "writeFile");
+    if (guard) return guard;
     await this.vfs.writeFile(path, content, "text/plain");
-    syncOpenDocument(openByPath.get(path), content);
-    this.readSet.add(path);
+    if (onWorkspaceChange) await notifyWorkspaceChange(onWorkspaceChange, { type: "write", path, text: content });
+    else syncOpenDocument(openByPath.get(path), content);
+    await this.markFileObserved(path);
     return { ok: true, output: `Wrote ${path}` };
   }
-  async toolEditFile(args, openByPath) {
+  async toolEditFile(args, openByPath, onWorkspaceChange) {
     const path = normalizeToolPath(argString(args, 0, "path"));
     const oldString = argString(args, 1, "oldString");
     const newString = argString(args, 2, "newString") ?? "";
     if (!path || oldString === void 0) return { ok: false, output: "editFile: usage editFile(path, oldString, newString)" };
-    if (!this.readSet.has(path)) return { ok: false, output: `editFile: call readFile first: ${path}` };
+    const guard = await this.requireFreshReadBeforeExistingWrite(path, "editFile");
+    if (guard) return guard;
     let content;
     try {
       content = await this.vfs.readText(path);
@@ -2901,8 +3496,22 @@ ${summary}`,
     if (content.indexOf(oldString, first + oldString.length) >= 0) return { ok: false, output: "editFile: oldString is not unique" };
     const updated = content.slice(0, first) + newString + content.slice(first + oldString.length);
     await this.vfs.writeFile(path, updated, "text/plain");
-    syncOpenDocument(openByPath.get(path), updated);
+    if (onWorkspaceChange) await notifyWorkspaceChange(onWorkspaceChange, { type: "write", path, text: updated });
+    else syncOpenDocument(openByPath.get(path), updated);
+    await this.markFileObserved(path);
     return { ok: true, output: `Edited ${path}` };
+  }
+  async requireFreshReadBeforeExistingWrite(path, toolName) {
+    const node = await this.vfs.stat(path);
+    if (!node) return null;
+    if (node.kind !== "file") return { ok: false, output: `${toolName}: not a file: ${path}` };
+    if (this.readVersions.get(path) === observedFileVersion(node)) return null;
+    return { ok: false, output: `${toolName}: call readFile first before modifying existing file: ${path}` };
+  }
+  async markFileObserved(path) {
+    const node = await this.vfs.stat(path);
+    if (node?.kind === "file") this.readVersions.set(path, observedFileVersion(node));
+    else this.readVersions.delete(path);
   }
   async toolGrep(args) {
     const pattern = argString(args, 0, "pattern");
@@ -2923,24 +3532,38 @@ ${summary}`,
     } catch (error) {
       return { ok: false, output: `grep: invalid regex: ${error instanceof Error ? error.message : String(error)}` };
     }
+    const matcher = makeGrepMatcher(pattern, regex);
     const matches = [];
-    await this.grepPath(normalizeToolPath(path) || "/", regex, matches);
-    return { ok: true, output: matches.length ? matches.join("\n") : "(no matches)" };
-  }
-  async grepPath(path, regex, matches) {
-    if (matches.length >= 500) return;
-    const node = await this.vfs.stat(path);
-    if (!node) return;
-    if (node.kind === "dir") {
-      const children = await this.vfs.listDir(path);
-      for (const child of children) {
-        if (child.name.startsWith(".") || child.path.startsWith("/.slug-")) continue;
-        await this.grepPath(child.path, regex, matches);
-        if (matches.length >= 500) break;
+    const stats = { skippedLarge: 0, skippedBinary: 0 };
+    const root = normalizeToolPath(path) || "/";
+    const node = await this.vfs.stat(root);
+    if (!node) return { ok: false, output: `grep: not found: ${root}` };
+    if (node.kind === "file") {
+      await this.grepFilePath(root, node, matcher, matches, stats);
+    } else {
+      const files = await this.vfs.listAllFiles();
+      for (const file of files) {
+        if (matches.length >= GREP_MAX_MATCHES) break;
+        if (root !== "/" && !isSameOrDescendantPath(file.path, root)) continue;
+        await this.grepFilePath(file.path, file, matcher, matches, stats);
       }
+    }
+    const notes = [];
+    if (matches.length >= GREP_MAX_MATCHES) notes.push(`[grep truncated at ${GREP_MAX_MATCHES} matches]`);
+    if (stats.skippedLarge > 0) notes.push(`[grep skipped ${stats.skippedLarge} file${stats.skippedLarge === 1 ? "" : "s"} larger than ${GREP_MAX_FILE_BYTES / (1024 * 1024)} MiB]`);
+    if (stats.skippedBinary > 0) notes.push(`[grep skipped ${stats.skippedBinary} unsupported or binary file${stats.skippedBinary === 1 ? "" : "s"}]`);
+    return { ok: true, output: [matches.length ? matches.join("\n") : "(no matches)", ...notes].join("\n") };
+  }
+  async grepFilePath(path, node, matcher, matches, stats) {
+    if (matches.length >= GREP_MAX_MATCHES || isHiddenSearchPath(path)) return;
+    if (isUnsupportedFilePath(path) || node.encoding === "binary") {
+      stats.skippedBinary++;
       return;
     }
-    if (isUnsupportedFilePath(path) || node.size > 1024 * 1024) return;
+    if (node.size > GREP_MAX_FILE_BYTES) {
+      stats.skippedLarge++;
+      return;
+    }
     let text = "";
     try {
       text = await this.vfs.readText(path);
@@ -2948,14 +3571,13 @@ ${summary}`,
       return;
     }
     const lines = text.split("\n");
-    for (let i = 0; i < lines.length && matches.length < 500; i++) {
-      regex.lastIndex = 0;
-      if (!regex.test(lines[i])) continue;
+    for (let i = 0; i < lines.length && matches.length < GREP_MAX_MATCHES; i++) {
+      if (!matcher.test(lines[i])) continue;
       const line = lines[i].length > 200 ? `${lines[i].slice(0, 200)}...` : lines[i];
       matches.push(`${path}:${i + 1}: ${line}`);
     }
   }
-  async toolBash(args, openByPath) {
+  async toolBash(args, openByPath, onWorkspaceChange) {
     const command = argString(args, 0, "command");
     if (!command) return { ok: false, output: "bash: missing command" };
     if (/[|;><&`]|\$\(/.test(command)) return { ok: false, output: "bash: shell operators are not supported in the browser" };
@@ -2965,12 +3587,12 @@ ${summary}`,
     if (cmd === "pwd") return { ok: true, output: "/\n" };
     if (cmd === "ls") return this.bashLs(argv);
     if (cmd === "cat") return this.bashCat(argv);
-    if (cmd === "mkdir") return this.bashMkdir(argv);
-    if (cmd === "rmdir") return this.bashRmdir(argv);
-    if (cmd === "rm") return this.bashRm(argv, openByPath);
-    if (cmd === "cp") return this.bashCp(argv, openByPath);
-    if (cmd === "mv") return this.bashMv(argv, openByPath);
-    if (cmd === "touch") return this.bashTouch(argv, openByPath);
+    if (cmd === "mkdir") return this.bashMkdir(argv, onWorkspaceChange);
+    if (cmd === "rmdir") return this.bashRmdir(argv, onWorkspaceChange);
+    if (cmd === "rm") return this.bashRm(argv, openByPath, onWorkspaceChange);
+    if (cmd === "cp") return this.bashCp(argv, openByPath, onWorkspaceChange);
+    if (cmd === "mv") return this.bashMv(argv, openByPath, onWorkspaceChange);
+    if (cmd === "touch") return this.bashTouch(argv, openByPath, onWorkspaceChange);
     if (cmd === "echo") return { ok: true, output: `${argv.slice(1).join(" ")}
 ` };
     return { ok: false, output: `bash: unsupported browser command: ${cmd}` };
@@ -2988,85 +3610,171 @@ ${summary}`,
     const paths = argv.slice(1).map(normalizeToolPath).filter((path) => Boolean(path));
     if (paths.length === 0) return { ok: false, output: "cat: missing file" };
     const out = [];
-    for (const path of paths) out.push(await this.vfs.readText(path));
+    for (const path of paths) {
+      out.push(await this.vfs.readText(path));
+      await this.markFileObserved(path);
+    }
     return { ok: true, output: out.join("") };
   }
-  async bashMkdir(argv) {
+  async bashMkdir(argv, onWorkspaceChange) {
     const dirs = argv.slice(1).filter((arg) => !arg.startsWith("-"));
     if (dirs.length === 0) return { ok: false, output: "mkdir: missing operand" };
-    for (const dir of dirs) await this.vfs.mkdir(normalizeToolPath(dir) || "/");
+    for (const dir of dirs) {
+      const path = normalizeToolPath(dir) || "/";
+      await this.vfs.mkdir(path);
+      await notifyWorkspaceChange(onWorkspaceChange, { type: "mkdir", path });
+    }
     return { ok: true, output: "" };
   }
-  async bashRmdir(argv) {
+  async bashRmdir(argv, onWorkspaceChange) {
     const dirs = argv.slice(1).filter((arg) => !arg.startsWith("-"));
-    for (const dir of dirs) await this.vfs.remove(normalizeToolPath(dir) || "/", { recursive: false });
+    for (const dir of dirs) {
+      const path = normalizeToolPath(dir) || "/";
+      await this.vfs.remove(path, { recursive: false });
+      await notifyWorkspaceChange(onWorkspaceChange, { type: "remove", path, recursive: false });
+    }
     return { ok: true, output: "" };
   }
-  async bashRm(argv, openByPath) {
+  async bashRm(argv, openByPath, onWorkspaceChange) {
     const recursive = argv.includes("-r") || argv.includes("-rf") || argv.includes("-fr");
     const targets = argv.slice(1).filter((arg) => !arg.startsWith("-"));
     if (targets.length === 0) return { ok: false, output: "rm: missing operand" };
     for (const target of targets) {
       const path = normalizeToolPath(target) || "/";
       await this.vfs.remove(path, { recursive });
-      openByPath.delete(path);
+      deleteOpenPathsUnder(openByPath, path, recursive);
+      await notifyWorkspaceChange(onWorkspaceChange, { type: "remove", path, recursive });
     }
     return { ok: true, output: "" };
   }
-  async bashCp(argv, openByPath) {
+  async bashCp(argv, openByPath, onWorkspaceChange) {
     const [sourceArg, destArg] = argv.slice(1).filter((arg) => !arg.startsWith("-"));
     const source = normalizeToolPath(sourceArg);
     const dest = normalizeToolPath(destArg);
     if (!source || !dest) return { ok: false, output: "cp: usage cp source dest" };
     const node = await this.vfs.stat(source);
     if (!node || node.kind !== "file") return { ok: false, output: `cp: not a file: ${source}` };
+    const guard = await this.requireFreshReadBeforeExistingWrite(dest, "cp");
+    if (guard) return guard;
     const data = await this.vfs.readFile(source);
     await this.vfs.writeFile(dest, data, node.mime ?? "text/plain");
-    if (!isUnsupportedFilePath(dest)) syncOpenDocument(openByPath.get(dest), await this.vfs.readText(dest));
+    const text = await readWorkspaceTextIfSupported(this.vfs, dest);
+    if (onWorkspaceChange) await notifyWorkspaceChange(onWorkspaceChange, { type: "write", path: dest, text });
+    else if (text !== void 0) syncOpenDocument(openByPath.get(dest), text);
+    await this.markFileObserved(dest);
     return { ok: true, output: "" };
   }
-  async bashMv(argv, openByPath) {
+  async bashMv(argv, openByPath, onWorkspaceChange) {
     const [sourceArg, destArg] = argv.slice(1).filter((arg) => !arg.startsWith("-"));
     const source = normalizeToolPath(sourceArg);
     const dest = normalizeToolPath(destArg);
     if (!source || !dest) return { ok: false, output: "mv: usage mv source dest" };
+    const remappedOpenDocs = openPathRemaps(openByPath, source, dest);
     await this.vfs.rename(source, dest);
-    const doc = openByPath.get(source);
-    if (doc) {
-      doc.path = dest;
-      openByPath.delete(source);
-      openByPath.set(dest, doc);
+    await notifyWorkspaceChange(onWorkspaceChange, { type: "rename", oldPath: source, newPath: dest });
+    for (const item of remappedOpenDocs) {
+      openByPath.delete(item.oldPath);
+      if (!onWorkspaceChange) item.doc.path = item.newPath;
+      openByPath.set(item.newPath, item.doc);
     }
     return { ok: true, output: "" };
   }
-  async bashTouch(argv, openByPath) {
+  async bashTouch(argv, openByPath, onWorkspaceChange) {
     const targets = argv.slice(1).filter((arg) => !arg.startsWith("-"));
     for (const target of targets) {
       const path = normalizeToolPath(target) || "";
       if (!path) continue;
       const existing = await this.vfs.stat(path);
+      if (existing?.kind === "file") {
+        const guard = await this.requireFreshReadBeforeExistingWrite(path, "touch");
+        if (guard) return guard;
+      }
       const text = existing?.kind === "file" ? await this.vfs.readText(path) : "";
       await this.vfs.writeFile(path, text, "text/plain");
-      syncOpenDocument(openByPath.get(path), text);
+      if (onWorkspaceChange) await notifyWorkspaceChange(onWorkspaceChange, { type: "write", path, text });
+      else syncOpenDocument(openByPath.get(path), text);
+      await this.markFileObserved(path);
     }
     return { ok: true, output: "" };
   }
 };
+async function notifyWorkspaceChange(handler, change) {
+  if (!handler) return;
+  await handler(change);
+}
+async function readWorkspaceTextIfSupported(vfs, path) {
+  if (isUnsupportedFilePath(path)) return void 0;
+  try {
+    return await vfs.readText(path);
+  } catch {
+    return void 0;
+  }
+}
+function openPathRemaps(openByPath, oldPath, newPath) {
+  const oldNormalized = normalizePath(oldPath);
+  const newNormalized = normalizePath(newPath);
+  const result = [];
+  for (const [path, doc] of openByPath) {
+    if (!isSameOrDescendantPath(path, oldNormalized)) continue;
+    result.push({
+      oldPath: path,
+      newPath: path === oldNormalized ? newNormalized : joinPath(newNormalized, path.slice(oldNormalized.length + 1)),
+      doc
+    });
+  }
+  return result;
+}
+function deleteOpenPathsUnder(openByPath, path, recursive) {
+  const normalized = normalizePath(path);
+  for (const key of [...openByPath.keys()]) {
+    if (key === normalized || recursive && isSameOrDescendantPath(key, normalized)) openByPath.delete(key);
+  }
+}
+function isSameOrDescendantPath(path, parent) {
+  const normalizedPath = normalizePath(path);
+  const normalizedParent = normalizePath(parent);
+  return normalizedPath === normalizedParent || normalizedParent !== "/" && normalizedPath.startsWith(`${normalizedParent}/`);
+}
+function isHiddenSearchPath(path) {
+  return normalizePath(path).split("/").some((segment) => segment.startsWith("."));
+}
+function makeGrepMatcher(pattern, regex) {
+  if (!/[\\^$.*+?()[\]{}|]/.test(pattern)) {
+    return { test: (line) => line.includes(pattern) };
+  }
+  return {
+    test: (line) => {
+      regex.lastIndex = 0;
+      return regex.test(line);
+    }
+  };
+}
+function observedFileVersion(node) {
+  return `${node.id}:${node.contentId ?? ""}:${node.size}:${node.mtime}`;
+}
 function normalizeAiEndpointConfig(value) {
   const raw = typeof value === "object" && value ? value : {};
+  const maxContextTokens = numericSetting(raw.maxContextTokens);
   return {
-    apiBaseUrl: normalizeBaseUrl(raw.apiBaseUrl ?? DEFAULT_AI_ENDPOINT_CONFIG.apiBaseUrl),
+    apiBaseUrl: typeof raw.apiBaseUrl === "string" ? raw.apiBaseUrl : DEFAULT_AI_ENDPOINT_CONFIG.apiBaseUrl,
     apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
     model: typeof raw.model === "string" ? raw.model : "",
     temperature: Number.isFinite(raw.temperature) ? Number(raw.temperature) : DEFAULT_AI_ENDPOINT_CONFIG.temperature,
-    maxContextTokens: Number.isFinite(raw.maxContextTokens) ? Math.max(0, Math.trunc(Number(raw.maxContextTokens))) : 0
+    maxContextTokens: Number.isFinite(maxContextTokens) ? Math.max(0, Math.trunc(maxContextTokens)) : 0
   };
+}
+function withResolvedApiBaseUrl(config) {
+  return { ...config, apiBaseUrl: resolvedApiBaseUrl(config) };
+}
+function resolvedApiBaseUrl(config) {
+  return normalizeBaseUrl(config.apiBaseUrl);
 }
 function normalizeRuntimeSettings(value) {
   return {
     maxToolCallsPerTurn: Number.isFinite(value.maxToolCallsPerTurn) ? Math.max(1, Math.trunc(Number(value.maxToolCallsPerTurn))) : DEFAULT_AI_RUNTIME_SETTINGS.maxToolCallsPerTurn,
     detectDuplicateToolCalls: typeof value.detectDuplicateToolCalls === "boolean" ? value.detectDuplicateToolCalls : DEFAULT_AI_RUNTIME_SETTINGS.detectDuplicateToolCalls,
-    toolCallFormat: value.toolCallFormat === "harmony" ? "harmony" : "tag",
+    toolCallFormat: value.toolCallFormat === "harmony" || value.toolCallFormat === "none" ? value.toolCallFormat : "tag",
+    thinkingFormat: "auto",
     compactFreePercent: Number.isFinite(value.compactFreePercent) ? Math.max(1, Math.min(95, Math.trunc(Number(value.compactFreePercent)))) : DEFAULT_AI_RUNTIME_SETTINGS.compactFreePercent
   };
 }
@@ -3074,8 +3782,20 @@ function normalizeBaseUrl(raw) {
   let url = String(raw || "").trim() || DEFAULT_AI_ENDPOINT_CONFIG.apiBaseUrl;
   if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
   url = url.replace(/\/+$/, "");
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    if (!parsed.port && (host === "localhost" || host === "127.0.0.1" || host === "::1")) parsed.port = "1234";
+    url = parsed.toString().replace(/\/+$/, "");
+  } catch {
+  }
   if (!/\/(?:api\/)?v\d+$/i.test(url)) url += "/v1";
   return url;
+}
+function numericSetting(value) {
+  if (Number.isFinite(value)) return Number(value);
+  if (typeof value === "string" && value.trim()) return Number(value.trim());
+  return Number.NaN;
 }
 function authHeaders(config) {
   return config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {};
@@ -3090,7 +3810,7 @@ function readJsonLocalStorage(key) {
 }
 async function mergeLmStudioNativeModels(config, headers, models) {
   const result = [...models];
-  const base = config.apiBaseUrl.replace(/\/v\d+$/i, "");
+  const base = config.apiBaseUrl.replace(/\/(?:api\/)?v\d+$/i, "");
   for (const nativeBase of [`${base}/api/v1`, `${base}/api/v0`]) {
     try {
       const response = await fetch(`${nativeBase}/models`, { headers });
@@ -3123,7 +3843,7 @@ function contextLengthFromObject(obj) {
   return 0;
 }
 function bestKnownContextLength(model) {
-  return loadAiModels().find((item) => item.id === model)?.contextLength ?? builtinContextLength(model);
+  return builtinContextLength(model);
 }
 function builtinContextLength(model) {
   if (!model) return 0;
@@ -3131,22 +3851,202 @@ function builtinContextLength(model) {
   if (/llama-3\.1|qwen|deepseek|mistral-large/i.test(model)) return 131072;
   return 0;
 }
+function tokenCounterKey(config, runtime) {
+  const nativeTools = shouldUseNativeTools(config, runtime);
+  return [
+    resolvedApiBaseUrl(config),
+    config.model,
+    runtime.toolCallFormat,
+    runtime.thinkingFormat,
+    nativeTools ? "native-tools" : "text-tools",
+    composeAiSystemPrompt(runtime.toolCallFormat, nativeTools)
+  ].join("\n");
+}
+function composeAiSystemPrompt(format, nativeTools = false) {
+  const systemPrompt = loadAiSystemPrompt().trimEnd();
+  let toolPrompt = "";
+  if (nativeTools) toolPrompt = DEFAULT_NATIVE_TOOL_PROMPT;
+  else if (format === "tag") toolPrompt = loadAiTagToolPrompt().trim();
+  else if (format === "harmony") toolPrompt = loadAiHarmonyToolPrompt().trim();
+  return toolPrompt ? `${systemPrompt}
+
+${toolPrompt}` : systemPrompt;
+}
+function shouldUseNativeTools(config, runtime) {
+  if (runtime.toolCallFormat === "none") return false;
+  const model = config.model.trim().toLowerCase();
+  if (!model) return false;
+  return /(?:^|[\/:_-])(?:gpt-oss|gpt-[45][a-z0-9._-]*|o[1345][a-z0-9._-]*)(?:$|[\/:_-])/i.test(model);
+}
+function sanitizeSystemPrompt(prompt) {
+  const trimmed = prompt.trim();
+  const toolBlockStart = legacyToolBlockStart(trimmed);
+  if (toolBlockStart < 0) return trimmed;
+  const cleaned = trimmed.slice(0, toolBlockStart).trim();
+  return cleaned || DEFAULT_SYSTEM_PROMPT;
+}
+function sanitizeToolPrompt(prompt) {
+  const removedToolLine = new RegExp(`^\\s*-\\s*${REMOVED_FILE_GREP_TOOL}\\b`);
+  return prompt.split("\n").filter((line) => !removedToolLine.test(line)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function legacyToolBlockStart(prompt) {
+  const markers = [
+    "Available tools:",
+    "Tag tool-call format:",
+    "Harmony-style tool-call format:",
+    "Use only this tag tool-call format",
+    "Use only this harmony-style tool-call format"
+  ];
+  let start = -1;
+  for (const marker of markers) {
+    const index = prompt.indexOf(marker);
+    if (index >= 0 && (start < 0 || index < start)) start = index;
+  }
+  return start;
+}
+function isCompactedSummaryMessage(msg) {
+  return msg.role === "system" && msg.text.startsWith(COMPACTED_SUMMARY_HEADER);
+}
+function isHiddenToolRepairMessage(msg) {
+  return msg.internal === true && msg.role === "user" && msg.text.startsWith("Your previous response put a tool call inside hidden reasoning/thinking.");
+}
+function usageFromApi(usage) {
+  return {
+    totalTokens: Math.max(0, Number(usage?.total_tokens ?? 0)),
+    promptTokens: Math.max(0, Number(usage?.prompt_tokens ?? 0)),
+    completionTokens: Math.max(0, Number(usage?.completion_tokens ?? 0))
+  };
+}
+function completionResultFromJson(data) {
+  const message = data.choices?.[0]?.message;
+  const usage = usageFromApi(data.usage);
+  return {
+    text: message?.content ?? "",
+    thinking: providerReasoningText(message),
+    toolCalls: parseNativeToolCalls(message?.tool_calls),
+    usageTotal: usage.totalTokens,
+    usagePrompt: usage.promptTokens,
+    usageCompletion: usage.completionTokens
+  };
+}
+function completionResultHasUsage(result) {
+  return result.usageTotal > 0 || result.usagePrompt > 0 || result.usageCompletion > 0;
+}
+function sseDataPayload(event) {
+  const lines = event.replace(/\r\n/g, "\n").split("\n");
+  const data = [];
+  for (const line of lines) {
+    if (line.startsWith("data:")) data.push(line.slice(5).trimStart());
+  }
+  return data.join("\n").trim();
+}
+function parseJsonObject(text) {
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function providerReasoningText(message) {
+  if (typeof message?.reasoning_content === "string") return message.reasoning_content;
+  return typeof message?.reasoning === "string" ? message.reasoning : "";
+}
+function streamDeltaText(delta, key) {
+  const value = delta[key];
+  return typeof value === "string" ? value : "";
+}
+function emptyUsage() {
+  return { totalTokens: 0, promptTokens: 0, completionTokens: 0 };
+}
+function basePromptTokensFromProbeUsage(usage) {
+  if (usage.totalTokens > 0) {
+    const completion = usage.completionTokens || PROBE_COMPLETION_TOKEN_COUNT;
+    return Math.max(0, usage.totalTokens - completion - PROBE_USER_TOKEN_COUNT);
+  }
+  if (usage.promptTokens > 0) return Math.max(0, usage.promptTokens - PROBE_USER_TOKEN_COUNT);
+  return 0;
+}
+function promptTokensFromRefreshUsage(usage) {
+  if (usage.promptTokens > 0) return usage.promptTokens;
+  if (usage.totalTokens > 0) return Math.max(0, usage.totalTokens - (usage.completionTokens || PROBE_COMPLETION_TOKEN_COUNT));
+  return 0;
+}
 function parseNativeToolCalls(raw) {
   if (!Array.isArray(raw)) return [];
   const result = [];
   for (const item of raw) {
     if (!item || typeof item !== "object") continue;
-    const fn = item.function;
+    const record = item;
+    const fn = record.function;
     const name = typeof fn?.name === "string" ? fn.name : "";
     if (!name) continue;
-    const args = parseJsonArgs(typeof fn?.arguments === "string" ? fn.arguments : "{}");
-    result.push({ name, args, raw: `<tool>${name}(${args.map((arg) => JSON.stringify(arg)).join(", ")})</tool>` });
+    const nativeArguments = nativeArgumentsText(fn?.arguments);
+    const args = parseJsonArgs(nativeArguments);
+    result.push({
+      name,
+      args,
+      raw: nativeToolCallText(name, args),
+      nativeId: typeof record.id === "string" && record.id ? record.id : uid("call"),
+      nativeArguments
+    });
   }
   return result;
 }
+function appendStreamToolCallDeltas(raw, parts) {
+  if (!Array.isArray(raw)) return;
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const record = item;
+    const index = typeof record.index === "number" && Number.isFinite(record.index) ? record.index : parts.size;
+    const part = parts.get(index) ?? { id: "", name: "", argumentsText: "" };
+    if (typeof record.id === "string" && record.id) part.id = record.id;
+    if (typeof record.function?.name === "string") part.name += record.function.name;
+    if (typeof record.function?.arguments === "string") part.argumentsText += record.function.arguments;
+    parts.set(index, part);
+  }
+}
+function parseStreamedToolCalls(parts) {
+  const result = [];
+  for (const [, part] of [...parts.entries()].sort((a, b) => a[0] - b[0])) {
+    if (!part.name) continue;
+    const args = parseJsonArgs(part.argumentsText || "{}");
+    result.push({
+      name: part.name,
+      args,
+      raw: nativeToolCallText(part.name, args),
+      nativeId: part.id || uid("call"),
+      nativeArguments: part.argumentsText || "{}"
+    });
+  }
+  return result;
+}
+function nativeArgumentsText(value) {
+  if (typeof value === "string") return value || "{}";
+  if (value === void 0 || value === null) return "{}";
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "{}";
+  }
+}
+function nativeToolCallText(name, args) {
+  return `<tool>${name}(${args.map((arg) => JSON.stringify(arg)).join(", ")})</tool>`;
+}
 function parseTextToolCalls(text, format) {
-  const calls = format === "harmony" ? parseHarmonyToolCalls(text) : parseTagToolCalls(text);
-  return calls.length ? calls : format === "harmony" ? parseTagToolCalls(text) : parseHarmonyToolCalls(text);
+  if (format === "none") return [];
+  return format === "harmony" ? parseHarmonyToolCalls(text) : parseTagToolCalls(text);
+}
+function thinkingSuggestsToolCall(text, format) {
+  if (!text.trim() || format === "none") return false;
+  if (format === "tag") return /<tool\b|<\/tool>|(?:readFile|writeFile|editFile|grep|grepFile|bash|compact)\s*\(/i.test(text);
+  return /(?:<\|channel\|>\s*)?commentary\s+to\s*=\s*(?:functions\.)?(?:readFile|writeFile|editFile|grep|grepFile|bash|compact)\b|<\|call\|>|<\|message\|>/i.test(text);
+}
+function hiddenToolCallRepairPrompt(format) {
+  if (format === "harmony") {
+    return 'Your previous response put a tool call inside hidden reasoning/thinking. Hidden reasoning is not executable. If you need a tool, resend only the executable harmony tool call in assistant content/commentary now. Do not explain, do not use markdown, and do not put the call in analysis/reasoning. The format is: <|channel|>commentary to=readFile <|message|>{"path":"/README.md"}<|call|>';
+  }
+  return 'Your previous response put a tool call inside hidden reasoning/thinking. Hidden reasoning is not executable. If you need a tool, resend only the executable tag tool call in assistant content now. Do not explain, do not use markdown, and do not put the call in thinking. The format is: <tool>readFile("/README.md")</tool>';
 }
 function parseTagToolCalls(text) {
   const calls = [];
@@ -3163,13 +4063,56 @@ function parseTagToolCalls(text) {
 }
 function parseHarmonyToolCalls(text) {
   const calls = [];
-  const regex = /<\|channel\|>commentary\s+to=([A-Za-z0-9_.-]+)[\s\S]*?<\|message\|>([\s\S]*?)(?:<\|call\|>|<\|end\|>)/g;
+  const regex = /<\|channel\|>\s*commentary(?:\s+to\s*=\s*([^\s<|]+))?[\s\S]*?<\|message\|>([\s\S]*?)(?=<\|call\|>|<\|end\|>|<\|start\|>|<\|channel\|>|$)/g;
   for (const match of text.matchAll(regex)) {
-    const name = match[1] ?? "";
+    const name = (match[1] ?? "").replace(/^functions\./, "");
+    if (!name) continue;
     const rawArgs = match[2]?.trim() ?? "{}";
     calls.push({ name, args: parseJsonArgs(rawArgs), raw: match[0] });
   }
   return calls;
+}
+function extractThinkingFromText(text, format) {
+  if (!text || format === "none") return { text, thinking: "" };
+  if (format === "tag") return extractTagThinking(text);
+  if (format === "harmony") return extractHarmonyThinking(text);
+  const harmony = extractHarmonyThinking(text);
+  const tagged = extractTagThinking(harmony.text);
+  return {
+    text: tagged.text,
+    thinking: [harmony.thinking, tagged.thinking].filter(Boolean).join("\n\n")
+  };
+}
+function extractTagThinking(text) {
+  const thinking = [];
+  const stripped = text.replace(/<think(?:ing)?\b[^>]*>([\s\S]*?)<\/think(?:ing)?>/gi, (_match, body) => {
+    const trimmed = String(body).trim();
+    if (trimmed) thinking.push(trimmed);
+    return "";
+  });
+  return { text: stripped.trim(), thinking: thinking.join("\n\n") };
+}
+function extractHarmonyThinking(text) {
+  const thinking = [];
+  const final = [];
+  let sawHarmonyMessage = false;
+  const withoutAnalysisOrFinal = text.replace(/(?:<\|start\|>\s*assistant\s*)?<\|channel\|>\s*(analysis|final)\b[\s\S]*?<\|message\|>([\s\S]*?)(?:<\|end\|>|(?=<\|start\|>|<\|channel\|>|$))/gi, (_match, channel, body) => {
+    sawHarmonyMessage = true;
+    const trimmed = String(body).trim();
+    if (trimmed) {
+      if (String(channel).toLowerCase() === "analysis") thinking.push(trimmed);
+      else final.push(trimmed);
+    }
+    return "";
+  });
+  if (final.length > 0) return { text: final.join("\n\n"), thinking: thinking.join("\n\n") };
+  return {
+    text: sawHarmonyMessage ? withoutAnalysisOrFinal.trim() : text,
+    thinking: thinking.join("\n\n")
+  };
+}
+function stripToolCallSyntax(text) {
+  return text.replace(/<tool>[\s\S]*?<\/tool>/g, "").replace(/<\|channel\|>\s*commentary\s+to=[^\s<|]+[\s\S]*?<\|message\|>[\s\S]*?(?:<\|call\|>|<\|end\|>|$)/g, "").trim();
 }
 function parseJsonArgs(raw) {
   try {
@@ -3221,7 +4164,55 @@ function parseCallArgs(src) {
 }
 function formatToolResult(output, format) {
   if (format === "harmony") return `<|channel|>commentary <|message|>${output}<|end|>`;
+  if (format === "none") return `Tool result:
+${output}`;
   return `<result>${output}</result>`;
+}
+function formatEditorContext(context) {
+  const fileTreePaths = uniqueStrings(context.fileTreePaths ?? []);
+  const shownTree = fileTreePaths.slice(0, EDITOR_CONTEXT_MAX_TREE_ENTRIES);
+  const openNames = uniqueStrings(context.openFileNames ?? context.openPaths.map((path) => path === "(untitled)" ? path : basename(path)));
+  const selectedText = truncateContextText(context.selectedText.trim(), EDITOR_CONTEXT_MAX_SELECTED_TEXT_CHARS);
+  const lines = [
+    "<editor-context>",
+    "Current editor state. File contents are not included unless explicitly selected. Use readFile before relying on or modifying existing file contents.",
+    "",
+    "File tree:",
+    ...formatContextList(shownTree),
+    ...fileTreePaths.length > shownTree.length ? [`[file tree truncated: showing ${shownTree.length} of ${fileTreePaths.length} entries]`] : [],
+    "",
+    "Open files:",
+    ...formatContextList(openNames),
+    "",
+    `Selected in file tree: ${context.selectedFileTreePath || "(none)"}`,
+    `Active file: ${context.activePath || "(none)"}`
+  ];
+  if (selectedText) {
+    lines.push("", `Active editor selection${context.activePath ? ` from ${context.activePath}` : ""}:`, selectedText);
+  } else {
+    lines.push("", "Active editor selection: (none)");
+  }
+  lines.push("</editor-context>");
+  return lines.join("\n");
+}
+function formatContextList(items) {
+  return items.length ? items.map((item) => `- ${item}`) : ["- (none)"];
+}
+function uniqueStrings(items) {
+  const result = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const item of items) {
+    const value = item.trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    result.push(value);
+  }
+  return result;
+}
+function truncateContextText(text, maxChars) {
+  if (text.length <= maxChars) return text;
+  return `${text.slice(0, maxChars)}
+[selection truncated: ${text.length - maxChars} more characters]`;
 }
 function argString(args, index, key) {
   const direct = args[index];
@@ -3276,6 +4267,9 @@ function tokenizeShell(cmd) {
 }
 function estimateTokens(text) {
   return Math.ceil(text.length / 4);
+}
+function estimateMessageTokens(text) {
+  return estimateTokens(text) + ESTIMATED_CHAT_MESSAGE_OVERHEAD_TOKENS;
 }
 
 // src/editor/document.ts
@@ -5578,7 +6572,7 @@ var HIGHLIGHT_OPTIONS = [
 var SETTINGS_TAB_ID = "settings";
 var SETTINGS_TAB_LABEL = "Settings";
 var SETTINGS_STORAGE_KEY = "slug.settings";
-var SESSION_STORAGE_KEY_PREFIX = "slug.session";
+var SESSION_STORAGE_KEY = "slug.session";
 var DEFAULT_SETTINGS = {
   theme: "dark",
   fontSize: 14,
@@ -5587,14 +6581,17 @@ var DEFAULT_SETTINGS = {
   tabSpaces: 4,
   useTabStops: true,
   showWhitespace: false,
+  showThinking: true,
   renameOnDoubleClick: true,
   showLineNumbers: true,
   rememberOpenFiles: true,
   aiProvider: "openai",
+  aiModelManual: false,
   aiMaxToolCalls: DEFAULT_AI_RUNTIME_SETTINGS.maxToolCallsPerTurn,
   aiDetectDuplicateToolCalls: DEFAULT_AI_RUNTIME_SETTINGS.detectDuplicateToolCalls,
   aiToolCallFormat: DEFAULT_AI_RUNTIME_SETTINGS.toolCallFormat,
-  aiCompactFreePercent: DEFAULT_AI_RUNTIME_SETTINGS.compactFreePercent
+  aiCompactFreePercent: DEFAULT_AI_RUNTIME_SETTINGS.compactFreePercent,
+  aiInsertEditorContext: false
 };
 var EditorApp = class {
   constructor(canvas, vfs, fontSources) {
@@ -5623,6 +6620,12 @@ var EditorApp = class {
   projectReplaceBuffer = new MiniBuffer();
   chatDraft = new TextDocument(void 0, "");
   renameBuffer = new MiniBuffer();
+  settingsTextBuffers = {
+    aiBaseUrl: new MiniBuffer(),
+    aiApiKey: new MiniBuffer(),
+    aiModel: new MiniBuffer(),
+    aiMaxContextTokens: new MiniBuffer()
+  };
   sidebarMode = "files";
   sidebarWidth = 280;
   lastSidebarWidth = 280;
@@ -5642,6 +6645,7 @@ var EditorApp = class {
   documentWidthCache = /* @__PURE__ */ new Map();
   lineWidthCache = /* @__PURE__ */ new Map();
   highlightCache = /* @__PURE__ */ new Map();
+  chatLineCache = /* @__PURE__ */ new Map();
   statusText = "Ready";
   hits = [];
   raf = 0;
@@ -5657,7 +6661,7 @@ var EditorApp = class {
   searchScrollY = 0;
   chatScrollY = 0;
   chatInputScrollY = 0;
-  aiModels = loadAiModels();
+  aiModels = [];
   sidebarScrollbarDrag = null;
   hoveredSidebarScrollbar = null;
   chatScrollbarDrag = null;
@@ -5700,6 +6704,7 @@ var EditorApp = class {
   activeSettingsNumber = null;
   settingsNumberBuffer = new MiniBuffer();
   settingsNumberSelecting = false;
+  activeSettingsText = null;
   settingsHitClip = null;
   localClipboard = "";
   systemClipboardOverlay = null;
@@ -5715,6 +6720,7 @@ var EditorApp = class {
   fileDragActive = false;
   fileDragLabel = "Drop to upload";
   async start() {
+    localStorage.removeItem("slug.aiHelperPrompts");
     await this.refreshFiles();
     await this.restoreEditorSession();
     this.draw();
@@ -5750,7 +6756,7 @@ var EditorApp = class {
   }
   isAiSpecialPath(path) {
     const normalized = path ? normalizePath(path) : "";
-    return normalized === AI_SETTINGS_DOC_PATH || normalized === AI_SYSTEM_PROMPT_DOC_PATH || normalized === AI_HELPER_PROMPTS_DOC_PATH;
+    return normalized === AI_SETTINGS_DOC_PATH || normalized === AI_SYSTEM_PROMPT_DOC_PATH || normalized === AI_TAG_TOOL_PROMPT_DOC_PATH || normalized === AI_HARMONY_TOOL_PROMPT_DOC_PATH || normalized === AI_COMPACT_PROMPT_DOC_PATH;
   }
   isAiSpecialDoc(doc) {
     return Boolean(doc?.path && this.isAiSpecialPath(doc.path));
@@ -5759,7 +6765,10 @@ var EditorApp = class {
     const normalized = normalizePath(path);
     if (normalized === AI_SETTINGS_DOC_PATH) return "AI Settings";
     if (normalized === AI_SYSTEM_PROMPT_DOC_PATH) return "System Prompt";
-    return "Helper Prompts";
+    if (normalized === AI_TAG_TOOL_PROMPT_DOC_PATH) return "Tag Tool Prompt";
+    if (normalized === AI_HARMONY_TOOL_PROMPT_DOC_PATH) return "Harmony Tool Prompt";
+    if (normalized === AI_COMPACT_PROMPT_DOC_PATH) return "Compact Prompt";
+    return "AI Document";
   }
   async refreshFiles() {
     this.treeNodes = await this.listTreeNodes("/");
@@ -5824,8 +6833,14 @@ var EditorApp = class {
   openSystemPromptDocument() {
     this.openVirtualAiDocument(AI_SYSTEM_PROMPT_DOC_PATH, loadAiSystemPrompt());
   }
-  openHelperPromptsDocument() {
-    this.openVirtualAiDocument(AI_HELPER_PROMPTS_DOC_PATH, loadAiHelperPrompts());
+  openTagToolPromptDocument() {
+    this.openVirtualAiDocument(AI_TAG_TOOL_PROMPT_DOC_PATH, loadAiTagToolPrompt());
+  }
+  openHarmonyToolPromptDocument() {
+    this.openVirtualAiDocument(AI_HARMONY_TOOL_PROMPT_DOC_PATH, loadAiHarmonyToolPrompt());
+  }
+  openCompactPromptDocument() {
+    this.openVirtualAiDocument(AI_COMPACT_PROMPT_DOC_PATH, loadAiCompactPrompt());
   }
   openVirtualAiDocument(path, text) {
     const doc = this.docs.createVirtual(path, text);
@@ -5881,10 +6896,6 @@ var EditorApp = class {
   ui(value) {
     return value * this.settings.uiScale / 100;
   }
-  sessionStorageKey() {
-    const db = new URL(window.location.href).searchParams.get("db")?.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80) || "default";
-    return `${SESSION_STORAGE_KEY_PREFIX}:${db}`;
-  }
   isCaretBlinkOn() {
     return Math.floor((performance.now() - this.caretBlinkEpoch) / CARET_BLINK_HALF_MS) % 2 === 0;
   }
@@ -5921,7 +6932,7 @@ var EditorApp = class {
       settingsNumberSelectedText: this.settingsNumberBuffer.selectedText(),
       activeSettingsNumber: this.activeSettingsNumber,
       settingsScrollY: this.settingsScrollY,
-      settingsTargets: this.hits.filter((hit) => hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "settingsNumber" || hit.type === "settingsButton").map((hit) => ({ type: hit.type, key: "key" in hit ? hit.key : "id" in hit ? hit.id : hit.action, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
+      settingsTargets: this.hits.filter((hit) => hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "settingsNumber" || hit.type === "settingsButton" || hit.type === "textField" && isSettingTextField(hit.field)).map((hit) => ({ type: hit.type, key: "key" in hit ? hit.key : "id" in hit ? hit.id : "action" in hit ? hit.action : hit.field, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
       searchQuery: this.searchBuffer.text,
       searchScrollX: this.searchBuffer.scrollX,
       projectReplaceText: this.projectReplaceBuffer.text,
@@ -5940,13 +6951,19 @@ var EditorApp = class {
       findSelectedText: findState?.findBuffer.selectedText() ?? "",
       findReplaceSelectedText: findState?.replaceBuffer.selectedText() ?? "",
       findTargets: this.hits.filter((hit) => hit.type === "textField" || hit.type === "findToggle" || hit.type === "findPrevious" || hit.type === "findNext" || hit.type === "findClose" || hit.type === "findReplace" || hit.type === "findReplaceAll").filter((hit) => hit.type !== "textField" || hit.field === "find" || hit.field === "findReplace").map((hit) => ({ type: hit.type, key: "field" in hit ? hit.field : hit.type, rect: hit.rect, enabled: "enabled" in hit ? hit.enabled : true })),
-      chatMessages: this.chat.messages,
+      chatMessages: this.chat.visibleMessages(),
+      chatDisplayedMessages: this.chatDisplayMessages(),
+      chatTokenUsage: this.chat.tokenUsage(),
+      chatRootTarget: this.hits.find((hit) => hit.type === "chatRoot")?.rect ?? null,
       activeInputKind: this.input.activeTarget?.kind ?? null,
       chatDraft: this.chatDraft.getText(),
       chatScrollY: this.chatScrollY,
       chatInputScrollY: this.chatInputScrollY,
       chatInputRect: this.hits.find((hit) => hit.type === "chatInput")?.rect ?? null,
       chatSendTarget: this.hits.find((hit) => hit.type === "chatSend") ?? null,
+      chatShowThinking: this.settings.showThinking,
+      chatShowThinkingTarget: this.hits.find((hit) => hit.type === "chatShowThinking")?.rect ?? null,
+      chatRunning: this.chat.running,
       chatScrollbars: this.hits.filter((hit) => hit.type === "chatScrollbar").map((hit) => ({ panel: hit.panel, rect: hit.rect, trackRect: hit.trackRect, thumbRect: hit.thumbRect })),
       aiEndpointConfig: loadAiEndpointConfig(),
       aiModels: this.aiModels,
@@ -6055,11 +7072,13 @@ var EditorApp = class {
       const tabGroup = this.tabGroupAtPoint(point);
       if (tabGroup && this.scrollTabGroupFromWheel(tabGroup, event, point)) {
         event.preventDefault();
+        this.closeContextMenuForScroll();
         return;
       }
       const chatRegion = this.chatScrollRegionForPoint(point);
       if (chatRegion) {
         event.preventDefault();
+        this.closeContextMenuForScroll();
         const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, chatRegion.viewport);
         this.setChatPanelScrollY(chatRegion.panel, this.chatPanelScrollY(chatRegion.panel) + deltaY2, chatRegion.viewport);
         this.scheduleDraw();
@@ -6068,6 +7087,7 @@ var EditorApp = class {
       const sidebarRegion = this.sidebarScrollRegionForPoint(point);
       if (sidebarRegion) {
         event.preventDefault();
+        this.closeContextMenuForScroll();
         const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, sidebarRegion.viewport);
         this.scrollSidebarPanel(sidebarRegion.panel, deltaY2, sidebarRegion.viewport);
         return;
@@ -6075,6 +7095,7 @@ var EditorApp = class {
       const group = this.editorGroupAt(point.x, point.y);
       if (group && this.isSettingsTab(group.activeDocId)) {
         event.preventDefault();
+        this.closeContextMenuForScroll();
         const deltaY2 = this.normalizedWheelDelta(event.deltaY, event.deltaMode, group.editorRect);
         this.settingsScrollY = clamp(this.settingsScrollY + deltaY2, 0, this.maxSettingsScrollY(group.editorRect));
         this.scheduleDraw();
@@ -6083,6 +7104,7 @@ var EditorApp = class {
       const doc = group?.activeDocId ? this.docs.get(group.activeDocId) : void 0;
       if (!group || !doc) return;
       event.preventDefault();
+      this.closeContextMenuForScroll();
       const scroll = this.scrollForDoc(doc.id);
       const deltaY = this.normalizedWheelDelta(event.deltaY, event.deltaMode, group.editorRect);
       const deltaX = this.normalizedWheelDelta(event.deltaX, event.deltaMode, group.editorRect) + (event.shiftKey ? deltaY : 0);
@@ -6191,6 +7213,7 @@ var EditorApp = class {
     const hit = this.hitAt(point.x, point.y);
     if (this.activeSettingsNumber && event.pointerType === "touch" && hit?.type !== "settingsNumber" && this.handleActiveSettingsNumberTouchDoubleTap(event, point)) return;
     if (this.activeSettingsNumber && hit?.type !== "settingsNumber") this.commitSettingsNumberInput();
+    if (this.activeSettingsText && !(hit?.type === "textField" && hit.field === this.activeSettingsText)) this.commitSettingsTextInput();
     if (this.modal) {
       event.preventDefault();
       if (hit?.type === "modalButton" && hit.enabled) void this.runModalAction(hit.action);
@@ -6293,7 +7316,9 @@ var EditorApp = class {
       this.setChatInputCursorFromPoint(point, hit.rect, false);
       this.chatInputSelecting = true;
     } else if (hit.type === "chatSend") {
-      if (hit.enabled) void this.sendChat();
+      if (hit.enabled) void this.runChatSendControl();
+    } else if (hit.type === "chatShowThinking") {
+      this.toggleChatShowThinking();
     } else if (hit.type === "settingsHeader") {
       this.toggleSettingsHeader(hit.id);
     } else if (hit.type === "settingsCheckbox") {
@@ -6638,6 +7663,10 @@ var EditorApp = class {
       this.openSettingsRootContextMenu(point);
       return;
     }
+    if (hit?.type === "chatRoot") {
+      this.openChatRootContextMenu(point);
+      return;
+    }
     if (!hit || hit.type !== "editor") {
       this.closeContextMenu();
       return;
@@ -6777,6 +7806,12 @@ var EditorApp = class {
     this.resetCaretBlink();
   }
   focusTextField(field, rect) {
+    if (isSettingTextField(field)) {
+      if (this.activeSettingsText !== field) this.syncSettingsTextBufferFromConfig(field);
+      this.activeSettingsText = field;
+    } else if (this.activeSettingsText) {
+      this.commitSettingsTextInput();
+    }
     this.input.focusEditor(this.textFieldTarget(field), rect);
     this.resetCaretBlink();
   }
@@ -6878,6 +7913,7 @@ var EditorApp = class {
     if (hit.type === "findReplace") return hit.enabled ? this.buttonHoverKey("findReplace") : null;
     if (hit.type === "findReplaceAll") return hit.enabled ? this.buttonHoverKey("findReplaceAll") : null;
     if (hit.type === "chatSend") return hit.enabled ? this.buttonHoverKey("chatSend") : null;
+    if (hit.type === "chatShowThinking") return this.buttonHoverKey("chatShowThinking");
     if (hit.type === "settingsButton") return hit.enabled ? this.buttonHoverKey("settingsButton", hit.action) : null;
     if (hit.type === "settingsCheckbox") return this.buttonHoverKey("settingsCheckbox", hit.key);
     if (hit.type === "settingsDropdown") return this.buttonHoverKey("settingsDropdown", hit.key);
@@ -7086,6 +8122,7 @@ var EditorApp = class {
       this.searchSelecting = false;
       this.textFieldSelecting = null;
       this.settingsNumberSelecting = false;
+      this.closeContextMenuForScroll();
       if (scroll.type === "editor") {
         const doc2 = this.docs.get(scroll.docId);
         if (doc2) doc2.selection = cloneSelectionState(scroll.originalSelection);
@@ -7123,7 +8160,7 @@ var EditorApp = class {
     }
   }
   shouldDeferTouchHit(hit) {
-    return hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "statusWhitespace" || hit.type === "statusHighlight" || hit.type === "settingsNumber" || hit.type === "settingsButton" || hit.type === "folder" || hit.type === "file" || hit.type === "filesRoot" || hit.type === "editorGutter" || hit.type === "searchResult";
+    return hit.type === "settingsHeader" || hit.type === "settingsCheckbox" || hit.type === "settingsDropdown" || hit.type === "statusWhitespace" || hit.type === "chatShowThinking" || hit.type === "statusHighlight" || hit.type === "settingsNumber" || hit.type === "settingsButton" || hit.type === "textField" || hit.type === "folder" || hit.type === "file" || hit.type === "filesRoot" || hit.type === "editorGutter" || hit.type === "searchResult";
   }
   runDeferredTouchHit(deferred) {
     const { hit, point } = deferred;
@@ -7135,6 +8172,8 @@ var EditorApp = class {
       this.openSettingsDropdown(hit.rect, hit.key);
     } else if (hit.type === "statusWhitespace") {
       this.toggleStatusWhitespace();
+    } else if (hit.type === "chatShowThinking") {
+      this.toggleChatShowThinking();
     } else if (hit.type === "statusHighlight") {
       this.openHighlightDropdown(hit);
     } else if (hit.type === "editorGutter") {
@@ -7153,6 +8192,9 @@ var EditorApp = class {
     } else if (hit.type === "settingsNumber") {
       this.focusSettingsNumber(hit.key, hit.rect);
       this.setSettingsNumberCursorFromPoint(point.x, hit.rect, false);
+    } else if (hit.type === "textField") {
+      this.focusTextField(hit.field, hit.rect);
+      this.setTextFieldCursorFromPoint(hit.field, point.x, hit.rect, false);
     } else if (hit.type === "settingsButton") {
       if (hit.enabled) void this.runSettingsButton(hit.action);
     } else if (hit.type === "folder") {
@@ -7207,6 +8249,7 @@ var EditorApp = class {
     if (hit.type === "folder") return `folder:${hit.path}`;
     if (hit.type === "filesRoot") return "filesRoot";
     if (hit.type === "settingsRoot") return "settingsRoot";
+    if (hit.type === "chatRoot") return "chatRoot";
     if (hit.type === "fileRenameInput") return `rename:${hit.path}`;
     if (hit.type === "searchInput") return "searchInput";
     if (hit.type === "chatInput") return "chatInput";
@@ -7276,6 +8319,10 @@ var EditorApp = class {
       this.openSettingsRootContextMenu(point);
       return true;
     }
+    if (hit.type === "chatRoot") {
+      this.openChatRootContextMenu(point);
+      return true;
+    }
     if (hit.type === "tab" || hit.type === "tabClose") {
       this.openTabContextMenu(point, hit.groupId, hit.docId);
       return true;
@@ -7330,6 +8377,16 @@ var EditorApp = class {
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
+  closeContextMenuForScroll() {
+    if (!this.contextMenu) return;
+    this.contextMenu = null;
+    this.contextMenuHover = null;
+  }
+  closeContextMenuForTextInput() {
+    if (!this.contextMenu) return;
+    this.contextMenu = null;
+    this.contextMenuHover = null;
+  }
   openEditorContextMenu(point, group, doc) {
     const selected = doc.hasSelection();
     const editable = !doc.readOnly;
@@ -7367,6 +8424,7 @@ var EditorApp = class {
     const group = this.groupById(groupId);
     this.contextMenu = this.makeContextMenu(point, { type: "tabBar", groupId }, [
       { command: "newFile", label: "New File", enabled: true },
+      { command: "uploadFile", label: "Upload File", enabled: true },
       { command: "closeAll", label: "Close All", enabled: group.tabs.length > 0 }
     ]);
     this.contextMenuHover = null;
@@ -7426,6 +8484,16 @@ var EditorApp = class {
   openSettingsRootContextMenu(point) {
     this.contextMenu = this.makeContextMenu(point, { type: "settingsRoot" }, [
       { command: "resetSettings", label: "Reset Settings", enabled: true }
+    ]);
+    this.contextMenuHover = null;
+    this.scheduleDraw();
+  }
+  openChatRootContextMenu(point) {
+    this.contextMenu = this.makeContextMenu(point, { type: "chatRoot" }, [
+      { command: "exportChat", label: "Export Chat", enabled: this.chat.visibleMessages().length > 0 },
+      { command: "debugChat", label: "Debug Chat", enabled: this.chat.visibleMessages().length > 0 },
+      { command: "clearChat", label: "Clear Chat", enabled: this.chat.messages.length > 0 && !this.chat.running },
+      { command: "compactChat", label: "Compact", enabled: this.chat.messages.length > 0 && !this.chat.running }
     ]);
     this.contextMenuHover = null;
     this.scheduleDraw();
@@ -7591,6 +8659,26 @@ var EditorApp = class {
       buttons: []
     });
   }
+  openCompactingModal() {
+    this.openModal({
+      kind: "compactProgress",
+      title: "Compacting conversation",
+      message: "Summarizing the chat history.",
+      detail: "The editor will continue when compaction is done.",
+      defaultAction: "cancel",
+      cancelAction: "cancel",
+      pending: true,
+      buttons: []
+    });
+  }
+  closeCompactingModal() {
+    if (this.modal?.kind !== "compactProgress") return;
+    this.modal = null;
+    this.modalHover = null;
+    if (this.activeDoc()) this.focusEditor();
+    else this.input.blur();
+    this.scheduleDraw();
+  }
   openDownloadReadyModal(url, filename, fileCount, byteLength) {
     this.openModal({
       kind: "downloadReady",
@@ -7606,6 +8694,46 @@ var EditorApp = class {
         modalButton("download", "Download", "primary"),
         modalButton("cancel", "Cancel", "secondary")
       ]
+    });
+  }
+  openToolCallLimitModal(limit, used) {
+    return new Promise((resolve) => {
+      this.openModal({
+        kind: "toolCallLimit",
+        title: "Max tool calls reached",
+        message: `This turn has used ${used} tool call${used === 1 ? "" : "s"}.`,
+        detail: `The per-turn limit is ${limit}. Choose whether this turn can keep using tools.`,
+        limit,
+        used,
+        resolve,
+        defaultAction: "allowMore",
+        cancelAction: "stopToolCalls",
+        pending: false,
+        buttons: [
+          modalButton("allowMore", `Allow ${limit} more`, "primary"),
+          modalButton("allowAll", "Allow all", "secondary"),
+          modalButton("stopToolCalls", "Stop tool calls", "danger")
+        ]
+      });
+    });
+  }
+  openDuplicateToolCallModal(call) {
+    return new Promise((resolve) => {
+      this.openModal({
+        kind: "duplicateToolCall",
+        title: "Duplicate tool call detected",
+        message: `The assistant requested ${call.name} with the same arguments twice in a row.`,
+        detail: `Arguments: ${formatToolArgsForModal(call.args)}`,
+        call,
+        resolve,
+        defaultAction: "breakDuplicateTool",
+        cancelAction: "breakDuplicateTool",
+        pending: false,
+        buttons: [
+          modalButton("allowDuplicateTool", "Allow", "primary"),
+          modalButton("breakDuplicateTool", "Break", "danger")
+        ]
+      });
     });
   }
   openDeleteFolderModal(path, itemCount) {
@@ -7664,6 +8792,14 @@ var EditorApp = class {
       this.startBrowserDownload(modal);
       return;
     }
+    if (modal.kind === "toolCallLimit") {
+      this.runToolCallLimitModalAction(modal, action);
+      return;
+    }
+    if (modal.kind === "duplicateToolCall") {
+      this.runDuplicateToolCallModalAction(modal, action);
+      return;
+    }
     if (modal.kind === "dirtyDownload" && action === "cancel") {
       modal.pending = true;
       this.scheduleDraw();
@@ -7699,6 +8835,18 @@ var EditorApp = class {
       this.statusText = error instanceof Error ? error.message : "Operation failed";
       this.scheduleDraw();
     }
+  }
+  runToolCallLimitModalAction(modal, action) {
+    const decision = action === "allowAll" ? "allowAll" : action === "allowMore" ? "allowMore" : "stop";
+    modal.resolve(decision);
+    this.statusText = decision === "allowAll" ? "Tool calls unlimited for this turn" : decision === "allowMore" ? `Allowed ${modal.limit} more tool calls` : "Tool calls stopped";
+    this.closeModal();
+  }
+  runDuplicateToolCallModalAction(modal, action) {
+    const decision = action === "allowDuplicateTool" ? "allow" : "break";
+    modal.resolve(decision);
+    this.statusText = decision === "allow" ? `Allowed duplicate ${modal.call.name}` : `Broke duplicate ${modal.call.name}`;
+    this.closeModal();
   }
   async runDirtyCloseModalAction(modal, action) {
     const doc = this.docs.get(modal.docId);
@@ -7922,27 +9070,23 @@ var EditorApp = class {
     return this.textFieldRect("search") ?? this.hits.find((hit) => hit.type === "searchInput")?.rect ?? null;
   }
   setChatInputCursorFromPoint(point, rect, extend) {
-    const content = this.chatInputContentRect(rect);
-    const lineH = this.renderer.lineHeight("ui");
     const doc = this.chatDraft;
-    const line = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
-    const col = this.columnFromTextOffset(doc.lines[line] ?? "", point.x - content.x, "ui");
-    doc.setSelection(extend ? doc.selection.anchor : { line, col }, { line, col });
+    const position = this.chatInputPositionFromPoint(point, rect);
+    doc.setSelection(extend ? doc.selection.anchor : position, position);
     this.ensureChatInputCaretVisible(rect);
     this.resetCaretBlink();
   }
   selectChatInputWordFromPoint(point, rect) {
-    const content = this.chatInputContentRect(rect);
-    const lineH = this.renderer.lineHeight("ui");
     const doc = this.chatDraft;
-    const lineIndex = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
+    const position = this.chatInputPositionFromPoint(point, rect);
+    const lineIndex = position.line;
     const line = doc.lines[lineIndex] ?? "";
     if (!line) {
       doc.setSelection({ line: lineIndex, col: 0 });
       this.resetCaretBlink();
       return;
     }
-    const col = this.columnFromTextOffset(line, point.x - content.x, "ui");
+    const col = position.col;
     let index = clamp(col, 0, Math.max(0, line.length - 1));
     if (!isWordChar(line.charAt(index)) && col > 0 && isWordChar(line.charAt(col - 1))) index = col - 1;
     let start = index;
@@ -7958,46 +9102,68 @@ var EditorApp = class {
   pointHitsChatInputSelection(point, rect) {
     const doc = this.chatDraft;
     if (!doc.hasSelection()) return false;
-    const content = this.chatInputContentRect(rect);
+    const metrics = this.chatInputMetrics(rect);
+    const content = metrics.content;
     const lineH = this.renderer.lineHeight("ui");
-    const line = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, doc.lineCount() - 1);
+    const visualIndex = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, metrics.visualLines.length - 1);
+    const visualLine = metrics.visualLines[visualIndex];
+    const line = visualLine.line;
     const ordered = doc.getOrderedSelection();
     if (line < ordered.start.line || line > ordered.end.line) return false;
     const text = doc.lines[line] ?? "";
-    const start = ordered.start.line === line ? ordered.start.col : 0;
-    const end = ordered.end.line === line ? ordered.end.col : text.length;
-    const sx = content.x + this.renderer.measureText(text.slice(0, start), "ui");
-    const ex = content.x + this.renderer.measureText(text.slice(0, end), "ui");
+    const start = Math.max(visualLine.start, ordered.start.line === line ? ordered.start.col : 0);
+    const end = Math.min(visualLine.end, ordered.end.line === line ? ordered.end.col : text.length);
+    if (end <= start) return false;
+    const sx = content.x + this.renderer.measureText(text.slice(visualLine.start, start), "ui");
+    const ex = content.x + this.renderer.measureText(text.slice(visualLine.start, end), "ui");
     return point.x >= sx && point.x <= Math.max(sx + 2, ex);
   }
   ensureChatInputCaretVisible(rect) {
-    const content = this.chatInputContentRect(rect);
+    const metrics = this.chatInputMetrics(rect);
+    const content = metrics.content;
     const lineH = this.renderer.lineHeight("ui");
-    const caretTop = this.chatDraft.selection.head.line * lineH;
+    const visual = this.chatInputVisualPositionForDocPosition(this.chatDraft.selection.head, metrics.visualLines);
+    const caretTop = visual.index * lineH;
     const caretBottom = caretTop + lineH;
     const margin = Math.min(lineH, Math.max(0, content.h / 3));
     let scroll = this.chatInputScrollY;
     if (caretTop < scroll + margin) scroll = caretTop - margin;
     else if (caretBottom > scroll + content.h - margin) scroll = caretBottom - content.h + margin;
-    this.chatInputScrollY = clamp(scroll, 0, Math.max(0, this.chatInputContentHeight() - content.h));
+    this.chatInputScrollY = clamp(scroll, 0, Math.max(0, metrics.contentHeight - metrics.viewport.h));
   }
   chatInputCaretRect(input) {
-    const content = this.chatInputContentRect(input);
+    const metrics = this.chatInputMetrics(input);
+    const content = metrics.content;
     const doc = this.chatDraft;
     const lineH = this.renderer.lineHeight("ui");
     const line = doc.lines[doc.selection.head.line] ?? "";
-    const x = content.x + this.renderer.measureText(line.slice(0, doc.selection.head.col), "ui");
-    const y = content.y + doc.selection.head.line * lineH - this.chatInputScrollY + this.ui(2);
+    const visual = this.chatInputVisualPositionForDocPosition(doc.selection.head, metrics.visualLines);
+    const x = content.x + this.renderer.measureText(line.slice(visual.line.start, doc.selection.head.col), "ui");
+    const y = content.y + visual.index * lineH - this.chatInputScrollY + this.ui(2);
     return { x, y, w: 1.5, h: lineH };
+  }
+  chatInputPositionFromPoint(point, rect) {
+    const metrics = this.chatInputMetrics(rect);
+    const content = metrics.content;
+    const lineH = this.renderer.lineHeight("ui");
+    const visualIndex = clamp(Math.floor((point.y - content.y + this.chatInputScrollY) / lineH), 0, metrics.visualLines.length - 1);
+    const visualLine = metrics.visualLines[visualIndex];
+    const col = visualLine.start + this.columnFromTextOffset(visualLine.text, point.x - content.x, "ui");
+    return this.chatDraft.clampPosition({ line: visualLine.line, col: clamp(col, visualLine.start, visualLine.end) });
   }
   bufferForTextField(field) {
     if (field === "search") return this.searchBuffer;
     if (field === "projectReplace") return this.projectReplaceBuffer;
+    if (isSettingTextField(field)) return this.settingsTextBuffers[field];
     const findState = this.activeFindState();
     if (field === "find") return findState?.findBuffer ?? this.inactiveFindBuffer;
     return findState?.replaceBuffer ?? this.inactiveFindReplaceBuffer;
   }
   afterTextFieldChanged(field) {
+    if (isSettingTextField(field)) {
+      this.scheduleDraw();
+      return;
+    }
     if (field === "search") {
       void this.runSearch();
       return;
@@ -8005,6 +9171,17 @@ var EditorApp = class {
     if (field === "find") {
       this.selectDocumentFindMatch(1, true);
     }
+  }
+  syncSettingsTextBufferFromConfig(field) {
+    const config = loadAiEndpointConfig();
+    const buffer = this.settingsTextBuffers[field];
+    if (field === "aiBaseUrl") buffer.text = config.apiBaseUrl;
+    else if (field === "aiApiKey") buffer.text = config.apiKey;
+    else if (field === "aiModel") buffer.text = config.model;
+    else buffer.text = config.maxContextTokens ? String(config.maxContextTokens) : "";
+    buffer.cursor = buffer.text.length;
+    buffer.anchor = buffer.cursor;
+    buffer.scrollX = 0;
   }
   setTextFieldCursorFromPoint(field, x, rect, extend) {
     const buffer = this.bufferForTextField(field);
@@ -8186,11 +9363,14 @@ var EditorApp = class {
       if (path === AI_SETTINGS_DOC_PATH) {
         const parsed = JSON.parse(text);
         saveAiEndpointConfig(parsed);
-        this.aiModels = loadAiModels();
       } else if (path === AI_SYSTEM_PROMPT_DOC_PATH) {
         saveAiSystemPrompt(text);
-      } else if (path === AI_HELPER_PROMPTS_DOC_PATH) {
-        saveAiHelperPrompts(text);
+      } else if (path === AI_TAG_TOOL_PROMPT_DOC_PATH) {
+        saveAiTagToolPrompt(text);
+      } else if (path === AI_HARMONY_TOOL_PROMPT_DOC_PATH) {
+        saveAiHarmonyToolPrompt(text);
+      } else if (path === AI_COMPACT_PROMPT_DOC_PATH) {
+        saveAiCompactPrompt(text);
       } else {
         return false;
       }
@@ -8441,6 +9621,33 @@ var EditorApp = class {
     if (this.activeDoc()) this.focusEditor();
     else this.input.blur();
     window.setTimeout(() => URL.revokeObjectURL(url), 1e3);
+    this.scheduleDraw();
+  }
+  exportChatToDisk() {
+    const filename = `chat-${downloadTimestamp()}.jsonl`;
+    const blob = new Blob([this.chat.exportJsonl()], { type: "application/x-ndjson;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    this.statusText = `Exported ${filename}`;
+    window.setTimeout(() => URL.revokeObjectURL(url), 1e3);
+    this.scheduleDraw();
+  }
+  debugChatToUntitled() {
+    const text = this.chat.debugApiJsonl(this.aiRuntimeSettings(), this.settings.aiInsertEditorContext ? this.editorContextBundle() : null);
+    const filename = `chat-debug-${downloadTimestamp()}.jsonl`;
+    this.openUntitledDocument(this.activeGroupId, {
+      label: "Debug Chat",
+      text,
+      preferredName: filename,
+      dirty: true
+    });
+    this.statusText = "Opened chat debug JSONL";
     this.scheduleDraw();
   }
   revokeDownloadReadyModal() {
@@ -8774,7 +9981,7 @@ var EditorApp = class {
     else this.chatScrollY = next;
   }
   maxChatScrollY(panel, viewport) {
-    const contentHeight = panel === "chatInput" ? this.chatInputContentHeight() : this.chatTranscriptContentHeight(Math.max(1, viewport.w - this.ui(12)));
+    const contentHeight = panel === "chatInput" ? this.chatInputMetrics(viewport).contentHeight : this.chatTranscriptContentHeight(Math.max(1, viewport.w - this.ui(12)));
     return Math.max(0, contentHeight - viewport.h);
   }
   fileTreeVisibleRowCount(entries = this.fileTreeEntries()) {
@@ -8822,7 +10029,7 @@ var EditorApp = class {
     if (this.settingsExpanded.has("interface")) y += this.ui(34) * 4;
     y += this.ui(6);
     y += this.ui(30);
-    if (this.settingsExpanded.has("ai")) y += this.ui(34) * 10;
+    if (this.settingsExpanded.has("ai")) y += this.ui(54) * 2 + this.ui(34) * 11;
     y += this.ui(6);
     y += this.ui(30);
     if (this.settingsExpanded.has("danger")) y += this.ui(34) * 2;
@@ -9235,23 +10442,30 @@ var EditorApp = class {
   }
   persistEditorSession() {
     try {
+      this.clearLegacyPersistedEditorSessions();
       if (!this.settings.rememberOpenFiles) {
-        localStorage.removeItem(this.sessionStorageKey());
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         return;
       }
       const session = this.makePersistedSession();
       if (!session) {
-        localStorage.removeItem(this.sessionStorageKey());
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         return;
       }
-      localStorage.setItem(this.sessionStorageKey(), JSON.stringify(session));
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
     } catch {
     }
   }
   clearPersistedEditorSession() {
     try {
-      localStorage.removeItem(this.sessionStorageKey());
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      this.clearLegacyPersistedEditorSessions();
     } catch {
+    }
+  }
+  clearLegacyPersistedEditorSessions() {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(`${SESSION_STORAGE_KEY}:`)) localStorage.removeItem(key);
     }
   }
   makePersistedSession() {
@@ -9285,7 +10499,8 @@ var EditorApp = class {
     }
     let session = null;
     try {
-      const raw = localStorage.getItem(this.sessionStorageKey());
+      this.clearLegacyPersistedEditorSessions();
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
       session = raw ? normalizePersistedSession(JSON.parse(raw)) : null;
     } catch {
       session = null;
@@ -9357,6 +10572,7 @@ var EditorApp = class {
       kind: "editor",
       getSelectedText: () => this.activeDoc()?.selectedText() ?? "",
       replaceSelection: (text) => {
+        this.closeContextMenuForTextInput();
         const doc = this.activeDoc();
         if (this.blockReadOnlyEdit(doc)) return;
         doc?.replaceSelection(text);
@@ -9364,6 +10580,7 @@ var EditorApp = class {
         this.revealEditorCaret();
       },
       deleteSelectionOrBackward: (unit = "char") => {
+        this.closeContextMenuForTextInput();
         const doc = this.activeDoc();
         if (this.blockReadOnlyEdit(doc)) return;
         doc?.deleteBackward(unit);
@@ -9371,6 +10588,7 @@ var EditorApp = class {
         this.revealEditorCaret();
       },
       deleteForward: (unit = "char") => {
+        this.closeContextMenuForTextInput();
         const doc = this.activeDoc();
         if (this.blockReadOnlyEdit(doc)) return;
         doc?.deleteForward(unit);
@@ -9384,6 +10602,7 @@ var EditorApp = class {
       runShortcut: (command) => this.runEditorShortcut(command),
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
+        this.closeContextMenuForTextInput();
         const doc = this.activeDoc();
         if (text && !this.blockReadOnlyEdit(doc)) {
           doc?.replaceSelection(text, "composition");
@@ -9400,16 +10619,19 @@ var EditorApp = class {
       kind,
       getSelectedText: () => buffer.selectedText(),
       replaceSelection: (text) => {
+        this.closeContextMenuForTextInput();
         buffer.replaceSelection(text.replaceAll("\n", " "));
         if (kind === "search") void this.runSearch();
         this.resetCaretBlink();
       },
       deleteSelectionOrBackward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteBackward();
         if (kind === "search") void this.runSearch();
         this.resetCaretBlink();
       },
       deleteForward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteForward();
         if (kind === "search") void this.runSearch();
         this.resetCaretBlink();
@@ -9433,6 +10655,7 @@ var EditorApp = class {
       },
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
+        this.closeContextMenuForTextInput();
         buffer.replaceSelection(text);
         if (kind === "search") void this.runSearch();
         this.resetCaretBlink();
@@ -9445,16 +10668,19 @@ var EditorApp = class {
       kind: "chat",
       getSelectedText: () => doc.selectedText(),
       replaceSelection: (text) => {
+        this.closeContextMenuForTextInput();
         doc.replaceSelection(text);
         this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
         this.resetCaretBlink();
       },
       deleteSelectionOrBackward: (unit) => {
+        this.closeContextMenuForTextInput();
         doc.deleteBackward(unit);
         this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
         this.resetCaretBlink();
       },
       deleteForward: (unit) => {
+        this.closeContextMenuForTextInput();
         doc.deleteForward(unit);
         this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
         this.resetCaretBlink();
@@ -9470,6 +10696,7 @@ var EditorApp = class {
           return true;
         }
         if (command === "Shift+Enter") {
+          this.closeContextMenuForTextInput();
           doc.replaceSelection("\n");
           this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
           this.resetCaretBlink();
@@ -9488,6 +10715,7 @@ var EditorApp = class {
       },
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
+        this.closeContextMenuForTextInput();
         doc.replaceSelection(text);
         this.ensureChatInputCaretVisible(this.chatInputRectForFocus());
         this.resetCaretBlink();
@@ -9500,16 +10728,19 @@ var EditorApp = class {
       kind: field,
       getSelectedText: () => buffer.selectedText(),
       replaceSelection: (text) => {
-        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.closeContextMenuForTextInput();
+        buffer.replaceSelection(this.sanitizeTextFieldInput(field, text));
         this.afterTextFieldChanged(field);
         this.resetCaretBlink();
       },
       deleteSelectionOrBackward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteBackward();
         this.afterTextFieldChanged(field);
         this.resetCaretBlink();
       },
       deleteForward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteForward();
         this.afterTextFieldChanged(field);
         this.resetCaretBlink();
@@ -9520,7 +10751,8 @@ var EditorApp = class {
       },
       runShortcut: (command) => {
         if (command === "Enter") {
-          if (field === "find") this.selectDocumentFindMatch(1);
+          if (isSettingTextField(field)) this.commitSettingsTextInput();
+          else if (field === "find") this.selectDocumentFindMatch(1);
           else if (field === "findReplace") this.replaceCurrentFindMatch();
           else if (field === "projectReplace") void this.replaceAllInWorkspace();
           else void this.runSearch();
@@ -9528,7 +10760,8 @@ var EditorApp = class {
           return true;
         }
         if (command === "Escape") {
-          if (field === "find" || field === "findReplace") this.closeFindWidget();
+          if (isSettingTextField(field)) this.cancelSettingsTextInput();
+          else if (field === "find" || field === "findReplace") this.closeFindWidget();
           else this.focusEditor();
           return true;
         }
@@ -9541,11 +10774,16 @@ var EditorApp = class {
       },
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
-        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        this.closeContextMenuForTextInput();
+        buffer.replaceSelection(this.sanitizeTextFieldInput(field, text));
         this.afterTextFieldChanged(field);
         this.resetCaretBlink();
       }
     };
+  }
+  sanitizeTextFieldInput(field, text) {
+    const singleLine = sanitizeSingleLineInput(text);
+    return field === "aiMaxContextTokens" ? singleLine.replace(/\D+/g, "") : singleLine;
   }
   renameTarget() {
     const buffer = this.renameBuffer;
@@ -9553,14 +10791,17 @@ var EditorApp = class {
       kind: "command",
       getSelectedText: () => buffer.selectedText(),
       replaceSelection: (text) => {
+        this.closeContextMenuForTextInput();
         buffer.replaceSelection(text.replaceAll("\r\n", " ").replaceAll("\r", " ").replaceAll("\n", " "));
         this.resetCaretBlink();
       },
       deleteSelectionOrBackward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteBackward();
         this.resetCaretBlink();
       },
       deleteForward: () => {
+        this.closeContextMenuForTextInput();
         buffer.deleteForward();
         this.resetCaretBlink();
       },
@@ -9586,6 +10827,7 @@ var EditorApp = class {
       },
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
+        this.closeContextMenuForTextInput();
         buffer.replaceSelection(text.replaceAll("\r\n", " ").replaceAll("\r", " ").replaceAll("\n", " "));
         this.resetCaretBlink();
       }
@@ -9690,6 +10932,10 @@ var EditorApp = class {
     if (menu.scope.type === "settingsRoot") {
       if (command === "resetSettings") this.resetSettings();
       this.closeContextMenu();
+      return;
+    }
+    if (menu.scope.type === "chatRoot") {
+      await this.runChatRootContextMenuCommand(command);
       return;
     }
     if (menu.scope.type === "settingsDropdown") {
@@ -9932,6 +11178,37 @@ var EditorApp = class {
     restore();
     this.resetCaretBlink();
   }
+  async runChatRootContextMenuCommand(command) {
+    if (command === "exportChat") {
+      this.exportChatToDisk();
+      return;
+    }
+    if (command === "debugChat") {
+      this.debugChatToUntitled();
+      return;
+    }
+    if (command === "clearChat") {
+      if (this.chat.running) return;
+      this.chat.clear();
+      await this.chat.persist();
+      this.chatScrollY = 0;
+      this.statusText = "Chat cleared";
+      this.scheduleDraw();
+      return;
+    }
+    if (command === "compactChat") {
+      if (this.chat.running) return;
+      this.statusText = "Compacting chat";
+      const result = await this.chat.compact(this.aiRuntimeSettings(), {
+        onUpdate: () => this.scheduleDraw(),
+        onCompactStart: () => this.openCompactingModal(),
+        onCompactEnd: () => this.closeCompactingModal()
+      });
+      this.chatScrollY = Number.MAX_SAFE_INTEGER;
+      this.statusText = result.output;
+      this.scheduleDraw();
+    }
+  }
   async runTextFieldContextMenuCommand(field, command) {
     if (field === "search") {
       await this.runSearchContextMenuCommand(command);
@@ -9950,7 +11227,7 @@ var EditorApp = class {
     }
     if (command === "systemPaste") {
       this.openSystemPasteDialog((text) => {
-        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        buffer.replaceSelection(this.sanitizeTextFieldInput(field, text));
         this.afterTextFieldChanged(field);
         this.statusText = "Pasted";
         restore();
@@ -9980,7 +11257,7 @@ var EditorApp = class {
       } else if (!text) {
         this.statusText = "Clipboard empty";
       } else {
-        buffer.replaceSelection(sanitizeSingleLineInput(text));
+        buffer.replaceSelection(this.sanitizeTextFieldInput(field, text));
         this.afterTextFieldChanged(field);
         this.statusText = "Pasted";
       }
@@ -10041,6 +11318,10 @@ var EditorApp = class {
     const group = this.groupById(groupId);
     if (command === "newFile") {
       this.openUntitledDocument(group.id);
+      return;
+    }
+    if (command === "uploadFile") {
+      this.requestFileUpload("/");
       return;
     }
     await this.requestCloseTabs(group.tabs);
@@ -10115,6 +11396,7 @@ var EditorApp = class {
       ];
     } else if (key === "aiToolCallFormat") {
       entries = [
+        { command: "aiToolFormatNone", label: "None", enabled: true },
         { command: "aiToolFormatTag", label: "Tag", enabled: true },
         { command: "aiToolFormatHarmony", label: "Harmony", enabled: true }
       ];
@@ -10125,14 +11407,18 @@ var EditorApp = class {
         command: aiModelCommand(model.id),
         label: `${model.id}${model.contextLength ? ` (${Math.round(model.contextLength / 1e3)}k)` : ""}`,
         enabled: true
-      })) : [{ command: aiModelCommand(""), label: "No models scanned", enabled: false }];
+      })) : [{ command: aiModelCommand(""), label: "No models probed", enabled: false }];
     } else {
       entries = [
         { command: "aiProviderLocal", label: "Local", enabled: true },
         { command: "aiProviderOpenAI", label: "OpenAI", enabled: true }
       ];
     }
-    this.contextMenu = this.makeContextMenu({ x: rect.x, y: rect.y + rect.h }, { type: "settingsDropdown", key }, entries, { x: rect.x, y: rect.y + rect.h, w: rect.w });
+    const menuW = key === "aiModel" ? Math.min(
+      Math.max(rect.w, ...entries.map((entry) => "separator" in entry ? 0 : this.renderer.measureText(entry.label, "ui") + this.ui(34))),
+      Math.max(rect.w, this.viewport.get().cssWidth - this.ui(24))
+    ) : rect.w;
+    this.contextMenu = this.makeContextMenu({ x: rect.x, y: rect.y + rect.h }, { type: "settingsDropdown", key }, entries, { x: rect.x, y: rect.y + rect.h, w: menuW });
     this.contextMenuHover = null;
     this.scheduleDraw();
   }
@@ -10145,17 +11431,19 @@ var EditorApp = class {
       if (command === "aiProviderLocal") this.settings.aiProvider = "local";
       else if (command === "aiProviderOpenAI") this.settings.aiProvider = "openai";
     } else if (key === "aiToolCallFormat") {
-      if (command === "aiToolFormatTag") this.settings.aiToolCallFormat = "tag";
+      if (command === "aiToolFormatNone") this.settings.aiToolCallFormat = "none";
+      else if (command === "aiToolFormatTag") this.settings.aiToolCallFormat = "tag";
       else if (command === "aiToolFormatHarmony") this.settings.aiToolCallFormat = "harmony";
     } else if (key === "aiModel") {
       const modelId = aiModelCommandValue(command);
       if (modelId !== null) {
         const selected = this.aiModels.find((model) => model.id === modelId);
         const config = loadAiEndpointConfig();
+        const detectedContextTokens = selected?.contextLength || resolveAiContextTokens({ ...config, model: modelId, maxContextTokens: 0 });
         saveAiEndpointConfig({
           ...config,
           model: modelId,
-          maxContextTokens: selected?.contextLength ?? config.maxContextTokens
+          maxContextTokens: detectedContextTokens || config.maxContextTokens
         });
         this.statusText = modelId ? `AI model ${modelId}` : "AI model unchanged";
       }
@@ -10219,6 +11507,7 @@ var EditorApp = class {
   }
   toggleSettingsCheckbox(key) {
     this.settings[key] = !this.settings[key];
+    if (key === "aiModelManual") this.syncSettingsTextBufferFromConfig("aiModel");
     this.saveAndApplySettings();
   }
   focusSettingsNumber(key, rect) {
@@ -10238,16 +11527,19 @@ var EditorApp = class {
       kind: "command",
       getSelectedText: () => this.settingsNumberBuffer.selectedText(),
       replaceSelection: (text) => {
+        this.closeContextMenuForTextInput();
         this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
         this.applySettingsNumberFromBuffer();
         this.resetCaretBlink();
       },
       deleteSelectionOrBackward: () => {
+        this.closeContextMenuForTextInput();
         this.settingsNumberBuffer.deleteBackward();
         this.applySettingsNumberFromBuffer();
         this.resetCaretBlink();
       },
       deleteForward: () => {
+        this.closeContextMenuForTextInput();
         this.settingsNumberBuffer.deleteForward();
         this.applySettingsNumberFromBuffer();
         this.resetCaretBlink();
@@ -10274,6 +11566,7 @@ var EditorApp = class {
       },
       onCompositionPreview: () => this.resetCaretBlink(),
       onCompositionCommit: (text) => {
+        this.closeContextMenuForTextInput();
         this.settingsNumberBuffer.replaceSelection(text.replace(/\D+/g, ""));
         this.applySettingsNumberFromBuffer();
         this.resetCaretBlink();
@@ -10311,6 +11604,51 @@ var EditorApp = class {
     this.input.blur();
     this.scheduleDraw();
   }
+  commitSettingsTextInput() {
+    const key = this.activeSettingsText;
+    if (!key) return;
+    this.applySettingsTextFromBuffer(key);
+    this.activeSettingsText = null;
+    this.textFieldSelecting = null;
+    this.input.blur();
+    this.scheduleDraw();
+  }
+  cancelSettingsTextInput() {
+    const key = this.activeSettingsText;
+    if (key) this.syncSettingsTextBufferFromConfig(key);
+    this.activeSettingsText = null;
+    this.textFieldSelecting = null;
+    this.input.blur();
+    this.scheduleDraw();
+  }
+  applySettingsTextFromBuffer(key) {
+    const config = loadAiEndpointConfig();
+    const buffer = this.settingsTextBuffers[key];
+    if (key === "aiBaseUrl") {
+      const next = saveAiEndpointConfig({ ...config, apiBaseUrl: buffer.text });
+      this.aiModels = [];
+      buffer.text = next.apiBaseUrl;
+      this.statusText = "AI base URL updated";
+    } else if (key === "aiApiKey") {
+      saveAiEndpointConfig({ ...config, apiKey: buffer.text.trim() });
+      buffer.text = buffer.text.trim();
+      this.statusText = "AI API key updated";
+    } else if (key === "aiModel") {
+      const model = buffer.text.trim();
+      saveAiEndpointConfig({ ...config, model });
+      buffer.text = model;
+      this.statusText = model ? `AI model ${model}` : "AI model cleared";
+    } else {
+      const value = Number.parseInt(buffer.text, 10);
+      const maxContextTokens = Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
+      saveAiEndpointConfig({ ...config, maxContextTokens });
+      buffer.text = maxContextTokens ? String(maxContextTokens) : "";
+      this.statusText = maxContextTokens ? "AI max context tokens updated" : "AI max context tokens set to auto-detect";
+    }
+    buffer.cursor = buffer.text.length;
+    buffer.anchor = buffer.cursor;
+    buffer.scrollX = 0;
+  }
   setSettingsNumberCursorFromPoint(x, rect, extend) {
     const offset = x - (rect.x + this.ui(8)) + this.settingsNumberBuffer.scrollX;
     const col = this.columnFromTextOffset(this.settingsNumberBuffer.text, offset, "ui");
@@ -10344,28 +11682,84 @@ var EditorApp = class {
       this.resetSettings();
       return;
     }
-    if (action === "editAiSettings") {
-      this.openAiSettingsDocument();
-      return;
-    }
     if (action === "editSystemPrompt") {
       this.openSystemPromptDocument();
       return;
     }
-    if (action === "editHelperPrompts") {
-      this.openHelperPromptsDocument();
+    if (action === "editTagToolPrompt") {
+      this.openTagToolPromptDocument();
       return;
     }
-    if (action === "scanLmStudio") {
-      this.statusText = "Scanning LM Studio models";
-      this.scheduleDraw();
-      const result = await probeOpenAICompatibleModels(loadAiEndpointConfig());
-      this.aiModels = result.models.length ? result.models : this.aiModels;
-      this.statusText = result.error ?? `Found ${result.models.length} model${result.models.length === 1 ? "" : "s"}`;
-      this.scheduleDraw();
+    if (action === "editHarmonyToolPrompt") {
+      this.openHarmonyToolPromptDocument();
+      return;
+    }
+    if (action === "editCompactPrompt") {
+      this.openCompactPromptDocument();
+      return;
+    }
+    if (action === "probeLmStudioModels") {
+      await this.probeLmStudioModels();
+      return;
+    }
+    if (action === "probeLmStudioMaxTokens") {
+      await this.probeLmStudioMaxTokens();
       return;
     }
     this.openClearFileSystemModal();
+  }
+  async probeLmStudioModels() {
+    this.statusText = "Probing LM Studio models";
+    this.scheduleDraw();
+    const config = loadAiEndpointConfig();
+    const result = await probeOpenAICompatibleModels(config);
+    if (result.error) {
+      this.statusText = result.error;
+      this.scheduleDraw();
+      return;
+    }
+    this.aiModels = result.models;
+    if (result.models.length > 0) {
+      let selected = config.model ? result.models.find((model) => model.id === config.model) : void 0;
+      if (!selected && result.models.length === 1) selected = result.models[0];
+      if (selected) {
+        saveAiEndpointConfig({
+          ...config,
+          model: selected.id,
+          maxContextTokens: selected.contextLength || config.maxContextTokens
+        });
+      }
+    }
+    this.statusText = `Found ${result.models.length} model${result.models.length === 1 ? "" : "s"}`;
+    this.scheduleDraw();
+  }
+  async probeLmStudioMaxTokens() {
+    this.statusText = "Probing LM Studio max tokens";
+    this.scheduleDraw();
+    const config = loadAiEndpointConfig();
+    if (!config.model) {
+      this.statusText = "Pick a model first";
+      this.scheduleDraw();
+      return;
+    }
+    const result = await probeOpenAICompatibleModels(config);
+    if (result.error) {
+      this.statusText = result.error;
+      this.scheduleDraw();
+      return;
+    }
+    if (result.models.length > 0) this.aiModels = result.models;
+    const match = result.models.find((model) => model.id === config.model);
+    const maxContextTokens = match?.contextLength || resolveAiContextTokens({ ...config, maxContextTokens: 0 });
+    if (!maxContextTokens) {
+      this.statusText = `No max context tokens reported for ${config.model}`;
+      this.scheduleDraw();
+      return;
+    }
+    saveAiEndpointConfig({ ...config, maxContextTokens });
+    this.syncSettingsTextBufferFromConfig("aiMaxContextTokens");
+    this.statusText = `Max context: ${maxContextTokens} tokens`;
+    this.scheduleDraw();
   }
   resetSettings() {
     this.settings = { ...DEFAULT_SETTINGS };
@@ -10989,10 +12383,122 @@ var EditorApp = class {
       maxToolCallsPerTurn: this.settings.aiMaxToolCalls,
       detectDuplicateToolCalls: this.settings.aiDetectDuplicateToolCalls,
       toolCallFormat: this.settings.aiToolCallFormat,
+      thinkingFormat: "auto",
       compactFreePercent: this.settings.aiCompactFreePercent
     };
   }
+  editorContextBundle() {
+    const activeDoc = this.activeDoc();
+    const activePath = activeDoc?.path && !this.isAiSpecialPath(activeDoc.path) ? normalizePath(activeDoc.path) : void 0;
+    const openDocs = this.docs.all().filter((doc) => !this.isAiSpecialDoc(doc));
+    const context = {
+      selectedText: activeDoc && !this.isAiSpecialDoc(activeDoc) ? activeDoc.selectedText() : "",
+      openPaths: openDocs.map((doc) => doc.path ? normalizePath(doc.path) : this.untitledLabels.get(doc.id) ?? "Untitled"),
+      openFileNames: openDocs.map((doc) => doc.path ? basename(doc.path) : this.untitledLabels.get(doc.id) ?? "Untitled"),
+      fileTreePaths: this.treeNodes.map((node) => `${normalizePath(node.path)}${node.kind === "dir" ? "/" : ""}`),
+      selectedFileTreePath: this.fileTreeSelectedPath() ?? void 0
+    };
+    if (activePath) context.activePath = activePath;
+    return context;
+  }
+  async handleAiWorkspaceChange(change) {
+    if (change.type === "write") {
+      const path = normalizePath(change.path);
+      this.expandFileTreeAncestors(path);
+      let text = change.text;
+      const doc = this.docs.getByPath(path);
+      if (doc && !doc.readOnly && text === void 0 && !isUnsupportedFilePath(path)) {
+        try {
+          text = await this.vfs.readText(path);
+        } catch {
+          text = void 0;
+        }
+      }
+      this.syncOpenDocumentFromWorkspace(path, text);
+      await this.refreshFiles();
+      this.syncOpenTabs();
+      this.scheduleDraw();
+      return;
+    }
+    if (change.type === "mkdir") {
+      const path = normalizePath(change.path);
+      this.expandFileTreeAncestors(path, true);
+      await this.refreshFiles();
+      this.scheduleDraw();
+      return;
+    }
+    if (change.type === "remove") {
+      const path = normalizePath(change.path);
+      if (this.renamePath && this.workspaceRemoveAffectsPath(this.renamePath, path, change.recursive)) this.cancelRename();
+      this.clearFileTreeSelectionUnder(path);
+      const docs = this.docs.all().filter((doc) => doc.path && this.workspaceRemoveAffectsPath(doc.path, path, change.recursive));
+      for (const doc of docs) {
+        this.closeTab(doc.id);
+        if (doc.path) this.docs.removePath(doc.path);
+        this.clearDocumentCaches(doc.id);
+      }
+      if (path === "/" && change.recursive) {
+        this.docs.clear();
+        this.resetEditorSession();
+      }
+      this.removeFolderExpansion(path);
+      await this.refreshFiles();
+      this.syncOpenTabs();
+      if (this.activeDoc()) this.focusEditor();
+      else this.input.blur();
+      this.scheduleDraw();
+      return;
+    }
+    const oldPath = normalizePath(change.oldPath);
+    const newPath = normalizePath(change.newPath);
+    if (this.renamePath && isSameOrDescendant(this.renamePath, oldPath)) this.cancelRename();
+    const node = await this.vfs.stat(newPath);
+    if (node?.kind === "dir") {
+      for (const doc of this.docs.all()) {
+        if (!doc.path || !isSameOrDescendant(doc.path, oldPath)) continue;
+        const nextPath = doc.path === oldPath ? newPath : joinPath(newPath, doc.path.slice(oldPath.length + 1));
+        const renamed = this.docs.renamePath(doc.path, nextPath);
+        if (renamed) this.clearDocumentCaches(renamed.id);
+      }
+      this.remapFolderExpansion(oldPath, newPath);
+    } else {
+      const renamed = this.docs.renamePath(oldPath, newPath);
+      if (renamed) this.clearDocumentCaches(renamed.id);
+    }
+    this.remapFileTreeSelection(oldPath, newPath);
+    this.expandFileTreeAncestors(newPath, node?.kind === "dir");
+    await this.refreshFiles();
+    this.syncOpenTabs();
+    this.scheduleDraw();
+  }
+  syncOpenDocumentFromWorkspace(path, text) {
+    const doc = this.docs.getByPath(path);
+    if (!doc || doc.readOnly || text === void 0) return;
+    if (doc.getText() !== text) {
+      doc.selectAll();
+      doc.replaceSelection(text, "agent");
+    }
+    doc.markSaved();
+    this.clearDocumentCaches(doc.id);
+    const group = this.groupContaining(doc.id);
+    if (group) this.ensureCaretVisible(doc, group.editorRect);
+  }
+  expandFileTreeAncestors(path, includeSelf = false) {
+    let current = includeSelf ? normalizePath(path) : dirname(path);
+    while (true) {
+      this.expandedFolders.add(current);
+      if (current === "/") break;
+      current = dirname(current);
+    }
+  }
+  workspaceRemoveAffectsPath(path, removedPath, recursive) {
+    const normalizedPath = normalizePath(path);
+    const normalizedRemoved = normalizePath(removedPath);
+    if (normalizedRemoved === "/") return recursive || normalizedPath === "/";
+    return normalizedPath === normalizedRemoved || recursive && isSameOrDescendant(normalizedPath, normalizedRemoved);
+  }
   async sendChat() {
+    if (this.chat.running) return;
     const text = this.chatDraft.getText().trim();
     if (!text) return;
     this.chatDraft.selectAll();
@@ -11003,11 +12509,27 @@ var EditorApp = class {
     this.statusText = "Sending chat turn";
     await this.chat.send(text, this.activeDoc(), this.docs.all(), {
       runtime: this.aiRuntimeSettings(),
-      onUpdate: () => this.scheduleDraw()
+      editorContext: this.settings.aiInsertEditorContext ? this.editorContextBundle() : null,
+      onUpdate: () => this.scheduleDraw(),
+      onCompactStart: () => this.openCompactingModal(),
+      onCompactEnd: () => this.closeCompactingModal(),
+      onToolCallLimit: (limit, used) => this.openToolCallLimitModal(limit, used),
+      onDuplicateToolCall: (call) => this.openDuplicateToolCallModal(call),
+      onWorkspaceChange: (change) => this.handleAiWorkspaceChange(change)
     });
     this.chatScrollY = Number.MAX_SAFE_INTEGER;
-    this.statusText = "Chat turn complete";
+    const latest = this.chat.visibleMessages().at(-1);
+    this.statusText = latest?.role === "system" && latest.text === "Turn canceled." ? "Chat turn canceled" : "Chat turn complete";
     this.scheduleDraw();
+  }
+  runChatSendControl() {
+    if (this.chat.running) {
+      this.statusText = "Stopping chat turn";
+      this.chat.cancel();
+      this.scheduleDraw();
+      return;
+    }
+    void this.sendChat();
   }
   draw() {
     this.viewport.resizeCanvas(this.renderer.gl);
@@ -11239,7 +12761,7 @@ var EditorApp = class {
   drawSearchInput(input) {
     this.drawTextFieldInput("search", input, "type to search");
   }
-  drawTextFieldInput(field, input, placeholder) {
+  drawTextFieldInput(field, input, placeholder, pushHit = true) {
     const buffer = this.bufferForTextField(field);
     const active = this.input.activeTarget?.kind === field;
     const border = active ? theme.accent : theme.divider;
@@ -11267,7 +12789,7 @@ var EditorApp = class {
       this.renderer.rect({ x: caretX, y: input.y + this.ui(5), w: 1.5, h: input.h - this.ui(10) }, theme.caret);
     }
     this.renderer.popClip();
-    this.hits.push({ type: "textField", field, rect: input });
+    if (pushHit) this.hits.push({ type: "textField", field, rect: input });
   }
   drawIconButton(rect, label, enabled, font = "ui", hovered = false) {
     this.renderer.rect(rect, this.buttonFill(enabled, hovered));
@@ -11299,19 +12821,31 @@ var EditorApp = class {
   }
   drawChatPanel(rect) {
     const body = this.drawPanelHeader(rect, "CHAT");
+    this.hits.push({ type: "chatRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: this.ui(PANEL_HEADER_H) } });
     const layout = this.chatPanelLayoutFromBody(body);
     this.drawChatTranscript(layout.transcript);
     this.drawChatInput(layout.input);
-    const enabled = Boolean(this.chatDraft.getText().trim()) && !this.chat.running;
-    this.drawButton(layout.send, this.chat.running ? "Sending..." : "Send", enabled, this.isButtonHovered("chatSend"));
-    this.hits.push({ type: "chatSend", rect: layout.send, enabled });
+    const label = this.chat.running ? "Stop" : "Send";
+    const enabled = this.chat.running || Boolean(this.chatDraft.getText().trim());
+    this.drawButton(layout.send, label, enabled, this.isButtonHovered("chatSend"));
+    this.hits.push({ type: "chatSend", rect: layout.send, enabled, label });
+    this.drawChatShowThinkingControl(layout.showThinking);
   }
   chatPanelLayoutFromBody(body) {
     const pad = this.ui(10);
     const gap = this.ui(8);
     const sendH = this.ui(30);
-    const inputH = clamp(body.h * 0.28, this.ui(72), this.ui(152));
-    const send = { x: body.x + pad, y: body.y + Math.max(pad, body.h - pad - sendH), w: Math.max(1, body.w - pad * 2), h: sendH };
+    const inputH = this.chatInputPreferredHeight();
+    const rowX = body.x + pad;
+    const rowW = Math.max(1, body.w - pad * 2);
+    const rowY = body.y + Math.max(pad, body.h - pad - sendH);
+    const labelW = this.renderer.measureText("Show thinking", "ui");
+    const boxSize = this.ui(12);
+    const preferredThinkingW = Math.max(this.ui(104), boxSize + labelW + this.ui(14));
+    const thinkingW = Math.min(preferredThinkingW, Math.max(this.ui(74), rowW - this.ui(64) - gap));
+    const sendW = Math.max(1, rowW - thinkingW - gap);
+    const showThinking = { x: rowX, y: rowY, w: thinkingW, h: sendH };
+    const send = { x: showThinking.x + showThinking.w + gap, y: rowY, w: sendW, h: sendH };
     const input = {
       x: body.x + pad,
       y: Math.max(body.y + pad, send.y - gap - inputH),
@@ -11324,7 +12858,22 @@ var EditorApp = class {
       w: Math.max(1, body.w - pad * 2),
       h: Math.max(1, input.y - body.y - pad - gap)
     };
-    return { transcript, input, send };
+    return { transcript, input, send, showThinking };
+  }
+  drawChatShowThinkingControl(rect) {
+    const hovered = this.isButtonHovered("chatShowThinking");
+    if (hovered) this.renderer.rect(rect, this.hoverControlColor(theme.activity));
+    const boxSize = this.ui(12);
+    const box = { x: rect.x + this.ui(3), y: rect.y + (rect.h - boxSize) / 2, w: boxSize, h: boxSize };
+    this.renderer.rect(box, this.settings.showThinking ? theme.activityActive : theme.panel2);
+    this.drawRectOutline(box, theme.divider);
+    if (this.settings.showThinking) this.drawCenteredText("\u2714\uFE0F", box, this.buttonTextColor(true, hovered), "mini");
+    const textY = rect.y + (rect.h - this.renderer.lineHeight("ui")) / 2;
+    this.drawClippedText("Show thinking", { x: box.x + box.w + this.ui(5), y: rect.y, w: Math.max(0, rect.x + rect.w - box.x - box.w - this.ui(5)), h: rect.h }, textY, hovered ? this.buttonTextColor(true, true) : theme.textDim, "ui");
+    this.hits.push({ type: "chatShowThinking", rect });
+  }
+  chatInputPreferredHeight() {
+    return this.renderer.lineHeight("ui") * 4 + this.ui(14);
   }
   chatInputRectForSidebar(sidebarRect) {
     return this.chatPanelLayoutFromBody(this.sidebarPanelBodyRect(sidebarRect)).input;
@@ -11335,14 +12884,20 @@ var EditorApp = class {
     const vp = this.viewport.get();
     return this.chatInputRectForSidebar({ x: this.ui(48), y: 0, w: Math.max(this.ui(160), this.sidebarWidth || this.lastSidebarWidth), h: vp.cssHeight - this.ui(24) });
   }
+  chatDisplayMessages() {
+    const messages = this.chat.visibleMessages();
+    return this.settings.showThinking ? messages : messages.filter((msg) => msg.role !== "thinking");
+  }
   drawChatTranscript(viewport) {
     const scrollbarSize = this.editorScrollbarSize();
+    const messages = this.chatDisplayMessages();
+    this.pruneChatLineCache(messages);
     let contentWidth = viewport.w;
-    let contentHeight = this.chatTranscriptContentHeight(contentWidth);
+    let contentHeight = this.chatTranscriptContentHeight(contentWidth, messages);
     const hasScrollbar = contentHeight > viewport.h;
     if (hasScrollbar) {
       contentWidth = Math.max(1, viewport.w - scrollbarSize);
-      contentHeight = this.chatTranscriptContentHeight(contentWidth);
+      contentHeight = this.chatTranscriptContentHeight(contentWidth, messages);
     }
     this.chatScrollY = clamp(this.chatScrollY, 0, Math.max(0, contentHeight - viewport.h));
     const content = { x: viewport.x, y: viewport.y, w: contentWidth, h: viewport.h };
@@ -11351,20 +12906,42 @@ var EditorApp = class {
     const lineH = this.renderer.lineHeight("ui");
     const bubblePad = this.ui(8);
     const gap = this.ui(8);
-    for (const msg of this.chat.messages) {
-      const lines = this.chatMessageLines(msg.text, Math.max(1, content.w - bubblePad * 2));
+    const contentBottom = content.y + content.h;
+    for (const msg of messages) {
+      const lines = this.chatMessageLinesCached(msg, Math.max(1, content.w - bubblePad * 2));
       const bubbleH = this.ui(26) + lines.length * lineH + bubblePad;
+      if (y >= contentBottom) break;
+      if (y + bubbleH <= content.y) {
+        y += bubbleH + gap;
+        continue;
+      }
       const bubble = { x: content.x + this.ui(2), y, w: Math.max(1, content.w - this.ui(4)), h: bubbleH };
-      if (bubble.y + bubble.h >= viewport.y && bubble.y <= viewport.y + viewport.h) {
+      const visibleBubble = intersectRect(bubble, content);
+      if (visibleBubble) {
         const colors = this.chatRoleColors(msg.role, msg.ok);
-        this.renderer.rect(bubble, colors.fill);
-        this.drawRectOutline(bubble, colors.outline);
+        this.renderer.rect(visibleBubble, colors.fill);
+        this.drawRectOutlineClipped(bubble, content, colors.outline);
         const label = msg.name ? `${this.chatRoleLabel(msg.role)}: ${msg.name}` : this.chatRoleLabel(msg.role);
-        this.renderer.text(label, bubble.x + bubblePad, bubble.y + this.ui(7), colors.label, "ui");
-        let textY = bubble.y + this.ui(25);
-        for (const line of lines) {
-          this.renderer.text(line, bubble.x + bubblePad, textY, colors.text, "ui");
-          textY += lineH;
+        const labelY = bubble.y + this.ui(7);
+        const stickyHeaderH = lineH + this.ui(10);
+        let textClipTop = content.y;
+        if (labelY + lineH >= content.y && labelY <= contentBottom) {
+          this.renderer.text(label, bubble.x + bubblePad, labelY, colors.label, "ui");
+        } else if (bubble.y < content.y && bubble.y + bubble.h > content.y + stickyHeaderH) {
+          const header = intersectRect({ x: bubble.x, y: content.y, w: bubble.w, h: stickyHeaderH }, content);
+          if (header) {
+            this.renderer.rect(header, colors.fill);
+            this.renderer.rect({ x: header.x, y: header.y + header.h - 1, w: header.w, h: 1 }, colors.outline);
+            this.renderer.text(label, bubble.x + bubblePad, content.y + this.ui(5), colors.label, "ui");
+            textClipTop = header.y + header.h;
+          }
+        }
+        const textStartY = bubble.y + this.ui(25);
+        const firstLineOffset = (textClipTop - textStartY) / lineH;
+        const firstLine = Math.max(0, textClipTop > content.y ? Math.ceil(firstLineOffset) : Math.floor(firstLineOffset));
+        const lastLine = Math.min(lines.length, Math.ceil((contentBottom - textStartY) / lineH) + 1);
+        for (let i = firstLine; i < lastLine; i++) {
+          this.renderer.text(lines[i], bubble.x + bubblePad, textStartY + i * lineH, colors.text, "ui");
         }
       }
       y += bubbleH + gap;
@@ -11375,14 +12952,11 @@ var EditorApp = class {
   }
   drawChatInput(input) {
     const active = this.input.activeTarget?.kind === "chat";
-    const contentHeight = this.chatInputContentHeight();
-    const hasScrollbar = contentHeight > input.h;
-    const scrollbarSize = this.editorScrollbarSize();
-    const viewport = hasScrollbar ? { ...input, w: Math.max(1, input.w - scrollbarSize) } : input;
+    const metrics = this.chatInputMetrics(input);
+    const { content, contentHeight, hasScrollbar, viewport, visualLines } = metrics;
     this.chatInputScrollY = clamp(this.chatInputScrollY, 0, Math.max(0, contentHeight - viewport.h));
     this.renderer.rect(input, active ? theme.activity : theme.panel2);
     this.drawRectOutline(input, active ? theme.accent : theme.divider);
-    const content = this.chatInputContentRect(viewport);
     const lineH = this.renderer.lineHeight("ui");
     const doc = this.chatDraft;
     const selection = doc.getOrderedSelection();
@@ -11393,12 +12967,12 @@ var EditorApp = class {
     const firstLine = Math.max(0, Math.floor(this.chatInputScrollY / lineH));
     const visibleLines = Math.ceil(content.h / lineH) + 2;
     for (let i = 0; i < visibleLines; i++) {
-      const lineIndex = firstLine + i;
-      if (lineIndex >= doc.lineCount()) break;
-      const line = doc.lines[lineIndex] ?? "";
-      const y = content.y + lineIndex * lineH - this.chatInputScrollY + this.ui(4);
-      this.drawChatInputSelectionForLine(line, lineIndex, content.x, y, lineH, selection);
-      this.renderer.text(line, content.x, y, theme.text, "ui");
+      const visualIndex = firstLine + i;
+      const visualLine = visualLines[visualIndex];
+      if (!visualLine) break;
+      const y = content.y + visualIndex * lineH - this.chatInputScrollY + this.ui(4);
+      this.drawChatInputSelectionForLine(visualLine, content.x, y, lineH, selection);
+      if (visualLine.text) this.renderer.text(visualLine.text, content.x, y, theme.text, "ui");
     }
     if (active && (this.input.composing || this.isCaretBlinkOn())) {
       const caret = this.chatInputCaretRect(input);
@@ -11409,32 +12983,127 @@ var EditorApp = class {
     this.hits.push({ type: "chatInput", rect: input });
     if (hasScrollbar) this.drawChatScrollbar("chatInput", input, contentHeight, this.chatInputScrollY);
   }
-  drawChatInputSelectionForLine(line, lineIndex, x, y, lineH, selection) {
+  drawChatInputSelectionForLine(visualLine, x, y, lineH, selection) {
+    const lineIndex = visualLine.line;
     if (selection.start.line > lineIndex || selection.end.line < lineIndex) return;
-    const start = selection.start.line === lineIndex ? selection.start.col : 0;
-    const end = selection.end.line === lineIndex ? selection.end.col : line.length;
+    const line = this.chatDraft.lines[lineIndex] ?? "";
+    const start = Math.max(visualLine.start, selection.start.line === lineIndex ? selection.start.col : 0);
+    const end = Math.min(visualLine.end, selection.end.line === lineIndex ? selection.end.col : line.length);
     if (end <= start) return;
-    const startX = x + this.renderer.measureText(line.slice(0, start), "ui");
-    const endX = x + this.renderer.measureText(line.slice(0, end), "ui");
+    const startX = x + this.renderer.measureText(line.slice(visualLine.start, start), "ui");
+    const endX = x + this.renderer.measureText(line.slice(visualLine.start, end), "ui");
     this.renderer.rect({ x: startX, y: y - this.ui(2), w: Math.max(2, endX - startX), h: lineH }, theme.selection);
   }
   chatInputContentRect(input) {
     const pad = this.ui(8);
     return { x: input.x + pad, y: input.y + this.ui(3), w: Math.max(1, input.w - pad * 2), h: Math.max(1, input.h - this.ui(6)) };
   }
-  chatInputContentHeight() {
-    return Math.max(1, this.chatDraft.lineCount() * this.renderer.lineHeight("ui") + this.ui(8));
+  chatInputMetrics(input) {
+    const scrollbarSize = this.editorScrollbarSize();
+    let viewport = input;
+    let content = this.chatInputContentRect(viewport);
+    let visualLines = this.chatInputVisualLines(content.w);
+    let contentHeight = this.chatInputContentHeightForVisualLines(visualLines);
+    const hasScrollbar = contentHeight > input.h;
+    if (hasScrollbar) {
+      viewport = { ...input, w: Math.max(1, input.w - scrollbarSize) };
+      content = this.chatInputContentRect(viewport);
+      visualLines = this.chatInputVisualLines(content.w);
+      contentHeight = this.chatInputContentHeightForVisualLines(visualLines);
+    }
+    return { viewport, content, visualLines, contentHeight, hasScrollbar };
   }
-  chatTranscriptContentHeight(width) {
+  chatInputVisualLines(width) {
+    const result = [];
+    for (let line = 0; line < this.chatDraft.lineCount(); line++) {
+      result.push(...this.wrapChatInputLine(line, width));
+    }
+    return result.length ? result : [{ line: 0, start: 0, end: 0, text: "" }];
+  }
+  wrapChatInputLine(lineIndex, width) {
+    const text = this.chatDraft.lines[lineIndex] ?? "";
+    if (!text) return [{ line: lineIndex, start: 0, end: 0, text: "" }];
+    const result = [];
+    const maxWidth = Math.max(1, width);
+    let start = 0;
+    while (start < text.length) {
+      let end = start;
+      let x = 0;
+      let lastBreak = -1;
+      while (end < text.length) {
+        const codePoint = text.codePointAt(end) ?? 0;
+        const char = String.fromCodePoint(codePoint);
+        const next = end + char.length;
+        const advance = this.renderer.measureText(char, "ui");
+        if (x + advance > maxWidth && end > start) {
+          if (lastBreak > start) end = lastBreak;
+          break;
+        }
+        x += advance;
+        end = next;
+        if (/\s/.test(char)) lastBreak = next;
+      }
+      if (end <= start) {
+        const codePoint = text.codePointAt(start) ?? 0;
+        end = start + String.fromCodePoint(codePoint).length;
+      }
+      result.push({ line: lineIndex, start, end, text: text.slice(start, end) });
+      start = end;
+    }
+    return result;
+  }
+  chatInputContentHeightForVisualLines(visualLines) {
+    return Math.max(1, visualLines.length * this.renderer.lineHeight("ui") + this.ui(8));
+  }
+  chatInputContentHeight() {
+    const input = this.chatInputRectForFocus();
+    return this.chatInputMetrics(input).contentHeight;
+  }
+  chatInputVisualPositionForDocPosition(pos, visualLines) {
+    const clamped = this.chatDraft.clampPosition(pos);
+    let fallbackIndex = 0;
+    for (let i = 0; i < visualLines.length; i++) {
+      const line = visualLines[i];
+      if (line.line !== clamped.line) continue;
+      fallbackIndex = i;
+      if (line.start === line.end && clamped.col === line.start) return { index: i, line };
+      if (clamped.col >= line.start && clamped.col < line.end) return { index: i, line };
+    }
+    for (let i = visualLines.length - 1; i >= 0; i--) {
+      const line = visualLines[i];
+      if (line.line === clamped.line && clamped.col === line.end) return { index: i, line };
+    }
+    return { index: fallbackIndex, line: visualLines[fallbackIndex] ?? { line: clamped.line, start: 0, end: 0, text: "" } };
+  }
+  chatTranscriptContentHeight(width, messages = this.chatDisplayMessages()) {
     const lineH = this.renderer.lineHeight("ui");
     const bubblePad = this.ui(8);
     const gap = this.ui(8);
     let h = this.ui(4);
-    for (const msg of this.chat.messages) {
-      const lines = this.chatMessageLines(msg.text, Math.max(1, width - this.ui(4) - bubblePad * 2));
+    for (const msg of messages) {
+      const lines = this.chatMessageLinesCached(msg, Math.max(1, width - this.ui(4) - bubblePad * 2));
       h += this.ui(26) + lines.length * lineH + bubblePad + gap;
     }
     return Math.max(1, h);
+  }
+  chatMessageLinesCached(msg, width) {
+    const widthKey = Math.round(width * 100) / 100;
+    const text = msg.text;
+    const first = text.length > 0 ? text.charCodeAt(0) : 0;
+    const last = text.length > 0 ? text.charCodeAt(text.length - 1) : 0;
+    const key = `${widthKey}:${this.settings.uiScale}:${this.renderer.lineHeight("ui")}:${text.length}:${first}:${last}`;
+    const cached = this.chatLineCache.get(msg.id);
+    if (cached?.key === key) return cached.lines;
+    const lines = this.chatMessageLines(text, width);
+    this.chatLineCache.set(msg.id, { key, lines });
+    return lines;
+  }
+  pruneChatLineCache(messages) {
+    if (this.chatLineCache.size <= messages.length + 8) return;
+    const ids = new Set(messages.map((msg) => msg.id));
+    for (const id of this.chatLineCache.keys()) {
+      if (!ids.has(id)) this.chatLineCache.delete(id);
+    }
   }
   chatMessageLines(text, width) {
     const lines = [];
@@ -11451,8 +13120,11 @@ var EditorApp = class {
   }
   chatRoleColors(role, ok) {
     if (role === "user") return { fill: [theme.accent[0], theme.accent[1], theme.accent[2], 0.2], outline: [theme.accent[0], theme.accent[1], theme.accent[2], 0.45], label: theme.accent, text: theme.text };
-    if (role === "system") return { fill: [theme.activityActive[0], theme.activityActive[1], theme.activityActive[2], 0.72], outline: theme.divider, label: theme.textDim, text: theme.textDim };
-    if (role === "thinking") return { fill: [theme.warning[0], theme.warning[1], theme.warning[2], 0.14], outline: [theme.warning[0], theme.warning[1], theme.warning[2], 0.38], label: theme.warning, text: theme.textDim };
+    if (role === "system") {
+      if (ok === false) return { fill: [theme.error[0], theme.error[1], theme.error[2], 0.14], outline: [theme.error[0], theme.error[1], theme.error[2], 0.4], label: theme.error, text: theme.text };
+      return { fill: [theme.activityActive[0], theme.activityActive[1], theme.activityActive[2], 0.72], outline: theme.divider, label: theme.textDim, text: theme.textDim };
+    }
+    if (role === "thinking") return { fill: [theme.keyword[0], theme.keyword[1], theme.keyword[2], 0.15], outline: [theme.keyword[0], theme.keyword[1], theme.keyword[2], 0.42], label: theme.keyword, text: theme.textDim };
     if (role === "tool_call") return { fill: [theme.number[0], theme.number[1], theme.number[2], 0.16], outline: [theme.number[0], theme.number[1], theme.number[2], 0.4], label: theme.number, text: theme.text };
     if (role === "tool_result") {
       const accent = ok === false ? theme.error : theme.string;
@@ -11755,16 +13427,19 @@ var EditorApp = class {
     y = this.drawSettingsHeader("ai", "AI", content, y, 0);
     if (this.settingsExpanded.has("ai")) {
       const endpointConfig = loadAiEndpointConfig();
-      y = this.drawSettingsLabelRow(content, y, 1, "Endpoint", endpointConfig.apiBaseUrl);
-      y = this.drawSettingsDropdownRow(content, y, 1, "Model", endpointConfig.model || "Select Model", "aiModel");
-      y = this.drawSettingsButtonRow(content, y, 1, "Endpoint Settings", "editAiSettings", { buttonLabel: "Edit" });
+      y = this.drawSettingsTextRow(content, y, 1, "API Base URL", "aiBaseUrl", endpointConfig.apiBaseUrl, "http://localhost:1234/v1");
+      y = this.drawSettingsTextRow(content, y, 1, "API Key", "aiApiKey", endpointConfig.apiKey, "(optional)");
+      y = this.drawSettingsModelRows(content, y, 1, endpointConfig.model || "Select Model");
+      y = this.drawSettingsInlineTextRow(content, y, 1, "Max Context Tokens", "aiMaxContextTokens", endpointConfig.maxContextTokens ? String(endpointConfig.maxContextTokens) : "", "auto-detect");
+      y = this.drawSettingsButtonRow(content, y, 1, "Probe LM Studio Max Tokens", "probeLmStudioMaxTokens", { buttonLabel: "Probe" });
       y = this.drawSettingsButtonRow(content, y, 1, "System Prompt", "editSystemPrompt", { buttonLabel: "Edit" });
-      y = this.drawSettingsButtonRow(content, y, 1, "Helper Prompts", "editHelperPrompts", { buttonLabel: "Edit" });
-      y = this.drawSettingsButtonRow(content, y, 1, "LM Studio Models", "scanLmStudio", { buttonLabel: "Scan" });
-      y = this.drawSettingsDropdownRow(content, y, 1, "Tool Call Format", this.settings.aiToolCallFormat === "harmony" ? "Harmony" : "Tag", "aiToolCallFormat");
-      y = this.drawSettingsNumberRow(content, y, 1, "Max Tool Calls", "aiMaxToolCalls", "");
+      y = this.drawSettingsToolPromptRow(content, y, 1);
+      y = this.drawSettingsButtonRow(content, y, 1, "Compact Prompt", "editCompactPrompt", { buttonLabel: "Edit" });
+      y = this.drawSettingsDropdownRow(content, y, 1, "Tool Call Format", this.aiToolCallFormatLabel(), "aiToolCallFormat");
+      y = this.drawSettingsNumberRow(content, y, 1, "Max Tool Calls Per Turn", "aiMaxToolCalls", "");
       y = this.drawSettingsNumberRow(content, y, 1, "Compact Free", "aiCompactFreePercent", "%");
       y = this.drawSettingsCheckboxRow(content, y, 1, "Detect Duplicate Tool Calls", "aiDetectDuplicateToolCalls");
+      y = this.drawSettingsCheckboxRow(content, y, 1, "Insert Editor Context", "aiInsertEditorContext");
     }
     y += this.ui(6);
     y = this.drawSettingsHeader("danger", "Danger", content, y, 0);
@@ -11791,13 +13466,121 @@ var EditorApp = class {
     const row = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(34) };
     const controlW = Math.min(this.ui(220), Math.max(this.ui(128), row.w * 0.36));
     const control = { x: row.x + row.w - controlW, y: row.y + this.ui(5), w: controlW, h: row.h - this.ui(10) };
-    this.renderer.text(label, row.x + this.ui(8), row.y + this.ui(9), theme.textDim, "ui");
+    this.drawClippedText(label, { x: row.x + this.ui(8), y: row.y, w: Math.max(0, control.x - row.x - this.ui(16)), h: row.h }, row.y + this.ui(9), theme.textDim, "ui");
     return { row, control };
   }
   drawSettingsLabelRow(content, y, depth, label, value) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
     this.drawClippedText(value, { x: control.x + this.ui(8), y: control.y, w: Math.max(0, control.w - this.ui(8)), h: control.h }, row.y + this.ui(9), theme.text, "ui", "right");
     return y + row.h;
+  }
+  drawSettingsTextRow(content, y, depth, label, key, value, placeholder) {
+    const indent = this.ui(20) * depth;
+    const row = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(54) };
+    const input = { x: row.x + this.ui(8), y: row.y + this.ui(23), w: Math.max(this.ui(80), row.w - this.ui(16)), h: this.ui(26) };
+    if (this.activeSettingsText !== key) {
+      const buffer = this.settingsTextBuffers[key];
+      buffer.text = value;
+      buffer.cursor = Math.min(buffer.cursor, buffer.text.length);
+      buffer.anchor = Math.min(buffer.anchor, buffer.text.length);
+      this.clampMiniBufferScroll(buffer, input, this.ui(8));
+    }
+    this.renderer.text(label, row.x + this.ui(8), row.y + this.ui(5), theme.textDim, "ui");
+    this.drawTextFieldInput(key, input, placeholder, false);
+    this.pushSettingsHit({ type: "textField", field: key, rect: input });
+    return y + row.h;
+  }
+  drawSettingsInlineTextRow(content, y, depth, label, key, value, placeholder) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    const active = this.activeSettingsText === key;
+    const buffer = this.settingsTextBuffers[key];
+    if (!active) {
+      buffer.text = value;
+      buffer.cursor = Math.min(buffer.cursor, buffer.text.length);
+      buffer.anchor = Math.min(buffer.anchor, buffer.text.length);
+      this.clampMiniBufferScroll(buffer, control, this.ui(8));
+    }
+    this.drawTextFieldInput(key, control, placeholder, false);
+    this.pushSettingsHit({ type: "textField", field: key, rect: control });
+    return y + row.h;
+  }
+  drawSettingsModelRows(content, y, depth, value) {
+    const indent = this.ui(20) * depth;
+    const labelRow = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(34) };
+    const checkboxLabel = "Manual";
+    const boxSize = this.ui(16);
+    const checkboxLabelW = this.renderer.measureText(checkboxLabel, "ui");
+    const checkboxRect = {
+      x: labelRow.x + labelRow.w - checkboxLabelW - boxSize - this.ui(18),
+      y: labelRow.y,
+      w: checkboxLabelW + boxSize + this.ui(18),
+      h: labelRow.h
+    };
+    const box = { x: checkboxRect.x + this.ui(2), y: labelRow.y + (labelRow.h - boxSize) / 2, w: boxSize, h: boxSize };
+    const hoveredCheckbox = this.isButtonHovered("settingsCheckbox", "aiModelManual");
+    const checkboxBase = this.settings.aiModelManual ? theme.activityActive : theme.panel2;
+    this.drawClippedText("Model", { x: labelRow.x + this.ui(8), y: labelRow.y, w: Math.max(0, checkboxRect.x - labelRow.x - this.ui(16)), h: labelRow.h }, labelRow.y + this.ui(9), theme.textDim, "ui");
+    this.renderer.rect(box, hoveredCheckbox ? this.hoverControlColor(checkboxBase) : checkboxBase);
+    this.drawRectOutline(box, theme.divider);
+    if (this.settings.aiModelManual) this.drawCenteredText("\u2714\uFE0F", box, this.buttonTextColor(true, hoveredCheckbox), "ui");
+    this.drawClippedText(checkboxLabel, { x: box.x + box.w + this.ui(8), y: labelRow.y, w: checkboxLabelW + this.ui(2), h: labelRow.h }, labelRow.y + this.ui(9), this.buttonTextColor(true, hoveredCheckbox), "ui");
+    this.pushSettingsHit({ type: "settingsCheckbox", key: "aiModelManual", rect: checkboxRect });
+    const controlRow = { x: labelRow.x, y: labelRow.y + labelRow.h, w: labelRow.w, h: this.ui(34) };
+    const controlY = controlRow.y + this.ui(5);
+    const controlH = controlRow.h - this.ui(10);
+    if (this.settings.aiModelManual) {
+      const input = { x: controlRow.x + this.ui(8), y: controlY, w: Math.max(this.ui(80), controlRow.w - this.ui(16)), h: controlH };
+      const buffer = this.settingsTextBuffers.aiModel;
+      if (this.activeSettingsText !== "aiModel") {
+        buffer.text = value === "Select Model" ? "" : value;
+        buffer.cursor = Math.min(buffer.cursor, buffer.text.length);
+        buffer.anchor = Math.min(buffer.anchor, buffer.text.length);
+        this.clampMiniBufferScroll(buffer, input, this.ui(8));
+      }
+      this.drawTextFieldInput("aiModel", input, "model name", false);
+      this.pushSettingsHit({ type: "textField", field: "aiModel", rect: input });
+    } else {
+      const gap = this.ui(6);
+      const buttonW = this.ui(76);
+      const button = { x: controlRow.x + controlRow.w - buttonW - this.ui(8), y: controlY, w: buttonW, h: controlH };
+      const dropdown = { x: controlRow.x + this.ui(8), y: controlY, w: Math.max(this.ui(80), button.x - controlRow.x - this.ui(8) - gap), h: controlH };
+      const hoveredDropdown = this.isButtonHovered("settingsDropdown", "aiModel");
+      this.renderer.rect(dropdown, hoveredDropdown ? this.hoverControlColor(theme.panel2) : theme.panel2);
+      this.drawRectOutline(dropdown, theme.divider);
+      this.drawClippedText(value, { x: dropdown.x + this.ui(8), y: dropdown.y, w: Math.max(0, dropdown.w - this.ui(30)), h: dropdown.h }, dropdown.y + this.ui(6), this.buttonTextColor(true, hoveredDropdown), "ui", "right");
+      this.renderer.text("v", dropdown.x + dropdown.w - this.ui(16), dropdown.y + this.ui(6), hoveredDropdown ? this.buttonTextColor(true, true) : theme.textDim, "ui");
+      this.pushSettingsHit({ type: "settingsDropdown", key: "aiModel", rect: dropdown });
+      const hoveredButton = this.isButtonHovered("settingsButton", "probeLmStudioModels");
+      this.renderer.rect(button, hoveredButton ? this.hoverControlColor(theme.activityActive) : theme.activityActive);
+      this.drawRectOutline(button, theme.divider);
+      this.drawCenteredText("Probe", button, this.buttonTextColor(true, hoveredButton), "ui");
+      this.pushSettingsHit({ type: "settingsButton", action: "probeLmStudioModels", rect: button, enabled: true });
+    }
+    return controlRow.y + controlRow.h;
+  }
+  drawSettingsToolPromptRow(content, y, depth) {
+    const { row, control } = this.drawSettingsRow(content, y, depth, "Tool Prompt");
+    const gap = this.ui(6);
+    const tagW = Math.min(Math.max(this.ui(42), this.renderer.measureText("Tag", "ui") + this.ui(22)), Math.max(this.ui(1), control.w - gap - this.ui(76)));
+    const harmonyW = Math.max(this.ui(76), control.w - tagW - gap);
+    const tag = { x: control.x, y: control.y, w: tagW, h: control.h };
+    const harmony = { x: tag.x + tag.w + gap, y: control.y, w: harmonyW, h: control.h };
+    const tagHovered = this.isButtonHovered("settingsButton", "editTagToolPrompt");
+    const harmonyHovered = this.isButtonHovered("settingsButton", "editHarmonyToolPrompt");
+    this.renderer.rect(tag, tagHovered ? this.hoverControlColor(theme.activityActive) : theme.activityActive);
+    this.drawRectOutline(tag, theme.divider);
+    this.drawCenteredText("Tag", tag, this.buttonTextColor(true, tagHovered), "ui");
+    this.renderer.rect(harmony, harmonyHovered ? this.hoverControlColor(theme.activityActive) : theme.activityActive);
+    this.drawRectOutline(harmony, theme.divider);
+    this.drawCenteredText("Harmony", harmony, this.buttonTextColor(true, harmonyHovered), "ui");
+    this.pushSettingsHit({ type: "settingsButton", action: "editTagToolPrompt", rect: tag, enabled: true });
+    this.pushSettingsHit({ type: "settingsButton", action: "editHarmonyToolPrompt", rect: harmony, enabled: true });
+    return y + row.h;
+  }
+  aiToolCallFormatLabel() {
+    if (this.settings.aiToolCallFormat === "none") return "None";
+    if (this.settings.aiToolCallFormat === "harmony") return "Harmony";
+    return "Tag";
   }
   drawSettingsDropdownRow(content, y, depth, label, value, key) {
     const { row, control } = this.drawSettingsRow(content, y, depth, label);
@@ -11844,11 +13627,13 @@ var EditorApp = class {
     return y + row.h;
   }
   drawSettingsCheckboxRow(content, y, depth, label, key) {
-    const { row, control } = this.drawSettingsRow(content, y, depth, label);
+    const indent = this.ui(20) * depth;
+    const row = { x: content.x + indent, y, w: Math.max(this.ui(120), content.w - indent), h: this.ui(34) };
     const size = this.ui(16);
-    const box = { x: control.x + control.w - size, y: row.y + (row.h - size) / 2, w: size, h: size };
+    const box = { x: row.x + row.w - size - this.ui(8), y: row.y + (row.h - size) / 2, w: size, h: size };
     const hovered = this.isButtonHovered("settingsCheckbox", key);
     const base = this.settings[key] ? theme.activityActive : theme.panel2;
+    this.drawClippedText(label, { x: row.x + this.ui(8), y: row.y, w: Math.max(0, box.x - row.x - this.ui(16)), h: row.h }, row.y + this.ui(9), theme.textDim, "ui");
     this.renderer.rect(box, hovered ? this.hoverControlColor(base) : base);
     this.drawRectOutline(box, theme.divider);
     if (this.settings[key]) this.drawCenteredText("\u2714\uFE0F", box, this.buttonTextColor(true, hovered), "ui");
@@ -11909,6 +13694,17 @@ var EditorApp = class {
     this.renderer.rect({ x: rect.x, y: rect.y + rect.h - 1, w: rect.w, h: 1 }, color);
     this.renderer.rect({ x: rect.x, y: rect.y, w: 1, h: rect.h }, color);
     this.renderer.rect({ x: rect.x + rect.w - 1, y: rect.y, w: 1, h: rect.h }, color);
+  }
+  drawRectOutlineClipped(rect, clip, color) {
+    for (const edge of [
+      { x: rect.x, y: rect.y, w: rect.w, h: 1 },
+      { x: rect.x, y: rect.y + rect.h - 1, w: rect.w, h: 1 },
+      { x: rect.x, y: rect.y, w: 1, h: rect.h },
+      { x: rect.x + rect.w - 1, y: rect.y, w: 1, h: rect.h }
+    ]) {
+      const visible = intersectRect(edge, clip);
+      if (visible) this.renderer.rect(visible, color);
+    }
   }
   drawFindWidget(editorRect) {
     const state = this.activeFindState(false);
@@ -12176,6 +13972,11 @@ var EditorApp = class {
     this.statusText = this.settings.showWhitespace ? "Show whitespace" : "Hide whitespace";
     this.saveAndApplySettings();
   }
+  toggleChatShowThinking() {
+    this.settings.showThinking = !this.settings.showThinking;
+    this.statusText = this.settings.showThinking ? "Show thinking" : "Hide thinking";
+    this.saveAndApplySettings();
+  }
   drawCenteredText(text, rect, color, font) {
     const bounds = this.renderer.visualTextBounds(text, font);
     const x = rect.x + rect.w / 2 - (bounds.x + bounds.w / 2);
@@ -12281,6 +14082,14 @@ var EditorApp = class {
     const lines = [];
     let line = "";
     for (const word of words) {
+      if (this.renderer.measureText(word, font) > width) {
+        if (line) {
+          lines.push(line);
+          line = "";
+        }
+        lines.push(...this.breakWordForWidth(word, width, font));
+        continue;
+      }
       const next = line ? `${line} ${word}` : word;
       if (!line || this.renderer.measureText(next, font) <= width) {
         line = next;
@@ -12291,6 +14100,21 @@ var EditorApp = class {
     }
     if (line) lines.push(line);
     return lines.length ? lines : [""];
+  }
+  breakWordForWidth(word, width, font) {
+    const chunks = [];
+    let chunk = "";
+    for (const char of word) {
+      const next = chunk + char;
+      if (chunk && this.renderer.measureText(next, font) > width) {
+        chunks.push(chunk);
+        chunk = char;
+      } else {
+        chunk = next;
+      }
+    }
+    if (chunk) chunks.push(chunk);
+    return chunks.length ? chunks : [word];
   }
   caretRect(doc, editorRect = this.activeEditorRect()) {
     return this.positionRectForDoc(doc, editorRect, doc.selection.head);
@@ -12430,7 +14254,7 @@ function isTabContextMenuCommand(command) {
   return command === "save" || command === "findInFile" || command === "close" || command === "closeOthers" || command === "resetSettings";
 }
 function isTabBarContextMenuCommand(command) {
-  return command === "newFile" || command === "closeAll";
+  return command === "newFile" || command === "uploadFile" || command === "closeAll";
 }
 function tabOverflowCommand(docId) {
   return `selectTab:${docId}`;
@@ -12447,7 +14271,10 @@ function highlightCommandSyntaxId(command) {
   return HIGHLIGHT_OPTIONS.some((option) => option.id === syntaxId) ? syntaxId : null;
 }
 function isSettingContextMenuCommand(command) {
-  return command === "themeDark" || command === "themeLight" || command === "aiProviderLocal" || command === "aiProviderOpenAI" || command === "aiToolFormatTag" || command === "aiToolFormatHarmony" || command.startsWith("aiModel:");
+  return command === "themeDark" || command === "themeLight" || command === "aiProviderLocal" || command === "aiProviderOpenAI" || command === "aiToolFormatNone" || command === "aiToolFormatTag" || command === "aiToolFormatHarmony" || command.startsWith("aiModel:");
+}
+function isSettingTextField(field) {
+  return field === "aiBaseUrl" || field === "aiApiKey" || field === "aiModel" || field === "aiMaxContextTokens";
 }
 function aiModelCommand(modelId) {
   return `aiModel:${encodeURIComponent(modelId)}`;
@@ -12501,18 +14328,30 @@ function normalizeSettings(value) {
     tabSpaces: Number.isFinite(tabSpaces) ? clamp(Math.trunc(tabSpaces), 1, 32) : DEFAULT_SETTINGS.tabSpaces,
     useTabStops: typeof value?.useTabStops === "boolean" ? value.useTabStops : DEFAULT_SETTINGS.useTabStops,
     showWhitespace: typeof value?.showWhitespace === "boolean" ? value.showWhitespace : DEFAULT_SETTINGS.showWhitespace,
+    showThinking: typeof value?.showThinking === "boolean" ? value.showThinking : DEFAULT_SETTINGS.showThinking,
     renameOnDoubleClick: typeof value?.renameOnDoubleClick === "boolean" ? value.renameOnDoubleClick : DEFAULT_SETTINGS.renameOnDoubleClick,
     showLineNumbers: typeof value?.showLineNumbers === "boolean" ? value.showLineNumbers : DEFAULT_SETTINGS.showLineNumbers,
     rememberOpenFiles: typeof value?.rememberOpenFiles === "boolean" ? value.rememberOpenFiles : DEFAULT_SETTINGS.rememberOpenFiles,
     aiProvider: value?.aiProvider === "local" ? "local" : "openai",
+    aiModelManual: typeof value?.aiModelManual === "boolean" ? value.aiModelManual : DEFAULT_SETTINGS.aiModelManual,
     aiMaxToolCalls: Number.isFinite(aiMaxToolCalls) ? clamp(Math.trunc(aiMaxToolCalls), 1, 200) : DEFAULT_SETTINGS.aiMaxToolCalls,
     aiDetectDuplicateToolCalls: typeof value?.aiDetectDuplicateToolCalls === "boolean" ? value.aiDetectDuplicateToolCalls : DEFAULT_SETTINGS.aiDetectDuplicateToolCalls,
-    aiToolCallFormat: value?.aiToolCallFormat === "harmony" ? "harmony" : "tag",
-    aiCompactFreePercent: Number.isFinite(aiCompactFreePercent) ? clamp(Math.trunc(aiCompactFreePercent), 1, 95) : DEFAULT_SETTINGS.aiCompactFreePercent
+    aiToolCallFormat: value?.aiToolCallFormat === "harmony" || value?.aiToolCallFormat === "none" ? value.aiToolCallFormat : "tag",
+    aiCompactFreePercent: Number.isFinite(aiCompactFreePercent) ? clamp(Math.trunc(aiCompactFreePercent), 1, 95) : DEFAULT_SETTINGS.aiCompactFreePercent,
+    aiInsertEditorContext: typeof value?.aiInsertEditorContext === "boolean" ? value.aiInsertEditorContext : DEFAULT_SETTINGS.aiInsertEditorContext
   };
 }
 function modalButton(action, label, variant) {
   return { action, label, variant, rect: { x: 0, y: 0, w: 0, h: 0 }, enabled: true };
+}
+function formatToolArgsForModal(args) {
+  let text;
+  try {
+    text = JSON.stringify(args);
+  } catch {
+    text = String(args);
+  }
+  return text.length > 220 ? `${text.slice(0, 217)}...` : text;
 }
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
