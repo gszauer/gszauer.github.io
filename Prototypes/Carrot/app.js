@@ -2684,7 +2684,26 @@ var TOOL_LIST_PROMPT = `Available tools:
 - grepFile(pattern, path)
 - bash(command)
 - compact()`;
+var BASH_EMULATION_PROMPT = `The bash(command) tool is a browser-emulated shell over the virtual workspace, not a real OS shell.
+Supported bash commands:
+- pwd
+- ls [path]
+- cat <file...>
+- mkdir <dir...>
+- rmdir <dir...>
+- rm [-r|-rf|-fr] <path...>
+- cp <source> <dest>
+- mv <source> <dest>
+- touch <file...>
+- echo <text...>
+
+Bash limitations:
+- Shell operators are not supported: pipes, redirects, command chaining, backgrounding, backticks, and $() substitution are rejected.
+- Use grep(pattern) or grepFile(pattern, path) instead of shell grep.
+- cp copies files only.`;
 var DEFAULT_NATIVE_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+${BASH_EMULATION_PROMPT}
 
 Primary tool protocol: use the OpenAI Chat Completions native tool_calls interface. The request already provides the tool schemas, so native tool_calls are the executable tool-call form for this conversation.
 
@@ -2697,6 +2716,8 @@ If the user asks to make or create a new file without naming it, choose a short 
 After each tool result, continue until the task is done or you need the user.`;
 var DEFAULT_TAG_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
 
+${BASH_EMULATION_PROMPT}
+
 Tool calls are executable only when they are emitted in assistant message content. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
 
 Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
@@ -2708,6 +2729,32 @@ If the user asks to make or create a new file without naming it, choose a short 
 
 After each tool result, continue until the task is done or you need the user.`;
 var DEFAULT_HARMONY_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+${BASH_EMULATION_PROMPT}
+
+Tool calls are executable only when they are emitted in assistant message content/commentary. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
+
+Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
+
+Use only this harmony-style tool-call format when invoking tools:
+<|channel|>commentary to=writeFile <|message|>{"path":"/notes.txt","content":"hello\\n"}<|call|>
+
+The final token of every harmony tool call must be <|call|>. If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var PRE_BASH_DEFAULT_TAG_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
+
+Tool calls are executable only when they are emitted in assistant message content. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
+
+Before modifying an existing file with writeFile or editFile, read it first with readFile. Creating a new file does not require readFile.
+
+Use only this tag tool-call format when invoking tools:
+<tool>readFile("/README.md")</tool>
+
+If the user asks to make or create a new file without naming it, choose a short root-level file name and simple starter content, then call writeFile.
+
+After each tool result, continue until the task is done or you need the user.`;
+var PRE_BASH_DEFAULT_HARMONY_TOOL_PROMPT = `${TOOL_LIST_PROMPT}
 
 Tool calls are executable only when they are emitted in assistant message content/commentary. Never put tool calls or tool-call syntax inside reasoning, thinking, analysis, markdown fences, or explanatory text.
 
@@ -2768,17 +2815,23 @@ function saveAiCompactPrompt(text) {
 }
 function loadAiTagToolPrompt() {
   const stored = localStorage.getItem(AI_TAG_TOOL_PROMPT_STORAGE_KEY);
-  return !stored || stored === LEGACY_DEFAULT_TAG_TOOL_PROMPT ? DEFAULT_TAG_TOOL_PROMPT : sanitizeToolPrompt(stored);
+  return !stored || stored === LEGACY_DEFAULT_TAG_TOOL_PROMPT || stored === PRE_BASH_DEFAULT_TAG_TOOL_PROMPT ? DEFAULT_TAG_TOOL_PROMPT : sanitizeToolPrompt(stored);
 }
 function saveAiTagToolPrompt(text) {
   localStorage.setItem(AI_TAG_TOOL_PROMPT_STORAGE_KEY, text);
 }
 function loadAiHarmonyToolPrompt() {
   const stored = localStorage.getItem(AI_HARMONY_TOOL_PROMPT_STORAGE_KEY);
-  return !stored || stored === LEGACY_DEFAULT_HARMONY_TOOL_PROMPT ? DEFAULT_HARMONY_TOOL_PROMPT : sanitizeToolPrompt(stored);
+  return !stored || stored === LEGACY_DEFAULT_HARMONY_TOOL_PROMPT || stored === PRE_BASH_DEFAULT_HARMONY_TOOL_PROMPT ? DEFAULT_HARMONY_TOOL_PROMPT : sanitizeToolPrompt(stored);
 }
 function saveAiHarmonyToolPrompt(text) {
   localStorage.setItem(AI_HARMONY_TOOL_PROMPT_STORAGE_KEY, text);
+}
+function resetAiPromptStorage() {
+  localStorage.removeItem(AI_SYSTEM_PROMPT_STORAGE_KEY);
+  localStorage.removeItem(AI_COMPACT_PROMPT_STORAGE_KEY);
+  localStorage.removeItem(AI_TAG_TOOL_PROMPT_STORAGE_KEY);
+  localStorage.removeItem(AI_HARMONY_TOOL_PROMPT_STORAGE_KEY);
 }
 async function probeOpenAICompatibleModels(config = loadAiEndpointConfig()) {
   const normalized = normalizeAiEndpointConfig(config);
@@ -6843,7 +6896,7 @@ var EditorApp = class {
     this.openVirtualAiDocument(AI_COMPACT_PROMPT_DOC_PATH, loadAiCompactPrompt());
   }
   openVirtualAiDocument(path, text) {
-    const doc = this.docs.createVirtual(path, text);
+    const doc = this.docs.getByPath(path) ?? this.docs.createVirtual(path, text);
     const existing = this.groupContaining(doc.id);
     const group = existing ?? this.activeGroup();
     if (!group.tabs.includes(doc.id)) group.tabs.push(doc.id);
@@ -9386,7 +9439,7 @@ var EditorApp = class {
   }
   afterDocumentMutated(doc) {
     if (!doc) return;
-    if (this.isAiSpecialDoc(doc)) this.saveAiSpecialDocument(doc);
+    this.scheduleDraw();
   }
   async savePathForUntitledDocument(doc) {
     const preferred = this.untitledPreferredNames.get(doc.id);
@@ -10029,11 +10082,11 @@ var EditorApp = class {
     if (this.settingsExpanded.has("interface")) y += this.ui(34) * 4;
     y += this.ui(6);
     y += this.ui(30);
-    if (this.settingsExpanded.has("ai")) y += this.ui(54) * 2 + this.ui(34) * 11;
+    if (this.settingsExpanded.has("ai")) y += this.ui(54) * 2 + this.ui(34) * 12;
     y += this.ui(6);
     y += this.ui(30);
     if (this.settingsExpanded.has("danger")) y += this.ui(34) * 2;
-    return y + this.ui(18);
+    return y + this.ui(32);
   }
   maxSettingsScrollY(rect) {
     return Math.max(0, this.settingsContentHeight() - this.settingsViewportHeight(rect));
@@ -11763,10 +11816,36 @@ var EditorApp = class {
   }
   resetSettings() {
     this.settings = { ...DEFAULT_SETTINGS };
+    this.aiModels = [];
+    saveAiEndpointConfig(DEFAULT_AI_ENDPOINT_CONFIG);
+    resetAiPromptStorage();
+    this.syncAllSettingsTextBuffersFromConfig();
+    this.reloadOpenAiSpecialDocuments();
     this.settingsScrollY = 0;
     this.resetSettingsExpansion();
     this.saveAndApplySettings();
     this.statusText = "Settings reset";
+  }
+  syncAllSettingsTextBuffersFromConfig() {
+    this.syncSettingsTextBufferFromConfig("aiBaseUrl");
+    this.syncSettingsTextBufferFromConfig("aiApiKey");
+    this.syncSettingsTextBufferFromConfig("aiModel");
+    this.syncSettingsTextBufferFromConfig("aiMaxContextTokens");
+  }
+  reloadOpenAiSpecialDocuments() {
+    this.replaceOpenAiDocument(AI_SETTINGS_DOC_PATH, JSON.stringify(loadAiEndpointConfig(), null, 2));
+    this.replaceOpenAiDocument(AI_SYSTEM_PROMPT_DOC_PATH, loadAiSystemPrompt());
+    this.replaceOpenAiDocument(AI_TAG_TOOL_PROMPT_DOC_PATH, loadAiTagToolPrompt());
+    this.replaceOpenAiDocument(AI_HARMONY_TOOL_PROMPT_DOC_PATH, loadAiHarmonyToolPrompt());
+    this.replaceOpenAiDocument(AI_COMPACT_PROMPT_DOC_PATH, loadAiCompactPrompt());
+  }
+  replaceOpenAiDocument(path, text) {
+    const doc = this.docs.getByPath(path);
+    if (!doc) return;
+    doc.selectAll();
+    doc.replaceSelection(text, "virtual");
+    doc.setSelection({ line: 0, col: 0 });
+    doc.markSaved();
   }
   resetSettingsExpansion() {
     this.settingsExpanded.clear();
@@ -13445,7 +13524,7 @@ var EditorApp = class {
     y = this.drawSettingsHeader("danger", "Danger", content, y, 0);
     if (this.settingsExpanded.has("danger")) {
       y = this.drawSettingsButtonRow(content, y, 1, "Reset Settings", "resetAll", { buttonLabel: "Reset" });
-      this.drawSettingsButtonRow(content, y, 1, "Clear File System", "clearFileSystem", { danger: true });
+      y = this.drawSettingsButtonRow(content, y, 1, "Clear File System", "clearFileSystem", { danger: true });
     }
     this.settingsHitClip = null;
     this.renderer.popClip();
