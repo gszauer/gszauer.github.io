@@ -6921,6 +6921,7 @@ var HIGHLIGHT_OPTIONS = [
 ];
 var SETTINGS_TAB_ID = "settings";
 var SETTINGS_TAB_LABEL = "Settings";
+var EMPTY_FILES_HINT = "right click or double tap header to create file";
 var SETTINGS_STORAGE_KEY = "slug.settings";
 var SESSION_STORAGE_KEY = "slug.session";
 var DEFAULT_SETTINGS = {
@@ -7350,6 +7351,7 @@ var EditorApp = class {
       sidebarWidth: this.sidebarWidth,
       selectedFileTreePath: this.fileTreeSelectedPath(),
       hoveredFileTreePath: this.hoveredFileTreePath,
+      filePanelEmptyHint: this.shouldShowEmptyFilesHint() ? EMPTY_FILES_HINT : null,
       fileTargets: this.hits.filter((hit) => hit.type === "file").map((hit) => ({ path: hit.path, rect: hit.rect })),
       folderTargets: this.hits.filter((hit) => hit.type === "folder").map((hit) => ({ path: hit.path, expanded: hit.expanded, rect: hit.rect })),
       filesRootTarget: this.hits.find((hit) => hit.type === "filesRoot")?.rect ?? null,
@@ -13700,6 +13702,7 @@ ${msg.text}`;
   }
   drawFilesPanel(rect) {
     const body = this.drawPanelHeader(rect, "FILES");
+    const entries = this.fileTreeEntries();
     const maxScroll = this.maxSidebarScrollY("files", body);
     this.filesScrollY = clamp(this.filesScrollY, 0, maxScroll);
     const hasScrollbar = maxScroll > 0;
@@ -13707,9 +13710,24 @@ ${msg.text}`;
     this.hits.push({ type: "filesRoot", rect: body });
     this.hits.push({ type: "filesRoot", rect: { x: rect.x, y: rect.y, w: rect.w, h: this.ui(PANEL_HEADER_H) } });
     this.renderer.pushClip(body);
-    this.drawFileTreeEntries(this.fileTreeEntries(), contentBody, body.y + this.ui(8) - this.filesScrollY, 0, body);
+    if (this.shouldShowEmptyFilesHint(entries)) this.drawEmptyFilesHint(contentBody);
+    else this.drawFileTreeEntries(entries, contentBody, body.y + this.ui(8) - this.filesScrollY, 0, body);
     this.renderer.popClip();
     if (hasScrollbar) this.drawSidebarScrollbar("files", body, this.fileTreeContentHeight(), this.filesScrollY);
+  }
+  drawEmptyFilesHint(body) {
+    const inset = this.ui(12);
+    const textRect = { x: body.x + inset, y: body.y + this.ui(12), w: Math.max(0, body.w - inset * 2), h: body.h };
+    const lines = this.wrapTextForWidth(EMPTY_FILES_HINT, textRect.w, "ui");
+    const lineH = this.ui(18);
+    let y = textRect.y;
+    for (const line of lines) {
+      this.drawClippedText(line, { x: textRect.x, y, w: textRect.w, h: lineH }, y, theme.textDim, "ui");
+      y += lineH;
+    }
+  }
+  shouldShowEmptyFilesHint(entries = this.fileTreeEntries()) {
+    return this.files.length === 0 && entries.length === 0;
   }
   drawFileTreeEntries(entries, body, y, depth, clip) {
     const indent = this.ui(14);
