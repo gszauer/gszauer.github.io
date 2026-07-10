@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>Mii Tracker</title>
+
+  <!-- PWA / iOS home-screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Miis">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="An address book for the Miis in your Tomodachi Life island.">
+
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Shared camera input: kept in the DOM (clipped, not display:none) so it
+       works inside an installed iOS PWA. Triggered synchronously on tap. -->
+  <input id="cameraInput" class="visually-hidden-input" type="file" accept="image/*" capture="environment">
+
+  <script src="app/store.js"></script>
+  <script src="app/ui.js"></script>
+  <script src="app/screens.js"></script>
+  <script src="app/main.js"></script>
+</body>
+</html>
