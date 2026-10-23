@@ -45,6 +45,22 @@ const desktop_icons = [
         icon: '♟️',
         width: 512,
         height: 768,
+      },
+      {
+        type: 'iframe',
+        name: 'Topple Knights',
+        link: 'ToppleKnights/index.html',
+        icon: '🛡️',
+        width: 512,
+        height: 768,
+      },
+      {
+        type: 'iframe',
+        name: 'Forever Sword',
+        link: 'ForeverSword/index.html',
+        icon: '🗡️',
+        width: 512,
+        height: 768,
       }
     ]
   },
@@ -67,14 +83,6 @@ const desktop_icons = [
         name: 'Carrot Code V2',
         link: 'Carrot/index.html',
         icon: '🥕',
-        width: 800,
-        height: 600,
-      },
-      {
-        type: 'iframe',
-        name: 'Emoji Finder',
-        link: 'Emojis/index.html',
-        icon: '😀',
         width: 800,
         height: 600,
       },
@@ -109,6 +117,7 @@ const desktop_icons = [
     name: 'Abandoned',
     icon: '🗑️',
     id: 'moregames',
+    position: 'bottom-right',
     items: [
       {
         type: 'shortcut',
@@ -139,6 +148,14 @@ const desktop_icons = [
         name: 'IK Beat Saber',
         link: 'saber/index.html',
         icon: '🔦'
+      },
+      {
+        type: 'iframe',
+        name: 'Emoji Finder',
+        link: 'Emojis/index.html',
+        icon: '😀',
+        width: 800,
+        height: 600,
       }
     ]
   },

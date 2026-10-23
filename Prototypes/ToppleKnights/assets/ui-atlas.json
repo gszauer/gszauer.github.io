@@ -1,0 +1,888 @@
+{
+  "frames": {
+    "hp": {
+      "frame": {
+        "x": 1776,
+        "y": 6,
+        "w": 125,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 125,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 21,
+        "w": 1228,
+        "h": 1233
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 64,
+      "displayScale": 0.10207336523125997,
+      "sourceScale": 0.10207336523125997,
+      "source": "ui-controls/hp_icon.png"
+    },
+    "attack": {
+      "frame": {
+        "x": 1907,
+        "y": 6,
+        "w": 123,
+        "h": 122
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 123,
+        "h": 122
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "originalSpriteSourceSize": {
+        "x": 29,
+        "y": 31,
+        "w": 1205,
+        "h": 1193
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 64,
+      "displayScale": 0.10207336523125997,
+      "sourceScale": 0.10207336523125997,
+      "source": "ui-controls/attack_icon.png"
+    },
+    "turn-frame": {
+      "frame": {
+        "x": 939,
+        "y": 6,
+        "w": 289,
+        "h": 284
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 15,
+        "w": 289,
+        "h": 284
+      },
+      "sourceSize": {
+        "w": 314,
+        "h": 314
+      },
+      "originalSpriteSourceSize": {
+        "x": 41,
+        "y": 61,
+        "w": 1153,
+        "h": 1133
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 157,
+      "displayScale": 0.2503987240829346,
+      "sourceScale": 0.2503987240829346,
+      "source": "ui-controls/turn_frame.png"
+    },
+    "rank-badge": {
+      "frame": {
+        "x": 1671,
+        "y": 296,
+        "w": 164,
+        "h": 89
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 164,
+        "h": 89
+      },
+      "sourceSize": {
+        "w": 164,
+        "h": 90
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 7,
+        "w": 1024,
+        "h": 553
+      },
+      "originalSourceSize": {
+        "w": 1024,
+        "h": 560
+      },
+      "displaySize": 82,
+      "displayScale": 0.16015625,
+      "sourceScale": 0.16015625,
+      "source": "ui-controls/rank-badge.png"
+    },
+    "start-battle-ready": {
+      "frame": {
+        "x": 6,
+        "y": 799,
+        "w": 648,
+        "h": 166
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 648,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 648,
+        "h": 173
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 5,
+        "w": 960,
+        "h": 246
+      },
+      "originalSourceSize": {
+        "w": 960,
+        "h": 256
+      },
+      "displaySize": 324,
+      "displayScale": 0.675,
+      "sourceScale": 0.675,
+      "source": "ui-controls/start-battle-ready.png"
+    },
+    "start-battle-disabled": {
+      "frame": {
+        "x": 660,
+        "y": 799,
+        "w": 648,
+        "h": 166
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 648,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 648,
+        "h": 173
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 5,
+        "w": 960,
+        "h": 246
+      },
+      "originalSourceSize": {
+        "w": 960,
+        "h": 256
+      },
+      "displaySize": 324,
+      "displayScale": 0.675,
+      "sourceScale": 0.675,
+      "source": "ui-controls/start-battle-disabled.png"
+    },
+    "start-battle-full-party": {
+      "frame": {
+        "x": 1314,
+        "y": 799,
+        "w": 648,
+        "h": 166
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 648,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 648,
+        "h": 173
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 5,
+        "w": 960,
+        "h": 246
+      },
+      "originalSourceSize": {
+        "w": 960,
+        "h": 256
+      },
+      "displaySize": 324,
+      "displayScale": 0.675,
+      "sourceScale": 0.675,
+      "source": "ui-controls/start-battle-full-party.png"
+    },
+    "button-base-idle": {
+      "frame": {
+        "x": 1776,
+        "y": 138,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-idle.png"
+    },
+    "button-base-hover": {
+      "frame": {
+        "x": 1898,
+        "y": 138,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-hover.png"
+    },
+    "button-base-pressed": {
+      "frame": {
+        "x": 939,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-pressed.png"
+    },
+    "button-base-disabled": {
+      "frame": {
+        "x": 1061,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-disabled.png"
+    },
+    "button-base-red-idle": {
+      "frame": {
+        "x": 1183,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-red-idle.png"
+    },
+    "button-base-red-hover": {
+      "frame": {
+        "x": 1305,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-red-hover.png"
+    },
+    "button-base-red-pressed": {
+      "frame": {
+        "x": 1427,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-red-pressed.png"
+    },
+    "button-base-red-disabled": {
+      "frame": {
+        "x": 1549,
+        "y": 296,
+        "w": 116,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 5,
+        "w": 116,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 124
+      },
+      "originalSpriteSourceSize": {
+        "x": 16,
+        "y": 19,
+        "w": 481,
+        "h": 475
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 62,
+      "displayScale": 0.2421875,
+      "sourceScale": 0.2421875,
+      "source": "ui-controls/button-base-red-disabled.png"
+    },
+    "icon-menu": {
+      "frame": {
+        "x": 524,
+        "y": 422,
+        "w": 59,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 12,
+        "w": 59,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 64
+      },
+      "originalSpriteSourceSize": {
+        "x": 21,
+        "y": 93,
+        "w": 471,
+        "h": 326
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 32,
+      "displayScale": 0.125,
+      "sourceScale": 0.125,
+      "source": "ui-controls/icon-menu.png"
+    },
+    "icon-view-isometric": {
+      "frame": {
+        "x": 1925,
+        "y": 296,
+        "w": 78,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 16,
+        "w": 78,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 84
+      },
+      "originalSpriteSourceSize": {
+        "x": 21,
+        "y": 100,
+        "w": 471,
+        "h": 313
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 42,
+      "displayScale": 0.1640625,
+      "sourceScale": 0.1640625,
+      "source": "ui-controls/icon-view-isometric.png"
+    },
+    "icon-view-topdown": {
+      "frame": {
+        "x": 1841,
+        "y": 296,
+        "w": 78,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 4,
+        "w": 78,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 84
+      },
+      "originalSpriteSourceSize": {
+        "x": 21,
+        "y": 25,
+        "w": 471,
+        "h": 463
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 42,
+      "displayScale": 0.1640625,
+      "sourceScale": 0.1640625,
+      "source": "ui-controls/icon-view-topdown.png"
+    },
+    "panel-details-9slice": {
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 512,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displayInset": 42,
+      "displayScale": 1,
+      "sourceScale": 1,
+      "source": "ui-controls/panel-details-9slice.png",
+      "nineSlice": {
+        "left": 72,
+        "top": 72,
+        "right": 72,
+        "bottom": 72
+      }
+    },
+    "defeat-emblem": {
+      "frame": {
+        "x": 524,
+        "y": 6,
+        "w": 409,
+        "h": 410
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 409,
+        "h": 410
+      },
+      "sourceSize": {
+        "w": 416,
+        "h": 416
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 18,
+        "w": 1234,
+        "h": 1236
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 208,
+      "displayScale": 0.3317384370015949,
+      "sourceScale": 0.3317384370015949,
+      "source": "ui-controls/defeat-emblem.png"
+    },
+    "result-panel-9slice": {
+      "frame": {
+        "x": 1519,
+        "y": 6,
+        "w": 251,
+        "h": 251
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 251,
+        "h": 251
+      },
+      "sourceSize": {
+        "w": 251,
+        "h": 251
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1254,
+        "h": 1254
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displayInset": 18,
+      "displayScale": 0.2,
+      "sourceScale": 0.2,
+      "source": "ui-controls/result-panel-9slice.png",
+      "nineSlice": {
+        "left": 36,
+        "top": 36,
+        "right": 36,
+        "bottom": 36
+      }
+    },
+    "result-score-9slice": {
+      "frame": {
+        "x": 1234,
+        "y": 6,
+        "w": 279,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 279,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 279,
+        "h": 279
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1254,
+        "h": 1254
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displayInset": 20,
+      "displayScale": 0.2222222222222222,
+      "sourceScale": 0.2222222222222222,
+      "source": "ui-controls/result-score-9slice.png",
+      "nineSlice": {
+        "left": 40,
+        "top": 40,
+        "right": 40,
+        "bottom": 40
+      }
+    },
+    "logo": {
+      "frame": {
+        "x": 855,
+        "y": 524,
+        "w": 1141,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 84,
+        "w": 1141,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 1224,
+        "h": 408
+      },
+      "originalSpriteSourceSize": {
+        "x": 77,
+        "y": 149,
+        "w": 2024,
+        "h": 398
+      },
+      "originalSourceSize": {
+        "w": 2172,
+        "h": 724
+      },
+      "displaySize": 612,
+      "displayScale": 0.56353591160221,
+      "sourceScale": 0.56353591160221,
+      "source": "ui-controls/topple-knights-logo.png"
+    },
+    "try-again": {
+      "frame": {
+        "x": 6,
+        "y": 524,
+        "w": 843,
+        "h": 269
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 16,
+        "w": 843,
+        "h": 269
+      },
+      "sourceSize": {
+        "w": 856,
+        "h": 285
+      },
+      "originalSpriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 2137,
+        "h": 684
+      },
+      "originalSourceSize": {
+        "w": 2172,
+        "h": 724
+      },
+      "displaySize": 428,
+      "displayScale": 0.39410681399631675,
+      "sourceScale": 0.39410681399631675,
+      "source": "ui-controls/try-again.png"
+    },
+    "icon-close": {
+      "frame": {
+        "x": 589,
+        "y": 422,
+        "w": 38,
+        "h": 38
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 14,
+        "w": 38,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 66,
+        "h": 66
+      },
+      "originalSpriteSourceSize": {
+        "x": 109,
+        "y": 109,
+        "w": 295,
+        "h": 295
+      },
+      "originalSourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "displaySize": 33,
+      "displayScale": 0.12890625,
+      "sourceScale": 0.12890625,
+      "source": "ui-controls/icon-close.png"
+    }
+  },
+  "meta": {
+    "app": "Topple Knights UI atlas builder",
+    "version": 12,
+    "image": "ui-atlas.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    },
+    "scale": "1",
+    "fitScale": 1,
+    "displayDensity": 2,
+    "padding": 6,
+    "scalingMode": "display-size-at-density",
+    "premultipliedAlpha": false
+  }
+}

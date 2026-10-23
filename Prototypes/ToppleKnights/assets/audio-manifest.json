@@ -1,0 +1,1150 @@
+{
+  "version": 2,
+  "banks": {
+    "sfx": {
+      "volume": 1,
+      "sources": [
+        {
+          "file": "sfx-sprite.mp3",
+          "format": "mp3",
+          "bytes": 1183724
+        },
+        {
+          "file": "sfx-sprite.ogg",
+          "format": "ogg",
+          "bytes": 1717004
+        },
+        {
+          "file": "sfx-sprite.webm",
+          "format": "webm",
+          "bytes": 1777279
+        }
+      ],
+      "format": {
+        "sampleRate": 48000,
+        "channels": 2,
+        "bitDepth": 16
+      },
+      "durationMilliseconds": 118302.083,
+      "guardMilliseconds": 40,
+      "sprite": {
+        "ui.tap": [
+          40,
+          405.5
+        ],
+        "ui.reject": [
+          485.5,
+          565.208
+        ],
+        "map.select": [
+          1090.708,
+          1738.188
+        ],
+        "ui.start": [
+          2868.896,
+          994.208
+        ],
+        "battle.start": [
+          3903.104,
+          2606.125
+        ],
+        "boss.charge": [
+          6549.229,
+          2914.667
+        ],
+        "pull.start": [
+          9503.896,
+          650.042
+        ],
+        "placement.drop": [
+          10193.938,
+          494.271
+        ],
+        "reward.pick": [
+          10728.208,
+          709.271
+        ],
+        "skill.pick": [
+          11477.479,
+          2257.792
+        ],
+        "discard": [
+          13775.271,
+          841.833
+        ],
+        "launch.melee.1": [
+          14657.104,
+          580.208
+        ],
+        "launch.melee.2": [
+          15277.313,
+          620.229
+        ],
+        "launch.fairy": [
+          15937.542,
+          1667.396
+        ],
+        "launch.arrow.1": [
+          17644.938,
+          618.458
+        ],
+        "launch.arrow.2": [
+          18303.396,
+          634.021
+        ],
+        "cast.fire": [
+          18977.417,
+          1195.896
+        ],
+        "cast.lightning": [
+          20213.313,
+          946.271
+        ],
+        "cast.ice": [
+          21199.583,
+          1836
+        ],
+        "contact.1": [
+          23075.583,
+          466.438
+        ],
+        "contact.2": [
+          23582.021,
+          465.833
+        ],
+        "contact.3": [
+          24087.854,
+          457.104
+        ],
+        "hit.melee.1": [
+          24584.958,
+          626.125
+        ],
+        "hit.melee.2": [
+          25251.083,
+          654.604
+        ],
+        "hit.melee.3": [
+          25945.688,
+          645.521
+        ],
+        "hit.arrow.1": [
+          26631.208,
+          523.583
+        ],
+        "hit.arrow.2": [
+          27194.792,
+          592.146
+        ],
+        "hit.fire": [
+          27826.938,
+          1801.625
+        ],
+        "hit.lightning": [
+          29668.563,
+          1477.125
+        ],
+        "hit.ice": [
+          31185.688,
+          685.208
+        ],
+        "freeze": [
+          31910.896,
+          2111.833
+        ],
+        "thaw": [
+          34062.729,
+          859.229
+        ],
+        "slam": [
+          34961.958,
+          1363.792
+        ],
+        "hit.blocked": [
+          36365.75,
+          694.271
+        ],
+        "boss.flame.hit": [
+          37100.021,
+          1188.729
+        ],
+        "unit.shatter": [
+          38328.75,
+          1620.833
+        ],
+        "unit.fall": [
+          39989.583,
+          1241.604
+        ],
+        "unit.ringout": [
+          41271.188,
+          1813.646
+        ],
+        "unit.summon": [
+          43124.833,
+          1239.792
+        ],
+        "heal": [
+          44404.625,
+          2187.604
+        ],
+        "buff": [
+          46632.229,
+          1864.458
+        ],
+        "fairy": [
+          48536.688,
+          1742.167
+        ],
+        "skill.counter": [
+          50318.854,
+          829.167
+        ],
+        "skill.pursuit": [
+          51188.021,
+          935.563
+        ],
+        "skill.wield": [
+          52163.583,
+          1045.604
+        ],
+        "skill.berserk": [
+          53249.188,
+          1348.625
+        ],
+        "turn.ally": [
+          54637.813,
+          1409.792
+        ],
+        "boss.arrive": [
+          56087.604,
+          3371.271
+        ],
+        "boss.flame.charge": [
+          59498.875,
+          2857.479
+        ],
+        "boss.flame.throw": [
+          62396.354,
+          1261.938
+        ],
+        "boss.summon.plunge": [
+          63698.292,
+          1631.208
+        ],
+        "boss.summon.rip": [
+          65369.5,
+          1132.104
+        ],
+        "summon.fail": [
+          66541.604,
+          995.875
+        ],
+        "boss.empower.charge": [
+          67577.479,
+          2824.583
+        ],
+        "boss.empower.release": [
+          70442.063,
+          2168.125
+        ],
+        "boss.empower.land": [
+          72650.188,
+          1427.792
+        ],
+        "boss.break": [
+          74117.979,
+          3405.938
+        ],
+        "victory": [
+          77563.917,
+          3124.25
+        ],
+        "boss.clear": [
+          80728.167,
+          6872.167
+        ],
+        "defeat.collapse": [
+          87640.333,
+          2943.229
+        ],
+        "defeat.break": [
+          90623.563,
+          2184.104
+        ],
+        "defeat": [
+          92847.667,
+          5171.208
+        ],
+        "result.score": [
+          98058.875,
+          2375.271
+        ],
+        "chest.open": [
+          100474.146,
+          1533.229
+        ],
+        "reward.fly": [
+          102047.375,
+          1352.854
+        ],
+        "potion.charge": [
+          103440.229,
+          828.958
+        ],
+        "potion.pop": [
+          104309.188,
+          1750.208
+        ],
+        "potion.pour": [
+          106099.396,
+          1535.917
+        ],
+        "goddess": [
+          107675.313,
+          3769.146
+        ],
+        "merge.gather": [
+          111484.458,
+          2884.938
+        ],
+        "merge.shatter": [
+          114409.396,
+          1329.729
+        ],
+        "merge.form": [
+          115779.125,
+          2482.958
+        ]
+      },
+      "sourceClips": {
+        "ui.tap": {
+          "file": "sfx/ui.tap.wav",
+          "loop": false,
+          "durationMilliseconds": 405.5,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "ui.reject": {
+          "file": "sfx/ui.reject.wav",
+          "loop": false,
+          "durationMilliseconds": 565.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "map.select": {
+          "file": "sfx/map.select.wav",
+          "loop": false,
+          "durationMilliseconds": 1738.188,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "ui.start": {
+          "file": "sfx/ui.start.wav",
+          "loop": false,
+          "durationMilliseconds": 994.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "battle.start": {
+          "file": "sfx/battle.start.wav",
+          "loop": false,
+          "durationMilliseconds": 2606.125,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.charge": {
+          "file": "sfx/boss.charge.wav",
+          "loop": false,
+          "durationMilliseconds": 2914.667,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "pull.start": {
+          "file": "sfx/pull.start.wav",
+          "loop": false,
+          "durationMilliseconds": 650.042,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "placement.drop": {
+          "file": "sfx/placement.drop.wav",
+          "loop": false,
+          "durationMilliseconds": 494.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "reward.pick": {
+          "file": "sfx/reward.pick.wav",
+          "loop": false,
+          "durationMilliseconds": 709.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "skill.pick": {
+          "file": "sfx/skill.pick.wav",
+          "loop": false,
+          "durationMilliseconds": 2257.792,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "discard": {
+          "file": "sfx/discard.wav",
+          "loop": false,
+          "durationMilliseconds": 841.833,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "launch.melee.1": {
+          "file": "sfx/launch.melee.1.wav",
+          "loop": false,
+          "durationMilliseconds": 580.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "launch.melee.2": {
+          "file": "sfx/launch.melee.2.wav",
+          "loop": false,
+          "durationMilliseconds": 620.229,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "launch.fairy": {
+          "file": "sfx/launch.fairy.wav",
+          "loop": false,
+          "durationMilliseconds": 1667.396,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "launch.arrow.1": {
+          "file": "sfx/launch.arrow.1.wav",
+          "loop": false,
+          "durationMilliseconds": 618.458,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "launch.arrow.2": {
+          "file": "sfx/launch.arrow.2.wav",
+          "loop": false,
+          "durationMilliseconds": 634.021,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "cast.fire": {
+          "file": "sfx/cast.fire.wav",
+          "loop": false,
+          "durationMilliseconds": 1195.896,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "cast.lightning": {
+          "file": "sfx/cast.lightning.wav",
+          "loop": false,
+          "durationMilliseconds": 946.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "cast.ice": {
+          "file": "sfx/cast.ice.wav",
+          "loop": false,
+          "durationMilliseconds": 1836,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "contact.1": {
+          "file": "sfx/contact.1.wav",
+          "loop": false,
+          "durationMilliseconds": 466.438,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "contact.2": {
+          "file": "sfx/contact.2.wav",
+          "loop": false,
+          "durationMilliseconds": 465.833,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "contact.3": {
+          "file": "sfx/contact.3.wav",
+          "loop": false,
+          "durationMilliseconds": 457.104,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.melee.1": {
+          "file": "sfx/hit.melee.1.wav",
+          "loop": false,
+          "durationMilliseconds": 626.125,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.melee.2": {
+          "file": "sfx/hit.melee.2.wav",
+          "loop": false,
+          "durationMilliseconds": 654.604,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.melee.3": {
+          "file": "sfx/hit.melee.3.wav",
+          "loop": false,
+          "durationMilliseconds": 645.521,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.arrow.1": {
+          "file": "sfx/hit.arrow.1.wav",
+          "loop": false,
+          "durationMilliseconds": 523.583,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.arrow.2": {
+          "file": "sfx/hit.arrow.2.wav",
+          "loop": false,
+          "durationMilliseconds": 592.146,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.fire": {
+          "file": "sfx/hit.fire.wav",
+          "loop": false,
+          "durationMilliseconds": 1801.625,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.lightning": {
+          "file": "sfx/hit.lightning.wav",
+          "loop": false,
+          "durationMilliseconds": 1477.125,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.ice": {
+          "file": "sfx/hit.ice.wav",
+          "loop": false,
+          "durationMilliseconds": 685.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "freeze": {
+          "file": "sfx/freeze.wav",
+          "loop": false,
+          "durationMilliseconds": 2111.833,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "thaw": {
+          "file": "sfx/thaw.wav",
+          "loop": false,
+          "durationMilliseconds": 859.229,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "slam": {
+          "file": "sfx/slam.wav",
+          "loop": false,
+          "durationMilliseconds": 1363.792,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "hit.blocked": {
+          "file": "sfx/hit.blocked.wav",
+          "loop": false,
+          "durationMilliseconds": 694.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.flame.hit": {
+          "file": "sfx/boss.flame.hit.wav",
+          "loop": false,
+          "durationMilliseconds": 1188.729,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "unit.shatter": {
+          "file": "sfx/unit.shatter.wav",
+          "loop": false,
+          "durationMilliseconds": 1620.833,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "unit.fall": {
+          "file": "sfx/unit.fall.wav",
+          "loop": false,
+          "durationMilliseconds": 1241.604,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "unit.ringout": {
+          "file": "sfx/unit.ringout.wav",
+          "loop": false,
+          "durationMilliseconds": 1813.646,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "unit.summon": {
+          "file": "sfx/unit.summon.wav",
+          "loop": false,
+          "durationMilliseconds": 1239.792,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "heal": {
+          "file": "sfx/heal.wav",
+          "loop": false,
+          "durationMilliseconds": 2187.604,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "buff": {
+          "file": "sfx/buff.wav",
+          "loop": false,
+          "durationMilliseconds": 1864.458,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "fairy": {
+          "file": "sfx/fairy.wav",
+          "loop": false,
+          "durationMilliseconds": 1742.167,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "skill.counter": {
+          "file": "sfx/skill.counter.wav",
+          "loop": false,
+          "durationMilliseconds": 829.167,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "skill.pursuit": {
+          "file": "sfx/skill.pursuit.wav",
+          "loop": false,
+          "durationMilliseconds": 935.563,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "skill.wield": {
+          "file": "sfx/skill.wield.wav",
+          "loop": false,
+          "durationMilliseconds": 1045.604,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "skill.berserk": {
+          "file": "sfx/skill.berserk.wav",
+          "loop": false,
+          "durationMilliseconds": 1348.625,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "turn.ally": {
+          "file": "sfx/turn.ally.wav",
+          "loop": false,
+          "durationMilliseconds": 1409.792,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.arrive": {
+          "file": "sfx/boss.arrive.wav",
+          "loop": false,
+          "durationMilliseconds": 3371.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.flame.charge": {
+          "file": "sfx/boss.flame.charge.wav",
+          "loop": false,
+          "durationMilliseconds": 2857.479,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.flame.throw": {
+          "file": "sfx/boss.flame.throw.wav",
+          "loop": false,
+          "durationMilliseconds": 1261.938,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.summon.plunge": {
+          "file": "sfx/boss.summon.plunge.wav",
+          "loop": false,
+          "durationMilliseconds": 1631.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.summon.rip": {
+          "file": "sfx/boss.summon.rip.wav",
+          "loop": false,
+          "durationMilliseconds": 1132.104,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "summon.fail": {
+          "file": "sfx/summon.fail.wav",
+          "loop": false,
+          "durationMilliseconds": 995.875,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.empower.charge": {
+          "file": "sfx/boss.empower.charge.wav",
+          "loop": false,
+          "durationMilliseconds": 2824.583,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.empower.release": {
+          "file": "sfx/boss.empower.release.wav",
+          "loop": false,
+          "durationMilliseconds": 2168.125,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.empower.land": {
+          "file": "sfx/boss.empower.land.wav",
+          "loop": false,
+          "durationMilliseconds": 1427.792,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.break": {
+          "file": "sfx/boss.break.wav",
+          "loop": false,
+          "durationMilliseconds": 3405.938,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "victory": {
+          "file": "sfx/victory.wav",
+          "loop": false,
+          "durationMilliseconds": 3124.25,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "boss.clear": {
+          "file": "sfx/boss.clear.wav",
+          "loop": false,
+          "durationMilliseconds": 6872.167,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "defeat.collapse": {
+          "file": "sfx/defeat.collapse.wav",
+          "loop": false,
+          "durationMilliseconds": 2943.229,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "defeat.break": {
+          "file": "sfx/defeat.break.wav",
+          "loop": false,
+          "durationMilliseconds": 2184.104,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "defeat": {
+          "file": "sfx/defeat.wav",
+          "loop": false,
+          "durationMilliseconds": 5171.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "result.score": {
+          "file": "sfx/result.score.wav",
+          "loop": false,
+          "durationMilliseconds": 2375.271,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "chest.open": {
+          "file": "sfx/chest.open.wav",
+          "loop": false,
+          "durationMilliseconds": 1533.229,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "reward.fly": {
+          "file": "sfx/reward.fly.wav",
+          "loop": false,
+          "durationMilliseconds": 1352.854,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "potion.charge": {
+          "file": "sfx/potion.charge.wav",
+          "loop": false,
+          "durationMilliseconds": 828.958,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "potion.pop": {
+          "file": "sfx/potion.pop.wav",
+          "loop": false,
+          "durationMilliseconds": 1750.208,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "potion.pour": {
+          "file": "sfx/potion.pour.wav",
+          "loop": false,
+          "durationMilliseconds": 1535.917,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "goddess": {
+          "file": "sfx/goddess.wav",
+          "loop": false,
+          "durationMilliseconds": 3769.146,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "merge.gather": {
+          "file": "sfx/merge.gather.wav",
+          "loop": false,
+          "durationMilliseconds": 2884.938,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "merge.shatter": {
+          "file": "sfx/merge.shatter.wav",
+          "loop": false,
+          "durationMilliseconds": 1329.729,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "merge.form": {
+          "file": "sfx/merge.form.wav",
+          "loop": false,
+          "durationMilliseconds": 2482.958,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        }
+      }
+    },
+    "music": {
+      "volume": 0.32,
+      "sources": [
+        {
+          "file": "music-sprite.ogg",
+          "format": "ogg",
+          "bytes": 3241090
+        },
+        {
+          "file": "music-sprite.webm",
+          "format": "webm",
+          "bytes": 3350999
+        },
+        {
+          "file": "music-sprite.mp3",
+          "format": "mp3",
+          "bytes": 3507500
+        }
+      ],
+      "format": {
+        "sampleRate": 48000,
+        "channels": 2,
+        "bitDepth": 16
+      },
+      "durationMilliseconds": 219146.667,
+      "guardMilliseconds": 80,
+      "sprite": {
+        "music.title": [
+          80,
+          48000,
+          true
+        ],
+        "music.explore": [
+          48160,
+          42666.667,
+          true
+        ],
+        "music.battle": [
+          90906.667,
+          42666.667,
+          true
+        ],
+        "music.prepare": [
+          133653.333,
+          42666.667,
+          true
+        ],
+        "music.victory": [
+          176400,
+          42666.667,
+          true
+        ]
+      },
+      "sourceClips": {
+        "music.title": {
+          "file": "music/title.wav",
+          "loop": true,
+          "durationMilliseconds": 48000,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "music.explore": {
+          "file": "music/explore.wav",
+          "loop": true,
+          "durationMilliseconds": 42666.667,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "music.battle": {
+          "file": "music/battle.wav",
+          "loop": true,
+          "durationMilliseconds": 42666.667,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "music.prepare": {
+          "file": "music/prepare.wav",
+          "loop": true,
+          "durationMilliseconds": 42666.667,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        },
+        "music.victory": {
+          "file": "music/victory.wav",
+          "loop": true,
+          "durationMilliseconds": 42666.667,
+          "sourceFormat": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "bitDepth": 16
+          }
+        }
+      }
+    }
+  }
+}

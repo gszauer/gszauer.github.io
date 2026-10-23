@@ -143,14 +143,22 @@ function initializeStartMenu() {
 
 // Desktop Icons
 function createDesktopIcons() {
-  desktop_icons.forEach((item, index) => {
+  let column = 0;
+  desktop_icons.forEach((item) => {
     const icon = document.createElement('div');
     icon.className = 'desktop-icon';
     if (item.type === 'shortcut') {
       icon.classList.add('shortcut');
     }
-    icon.style.left = '25px';
-    icon.style.top = `${25 + index * 90}px`;
+    if (item.position === 'bottom-right') {
+      // Fixed, like the taskbar, so it stays above it on mobile browsers
+      icon.style.position = 'fixed';
+      icon.style.right = '25px';
+      icon.style.bottom = 'calc(var(--taskbar-height) + 25px)';
+    } else {
+      icon.style.left = '25px';
+      icon.style.top = `${25 + column++ * 90}px`;
+    }
 
     icon.innerHTML = `
       <span>${item.icon}</span>

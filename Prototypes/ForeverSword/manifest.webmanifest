@@ -1,0 +1,17 @@
+{
+  "name": "Forever Sword: Arena",
+  "short_name": "Forever Sword",
+  "description": "Block, strike and clash your way through the arena's champions, one duel at a time.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#05040a",
+  "theme_color": "#05040a",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

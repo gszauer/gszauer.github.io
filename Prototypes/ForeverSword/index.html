@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Forever Sword: Arena</title>
+  <style>
+    /* The picture fills the window (or the screen, in fullscreen); the game draws its interface into it. */
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; overscroll-behavior: none; }
+    #game { position: fixed; inset: 0; touch-action: none; }
+    /* A long press is a held button or a stroke: no text selection, no magnifier, no callout, no dragged pictures. */
+    html, body, #game, #game * { user-select: none; -webkit-user-select: none; -moz-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+    #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  </style>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#05040a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Forever Sword">
+  <style>
+    #not-permitted { display: none; }
+    .not-permitted #game { display: none; }
+    .not-permitted #not-permitted { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9em;
+      padding: 1em; background: #05040a; color: #e9dfcc; font: 600 clamp(18px, 4vw, 30px) / 1.3 'Palatino Linotype', Palatino, 'Book Antiqua', 'TeX Gyre Pagella', Georgia, serif; text-align: center; }
+    #not-permitted .home, #not-permitted a { color: #d9b36a; }
+  </style>
+  <script type="application/json" id="stamps">{"assets/arena.glb":["00a977b51c",3096948],"assets/arena_cavern.glb":["a6299a4dd8",907396],"assets/arena_court.glb":["81ddf830db",1272312],"assets/arena_graveyard.glb":["b38cda08e9",1728904],"assets/arena_market.glb":["63a90575e0",2823656],"assets/audio/fight.mp3":["2e0801ca59",965530,"assets/fight.mp3"],"assets/audio/menu.mp3":["7fad97c49b",1925269,"assets/menu.mp3"],"assets/audio/sfx.mp3":["df0dc455c1",2395995,"assets/sfx.mp3"],"assets/audio/sounds.json":["70ef5dd228",72448,"assets/sounds.json"],"assets/characters.glb":["5512abdd03",4150404],"assets/characters_court.glb":["bb9b223462",763496],"assets/clips_twohand.glb":["318c9960f6",793268],"assets/clips_dual.glb":["f05b57f1d4",733836],"assets/characters_cavern.glb":["ee9d6cdd9e",686692],"assets/characters_market.glb":["fe2c7ac1bd",604288],"assets/characters_graveyard.glb":["348138ee20",769036],"assets/data/arena.json":["6215281f0d",993,"assets/arena.json"],"assets/data/arena_cavern.json":["94bb973823",977,"assets/arena_cavern.json"],"assets/data/arena_court.json":["2fa762e3bc",976,"assets/arena_court.json"],"assets/data/arena_graveyard.json":["bb7768e6ed",992,"assets/arena_graveyard.json"],"assets/data/arena_market.json":["3534e16743",966,"assets/arena_market.json"],"assets/data/camera.json":["86a759e091",47973,"assets/camera.json"],"assets/data/catalog.json":["806d4aeaed",9336,"assets/catalog.json"],"assets/data/fight.json":["83597aea34",49446,"assets/fight.json"],"assets/data/moves.json":["fc0ca452b8",60707,"assets/moves.json"],"assets/data/sockets.json":["b01e6ab3d8",6196,"assets/sockets.json"],"assets/ui/atlas.json":["f52d4bc653",42414,"assets/atlas.json"],"assets/ui/atlas.webp":["baaacc77ca",756600,"assets/atlas.webp"],"assets/data/packs.json":["60e9515378",686,"assets/packs.json"]}</script>
+  <script>
+    if (new URLSearchParams(location.search).has('not-permitted')) document.documentElement.classList.add('not-permitted');
+    else {
+      document.head.append(Object.assign(document.createElement('script'), { type: 'module', src: 'game.js?v=ec84b34c6d' }));
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</head>
+<body>
+  <div id="game">
+    <canvas id="view"></canvas>
+  </div>
+  <div id="not-permitted"><div>Not permitted on this domain</div><div class="home">Play on itch</div></div>
+</body>
+</html>

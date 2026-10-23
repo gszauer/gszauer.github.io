@@ -1,0 +1,1802 @@
+{
+  "frames": {
+    "victory-emblem": {
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "w": 909,
+        "h": 902
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 18,
+        "w": 909,
+        "h": 902
+      },
+      "sourceSize": {
+        "w": 920,
+        "h": 920
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 25,
+        "w": 1239,
+        "h": 1229
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 460,
+      "displayScale": 0.733652312599681,
+      "sourceScale": 0.733652312599681,
+      "source": "ui-controls/victory-emblem.png"
+    },
+    "charge-emblem": {
+      "frame": {
+        "x": 925,
+        "y": 8,
+        "w": 908,
+        "h": 887
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 15,
+        "w": 908,
+        "h": 887
+      },
+      "sourceSize": {
+        "w": 920,
+        "h": 920
+      },
+      "originalSpriteSourceSize": {
+        "x": 0,
+        "y": 20,
+        "w": 1237,
+        "h": 1209
+      },
+      "originalSourceSize": {
+        "w": 1254,
+        "h": 1254
+      },
+      "displaySize": 460,
+      "displayScale": 0.733652312599681,
+      "sourceScale": 0.733652312599681,
+      "source": "ui-controls/charge-emblem.png"
+    },
+    "portrait-knight-r1": {
+      "frame": {
+        "x": 482,
+        "y": 1260,
+        "w": 160,
+        "h": 242
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 108,
+        "y": 91,
+        "w": 160,
+        "h": 242
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 231,
+        "y": 194,
+        "w": 340,
+        "h": 516
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-knight-r1.png",
+      "portrait": {
+        "variant": "KnightRank1",
+        "className": "Knight",
+        "unitId": 0,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-knight-r2": {
+      "frame": {
+        "x": 8,
+        "y": 1754,
+        "w": 159,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 119,
+        "y": 106,
+        "w": 159,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 254,
+        "y": 226,
+        "w": 338,
+        "h": 484
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-knight-r2.png",
+      "portrait": {
+        "variant": "KnightRank2",
+        "className": "Knight",
+        "unitId": 0,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-knight-r3": {
+      "frame": {
+        "x": 1721,
+        "y": 1512,
+        "w": 184,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 106,
+        "y": 106,
+        "w": 184,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 226,
+        "y": 226,
+        "w": 393,
+        "h": 484
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-knight-r3.png",
+      "portrait": {
+        "variant": "KnightRank3",
+        "className": "Knight",
+        "unitId": 0,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-fire-wizard-r1": {
+      "frame": {
+        "x": 692,
+        "y": 918,
+        "w": 206,
+        "h": 270
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 71,
+        "y": 63,
+        "w": 206,
+        "h": 270
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 152,
+        "y": 134,
+        "w": 439,
+        "h": 576
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-fire-wizard-r1.png",
+      "portrait": {
+        "variant": "FireWizardRank1",
+        "className": "FireWizard",
+        "unitId": 3,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-fire-wizard-r2": {
+      "frame": {
+        "x": 1841,
+        "y": 8,
+        "w": 185,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 83,
+        "y": 40,
+        "w": 185,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 176,
+        "y": 86,
+        "w": 396,
+        "h": 624
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-fire-wizard-r2.png",
+      "portrait": {
+        "variant": "FireWizardRank2",
+        "className": "FireWizard",
+        "unitId": 3,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-fire-wizard-r3": {
+      "frame": {
+        "x": 862,
+        "y": 1512,
+        "w": 153,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 110,
+        "y": 103,
+        "w": 153,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 234,
+        "y": 220,
+        "w": 326,
+        "h": 490
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-fire-wizard-r3.png",
+      "portrait": {
+        "variant": "FireWizardRank3",
+        "className": "FireWizard",
+        "unitId": 3,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-frost-wizard-r1": {
+      "frame": {
+        "x": 906,
+        "y": 918,
+        "w": 206,
+        "h": 270
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 71,
+        "y": 63,
+        "w": 206,
+        "h": 270
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 152,
+        "y": 134,
+        "w": 439,
+        "h": 576
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-frost-wizard-r1.png",
+      "portrait": {
+        "variant": "FrostWizardRank1",
+        "className": "FrostWizard",
+        "unitId": 3,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-frost-wizard-r2": {
+      "frame": {
+        "x": 1841,
+        "y": 309,
+        "w": 185,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 83,
+        "y": 40,
+        "w": 185,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 176,
+        "y": 86,
+        "w": 396,
+        "h": 624
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-frost-wizard-r2.png",
+      "portrait": {
+        "variant": "FrostWizardRank2",
+        "className": "FrostWizard",
+        "unitId": 3,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-frost-wizard-r3": {
+      "frame": {
+        "x": 1023,
+        "y": 1512,
+        "w": 153,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 110,
+        "y": 103,
+        "w": 153,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 234,
+        "y": 220,
+        "w": 326,
+        "h": 490
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-frost-wizard-r3.png",
+      "portrait": {
+        "variant": "FrostWizardRank3",
+        "className": "FrostWizard",
+        "unitId": 3,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-lightning-wizard-r1": {
+      "frame": {
+        "x": 1120,
+        "y": 918,
+        "w": 206,
+        "h": 270
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 71,
+        "y": 63,
+        "w": 206,
+        "h": 270
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 152,
+        "y": 134,
+        "w": 439,
+        "h": 576
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-lightning-wizard-r1.png",
+      "portrait": {
+        "variant": "LightningWizardRank1",
+        "className": "LightningWizard",
+        "unitId": 3,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-lightning-wizard-r2": {
+      "frame": {
+        "x": 261,
+        "y": 918,
+        "w": 185,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 83,
+        "y": 40,
+        "w": 185,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 176,
+        "y": 86,
+        "w": 396,
+        "h": 624
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-lightning-wizard-r2.png",
+      "portrait": {
+        "variant": "LightningWizardRank2",
+        "className": "LightningWizard",
+        "unitId": 3,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-lightning-wizard-r3": {
+      "frame": {
+        "x": 1184,
+        "y": 1512,
+        "w": 153,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 110,
+        "y": 103,
+        "w": 153,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 234,
+        "y": 220,
+        "w": 326,
+        "h": 490
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-lightning-wizard-r3.png",
+      "portrait": {
+        "variant": "LightningWizardRank3",
+        "className": "LightningWizard",
+        "unitId": 3,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-archer-r1": {
+      "frame": {
+        "x": 1594,
+        "y": 1260,
+        "w": 151,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 114,
+        "y": 98,
+        "w": 151,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 243,
+        "y": 208,
+        "w": 322,
+        "h": 502
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-archer-r1.png",
+      "portrait": {
+        "variant": "ArcherRank1",
+        "className": "Archer",
+        "unitId": 4,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-archer-r2": {
+      "frame": {
+        "x": 1432,
+        "y": 1260,
+        "w": 154,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 114,
+        "y": 98,
+        "w": 154,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 243,
+        "y": 208,
+        "w": 329,
+        "h": 502
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-archer-r2.png",
+      "portrait": {
+        "variant": "ArcherRank2",
+        "className": "Archer",
+        "unitId": 4,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-archer-r3": {
+      "frame": {
+        "x": 1267,
+        "y": 1260,
+        "w": 157,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 114,
+        "y": 98,
+        "w": 157,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 243,
+        "y": 208,
+        "w": 335,
+        "h": 502
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-archer-r3.png",
+      "portrait": {
+        "variant": "ArcherRank3",
+        "className": "Archer",
+        "unitId": 4,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-valkyrie-r1": {
+      "frame": {
+        "x": 335,
+        "y": 1512,
+        "w": 145,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 124,
+        "y": 99,
+        "w": 145,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 265,
+        "y": 212,
+        "w": 309,
+        "h": 498
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-valkyrie-r1.png",
+      "portrait": {
+        "variant": "ValkyrieRank1",
+        "className": "Valkyrie",
+        "unitId": 8,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-valkyrie-r2": {
+      "frame": {
+        "x": 178,
+        "y": 1512,
+        "w": 149,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 124,
+        "y": 99,
+        "w": 149,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 265,
+        "y": 212,
+        "w": 318,
+        "h": 498
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-valkyrie-r2.png",
+      "portrait": {
+        "variant": "ValkyrieRank2",
+        "className": "Valkyrie",
+        "unitId": 8,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-valkyrie-r3": {
+      "frame": {
+        "x": 8,
+        "y": 1512,
+        "w": 162,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 116,
+        "y": 99,
+        "w": 162,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 247,
+        "y": 212,
+        "w": 347,
+        "h": 498
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-valkyrie-r3.png",
+      "portrait": {
+        "variant": "ValkyrieRank3",
+        "className": "Valkyrie",
+        "unitId": 8,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-barbarian-r1": {
+      "frame": {
+        "x": 715,
+        "y": 1512,
+        "w": 139,
+        "h": 231
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 120,
+        "y": 102,
+        "w": 139,
+        "h": 231
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 255,
+        "y": 217,
+        "w": 298,
+        "h": 493
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-barbarian-r1.png",
+      "portrait": {
+        "variant": "BarbarianRank1",
+        "className": "Barbarian",
+        "unitId": 9,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-barbarian-r2": {
+      "frame": {
+        "x": 1734,
+        "y": 918,
+        "w": 176,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 99,
+        "y": 77,
+        "w": 176,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 211,
+        "y": 164,
+        "w": 376,
+        "h": 546
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-barbarian-r2.png",
+      "portrait": {
+        "variant": "BarbarianRank2",
+        "className": "Barbarian",
+        "unitId": 9,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-barbarian-r3": {
+      "frame": {
+        "x": 1334,
+        "y": 918,
+        "w": 189,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 89,
+        "y": 70,
+        "w": 189,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 189,
+        "y": 150,
+        "w": 405,
+        "h": 560
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-barbarian-r3.png",
+      "portrait": {
+        "variant": "BarbarianRank3",
+        "className": "Barbarian",
+        "unitId": 9,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-healer-r1": {
+      "frame": {
+        "x": 176,
+        "y": 1260,
+        "w": 146,
+        "h": 244
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 123,
+        "y": 89,
+        "w": 146,
+        "h": 244
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 262,
+        "y": 189,
+        "w": 312,
+        "h": 521
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-healer-r1.png",
+      "portrait": {
+        "variant": "HealerRank1",
+        "className": "Healer",
+        "unitId": 16,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-healer-r2": {
+      "frame": {
+        "x": 330,
+        "y": 1260,
+        "w": 144,
+        "h": 244
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 123,
+        "y": 89,
+        "w": 144,
+        "h": 244
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 262,
+        "y": 189,
+        "w": 307,
+        "h": 521
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-healer-r2.png",
+      "portrait": {
+        "variant": "HealerRank2",
+        "className": "Healer",
+        "unitId": 16,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-healer-r3": {
+      "frame": {
+        "x": 8,
+        "y": 1260,
+        "w": 160,
+        "h": 244
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 123,
+        "y": 89,
+        "w": 160,
+        "h": 244
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 262,
+        "y": 189,
+        "w": 341,
+        "h": 521
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-healer-r3.png",
+      "portrait": {
+        "variant": "HealerRank3",
+        "className": "Healer",
+        "unitId": 16,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-paladin-r1": {
+      "frame": {
+        "x": 890,
+        "y": 1260,
+        "w": 193,
+        "h": 236
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 103,
+        "y": 97,
+        "w": 193,
+        "h": 236
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 220,
+        "y": 206,
+        "w": 412,
+        "h": 504
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-paladin-r1.png",
+      "portrait": {
+        "variant": "PaladinRank1",
+        "className": "Paladin",
+        "unitId": 17,
+        "rank": 1,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-paladin-r2": {
+      "frame": {
+        "x": 1345,
+        "y": 1512,
+        "w": 172,
+        "h": 229
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 113,
+        "y": 104,
+        "w": 172,
+        "h": 229
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 240,
+        "y": 222,
+        "w": 368,
+        "h": 488
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-paladin-r2.png",
+      "portrait": {
+        "variant": "PaladinRank2",
+        "className": "Paladin",
+        "unitId": 17,
+        "rank": 2,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-paladin-r3": {
+      "frame": {
+        "x": 1091,
+        "y": 1260,
+        "w": 168,
+        "h": 236
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 112,
+        "y": 97,
+        "w": 168,
+        "h": 236
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 239,
+        "y": 206,
+        "w": 358,
+        "h": 504
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-paladin-r3.png",
+      "portrait": {
+        "variant": "PaladinRank3",
+        "className": "Paladin",
+        "unitId": 17,
+        "rank": 3,
+        "side": "ally",
+        "facing": "left"
+      }
+    },
+    "portrait-skeleton-r1": {
+      "frame": {
+        "x": 454,
+        "y": 918,
+        "w": 230,
+        "h": 278
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 62,
+        "y": 55,
+        "w": 230,
+        "h": 278
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 132,
+        "y": 118,
+        "w": 490,
+        "h": 592
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-skeleton-r1.png",
+      "portrait": {
+        "variant": "Skeleton",
+        "className": "Skeleton",
+        "unitId": 5,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-skeleton-archer-r1": {
+      "frame": {
+        "x": 175,
+        "y": 1754,
+        "w": 176,
+        "h": 226
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 82,
+        "y": 107,
+        "w": 176,
+        "h": 226
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 175,
+        "y": 229,
+        "w": 376,
+        "h": 481
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-skeleton-archer-r1.png",
+      "portrait": {
+        "variant": "SkeletonArcher",
+        "className": "SkeletonArcher",
+        "unitId": 7,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-dark-knight-r1": {
+      "frame": {
+        "x": 488,
+        "y": 1512,
+        "w": 219,
+        "h": 232
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 62,
+        "y": 101,
+        "w": 219,
+        "h": 232
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 132,
+        "y": 216,
+        "w": 467,
+        "h": 494
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-dark-knight-r1.png",
+      "portrait": {
+        "variant": "DarkKnight",
+        "className": "DarkKnight",
+        "unitId": 10,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-one-armed-spear-r1": {
+      "frame": {
+        "x": 910,
+        "y": 1754,
+        "w": 145,
+        "h": 215
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 97,
+        "y": 115,
+        "w": 145,
+        "h": 215
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 207,
+        "y": 245,
+        "w": 310,
+        "h": 458
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-one-armed-spear-r1.png",
+      "portrait": {
+        "variant": "OneArmedSpear",
+        "className": "OneArmedSpear",
+        "unitId": 11,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-one-armed-shield-r1": {
+      "frame": {
+        "x": 728,
+        "y": 1754,
+        "w": 174,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 88,
+        "y": 116,
+        "w": 174,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 188,
+        "y": 248,
+        "w": 371,
+        "h": 462
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-one-armed-shield-r1.png",
+      "portrait": {
+        "variant": "OneArmedShield",
+        "className": "OneArmedShield",
+        "unitId": 12,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-troll-r1": {
+      "frame": {
+        "x": 544,
+        "y": 1754,
+        "w": 176,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 83,
+        "y": 113,
+        "w": 176,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 178,
+        "y": 241,
+        "w": 374,
+        "h": 469
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-troll-r1.png",
+      "portrait": {
+        "variant": "Troll",
+        "className": "Troll",
+        "unitId": 13,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-gargoyle-r1": {
+      "frame": {
+        "x": 359,
+        "y": 1754,
+        "w": 177,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 76,
+        "y": 113,
+        "w": 177,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 162,
+        "y": 242,
+        "w": 378,
+        "h": 468
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-gargoyle-r1.png",
+      "portrait": {
+        "variant": "Gargoyle",
+        "className": "Gargoyle",
+        "unitId": 14,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-fire-skeleton-r1": {
+      "frame": {
+        "x": 1841,
+        "y": 610,
+        "w": 160,
+        "h": 265
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 90,
+        "y": 68,
+        "w": 160,
+        "h": 265
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 191,
+        "y": 144,
+        "w": 343,
+        "h": 566
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-fire-skeleton-r1.png",
+      "portrait": {
+        "variant": "FireSkeleton",
+        "className": "FireSkeleton",
+        "unitId": 15,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-dark-knight-variant-r1": {
+      "frame": {
+        "x": 1753,
+        "y": 1260,
+        "w": 222,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 75,
+        "y": 96,
+        "w": 222,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 160,
+        "y": 204,
+        "w": 474,
+        "h": 500
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-dark-knight-variant-r1.png",
+      "portrait": {
+        "variant": "DarkKnightVariant",
+        "className": "DarkKnightVariant",
+        "unitId": 19,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-dark-wizard-r1": {
+      "frame": {
+        "x": 1525,
+        "y": 1512,
+        "w": 188,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 78,
+        "y": 106,
+        "w": 188,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 166,
+        "y": 227,
+        "w": 402,
+        "h": 483
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-dark-wizard-r1.png",
+      "portrait": {
+        "variant": "DarkWizard",
+        "className": "DarkWizard",
+        "unitId": 20,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-dark-barbarian-r1": {
+      "frame": {
+        "x": 1063,
+        "y": 1754,
+        "w": 238,
+        "h": 193
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 52,
+        "y": 140,
+        "w": 238,
+        "h": 193
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 111,
+        "y": 299,
+        "w": 508,
+        "h": 411
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-dark-barbarian-r1.png",
+      "portrait": {
+        "variant": "DarkBarbarian",
+        "className": "DarkBarbarian",
+        "unitId": 21,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "portrait-demon-boss-r1": {
+      "frame": {
+        "x": 650,
+        "y": 1260,
+        "w": 232,
+        "h": 236
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 83,
+        "w": 232,
+        "h": 236
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      },
+      "originalSpriteSourceSize": {
+        "x": 58,
+        "y": 176,
+        "w": 494,
+        "h": 504
+      },
+      "originalSourceSize": {
+        "w": 768,
+        "h": 768
+      },
+      "displaySize": 180,
+      "displayScale": 0.46875,
+      "sourceScale": 0.46875,
+      "source": "portraits/portrait-demon-boss-r1.png",
+      "portrait": {
+        "variant": "DemonBoss",
+        "className": "DemonBoss",
+        "unitId": 18,
+        "rank": 1,
+        "side": "enemy",
+        "facing": "right"
+      }
+    },
+    "tutorial-hand-up": {
+      "frame": {
+        "x": 8,
+        "y": 918,
+        "w": 245,
+        "h": 334
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 245,
+        "h": 334
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 346
+      },
+      "originalSpriteSourceSize": {
+        "x": 5,
+        "y": 6,
+        "w": 431,
+        "h": 586
+      },
+      "originalSourceSize": {
+        "w": 448,
+        "h": 608
+      },
+      "displaySize": 173,
+      "displayScale": 0.569078947368421,
+      "sourceScale": 0.569078947368421,
+      "anchor": {
+        "x": 0.13868303571428572,
+        "y": 0.041924342105263156
+      },
+      "source": "tutorial/hand-up.png"
+    },
+    "tutorial-hand-down": {
+      "frame": {
+        "x": 1531,
+        "y": 918,
+        "w": 195,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 57,
+        "y": 88,
+        "w": 195,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 346
+      },
+      "originalSpriteSourceSize": {
+        "x": 100,
+        "y": 155,
+        "w": 343,
+        "h": 449
+      },
+      "originalSourceSize": {
+        "w": 448,
+        "h": 608
+      },
+      "displaySize": 173,
+      "displayScale": 0.569078947368421,
+      "sourceScale": 0.569078947368421,
+      "anchor": {
+        "x": 0.3896428571428571,
+        "y": 0.3144407894736842
+      },
+      "source": "tutorial/hand-down.png"
+    }
+  },
+  "meta": {
+    "app": "Topple Knights UI atlas builder",
+    "version": 2,
+    "image": "portrait_atlas.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 2048
+    },
+    "scale": "1",
+    "fitScale": 1,
+    "displayDensity": 2,
+    "padding": 8,
+    "scalingMode": "display-size-at-density",
+    "premultipliedAlpha": false
+  }
+}
