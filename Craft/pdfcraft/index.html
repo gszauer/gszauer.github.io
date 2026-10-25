@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PdfCraft</title>
+    
+<script type="module">
+import init, * as bindings from './pdfcraft-web-48d9b1c3b1326b9e.js';
+const wasm = await init({ module_or_path: './pdfcraft-web-d3e167e8da3bd97f_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #f1f1f3; }
+      canvas { width: 100%; height: 100%; display: block; outline: none; }
+      @media (prefers-color-scheme: dark) { html, body { background: #19191c; } }
+    </style>
+  <link rel="modulepreload" href="./pdfcraft-web-48d9b1c3b1326b9e.js" crossorigin="anonymous" integrity="sha384-lIsA4bbrqpoLa8YiH5yBMdxBoCHD9naQVaOHwGyYXLXXdSrdp7AYPeMYrU/fQzmq"><link rel="preload" href="./pdfcraft-web-d3e167e8da3bd97f_bg.wasm" crossorigin="anonymous" integrity="sha384-vztEBLXR/mAwCZ63N/i165xJmAPWuxiywDu43Yv4lV2LtxWul0utLoCvnRVVSzRt" as="fetch" type="application/wasm"></head>
+  <body>
+    <canvas id="pdfcraft"></canvas>
+  </body>
+</html>
