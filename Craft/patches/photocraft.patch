@@ -24,3 +24,17 @@ index 2c683bce3..b5a7355e9 100644
                  crate::links::link_row(app, ui);
              });
              ui.add_space(10.0);
+diff --git a/crates/ui-egui/src/panels.rs b/crates/ui-egui/src/panels.rs
+index bcb59b5e9..2b8f20e4a 100644
+--- a/crates/ui-egui/src/panels.rs
++++ b/crates/ui-egui/src/panels.rs
+@@ -643,7 +643,8 @@ pub fn title_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+                 if lead > 0.0 {
+                     ui.add_space(lead + 4.0);
+                 }
+-                if !system {
++                // In the browser the tab shows the icon; the mark would only take room.
++                if !system && !cfg!(target_arch = "wasm32") {
+                     let side = if t.pro { 18.0 } else { 20.0 };
+                     let (mark, _) = ui.allocate_exact_size(vec2(side, side), Sense::hover());
+                     crate::brand::paint_mark(ui, mark);
