@@ -1,0 +1,12 @@
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index c300bf07..ed7879d7 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -1880,7 +1880,6 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
+             ui.add_space(4.0);
+             ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of ArtCraft.");
+             ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
+-            ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
+         }
+     }
+ }

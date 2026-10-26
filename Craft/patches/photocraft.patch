@@ -1,0 +1,26 @@
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index ab3e6939a..8c72508c8 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -3366,8 +3366,6 @@ fn start_screen(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+                 home_recent(app, ui, &recent);
+             }
+             ui.add_space(26.0);
+-            crate::links::discord_button(app, ui, 190.0);
+-            ui.add_space(10.0);
+             crate::links::link_row(app, ui);
+         });
+     });
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 2c683bce3..b5a7355e9 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -703,8 +703,6 @@ fn about_tab_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, tab: &str) {
+             ui.label(crate::i18n::fmt(tl!("Version {version}"), &[("version", &photocraft_engine::build_info::long_version())]));
+             ui.add_space(12.0);
+             ui.vertical_centered(|ui| {
+-                crate::links::discord_button(app, ui, 220.0);
+-                ui.add_space(8.0);
+                 crate::links::link_row(app, ui);
+             });
+             ui.add_space(10.0);

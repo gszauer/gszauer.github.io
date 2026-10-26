@@ -7,6 +7,9 @@
 # Needs: the wasm32-unknown-unknown target, trunk, wasm-bindgen-cli 0.2.129 (FilmCraft builds
 # with its own `cargo xtask web`, which calls it directly) and, optionally, binaryen's wasm-opt.
 # A failed build leaves that app's previous copy in place; the summary lists the failures.
+#
+# patches/<app>.patch takes the Discord buttons out of that app. It is applied to the app's
+# working tree (and left there) unless it already is; if it no longer applies, the app isn't built.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$HERE")"
@@ -18,6 +21,15 @@ built=()
 failed=()
 for app in "${APPS[@]}"; do
   echo "==> $app ($(date +%H:%M:%S))"
+  patch="$HERE/patches/$app.patch"
+  if [[ -f "$patch" ]] && ! git -C "$ROOT/$app" apply --reverse --check "$patch" 2>/dev/null; then
+    if ! git -C "$ROOT/$app" apply "$patch"; then
+      echo "!! $app: patches/$app.patch no longer applies (the app's code changed); update it"
+      failed+=("$app")
+      continue
+    fi
+    echo "applied patches/$app.patch"
+  fi
   if [[ "$app" == filmcraft ]]; then
     site="$ROOT/filmcraft/target/web/dist"
     (cd "$ROOT/filmcraft" && cargo xtask web)

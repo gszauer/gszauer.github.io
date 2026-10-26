@@ -1,0 +1,33 @@
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index fd41202..57638f7 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -741,8 +741,6 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+             }
+         });
+     }
+-    ui.add_space(30.0);
+-    ui.hyperlink_to("Join the ArtCraft community on Discord", deckcraft_engine::links::DISCORD);
+ }
+ 
+ /// New: a blank presentation, then every theme and starter template, with a search box.
+@@ -1410,7 +1408,6 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             ) {
+                 let _ = app.run("app.about", json!({}));
+             }
+-            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+             ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+         });
+     });
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index acbfc97..badbb50 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -2813,7 +2813,6 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+         ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
+         ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
+         ui.add_space(6.0);
+-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+         ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+         ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+         ui.add_space(6.0);
