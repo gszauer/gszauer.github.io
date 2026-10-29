@@ -13,9 +13,6 @@
     --muted: #6e6e73;
     --tile-hover: rgba(0, 0, 0, 0.045);
     --ring: #2f6fed;
-    --notice-bg: #fff4d6;
-    --notice-text: #5b4500;
-    --code-bg: rgba(0, 0, 0, 0.07);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -25,9 +22,6 @@
       --muted: #98989f;
       --tile-hover: rgba(255, 255, 255, 0.06);
       --ring: #6b9bff;
-      --notice-bg: #3a2f10;
-      --notice-text: #f5dc95;
-      --code-bg: rgba(255, 255, 255, 0.1);
     }
   }
 
@@ -45,26 +39,14 @@
     padding: 32px 16px;
   }
 
-  .notice {
-    max-width: 560px;
-    margin: 0 0 32px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    background: var(--notice-bg);
-    color: var(--notice-text);
-    font-size: 14px;
-  }
-  .notice code { background: var(--code-bg); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
-  .notice[hidden] { display: none; }
-
   .apps {
     list-style: none;
     margin: 0;
     padding: 0;
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: clamp(8px, 3vw, 28px);
   }
 
@@ -96,12 +78,9 @@
   .app:active img { transform: scale(0.95); transition-duration: 0.06s; }
   .app:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
 
-  .app.missing { cursor: not-allowed; }
-  .app.missing img { filter: grayscale(1); opacity: 0.4; }
-  .app.missing:hover { background: none; }
-  .app.missing:hover img { transform: none; }
-  .app.missing .kind::after { content: " · not built"; }
-
+  @media (max-width: 640px) {
+    .apps { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 420px) {
     .app .name { font-size: 13px; }
     .app .kind { font-size: 11.5px; }
@@ -113,51 +92,27 @@
 </style>
 </head>
 <body>
-  <p class="notice" id="file-notice" hidden>
-    The apps need to be served over HTTP, not opened as files. From the folder above
-    <code>webdir</code>, run <code>python3 webdir/serve.py</code>, then open
-    <code>http://localhost:8080/</code>.
-  </p>
-
   <ul class="apps">
-    <li><a class="app" data-app="photocraft" href="photocraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="photocraft/index.html" target="_blank" rel="noopener">
       <img src="icons/photocraft.png" alt=""><span class="name">PhotoCraft</span><span class="kind">Photo editing</span></a></li>
-    <li><a class="app" data-app="vectorcraft" href="vectorcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="vectorcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/vectorcraft.png" alt=""><span class="name">VectorCraft</span><span class="kind">Vector illustration</span></a></li>
-    <li><a class="app" data-app="designcraft" href="designcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="designcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/designcraft.png" alt=""><span class="name">DesignCraft</span><span class="kind">Page layout</span></a></li>
-    <li><a class="app" data-app="wordcraft" href="wordcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="wordcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/wordcraft.png" alt=""><span class="name">WordCraft</span><span class="kind">Word processing</span></a></li>
-    <li><a class="app" data-app="gridcraft" href="gridcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="gridcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/gridcraft.png" alt=""><span class="name">GridCraft</span><span class="kind">Spreadsheets</span></a></li>
-    <li><a class="app" data-app="deckcraft" href="deckcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="deckcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/deckcraft.png" alt=""><span class="name">DeckCraft</span><span class="kind">Presentations</span></a></li>
-    <li><a class="app" data-app="pdfcraft" href="pdfcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="pdfcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/pdfcraft.png" alt=""><span class="name">PdfCraft</span><span class="kind">PDF documents</span></a></li>
-    <li><a class="app" data-app="filmcraft" href="filmcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="filmcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/filmcraft.png" alt=""><span class="name">FilmCraft</span><span class="kind">Video editing</span></a></li>
-    <li><a class="app" data-app="soundcraft" href="soundcraft/index.html" target="_blank" rel="noopener">
+    <li><a class="app" href="soundcraft/index.html" target="_blank" rel="noopener">
       <img src="icons/soundcraft.png" alt=""><span class="name">SoundCraft</span><span class="kind">Audio workstation</span></a></li>
+    <li><a class="app" href="miscraft/index.html" target="_blank" rel="noopener">
+      <img src="icons/miscraft.png" alt=""><span class="name">MisCraft</span><span class="kind">Sketching</span></a></li>
   </ul>
-
-<script>
-  // WebAssembly can't load from file:// URLs, so say how to serve the folder instead.
-  if (location.protocol === "file:") {
-    document.getElementById("file-notice").hidden = false;
-  } else {
-    // Grey out any app whose build isn't in this folder (build.sh skips failed builds).
-    for (const link of document.querySelectorAll(".app")) {
-      fetch(link.dataset.app + "/index.html", { method: "HEAD", cache: "no-store" })
-        .then((r) => { if (!r.ok) markMissing(link); })
-        .catch(() => markMissing(link));
-    }
-  }
-
-  function markMissing(link) {
-    link.classList.add("missing");
-    link.setAttribute("aria-disabled", "true");
-    link.addEventListener("click", (e) => e.preventDefault());
-  }
-</script>
 </body>
 </html>
