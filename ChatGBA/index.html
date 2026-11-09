@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChatGBA</title>
+<meta name="description" content="ChatGBA: a 4-million-parameter language model that runs on a Game Boy Advance. Play it in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #14121f;
+  --page-2: #1c1930;
+  --ink: #ecebf5;
+  --ink-dim: #a9a6c4;
+  --accent: #8f7bff;
+  --accent-2: #ffcf4d;
+  --line: #2f2b4a;
+  --shell: #4b3fa0;
+  --shell-light: #6253c4;
+  --shell-dark: #352b7a;
+  --bezel: #2a2833;
+  --button: #c9c3ea;
+  --button-dark: #8d86b8;
+  --code: #0f0d19;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 50% -200px, #2a2350 0%, var(--page) 60%) fixed, var(--page);
+  color: var(--ink);
+  font: 16px/1.6 Inter, system-ui, sans-serif;
+}
+a { color: var(--accent-2); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+h2 { font: 16px/1.5 "Press Start 2P", monospace; color: var(--accent-2); margin: 56px 0 16px; }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+code, .mono { font-family: "JetBrains Mono", monospace; font-size: 0.92em; }
+/* JetBrains Mono joins <| and |> into arrows: show the markers as typed. */
+* { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+code { background: var(--code); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); }
+
+/* --- The console --------------------------------------------------------- */
+/* An original Game Boy Advance in indigo, laid out from a photo: every
+   position is the photo's, scaled so the screen is exactly 480 x 320 (twice
+   the GBA's 240 x 160). Drawn at 1004 x 541 and zoomed to fit the page. */
+.console-area { display: flex; justify-content: center; padding: 24px 0 0; }
+.console-fit { width: 1004px; height: 590px; padding-top: 30px; box-sizing: border-box; }
+.gba {
+  --blue: #3237a4;
+  --blue-light: #4a50c4;
+  --blue-dark: #20237a;
+  --grey: #d6d6dc;
+  --grey-dark: #a3a3ad;
+  position: relative; width: 1004px; height: 560px;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.gba .grain::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: .12; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Light grey plastic: the shoulder buttons and the sides of the grips. */
+.rim {
+  position: absolute; left: 0; right: 0; top: 0; height: 540px;
+  border-radius: 120px 120px 150px 150px / 100px 100px 170px 170px;
+  background: linear-gradient(90deg, #b9b9c2 0%, var(--grey) 3%, #c4c4cc 6%, transparent 9%, transparent 91%, #c4c4cc 94%, var(--grey) 97%, #b9b9c2 100%);
+  box-shadow: 0 30px 50px rgba(0,0,0,.55), 0 8px 14px rgba(0,0,0,.35);
+}
+.shoulder {
+  position: absolute; top: -30px; width: 230px; height: 110px; cursor: pointer; z-index: 0;
+  background: linear-gradient(180deg, #ececf1 0%, var(--grey) 40%, #b4b4bd 100%);
+  box-shadow: inset 0 3px 2px rgba(255,255,255,.9), inset 0 -4px 8px rgba(0,0,0,.2);
+  transition: transform .05s;
+}
+.shoulder.l { left: 4px; border-radius: 120px 30px 0 0 / 90px 30px 0 0; }
+.shoulder.r { right: 4px; border-radius: 30px 120px 0 0 / 30px 90px 0 0; }
+.shoulder.pressed { transform: translateY(5px); }
+.shoulder .letter { position: absolute; top: 9px; font: bold 20px Arial; color: #a9a9b3; text-shadow: 0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,.25); pointer-events: none; }
+.shoulder.l .letter { left: 92px; } .shoulder.r .letter { right: 92px; }
+
+/* The blue face. */
+.body {
+  position: absolute; left: 12px; right: 12px; top: 14px; height: 526px; z-index: 1;
+  border-radius: 110px 110px 140px 140px / 90px 90px 160px 160px;
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(255,255,255,.14), transparent 60%),
+    linear-gradient(180deg, var(--blue-light) 0%, var(--blue) 22%, var(--blue) 75%, var(--blue-dark) 100%);
+  box-shadow:
+    inset 0 5px 4px -2px rgba(255,255,255,.4),
+    inset 0 -12px 20px rgba(0,0,0,.4),
+    inset 18px 0 24px -14px rgba(0,0,0,.35),
+    inset -18px 0 24px -14px rgba(0,0,0,.35);
+}
+/* Embossed oval at the top edge (Nintendo's logo on the real one). */
+.oval {
+  position: absolute; left: 50%; top: 27px; width: 150px; height: 32px; margin-left: -75px; z-index: 2; border-radius: 50%;
+  box-shadow: inset 0 2px 2px rgba(0,0,0,.35), inset 0 -1px 1px rgba(255,255,255,.25), 0 1px 0 rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  font: bold 15px Arial; color: var(--blue); text-shadow: 0 1px 0 rgba(255,255,255,.22), 0 -1px 0 rgba(0,0,0,.4);
+}
+
+/* The lens: glossy black. */
+.lens {
+  position: absolute; left: 226px; top: 72px; width: 557px; height: 396px; z-index: 2;
+  border-radius: 30px 30px 40px 40px;
+  background: linear-gradient(180deg, #1f1f24, #0c0c0f 60%, #151519);
+  box-shadow: 0 0 0 2px #15175a, inset 0 2px 2px rgba(255,255,255,.18), inset 0 -2px 4px rgba(255,255,255,.06), 0 2px 3px rgba(0,0,0,.4);
+}
+.lens::after { /* glare */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 5;
+  background: linear-gradient(118deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.05) 30%, transparent 31%, transparent 66%, rgba(255,255,255,.04) 67%, transparent 82%);
+}
+.screen-well { position: absolute; left: 37px; top: 36px; width: 484px; height: 324px; padding: 2px; background: #000; box-shadow: 0 0 0 1px rgba(255,255,255,.05); }
+.screen { position: relative; width: 480px; height: 320px; background: #111; overflow: hidden; }
+.screen::after { content: ""; position: absolute; inset: 0; box-shadow: inset 3px 5px 10px rgba(0,0,0,.6); pointer-events: none; z-index: 2; }
+#game { width: 100%; height: 100%; }
+/* The console is the only interface: no EmulatorJS menu bar (restart,
+   volume, fullscreen), right-click menu, or on-screen touch gamepad. */
+#game .ejs_menu_bar, #game .ejs_context_menu, #game .ejs_virtualGamepad_parent { display: none !important; }
+/* POWER: a green LED with printed lettering, top right. */
+.led { position: absolute; left: 843px; top: 92px; width: 16px; height: 13px; border-radius: 50%; z-index: 2; background: #1b3a1d; box-shadow: inset 0 2px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.2); }
+.led.on { background: radial-gradient(circle at 40% 35%, #e3ffd8, #4fe24f 45%, #16901d); box-shadow: 0 0 8px #4cff52, 0 0 2px #4cff52; }
+.emboss { position: absolute; z-index: 2; font: bold 13px Arial; letter-spacing: 1px; color: #d9dbf7; text-shadow: 0 1px 1px rgba(0,0,0,.55); pointer-events: none; }  /* printed light, like SELECT and START */
+.emboss.power { left: 866px; top: 92px; }
+.led.on.fast { background: radial-gradient(circle at 40% 35%, #fff1d0, #ffb21f 45%, #c46a00); box-shadow: 0 0 8px #ffb21f, 0 0 2px #ffb21f; }
+
+/* TURBO: a slide switch with printed lettering, top left, opposite POWER. */
+.emboss.turbo { left: 54px; top: 92px; }
+.switch {
+  position: absolute; left: 118px; top: 90px; width: 40px; height: 16px; z-index: 3; cursor: pointer; border-radius: 8px;
+  background: #15175a; box-shadow: inset 0 2px 3px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.15);
+}
+.switch .nub {
+  position: absolute; left: 1px; top: 1px; width: 20px; height: 14px; border-radius: 7px; transition: left .12s;
+  background: linear-gradient(180deg, #f1f1f5, var(--grey) 55%, #b8b8c1); box-shadow: inset 0 1px 1px rgba(255,255,255,.9), 0 1px 2px rgba(0,0,0,.5);
+}
+.switch.on .nub { left: 19px; }
+
+/* The light grey controls, on the surface. */
+.dpad { position: absolute; left: 44px; top: 159px; width: 138px; height: 138px; z-index: 3; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.dpad::before { /* the dark rim around the cross */
+  content: ""; position: absolute; inset: -3px; z-index: -1;
+  clip-path: polygon(33% 0, 67% 0, 67% 33%, 100% 33%, 100% 67%, 67% 67%, 67% 100%, 33% 100%, 33% 67%, 0 67%, 0 33%, 33% 33%);
+  background: #14164f;
+}
+.dpad .arm, .dpad .hub { position: absolute; background: linear-gradient(180deg, #f1f1f5, var(--grey) 55%, #b8b8c1); }
+.dpad .arm { cursor: pointer; transition: transform .05s, filter .05s; box-shadow: inset 0 2px 1px rgba(255,255,255,.95); }
+.dpad .up    { left: 46px; top: 0; width: 46px; height: 47px; border-radius: 5px 5px 0 0; }
+.dpad .down  { left: 46px; bottom: 0; width: 46px; height: 47px; border-radius: 0 0 5px 5px; }
+.dpad .left  { left: 0; top: 46px; width: 47px; height: 46px; border-radius: 5px 0 0 5px; }
+.dpad .right { right: 0; top: 46px; width: 47px; height: 46px; border-radius: 0 5px 5px 0; }
+.dpad .hub { left: 46px; top: 46px; width: 46px; height: 46px; }
+.dpad .hub::after { content: ""; position: absolute; inset: 13px; border-radius: 50%; background: radial-gradient(circle at 50% 70%, #e9e9ee, #c2c2ca); box-shadow: inset 0 2px 3px rgba(0,0,0,.25); }
+.dpad .arm.pressed { filter: brightness(.82); }
+.dpad .up.pressed { transform: translateY(2px); } .dpad .down.pressed { transform: translateY(-2px); }
+.dpad .left.pressed { transform: translateX(2px); } .dpad .right.pressed { transform: translateX(-2px); }
+
+.btn {
+  position: absolute; width: 68px; height: 68px; border-radius: 50%; z-index: 3; cursor: pointer;
+  background: radial-gradient(circle at 40% 32%, #fbfbfd 0%, var(--grey) 45%, #a9a9b3 100%);
+  box-shadow: 0 4px 0 #8b8b96, 0 7px 8px rgba(0,0,0,.45), inset 0 -3px 4px rgba(0,0,0,.12);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .05s, box-shadow .05s;
+}
+.btn .letter { font: 22px Arial; color: #b9b9c2; text-shadow: 0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,.25); pointer-events: none; }
+.btn.b { left: 801px; top: 211px; }
+.btn.a { left: 885px; top: 174px; }
+.btn.pressed { transform: translateY(4px); box-shadow: 0 0 0 #8b8b96, 0 2px 3px rgba(0,0,0,.4), inset 0 -2px 3px rgba(0,0,0,.12); }
+
+/* START and SELECT: grey dots, each beside an engraved capsule label. */
+.pill {
+  position: absolute; width: 29px; height: 29px; border-radius: 50%; z-index: 3; cursor: pointer;
+  background: radial-gradient(circle at 40% 32%, #fbfbfd, var(--grey) 50%, #a9a9b3);
+  box-shadow: 0 2px 0 #7f7f8a, 0 3px 4px rgba(0,0,0,.45);
+  transition: transform .05s;
+}
+.pill.select { left: 136px; top: 364px; } .pill.start { left: 136px; top: 405px; }
+.pill.pressed { transform: translateY(2px); box-shadow: 0 0 0 #7f7f8a, 0 1px 2px rgba(0,0,0,.45); }
+.capsule {
+  position: absolute; width: 80px; height: 28px; border-radius: 14px; z-index: 2; left: 46px;
+  box-shadow: inset 0 2px 2px rgba(0,0,0,.4), inset 0 -1px 1px rgba(255,255,255,.22), 0 1px 0 rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  font: bold 12px Arial; letter-spacing: 1px; color: #d9dbf7; text-shadow: 0 1px 1px rgba(0,0,0,.55);  /* printed light on the blue */
+}
+.capsule.select { top: 364px; } .capsule.start { top: 405px; }
+
+/* Speaker: six slots, lower right. */
+.speaker { position: absolute; left: 818px; top: 355px; z-index: 2; display: flex; flex-direction: column; gap: 9px; transform: skewX(-14deg); }
+.speaker i { display: block; height: 8px; border-radius: 4px; background: #15175a; box-shadow: inset 0 2px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.14); }
+.speaker i:nth-child(1) { width: 90px; margin-left: 24px; } .speaker i:nth-child(2) { width: 104px; margin-left: 14px; }
+.speaker i:nth-child(3) { width: 112px; margin-left: 6px; } .speaker i:nth-child(4) { width: 112px; margin-left: 2px; }
+.speaker i:nth-child(5) { width: 106px; margin-left: 2px; } .speaker i:nth-child(6) { width: 94px; margin-left: 6px; }
+
+/* Keyboard keys, as little keycaps on each control. */
+.keycap {
+  position: absolute; z-index: 6; pointer-events: none;
+  font: 600 11px "JetBrains Mono", monospace; color: #20237a; background: linear-gradient(180deg, #fffbe9, #e9dfb8);
+  border-radius: 4px; padding: 2px 5px; box-shadow: 0 2px 0 #a99a63, 0 3px 4px rgba(0,0,0,.4); white-space: nowrap;
+}
+.dpad .keycap { transform: translate(-50%, -50%); }
+.dpad .up .keycap { left: 50%; top: 22px; } .dpad .down .keycap { left: 50%; top: 26px; }
+.dpad .left .keycap { left: 22px; top: 50%; } .dpad .right .keycap { left: 26px; top: 50%; }
+.btn .keycap { right: -15px; bottom: -14px; }
+.shoulder .keycap { top: 11px; }
+.shoulder.l .keycap { left: 118px; } .shoulder.r .keycap { right: 118px; }
+.pill .keycap { left: 38px; top: 5px; }
+.switch .keycap { left: 48px; top: -2px; }
+
+.under-console { text-align: center; color: var(--ink-dim); font-size: 14px; margin: 18px auto 0; max-width: 700px; }
+/* Shown only if the emulator's sound is held off by the browser until the
+   first click or key press (it is turned off, so normally never). */
+.power-hint {
+  position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: rgba(10, 9, 16, .82); color: #e9e6ff; cursor: pointer; text-align: center;
+  font: 12px/1.8 "Press Start 2P", monospace;
+}
+.power-hint b { color: var(--accent-2); font-weight: normal; animation: blink 1.1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.power-hint.gone { display: none; }
+
+/* --- Content -------------------------------------------------------------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 18px 0 8px; }
+.stat { background: var(--page-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.stat .label { color: var(--ink-dim); font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.stat .big { font: 18px/1.4 "Press Start 2P", monospace; color: var(--accent-2); }
+.footnote { color: var(--ink-dim); font-size: 13px; }
+
+.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.dl { display: block; text-decoration: none; color: var(--ink); background: var(--page-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; transition: border-color .15s, transform .15s; }
+.dl:hover { border-color: var(--accent); transform: translateY(-2px); }
+.dl .what { font-weight: 800; font-size: 17px; }
+.dl .size { font: 12px "Press Start 2P", monospace; color: var(--accent-2); margin: 8px 0 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 10px 0 18px; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink-dim); font-weight: 600; }
+td.num, th.num { text-align: right; font-family: "JetBrains Mono", monospace; }
+.table-scroll { overflow-x: auto; }
+
+/* The layer walk */
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 20px 0; }
+.node {
+  width: min(560px, 100%); background: var(--page-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 14px; position: relative;
+}
+.node .t { font-weight: 800; }
+.node .s { font: 12px "JetBrains Mono", monospace; color: var(--ink-dim); }
+.node.norm { border-color: #3d6a8f; }
+.node.mix { border-color: #3d8f6a; }
+.node.attn { border-color: #8f3d74; }
+.node.mlp { border-color: #8f6a3d; }
+.node.io { border-color: var(--accent); }
+.node.add { border-color: #a8913a; }
+/* A shaft that stops where the head starts, and the head's tip on the next box. */
+.arrow { width: 10px; height: 18px; position: relative; }
+.arrow::before { content: ""; position: absolute; left: 4px; top: 0; bottom: 6px; width: 2px; background: var(--line); }
+.arrow::after { content: ""; position: absolute; left: 0; bottom: 0; border-style: solid; border-width: 6px 5px 0; border-color: var(--line) transparent transparent; }
+.arrow.into-block { height: 30px; }  /* room above the BLOCK × 10 label */
+.block-frame { border: 2px dashed #4a4470; border-radius: 16px; padding: 18px 12px 12px; width: min(620px, 100%); position: relative; display: flex; flex-direction: column; align-items: center; }
+.block-frame > .label { position: absolute; top: -12px; left: 18px; background: var(--page); padding: 0 8px; font: 10px "Press Start 2P", monospace; color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-dim); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 2px solid; }
+
+.memmap { display: flex; height: 34px; border-radius: 8px; overflow: hidden; margin: 10px 0 4px; border: 1px solid var(--line); }
+.memmap div { display: flex; align-items: center; justify-content: center; font: 11px "JetBrains Mono", monospace; color: #fff; overflow: hidden; white-space: nowrap; }
+footer { color: var(--ink-dim); font-size: 13px; text-align: center; padding: 60px 0 40px; }
+</style>
+</head>
+<body>
+
+<section class="wrap console-area" aria-label="Game Boy Advance emulator">
+  <div class="console-fit" id="console-fit">
+  <div class="gba" id="gba">
+    <div class="rim"></div>
+    <div class="shoulder l grain" data-button="10"><span class="letter">L</span><span class="keycap">Q</span></div>
+    <div class="shoulder r grain" data-button="11"><span class="letter">R</span><span class="keycap">E</span></div>
+    <div class="body grain"></div>
+    <div class="oval">ChatGBA</div>
+
+    <div class="lens">
+      <div class="screen-well"><div class="screen"><div id="game"></div><div class="power-hint gone" id="power-hint"><b>PRESS ANY KEY</b>or click to power on</div></div></div>
+    </div>
+    <div class="led" id="led"></div><div class="emboss power">POWER</div>
+    <div class="emboss turbo">TURBO</div>
+    <div class="switch" id="turbo" role="switch" aria-checked="false" aria-label="Turbo" title="Turbo (T)"><span class="nub"></span><span class="keycap">T</span></div>
+
+    <div class="dpad">
+      <div class="arm up" data-button="4"><span class="keycap">W</span></div>
+      <div class="arm left" data-button="6"><span class="keycap">A</span></div>
+      <div class="hub"></div>
+      <div class="arm right" data-button="7"><span class="keycap">D</span></div>
+      <div class="arm down" data-button="5"><span class="keycap">S</span></div>
+    </div>
+
+    <div class="capsule select">SELECT</div><div class="capsule start">START</div>
+    <div class="pill select" data-button="2"><span class="keycap">SPACE</span></div>
+    <div class="pill start" data-button="3"><span class="keycap">ENTER</span></div>
+
+    <div class="btn b" data-button="0"><span class="letter">B</span><span class="keycap">J</span></div>
+    <div class="btn a" data-button="8"><span class="letter">A</span><span class="keycap">K</span></div>
+
+    <div class="speaker"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  </div>
+</section>
+<div class="wrap under-console">
+  <p>At real Game Boy speed, ChatGBA takes about 2 seconds per letter. If you would rather not wait four minutes for a paragraph, flip the <b>TURBO</b> switch (<b>T</b>) at the top left. Try JavaScript inference <a href="inference.html">here</a>.</p>
+</div>
+
+<main class="wrap">
+
+<h2>Downloads</h2>
+<div class="downloads">
+  <a class="dl" href="ChatGBA.gba" download>
+    <div class="what">The cartridge</div>
+    <div class="size" data-size="ChatGBA.gba">4.03 MiB</div>
+  </a>
+  <a class="dl" href="chatgba-int8.bin" download>
+    <div class="what">Quantized weights</div>
+    <div class="size" data-size="chatgba-int8.bin">4.01 MiB</div>
+  </a>
+  <a class="dl" href="chatgba-float32.gab" download>
+    <div class="what">Full weights</div>
+    <div class="size" data-size="chatgba-float32.gab">15.3 MiB</div>
+  </a>
+</div>
+
+<h2>By the numbers</h2>
+<p>To be era authentic, a model like this could be trained on <b data-stat="ps2">120 PlayStation 2s</b> in 60 days. That training would take <b data-stat="kwh">8,700 kWh</b> of electricity (<b data-stat="cost">$1,600</b> at today's rate). To put that into context, <span data-stat="cost">$1,600</span> is <b data-stat="nuggets">2,800 Chicken McNuggets</b>.</p>
+<div class="stats">
+  <div class="stat"><div class="label">Parameter count</div><div class="big" data-stat="params">4,003,264</div></div>
+  <div class="stat"><div class="label">Model size</div><div class="big" data-stat="model">4.01 MiB</div></div>
+  <div class="stat"><div class="label">Context length</div><div class="big">512 bytes</div></div>
+  <div class="stat"><div class="label">Corpus size</div><div class="big" data-stat="corpus">139 GiB</div></div>
+</div>
+
+<h2>The model, layer by layer</h2>
+<p>ChatGBA reads and writes <b>bytes</b>. There is no tokenizer: each UTF-8 byte is one token. A conversation is plain text with three special markers: <code>&lt;|u|&gt;</code> starts a user message, <code>&lt;|a|&gt;</code> starts an assistant message, and <code>&lt;|e|&gt;</code> ends either one. A conversation might look like <code>&lt;|u|&gt;Hi&lt;|e|&gt;&lt;|a|&gt;Hello!&lt;|e|&gt;</code>, and a reply ends when the model writes <code>&lt;|e|&gt;</code> itself.</p>
+
+<div class="legend">
+  <span><i style="border-color:#3d6a8f"></i>normalization</span>
+  <span><i style="border-color:#3d8f6a"></i>mixing nearby positions</span>
+  <span><i style="border-color:#8f3d74"></i>attention</span>
+  <span><i style="border-color:#8f6a3d"></i>MLP</span>
+  <span><i style="border-color:#a8913a"></i>residual</span>
+</div>
+
+<div class="flow">
+  <div class="node io"><div class="t">Byte in</div><div class="s">one of 256 values</div></div>
+  <div class="arrow"></div>
+  <div class="node io"><div class="t">Embedding</div><div class="s">look up row [byte] of a 256 × 192 table → x, feature dimension: 192</div></div>
+  <div class="arrow into-block"></div>
+  <div class="block-frame">
+    <span class="label">BLOCK × 10</span>
+    <div class="node norm"><div class="t">RMSNorm</div><div class="s">a = x / √(mean(x²) + ε) × γ</div></div>
+    <div class="arrow"></div>
+    <div class="node mix"><div class="t">Canon A</div><div class="s">a += w₀·a[t] + w₁·a[t−1] + w₂·a[t−2] + w₃·a[t−3], one 4-tap filter per feature</div></div>
+    <div class="arrow"></div>
+    <div class="node attn"><div class="t">Q, K, V projections (grouped-query attention)</div><div class="s">q = a·W<sub>Q</sub>: 6 query heads × 32. k = a·W<sub>K</sub>, v = a·W<sub>V</sub>: 2 key/value heads × 32. 3 q heads share 1 kv head</div></div>
+    <div class="arrow"></div>
+    <div class="node norm"><div class="t">QK-norm</div><div class="s">RMSNorm on every head's query and key, each with its own learned 32 scales</div></div>
+    <div class="arrow"></div>
+    <div class="node attn"><div class="t">RoPE</div><div class="s">rotate each pair (2i, 2i+1) of q and k by position × 10000<sup>−2i/32</sup>: position enters here, as an angle</div></div>
+    <div class="arrow"></div>
+    <div class="node attn"><div class="t">Attention, grouped</div><div class="s">softmax(q·k / √32) over earlier positions; 3 query heads share each key/value head. Blocks 1–4 and 6–9 look back 64 bytes, blocks 5 and 10 the whole 512</div></div>
+    <div class="arrow"></div>
+    <div class="node attn"><div class="t">Output projection</div><div class="s">6 heads × 32 → 192 (W<sub>O</sub>)</div></div>
+    <div class="arrow"></div>
+    <div class="node add"><div class="t">Residual add</div><div class="s">x = x + attention's output</div></div>
+    <div class="arrow"></div>
+    <div class="node norm"><div class="t">RMSNorm</div><div class="s">m = RMSNorm(x) × γ₂</div></div>
+    <div class="arrow"></div>
+    <div class="node mix"><div class="t">Canon C</div><div class="s">another 4-tap causal filter, on the MLP's input</div></div>
+    <div class="arrow"></div>
+    <div class="node mlp"><div class="t">SwiGLU MLP</div><div class="s">silu(m·W<sub>gate</sub>) × (m·W<sub>up</sub>), 192 → 512, then ·W<sub>down</sub> 512 → 192. No biases</div></div>
+    <div class="arrow"></div>
+    <div class="node add"><div class="t">Residual add</div><div class="s">x = x + the MLP's output, and on to the next block</div></div>
+  </div>
+  <div class="arrow"></div>
+  <div class="node norm"><div class="t">Final RMSNorm</div><div class="s">x / rms(x) × γ</div></div>
+  <div class="arrow"></div>
+  <div class="node io"><div class="t">Unembedding (tied)</div><div class="s">scores = x · Embeddingᵀ</div></div>
+  <div class="arrow"></div>
+  <div class="node io"><div class="t">Next byte</div><div class="s">temperature 0.7</div></div>
+</div>
+
+<h3>Why each piece is there</h3>
+<table>
+  <tr><th>Piece</th><th>What it buys a model this small</th></tr>
+  <tr><td>Pre-norm (RMSNorm before each half)</td><td>Keeps the numbers in a predictable range going into every matrix, which deep stacks and fixed-point math both need. RMSNorm skips the mean subtraction of LayerNorm: cheaper, and it works as well.</td></tr>
+  <tr><td>Canon layers</td><td>Bytes are tiny tokens: a word is 5 or 6 of them. A 4-tap filter lets every position see its last few neighbours for almost no parameters (768 per block), so attention does not have to spend heads on "what letter came before me".</td></tr>
+  <tr><td>QK-norm</td><td>Normalizing queries and keys keeps attention scores from growing without bound during training, and on the GBA it bounds the numbers the integer engine has to handle.</td></tr>
+  <tr><td>RoPE</td><td>Position as a rotation means attention depends only on the distance between two bytes. That is what lets the context slide: past 512 bytes the oldest byte falls out and nothing else changes.</td></tr>
+  <tr><td>Grouped-query attention</td><td>6 query heads but only 2 key/value heads: the cache that remembers the conversation is a third the size. On a machine with 256 KB of work RAM, that is the difference between fitting and not.</td></tr>
+  <tr><td>Short attention windows</td><td>8 of the 10 blocks only look 64 bytes back; 2 see everything. Local blocks are cheap and their cache is small; the 2 global ones carry the long-range conversation.</td></tr>
+  <tr><td>SwiGLU</td><td>A gated MLP learns more per parameter than the classic two-matrix one; 512 hidden units keeps the total near 4M.</td></tr>
+  <tr><td>Tied embeddings</td><td>The 256 × 192 table is used twice, in and out: 49,152 parameters instead of 98,304.</td></tr>
+</table>
+
+<h3>Where the 4,003,264 parameters are</h3>
+<div class="table-scroll">
+<table>
+  <tr><th>Tensor</th><th>Shape</th><th class="num">Per block</th><th class="num">All 10 blocks</th></tr>
+  <tr><td>Attention norm, MLP norm</td><td class="mono">2 × [192]</td><td class="num">384</td><td class="num">3,840</td></tr>
+  <tr><td>Canon A, Canon C</td><td class="mono">2 × [4, 192]</td><td class="num">1,536</td><td class="num">15,360</td></tr>
+  <tr><td>W<sub>Q</sub>, W<sub>O</sub></td><td class="mono">[192, 192], [192, 192]</td><td class="num">73,728</td><td class="num">737,280</td></tr>
+  <tr><td>W<sub>K</sub>, W<sub>V</sub></td><td class="mono">[192, 64], [192, 64]</td><td class="num">24,576</td><td class="num">245,760</td></tr>
+  <tr><td>Query norm, key norm</td><td class="mono">[6, 32], [2, 32]</td><td class="num">256</td><td class="num">2,560</td></tr>
+  <tr><td>W<sub>gate</sub>, W<sub>up</sub>, W<sub>down</sub></td><td class="mono">[192, 512] × 2, [512, 192]</td><td class="num">294,912</td><td class="num">2,949,120</td></tr>
+  <tr><td><b>Block total</b></td><td></td><td class="num"><b>395,392</b></td><td class="num"><b>3,953,920</b></td></tr>
+  <tr><td>Embedding (tied)</td><td class="mono">[256, 192]</td><td></td><td class="num">49,152</td></tr>
+  <tr><td>Final norm</td><td class="mono">[192]</td><td></td><td class="num">192</td></tr>
+  <tr><td><b>Total</b></td><td></td><td></td><td class="num"><b>4,003,264</b></td></tr>
+</table>
+</div>
+
+<h2>How it fits on a Game Boy Advance</h2>
+<p>The GBA has a 16.78 MHz ARM7TDMI, no floating point, no divide instruction, 32 KB of fast RAM and 256 KB of slow RAM. The model has to live in the cartridge and run in integers.</p>
+<table>
+  <tr><th>Problem</th><th>What the cartridge does</th></tr>
+  <tr><td>16 MB of float weights</td><td>Every matrix becomes int8 with one scale per output row (a 4× shrink, 4.0 MB), read straight from cartridge ROM. Each byte is stored offset by 128 so one <code>AND</code> instruction unpacks it.</td></tr>
+  <tr><td>No floating point</td><td>Everything is fixed point: activations are 32-bit integers with 16 fractional bits ("Q16"). Inputs to a matrix are rounded to 13 bits with a shared power-of-two shift, so int8 × 13-bit products add up safely in 32 bits.</td></tr>
+  <tr><td>exp, sigmoid, sin, cos</td><td>Lookup tables in the ROM: 2<sup>−i/256</sup> for softmax, the sigmoid for SiLU, and RoPE's angles for 512 positions. Past position 511, a per-frequency "anchor" rotation turns by 512 steps at a time, so the context can slide forever.</td></tr>
+  <tr><td>Remembering the conversation</td><td>An int8 key/value cache with one scale per vector, in rings: 64 positions for the windowed blocks, 512 for the two global ones. 196 KB of the 256 KB.</td></tr>
+</table>
+<div class="memmap" aria-label="EWRAM use">
+  <div style="flex:196608;background:#8f3d74">KV cache 192 KB</div>
+  <div style="flex:23040;background:#3d8f6a">canon 22.5 KB</div>
+  <div style="flex:5632;background:#3d6a8f">text</div>
+  <div style="flex:11060;background:#2f2b4a">free</div>
+</div>
+<p class="footnote">The 256 KB of external work RAM: the cache, the canon layers' last three inputs per block, the chat screen's text, and what is left.</p>
+<p>The result costs about <b>0.001 bits per byte</b> of accuracy against the float model, and the cartridge in an emulator gives byte-for-byte the same replies as the same integer engine compiled for a Mac. Each byte takes about 37 million cycles: <b>2.2 seconds</b>.</p>
+
+<h2>How it was trained</h2>
+<table>
+  <tr><th>Stage</th><th>Data</th><th>How</th></tr>
+  <tr><td>Pretraining</td><td>All of Cosmopedia-v2: 39.1 million synthetic textbook pages, stories and articles, 147 GB. One pass.</td><td>512-byte windows, 128 per step, 2.2 million steps. Documents shuffled; 1 in 10,000 held out for validation and another for the test.</td></tr>
+  <tr><td>Fine-tuning</td><td>smol-smoltalk: 458,000 conversations.</td><td>512-byte windows starting every 256 bytes, so every conversation is also seen cut off at the top, the way a sliding context shows it. Only the assistant's bytes are graded.</td></tr>
+</table>
+<p>The optimizer is Muon for the attention and MLP matrices (it orthogonalizes each update, so every direction of a matrix learns at the same rate) and AdamW for the rest. The learning rate warms up, stays flat for most of the run, then falls in a straight line to zero over the last 10%. Weights are float32; the GPU multiplies in TF32.</p>
+
+</main>
+
+<footer class="wrap">ChatGBA · emulator: <a href="https://emulatorjs.org">EmulatorJS</a> running mGBA · Game Boy Advance is a trademark of Nintendo.</footer>
+
+<script>
+// --- Numbers ------------------------------------------------------------------
+// From the finished production run. The PS2 is the Emotion Engine's 6.2
+// GFLOPS peak (no game ever reached it) at about 50 W. Electricity: the US
+// average residential rate, 18.8 cents per kWh (EIA, April 2026). A McNugget:
+// a 10-piece at $5.79.
+const RUN = {
+  params: 4003264,
+  modelBytes: 4207968,              // model.bin, the int8 weights in the cartridge
+  pretrainBytes: 147277920173,      // Cosmopedia-v2 training text
+  finetuneBytes: 1791452231,        // smol-smoltalk training text
+  finetuneOverlap: 2,               // windows every 256 bytes, 512 long: each byte twice
+  flopsPerByte: 25.7e6,             // 6 x matrix parameters + attention, per byte trained
+  ps2Days: 60,
+  ps2Flops: 6.2e9, ps2Watts: 50,
+  dollarsPerKwh: 0.188,
+  dollarsPerNugget: 0.579,
+};
+const MiB = 1024 * 1024, GiB = 1024 * MiB;
+const fmt = (n, digits = 0) => n.toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+const roughly = n => { const p = Math.pow(10, Math.floor(Math.log10(n)) - 1); return fmt(Math.round(n / p) * p); };
+const dataBytes = RUN.pretrainBytes + RUN.finetuneBytes;
+const flops = (RUN.pretrainBytes + RUN.finetuneBytes * RUN.finetuneOverlap) * RUN.flopsPerByte;
+const ps2Seconds = flops / RUN.ps2Flops;                    // one PS2's time: the same energy however many share it
+const kwh = ps2Seconds * RUN.ps2Watts / 3.6e6;
+const dollars = kwh * RUN.dollarsPerKwh;
+const stats = {
+  params: fmt(RUN.params),
+  model: fmt(RUN.modelBytes / MiB, 2) + " MiB",
+  corpus: fmt(dataBytes / GiB) + " GiB",
+  ps2: roughly(ps2Seconds / (RUN.ps2Days * 86400)) + " PlayStation 2s",
+  kwh: roughly(kwh) + " kWh",
+  cost: "$" + roughly(dollars),
+  nuggets: roughly(dollars / RUN.dollarsPerNugget) + " Chicken McNuggets",
+};
+document.querySelectorAll("[data-stat]").forEach(el => { if (stats[el.dataset.stat]) el.textContent = stats[el.dataset.stat]; });
+// Real download sizes, when the server says.
+document.querySelectorAll("[data-size]").forEach(async el => {
+  try {
+    const r = await fetch(el.dataset.size, { method: "HEAD" });
+    const n = Number(r.headers.get("content-length"));
+    if (n) el.textContent = fmt(n / MiB, 2) + " MiB";
+  } catch (e) { /* keep the written size */ }
+});
+
+// --- The emulator ---------------------------------------------------------------
+// EmulatorJS with the mGBA core. Button numbers are RetroArch's: B 0, SELECT 2,
+// START 3, UP 4, DOWN 5, LEFT 6, RIGHT 7, A 8, L 10, R 11 (X 1 and Y 9 are
+// unused on a GBA).
+window.EJS_player = "#game";
+window.EJS_core = "gba";
+window.EJS_gameUrl = "ChatGBA.gba";
+window.EJS_gameName = "ChatGBA";
+window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+window.EJS_startOnLoaded = true;
+window.EJS_color = "#8f7bff";
+// Always the bindings below: EmulatorJS would otherwise keep a visitor's
+// controls (and other settings) from an earlier visit.
+window.EJS_disableLocalStorage = true;
+window.EJS_backgroundColor = "#111111";
+window.EJS_defaultControls = {
+  0: {
+    0: { value: "j" }, 1: { value: "" }, 2: { value: "space" }, 3: { value: "enter" },
+    4: { value: "w" }, 5: { value: "s" }, 6: { value: "a" }, 7: { value: "d" },
+    8: { value: "k" }, 9: { value: "" }, 10: { value: "q" }, 11: { value: "e" },
+  },
+  1: {}, 2: {}, 3: {},
+};
+window.EJS_Buttons = {
+  playPause: false, restart: false, mute: false, settings: false, fullscreen: false, saveState: false, loadState: false,
+  screenRecord: false, gamepad: false, cheat: false, volume: false, saveSavFiles: false, loadSavFiles: false,
+  quickSave: false, quickLoad: false, screenshot: false, cacheManager: false, exitEmulation: false,
+};
+// No right-click menu on the screen (caught before EmulatorJS sees it).
+document.querySelector(".screen").addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); }, true);
+
+// ChatGBA makes no sound, so the emulator runs without any: RetroArch, under
+// EmulatorJS, otherwise keeps time by its sound, which a browser holds off
+// until the visitor's first click or key press. Without sound it keeps time by
+// the screen's refresh instead. RetroArch's own messages drawn over the game
+// (such as "Fast forward") are off too.
+// EmulatorJS writes RetroArch's settings when the game starts; these lines are
+// added to them.
+let gameManagerClass;
+Object.defineProperty(window, "EJS_GameManager", {
+  configurable: true,
+  get: () => gameManagerClass,
+  set: cls => {
+    const settings = cls.prototype.getRetroArchCfg;
+    cls.prototype.getRetroArchCfg = function () { return settings.call(this) + "audio_enable = false\naudio_sync = false\nvideo_font_enable = false\nnotification_show_fast_forward = false\nmenu_enable_widgets = false\n"; };
+    gameManagerClass = cls;
+  },
+});
+
+const loader = document.createElement("script");
+loader.src = window.EJS_pathtodata + "loader.js";
+document.body.appendChild(loader);
+
+// The game starts as soon as it has loaded. In case the emulator still made
+// a sound player the browser holds off (it stalls the game part way through a
+// frame), the screen then asks for a key, and the first click or key press
+// turns the sound on and restarts the game cleanly.
+const hint = document.getElementById("power-hint");
+function audioContexts() {
+  const AL = window.EJS_emulator && window.EJS_emulator.Module && window.EJS_emulator.Module.AL;
+  if (!AL) return [];
+  const contexts = new Set();
+  [AL.currentCtx, ...Object.values(AL.contexts || {})].forEach(c => {
+    if (!c) return;
+    if (c.audioCtx) contexts.add(c.audioCtx);
+    (c.sources || []).forEach(s => s && s.gain && contexts.add(s.gain.context));
+  });
+  return [...contexts];
+}
+const silent = () => audioContexts().some(c => c.state !== "running");
+let startedSilent = false;
+window.EJS_onGameStart = () => {
+  document.getElementById("led").classList.add("on");
+  // The sound starts a moment after the game.
+  setTimeout(() => { startedSilent = silent(); hint.classList.toggle("gone", !startedSilent); }, 300);
+};
+async function powerOn() {
+  const contexts = audioContexts();
+  if (!contexts.length) return;
+  await Promise.all(contexts.map(c => c.state === "running" ? null : c.resume().catch(() => {})));
+  if (silent()) return;  // still blocked: try again on the next click or key
+  hint.classList.add("gone");
+  document.removeEventListener("pointerdown", powerOn, true);
+  document.removeEventListener("keydown", powerOn, true);
+  if (startedSilent) {
+    startedSilent = false;
+    window.EJS_emulator.gameManager.restart();
+  }
+}
+document.addEventListener("pointerdown", powerOn, true);
+document.addEventListener("keydown", powerOn, true);
+
+// The console is drawn 1004 px wide; zoom it to fit narrower windows.
+function fitConsole() {
+  const fit = document.getElementById("console-fit");
+  const scale = Math.min(1, (document.documentElement.clientWidth - 32) / 1004);
+  fit.style.zoom = scale;
+}
+fitConsole();
+window.addEventListener("resize", fitConsole);
+
+// The drawn buttons press the emulator's buttons, by mouse or touch, and light
+// up when the keyboard presses them.
+function press(index, down) {
+  const manager = window.EJS_emulator && window.EJS_emulator.gameManager;
+  if (manager && manager.simulateInput) manager.simulateInput(0, index, down ? 1 : 0);
+}
+document.querySelectorAll("[data-button]").forEach(el => {
+  const index = Number(el.dataset.button);
+  const down = e => { e.preventDefault(); el.classList.add("pressed"); press(index, true); };
+  const up = () => { if (el.classList.contains("pressed")) { el.classList.remove("pressed"); press(index, false); } };
+  el.addEventListener("pointerdown", down);
+  el.addEventListener("pointerup", up);
+  el.addEventListener("pointerleave", up);
+  el.addEventListener("pointercancel", up);
+});
+const keyToButton = { w: 4, s: 5, a: 6, d: 7, k: 8, j: 0, q: 10, e: 11, " ": 2, enter: 3 };
+function light(e, on) {
+  const index = keyToButton[e.key.toLowerCase()];
+  if (index === undefined) return;
+  if (e.key === " " && !e.target.closest("input, textarea")) e.preventDefault();  // SELECT, not a page scroll
+  const el = document.querySelector(`[data-button="${index}"]`);
+  if (el) el.classList.toggle("pressed", on);
+}
+document.addEventListener("keydown", e => light(e, true));
+document.addEventListener("keyup", e => light(e, false));
+
+// Turbo: the emulator's fast forward. Uncapped, mGBA runs the cartridge many
+// times faster than a real Game Boy.
+// The switch (or T) flips it, and the power LED turns amber while it is on.
+const turbo = document.getElementById("turbo");
+let turboOn = false;
+function flipTurbo() {
+  const manager = window.EJS_emulator && window.EJS_emulator.gameManager;
+  if (!manager) return;
+  turboOn = !turboOn;
+  try {
+    if (manager.setFastForwardRatio) manager.setFastForwardRatio(0);  // 0: as fast as possible
+    manager.toggleFastForward(turboOn ? 1 : 0);
+  } catch (e) { turboOn = false; }
+  turbo.classList.toggle("on", turboOn);
+  turbo.setAttribute("aria-checked", String(turboOn));
+  document.getElementById("led").classList.toggle("fast", turboOn);
+}
+turbo.addEventListener("click", flipTurbo);
+document.addEventListener("keydown", e => {
+  if (e.key.toLowerCase() === "t" && !e.repeat && !e.target.closest("input, textarea")) flipTurbo();
+});
+</script>
+</body>
+</html>
